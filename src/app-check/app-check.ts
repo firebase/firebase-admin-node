@@ -18,13 +18,15 @@
 import { FirebaseApp } from '../firebase-app';
 import { appCheck } from './index';
 import { AppCheckApiClient } from './app-check-api-client-internal';
-import { 
-  appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator 
+import {
+  appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator
 } from './token-generator';
+import { AppCheckTokenVerifier } from './token-verifier';
 import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
 import AppCheckInterface = appCheck.AppCheck;
 import AppCheckToken = appCheck.AppCheckToken;
+import VerifyAppCheckTokenResponse = appCheck.VerifyAppCheckTokenResponse;
 
 /**
  * AppCheck service bound to the provided app.
@@ -33,6 +35,7 @@ export class AppCheck implements AppCheckInterface {
 
   private readonly client: AppCheckApiClient;
   private readonly tokenGenerator: AppCheckTokenGenerator;
+  private readonly appCheckTokenVerifier: AppCheckTokenVerifier;
 
   /**
    * @param app The app for this AppCheck service.
@@ -45,11 +48,14 @@ export class AppCheck implements AppCheckInterface {
     } catch (err) {
       throw appCheckErrorFromCryptoSignerError(err);
     }
+    this.appCheckTokenVerifier = new AppCheckTokenVerifier(app);
   }
 
   /**
    * Creates a new {@link appCheck.AppCheckToken `AppCheckToken`} that can be sent
    * back to a client.
+   *
+   * @param appId The app ID to use as the JWT app_id.
    *
    * @return A promise that fulfills with a `AppCheckToken`.
    */
@@ -57,6 +63,24 @@ export class AppCheck implements AppCheckInterface {
     return this.tokenGenerator.createCustomToken(appId)
       .then((customToken) => {
         return this.client.exchangeToken(customToken, appId);
+      });
+  }
+
+  /**
+   * Veifies an App Check token.
+   *
+   * @param appCheckToken The App Check token to verify.
+   *
+   * @return A promise that fulfills with a `VerifyAppCheckTokenResponse` on successful
+   *     verification.
+   */
+  public verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse> {
+    return this.appCheckTokenVerifier.verifyToken(appCheckToken)
+      .then((decodedToken) => {
+        return {
+          appId: decodedToken.app_id,
+          token: decodedToken,
+        };
       });
   }
 }

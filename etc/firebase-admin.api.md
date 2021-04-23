@@ -52,10 +52,25 @@ export namespace appCheck {
         // (undocumented)
         app: app.App;
         createToken(appId: string): Promise<AppCheckToken>;
+        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
     }
     export interface AppCheckToken {
         token: string;
         ttlMillis: number;
+    }
+    export interface DecodedAppCheckToken {
+        // (undocumented)
+        [key: string]: any;
+        app_id: string;
+        aud: string[];
+        exp: number;
+        iat: number;
+        iss: string;
+        sub: string;
+    }
+    export interface VerifyAppCheckTokenResponse {
+        appId: string;
+        token: appCheck.DecodedAppCheckToken;
     }
 }
 

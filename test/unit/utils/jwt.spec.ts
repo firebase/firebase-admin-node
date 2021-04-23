@@ -23,16 +23,19 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
-//import * as sinonChai from 'sinon-chai';
-//import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import * as jwtUtil from '../../../src/utils/jwt';
+import {
+  ALGORITHM_RS256, DecodedToken, decodeJwt, EmulatorSignatureVerifier, JwksFetcher,
+  JwtErrorCode, PublicKeySignatureVerifier, UrlKeyFetcher, verifyJwtSignature
+} from '../../../src/utils/jwt';
 
 const expect = chai.expect;
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const ONE_DAY_IN_SECONDS = 86400;
 const publicCertPath = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
+const jwksPath = '/v1alpha/jwks';
 
 /**
  * Returns a mocked out success response from the URL containing the public keys for the Google certs.
@@ -80,6 +83,43 @@ function mockFailedFetchPublicKeys(): nock.Scope {
     .replyWithError('message');
 }
 
+/**
+ * Returns a mocked out success JWKS response.
+ *
+ * @return {Object} A nock response object.
+ */
+function mockFetchJsonWebKeys(path: string = jwksPath): nock.Scope {
+  return nock('https://firebaseappcheck.googleapis.com')
+    .get(path)
+    .reply(200, mocks.jwksResponse);
+}
+
+/**
+ * Returns a mocked out error response for JWKS.
+ * The status code is 200 but the response itself will contain an 'error' key.
+ *
+ * @return {Object} A nock response object.
+ */
+function mockFetchJsonWebKeysWithErrorResponse(): nock.Scope {
+  return nock('https://firebaseappcheck.googleapis.com')
+    .get(jwksPath)
+    .reply(200, {
+      error: 'message',
+      error_description: 'description', // eslint-disable-line @typescript-eslint/camelcase
+    });
+}
+
+/**
+ * Returns a mocked out failed JSON Web Keys response.
+ * The status code is non-200 and the response itself will fail.
+ *
+ * @return {Object} A nock response object.
+ */
+function mockFailedFetchJsonWebKeys(): nock.Scope {
+  return nock('https://firebaseappcheck.googleapis.com')
+    .get(jwksPath)
+    .replyWithError('message');
+}
 
 const TOKEN_PAYLOAD = {
   one: 'uno',
@@ -91,7 +131,7 @@ const TOKEN_PAYLOAD = {
   sub: mocks.uid,
 };
 
-const DECODED_SIGNED_TOKEN: jwtUtil.DecodedToken = {
+const DECODED_SIGNED_TOKEN: DecodedToken = {
   header: {
     alg: 'RS256',
     kid: 'aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd',
@@ -100,7 +140,7 @@ const DECODED_SIGNED_TOKEN: jwtUtil.DecodedToken = {
   payload: TOKEN_PAYLOAD
 };
 
-const DECODED_UNSIGNED_TOKEN: jwtUtil.DecodedToken = {
+const DECODED_UNSIGNED_TOKEN: DecodedToken = {
   header: {
     alg: 'none',
     typ: 'JWT',
@@ -122,25 +162,25 @@ describe('decodeJwt', () => {
   });
 
   it('should reject given no token', () => {
-    return (jwtUtil.decodeJwt as any)()
+    return (decodeJwt as any)()
       .should.eventually.be.rejectedWith('The provided token must be a string.');
   });
 
   const invalidIdTokens = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
   invalidIdTokens.forEach((invalidIdToken) => {
     it('should reject given a non-string token: ' + JSON.stringify(invalidIdToken), () => {
-      return jwtUtil.decodeJwt(invalidIdToken as any)
+      return decodeJwt(invalidIdToken as any)
         .should.eventually.be.rejectedWith('The provided token must be a string.');
     });
   });
 
   it('should reject given an empty string token', () => {
-    return jwtUtil.decodeJwt('')
+    return decodeJwt('')
       .should.eventually.be.rejectedWith('Decoding token failed.');
   });
 
   it('should reject given an invalid token', () => {
-    return jwtUtil.decodeJwt('invalid-token')
+    return decodeJwt('invalid-token')
       .should.eventually.be.rejectedWith('Decoding token failed.');
   });
 
@@ -149,7 +189,7 @@ describe('decodeJwt', () => {
 
     const mockIdToken = mocks.generateIdToken();
 
-    return jwtUtil.decodeJwt(mockIdToken)
+    return decodeJwt(mockIdToken)
       .should.eventually.be.fulfilled.and.deep.equal(DECODED_SIGNED_TOKEN);
   });
 
@@ -161,7 +201,7 @@ describe('decodeJwt', () => {
       header: {}
     });
 
-    return jwtUtil.decodeJwt(mockIdToken)
+    return decodeJwt(mockIdToken)
       .should.eventually.be.fulfilled.and.deep.equal(DECODED_UNSIGNED_TOKEN);
   });
 });
@@ -178,28 +218,28 @@ describe('verifyJwtSignature', () => {
   });
 
   it('should throw given no token', () => {
-    return (jwtUtil.verifyJwtSignature as any)()
+    return (verifyJwtSignature as any)()
       .should.eventually.be.rejectedWith('The provided token must be a string.');
   });
 
   const invalidIdTokens = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
   invalidIdTokens.forEach((invalidIdToken) => {
     it('should reject given a non-string token: ' + JSON.stringify(invalidIdToken), () => {
-      return jwtUtil.verifyJwtSignature(invalidIdToken as any, mocks.keyPairs[0].public)
+      return verifyJwtSignature(invalidIdToken as any, mocks.keyPairs[0].public)
         .should.eventually.be.rejectedWith('The provided token must be a string.');
     });
   });
 
   it('should reject given an empty string token', () => {
-    return jwtUtil.verifyJwtSignature('', mocks.keyPairs[0].public)
+    return verifyJwtSignature('', mocks.keyPairs[0].public)
       .should.eventually.be.rejectedWith('jwt must be provided');
   });
 
   it('should be fulfilled given a valid signed token and public key', () => {
     const mockIdToken = mocks.generateIdToken();
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
+      { algorithms: [ALGORITHM_RS256] })
       .should.eventually.be.fulfilled;
   });
 
@@ -209,7 +249,7 @@ describe('verifyJwtSignature', () => {
       header: {}
     });
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, '')
+    return verifyJwtSignature(mockIdToken, '')
       .should.eventually.be.fulfilled;
   });
 
@@ -217,18 +257,18 @@ describe('verifyJwtSignature', () => {
     const mockIdToken = mocks.generateIdToken();
     const getKeyCallback = (_: any, callback: any): void => callback(null, mocks.keyPairs[0].public);
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, getKeyCallback,
+      { algorithms: [ALGORITHM_RS256] })
       .should.eventually.be.fulfilled;
   });
 
   it('should be rejected when the given algorithm does not match the token', () => {
     const mockIdToken = mocks.generateIdToken();
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
+    return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
       { algorithms: ['RS384'] })
       .should.eventually.be.rejectedWith('invalid algorithm')
-      .with.property('code', jwtUtil.JwtErrorCode.INVALID_SIGNATURE);
+      .with.property('code', JwtErrorCode.INVALID_SIGNATURE);
   });
 
   it('should be rejected given an expired token', () => {
@@ -237,18 +277,18 @@ describe('verifyJwtSignature', () => {
     clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
 
     // token should still be valid
-    return jwtUtil.verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
+      { algorithms: [ALGORITHM_RS256] })
       .then(() => {
         clock!.tick(1);
 
         // token should now be invalid
-        return jwtUtil.verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-          { algorithms: [jwtUtil.ALGORITHM_RS256] })
+        return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
+          { algorithms: [ALGORITHM_RS256] })
           .should.eventually.be.rejectedWith(
             'The provided token has expired. Get a fresh token from your client app and try again.'
           )
-          .with.property('code', jwtUtil.JwtErrorCode.TOKEN_EXPIRED);
+          .with.property('code', JwtErrorCode.TOKEN_EXPIRED);
       });
   });
 
@@ -257,10 +297,10 @@ describe('verifyJwtSignature', () => {
     const getKeyCallback = (_: any, callback: any): void =>
       callback(new Error('key fetch failed.'));
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, getKeyCallback,
+      { algorithms: [ALGORITHM_RS256] })
       .should.eventually.be.rejectedWith('key fetch failed.')
-      .with.property('code', jwtUtil.JwtErrorCode.KEY_FETCH_ERROR);
+      .with.property('code', JwtErrorCode.KEY_FETCH_ERROR);
   });
 
   it('should be rejected with correct no matching key id found error.', () => {
@@ -268,43 +308,49 @@ describe('verifyJwtSignature', () => {
     const getKeyCallback = (_: any, callback: any): void =>
       callback(new Error('no-matching-kid-error'));
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, getKeyCallback,
+      { algorithms: [ALGORITHM_RS256] })
       .should.eventually.be.rejectedWith('no-matching-kid-error')
-      .with.property('code', jwtUtil.JwtErrorCode.NO_MATCHING_KID);
+      .with.property('code', JwtErrorCode.NO_MATCHING_KID);
   });
 
   it('should be rejected given a public key that does not match the token.', () => {
     const mockIdToken = mocks.generateIdToken();
 
-    return jwtUtil.verifyJwtSignature(mockIdToken, mocks.keyPairs[1].public,
-      { algorithms: [jwtUtil.ALGORITHM_RS256] })
+    return verifyJwtSignature(mockIdToken, mocks.keyPairs[1].public,
+      { algorithms: [ALGORITHM_RS256] })
       .should.eventually.be.rejectedWith('invalid signature')
-      .with.property('code', jwtUtil.JwtErrorCode.INVALID_SIGNATURE);
+      .with.property('code', JwtErrorCode.INVALID_SIGNATURE);
   });
 
   it('should be rejected given an invalid JWT.', () => {
-    return jwtUtil.verifyJwtSignature('invalid-token', mocks.keyPairs[0].public)
+    return verifyJwtSignature('invalid-token', mocks.keyPairs[0].public)
       .should.eventually.be.rejectedWith('jwt malformed')
-      .with.property('code', jwtUtil.JwtErrorCode.INVALID_SIGNATURE);
+      .with.property('code', JwtErrorCode.INVALID_SIGNATURE);
   });
 });
 
 describe('PublicKeySignatureVerifier', () => {
   let stubs: sinon.SinonStub[] = [];
-  const verifier = new jwtUtil.PublicKeySignatureVerifier(
-    new jwtUtil.UrlKeyFetcher('https://www.example.com/publicKeys'));
+  let clock: sinon.SinonFakeTimers | undefined;
+  const verifier = new PublicKeySignatureVerifier(
+    new UrlKeyFetcher('https://www.example.com/publicKeys'));
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
     stubs = [];
+
+    if (clock) {
+      clock.restore();
+      clock = undefined;
+    }
   });
 
   describe('Constructor', () => {
     it('should not throw when valid key fetcher is provided', () => {
       expect(() => {
-        new jwtUtil.PublicKeySignatureVerifier(
-          new jwtUtil.UrlKeyFetcher('https://www.example.com/publicKeys'));
+        new PublicKeySignatureVerifier(
+          new UrlKeyFetcher('https://www.example.com/publicKeys'));
       }).not.to.throw();
     });
 
@@ -312,17 +358,27 @@ describe('PublicKeySignatureVerifier', () => {
     invalidKeyFetchers.forEach((invalidKeyFetcher) => {
       it('should throw given an invalid key fetcher: ' + JSON.stringify(invalidKeyFetcher), () => {
         expect(() => {
-          new jwtUtil.PublicKeySignatureVerifier(invalidKeyFetchers as any);
+          new PublicKeySignatureVerifier(invalidKeyFetchers as any);
         }).to.throw('The provided key fetcher is not an object or null.');
       });
     });
   });
 
   describe('withCertificateUrl', () => {
-    it('should return a PublicKeySignatureVerifier instance when a valid cert url is provided', () => {
-      expect(
-        jwtUtil.PublicKeySignatureVerifier.withCertificateUrl('https://www.example.com/publicKeys')
-      ).to.be.an.instanceOf(jwtUtil.PublicKeySignatureVerifier);
+    it('should return a PublicKeySignatureVerifier instance with a UrlKeyFetcher when a ' +
+      'valid cert url is provided', () => {
+      const verifier = PublicKeySignatureVerifier.withCertificateUrl('https://www.example.com/publicKeys');
+      expect(verifier).to.be.an.instanceOf(PublicKeySignatureVerifier);
+      expect((verifier as any).keyFetcher).to.be.an.instanceOf(UrlKeyFetcher);
+    });
+  });
+
+  describe('withJwksUrl', () => {
+    it('should return a PublicKeySignatureVerifier instance with a JwksFetcher when a ' +
+      'valid jwks url is provided', () => {
+      const verifier = PublicKeySignatureVerifier.withJwksUrl('https://www.example.com/publicKeys');
+      expect(verifier).to.be.an.instanceOf(PublicKeySignatureVerifier);
+      expect((verifier as any).keyFetcher).to.be.an.instanceOf(JwksFetcher);
     });
   });
 
@@ -346,7 +402,7 @@ describe('PublicKeySignatureVerifier', () => {
     });
 
     it('should be fullfilled given a valid token', () => {
-      const keyFetcherStub = sinon.stub(jwtUtil.UrlKeyFetcher.prototype, 'fetchPublicKeys')
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .resolves(VALID_PUBLIC_KEYS_RESPONSE);
       stubs.push(keyFetcherStub);
       const mockIdToken = mocks.generateIdToken();
@@ -354,8 +410,41 @@ describe('PublicKeySignatureVerifier', () => {
       return verifier.verify(mockIdToken).should.eventually.be.fulfilled;
     });
 
+    it('should be fullfilled given a valid token without a kid (should check against all the keys)', () => {
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
+        .resolves({ 'kid-other': 'key-other', ...VALID_PUBLIC_KEYS_RESPONSE });
+      stubs.push(keyFetcherStub);
+      const mockIdToken = mocks.generateIdToken({
+        header: {}
+      });
+
+      return verifier.verify(mockIdToken).should.eventually.be.fulfilled;
+    });
+
+    it('should be rejected given an expired token without a kid (should check against all the keys)', () => {
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
+        .resolves({ 'kid-other': 'key-other', ...VALID_PUBLIC_KEYS_RESPONSE });
+      stubs.push(keyFetcherStub);
+      clock = sinon.useFakeTimers(1000);
+      const mockIdToken = mocks.generateIdToken({
+        header: {}
+      });
+      clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+
+      // token should still be valid
+      return verifier.verify(mockIdToken)
+        .then(() => {
+          clock!.tick(1);
+
+          // token should now be invalid
+          return verifier.verify(mockIdToken).should.eventually.be.rejectedWith(
+            'The provided token has expired. Get a fresh token from your client app and try again.')
+            .with.property('code', JwtErrorCode.TOKEN_EXPIRED);
+        });
+    });
+
     it('should be rejected given a token with an incorrect algorithm', () => {
-      const keyFetcherStub = sinon.stub(jwtUtil.UrlKeyFetcher.prototype, 'fetchPublicKeys')
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .resolves(VALID_PUBLIC_KEYS_RESPONSE);
       stubs.push(keyFetcherStub);
       const mockIdToken = mocks.generateIdToken({
@@ -364,36 +453,36 @@ describe('PublicKeySignatureVerifier', () => {
 
       return verifier.verify(mockIdToken).should.eventually.be
         .rejectedWith('invalid algorithm')
-        .with.property('code', jwtUtil.JwtErrorCode.INVALID_SIGNATURE);
+        .with.property('code', JwtErrorCode.INVALID_SIGNATURE);
     });
 
     // tests to cover the private getKeyCallback function.
     it('should reject when no matching kid found', () => {
-      const keyFetcherStub = sinon.stub(jwtUtil.UrlKeyFetcher.prototype, 'fetchPublicKeys')
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .resolves({ 'not-a-matching-key': 'public-key' });
       stubs.push(keyFetcherStub);
       const mockIdToken = mocks.generateIdToken();
 
       return verifier.verify(mockIdToken).should.eventually.be
         .rejectedWith('no-matching-kid-error')
-        .with.property('code', jwtUtil.JwtErrorCode.NO_MATCHING_KID);
+        .with.property('code', JwtErrorCode.NO_MATCHING_KID);
     });
 
     it('should reject when an error occurs while fetching the keys', () => {
-      const keyFetcherStub = sinon.stub(jwtUtil.UrlKeyFetcher.prototype, 'fetchPublicKeys')
+      const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .rejects(new Error('Error fetching public keys.'));
       stubs.push(keyFetcherStub);
       const mockIdToken = mocks.generateIdToken();
 
       return verifier.verify(mockIdToken).should.eventually.be
         .rejectedWith('Error fetching public keys.')
-        .with.property('code', jwtUtil.JwtErrorCode.KEY_FETCH_ERROR);
+        .with.property('code', JwtErrorCode.KEY_FETCH_ERROR);
     });
   });
 });
 
 describe('EmulatorSignatureVerifier', () => {
-  const emulatorVerifier = new jwtUtil.EmulatorSignatureVerifier();
+  const emulatorVerifier = new EmulatorSignatureVerifier();
 
   describe('verify', () => {
     it('should be fullfilled given a valid unsigned (emulator) token', () => {
@@ -415,12 +504,12 @@ describe('EmulatorSignatureVerifier', () => {
 
 describe('UrlKeyFetcher', () => {
   const agent = new https.Agent();
-  let keyFetcher: jwtUtil.UrlKeyFetcher;
+  let keyFetcher: UrlKeyFetcher;
   let clock: sinon.SinonFakeTimers | undefined;
   let httpsSpy: sinon.SinonSpy;
 
   beforeEach(() => {
-    keyFetcher = new jwtUtil.UrlKeyFetcher(
+    keyFetcher = new UrlKeyFetcher(
       'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
       agent);
     httpsSpy = sinon.spy(https, 'request');
@@ -441,7 +530,7 @@ describe('UrlKeyFetcher', () => {
   describe('Constructor', () => {
     it('should not throw when valid key parameters are provided', () => {
       expect(() => {
-        new jwtUtil.UrlKeyFetcher('https://www.example.com/publicKeys', agent);
+        new UrlKeyFetcher('https://www.example.com/publicKeys', agent);
       }).not.to.throw();
     });
 
@@ -449,7 +538,7 @@ describe('UrlKeyFetcher', () => {
     invalidCertURLs.forEach((invalidCertUrl) => {
       it('should throw given a non-URL public cert: ' + JSON.stringify(invalidCertUrl), () => {
         expect(() => {
-          new jwtUtil.UrlKeyFetcher(invalidCertUrl as any, agent);
+          new UrlKeyFetcher(invalidCertUrl as any, agent);
         }).to.throw('The provided public client certificate URL is not a valid URL.');
       });
     });
@@ -465,7 +554,7 @@ describe('UrlKeyFetcher', () => {
 
     it('should use the given HTTP Agent', () => {
       const agent = new https.Agent();
-      const urlKeyFetcher = new jwtUtil.UrlKeyFetcher('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com', agent);
+      const urlKeyFetcher = new UrlKeyFetcher('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com', agent);
       mockedRequests.push(mockFetchPublicKeys());
 
       return urlKeyFetcher.fetchPublicKeys()
@@ -478,7 +567,7 @@ describe('UrlKeyFetcher', () => {
     it('should not fetch the public keys until the first time fetchPublicKeys() is called', () => {
       mockedRequests.push(mockFetchPublicKeys());
 
-      const urlKeyFetcher = new jwtUtil.UrlKeyFetcher('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com', agent);
+      const urlKeyFetcher = new UrlKeyFetcher('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com', agent);
       expect(https.request).not.to.have.been.called;
 
       return urlKeyFetcher.fetchPublicKeys()
@@ -536,6 +625,124 @@ describe('UrlKeyFetcher', () => {
 
       return keyFetcher.fetchPublicKeys()
         .should.eventually.be.rejectedWith('Error fetching public keys for Google certs: message (description)');
+    });
+  });
+});
+
+describe('JwksFetcher', () => {
+  let keyFetcher: JwksFetcher;
+  let clock: sinon.SinonFakeTimers | undefined;
+  let httpsSpy: sinon.SinonSpy;
+
+  beforeEach(() => {
+    keyFetcher = new JwksFetcher(
+      'https://firebaseappcheck.googleapis.com/v1alpha/jwks'
+    );
+    httpsSpy = sinon.spy(https, 'request');
+  });
+
+  afterEach(() => {
+    if (clock) {
+      clock.restore();
+      clock = undefined;
+    }
+    httpsSpy.restore();
+  });
+
+  after(() => {
+    nock.cleanAll();
+  });
+
+  describe('Constructor', () => {
+    it('should not throw when valid url is provided', () => {
+      expect(() => {
+        new JwksFetcher('https://www.example.com/publicKeys');
+      }).not.to.throw();
+    });
+
+    const invalidJwksURLs = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, 'file://invalid'];
+    invalidJwksURLs.forEach((invalidJwksURL) => {
+      it('should throw given a non-URL jwks endpoint: ' + JSON.stringify(invalidJwksURL), () => {
+        expect(() => {
+          new JwksFetcher(invalidJwksURL as any);
+        }).to.throw('The provided JWKS URL is not a valid URL.');
+      });
+    });
+  });
+
+  describe('fetchPublicKeys', () => {
+    let mockedRequests: nock.Scope[] = [];
+
+    afterEach(() => {
+      _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+      mockedRequests = [];
+    });
+
+    it('should not fetch the public keys until the first time fetchPublicKeys() is called', () => {
+      mockedRequests.push(mockFetchJsonWebKeys());
+
+      const jwksFetcher = new JwksFetcher('https://firebaseappcheck.googleapis.com/v1alpha/jwks');
+      expect(https.request).not.to.have.been.called;
+
+      return jwksFetcher.fetchPublicKeys()
+        .then((result) => { 
+          expect(https.request).to.have.been.calledOnce;
+          expect(result).to.have.key(mocks.jwksResponse.keys[0].kid);
+        });
+    });
+
+    it('should not re-fetch the public keys every time fetchPublicKeys() is called', () => {
+      mockedRequests.push(mockFetchJsonWebKeys());
+
+      return keyFetcher.fetchPublicKeys().then(() => {
+        expect(https.request).to.have.been.calledOnce;
+        return keyFetcher.fetchPublicKeys();
+      }).then(() => expect(https.request).to.have.been.calledOnce);
+    });
+
+    it('should refresh the public keys after the previous set of keys expire', () => {
+      mockedRequests.push(mockFetchJsonWebKeys());
+      mockedRequests.push(mockFetchJsonWebKeys());
+      mockedRequests.push(mockFetchJsonWebKeys());
+
+      clock = sinon.useFakeTimers(1000);
+
+      return keyFetcher.fetchPublicKeys().then(() => {
+        expect(https.request).to.have.been.calledOnce;
+        clock!.tick((ONE_DAY_IN_SECONDS - 1) * 1000);
+        return keyFetcher.fetchPublicKeys();
+      }).then(() => {
+        expect(https.request).to.have.been.calledOnce;
+        clock!.tick(ONE_DAY_IN_SECONDS * 1000); // 24 hours in milliseconds
+        return keyFetcher.fetchPublicKeys();
+      }).then(() => {
+        // App check keys do not contain cache headers so we cache the keys for 24 hours.
+        // 24 hours has passed
+        expect(https.request).to.have.been.calledTwice;
+        clock!.tick((ONE_DAY_IN_SECONDS - 1) * 1000);
+        return keyFetcher.fetchPublicKeys();
+      }).then(() => {
+        expect(https.request).to.have.been.calledTwice;
+        clock!.tick(ONE_DAY_IN_SECONDS * 1000);
+        return keyFetcher.fetchPublicKeys();
+      }).then(() => {
+        // 48 hours have passed
+        expect(https.request).to.have.been.calledThrice;
+      });
+    });
+
+    it('should be rejected if fetching the public keys fails', () => {
+      mockedRequests.push(mockFailedFetchJsonWebKeys());
+
+      return keyFetcher.fetchPublicKeys()
+        .should.eventually.be.rejectedWith('message');
+    });
+
+    it('should be rejected if fetching the public keys returns a response with an error message', () => {
+      mockedRequests.push(mockFetchJsonWebKeysWithErrorResponse());
+
+      return keyFetcher.fetchPublicKeys()
+        .should.eventually.be.rejectedWith('Error fetching Json Web Keys');
     });
   });
 });

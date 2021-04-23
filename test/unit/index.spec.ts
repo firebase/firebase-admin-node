@@ -82,3 +82,4 @@ import './remote-config/remote-config-api-client.spec';
 import './app-check/app-check.spec';
 import './app-check/app-check-api-client-internal.spec';
 import './app-check/token-generator.spec';
+import './app-check/token-verifier.spec.ts';

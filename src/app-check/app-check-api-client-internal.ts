@@ -205,6 +205,7 @@ export type AppCheckErrorCode =
   | 'permission-denied'
   | 'unauthenticated'
   | 'not-found'
+  | 'app-check-token-expired'
   | 'unknown-error';
 
 /**

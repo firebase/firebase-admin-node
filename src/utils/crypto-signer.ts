@@ -209,7 +209,6 @@ export interface ExtendedErrorInfo extends ErrorInfo {
 /**
  * CryptoSigner error code structure.
  *
- * @param {ProjectManagementErrorCode} code The error code.
  * @param {ErrorInfo} errorInfo The error information (code and message).
  * @constructor
  */

@@ -28,6 +28,7 @@ import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
 import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
+import { AppCheckTokenVerifier } from '../../../src/app-check/token-verifier';
 
 const expect = chai.expect;
 
@@ -156,6 +157,38 @@ describe('AppCheck', () => {
         .then((token) => {
           expect(token.token).equals('token');
           expect(token.ttlMillis).equals(3000);
+        });
+    });
+  });
+
+  describe('verifyToken', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return appCheck.verifyToken('token')
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should resolve with VerifyAppCheckTokenResponse on success', () => {
+      const response = { 
+        sub: 'app-id',
+        iss: 'https://firebaseappcheck.googleapis.com/123456',
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        app_id: 'app-id',
+        aud: ['123456', 'project-id'],
+        exp: 1617741496,
+        iat: 1516239022,
+      };
+      const stub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.verifyToken('token')
+        .then((tokenResponse) => {
+          expect(tokenResponse.appId).equals('app-id');
+          expect(tokenResponse.token).equals(response);
         });
     });
   });
