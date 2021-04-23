@@ -74,6 +74,10 @@ export class FirebaseAppInternals {
     return Promise.resolve(this.cachedToken_);
   }
 
+  public getCachedToken(): FirebaseAccessToken | null {
+    return this.cachedToken_ || null;
+  }
+
   private refreshToken(): Promise<FirebaseAccessToken> {
     return Promise.resolve(this.credential_.getAccessToken())
       .then((result) => {
@@ -97,6 +101,8 @@ export class FirebaseAppInternals {
         if (!this.cachedToken_
           || this.cachedToken_.accessToken !== token.accessToken
           || this.cachedToken_.expirationTime !== token.expirationTime) {
+          // Update the cache before firing listeners. Listeners may directly query the
+          // cached token state.
           this.cachedToken_ = token;
           this.tokenListeners_.forEach((listener) => {
             listener(token.accessToken);

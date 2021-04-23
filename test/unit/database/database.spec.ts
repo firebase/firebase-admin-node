@@ -211,9 +211,7 @@ describe('Database', () => {
         });
     });
 
-    // Currently doesn't work as expected since onTokenChange() can force a token refresh
-    // by calling getToken(). Skipping for now.
-    xit('should not reschedule when the token is about to expire in 5 minutes', () => {
+    it('should not reschedule when the token is about to expire in 5 minutes', () => {
       database.getDatabase();
       return mockApp.INTERNAL.getToken()
         .then((token1) => {
