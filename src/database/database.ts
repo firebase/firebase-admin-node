@@ -32,7 +32,7 @@ export interface Database extends FirebaseDatabase {
    * Gets the currently applied security rules as a string. The return value consists of
    * the rules source including comments.
    *
-   * @return A promise fulfilled with the rules as a raw string.
+   * @returns A promise fulfilled with the rules as a raw string.
    */
   getRules(): Promise<string>;
 
@@ -40,7 +40,7 @@ export interface Database extends FirebaseDatabase {
    * Gets the currently applied security rules as a parsed JSON object. Any comments in
    * the original source are stripped away.
    *
-   * @return A promise fulfilled with the parsed rules object.
+   * @returns A promise fulfilled with the parsed rules object.
    */
   getRulesJSON(): Promise<object>;
 
@@ -49,7 +49,7 @@ export interface Database extends FirebaseDatabase {
    * specified as a string or a Buffer, it may include comments.
    *
    * @param source Source of the rules to apply. Must not be `null` or empty.
-   * @return Resolves when the rules are set on the Realtime Database.
+   * @returns Resolves when the rules are set on the Realtime Database.
    */
   setRules(source: string | Buffer | object): Promise<void>;
 }
@@ -102,7 +102,7 @@ export class DatabaseService {
   /**
    * Returns the app associated with this DatabaseService instance.
    *
-   * @return The app associated with this DatabaseService instance.
+   * @returns The app associated with this DatabaseService instance.
    */
   get app(): App {
     return this.appInternal;
@@ -212,7 +212,7 @@ class DatabaseRulesClient {
    * Gets the currently applied security rules as a string. The return value consists of
    * the rules source including comments.
    *
-   * @return A promise fulfilled with the rules as a raw string.
+   * @returns A promise fulfilled with the rules as a raw string.
    */
   public getRules(): Promise<string> {
     const req: HttpRequestConfig = {
@@ -235,7 +235,7 @@ class DatabaseRulesClient {
    * Gets the currently applied security rules as a parsed JSON object. Any comments in
    * the original source are stripped away.
    *
-   * @return {Promise<object>} A promise fulfilled with the parsed rules source.
+   * @returns {Promise<object>} A promise fulfilled with the parsed rules source.
    */
   public getRulesJSON(): Promise<object> {
     const req: HttpRequestConfig = {
@@ -258,7 +258,7 @@ class DatabaseRulesClient {
    *
    * @param {string|Buffer|object} source Source of the rules to apply. Must not be `null`
    *  or empty.
-   * @return {Promise<void>} Resolves when the rules are set on the Database.
+   * @returns {Promise<void>} Resolves when the rules are set on the Database.
    */
   public setRules(source: string | Buffer | object): Promise<void> {
     if (!validator.isNonEmptyString(source) &&

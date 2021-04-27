@@ -43,14 +43,16 @@ export class Auth extends BaseAuth {
   /**
    * Returns the app associated with this Auth instance.
    *
-   * @return The app associated with this Auth instance.
+   * @returns The app associated with this Auth instance.
    */
   get app(): App {
     return this.app_;
   }
 
   /**
-   * @return The tenant manager instance associated with the current project.
+   * Returns the tenant manager instance associated with the current project.
+   *
+   * @returns The tenant manager instance associated with the current project.
    */
   public tenantManager(): TenantManager {
     return this.tenantManager_;

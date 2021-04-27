@@ -29,14 +29,14 @@ import { DecodedIdToken } from './token-verifier';
 
 /**
  * Interface representing the object returned from a
- * {@link auth.TenantManager.listTenants `listTenants()`}
+ * {@link TenantManager.listTenants}
  * operation.
  * Contains the list of tenants for the current batch and the next page token if available.
  */
 export interface ListTenantsResult {
 
   /**
-   * The list of {@link auth.Tenant `Tenant`} objects for the downloaded batch.
+   * The list of {@link Tenant} objects for the downloaded batch.
    */
   tenants: Tenant[];
 
@@ -52,7 +52,7 @@ export interface ListTenantsResult {
  *
  * Multi-tenancy support requires Google Cloud's Identity Platform
  * (GCIP). To learn more about GCIP, including pricing and features,
- * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+ * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
  *
  * Each tenant contains its own identity providers, settings and sets of users.
  * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
@@ -61,7 +61,7 @@ export interface ListTenantsResult {
  * tenant.
  *
  * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
- * `auth.tenantManager().authForTenant(tenantId)`.
+ * {@link TenantManager.authForTenant}.
  */
 export class TenantAwareAuth extends BaseAuth {
 
@@ -169,7 +169,7 @@ export class TenantManager {
    *
    * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
    *
-   * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
+   * @returns The `TenantAwareAuth` instance corresponding to this tenant identifier.
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
     if (!validator.isNonEmptyString(tenantId)) {
@@ -186,7 +186,7 @@ export class TenantManager {
    *
    * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
    *
-   * @return A promise fulfilled with the tenant configuration to the provided `tenantId`.
+   * @returns A promise fulfilled with the tenant configuration to the provided `tenantId`.
    */
   public getTenant(tenantId: string): Promise<Tenant> {
     return this.authRequestHandler.getTenant(tenantId)
@@ -205,7 +205,7 @@ export class TenantManager {
    * @param pageToken The next page token. If not specified, returns
    *   tenants starting without any offset.
    *
-   * @return A promise that resolves with
+   * @returns A promise that resolves with
    *   a batch of downloaded tenants and the next page token.
    */
   public listTenants(
@@ -237,7 +237,7 @@ export class TenantManager {
    *
    * @param tenantId The `tenantId` corresponding to the tenant to delete.
    *
-   * @return An empty promise fulfilled once the tenant has been deleted.
+   * @returns An empty promise fulfilled once the tenant has been deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
     return this.authRequestHandler.deleteTenant(tenantId);
@@ -250,7 +250,7 @@ export class TenantManager {
    *
    * @param tenantOptions The properties to set on the new tenant configuration to be created.
    *
-   * @return A promise fulfilled with the tenant configuration corresponding to the newly
+   * @returns A promise fulfilled with the tenant configuration corresponding to the newly
    *   created tenant.
    */
   public createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant> {
@@ -266,7 +266,7 @@ export class TenantManager {
    * @param tenantId The `tenantId` corresponding to the tenant to delete.
    * @param tenantOptions The properties to update on the provided tenant.
    *
-   * @return A promise fulfilled with the update tenant data.
+   * @returns A promise fulfilled with the update tenant data.
    */
   public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)

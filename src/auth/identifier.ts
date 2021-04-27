@@ -17,7 +17,7 @@
 /**
  * Used for looking up an account by uid.
  *
- * See `auth.getUsers()`
+ * See {@link BaseAuth.getUsers}.
  */
 export interface UidIdentifier {
   uid: string;
@@ -26,7 +26,7 @@ export interface UidIdentifier {
 /**
  * Used for looking up an account by email.
  *
- * See `auth.getUsers()`
+ * See {@link BaseAuth.getUsers}.
  */
 export interface EmailIdentifier {
   email: string;
@@ -35,7 +35,7 @@ export interface EmailIdentifier {
 /**
  * Used for looking up an account by phone number.
  *
- * See `auth.getUsers()`
+ * See {@link BaseAuth.getUsers}.
  */
 export interface PhoneIdentifier {
   phoneNumber: string;
@@ -44,7 +44,7 @@ export interface PhoneIdentifier {
 /**
  * Used for looking up an account by federated provider.
  *
- * See `auth.getUsers()`
+ * See {@link BaseAuth.getUsers}.
  */
 export interface ProviderIdentifier {
   providerId: string;

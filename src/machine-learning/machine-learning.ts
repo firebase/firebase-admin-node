@@ -84,7 +84,7 @@ export class MachineLearning {
   }
 
   /**
-   *  The {@link app.App} associated with the current `MachineLearning`
+   *  The {@link firebase-admin.app#App} associated with the current `MachineLearning`
    *  service instance.
    */
   public get app(): App {
@@ -96,7 +96,7 @@ export class MachineLearning {
    *
    * @param model The model to create.
    *
-   * @return A Promise fulfilled with the created model.
+   * @returns A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
@@ -111,7 +111,7 @@ export class MachineLearning {
    * @param modelId The ID of the model to update.
    * @param model The model fields to update.
    *
-   * @return A Promise fulfilled with the updated model.
+   * @returns A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
     const updateMask = utils.generateUpdateMask(model);
@@ -128,7 +128,7 @@ export class MachineLearning {
    *
    * @param modelId The ID of the model to publish.
    *
-   * @return A Promise fulfilled with the published model.
+   * @returns A Promise fulfilled with the published model.
    */
   public publishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, true);
@@ -139,7 +139,7 @@ export class MachineLearning {
    *
    * @param modelId The ID of the model to unpublish.
    *
-   * @return A Promise fulfilled with the unpublished model.
+   * @returns A Promise fulfilled with the unpublished model.
    */
   public unpublishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, false);
@@ -150,7 +150,7 @@ export class MachineLearning {
    *
    * @param modelId The ID of the model to get.
    *
-   * @return A Promise fulfilled with the model object.
+   * @returns A Promise fulfilled with the model object.
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
@@ -162,7 +162,7 @@ export class MachineLearning {
    *
    * @param options The listing options.
    *
-   * @return A promise that
+   * @returns A promise that
    *     resolves with the current (filtered) list of models and the next page
    *     token. For the last page, an empty list of models and no page token
    *     are returned.
@@ -369,7 +369,7 @@ export class Model {
    * @param maxTimeMillis The maximum time in milliseconds to wait.
    *     If not specified, a default maximum of 2 minutes is used.
    *
-   * @return A promise that resolves when the model is unlocked
+   * @returns A promise that resolves when the model is unlocked
    *   or the maximum wait time has passed.
    */
   public waitForUnlocked(maxTimeMillis?: number): Promise<void> {

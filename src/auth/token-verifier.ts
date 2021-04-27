@@ -299,7 +299,7 @@ export class FirebaseTokenVerifier {
    *
    * @param jwtToken The Firebase Auth JWT token to verify.
    * @param isEmulator Whether to accept Auth Emulator tokens.
-   * @return A promise fulfilled with the decoded claims of the Firebase Auth ID token.
+   * @returns A promise fulfilled with the decoded claims of the Firebase Auth ID token.
    */
   public verifyJWT(jwtToken: string, isEmulator = false): Promise<DecodedIdToken> {
     if (!validator.isString(jwtToken)) {
@@ -460,7 +460,7 @@ export class FirebaseTokenVerifier {
  *
  * @internal
  * @param app Firebase app instance.
- * @return FirebaseTokenVerifier
+ * @returns FirebaseTokenVerifier
  */
 export function createIdTokenVerifier(app: App): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
@@ -476,7 +476,7 @@ export function createIdTokenVerifier(app: App): FirebaseTokenVerifier {
  *
  * @internal
  * @param app Firebase app instance.
- * @return FirebaseTokenVerifier
+ * @returns FirebaseTokenVerifier
  */
 export function createSessionCookieVerifier(app: App): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(

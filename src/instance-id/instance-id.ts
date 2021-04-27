@@ -51,12 +51,13 @@ export class InstanceId {
    * Note that Google Analytics for Firebase uses its own form of Instance ID to
    * keep track of analytics data. Therefore deleting a Firebase Instance ID does
    * not delete Analytics data. See
-   * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
+   * {@link https://firebase.google.com/support/privacy/manage-iids#delete_an_instance_id |
+   * Delete an Instance ID}
    * for more information.
    *
    * @param instanceId The instance ID to be deleted.
    *
-   * @return A promise fulfilled when the instance ID is deleted.
+   * @returns A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
     return this.requestHandler.deleteInstanceId(instanceId)
@@ -68,7 +69,7 @@ export class InstanceId {
   /**
    * Returns the app associated with this InstanceId instance.
    *
-   * @return The app associated with this InstanceId instance.
+   * @returns The app associated with this InstanceId instance.
    */
   get app(): App {
     return this.app_;

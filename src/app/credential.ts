@@ -42,12 +42,7 @@ export interface Credential {
    * Returns a Google OAuth2 access token object used to authenticate with
    * Firebase services.
    *
-   * This object contains the following properties:
-   * * `access_token` (`string`): The actual Google OAuth2 access token.
-   * * `expires_in` (`number`): The number of seconds from when the token was
-   *   issued that it expires.
-   *
-   * @return A Google OAuth2 access token object.
+   * @returns A Google OAuth2 access token object.
    */
   getAccessToken(): Promise<GoogleOAuthAccessToken>;
 }

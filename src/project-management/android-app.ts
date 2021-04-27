@@ -42,8 +42,7 @@ export interface AndroidAppMetadata extends AppMetadata {
 /**
  * A reference to a Firebase Android app.
  *
- * Do not call this constructor directly. Instead, use
- * [`projectManagement.androidApp()`](projectManagement.ProjectManagement#androidApp).
+ * Do not call this constructor directly. Instead, use {@link ProjectManagement.androidApp}.
  */
 export class AndroidApp {
 
@@ -66,7 +65,7 @@ export class AndroidApp {
   /**
    * Retrieves metadata about this Android app.
    *
-   * @return A promise that resolves to the retrieved metadata about this Android app.
+   * @returns A promise that resolves to the retrieved metadata about this Android app.
    */
   public getMetadata(): Promise<AndroidAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
@@ -101,7 +100,7 @@ export class AndroidApp {
    *
    * @param newDisplayName The new display name to set.
    *
-   * @return A promise that resolves when the display name has been set.
+   * @returns A promise that resolves when the display name has been set.
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
@@ -110,7 +109,7 @@ export class AndroidApp {
   /**
    * Gets the list of SHA certificates associated with this Android app in Firebase.
    *
-   * @return The list of SHA-1 and SHA-256 certificates associated with this Android app in
+   * @returns The list of SHA-1 and SHA-256 certificates associated with this Android app in
    *     Firebase.
    */
   public getShaCertificates(): Promise<ShaCertificate[]> {
@@ -151,7 +150,7 @@ export class AndroidApp {
    *
    * @param certificateToAdd The SHA certificate to add.
    *
-   * @return A promise that resolves when the given certificate
+   * @returns A promise that resolves when the given certificate
    *     has been added to the Android app.
    */
   public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
@@ -163,7 +162,7 @@ export class AndroidApp {
    *
    * @param  certificateToDelete The SHA certificate to delete.
    *
-   * @return A promise that resolves when the specified
+   * @returns A promise that resolves when the specified
    *     certificate has been removed from the Android app.
    */
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
@@ -179,7 +178,7 @@ export class AndroidApp {
   /**
    * Gets the configuration artifact associated with this app.
    *
-   * @return A promise that resolves to the Android app's
+   * @returns A promise that resolves to the Android app's
    *     Firebase config file, in UTF-8 string format. This string is typically
    *     intended to be written to a JSON file that gets shipped with your Android
    *     app.

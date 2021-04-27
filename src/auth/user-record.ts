@@ -28,8 +28,8 @@ const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
 /**
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
- * @param {any} time The unix timestamp string or number in milliseconds.
- * @return {string} The corresponding date as a UTC string, if valid. Otherwise, null.
+ * @param time The unix timestamp string or number in milliseconds.
+ * @returns The corresponding date as a UTC string, if valid. Otherwise, null.
  */
 function parseDate(time: any): string | null {
   try {
@@ -141,7 +141,9 @@ export abstract class MultiFactorInfo {
   }
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   public toJSON(): object {
     return {
@@ -156,7 +158,7 @@ export abstract class MultiFactorInfo {
    * Returns the factor ID based on the response provided.
    *
    * @param response The server side response.
-   * @return The multi-factor ID associated with the provided response. If the response is
+   * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    *
    * @internal
@@ -228,7 +230,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * Returns the factor ID based on the response provided.
    *
    * @param response The server side response.
-   * @return The multi-factor ID associated with the provided response. If the response is
+   * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    *
    * @internal
@@ -276,7 +278,9 @@ export class MultiFactorSettings {
   }
 
   /**
-   * @return A JSON-serializable representation of this multi-factor object.
+   * Returns a JSON-serializable representation of this multi-factor object.
+   *
+   * @returns A JSON-serializable representation of this multi-factor object.
    */
   public toJSON(): object {
     return {
@@ -325,7 +329,9 @@ export class UserMetadata {
   }
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   public toJSON(): object {
     return {
@@ -395,7 +401,9 @@ export class UserInfo {
   }
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   public toJSON(): object {
     return {
@@ -466,7 +474,7 @@ export class UserRecord {
    * when uploading this user, as is typical when migrating from another Auth
    * system, this will be an empty string. If no password is set, this is
    * null. This is only available when the user is obtained from
-   * {@link auth.Auth.listUsers `listUsers()`}.
+   * {@link BaseAuth.listUsers}.
    */
   public readonly passwordHash?: string;
 
@@ -475,16 +483,14 @@ export class UserRecord {
    * algorithm (SCRYPT) is used. If a different hashing algorithm had been used to
    * upload this user, typical when migrating from another Auth system, this will
    * be an empty string. If no password is set, this is null. This is only
-   * available when the user is obtained from
-   * {@link auth.Auth.listUsers `listUsers()`}.
+   * available when the user is obtained from {@link BaseAuth.listUsers}.
    */
   public readonly passwordSalt?: string;
 
   /**
    * The user's custom claims object if available, typically used to define
    * user roles and propagated to an authenticated user's ID token.
-   * This is set via
-   * {@link auth.Auth.setCustomUserClaims `setCustomUserClaims()`}
+   * This is set via {@link BaseAuth.setCustomUserClaims}
    */
   public readonly customClaims?: {[key: string]: any};
 
@@ -496,7 +502,7 @@ export class UserRecord {
   /**
    * The date the user's tokens are valid after, formatted as a UTC string.
    * This is updated every time the user's refresh token are revoked either
-   * from the {@link auth.Auth.revokeRefreshTokens `revokeRefreshTokens()`}
+   * from the {@link BaseAuth.revokeRefreshTokens}
    * API or from the Firebase Auth backend on big account changes (password
    * resets, password or email updates, etc).
    */
@@ -565,7 +571,9 @@ export class UserRecord {
   }
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   public toJSON(): object {
     const json: any = {

@@ -39,8 +39,7 @@ export interface IosAppMetadata extends AppMetadata {
 /**
  * A reference to a Firebase iOS app.
  *
- * Do not call this constructor directly. Instead, use
- * [`projectManagement.iosApp()`](projectManagement.ProjectManagement#iosApp).
+ * Do not call this constructor directly. Instead, use {@link ProjectManagement.iosApp}.
  */
 export class IosApp {
 
@@ -63,7 +62,7 @@ export class IosApp {
   /**
    * Retrieves metadata about this iOS app.
    *
-   * @return A promise that
+   * @returns A promise that
    *     resolves to the retrieved metadata about this iOS app.
    */
   public getMetadata(): Promise<IosAppMetadata> {
@@ -99,7 +98,7 @@ export class IosApp {
    *
    * @param newDisplayName The new display name to set.
    *
-   * @return A promise that resolves when the display name has
+   * @returns A promise that resolves when the display name has
    *     been set.
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
@@ -109,7 +108,7 @@ export class IosApp {
   /**
    * Gets the configuration artifact associated with this app.
    *
-   * @return A promise that resolves to the iOS app's Firebase
+   * @returns A promise that resolves to the iOS app's Firebase
    *     config file, in UTF-8 string format. This string is typically intended to
    *     be written to a plist file that gets shipped with your iOS app.
    */

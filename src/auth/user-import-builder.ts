@@ -319,7 +319,7 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
 /**
  * Converts a client format second factor object to server format.
  * @param multiFactorInfo The client format second factor.
- * @return The corresponding AuthFactorInfo server request format.
+ * @returns The corresponding AuthFactorInfo server request format.
  */
 export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
   let enrolledAt;
@@ -366,7 +366,7 @@ function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
 /**
  * @param {any} obj The object to check for number field within.
  * @param {string} key The entry key.
- * @return {number} The corresponding number if available. Otherwise, NaN.
+ * @returns {number} The corresponding number if available. Otherwise, NaN.
  */
 function getNumberField(obj: any, key: string): number {
   if (typeof obj[key] !== 'undefined' && obj[key] !== null) {
@@ -381,7 +381,7 @@ function getNumberField(obj: any, key: string): number {
  * fields are provided.
  * @param {UserImportRecord} user The UserImportRecord to conver to UploadAccountUser.
  * @param {ValidatorFunction=} userValidator The user validator function.
- * @return {UploadAccountUser} The corresponding UploadAccountUser to return.
+ * @returns {UploadAccountUser} The corresponding UploadAccountUser to return.
  */
 function populateUploadAccountUser(
   user: UserImportRecord, userValidator?: ValidatorFunction): UploadAccountUser {
@@ -497,7 +497,7 @@ export class UserImportBuilder {
 
   /**
    * Returns the corresponding constructed uploadAccount request.
-   * @return {UploadAccountRequest} The constructed uploadAccount request.
+   * @returns {UploadAccountRequest} The constructed uploadAccount request.
    */
   public buildRequest(): UploadAccountRequest {
     const users = this.validatedUsers.map((user) => {
@@ -509,7 +509,7 @@ export class UserImportBuilder {
   /**
    * Populates the UserImportResult using the client side detected errors and the server
    * side returned errors.
-   * @return {UserImportResult} The user import result based on the returned failed
+   * @returns {UserImportResult} The user import result based on the returned failed
    *     uploadAccount response.
    */
   public buildResponse(
@@ -545,7 +545,7 @@ export class UserImportBuilder {
    * Throws an error whenever an invalid or missing options is detected.
    * @param {UserImportOptions} options The UserImportOptions.
    * @param {boolean} requiresHashOptions Whether to require hash options.
-   * @return {UploadAccountOptions} The populated UploadAccount options.
+   * @returns {UploadAccountOptions} The populated UploadAccount options.
    */
   private populateOptions(
     options: UserImportOptions | undefined, requiresHashOptions: boolean): UploadAccountOptions {
@@ -733,7 +733,7 @@ export class UserImportBuilder {
    * @param {UserImportRecord[]} users The UserImportRecords to convert to UnploadAccountUser
    *     objects.
    * @param {ValidatorFunction=} userValidator The user validator function.
-   * @return {UploadAccountUser[]} The populated uploadAccount users.
+   * @returns {UploadAccountUser[]} The populated uploadAccount users.
    */
   private populateUsers(
     users: UserImportRecord[], userValidator?: ValidatorFunction): UploadAccountUser[] {

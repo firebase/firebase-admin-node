@@ -75,7 +75,7 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  *
  * @param app A Firebase app to get the project ID from.
  *
- * @return A project ID string or null.
+ * @returns A project ID string or null.
  */
 export function getExplicitProjectId(app: App): string | null {
   const options = app.options;
@@ -104,7 +104,7 @@ export function getExplicitProjectId(app: App): string | null {
  *
  * @param app A Firebase app to get the project ID from.
  *
- * @return A project ID string or null.
+ * @returns A project ID string or null.
  */
 export function findProjectId(app: App): Promise<string | null> {
   const projectId = getExplicitProjectId(app);
@@ -124,7 +124,7 @@ export function findProjectId(app: App): Promise<string | null> {
  * Encodes data using web-safe-base64.
  *
  * @param {Buffer} data The raw data byte input.
- * @return {string} The base64-encoded result.
+ * @returns {string} The base64-encoded result.
  */
 export function toWebSafeBase64(data: Buffer): string {
   return data.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
@@ -139,7 +139,7 @@ export function toWebSafeBase64(data: Buffer): string {
  *     replaced.
  * @param {object=} params The optional parameters to replace in the
  *     string.
- * @return {string} The resulting formatted string.
+ * @returns {string} The resulting formatted string.
  */
 export function formatString(str: string, params?: object): string {
   let formatted = str;
@@ -160,7 +160,7 @@ export function formatString(str: string, params?: object): string {
  *      Nested objects beyond that path will be ignored. This is useful for
  *      keys with variable object values.
  * @param root The path so far.
- * @return The computed update mask list.
+ * @returns The computed update mask list.
  */
 export function generateUpdateMask(
   obj: any, terminalPaths: string[] = [], root = ''

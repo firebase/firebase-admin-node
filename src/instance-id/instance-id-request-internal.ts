@@ -76,8 +76,8 @@ export class FirebaseInstanceIdRequestHandler {
   /**
    * Invokes the request handler based on the API settings object passed.
    *
-   * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @return {Promise<void>} A promise that resolves when the request is complete.
+   * @param apiSettings The API endpoint settings to apply to request and response.
+   * @returns A promise that resolves when the request is complete.
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {
     return this.getPathPrefix()

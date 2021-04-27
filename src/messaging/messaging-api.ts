@@ -39,13 +39,13 @@ export interface ConditionMessage extends BaseMessage {
 }
 
 /**
- * Payload for the admin.messaging.send() operation. The payload contains all the fields
+ * Payload for the {@link Messaging.send} operation. The payload contains all the fields
  * in the BaseMessage type, and exactly one of token, topic or condition.
  */
 export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the admin.messaing.sendMulticast() method. The payload contains all the fields
+ * Payload for the {@link Messaging.sendMulticast} method. The payload contains all the fields
  * in the BaseMessage type, and a list of tokens.
  */
 export interface MulticastMessage extends BaseMessage {
@@ -53,7 +53,7 @@ export interface MulticastMessage extends BaseMessage {
 }
 
 /**
-   * A notification that can be included in {@link messaging.Message}.
+   * A notification that can be included in {@link Message}.
    */
 export interface Notification {
   /**
@@ -82,14 +82,14 @@ export interface FcmOptions {
 
 /**
  * Represents the WebPush protocol options that can be included in an
- * {@link messaging.Message}.
+ * {@link Message}.
  */
 export interface WebpushConfig {
 
   /**
    * A collection of WebPush headers. Header values must be strings.
    *
-   * See [WebPush specification](https://tools.ietf.org/html/rfc8030#section-5)
+   * See {@link https://tools.ietf.org/html/rfc8030#section-5 | WebPush specification}
    * for supported headers.
    */
   headers?: { [key: string]: string };
@@ -124,9 +124,9 @@ export interface WebpushFcmOptions {
 
 /**
  * Represents the WebPush-specific notification options that can be included in
- * {@link messaging.WebpushConfig}. This supports most of the standard
+ * {@link WebpushConfig}. This supports most of the standard
  * options as defined in the Web Notification
- * [specification](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification).
+ * {@link https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification | specification}.
  */
 export interface WebpushNotification {
 
@@ -236,9 +236,9 @@ export interface WebpushNotification {
 
 /**
  * Represents the APNs-specific options that can be included in an
- * {@link messaging.Message}. Refer to
- * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
- * for various headers and payload fields supported by APNs.
+ * {@link Message}. Refer to
+ * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html |
+ * Apple documentation} for various headers and payload fields supported by APNs.
  */
 export interface ApnsConfig {
   /**
@@ -271,8 +271,8 @@ export interface ApnsPayload {
 }
 
 /**
- * Represents the [aps dictionary](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
- * that is part of APNs messages.
+ * Represents the {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
+ * aps dictionary} that is part of APNs messages.
  */
 export interface Aps {
 
@@ -374,7 +374,7 @@ export interface ApnsFcmOptions {
 
 /**
  * Represents the Android-specific options that can be included in an
- * {@link messaging.Message}.
+ * {@link Message}.
  */
 export interface AndroidConfig {
 
@@ -422,7 +422,7 @@ export interface AndroidConfig {
 
 /**
   * Represents the Android-specific notification options that can be included in
-  * {@link messaging.AndroidConfig}.
+  * {@link AndroidConfig}.
   */
 export interface AndroidNotification {
   /**
@@ -531,7 +531,8 @@ export interface AndroidNotification {
    * Sets whether or not this notification is relevant only to the current device.
    * Some notifications can be bridged to other devices for remote display, such as
    * a Wear OS watch. This hint can be set to recommend this notification not be bridged.
-   * See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
+   * See {@link https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging |
+   * Wear OS guides}.
    */
   localOnly?: boolean;
 
@@ -556,15 +557,16 @@ export interface AndroidNotification {
 
   /**
    * If set to `true`, use the Android framework's default vibrate pattern for the
-   * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
-   * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set,
+   * notification. Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}. If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set,
    * the default value is used instead of the user-specified `vibrate_timings`.
    */
   defaultVibrateTimings?: boolean;
 
   /**
    * If set to `true`, use the Android framework's default sound for the notification.
-   * Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+   * Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}.
    */
   defaultSound?: boolean;
 
@@ -576,7 +578,8 @@ export interface AndroidNotification {
 
   /**
    * If set to `true`, use the Android framework's default LED light settings
-   * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+   * for the notification. Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}.
    * If `default_light_settings` is set to `true` and `light_settings` is also set,
    * the user-specified `light_settings` is used instead of the default value.
    */
@@ -590,7 +593,8 @@ export interface AndroidNotification {
 
   /**
    * Sets the number of items this notification represents. May be displayed as a
-   * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges).
+   * badge count for Launchers that support badging. See {@link https://developer.android.com/training/notify-user/badges |
+   * NotificationBadge}.
    * For example, this might be useful if you're using just one notification to
    * represent multiple new messages but you want the count here to represent
    * the number of total new messages. If zero or unspecified, systems
@@ -602,7 +606,7 @@ export interface AndroidNotification {
 
 /**
   * Represents settings to control notification LED that can be included in
-  * {@link messaging.AndroidNotification}.
+  * {@link AndroidNotification}.
   */
 export interface LightSettings {
   /**
@@ -638,10 +642,12 @@ export interface AndroidFcmOptions {
  * keys and values must both be strings. Keys can be any custom string,
  * except for the following reserved strings:
  *
- *   * `"from"`
- *   * Anything starting with `"google."`.
+ * <ul>
+ *   <li><code>from</code></li>
+ *   <li>Anything starting with <code>google.</code></li>
+ * </ul>
  *
- * See [Build send requests](/docs/cloud-messaging/send-message)
+ * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
  * for code samples and detailed documentation.
  */
 export interface DataMessagePayload {
@@ -653,7 +659,7 @@ export interface DataMessagePayload {
  * Notification messages let developers send up to 4KB of predefined
  * key-value pairs. Accepted keys are outlined below.
  *
- * See [Build send requests](/docs/cloud-messaging/send-message)
+ * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
  * for code samples and detailed documentation.
  */
 export interface NotificationMessagePayload {
@@ -730,13 +736,14 @@ export interface NotificationMessagePayload {
    * the body text to the user's current localization.
    *
    * **iOS:** Corresponds to `loc-key` in the APNs payload. See
-   * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
-   * and
-   * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
-   * for more information.
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
+   * Payload Key Reference} and
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
+   * Localizing the Content of Your Remote Notifications} for more information.
    *
    * **Android:** See
-   * [String Resources](http://developer.android.com/guide/topics/resources/string-resource.html)      * for more information.
+   * {@link http://developer.android.com/guide/topics/resources/string-resource.html | String Resources}
+   * for more information.
    *
    * **Platforms:** iOS, Android
    */
@@ -750,14 +757,14 @@ export interface NotificationMessagePayload {
    * The value should be a stringified JSON array.
    *
    * **iOS:** Corresponds to `loc-args` in the APNs payload. See
-   * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
-   * and
-   * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
-   * for more information.
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
+   * Payload Key Reference} and
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
+   * Localizing the Content of Your Remote Notifications} for more information.
    *
    * **Android:** See
-   * [Formatting and Styling](http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling)
-   * for more information.
+   * {@link http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling |
+   * Formatting and Styling} for more information.
    *
    * **Platforms:** iOS, Android
    */
@@ -777,13 +784,13 @@ export interface NotificationMessagePayload {
    * the title text to the user's current localization.
    *
    * **iOS:** Corresponds to `title-loc-key` in the APNs payload. See
-   * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
-   * and
-   * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
-   * for more information.
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
+   * Payload Key Reference} and
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
+   * Localizing the Content of Your Remote Notifications} for more information.
    *
    * **Android:** See
-   * [String Resources](http://developer.android.com/guide/topics/resources/string-resource.html)
+   * {@link http://developer.android.com/guide/topics/resources/string-resource.html | String Resources}
    * for more information.
    *
    * **Platforms:** iOS, Android
@@ -798,14 +805,14 @@ export interface NotificationMessagePayload {
    * The value should be a stringified JSON array.
    *
    * **iOS:** Corresponds to `title-loc-args` in the APNs payload. See
-   * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
-   * and
-   * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
-   * for more information.
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
+   * Payload Key Reference} and
+   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
+   * Localizing the Content of Your Remote Notifications} for more information.
    *
    * **Android:** See
-   * [Formatting and Styling](http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling)
-   * for more information.
+   * {@link http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling |
+   * Formatting and Styling} for more information.
    *
    * **Platforms:** iOS, Android
    */
@@ -817,8 +824,7 @@ export interface NotificationMessagePayload {
  * Interface representing a Firebase Cloud Messaging message payload. One or
  * both of the `data` and `notification` keys are required.
  *
- * See
- * [Build send requests](/docs/cloud-messaging/send-message)
+ * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
  * for code samples and detailed documentation.
  */
 export interface MessagingPayload {
@@ -838,7 +844,7 @@ export interface MessagingPayload {
  * Interface representing the options that can be provided when sending a
  * message via the FCM legacy APIs.
  *
- * See [Build send requests](/docs/cloud-messaging/send-message)
+ * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
  * for code samples and detailed documentation.
  */
 export interface MessagingOptions {
@@ -866,7 +872,8 @@ export interface MessagingOptions {
    * app can wake a sleeping device and open a network connection to your server.
    *
    * For more information, see
-   * [Setting the priority of a message](/docs/cloud-messaging/concept-options#setting-the-priority-of-a-message).
+   * {@link https://firebase.google.com/docs/cloud-messaging/concept-options#setting-the-priority-of-a-message |
+   * Setting the priority of a message}.
    *
    * **Default value:** `"high"` for notification messages, `"normal"` for data
    * messages
@@ -877,7 +884,7 @@ export interface MessagingOptions {
    * How long (in seconds) the message should be kept in FCM storage if the device
    * is offline. The maximum time to live supported is four weeks, and the default
    * value is also four weeks. For more information, see
-   * [Setting the lifespan of a message](/docs/cloud-messaging/concept-options#ttl).
+   * {@link https://firebase.google.com/docs/cloud-messaging/concept-options#ttl | Setting the lifespan of a message}.
    *
    * **Default value:** `2419200` (representing four weeks, in seconds)
    */
@@ -904,7 +911,8 @@ export interface MessagingOptions {
    * On iOS, use this field to represent `mutable-content` in the APNs payload.
    * When a notification is sent and this is set to `true`, the content of the
    * notification can be modified before it is displayed, using a
-   * [Notification Service app extension](https://developer.apple.com/reference/usernotifications/unnotificationserviceextension)
+   * {@link https://developer.apple.com/reference/usernotifications/unnotificationserviceextension |
+   * Notification Service app extension}.
    *
    * On Android and Web, this parameter will be ignored.
    *
@@ -957,8 +965,8 @@ export interface MessagingDeviceResult {
  * via the FCM legacy APIs.
  *
  * See
- * [Send to individual devices](/docs/cloud-messaging/admin/send-messages#send_to_individual_devices)
- * for code samples and detailed documentation.
+ * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_individual_devices |
+ * Send to individual devices} for code samples and detailed documentation.
  */
 export interface MessagingDevicesResponse {
   canonicalRegistrationTokenCount: number;
@@ -969,13 +977,12 @@ export interface MessagingDevicesResponse {
 }
 
 /**
- * Interface representing the server response from the
- * {@link messaging.Messaging.sendToDeviceGroup `sendToDeviceGroup()`}
+ * Interface representing the server response from the {@link Messaging.sendToDeviceGroup}
  * method.
  *
  * See
- * [Send messages to device groups](/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups)
- * for code samples and detailed documentation.
+ * {@link https://firebase.google.com/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups |
+ * Send messages to device groups} for code samples and detailed documentation.
  */
 export interface MessagingDeviceGroupResponse {
 
@@ -996,12 +1003,11 @@ export interface MessagingDeviceGroupResponse {
 }
 
 /**
- * Interface representing the server response from the legacy
- * {@link messaging.Messaging.sendToTopic `sendToTopic()`} method.
+ * Interface representing the server response from the legacy {@link Messaging.sendToTopic} method.
  *
  * See
- * [Send to a topic](/docs/cloud-messaging/admin/send-messages#send_to_a_topic)
- * for code samples and detailed documentation.
+ * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_topic |
+ * Send to a topic} for code samples and detailed documentation.
  */
 export interface MessagingTopicResponse {
   /**
@@ -1013,11 +1019,11 @@ export interface MessagingTopicResponse {
 
 /**
  * Interface representing the server response from the legacy
- * {@link messaging.Messaging.sendToCondition `sendToCondition()`} method.
+ * {@link Messaging.sendToCondition} method.
  *
  * See
- * [Send to a condition](/docs/cloud-messaging/admin/send-messages#send_to_a_condition)
- * for code samples and detailed documentation.
+ * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_condition |
+ * Send to a condition} for code samples and detailed documentation.
  */
 export interface MessagingConditionResponse {
   /**
@@ -1029,13 +1035,12 @@ export interface MessagingConditionResponse {
 
 /**
  * Interface representing the server response from the
- * {@link messaging.Messaging.subscribeToTopic `subscribeToTopic()`} and
- * {@link messaging.Messaging.unsubscribeFromTopic `unsubscribeFromTopic()`}
+ * {@link Messaging.subscribeToTopic} and {@link Messaging.unsubscribeFromTopic}
  * methods.
  *
  * See
- * [Manage topics from the server](/docs/cloud-messaging/manage-topics)
- * for code samples and detailed documentation.
+ * {@link https://firebase.google.com/docs/cloud-messaging/manage-topics |
+ * Manage topics from the server} for code samples and detailed documentation.
  */
 export interface MessagingTopicManagementResponse {
   /**
@@ -1052,15 +1057,14 @@ export interface MessagingTopicManagementResponse {
 
   /**
    * An array of errors corresponding to the provided registration token(s). The
-   * length of this array will be equal to [`failureCount`](#failureCount).
+   * length of this array will be equal to {@link MessagingTopicManagementResponse.failureCount}.
    */
   errors: FirebaseArrayIndexError[];
 }
 
 /**
  * Interface representing the server response from the
- * {@link messaging.Messaging.sendAll `sendAll()`} and
- * {@link messaging.Messaging.sendMulticast `sendMulticast()`} methods.
+ * {@link Messaging.sendAll} and {@link Messaging.sendMulticast} methods.
  */
 export interface BatchResponse {
 

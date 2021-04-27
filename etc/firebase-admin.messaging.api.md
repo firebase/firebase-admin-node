@@ -180,7 +180,6 @@ export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 // @public
 export class Messaging {
-    constructor(app: App);
     get app(): App;
     send(message: Message, dryRun?: boolean): Promise<string>;
     sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;

@@ -30,14 +30,12 @@ import {
 } from './machine-learning-api-client';
 
 /**
- * Gets the {@link machineLearning.MachineLearning `MachineLearning`} service for the
+ * Gets the {@link firebase-admin.machine-learning#MachineLearning} service for the
  * default app or a given app.
  *
  * `admin.machineLearning()` can be called with no arguments to access the
- * default app's {@link machineLearning.MachineLearning
- * `MachineLearning`} service or as `admin.machineLearning(app)` to access
- * the {@link machineLearning.MachineLearning `MachineLearning`}
- * service associated with a specific app.
+ * default app's `MachineLearning` service or as `admin.machineLearning(app)` to access
+ * the `MachineLearning` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -55,7 +53,7 @@ import {
  *   return. If not provided, the default `MachineLearning` service
  *   will be returned.
  *
- * @return The default `MachineLearning` service if no app is provided or the
+ * @returns The default `MachineLearning` service if no app is provided or the
  *   `MachineLearning` service associated with the provided app.
  */
 export declare function machineLearning(app?: App): machineLearning.MachineLearning;

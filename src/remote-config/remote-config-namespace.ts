@@ -32,14 +32,12 @@ import {
 import { RemoteConfig as TRemoteConfig } from './remote-config';
 
 /**
- * Gets the {@link remoteConfig.RemoteConfig `RemoteConfig`} service for the
+ * Gets the {@link firebase-admin.remote-config#RemoteConfig} service for the
  * default app or a given app.
  *
  * `admin.remoteConfig()` can be called with no arguments to access the default
- * app's {@link remoteConfig.RemoteConfig `RemoteConfig`} service or as
- * `admin.remoteConfig(app)` to access the
- * {@link remoteConfig.RemoteConfig `RemoteConfig`} service associated with a
- * specific app.
+ * app's `RemoteConfig` service or as `admin.remoteConfig(app)` to access the
+ * `RemoteConfig` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -56,7 +54,7 @@ import { RemoteConfig as TRemoteConfig } from './remote-config';
  * @param app Optional app for which to return the `RemoteConfig` service.
  *   If not provided, the default `RemoteConfig` service is returned.
  *
- * @return The default `RemoteConfig` service if no
+ * @returns The default `RemoteConfig` service if no
  *   app is provided, or the `RemoteConfig` service associated with the provided
  *   app.
  */

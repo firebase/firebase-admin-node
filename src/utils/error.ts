@@ -50,17 +50,17 @@ export class FirebaseError extends Error implements FirebaseErrorInterface {
     (this as any).__proto__ = FirebaseError.prototype;
   }
 
-  /** @return {string} The error code. */
+  /** @returns {string} The error code. */
   public get code(): string {
     return this.errorInfo.code;
   }
 
-  /** @return {string} The error message. */
+  /** @returns {string} The error message. */
   public get message(): string {
     return this.errorInfo.message;
   }
 
-  /** @return {object} The object representation of the error. */
+  /** @returns {object} The object representation of the error. */
   public toJSON(): object {
     return {
       code: this.code,
@@ -96,7 +96,7 @@ export class PrefixedFirebaseError extends FirebaseError {
    * of the code prefixing.
    *
    * @param {string} code The non-prefixed error code to test against.
-   * @return {boolean} True if the code matches, false otherwise.
+   * @returns {boolean} True if the code matches, false otherwise.
    */
   public hasCode(code: string): boolean {
     return `${this.codePrefix}/${code}` === this.code;
@@ -138,7 +138,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
    * @param {object} [rawServerResponse] The error's raw server response.
-   * @return {FirebaseAuthError} The corresponding developer-facing error.
+   * @returns {FirebaseAuthError} The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string,
@@ -243,7 +243,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
    * @param {object} [rawServerResponse] The error's raw server response.
-   * @return {FirebaseMessagingError} The corresponding developer-facing error.
+   * @returns {FirebaseMessagingError} The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string | null,

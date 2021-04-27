@@ -86,7 +86,7 @@ export interface TenantServerResponse {
  *
  * Multi-tenancy support requires Google Cloud's Identity Platform
  * (GCIP). To learn more about GCIP, including pricing and features,
- * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+ * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
  *
  * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
  * tenants must be allowed on that project via the Cloud Console UI.
@@ -128,7 +128,7 @@ export class Tenant {
    *
    * @param tenantOptions The properties to convert to a server request.
    * @param createRequest Whether this is a create request.
-   * @return The equivalent server request.
+   * @returns The equivalent server request.
    *
    * @internal
    */
@@ -158,8 +158,8 @@ export class Tenant {
   /**
    * Returns the tenant ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The tenant ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name
+   * @returns The tenant ID corresponding to the resource, null otherwise.
    *
    * @internal
    */
@@ -282,7 +282,9 @@ export class Tenant {
   }
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   public toJSON(): object {
     const json = {

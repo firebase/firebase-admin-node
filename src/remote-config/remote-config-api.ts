@@ -35,7 +35,7 @@ export interface RemoteConfigCondition {
   /**
    * The logic of this condition.
    * See the documentation on
-   * {@link https://firebase.google.com/docs/remote-config/condition-reference condition expressions}
+   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
    * for the expected syntax of this field.
    */
   expression: string;

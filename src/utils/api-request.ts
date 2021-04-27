@@ -261,7 +261,7 @@ export class HttpClient {
    * and pass as a string or a Buffer along with the appropriate content-type header.
    *
    * @param {HttpRequest} config HTTP request to be sent.
-   * @return {Promise<HttpResponse>} A promise that resolves with the response details.
+   * @returns {Promise<HttpResponse>} A promise that resolves with the response details.
    */
   public send(config: HttpRequestConfig): Promise<HttpResponse> {
     return this.sendWithRetry(config);
@@ -273,7 +273,7 @@ export class HttpClient {
    *
    * @param {HttpRequestConfig} config HTTP request to be sent.
    * @param {number} retryAttempts Number of retries performed up to now.
-   * @return {Promise<HttpResponse>} A promise that resolves with the response details.
+   * @returns {Promise<HttpResponse>} A promise that resolves with the response details.
    */
   private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
     return AsyncHttpCall.invoke(config)
@@ -403,7 +403,7 @@ export class HttpClient {
  *
  * @param {string|Buffer} response The HTTP response to be parsed.
  * @param {HttpRequestConfig} config The request configuration that resulted in the HTTP response.
- * @return {HttpResponse} An object containing the parsed HTTP status, headers and the body.
+ * @returns {HttpResponse} An object containing the parsed HTTP status, headers and the body.
  */
 export function parseHttpResponse(
   response: string | Buffer, config: HttpRequestConfig): HttpResponse {
@@ -852,19 +852,19 @@ export class ApiSettings {
       .setResponseValidator(null);
   }
 
-  /** @return {string} The backend API endpoint. */
+  /** @returns {string} The backend API endpoint. */
   public getEndpoint(): string {
     return this.endpoint;
   }
 
-  /** @return {HttpMethod} The request HTTP method. */
+  /** @returns {HttpMethod} The request HTTP method. */
   public getHttpMethod(): HttpMethod {
     return this.httpMethod;
   }
 
   /**
    * @param {ApiCallbackFunction} requestValidator The request validator.
-   * @return {ApiSettings} The current API settings instance.
+   * @returns {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: ApiCallbackFunction = () => undefined;
@@ -872,14 +872,14 @@ export class ApiSettings {
     return this;
   }
 
-  /** @return {ApiCallbackFunction} The request validator. */
+  /** @returns {ApiCallbackFunction} The request validator. */
   public getRequestValidator(): ApiCallbackFunction {
     return this.requestValidator;
   }
 
   /**
    * @param {ApiCallbackFunction} responseValidator The response validator.
-   * @return {ApiSettings} The current API settings instance.
+   * @returns {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: ApiCallbackFunction = () => undefined;
@@ -887,7 +887,7 @@ export class ApiSettings {
     return this;
   }
 
-  /** @return {ApiCallbackFunction} The response validator. */
+  /** @returns {ApiCallbackFunction} The response validator. */
   public getResponseValidator(): ApiCallbackFunction {
     return this.responseValidator;
   }
@@ -941,7 +941,7 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
    * @param {() => Promise<T>} callback The callback to be called for each poll. If the
    *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
    *     resolution will be used to resolve the promise returned by this method.
-   * @return {Promise<T>} A Promise which resolves to the truthy value returned by the provided
+   * @returns {Promise<T>} A Promise which resolves to the truthy value returned by the provided
    *     callback when polling is complete.
    */
   public poll(callback: () => Promise<T>): Promise<T> {

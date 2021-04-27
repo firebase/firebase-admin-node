@@ -2,14 +2,12 @@ import { App } from '../app/index';
 import { InstanceId as TInstanceId } from './instance-id';
 
 /**
- * Gets the {@link instanceId.InstanceId `InstanceId`} service for the
+ * Gets the {@link firebase-admin.instance-id#InstanceId} service for the
  * default app or a given app.
  *
  * `admin.instanceId()` can be called with no arguments to access the default
- * app's {@link instanceId.InstanceId `InstanceId`} service or as
- * `admin.instanceId(app)` to access the
- * {@link instanceId.InstanceId `InstanceId`} service associated with a
- * specific app.
+ * app's `InstanceId` service or as `admin.instanceId(app)` to access the
+ * `InstanceId` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -27,7 +25,7 @@ import { InstanceId as TInstanceId } from './instance-id';
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
  *
- * @return The default `InstanceId` service if
+ * @returns The default `InstanceId` service if
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
  */

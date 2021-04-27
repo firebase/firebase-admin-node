@@ -37,22 +37,16 @@ export namespace credential {
 
   /**
    * Returns a credential created from the
-   * {@link
-   *    https://developers.google.com/identity/protocols/application-default-credentials
-   *    Google Application Default Credentials}
+   * {@link https://developers.google.com/identity/protocols/application-default-credentials |
+   * Google Application Default Credentials}
    * that grants admin access to Firebase services. This credential can be used
-   * in the call to
-   * {@link
-   *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
-   *  `admin.initializeApp()`}.
+   * in the call to {@link firebase-admin.app#initializeApp}.
    *
    * Google Application Default Credentials are available on any Google
    * infrastructure, such as Google App Engine and Google Compute Engine.
    *
    * See
-   * {@link
-   *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
-   *   Initialize the SDK}
+   * {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
    * for more details.
    *
    * @example
@@ -63,10 +57,10 @@ export namespace credential {
    * });
    * ```
    *
-   * @param {!Object=} httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
-   * @return {!admin.credential.Credential} A credential authenticated via Google
+   * @returns A credential authenticated via Google
    *   Application Default Credentials that can be used to initialize an app.
    */
   export const applicationDefault = applicationDefaultFn;
@@ -74,15 +68,10 @@ export namespace credential {
   /**
    * Returns a credential created from the provided service account that grants
    * admin access to Firebase services. This credential can be used in the call
-   * to
-   * {@link
-   *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
-   *   `admin.initializeApp()`}.
+   * to {@link firebase-admin.app#initializeApp}.
    *
    * See
-   * {@link
-   *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
-   *   Initialize the SDK}
+   * {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
    * for more details.
    *
    * @example
@@ -110,10 +99,10 @@ export namespace credential {
    *
    * @param serviceAccountPathOrObject The path to a service
    *   account key JSON file or an object representing a service account key.
-   * @param httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
-   * @return A credential authenticated via the
+   * @returns A credential authenticated via the
    *   provided service account that can be used to initialize an app.
    */
   export const cert = certFn;
@@ -121,15 +110,10 @@ export namespace credential {
   /**
    * Returns a credential created from the provided refresh token that grants
    * admin access to Firebase services. This credential can be used in the call
-   * to
-   * {@link
-   *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
-   *   `admin.initializeApp()`}.
+   * to {@link firebase-admin.app#initializeApp}.
    *
    * See
-   * {@link
-   *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
-   *   Initialize the SDK}
+   * {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
    * for more details.
    *
    * @example
@@ -145,10 +129,10 @@ export namespace credential {
    * @param refreshTokenPathOrObject The path to a Google
    *   OAuth2 refresh token JSON file or an object representing a Google OAuth2
    *   refresh token.
-   * @param httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
-   * @return A credential authenticated via the
+   * @returns A credential authenticated via the
    *   provided service account that can be used to initialize an app.
    */
   export const refreshToken = refreshTokenFn;

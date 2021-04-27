@@ -48,7 +48,7 @@ export class Storage {
     if (!process.env.STORAGE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
       process.env.STORAGE_EMULATOR_HOST = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
     }
-    
+
     let storage: typeof StorageClient;
     try {
       storage = require('@google-cloud/storage').Storage;
@@ -92,7 +92,7 @@ export class Storage {
    *
    * @param name Optional name of the bucket to be retrieved. If name is not specified,
    * retrieves a reference to the default bucket.
-   * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
+   * @returns A {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket | Bucket}
    * instance as defined in the `@google-cloud/storage` package.
    */
   public bucket(name?: string): Bucket {

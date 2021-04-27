@@ -336,7 +336,7 @@ export class RemoteConfigApiClient {
    *
    * @param {ListVersionsOptions} options An options object to be validated.
    *
-   * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
+   * @returns {ListVersionsOptions} A copy of the provided options object with timestamps converted
    * to UTC Zulu format.
    */
   private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {
