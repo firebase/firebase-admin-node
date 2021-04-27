@@ -156,7 +156,64 @@ export interface UpdateRequest {
    * The user's updated multi-factor related properties.
    */
   multiFactor?: MultiFactorUpdateSettings;
+
+  /**
+   * Links this user to the specified provider.
+   *
+   * Linking a provider to an existing user account does not invalidate the
+   * refresh token of that account. In other words, the existing account
+   * would continue to be able to access resources, despite not having used
+   * the newly linked provider to log in. If you wish to force the user to
+   * authenticate with this new provider, you need to (a) revoke their
+   * refresh token (see
+   * https://firebase.google.com/docs/auth/admin/manage-sessions#revoke_refresh_tokens),
+   * and (b) ensure no other authentication methods are present on this
+   * account.
+   */
+  providerToLink?: UserProvider;
+
+  /**
+   * Unlinks this user from the specified providers.
+   */
+  providersToUnlink?: string[];
 }
+
+/**
+ * Represents a user identity provider that can be associated with a Firebase user.
+ */
+export interface UserProvider {
+
+  /**
+   * The user identifier for the linked provider.
+   */
+  uid?: string;
+
+  /**
+   * The display name for the linked provider.
+   */
+  displayName?: string;
+
+  /**
+   * The email for the linked provider.
+   */
+  email?: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
+  photoURL?: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
+  providerId?: string;
+}
+
 
 /**
  * Interface representing the properties to set on a new user record to be

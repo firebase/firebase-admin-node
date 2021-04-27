@@ -237,6 +237,8 @@ function getSAMLConfigServerResponse(providerId: string): SAMLConfigServerRespon
 }
 
 
+const INVALID_PROVIDER_IDS = [
+  undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
 const TENANT_ID = 'tenantId';
 const AUTH_CONFIGS: AuthTest[] = [
   {
@@ -1147,6 +1149,120 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
+    describe('getUserByProviderUid()', () => {
+      const providerId = 'google.com';
+      const providerUid = 'google_uid';
+      const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
+      const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
+      const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+
+      // Stubs used to simulate underlying api calls.
+      let stubs: sinon.SinonStub[] = [];
+      beforeEach(() => sinon.spy(validator, 'isEmail'));
+      afterEach(() => {
+        (validator.isEmail as any).restore();
+        _.forEach(stubs, (stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should be rejected given no provider id', () => {
+        expect(() => (auth as any).getUserByProviderUid())
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid provider id', () => {
+        expect(() => auth.getUserByProviderUid('', 'uid'))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid provider uid', () => {
+        expect(() => auth.getUserByProviderUid('id', ''))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an app which returns null access tokens', () => {
+        return nullAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which returns invalid access tokens', () => {
+        return malformedAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which fails to generate access tokens', () => {
+        return rejectedPromiseAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should resolve with a UserRecord on success', () => {
+        // Stub getAccountInfoByEmail to return expected result.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
+          .resolves(expectedGetAccountInfoResult);
+        stubs.push(stub);
+        return auth.getUserByProviderUid(providerId, providerUid)
+          .then((userRecord) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
+            // Confirm expected user record response returned.
+            expect(userRecord).to.deep.equal(expectedUserRecord);
+          });
+      });
+
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+        });
+
+        it('phone lookups should use phoneNumber field', async () => {
+          await auth.getUserByProviderUid('phone', '+15555550001');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              phoneNumber: ['+15555550001'],
+            });
+        });
+
+        it('email lookups should use email field', async () => {
+          await auth.getUserByProviderUid('email', 'user@example.com');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              email: ['user@example.com'],
+            });
+        });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub getAccountInfoByFederatedUid to throw a backend error.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return auth.getUserByProviderUid(providerId, providerUid)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
     describe('getUsers()', () => {
       let stubs: sinon.SinonStub[] = [];
 
@@ -1510,6 +1626,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         emailVerified: expectedUserRecord.emailVerified,
         password: 'password',
         phoneNumber: expectedUserRecord.phoneNumber,
+        providerToLink: {
+          providerId: 'google.com',
+          uid: 'google_uid',
+        },
       };
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1553,8 +1673,193 @@ AUTH_CONFIGS.forEach((testConfig) => {
           })
           .catch((error) => {
             expect(error).to.have.property('code', 'auth/argument-error');
-            expect(validator.isNonNullObject).to.have.been.calledOnce.and.calledWith(null);
+            expect(validator.isNonNullObject).to.have.been.calledWith(null);
           });
+      });
+
+      const invalidUpdateRequests: UpdateRequest[] = [
+        { providerToLink: { uid: 'google_uid' } },
+        { providerToLink: { providerId: 'google.com' } },
+        { providerToLink: { providerId: 'google.com', uid: '' } },
+        { providerToLink: { providerId: '', uid: 'google_uid' } },
+      ];
+      invalidUpdateRequests.forEach((invalidUpdateRequest) => {
+        it('should be rejected given an UpdateRequest with an invalid providerToLink parameter', () => {
+          expect(() => {
+            auth.updateUser(uid, invalidUpdateRequest);
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+      });
+
+      it('should rename providerToLink property to linkProviderUserInfo', async () => {
+        const invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+          .resolves({
+            localId: uid,
+          });
+
+        // Stub getAccountInfoByUid to return a valid result (unchecked; we
+        // just need it to be valid so as to not crash.)
+        const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+          .resolves(expectedGetAccountInfoResult);
+
+        stubs.push(invokeRequestHandlerStub);
+        stubs.push(getUserStub);
+
+        await auth.updateUser(uid, {
+          providerToLink: {
+            providerId: 'google.com',
+            uid: 'google_uid',
+          },
+        });
+
+        expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+          sinon.match.any, sinon.match.any, {
+            localId: uid,
+            linkProviderUserInfo: {
+              providerId: 'google.com',
+              rawId: 'google_uid',
+            },
+          });
+      });
+
+      INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
+        it('should be rejected given a deleteProvider list with an invalid provider ID '
+            + JSON.stringify(invalidProviderId), () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              providersToUnlink: [ invalidProviderId as any ],
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+      });
+
+      it('should merge deletion of phone provider with the providersToUnlink list', async () => {
+        const invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+          .resolves({
+            localId: uid,
+          });
+
+        // Stub getAccountInfoByUid to return a valid result (unchecked; we
+        // just need it to be valid so as to not crash.)
+        const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+          .resolves(expectedGetAccountInfoResult);
+
+        stubs.push(invokeRequestHandlerStub);
+        stubs.push(getUserStub);
+
+        await auth.updateUser(uid, {
+          phoneNumber: null,
+          providersToUnlink: [ 'google.com' ],
+        });
+
+        expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+          sinon.match.any, sinon.match.any, {
+            localId: uid,
+            deleteProvider: [ 'phone', 'google.com' ],
+          });
+      });
+
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        let getAccountInfoByUidStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+          getAccountInfoByUidStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+          getAccountInfoByUidStub.restore();
+        });
+
+        it('specifying both email and providerId=email should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              email: 'user@example.com',
+              providerToLink: {
+                providerId: 'email',
+                uid: 'user@example.com',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('specifying both phoneNumber and providerId=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: '+15555550001',
+              providerToLink: {
+                providerId: 'phone',
+                uid: '+15555550001',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('email linking should use email field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              email: 'user@example.com',
+            });
+        });
+
+        it('phone linking should use phoneNumber field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'phone',
+              uid: '+15555550001',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              phoneNumber: '+15555550001',
+            });
+        });
+
+        it('specifying both phoneNumber=null and providersToUnlink=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: null,
+              providersToUnlink: ['phone'],
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('doesnt mutate the properties parameter', async () => {
+          const properties: UpdateRequest = {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          };
+          await auth.updateUser(uid, properties);
+          expect(properties).to.deep.equal({
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+        });
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
@@ -2369,9 +2674,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
       });
 
-      const invalidProviderIds = [
-        undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-      invalidProviderIds.forEach((invalidProviderId) => {
+      INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
         it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
           return (auth as Auth).getProviderConfig(invalidProviderId as any)
             .then(() => {
@@ -2742,15 +3045,16 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected given an invalid provider ID', () => {
-        const invalidProviderId = '';
-        return (auth as Auth).deleteProviderConfig(invalidProviderId)
-          .then(() => {
-            throw new Error('Unexpected success');
-          })
-          .catch((error) => {
-            expect(error).to.have.property('code', 'auth/invalid-provider-id');
-          });
+      INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
+        it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
+          return (auth as Auth).deleteProviderConfig(invalidProviderId as any)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-provider-id');
+            });
+        });
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
@@ -2861,15 +3165,16 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected given an invalid provider ID', () => {
-        const invalidProviderId = '';
-        return (auth as Auth).updateProviderConfig(invalidProviderId, oidcConfigOptions)
-          .then(() => {
-            throw new Error('Unexpected success');
-          })
-          .catch((error) => {
-            expect(error).to.have.property('code', 'auth/invalid-provider-id');
-          });
+      INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
+        it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
+          return (auth as Auth).updateProviderConfig(invalidProviderId as any, oidcConfigOptions)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-provider-id');
+            });
+        });
       });
 
       it('should be rejected given no options', () => {
@@ -3189,14 +3494,22 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('auth emulator support', () => {
 
       let mockAuth = testConfig.init(mocks.app());
+      const userRecord = getValidUserRecord(getValidGetAccountInfoResponse());
+      const validSince = new Date(userRecord.tokensValidAfterTime!);
+
+      const stubs: sinon.SinonStub[] = [];
+      let clock: sinon.SinonFakeTimers;
 
       beforeEach(() => {
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
         mockAuth = testConfig.init(mocks.app());
+        clock = sinon.useFakeTimers(validSince.getTime());
       });
 
       afterEach(() => {
+        _.forEach(stubs, (s) => s.restore());
         delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        clock.restore();
       });
 
       it('createCustomToken() generates an unsigned token', async () => {
@@ -3211,39 +3524,78 @@ AUTH_CONFIGS.forEach((testConfig) => {
         jwt.verify(token, '', { algorithms: ['none'] });
       });
 
-      it('verifyIdToken() rejects an unsigned token when only the env var is set', async () => {
+      it('verifyIdToken() should reject revoked ID tokens', () => {
+        const uid = userRecord.uid;
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        // verifyIdToken should force checking revocation in emulator mode,
+        // even if checkRevoked=false.
+        return mockAuth.verifyIdToken(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/id-token-revoked');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
+
+      it('verifySessionCookie() should reject revoked session cookies', () => {
+        const uid = userRecord.uid;
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        // verifySessionCookie should force checking revocation in emulator
+        // mode, even if checkRevoked=false.
+        return mockAuth.verifySessionCookie(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/session-cookie-revoked');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
+
+      it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         });
 
+        const errorMessage = 'Error while making request: connect ECONNREFUSED 127.0.0.1. Error code: ECONNREFUSED';
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser').rejects(new Error(errorMessage));
+        stubs.push(getUserStub);
+
+        // Since revocation check is forced on in emulator mode, this will call
+        // the getUser method and get rejected (instead of succeed locally).
         await expect(mockAuth.verifyIdToken(unsignedToken))
-          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
-      });
-
-      it('verifyIdToken() accepts an unsigned token when private method is called and env var is set', async () => {
-        (mockAuth as any).setJwtVerificationEnabled(false);
-
-        let claims = {};
-        if (testConfig.Auth === TenantAwareAuth) {
-          claims = {
-            firebase: {
-              tenant: TENANT_ID
-            }
-          }
-        }
-
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none'
-        }, claims);
-
-        const decoded = await mockAuth.verifyIdToken(unsignedToken);
-        expect(decoded).to.be.ok;
-      });
-
-      it('private method throws when env var is unset', async () => {
-        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
-        await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
-          .to.throw('This method is only available when connected to the Authentication emulator.')
+          .to.be.rejectedWith(errorMessage);
       });
     });
   });

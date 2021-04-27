@@ -16,12 +16,13 @@
 
 import { App, FirebaseArrayIndexError } from '../app';
 import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
+import { deepCopy } from '../utils/deep-copy';
 import * as validator from '../utils/validator';
 
 import { AbstractAuthRequestHandler, useEmulator } from './auth-api-request';
 import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
 import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256,
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
   DecodedIdToken,
 } from './token-verifier';
 import {
@@ -186,15 +187,16 @@ export abstract class BaseAuth {
    *   promise.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.idTokenVerifier.verifyJWT(idToken)
+    const isEmulator = useEmulator();
+    return this.idTokenVerifier.verifyJWT(idToken, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.ID_TOKEN_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -252,6 +254,36 @@ export abstract class BaseAuth {
    */
   public getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord> {
     return this.authRequestHandler.getAccountInfoByPhoneNumber(phoneNumber)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  }
+
+  /**
+   * Gets the user data for the user corresponding to a given provider id.
+   *
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param providerId The provider ID, for example, "google.com" for the
+   *   Google provider.
+   * @param uid The user identifier for the given provider.
+   *
+   * @return A promise fulfilled with the user data corresponding to the
+   *   given provider id.
+   */
+  public getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord> {
+    // Although we don't really advertise it, we want to also handle
+    // non-federated idps with this call. So if we detect one of them, we'll
+    // reroute this request appropriately.
+    if (providerId === 'phone') {
+      return this.getUserByPhoneNumber(uid);
+    } else if (providerId === 'email') {
+      return this.getUserByEmail(uid);
+    }
+
+    return this.authRequestHandler.getAccountInfoByFederatedUid(providerId, uid)
       .then((response: any) => {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
@@ -477,6 +509,50 @@ export abstract class BaseAuth {
    *   updated user data.
    */
   public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
+    // Although we don't really advertise it, we want to also handle linking of
+    // non-federated idps with this call. So if we detect one of them, we'll
+    // adjust the properties parameter appropriately. This *does* imply that a
+    // conflict could arise, e.g. if the user provides a phoneNumber property,
+    // but also provides a providerToLink with a 'phone' provider id. In that
+    // case, we'll throw an error.
+    properties = deepCopy(properties);
+
+    if (properties?.providerToLink) {
+      if (properties.providerToLink.providerId === 'email') {
+        if (typeof properties.email !== 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.email and UpdateRequest.providerToLink.providerId='email' were set. To "
+            + 'link to the email/password provider, only specify the UpdateRequest.email field.');
+        }
+        properties.email = properties.providerToLink.uid;
+        delete properties.providerToLink;
+      } else if (properties.providerToLink.providerId === 'phone') {
+        if (typeof properties.phoneNumber !== 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.phoneNumber and UpdateRequest.providerToLink.providerId='phone' were set. To "
+            + 'link to a phone provider, only specify the UpdateRequest.phoneNumber field.');
+        }
+        properties.phoneNumber = properties.providerToLink.uid;
+        delete properties.providerToLink;
+      }
+    }
+    if (properties?.providersToUnlink) {
+      if (properties.providersToUnlink.indexOf('phone') !== -1) {
+        // If we've been told to unlink the phone provider both via setting
+        // phoneNumber to null *and* by setting providersToUnlink to include
+        // 'phone', then we'll reject that. Though it might also be reasonable
+        // to relax this restriction and just unlink it.
+        if (properties.phoneNumber === null) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.phoneNumber=null and UpdateRequest.providersToUnlink=['phone'] were set. To "
+            + 'unlink from a phone provider, only specify the UpdateRequest.phoneNumber=null field.');
+        }
+      }
+    }
+
     return this.authRequestHandler.updateExistingAccount(uid, properties)
       .then((existingUid) => {
         // Return the corresponding user record.
@@ -615,15 +691,16 @@ export abstract class BaseAuth {
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.sessionCookieVerifier.verifyJWT(sessionCookie)
+    const isEmulator = useEmulator();
+    return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.SESSION_COOKIE_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -990,27 +1067,5 @@ export abstract class BaseAuth {
         // All checks above passed. Return the decoded token.
         return decodedIdToken;
       });
-  }
-
-  /**
-   * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
-   * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
-   *
-   * WARNING: This is a dangerous method that will compromise your app's security and break your app in
-   * production. Developers should never call this method, it is for internal testing use only.
-   *
-   * @internal
-   */
-  // @ts-expect-error: this method appears unused but is used privately.
-  private setJwtVerificationEnabled(enabled: boolean): void {
-    if (!enabled && !useEmulator()) {
-      // We only allow verification to be disabled in conjunction with
-      // the emulator environment variable.
-      throw new Error('This method is only available when connected to the Authentication emulator.');
-    }
-
-    const algorithm = enabled ? ALGORITHM_RS256 : 'none';
-    this.idTokenVerifier.setAlgorithm(algorithm);
-    this.sessionCookieVerifier.setAlgorithm(algorithm);
   }
 }

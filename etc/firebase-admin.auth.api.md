@@ -61,6 +61,7 @@ export abstract class BaseAuth {
     getUser(uid: string): Promise<UserRecord>;
     getUserByEmail(email: string): Promise<UserRecord>;
     getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
+    getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord>;
     getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
     importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
     listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
@@ -264,6 +265,8 @@ export interface SessionCookieOptions {
 
 // @public
 export class Tenant {
+    // (undocumented)
+    readonly anonymousSignInEnabled: boolean;
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
@@ -324,10 +327,13 @@ export interface UpdateRequest {
     password?: string;
     phoneNumber?: string | null;
     photoURL?: string | null;
+    providersToUnlink?: string[];
+    providerToLink?: UserProvider;
 }
 
 // @public
 export interface UpdateTenantRequest {
+    anonymousSignInEnabled?: boolean;
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
@@ -403,6 +409,16 @@ export class UserMetadata {
 export interface UserMetadataRequest {
     creationTime?: string;
     lastSignInTime?: string;
+}
+
+// @public
+export interface UserProvider {
+    displayName?: string;
+    email?: string;
+    phoneNumber?: string;
+    photoURL?: string;
+    providerId?: string;
+    uid?: string;
 }
 
 // @public
