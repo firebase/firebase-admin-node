@@ -10,17 +10,12 @@ import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
 
-// @public
-export interface App {
-    name: string;
-    options: AppOptions;
-}
-
 // @public (undocumented)
 export function app(name?: string): app.App;
 
 // @public (undocumented)
 export namespace app {
+    // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point default-namespace.d.ts
     export interface App extends App {
         // (undocumented)
         auth(): auth.Auth;
