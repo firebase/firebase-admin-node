@@ -37,8 +37,8 @@ export function getSdkVersion(): string {
  *
  * For example, this can be used to map underscore_cased properties to camelCase.
  *
- * @param {object} obj The object whose properties to rename.
- * @param {object} keyMap The mapping from old to new property names.
+ * @param obj The object whose properties to rename.
+ * @param keyMap The mapping from old to new property names.
  */
 export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
@@ -54,9 +54,9 @@ export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: stri
 /**
  * Defines a new read-only property directly on an object and returns the object.
  *
- * @param {object} obj The object on which to define the property.
- * @param {string} prop The name of the property to be defined or modified.
- * @param {any} value The value associated with the property.
+ * @param obj The object on which to define the property.
+ * @param prop The name of the property to be defined or modified.
+ * @param value The value associated with the property.
  */
 export function addReadonlyGetter(obj: object, prop: string, value: any): void {
   Object.defineProperty(obj, prop, {
@@ -123,8 +123,8 @@ export function findProjectId(app: App): Promise<string | null> {
 /**
  * Encodes data using web-safe-base64.
  *
- * @param {Buffer} data The raw data byte input.
- * @returns {string} The base64-encoded result.
+ * @param data The raw data byte input.
+ * @returns The base64-encoded result.
  */
 export function toWebSafeBase64(data: Buffer): string {
   return data.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
@@ -135,11 +135,11 @@ export function toWebSafeBase64(data: Buffer): string {
  * with corresponding arguments {projectId: '1234', api: 'resource'}
  * and returns output: 'project/1234/resource'.
  *
- * @param {string} str The original string where the param need to be
+ * @param str The original string where the param need to be
  *     replaced.
- * @param {object=} params The optional parameters to replace in the
+ * @param params The optional parameters to replace in the
  *     string.
- * @returns {string} The resulting formatted string.
+ * @returns The resulting formatted string.
  */
 export function formatString(str: string, params?: object): string {
   let formatted = str;
