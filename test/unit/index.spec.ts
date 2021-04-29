@@ -25,6 +25,7 @@ import './utils/index.spec';
 import './utils/error.spec';
 import './utils/validator.spec';
 import './utils/api-request.spec';
+import './utils/jwt.spec';
 
 // Auth
 import './auth/auth.spec';

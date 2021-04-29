@@ -25,6 +25,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { DatabaseService } from '../../../src/database/database-internal';
 import { database } from '../../../src/database/index';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 
@@ -48,7 +49,7 @@ describe('Database', () => {
   describe('Constructor', () => {
     const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidApps.forEach((invalidApp) => {
-      it(`should throw given invalid app: ${ JSON.stringify(invalidApp) }`, () => {
+      it(`should throw given invalid app: ${JSON.stringify(invalidApp)}`, () => {
         expect(() => {
           const databaseAny: any = DatabaseService;
           return new databaseAny(invalidApp);
@@ -118,6 +119,179 @@ describe('Database', () => {
     });
   });
 
+  describe('Token refresh', () => {
+    const MINUTE_IN_MILLIS = 60 * 1000;
+
+    let clock: sinon.SinonFakeTimers;
+    let getTokenStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      getTokenStub = stubCredentials();
+      clock = sinon.useFakeTimers(1000);
+    });
+
+    afterEach(() => {
+      getTokenStub.restore();
+      clock.restore();
+    });
+
+    function stubCredentials(options?: {
+      accessToken?: string;
+      expiresIn?: number;
+      err?: any;
+    }): sinon.SinonStub {
+      if (options?.err) {
+        return sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .rejects(options.err);
+      }
+
+      return sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+        .resolves({
+          access_token: options?.accessToken || 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: options?.expiresIn || 3600, // eslint-disable-line @typescript-eslint/camelcase
+        });
+    }
+
+    it('should refresh the token 5 minutes before expiration', () => {
+      database.getDatabase();
+      expect(getTokenStub).to.have.not.been.called;
+      return mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const expiryInMillis = token.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS) - 1000);
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          clock.tick(1000);
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should not start multiple token refresher tasks', () => {
+      database.getDatabase();
+      database.getDatabase('https://other-database.firebaseio.com');
+      expect(getTokenStub).to.have.not.been.called;
+      return mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const expiryInMillis = token.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should reschedule the token refresher when the underlying token changes', () => {
+      database.getDatabase();
+      return mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          // Forward the clock to 30 minutes before expiry.
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (30 * MINUTE_IN_MILLIS));
+
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true)
+            .then((token2) => {
+              expect(getTokenStub).to.have.been.calledTwice;
+              // Forward the clock to 5 minutes before old expiry time.
+              clock.tick(25 * MINUTE_IN_MILLIS);
+              expect(getTokenStub).to.have.been.calledTwice;
+
+              // Forward the clock 1 second past old expiry time.
+              clock.tick(5 * MINUTE_IN_MILLIS + 1000);
+              expect(getTokenStub).to.have.been.calledTwice;
+
+              const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+              clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+              expect(getTokenStub).to.have.been.calledThrice;
+            });
+        });
+    });
+
+    it('should not reschedule when the token is about to expire in 5 minutes', () => {
+      database.getDatabase();
+      return mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          // Forward the clock to 30 minutes before expiry.
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (30 * MINUTE_IN_MILLIS));
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ expiresIn: 5 * 60 });
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token2) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis);
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ expiresIn: 60 * 60 });
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token3) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const newExpiryTimeInMillis = token3.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should gracefully handle errors during token refresh', () => {
+      database.getDatabase();
+      return mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ err: new Error('Test error') });
+          expect(getTokenStub).to.have.not.been.called;
+
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis);
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials();
+          expect(getTokenStub).to.have.not.been.called;
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token2) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should stop the token refresher task at delete', () => {
+      database.getDatabase();
+      return mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+          return database.delete()
+            .then(() => {
+              // Forward the clock to five minutes before expiry.
+              const expiryInMillis = token.expirationTime - Date.now();
+              clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS));
+              expect(getTokenStub).to.have.been.calledOnce;
+            });
+        });
+    });
+  });
+
   describe('Rules', () => {
     const mockAccessToken: string = utils.generateRandomAccessToken();
     let getTokenStub: sinon.SinonStub;
@@ -154,11 +328,8 @@ describe('Database', () => {
     }`;
     const rulesPath = '.settings/rules.json';
 
-    function callParamsForGet(
-      strict = false,
-      url = `https://databasename.firebaseio.com/${rulesPath}`,
-    ): HttpRequestConfig {
-
+    function callParamsForGet(options?: { strict?: boolean; url?: string }): HttpRequestConfig {
+      const url = options?.url || `https://databasename.firebaseio.com/${rulesPath}`;
       const params: HttpRequestConfig = {
         method: 'GET',
         url,
@@ -167,7 +338,7 @@ describe('Database', () => {
         },
       };
 
-      if (strict) {
+      if (options?.strict) {
         params.data = { format: 'strict' };
       }
 
@@ -215,7 +386,7 @@ describe('Database', () => {
         return db.getRules().then((result) => {
           expect(result).to.equal(rulesString);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(false, `https://custom.firebaseio.com/${rulesPath}`));
+            callParamsForGet({ url: `https://custom.firebaseio.com/${rulesPath}` }));
         });
       });
 
@@ -225,7 +396,7 @@ describe('Database', () => {
         return db.getRules().then((result) => {
           expect(result).to.equal(rulesString);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(false, `http://localhost:9000/${rulesPath}?ns=foo`));
+            callParamsForGet({ url: `http://localhost:9000/${rulesPath}?ns=foo` }));
         });
       });
 
@@ -259,7 +430,7 @@ describe('Database', () => {
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(true));
+            callParamsForGet({ strict: true }));
         });
       });
 
@@ -269,7 +440,7 @@ describe('Database', () => {
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(true, `https://custom.firebaseio.com/${rulesPath}`));
+            callParamsForGet({ strict: true, url: `https://custom.firebaseio.com/${rulesPath}` }));
         });
       });
 
@@ -279,7 +450,7 @@ describe('Database', () => {
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(true, `http://localhost:9000/${rulesPath}?ns=foo`));
+            callParamsForGet({ strict: true, url: `http://localhost:9000/${rulesPath}?ns=foo` }));
         });
       });
 
@@ -407,6 +578,102 @@ describe('Database', () => {
           new Error('network error'));
         stubs.push(stub);
         return db.setRules(rules).should.eventually.be.rejectedWith('network error');
+      });
+    });
+
+    describe('emulator mode', () => {
+      interface EmulatorTestConfig {
+        name: string;
+        setUp: () => FirebaseApp;
+        tearDown?: () => void;
+        url: string;
+      }
+
+      const configs: EmulatorTestConfig[] = [
+        {
+          name: 'with environment variable',
+          setUp: () => {
+            process.env.FIREBASE_DATABASE_EMULATOR_HOST = 'localhost:9090';
+            return mocks.app();
+          },
+          tearDown: () => {
+            delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+          },
+          url: `http://localhost:9090/${rulesPath}?ns=databasename`,
+        },
+        {
+          name: 'with app options',
+          setUp: () => {
+            return mocks.appWithOptions({
+              databaseURL: 'http://localhost:9091?ns=databasename',
+            });
+          },
+          url: `http://localhost:9091/${rulesPath}?ns=databasename`,
+        },
+        {
+          name: 'with environment variable overriding app options',
+          setUp: () => {
+            process.env.FIREBASE_DATABASE_EMULATOR_HOST = 'localhost:9090';
+            return mocks.appWithOptions({
+              databaseURL: 'http://localhost:9091?ns=databasename',
+            });
+          },
+          tearDown: () => {
+            delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+          },
+          url: `http://localhost:9090/${rulesPath}?ns=databasename`,
+        },
+      ];
+
+      configs.forEach((config) => {
+        describe(config.name, () => {
+          let emulatorApp: FirebaseApp;
+          let emulatorDatabase: DatabaseService;
+
+          before(() => {
+            emulatorApp = config.setUp();
+            emulatorDatabase = new DatabaseService(emulatorApp);
+          });
+
+          after(() => {
+            if (config.tearDown) {
+              config.tearDown();
+            }
+
+            return emulatorDatabase.delete().then(() => {
+              return emulatorApp.delete();
+            });
+          });
+
+          it('getRules should connect to the emulator', () => {
+            const db: Database = emulatorDatabase.getDatabase();
+            const stub = stubSuccessfulResponse(rules);
+            return db.getRules().then((result) => {
+              expect(result).to.equal(rulesString);
+              return expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParamsForGet({ url: config.url }));
+            });
+          });
+
+          it('getRulesJSON should connect to the emulator', () => {
+            const db: Database = emulatorDatabase.getDatabase();
+            const stub = stubSuccessfulResponse(rules);
+            return db.getRulesJSON().then((result) => {
+              expect(result).to.equal(rules);
+              return expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParamsForGet({ strict: true, url: config.url }));
+            });
+          });
+
+          it('setRules should connect to the emulator', () => {
+            const db: Database = emulatorDatabase.getDatabase();
+            const stub = stubSuccessfulResponse({});
+            return db.setRules(rulesString).then(() => {
+              return expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParamsForPut(rulesString, config.url));
+            });
+          });
+        });
       });
     });
   });

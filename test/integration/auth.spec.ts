@@ -683,7 +683,10 @@ describe('admin.auth', () => {
         });
     });
 
-    it('can link/unlink with a federated provider', async () => {
+    it('can link/unlink with a federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       let userRecord = await admin.auth().updateUser(updateUser.uid, {
         providerToLink: {
@@ -707,7 +710,10 @@ describe('admin.auth', () => {
       expect(providerIds).to.not.deep.include('google.com');
     });
 
-    it('can unlink multiple providers at once, incl a non-federated provider', async () => {
+    it('can unlink multiple providers at once, incl a non-federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
       await deletePhoneNumberUser('+15555550001');
 
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);

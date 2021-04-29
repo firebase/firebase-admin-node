@@ -28,9 +28,13 @@ import { getSdkVersion } from '../utils/index';
 
 import Database = database.Database;
 
+const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
 export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
+  private tokenListener: (token: string) => void;
+  private tokenRefreshTimeout: NodeJS.Timeout;
 
   private databases: {
     [dbUrl: string]: Database;
@@ -50,6 +54,11 @@ export class DatabaseService {
    * @internal
    */
   public delete(): Promise<void> {
+    if (this.tokenListener) {
+      this.appInternal.INTERNAL.removeAuthTokenListener(this.tokenListener);
+      clearTimeout(this.tokenRefreshTimeout);
+    }
+
     const promises = [];
     for (const dbUrl of Object.keys(this.databases)) {
       const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
@@ -63,7 +72,7 @@ export class DatabaseService {
   /**
    * Returns the app associated with this DatabaseService instance.
    *
-   * @return {FirebaseApp} The app associated with this DatabaseService instance.
+   * @return The app associated with this DatabaseService instance.
    */
   get app(): FirebaseApp {
     return this.appInternal;
@@ -96,7 +105,38 @@ export class DatabaseService {
 
       this.databases[dbUrl] = db;
     }
+
+    if (!this.tokenListener) {
+      this.tokenListener = this.onTokenChange.bind(this);
+      this.appInternal.INTERNAL.addAuthTokenListener(this.tokenListener);
+    }
+
     return db;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private onTokenChange(_: string): void {
+    const token = this.appInternal.INTERNAL.getCachedToken();
+    if (token) {
+      const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
+      // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
+      // notice and refresh the token, at which point this callback will fire again.
+      if (delayMillis > 0) {
+        this.scheduleTokenRefresh(delayMillis);
+      }
+    }
+  }
+
+  private scheduleTokenRefresh(delayMillis: number): void {
+    clearTimeout(this.tokenRefreshTimeout);
+    this.tokenRefreshTimeout = setTimeout(() => {
+      this.appInternal.INTERNAL.getToken(/*forceRefresh=*/ true)
+        .catch(() => {
+          // Ignore the error since this might just be an intermittent failure. If we really cannot
+          // refresh the token, an error will be logged once the existing token expires and we try
+          // to fetch a fresh one.
+        });
+    }, delayMillis);
   }
 
   private ensureUrl(url?: string): string {
@@ -123,7 +163,13 @@ class DatabaseRulesClient {
   private readonly httpClient: AuthorizedHttpClient;
 
   constructor(app: FirebaseApp, dbUrl: string) {
-    const parsedUrl = new URL(dbUrl);
+    let parsedUrl = new URL(dbUrl);
+    const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+    if (emulatorHost) {
+      const namespace = extractNamespace(parsedUrl);
+      parsedUrl = new URL(`http://${emulatorHost}?ns=${namespace}`);
+    }
+
     parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
     this.dbUrl = parsedUrl.toString();
     this.httpClient = new AuthorizedHttpClient(app);
@@ -133,7 +179,7 @@ class DatabaseRulesClient {
    * Gets the currently applied security rules as a string. The return value consists of
    * the rules source including comments.
    *
-   * @return {Promise<string>} A promise fulfilled with the rules as a raw string.
+   * @return A promise fulfilled with the rules as a raw string.
    */
   public getRules(): Promise<string> {
     const req: HttpRequestConfig = {
@@ -232,4 +278,15 @@ class DatabaseRulesClient {
 
     return `${intro}: ${err.response.text}`;
   }
+}
+
+function extractNamespace(parsedUrl: URL): string {
+  const ns = parsedUrl.searchParams.get('ns');
+  if (ns) {
+    return ns;
+  }
+
+  const hostname = parsedUrl.hostname;
+  const dotIndex = hostname.indexOf('.');
+  return hostname.substring(0, dotIndex).toLowerCase();
 }

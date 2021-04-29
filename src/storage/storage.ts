@@ -48,6 +48,10 @@ export class Storage implements StorageInterface {
       });
     }
 
+    if (!process.env.STORAGE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+      process.env.STORAGE_EMULATOR_HOST = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+    }
+    
     let storage: typeof StorageClient;
     try {
       storage = require('@google-cloud/storage').Storage;
