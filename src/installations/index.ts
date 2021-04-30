@@ -39,7 +39,7 @@ import { app } from '../firebase-namespace-api';
  *```
  *
  * @param app Optional app whose `Installations` service to
- *   return. If not provided, the default `Installations` service will be
+ *   return. If not provided, the default `Installations` service is
  *   returned.
  *
  * @return The default `Installations` service if
@@ -73,7 +73,7 @@ export namespace installations {
      * Note that Google Analytics for Firebase uses its own form of Instance ID to
      * keep track of analytics data. Therefore deleting a Firebase installation ID does
      * not delete Analytics data. See
-     * [Delete an Instance ID](/docs/projects/manage-installations#delete-installation)
+     * [Delete a Firebase installation](/docs/projects/manage-installations#delete-installation)
      * for more information.
      *
      * @param fid The Firebase installation ID to be deleted.
