@@ -51,6 +51,9 @@ export declare function database(app?: App): database.Database;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace database {
+  /**
+   * Type alias to {@link firebase-admin.database#Database}.
+   */
   export type Database = TDatabase;
   export type DataSnapshot = rtdb.DataSnapshot;
   export type EventType = rtdb.EventType;
@@ -59,11 +62,15 @@ export namespace database {
   export type Reference = rtdb.Reference;
   export type ThenableReference = rtdb.ThenableReference;
 
+  /**
+   * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
+   * function from the `@firebase/database` package.
+   */
   export declare const enableLogging: typeof rtdb.enableLogging;
 
   /**
    * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
-   * module from the `@firebase/database` package.
+   * constant from the `@firebase/database` package.
    */
   export declare const ServerValue: rtdb.ServerValue;
 }

@@ -14,7 +14,7 @@ import { Reference } from '@firebase/database-types';
 import * as rtdb from '@firebase/database-types';
 import { ThenableReference } from '@firebase/database-types';
 
-// @public (undocumented)
+// @public
 export interface Database extends FirebaseDatabase {
     getRules(): Promise<string>;
     getRulesJSON(): Promise<object>;

@@ -42,7 +42,7 @@ export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
 
 /**
  * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
- * module from the `@firebase/database` package.
+ * constant from the `@firebase/database` package.
  */
 export const ServerValue: rtdb.ServerValue = serverValueConst;
 

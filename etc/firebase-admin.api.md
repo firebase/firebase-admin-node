@@ -72,188 +72,96 @@ export namespace auth {
     // Warning: (ae-forgotten-export) The symbol "AuthProviderConfigFilter" needs to be exported by the entry point default-namespace.d.ts
     export type AuthProviderConfigFilter = AuthProviderConfigFilter;
     // Warning: (ae-forgotten-export) The symbol "BaseAuth" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type BaseAuth = BaseAuth;
     // Warning: (ae-forgotten-export) The symbol "CreateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type CreateMultiFactorInfoRequest = CreateMultiFactorInfoRequest;
     // Warning: (ae-forgotten-export) The symbol "CreatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type CreatePhoneMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
     // Warning: (ae-forgotten-export) The symbol "CreateRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type CreateRequest = CreateRequest;
     // Warning: (ae-forgotten-export) The symbol "CreateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type CreateTenantRequest = CreateTenantRequest;
     // Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type DecodedIdToken = DecodedIdToken;
     // Warning: (ae-forgotten-export) The symbol "DeleteUsersResult" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type DeleteUsersResult = DeleteUsersResult;
     // Warning: (ae-forgotten-export) The symbol "EmailIdentifier" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type EmailIdentifier = EmailIdentifier;
     // Warning: (ae-forgotten-export) The symbol "EmailSignInProviderConfig" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type EmailSignInProviderConfig = EmailSignInProviderConfig;
     // Warning: (ae-forgotten-export) The symbol "GetUsersResult" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type GetUsersResult = GetUsersResult;
     // Warning: (ae-forgotten-export) The symbol "HashAlgorithmType" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type HashAlgorithmType = HashAlgorithmType;
     // Warning: (ae-forgotten-export) The symbol "ListProviderConfigResults" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type ListProviderConfigResults = ListProviderConfigResults;
     // Warning: (ae-forgotten-export) The symbol "ListTenantsResult" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type ListTenantsResult = ListTenantsResult;
     // Warning: (ae-forgotten-export) The symbol "ListUsersResult" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type ListUsersResult = ListUsersResult;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorConfig" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorConfig = MultiFactorConfig;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorConfigState" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorConfigState = MultiFactorConfigState;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorCreateSettings" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorCreateSettings = MultiFactorCreateSettings;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorInfo = MultiFactorInfo;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorSettings" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorSettings = MultiFactorSettings;
     // Warning: (ae-forgotten-export) The symbol "MultiFactorUpdateSettings" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type MultiFactorUpdateSettings = MultiFactorUpdateSettings;
     // Warning: (ae-forgotten-export) The symbol "OIDCAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type OIDCAuthProviderConfig = OIDCAuthProviderConfig;
     // Warning: (ae-forgotten-export) The symbol "OIDCUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type OIDCUpdateAuthProviderRequest = OIDCUpdateAuthProviderRequest;
     // Warning: (ae-forgotten-export) The symbol "PhoneIdentifier" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type PhoneIdentifier = PhoneIdentifier;
     // Warning: (ae-forgotten-export) The symbol "PhoneMultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type PhoneMultiFactorInfo = PhoneMultiFactorInfo;
     // Warning: (ae-forgotten-export) The symbol "ProviderIdentifier" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type ProviderIdentifier = ProviderIdentifier;
     // Warning: (ae-forgotten-export) The symbol "SAMLAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type SAMLAuthProviderConfig = SAMLAuthProviderConfig;
     // Warning: (ae-forgotten-export) The symbol "SAMLUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type SAMLUpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest;
     // Warning: (ae-forgotten-export) The symbol "SessionCookieOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type SessionCookieOptions = SessionCookieOptions;
     // Warning: (ae-forgotten-export) The symbol "Tenant" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type Tenant = Tenant;
     // Warning: (ae-forgotten-export) The symbol "TenantAwareAuth" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type TenantAwareAuth = TenantAwareAuth;
     // Warning: (ae-forgotten-export) The symbol "TenantManager" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type TenantManager = TenantManager;
     // Warning: (ae-forgotten-export) The symbol "UidIdentifier" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UidIdentifier = UidIdentifier;
     // Warning: (ae-forgotten-export) The symbol "UpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UpdateAuthProviderRequest = UpdateAuthProviderRequest;
     // Warning: (ae-forgotten-export) The symbol "UpdateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UpdateMultiFactorInfoRequest = UpdateMultiFactorInfoRequest;
     // Warning: (ae-forgotten-export) The symbol "UpdatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UpdatePhoneMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
     // Warning: (ae-forgotten-export) The symbol "UpdateRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UpdateRequest = UpdateRequest;
     // Warning: (ae-forgotten-export) The symbol "UpdateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UpdateTenantRequest = UpdateTenantRequest;
     // Warning: (ae-forgotten-export) The symbol "UserIdentifier" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserIdentifier = UserIdentifier;
     // Warning: (ae-forgotten-export) The symbol "UserImportOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserImportOptions = UserImportOptions;
     // Warning: (ae-forgotten-export) The symbol "UserImportRecord" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserImportRecord = UserImportRecord;
     // Warning: (ae-forgotten-export) The symbol "UserImportResult" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserImportResult = UserImportResult;
     // Warning: (ae-forgotten-export) The symbol "UserInfo" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserInfo = UserInfo;
     // Warning: (ae-forgotten-export) The symbol "UserMetadata" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserMetadata = UserMetadata;
     // Warning: (ae-forgotten-export) The symbol "UserMetadataRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserMetadataRequest = UserMetadataRequest;
     // Warning: (ae-forgotten-export) The symbol "UserProviderRequest" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserProviderRequest = UserProviderRequest;
     // Warning: (ae-forgotten-export) The symbol "UserRecord" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type UserRecord = UserRecord;
 }
 
@@ -274,8 +182,6 @@ export function database(app?: App): database.Database;
 // @public (undocumented)
 export namespace database {
     // Warning: (ae-forgotten-export) The symbol "Database" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type Database = Database;
     // (undocumented)
     export type DataSnapshot = rtdb.DataSnapshot;
@@ -289,8 +195,7 @@ export namespace database {
     export type Reference = rtdb.Reference;
     // (undocumented)
     export type ThenableReference = rtdb.ThenableReference;
-    const // (undocumented)
-    enableLogging: typeof rtdb.enableLogging;
+    const enableLogging: typeof rtdb.enableLogging;
     const ServerValue: rtdb.ServerValue;
 }
 

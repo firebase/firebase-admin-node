@@ -57,17 +57,39 @@
   "types": "./lib/index.d.ts",
   "typesVersions": {
     "*": {
-      "app": ["lib/app"],
-      "auth": ["lib/auth"],
-      "database": ["lib/database"],
-      "firestore": ["lib/firestore"],
-      "instance-id": ["lib/instance-id"],
-      "machine-learning": ["lib/machine-learning"],
-      "messaging": ["lib/messaging"],
-      "project-management": ["lib/project-management"],
-      "remote-config": ["lib/remote-config"],
-      "security-rules": ["lib/security-rules"],
-      "storage": ["lib/storage"]
+      "app": [
+        "lib/app"
+      ],
+      "auth": [
+        "lib/auth"
+      ],
+      "database": [
+        "lib/database"
+      ],
+      "firestore": [
+        "lib/firestore"
+      ],
+      "instance-id": [
+        "lib/instance-id"
+      ],
+      "machine-learning": [
+        "lib/machine-learning"
+      ],
+      "messaging": [
+        "lib/messaging"
+      ],
+      "project-management": [
+        "lib/project-management"
+      ],
+      "remote-config": [
+        "lib/remote-config"
+      ],
+      "security-rules": [
+        "lib/security-rules"
+      ],
+      "storage": [
+        "lib/storage"
+      ]
     }
   },
   "exports": {

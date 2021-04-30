@@ -142,50 +142,234 @@ export namespace auth {
    * Type alias to {@link firebase-admin.auth#AuthProviderConfigFilter}.
    */
   export type AuthProviderConfigFilter = TAuthProviderConfigFilter;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#BaseAuth}.
+   */
   export type BaseAuth = TBaseAuth;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#CreateMultiFactorInfoRequest}.
+   */
   export type CreateMultiFactorInfoRequest = TCreateMultiFactorInfoRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#CreatePhoneMultiFactorInfoRequest}.
+   */
   export type CreatePhoneMultiFactorInfoRequest = TCreatePhoneMultiFactorInfoRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#CreateRequest}.
+   */
   export type CreateRequest = TCreateRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#CreateTenantRequest}.
+   */
   export type CreateTenantRequest = TCreateTenantRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#DecodedIdToken}.
+   */
   export type DecodedIdToken = TDecodedIdToken;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#DeleteUsersResult}.
+   */
   export type DeleteUsersResult = TDeleteUsersResult;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#EmailIdentifier}.
+   */
   export type EmailIdentifier = TEmailIdentifier;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#EmailSignInProviderConfig}.
+   */
   export type EmailSignInProviderConfig = TEmailSignInProviderConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#GetUsersResult}.
+   */
   export type GetUsersResult = TGetUsersResult;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#HashAlgorithmType}.
+   */
   export type HashAlgorithmType = THashAlgorithmType;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#ListProviderConfigResults}.
+   */
   export type ListProviderConfigResults = TListProviderConfigResults;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#ListTenantsResult}.
+   */
   export type ListTenantsResult = TListTenantsResult;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#ListUsersResult}.
+   */
   export type ListUsersResult = TListUsersResult;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorCreateSettings}.
+   */
   export type MultiFactorCreateSettings = TMultiFactorCreateSettings;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorConfig}.
+   */
   export type MultiFactorConfig = TMultiFactorConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorConfigState}.
+   */
   export type MultiFactorConfigState = TMultiFactorConfigState;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorInfo}.
+   */
   export type MultiFactorInfo = TMultiFactorInfo;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorUpdateSettings}.
+   */
   export type MultiFactorUpdateSettings = TMultiFactorUpdateSettings;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#MultiFactorSettings}.
+   */
   export type MultiFactorSettings = TMultiFactorSettings;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#OIDCAuthProviderConfig}.
+   */
   export type OIDCAuthProviderConfig = TOIDCAuthProviderConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#OIDCUpdateAuthProviderRequest}.
+   */
   export type OIDCUpdateAuthProviderRequest = TOIDCUpdateAuthProviderRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#PhoneIdentifier}.
+   */
   export type PhoneIdentifier = TPhoneIdentifier;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#PhoneMultiFactorInfo}.
+   */
   export type PhoneMultiFactorInfo = TPhoneMultiFactorInfo;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#ProviderIdentifier}.
+   */
   export type ProviderIdentifier = TProviderIdentifier;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#SAMLAuthProviderConfig}.
+   */
   export type SAMLAuthProviderConfig = TSAMLAuthProviderConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#SAMLUpdateAuthProviderRequest}.
+   */
   export type SAMLUpdateAuthProviderRequest = TSAMLUpdateAuthProviderRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#SessionCookieOptions}.
+   */
   export type SessionCookieOptions = TSessionCookieOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#Tenant}.
+   */
   export type Tenant = TTenant;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#TenantAwareAuth}.
+   */
   export type TenantAwareAuth = TTenantAwareAuth;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#TenantManager}.
+   */
   export type TenantManager = TTenantManager;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UidIdentifier}.
+   */
   export type UidIdentifier = TUidIdentifier;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UpdateAuthProviderRequest}.
+   */
   export type UpdateAuthProviderRequest = TUpdateAuthProviderRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UpdateMultiFactorInfoRequest}.
+   */
   export type UpdateMultiFactorInfoRequest = TUpdateMultiFactorInfoRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UpdatePhoneMultiFactorInfoRequest}.
+   */
   export type UpdatePhoneMultiFactorInfoRequest = TUpdatePhoneMultiFactorInfoRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UpdateRequest}.
+   */
   export type UpdateRequest = TUpdateRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UpdateTenantRequest}.
+   */
   export type UpdateTenantRequest = TUpdateTenantRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserIdentifier}.
+   */
   export type UserIdentifier = TUserIdentifier;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserImportOptions}.
+   */
   export type UserImportOptions = TUserImportOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserImportRecord}.
+   */
   export type UserImportRecord = TUserImportRecord;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserImportResult}.
+   */
   export type UserImportResult = TUserImportResult;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserInfo}.
+   */
   export type UserInfo = TUserInfo;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserMetadata}.
+   */
   export type UserMetadata = TUserMetadata;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserMetadataRequest}.
+   */
   export type UserMetadataRequest = TUserMetadataRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserProviderRequest}.
+   */
   export type UserProviderRequest = TUserProviderRequest;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#UserRecord}.
+   */
   export type UserRecord = TUserRecord;
 }
