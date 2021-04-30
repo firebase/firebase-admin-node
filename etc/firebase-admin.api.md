@@ -62,24 +62,14 @@ export function auth(app?: App): auth.Auth;
 // @public (undocumented)
 export namespace auth {
     // Warning: (ae-forgotten-export) The symbol "ActionCodeSettings" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type ActionCodeSettings = ActionCodeSettings;
     // Warning: (ae-forgotten-export) The symbol "Auth" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type Auth = Auth;
     // Warning: (ae-forgotten-export) The symbol "AuthFactorType" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type AuthFactorType = AuthFactorType;
     // Warning: (ae-forgotten-export) The symbol "AuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type AuthProviderConfig = AuthProviderConfig;
     // Warning: (ae-forgotten-export) The symbol "AuthProviderConfigFilter" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type AuthProviderConfigFilter = AuthProviderConfigFilter;
     // Warning: (ae-forgotten-export) The symbol "BaseAuth" needs to be exported by the entry point default-namespace.d.ts
     //

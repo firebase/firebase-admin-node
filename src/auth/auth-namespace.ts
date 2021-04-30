@@ -118,10 +118,29 @@ export declare function auth(app?: App): auth.Auth;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace auth {
+  /**
+   * Type alias to {@link firebase-admin.auth#ActionCodeSettings}.
+   */
   export type ActionCodeSettings = TActionCodeSettings;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#Auth}.
+   */
   export type Auth = TAuth;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#AuthFactorType}.
+   */
   export type AuthFactorType = TAuthFactorType;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#AuthProviderConfig}.
+   */
   export type AuthProviderConfig = TAuthProviderConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.auth#AuthProviderConfigFilter}.
+   */
   export type AuthProviderConfigFilter = TAuthProviderConfigFilter;
   export type BaseAuth = TBaseAuth;
   export type CreateMultiFactorInfoRequest = TCreateMultiFactorInfoRequest;
