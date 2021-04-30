@@ -48,7 +48,7 @@ import {
   * @param app Optional app to return the `SecurityRules` service
   *     for. If not provided, the default `SecurityRules` service
   *     is returned.
-  * @return The default `SecurityRules` service if no app is provided, or the
+  * @returns The default `SecurityRules` service if no app is provided, or the
   *   `SecurityRules` service associated with the provided app.
   */
 export declare function securityRules(app?: App): securityRules.SecurityRules;

@@ -54,14 +54,14 @@ export interface CryptoSigner {
    * Cryptographically signs a buffer of data.
    *
    * @param {Buffer} buffer The data to be signed.
-   * @return {Promise<Buffer>} A promise that resolves with the raw bytes of a signature.
+   * @returns {Promise<Buffer>} A promise that resolves with the raw bytes of a signature.
    */
   sign(buffer: Buffer): Promise<Buffer>;
 
   /**
    * Returns the ID of the service account used to sign tokens.
    *
-   * @return {Promise<string>} A promise that resolves with a service account ID.
+   * @returns {Promise<string>} A promise that resolves with a service account ID.
    */
   getAccountId(): Promise<string>;
 }
@@ -259,7 +259,7 @@ export class EmulatedSigner implements CryptoSigner {
  * account credential, creates a ServiceAccountSigner. Otherwise creates an IAMSigner.
  *
  * @param {FirebaseApp} app A FirebaseApp instance.
- * @return {CryptoSigner} A CryptoSigner instance.
+ * @returns {CryptoSigner} A CryptoSigner instance.
  */
 export function cryptoSignerFromApp(app: App): CryptoSigner {
   const credential = app.options.credential;
@@ -303,7 +303,7 @@ export class FirebaseTokenGenerator {
    * @param uid The user ID to use for the generated Firebase Auth Custom token.
    * @param developerClaims Optional developer claims to include in the generated Firebase
    *     Auth Custom token.
-   * @return A Promise fulfilled with a Firebase Auth Custom token signed with a
+   * @returns A Promise fulfilled with a Firebase Auth Custom token signed with a
    *     service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
@@ -374,7 +374,7 @@ export class FirebaseTokenGenerator {
    * Returns whether or not the provided developer claims are valid.
    *
    * @param {object} [developerClaims] Optional developer claims to validate.
-   * @return {boolean} True if the provided claims are valid; otherwise, false.
+   * @returns {boolean} True if the provided claims are valid; otherwise, false.
    */
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
     if (typeof developerClaims === 'undefined') {

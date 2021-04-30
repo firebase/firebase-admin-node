@@ -20,7 +20,7 @@ import { Agent } from 'http';
 import { Credential } from './credential';
 
 /**
- * Available options to pass to [`initializeApp()`](admin#.initializeApp).
+ * Available options to pass to {@link firebase-admin.app#initializeApp}.
  */
 export interface AppOptions {
 
@@ -28,13 +28,13 @@ export interface AppOptions {
    * A {@link Credential `Credential`} object used to
    * authenticate the Admin SDK.
    *
-   * See [Initialize the SDK](/docs/admin/setup#initialize_the_sdk) for detailed
-   * documentation and code samples.
+   * See {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
+   * for detailed documentation and code samples.
    */
   credential?: Credential;
 
   /**
-   * The object to use as the [`auth`](/docs/reference/security/database/#auth)
+   * The object to use as the {@link https://firebase.google.com/docs/reference/security/database/#auth | auth}
    * variable in your Realtime Database Rules when the Admin SDK reads from or
    * writes to the Realtime Database. This allows you to downscope the Admin SDK
    * from its default full read and write privileges.
@@ -42,7 +42,8 @@ export interface AppOptions {
    * You can pass `null` to act as an unauthenticated client.
    *
    * See
-   * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
+   * {@link https://firebase.google.com/docs/database/admin/start#authenticate-with-limited-privileges |
+   * Authenticate with limited privileges}
    * for detailed documentation and code samples.
    */
   databaseAuthVariableOverride?: object | null;
@@ -71,7 +72,7 @@ export interface AppOptions {
   projectId?: string;
 
   /**
-   * An [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+   * An {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    * to be used when making outgoing HTTP calls. This Agent instance is used
    * by all services that make REST calls (e.g. `auth`, `messaging`,
    * `projectManagement`).
@@ -87,12 +88,6 @@ export interface AppOptions {
 /**
  * A Firebase app holds the initialization information for a collection of
  * services.
- *
- * Do not call this constructor directly. Instead, use
- * {@link
- *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
- *   `admin.initializeApp()`}
- * to create an app.
  */
 export interface App {
 
@@ -119,10 +114,7 @@ export interface App {
 
   /**
    * The (read-only) configuration options for this app. These are the original
-   * parameters given in
-   * {@link
-   *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
-   *   `admin.initializeApp()`}.
+   * parameters given in {@link firebase-admin.app#initializeApp}.
    *
    * @example
    * ```javascript
@@ -170,7 +162,9 @@ export interface FirebaseError {
   stack?: string;
 
   /**
-   * @return A JSON-serializable representation of this object.
+   * Returns a JSON-serializable object representation of this error.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
   toJSON(): object;
 }

@@ -19,14 +19,12 @@ import { App } from '../app';
 import { Database as TDatabase } from './database';
 
 /**
- * Gets the {@link database.Database `Database`} service for the default
+ * Gets the {@link firebase-admin.database#Database} service for the default
  * app or a given app.
  *
  * `admin.database()` can be called with no arguments to access the default
- * app's {@link database.Database `Database`} service or as
- * `admin.database(app)` to access the
- * {@link database.Database `Database`} service associated with a specific
- * app.
+ * app's `Database` service or as `admin.database(app)` to access the
+ * `Database` service associated with a specific app.
  *
  * `admin.database` is also a namespace that can be used to access global
  * constants and methods associated with the `Database` service.
@@ -46,7 +44,7 @@ import { Database as TDatabase } from './database';
  * @param App whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
- * @return The default `Database` service if no app
+ * @returns The default `Database` service if no app
  *   is provided or the `Database` service associated with the provided app.
  */
 export declare function database(app?: App): database.Database;
@@ -64,7 +62,7 @@ export namespace database {
   export declare const enableLogging: typeof rtdb.enableLogging;
 
   /**
-   * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
+   * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
    * module from the `@firebase/database` package.
    */
   export declare const ServerValue: rtdb.ServerValue;

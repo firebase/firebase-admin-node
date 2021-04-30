@@ -62,7 +62,7 @@ export class UrlKeyFetcher implements KeyFetcher {
   /**
    * Fetches the public keys for the Google certs.
    *
-   * @return A promise fulfilled with public keys for the Google certs.
+   * @returns A promise fulfilled with public keys for the Google certs.
    */
   public fetchPublicKeys(): Promise<{ [key: string]: string }> {
     if (this.shouldRefresh()) {
@@ -73,7 +73,7 @@ export class UrlKeyFetcher implements KeyFetcher {
 
   /**
    * Checks if the cached public keys need to be refreshed.
-   * 
+   *
    * @returns Whether the keys should be fetched from the client certs url or not.
    */
   private shouldRefresh(): boolean {
@@ -163,7 +163,7 @@ export class EmulatorSignatureVerifier implements SignatureVerifier {
 
 /**
  * Provides a callback to fetch public keys.
- * 
+ *
  * @param fetcher KeyFetcher to fetch the keys from.
  * @returns A callback function that can be used to get keys in `jsonwebtoken`.
  */
@@ -186,7 +186,7 @@ function getKeyCallback(fetcher: KeyFetcher): jwt.GetPublicKeyOrSecret {
 /**
  * Verifies the signature of a JWT using the provided secret or a function to fetch
  * the secret or public key.
- * 
+ *
  * @param token The JWT to be verfied.
  * @param secretOrPublicKey The secret or a function to fetch the secret or public key.
  * @param options JWT verification options.
@@ -224,7 +224,7 @@ export function verifyJwtSignature(token: string, secretOrPublicKey: jwt.Secret 
 
 /**
  * Decodes general purpose Firebase JWTs.
- * 
+ *
  * @param jwtToken JWT token to be decoded.
  * @returns Decoded token containing the header and payload.
  */

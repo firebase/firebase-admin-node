@@ -21,14 +21,11 @@ import { InstanceId } from './instance-id';
 export { InstanceId };
 
 /**
- * Gets the {@link InstanceId `InstanceId`} service for the
- * default app or a given app.
+ * Gets the {@link InstanceId} service for the default app or a given app.
  *
  * `getInstanceId()` can be called with no arguments to access the default
- * app's {@link InstanceId `InstanceId`} service or as
- * `getInstanceId(app)` to access the
- * {@link InstanceId `InstanceId`} service associated with a
- * specific app.
+ * app's `InstanceId` service or as `getInstanceId(app)` to access the
+ * `InstanceId` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -46,7 +43,7 @@ export { InstanceId };
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
  *
- * @return The default `InstanceId` service if
+ * @returns The default `InstanceId` service if
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
  */

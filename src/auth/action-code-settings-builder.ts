@@ -223,7 +223,7 @@ export class ActionCodeSettingsBuilder {
    * Returns the corresponding constructed server request corresponding to the
    * current ActionCodeSettings.
    *
-   * @return {EmailActionCodeRequest} The constructed EmailActionCodeRequest request.
+   * @returns The constructed EmailActionCodeRequest request.
    */
   public buildRequest(): EmailActionCodeRequest {
     const request: { [key: string]: any } = {

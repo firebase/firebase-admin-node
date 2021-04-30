@@ -192,7 +192,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the Auth service instance associated with this app.
    *
-   * @return The Auth service instance of this app.
+   * @returns The Auth service instance of this app.
    */
   public auth(): Auth {
     const fn = require('../auth/index').getAuth;
@@ -202,7 +202,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the Database service for the specified URL, and the current app.
    *
-   * @return The Database service instance of this app.
+   * @returns The Database service instance of this app.
    */
   public database(url?: string): Database {
     const fn = require('../database/index').getDatabaseWithUrl;
@@ -212,7 +212,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the Messaging service instance associated with this app.
    *
-   * @return The Messaging service instance of this app.
+   * @returns The Messaging service instance of this app.
    */
   public messaging(): Messaging {
     const fn = require('../messaging/index').getMessaging;
@@ -222,7 +222,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the Storage service instance associated with this app.
    *
-   * @return The Storage service instance of this app.
+   * @returns The Storage service instance of this app.
    */
   public storage(): Storage {
     const fn = require('../storage/index').getStorage;
@@ -237,7 +237,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the InstanceId service instance associated with this app.
    *
-   * @return The InstanceId service instance of this app.
+   * @returns The InstanceId service instance of this app.
    */
   public instanceId(): InstanceId {
     const fn = require('../instance-id/index').getInstanceId;
@@ -247,7 +247,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the MachineLearning service instance associated with this app.
    *
-   * @return The Machine Learning service instance of this app
+   * @returns The Machine Learning service instance of this app
    */
   public machineLearning(): MachineLearning {
     const fn = require('../machine-learning/index').getMachineLearning;
@@ -257,7 +257,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the ProjectManagement service instance associated with this app.
    *
-   * @return The ProjectManagement service instance of this app.
+   * @returns The ProjectManagement service instance of this app.
    */
   public projectManagement(): ProjectManagement {
     const fn = require('../project-management/index').getProjectManagement;
@@ -267,7 +267,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the SecurityRules service instance associated with this app.
    *
-   * @return The SecurityRules service instance of this app.
+   * @returns The SecurityRules service instance of this app.
    */
   public securityRules(): SecurityRules {
     const fn = require('../security-rules/index').getSecurityRules;
@@ -277,7 +277,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the RemoteConfig service instance associated with this app.
    *
-   * @return The RemoteConfig service instance of this app.
+   * @returns The RemoteConfig service instance of this app.
    */
   public remoteConfig(): RemoteConfig {
     const fn = require('../remote-config/index').getRemoteConfig;
@@ -287,7 +287,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the name of the FirebaseApp instance.
    *
-   * @return The name of the FirebaseApp instance.
+   * @returns The name of the FirebaseApp instance.
    */
   get name(): string {
     this.checkDestroyed_();
@@ -297,7 +297,7 @@ export class FirebaseApp implements app.App {
   /**
    * Returns the options for the FirebaseApp instance.
    *
-   * @return The options for the FirebaseApp instance.
+   * @returns The options for the FirebaseApp instance.
    */
   get options(): AppOptions {
     this.checkDestroyed_();
@@ -314,7 +314,7 @@ export class FirebaseApp implements app.App {
   /**
    * Deletes the FirebaseApp instance.
    *
-   * @return An empty Promise fulfilled once the FirebaseApp instance is deleted.
+   * @returns An empty Promise fulfilled once the FirebaseApp instance is deleted.
    */
   public delete(): Promise<void> {
     this.checkDestroyed_();

@@ -36,7 +36,7 @@ export class FirestoreService {
   /**
    * Returns the app associated with this Storage instance.
    *
-   * @return The app associated with this Storage instance.
+   * @returns The app associated with this Storage instance.
    */
   get app(): App {
     return this.appInternal;

@@ -495,7 +495,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    * Throws an error if validation fails.
    *
    * @param options The options object to convert to a server request.
-   * @return The resulting server request.
+   * @returns The resulting server request.
    * @internal
    */
   public static buildServerRequest(options: MultiFactorConfig): MultiFactorAuthServerConfig {
@@ -599,7 +599,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     })
   }
 
-  /** @return The plain object representation of the multi-factor config instance. */
+  /** @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,
@@ -676,8 +676,8 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    * Static method to convert a client side request to a EmailSignInConfigServerRequest.
    * Throws an error if validation fails.
    *
-   * @param {any} options The options object to convert to a server request.
-   * @return {EmailSignInConfigServerRequest} The resulting server request.
+   * @param options The options object to convert to a server request.
+   * @returns The resulting server request.
    * @internal
    */
   public static buildServerRequest(options: EmailSignInProviderConfig): EmailSignInConfigServerRequest {
@@ -695,7 +695,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * Validates the EmailSignInConfig options object. Throws an error on failure.
    *
-   * @param {any} options The options object to validate.
+   * @param options The options object to validate.
    */
   private static validate(options: EmailSignInProviderConfig): void {
     // TODO: Validate the request.
@@ -738,7 +738,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * The EmailSignInConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the
+   * @param response The server side response used to initialize the
    *     EmailSignInConfig object.
    * @constructor
    */
@@ -752,7 +752,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
     this.passwordRequired = !response.enableEmailLinkSignin;
   }
 
-  /** @return {object} The plain object representation of the email sign-in config. */
+  /** @returns The plain object representation of the email sign-in config. */
   public toJSON(): object {
     return {
       enabled: this.enabled,
@@ -890,9 +890,9 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a SAMLConfig request,
    * returns null.
    *
-   * @param {SAMLAuthProviderRequest} options The options object to convert to a server request.
-   * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
-   * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
+   * @param options The options object to convert to a server request.
+   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
     options: Partial<SAMLAuthProviderConfig>,
@@ -934,8 +934,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name.
-   * @return {?string} The provider ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name.
+   * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/inboundSamlConfigs/providerId1
@@ -947,8 +947,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   }
 
   /**
-   * @param {any} providerId The provider ID to check.
-   * @return {boolean} Whether the provider ID corresponds to a SAML provider.
+   * @param providerId The provider ID to check.
+   * @returns Whether the provider ID corresponds to a SAML provider.
    */
   public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('saml.') === 0;
@@ -957,8 +957,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Validates the SAMLConfig options object. Throws an error on failure.
    *
-   * @param {SAMLAuthProviderRequest} options The options object to validate.
-   * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
+   * @param options The options object to validate.
+   * @param ignoreMissingFields Whether to ignore missing fields.
    */
   public static validate(options: Partial<SAMLAuthProviderConfig>, ignoreMissingFields = false): void {
     const validKeys = {
@@ -1117,7 +1117,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     this.displayName = response.displayName;
   }
 
-  /** @return The plain object representation of the SAMLConfig. */
+  /** @returns The plain object representation of the SAMLConfig. */
   public toJSON(): object {
     return {
       enabled: this.enabled,
@@ -1154,7 +1154,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    *
    * @param options The options object to convert to a server request.
    * @param ignoreMissingFields Whether to ignore missing fields.
-   * @return The resulting server request or null if not valid.
+   * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
     options: Partial<OIDCAuthProviderConfig>,
@@ -1177,8 +1177,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The provider ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name
+   * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/oauthIdpConfigs/providerId1
@@ -1190,8 +1190,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   }
 
   /**
-   * @param {any} providerId The provider ID to check.
-   * @return {boolean} Whether the provider ID corresponds to an OIDC provider.
+   * @param providerId The provider ID to check.
+   * @returns Whether the provider ID corresponds to an OIDC provider.
    */
   public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('oidc.') === 0;
@@ -1303,7 +1303,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     this.displayName = response.displayName;
   }
 
-  /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
+  /** @returns The plain object representation of the OIDCConfig. */
   public toJSON(): OIDCAuthProviderConfig {
     return {
       enabled: this.enabled,

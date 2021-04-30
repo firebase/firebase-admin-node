@@ -35,13 +35,13 @@ export {
 } from '@firebase/database-types';
 
 /**
- * [`enableLogging`](https://firebase.google.com/docs/reference/js/firebase.database#enablelogging)
+ * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
  * function from the `@firebase/database` package.
  */
 export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
 
 /**
- * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
+ * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
  * module from the `@firebase/database` package.
  */
 export const ServerValue: rtdb.ServerValue = serverValueConst;
@@ -71,7 +71,7 @@ export const ServerValue: rtdb.ServerValue = serverValueConst;
  * @param App whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
- * @return The default `Database` service if no app
+ * @returns The default `Database` service if no app
  *   is provided or the `Database` service associated with the provided app.
  */
 export function getDatabase(app?: App): Database {
@@ -103,7 +103,7 @@ export function getDatabase(app?: App): Database {
  * @param App whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
- * @return The default `Database` service if no app
+ * @returns The default `Database` service if no app
  *   is provided or the `Database` service associated with the provided app.
  */
 export function getDatabaseWithUrl(url: string, app?: App): Database {

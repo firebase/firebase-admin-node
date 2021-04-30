@@ -27,14 +27,11 @@ export {
 } from './security-rules';
 
 /**
- * Gets the {@link securityRules.SecurityRules
- * `SecurityRules`} service for the default app or a given app.
+ * Gets the {@link SecurityRules} service for the default app or a given app.
  *
  * `admin.securityRules()` can be called with no arguments to access the
- * default app's {@link securityRules.SecurityRules
- * `SecurityRules`} service, or as `admin.securityRules(app)` to access
- * the {@link securityRules.SecurityRules `SecurityRules`}
- * service associated with a specific app.
+ * default app's `SecurityRules` service, or as `admin.securityRules(app)` to access
+ * the `SecurityRules` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -51,7 +48,7 @@ export {
  * @param app Optional app to return the `SecurityRules` service
  *     for. If not provided, the default `SecurityRules` service
  *     is returned.
- * @return The default `SecurityRules` service if no app is provided, or the
+ * @returns The default `SecurityRules` service if no app is provided, or the
  *   `SecurityRules` service associated with the provided app.
  */
 export function getSecurityRules(app?: App): SecurityRules {

@@ -72,7 +72,7 @@ export class FirebaseNamespaceInternals {
    *   to a file.
    * @param appName Optional name of the FirebaseApp instance.
    *
-   * @return A new App instance.
+   * @returns A new App instance.
    */
   public initializeApp(options?: AppOptions, appName = DEFAULT_APP_NAME): App {
     if (typeof options === 'undefined') {
@@ -114,7 +114,7 @@ export class FirebaseNamespaceInternals {
    * if no name is provided).
    *
    * @param appName Optional name of the FirebaseApp instance to return.
-   * @return The App instance which has the provided name.
+   * @returns The App instance which has the provided name.
    */
   public app(appName = DEFAULT_APP_NAME): App {
     if (typeof appName !== 'string' || appName === '') {
@@ -360,7 +360,7 @@ export class FirebaseNamespace {
    *   otherwise it will be assumed to be pointing to a file.
    * @param appName Optional name of the FirebaseApp instance.
    *
-   * @return A new FirebaseApp instance.
+   * @returns A new FirebaseApp instance.
    */
   public initializeApp(options?: AppOptions, appName?: string): App {
     return this.INTERNAL.initializeApp(options, appName);
@@ -371,7 +371,7 @@ export class FirebaseNamespace {
    * if no name is provided).
    *
    * @param appName Optional name of the FirebaseApp instance to return.
-   * @return The FirebaseApp instance which has the provided name.
+   * @returns The FirebaseApp instance which has the provided name.
    */
   public app(appName?: string): App {
     return this.INTERNAL.app(appName);

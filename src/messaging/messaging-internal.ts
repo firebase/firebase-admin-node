@@ -372,7 +372,7 @@ function validateApsAlert(alert: string | ApsAlert | undefined): void {
  * and notification fields. If successful, transforms the input object by renaming keys to valid
  * Android keys. Also transforms the ttl value to the format expected by FCM service.
  *
- * @param {AndroidConfig} config An object to be validated.
+ * @param config An object to be validated.
  */
 function validateAndroidConfig(config: AndroidConfig | undefined): void {
   if (typeof config === 'undefined') {
@@ -585,8 +585,8 @@ function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined): v
  * Returns the duration in seconds with up to nine fractional
  * digits, terminated by 's'. Example: "3.5s".
  *
- * @param {number} milliseconds The duration in milliseconds.
- * @return {string} The resulting formatted string in seconds with up to nine fractional
+ * @param milliseconds The duration in milliseconds.
+ * @returns The resulting formatted string in seconds with up to nine fractional
  * digits, terminated by 's'.
  */
 function transformMillisecondsToSecondsString(milliseconds: number): string {

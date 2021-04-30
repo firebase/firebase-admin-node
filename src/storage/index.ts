@@ -21,14 +21,11 @@ import { Storage } from './storage';
 export { Storage } from './storage';
 
 /**
- * Gets the {@link storage.Storage `Storage`} service for the
- * default app or a given app.
+ * Gets the {@link Storage} service for the default app or a given app.
  *
  * `getStorage()` can be called with no arguments to access the default
- * app's {@link storage.Storage `Storage`} service or as
- * `getStorage(app)` to access the
- * {@link storage.Storage `Storage`} service associated with a
- * specific app.
+ * app's `Storage` service or as `getStorage(app)` to access the
+ * `Storage` service associated with a specific app.
  *
  * @example
  * ```javascript

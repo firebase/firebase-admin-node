@@ -37,7 +37,7 @@ import {
 import { UserImportOptions, UserImportRecord, UserImportResult } from './user-import-builder';
 import { ActionCodeSettings } from './action-code-settings-builder';
 
-/** Represents the result of the {@link auth.Auth.getUsers} API. */
+/** Represents the result of the {@link BaseAuth.getUsers} API. */
 export interface GetUsersResult {
   /**
    * Set of user records, corresponding to the set of users that were
@@ -70,8 +70,7 @@ export interface ListUsersResult {
 }
 
 /**
- * Represents the result of the
- * {@link auth.Auth.deleteUsers `deleteUsers()`}
+ * Represents the result of the {@link BaseAuth.deleteUsers}.
  * API.
  */
 export interface DeleteUsersResult {
@@ -90,14 +89,14 @@ export interface DeleteUsersResult {
   /**
    * A list of `FirebaseArrayIndexError` instances describing the errors that
    * were encountered during the deletion. Length of this list is equal to
-   * the return value of [`failureCount`](#failureCount).
+   * the return value of {@link DeleteUsersResult.failureCount}.
    */
   errors: FirebaseArrayIndexError[];
 }
 
 /**
  * Interface representing the session cookie options needed for the
- * {@link auth.Auth.createSessionCookie `createSessionCookie()`} method.
+ * {@link BaseAuth.createSessionCookie} method.
  */
 export interface SessionCookieOptions {
 
@@ -152,14 +151,14 @@ export abstract class BaseAuth {
    * methods. (Tenant-aware instances will also embed the tenant ID in the
    * token.)
    *
-   * See [Create Custom Tokens](/docs/auth/admin/create-custom-tokens) for code
-   * samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/auth/admin/create-custom-tokens | Create Custom Tokens}
+   * for code samples and detailed documentation.
    *
    * @param uid The `uid` to use as the custom token's subject.
    * @param developerClaims Optional additional claims to include
    *   in the custom token's payload.
    *
-   * @return A promise fulfilled with a custom token for the
+   * @returns A promise fulfilled with a custom token for the
    *   provided `uid` and payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
@@ -173,8 +172,8 @@ export abstract class BaseAuth {
    * An optional flag can be passed to additionally check whether the ID token
    * was revoked.
    *
-   * See [Verify ID Tokens](/docs/auth/admin/verify-id-tokens) for code samples
-   * and detailed documentation.
+   * See {@link https://firebase.google.com/docs/auth/admin/verify-id-tokens | Verify ID Tokens}
+   * for code samples and detailed documentation.
    *
    * @param idToken The ID token to verify.
    * @param checkRevoked Whether to check if the ID token was revoked.
@@ -182,7 +181,7 @@ export abstract class BaseAuth {
    *   the `tokensValidAfterTime` time for the corresponding user.
    *   When not specified, this additional check is not applied.
    *
-   * @return A promise fulfilled with the
+   * @returns A promise fulfilled with the
    *   token's decoded claims if the ID token is valid; otherwise, a rejected
    *   promise.
    */
@@ -203,12 +202,12 @@ export abstract class BaseAuth {
   /**
    * Gets the user data for the user corresponding to a given `uid`.
    *
-   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
    * @param uid The `uid` corresponding to the user whose data to fetch.
    *
-   * @return A promise fulfilled with the user
+   * @returns A promise fulfilled with the user
    *   data corresponding to the provided `uid`.
    */
   public getUser(uid: string): Promise<UserRecord> {
@@ -222,13 +221,13 @@ export abstract class BaseAuth {
   /**
    * Gets the user data for the user corresponding to a given email.
    *
-   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
    * @param email The email corresponding to the user whose data to
    *   fetch.
    *
-   * @return A promise fulfilled with the user
+   * @returns A promise fulfilled with the user
    *   data corresponding to the provided email.
    */
   public getUserByEmail(email: string): Promise<UserRecord> {
@@ -243,13 +242,13 @@ export abstract class BaseAuth {
    * Gets the user data for the user corresponding to a given phone number. The
    * phone number has to conform to the E.164 specification.
    *
-   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
    * @param phoneNumber The phone number corresponding to the user whose
    *   data to fetch.
    *
-   * @return A promise fulfilled with the user
+   * @returns A promise fulfilled with the user
    *   data corresponding to the provided phone number.
    */
   public getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord> {
@@ -263,14 +262,14 @@ export abstract class BaseAuth {
   /**
    * Gets the user data for the user corresponding to a given provider id.
    *
-   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
    * @param providerId The provider ID, for example, "google.com" for the
    *   Google provider.
    * @param uid The user identifier for the given provider.
    *
-   * @return A promise fulfilled with the user data corresponding to the
+   * @returns A promise fulfilled with the user data corresponding to the
    *   given provider id.
    */
   public getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord> {
@@ -301,7 +300,7 @@ export abstract class BaseAuth {
    *
    * @param identifiers The identifiers used to indicate which user records should be returned.
    *     Must have <= 100 entries.
-   * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+   * @returns A promise that resolves to the corresponding user records.
    * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
    *     identifiers are specified.
    */
@@ -350,14 +349,14 @@ export abstract class BaseAuth {
    * starting from the offset as specified by `pageToken`. This is used to
    * retrieve all the users of a specified project in batches.
    *
-   * See [List all users](/docs/auth/admin/manage-users#list_all_users)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#list_all_users | List all users}
    * for code samples and detailed documentation.
    *
    * @param maxResults The page size, 1000 if undefined. This is also
    *   the maximum allowed limit.
    * @param pageToken The next page token. If not specified, returns
    *   users starting without any offset.
-   * @return A promise that resolves with
+   * @returns A promise that resolves with
    *   the current batch of downloaded users and the next page token.
    */
   public listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult> {
@@ -385,13 +384,13 @@ export abstract class BaseAuth {
   /**
    * Creates a new user.
    *
-   * See [Create a user](/docs/auth/admin/manage-users#create_a_user) for code
-   * samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#create_a_user | Create a user}
+   * for code samples and detailed documentation.
    *
    * @param properties The properties to set on the
    *   new user record to be created.
    *
-   * @return A promise fulfilled with the user
+   * @returns A promise fulfilled with the user
    *   data corresponding to the newly created user.
    */
   public createUser(properties: CreateRequest): Promise<UserRecord> {
@@ -414,12 +413,12 @@ export abstract class BaseAuth {
   /**
    * Deletes an existing user.
    *
-   * See [Delete a user](/docs/auth/admin/manage-users#delete_a_user) for code
-   * samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#delete_a_user | Delete a user}
+   * for code samples and detailed documentation.
    *
    * @param uid The `uid` corresponding to the user to delete.
    *
-   * @return An empty promise fulfilled once the user has been
+   * @returns An empty promise fulfilled once the user has been
    *   deleted.
    */
   public deleteUser(uid: string): Promise<void> {
@@ -447,7 +446,7 @@ export abstract class BaseAuth {
    *
    * @param uids The `uids` corresponding to the users to delete.
    *
-   * @return A Promise that resolves to the total number of successful/failed
+   * @returns A Promise that resolves to the total number of successful/failed
    *     deletions, as well as the array of errors that corresponds to the
    *     failed deletions.
    */
@@ -498,14 +497,14 @@ export abstract class BaseAuth {
   /**
    * Updates an existing user.
    *
-   * See [Update a user](/docs/auth/admin/manage-users#update_a_user) for code
-   * samples and detailed documentation.
+   * See {@link https://firebsae.google.com/docs/auth/admin/manage-users#update_a_user | Update a user}
+   * for code samples and detailed documentation.
    *
    * @param uid The `uid` corresponding to the user to update.
    * @param properties The properties to update on
    *   the provided user.
    *
-   * @return A promise fulfilled with the
+   * @returns A promise fulfilled with the
    *   updated user data.
    */
   public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
@@ -569,8 +568,8 @@ export abstract class BaseAuth {
    * is used (sub, iat, iss, etc), an error is thrown. They are set on the
    * authenticated user's ID token JWT.
    *
-   * See
-   * [Defining user roles and access levels](/docs/auth/admin/custom-claims)
+   * See {@link https://firebase.google.com/docs/auth/admin/custom-claims |
+   * Defining user roles and access levels}
    * for code samples and detailed documentation.
    *
    * @param uid The `uid` of the user to edit.
@@ -580,7 +579,7 @@ export abstract class BaseAuth {
    *   user's ID token which is transmitted on every authenticated request.
    *   For profile non-access related user attributes, use database or other
    *   separate storage systems.
-   * @return A promise that resolves when the operation completes
+   * @returns A promise that resolves when the operation completes
    *   successfully.
    */
   public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void> {
@@ -593,22 +592,20 @@ export abstract class BaseAuth {
   /**
    * Revokes all refresh tokens for an existing user.
    *
-   * This API will update the user's
-   * {@link auth.UserRecord.tokensValidAfterTime `tokensValidAfterTime`} to
+   * This API will update the user's {@link UserRecord.tokensValidAfterTime} to
    * the current UTC. It is important that the server on which this is called has
    * its clock set correctly and synchronized.
    *
    * While this will revoke all sessions for a specified user and disable any
    * new ID tokens for existing sessions from getting minted, existing ID tokens
    * may remain active until their natural expiration (one hour). To verify that
-   * ID tokens are revoked, use
-   * {@link auth.Auth.verifyIdToken `verifyIdToken(idToken, true)`}
+   * ID tokens are revoked, use {@link BaseAuth.verifyIdToken}
    * where `checkRevoked` is set to true.
    *
    * @param uid The `uid` corresponding to the user whose refresh tokens
    *   are to be revoked.
    *
-   * @return An empty promise fulfilled once the user's refresh
+   * @returns An empty promise fulfilled once the user's refresh
    *   tokens have been revoked.
    */
   public revokeRefreshTokens(uid: string): Promise<void> {
@@ -622,7 +619,7 @@ export abstract class BaseAuth {
    * Imports the provided list of users into Firebase Auth.
    * A maximum of 1000 users are allowed to be imported one at a time.
    * When importing users with passwords,
-   * {@link auth.UserImportOptions `UserImportOptions`} are required to be
+   * {@link UserImportOptions} are required to be
    * specified.
    * This operation is optimized for bulk imports and will ignore checks on `uid`,
    * `email` and other identifier uniqueness which could result in duplications.
@@ -630,7 +627,7 @@ export abstract class BaseAuth {
    * @param users The list of user records to import to Firebase Auth.
    * @param options The user import options, required when the users provided include
    *   password credentials.
-   * @return A promise that resolves when
+   * @returns A promise that resolves when
    *   the operation completes with the result of the import. This includes the
    *   number of successful imports, the number of failed imports and their
    *   corresponding errors.
@@ -646,15 +643,15 @@ export abstract class BaseAuth {
    * policy, and be used for session management. The session cookie JWT will have
    * the same payload claims as the provided ID token.
    *
-   * See [Manage Session Cookies](/docs/auth/admin/manage-cookies) for code
-   * samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-cookies | Manage Session Cookies}
+   * for code samples and detailed documentation.
    *
    * @param idToken The Firebase ID token to exchange for a session
    *   cookie.
    * @param sessionCookieOptions The session
    *   cookie options which includes custom session duration.
    *
-   * @return A promise that resolves on success with the
+   * @returns A promise that resolves on success with the
    *   created session cookie.
    */
   public createSessionCookie(
@@ -676,7 +673,8 @@ export abstract class BaseAuth {
    * `auth/session-cookie-revoked` error is thrown. If not specified the check is
    * not performed.
    *
-   * See [Verify Session Cookies](/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions)
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions |
+   * Verify Session Cookies}
    * for code samples and detailed documentation
    *
    * @param sessionCookie The session cookie to verify.
@@ -685,7 +683,7 @@ export abstract class BaseAuth {
    *   check the `tokensValidAfterTime` time for the corresponding user.
    *   When not specified, this additional check is not performed.
    *
-   * @return A promise fulfilled with the
+   * @returns A promise fulfilled with the
    *   session cookie's decoded claims if the session cookie is valid; otherwise,
    *   a rejected promise.
    */
@@ -707,7 +705,7 @@ export abstract class BaseAuth {
   /**
    * Generates the out of band email action link to reset a user's password.
    * The link is generated for the user with the specified email address. The
-   * optional  {@link auth.ActionCodeSettings `ActionCodeSettings`} object
+   * optional  {@link ActionCodeSettings} object
    * defines whether the link is to be handled by a mobile app or browser and the
    * additional state information to be passed in the deep link, etc.
    *
@@ -751,7 +749,7 @@ export abstract class BaseAuth {
    *     and accepts the Firebase Dynamic Links terms of service.
    *     The Android package name and iOS bundle ID are respected only if they
    *     are configured in the same Firebase Auth project.
-   * @return A promise that resolves with the generated link.
+   * @returns A promise that resolves with the generated link.
    */
   public generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('PASSWORD_RESET', email, actionCodeSettings);
@@ -759,8 +757,7 @@ export abstract class BaseAuth {
 
   /**
    * Generates the out of band email action link to verify the user's ownership
-   * of the specified email. The
-   * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
+   * of the specified email. The {@link ActionCodeSettings} object provided
    * as an argument to this method defines whether the link is to be handled by a
    * mobile app or browser along with additional state information to be passed in
    * the deep link, etc.
@@ -804,7 +801,7 @@ export abstract class BaseAuth {
    *     and accepts the Firebase Dynamic Links terms of service.
    *     The Android package name and iOS bundle ID are respected only if they
    *     are configured in the same Firebase Auth project.
-   * @return A promise that resolves with the generated link.
+   * @returns A promise that resolves with the generated link.
    */
   public generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings);
@@ -812,8 +809,7 @@ export abstract class BaseAuth {
 
   /**
    * Generates the out of band email action link to verify the user's ownership
-   * of the specified email. The
-   * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
+   * of the specified email. The {@link ActionCodeSettings} object provided
    * as an argument to this method defines whether the link is to be handled by a
    * mobile app or browser along with additional state information to be passed in
    * the deep link, etc.
@@ -857,7 +853,7 @@ export abstract class BaseAuth {
    *     and accepts the Firebase Dynamic Links terms of service.
    *     The Android package name and iOS bundle ID are respected only if they
    *     are configured in the same Firebase Auth project.
-   * @return A promise that resolves with the generated link.
+   * @returns A promise that resolves with the generated link.
    */
   public generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('EMAIL_SIGNIN', email, actionCodeSettings);
@@ -869,10 +865,10 @@ export abstract class BaseAuth {
    *
    * SAML and OIDC provider support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
-   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
    * @param options The provider config filter to apply.
-   * @return A promise that resolves with the list of provider configs meeting the
+   * @returns A promise that resolves with the list of provider configs meeting the
    *   filter requirements.
    */
   public listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults> {
@@ -926,11 +922,11 @@ export abstract class BaseAuth {
    *
    * SAML and OIDC provider support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
-   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
    * @param providerId The provider ID corresponding to the provider
    *     config to return.
-   * @return A promise that resolves
+   * @returns A promise that resolves
    *     with the configuration corresponding to the provided ID.
    */
   public getProviderConfig(providerId: string): Promise<AuthProviderConfig> {
@@ -955,11 +951,11 @@ export abstract class BaseAuth {
    *
    * SAML and OIDC provider support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
-   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
    * @param providerId The provider ID corresponding to the provider
    *     config to delete.
-   * @return A promise that resolves on completion.
+   * @returns A promise that resolves on completion.
    */
   public deleteProviderConfig(providerId: string): Promise<void> {
     if (OIDCConfig.isProviderId(providerId)) {
@@ -978,12 +974,12 @@ export abstract class BaseAuth {
    *
    * SAML and OIDC provider support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
-   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
    * @param providerId The provider ID corresponding to the provider
    *     config to update.
    * @param updatedConfig The updated configuration.
-   * @return A promise that resolves with the updated provider configuration.
+   * @returns A promise that resolves with the updated provider configuration.
    */
   public updateProviderConfig(
     providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
@@ -1013,10 +1009,10 @@ export abstract class BaseAuth {
    *
    * SAML and OIDC provider support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
-   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
    * @param config The provider configuration to create.
-   * @return A promise that resolves with the created provider configuration.
+   * @returns A promise that resolves with the created provider configuration.
    */
   public createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(config)) {
@@ -1046,7 +1042,7 @@ export abstract class BaseAuth {
    * @param decodedIdToken The JWT's decoded claims.
    * @param revocationErrorInfo The revocation error info to throw on revocation
    *     detection.
-   * @return A Promise that will be fulfilled after a successful verification.
+   * @returns A Promise that will be fulfilled after a successful verification.
    */
   private verifyDecodedJWTNotRevoked(
     decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
