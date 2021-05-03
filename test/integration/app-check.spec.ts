@@ -34,7 +34,7 @@ let appId: string;
 describe('admin.appCheck', () => {
   before(async () => {
     try {
-      appId = fs.readFileSync(path.join(__dirname, '../resources/appId.txt')).toString().trim();
+      appId = fs.readFileSync(path.join(__dirname, '../resources/appid.txt')).toString().trim();
     } catch (error) {
       console.log(chalk.yellow(
         'Unable to find an an App ID. Skipping tests that require a valid App ID.',
