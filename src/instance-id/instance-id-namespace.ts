@@ -33,5 +33,8 @@ export declare function instanceId(app?: App): instanceId.InstanceId;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace instanceId {
+  /**
+   * Type alias to {@link firebase-admin.instance-id#InstanceId}.
+   */
   export type InstanceId = TInstanceId;
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as _firestore from '@google-cloud/firestore';
+import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirestoreService } from './firestore-internal';
@@ -50,7 +50,7 @@ export {
   setLogFunction,
 } from '@google-cloud/firestore';
 
-export function getFirestore(app?: App): _firestore.Firestore {
+export function getFirestore(app?: App): Firestore {
   if (typeof app === 'undefined') {
     app = getApp();
   }

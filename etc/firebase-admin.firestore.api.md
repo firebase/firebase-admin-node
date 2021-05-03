@@ -16,7 +16,6 @@ import { DocumentSnapshot } from '@google-cloud/firestore';
 import { FieldPath } from '@google-cloud/firestore';
 import { FieldValue } from '@google-cloud/firestore';
 import { Firestore } from '@google-cloud/firestore';
-import * as _firestore from '@google-cloud/firestore';
 import { FirestoreDataConverter } from '@google-cloud/firestore';
 import { GeoPoint } from '@google-cloud/firestore';
 import { GrpcStatus } from '@google-cloud/firestore';
@@ -64,7 +63,7 @@ export { GeoPoint }
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function getFirestore(app?: App): _firestore.Firestore;
+export function getFirestore(app?: App): Firestore;
 
 export { GrpcStatus }
 

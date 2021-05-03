@@ -60,12 +60,43 @@ export declare function projectManagement(app?: App): projectManagement.ProjectM
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace projectManagement {
+  /**
+   * Type alias to {@link firebase-admin.project-management#AppMetadata}.
+   */
   export type AppMetadata = TAppMetadata;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#AppPlatform}.
+   */
   export type AppPlatform = TAppPlatform;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#ProjectManagement}.
+   */
   export type ProjectManagement = TProjectManagement;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#IosApp}.
+   */
   export type IosApp = TIosApp;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#IosAppMetadata}.
+   */
   export type IosAppMetadata = TIosAppMetadata;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#AndroidApp}.
+   */
   export type AndroidApp = TAndroidApp;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#AndroidAppMetadata}.
+   */
   export type AndroidAppMetadata = TAndroidAppMetadata;
+
+  /**
+   * Type alias to {@link firebase-admin.project-management#ShaCertificate}.
+   */
   export type ShaCertificate = TShaCertificate;
 }

@@ -41,5 +41,8 @@ export declare function storage(app?: App): storage.Storage;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace storage {
+  /**
+   * Type alias to {@link firebase-admin.storage#Storage}.
+   */
   export type Storage = TStorage;
 }

@@ -60,14 +60,48 @@ export declare function machineLearning(app?: App): machineLearning.MachineLearn
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace machineLearning {
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#ListModelsResult}.
+   */
   export type ListModelsResult = TListModelsResult;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#MachineLearning}.
+   */
   export type MachineLearning = TMachineLearning;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#Model}.
+   */
   export type Model = TModel;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#TFLiteModel}.
+   */
   export type TFLiteModel = TTFLiteModel;
 
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#AutoMLTfliteModelOptions}.
+   */
   export type AutoMLTfliteModelOptions = TAutoMLTfliteModelOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#GcsTfliteModelOptions}.
+   */
   export type GcsTfliteModelOptions = TGcsTfliteModelOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#ListModelsOptions}.
+   */
   export type ListModelsOptions = TListModelsOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#ModelOptions}.
+   */
   export type ModelOptions = TModelOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.machine-learning#ModelOptionsBase}.
+   */
   export type ModelOptionsBase = TModelOptionsBase;
 }
