@@ -374,6 +374,10 @@ export class AuthClientErrorCode {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
   };
+  public static EMAIL_NOT_FOUND = {
+    code: 'email-not-found',
+    message: 'There is no user record corresponding to the provided email.',
+  };
   public static FORBIDDEN_CLAIM = {
     code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
@@ -854,6 +858,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   DUPLICATE_MFA_ENROLLMENT_ID: 'SECOND_FACTOR_UID_ALREADY_EXISTS',
   // setAccountInfo email already exists.
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  // /accounts:sendOobCode for password reset when user is not found.
+  EMAIL_NOT_FOUND: 'EMAIL_NOT_FOUND',
   // Reserved claim name.
   FORBIDDEN_CLAIM: 'FORBIDDEN_CLAIM',
   // Invalid claims provided.
