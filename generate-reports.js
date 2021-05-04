@@ -31,38 +31,24 @@ const { local: localMode } = yargs
 // API Extractor configuration file.
 const config = require('./api-extractor.json');
 
-// List of module entry points. We generate a separate report for each entry point.
-const entryPoints = {
-  'firebase-admin': './lib/default-namespace.d.ts',
-  'firebase-admin/app': './lib/app/index.d.ts',
-  'firebase-admin/auth': './lib/auth/index.d.ts',
-  'firebase-admin/database': './lib/database/index.d.ts',
-  'firebase-admin/firestore': './lib/firestore/index.d.ts',
-  'firebase-admin/instance-id': './lib/instance-id/index.d.ts',
-  'firebase-admin/messaging': './lib/messaging/index.d.ts',
-  'firebase-admin/machine-learning': './lib/machine-learning/index.d.ts',
-  'firebase-admin/project-management': './lib/project-management/index.d.ts',
-  'firebase-admin/security-rules': './lib/security-rules/index.d.ts',
-  'firebase-admin/storage': './lib/storage/index.d.ts',
-  'firebase-admin/remote-config': './lib/remote-config/index.d.ts',
-};
-
 const tempConfigFile = 'api-extractor.tmp';
 
 async function generateReports() {
-  for (const key in entryPoints) {
-    await generateReportForEntryPoint(key);
+  const entryPoints = require('./entrypoints.json');
+  for (const entryPoint in entryPoints) {
+    const filePath = entryPoints[entryPoint].typings;
+    await generateReportForEntryPoint(entryPoint, filePath);
   }
 }
 
-async function generateReportForEntryPoint(key) {
-  console.log(`\nGenerating API report for ${key}`)
+async function generateReportForEntryPoint(entryPoint, filePath) {
+  console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
-  const safeName = key.replace('/', '.');
+  const safeName = entryPoint.replace('/', '.');
   console.log('Updating configuration for entry point...');
   config.apiReport.reportFileName = `${safeName}.api.md`;
-  config.mainEntryPointFilePath = entryPoints[key];
+  config.mainEntryPointFilePath = filePath;
   console.log(`Report file name: ${config.apiReport.reportFileName}`);
   console.log(`Entry point declaration: ${config.mainEntryPointFilePath}`);
   await fs.writeFile(tempConfigFile, JSON.stringify(config));

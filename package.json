@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "9.100.0-alpha.0",
+  "version": "9.100.0-alpha.1",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -11,7 +11,7 @@
   "scripts": {
     "build": "gulp build",
     "build:tests": "gulp compile_test",
-    "prepare": "npm run build",
+    "prepare": "npm run build && npm run esm-wrap",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
@@ -22,7 +22,8 @@
     "lint:test": "eslint test/ --ext .ts",
     "apidocs": "node docgen/generate-docs.js --api node",
     "api-extractor": "node generate-reports.js",
-    "api-extractor:local": "npm run build && node generate-reports.js --local"
+    "api-extractor:local": "npm run build && node generate-reports.js --local",
+    "esm-wrap": "node generate-esm-wrapper.js"
   },
   "nyc": {
     "extension": [
@@ -94,17 +95,50 @@
   },
   "exports": {
     ".": "./lib/index.js",
-    "./app": "./lib/app/index.js",
-    "./auth": "./lib/auth/index.js",
-    "./database": "./lib/database/index.js",
-    "./firestore": "./lib/firestore/index.js",
-    "./instance-id": "./lib/instance-id/index.js",
-    "./machine-learning": "./lib/machine-learning/index.js",
-    "./messaging": "./lib/messaging/index.js",
-    "./project-management": "./lib/project-management/index.js",
-    "./remote-config": "./lib/remote-config/index.js",
-    "./security-rules": "./lib/security-rules/index.js",
-    "./storage": "./lib/storage/index.js"
+    "./app": {
+      "require": "./lib/app/index.js",
+      "import": "./lib/esm/app/index.js"
+    },
+    "./auth": {
+      "require": "./lib/auth/index.js",
+      "import": "./lib/esm/auth/index.js"
+    },
+    "./database": {
+      "require": "./lib/database/index.js",
+      "import": "./lib/esm/database/index.js"
+    },
+    "./firestore": {
+      "require": "./lib/firestore/index.js",
+      "import": "./lib/esm/firestore/index.js"
+    },
+    "./instance-id": {
+      "require": "./lib/instance-id/index.js",
+      "import": "./lib/esm/instance-id/index.js"
+    },
+    "./machine-learning": {
+      "require": "./lib/machine-learning/index.js",
+      "import": "./lib/esm/machine-learning/index.js"
+    },
+    "./messaging": {
+      "require": "./lib/messaging/index.js",
+      "import": "./lib/esm/messaging/index.js"
+    },
+    "./project-management": {
+      "require": "./lib/project-management/index.js",
+      "import": "./lib/esm/project-management/index.js"
+    },
+    "./remote-config": {
+      "require": "./lib/remote-config/index.js",
+      "import": "./lib/esm/remote-config/index.js"
+    },
+    "./security-rules": {
+      "require": "./lib/security-rules/index.js",
+      "import": "./lib/esm/security-rules/index.js"
+    },
+    "./storage": {
+      "require": "./lib/storage/index.js",
+      "import": "./lib/esm/storage/index.js"
+    }
   },
   "dependencies": {
     "@firebase/database": "^0.8.1",
