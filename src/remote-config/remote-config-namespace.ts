@@ -62,17 +62,68 @@ export declare function remoteConfig(app?: App): remoteConfig.RemoteConfig;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace remoteConfig {
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExplicitParameterValue}.
+   */
   export type ExplicitParameterValue = TExplicitParameterValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#InAppDefaultValue}.
+   */
   export type InAppDefaultValue = TInAppDefaultValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ListVersionsOptions}.
+   */
   export type ListVersionsOptions = TListVersionsOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ListVersionsResult}.
+   */
   export type ListVersionsResult = TListVersionsResult;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfig}.
+   */
   export type RemoteConfig = TRemoteConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigCondition}.
+   */
   export type RemoteConfigCondition = TRemoteConfigCondition;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigParameter}.
+   */
   export type RemoteConfigParameter = TRemoteConfigParameter;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigParameterGroup}.
+   */
   export type RemoteConfigParameterGroup = TRemoteConfigParameterGroup;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigParameterValue}.
+   */
   export type RemoteConfigParameterValue = TRemoteConfigParameterValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigTemplate}.
+   */
   export type RemoteConfigTemplate = TRemoteConfigTemplate;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RemoteConfigUser}.
+   */
   export type RemoteConfigUser = TRemoteConfigUser;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#TagColor}.
+   */
   export type TagColor = TTagColor;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#Version}.
+   */
   export type Version = TVersion;
 }

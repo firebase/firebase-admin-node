@@ -55,9 +55,28 @@ export declare function securityRules(app?: App): securityRules.SecurityRules;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace securityRules {
+  /**
+   * Type alias to {@link firebase-admin.security-rules#RulesFile}.
+   */
   export type RulesFile = TRulesFile;
+
+  /**
+   * Type alias to {@link firebase-admin.security-rules#Ruleset}.
+   */
   export type Ruleset = TRuleset;
+
+  /**
+   * Type alias to {@link firebase-admin.security-rules#RulesetMetadata}.
+   */
   export type RulesetMetadata = TRulesetMetadata;
+
+  /**
+   * Type alias to {@link firebase-admin.security-rules#RulesetMetadataList}.
+   */
   export type RulesetMetadataList = TRulesetMetadataList;
+
+  /**
+   * Type alias to {@link firebase-admin.security-rules#SecurityRules}.
+   */
   export type SecurityRules = TSecurityRules;
 }

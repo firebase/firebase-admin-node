@@ -27,6 +27,11 @@ import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
 
+/**
+ * The Firebase Database service interface. Extends the
+ * {@link https://firebase.google.com/docs/reference/js/firebase.database.Database | Database}
+ * interface provided by the `@firebase/database` package.
+ */
 export interface Database extends FirebaseDatabase {
   /**
    * Gets the currently applied security rules as a string. The return value consists of

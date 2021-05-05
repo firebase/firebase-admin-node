@@ -84,40 +84,170 @@ export declare function messaging(app?: App): messaging.Messaging;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace messaging {
+  /**
+   * Type alias to {@link firebase-admin.messaging#Messaging}.
+   */
   export type Messaging = TMessaging;
 
+  /**
+   * Type alias to {@link firebase-admin.messaging#AndroidConfig}.
+   */
   export type AndroidConfig = TAndroidConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#AndroidFcmOptions}.
+   */
   export type AndroidFcmOptions = TAndroidFcmOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#AndroidNotification}.
+   */
   export type AndroidNotification = TAndroidNotification;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#ApnsConfig}.
+   */
   export type ApnsConfig = TApnsConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#ApnsFcmOptions}.
+   */
   export type ApnsFcmOptions = TApnsFcmOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#ApnsPayload}.
+   */
   export type ApnsPayload = TApnsPayload;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#Aps}.
+   */
   export type Aps = TAps;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#ApsAlert}.
+   */
   export type ApsAlert = TApsAlert;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#BatchResponse}.
+   */
   export type BatchResponse = TBatchResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#CriticalSound}.
+   */
   export type CriticalSound = TCriticalSound;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#ConditionMessage}.
+   */
   export type ConditionMessage = TConditionMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#FcmOptions}.
+   */
   export type FcmOptions = TFcmOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#LightSettings}.
+   */
   export type LightSettings = TLightSettings;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#Message}.
+   */
   export type Message = TMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingTopicManagementResponse}.
+   */
   export type MessagingTopicManagementResponse = TMessagingTopicManagementResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MulticastMessage}.
+   */
   export type MulticastMessage = TMulticastMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#Notification}.
+   */
   export type Notification = TNotification;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#SendResponse}.
+   */
   export type SendResponse = TSendResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#TokenMessage}.
+   */
   export type TokenMessage = TTokenMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#TopicMessage}.
+   */
   export type TopicMessage = TTopicMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#WebpushConfig}.
+   */
   export type WebpushConfig = TWebpushConfig;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#WebpushFcmOptions}.
+   */
   export type WebpushFcmOptions = TWebpushFcmOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#WebpushNotification}.
+   */
   export type WebpushNotification = TWebpushNotification;
 
   // Legacy APIs
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#DataMessagePayload}.
+   */
   export type DataMessagePayload = TDataMessagePayload;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingConditionResponse}.
+   */
   export type MessagingConditionResponse = TMessagingConditionResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingDeviceGroupResponse}.
+   */
   export type MessagingDeviceGroupResponse = TMessagingDeviceGroupResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingDeviceResult}.
+   */
   export type MessagingDeviceResult = TMessagingDeviceResult;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingDevicesResponse}.
+   */
   export type MessagingDevicesResponse = TMessagingDevicesResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingOptions}.
+   */
   export type MessagingOptions = TMessagingOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingPayload}.
+   */
   export type MessagingPayload = TMessagingPayload;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#MessagingTopicResponse}.
+   */
   export type MessagingTopicResponse = TMessagingTopicResponse;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#NotificationMessagePayload}.
+   */
   export type NotificationMessagePayload = TNotificationMessagePayload;
 }
