@@ -41,7 +41,7 @@ var paths = {
 
   test: [
     'test/**/*.ts',
-    '!test/integration/typescript/src/example*.ts',
+    '!test/integration/postcheck/typescript/*.ts',
   ],
 
   build: 'lib/',
