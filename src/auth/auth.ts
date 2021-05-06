@@ -21,7 +21,7 @@ import {
   isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
 } from './auth-api-request';
@@ -36,6 +36,7 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import { TenantManager } from './tenant-manager';
+import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
 import UserIdentifier = auth.UserIdentifier;
 import CreateRequest = auth.CreateRequest;
@@ -82,8 +83,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
-      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
+      this.tokenGenerator = createFirebaseTokenGenerator(app);
     }
 
     this.sessionCookieVerifier = createSessionCookieVerifier(app);
@@ -772,9 +772,8 @@ export class TenantAwareAuth
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
-    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
-    super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
+    super(app, new TenantAwareAuthRequestHandler(app, tenantId),
+      createFirebaseTokenGenerator(app, tenantId));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -885,5 +884,15 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements AuthInterface 
   /** @return The current Auth instance's tenant manager. */
   public tenantManager(): TenantManager {
     return this.tenantManager_;
+  }
+}
+
+function createFirebaseTokenGenerator(app: FirebaseApp,
+  tenantId?: string): FirebaseTokenGenerator {
+  try {
+    const signer = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+    return new FirebaseTokenGenerator(signer, tenantId);
+  } catch (err) {
+    throw handleCryptoSignerError(err);
   }
 }
