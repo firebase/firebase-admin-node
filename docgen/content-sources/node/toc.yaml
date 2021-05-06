@@ -19,6 +19,18 @@ toc:
   - title: "App"
     path: /docs/reference/admin/node/admin.app.App-1
 
+- title: "admin.appCheck"
+  path: /docs/reference/admin/node/admin.appCheck
+  section:
+  - title: "AppCheck"
+    path: /docs/reference/admin/node/admin.appCheck.AppCheck-1
+  - title: "AppCheckToken"
+    path: /docs/reference/admin/node/admin.appCheck.AppCheckToken
+  - title: "DecodedAppCheckToken"
+    path: /docs/reference/admin/node/admin.appCheck.DecodedAppCheckToken
+  - title: "VerifyAppCheckTokenResponse"
+    path: /docs/reference/admin/node/admin.appCheck.VerifyAppCheckTokenResponse
+
 - title: "admin.auth"
   path: /docs/reference/admin/node/admin.auth
   section:
