@@ -56,8 +56,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/database": "^0.8.1",
-    "@firebase/database-types": "^0.6.1",
+    "@firebase/database": "^0.10.0",
+    "@firebase/database-types": "^0.7.2",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
@@ -68,9 +68,9 @@
     "@google-cloud/storage": "^5.3.0"
   },
   "devDependencies": {
-    "@firebase/app": "^0.6.13",
-    "@firebase/auth": "^0.16.2",
-    "@firebase/auth-types": "^0.10.1",
+    "@firebase/app": "^0.6.21",
+    "@firebase/auth": "^0.16.5",
+    "@firebase/auth-types": "^0.10.3",
     "@microsoft/api-extractor": "^7.11.2",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^4.0.0",
