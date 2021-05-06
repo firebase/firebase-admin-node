@@ -11,6 +11,6 @@
     ]
   },
   "files": [
-    "src/example.ts"
+    "./typescript/example.ts"
   ]
 }
