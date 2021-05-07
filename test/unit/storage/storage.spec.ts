@@ -127,7 +127,7 @@ describe('Storage', () => {
       expect(process.env.STORAGE_EMULATOR_HOST).to.equal(`http://${EMULATOR_HOST}`);
     });
 
-    it('sets STORAGE_EMULATOR_HOST if FIREBASE_STORAGE_EMULATOR_HOST is set', () => {
+    it('throws if FIREBASE_STORAGE_EMULATOR_HOST has a protocol', () => {
       expect(() => new Storage(mockApp)).to.throw;
     });
   
