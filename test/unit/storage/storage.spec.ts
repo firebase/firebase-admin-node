@@ -115,7 +115,7 @@ describe('Storage', () => {
   });
 
   describe('Emulator mode', () => {
-    const EMULATOR_HOST = 'http://localhost:9199';
+    const EMULATOR_HOST = 'localhost:9199';
 
     before(() => {
       delete process.env.STORAGE_EMULATOR_HOST;
