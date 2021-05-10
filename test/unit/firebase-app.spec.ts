@@ -41,6 +41,7 @@ import { instanceId } from '../../src/instance-id/index';
 import { projectManagement } from '../../src/project-management/index';
 import { securityRules } from '../../src/security-rules/index';
 import { remoteConfig } from '../../src/remote-config/index';
+import { appCheck } from '../../src/app-check/index';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 import Auth = auth.Auth;
@@ -53,6 +54,7 @@ import InstanceId = instanceId.InstanceId;
 import ProjectManagement = projectManagement.ProjectManagement;
 import SecurityRules = securityRules.SecurityRules;
 import RemoteConfig = remoteConfig.RemoteConfig;
+import AppCheck = appCheck.AppCheck;
 
 chai.should();
 chai.use(sinonChai);
@@ -665,6 +667,32 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const service1: RemoteConfig = app.remoteConfig();
       const service2: RemoteConfig = app.remoteConfig();
+      expect(service1).to.equal(service2);
+    });
+  });
+
+  describe('appCheck()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.appCheck();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the AppCheck client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const appCheck: AppCheck = app.appCheck();
+      expect(appCheck).to.not.be.null;
+    });
+
+    it('should return a cached version of AppCheck on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: AppCheck = app.appCheck();
+      const service2: AppCheck = app.appCheck();
       expect(service1).to.equal(service2);
     });
   });
