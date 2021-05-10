@@ -58,7 +58,7 @@
   "dependencies": {
     "@firebase/database": "^0.10.0",
     "@firebase/database-types": "^0.7.2",
-    "@types/node": "^10.10.0",
+    "@types/node": ">=12.12.47",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.2",
