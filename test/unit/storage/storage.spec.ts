@@ -114,21 +114,24 @@ describe('Storage', () => {
     });
   });
 
-  describe('Emulator mode', () => {
-    const EMULATOR_HOST = 'localhost:9199';
+  describe.only('Emulator mode', () => {
+    const VALID_EMULATOR_HOST = 'localhost:9199';
+    const INVALID_EMULATOR_HOST = 'https://localhost:9199';
 
-    before(() => {
+    beforeEach(() => {
       delete process.env.STORAGE_EMULATOR_HOST;
-      process.env.FIREBASE_STORAGE_EMULATOR_HOST = EMULATOR_HOST;
+      delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
     });
 
     it('sets STORAGE_EMULATOR_HOST if FIREBASE_STORAGE_EMULATOR_HOST is set', () => {
+      process.env.FIREBASE_STORAGE_EMULATOR_HOST = VALID_EMULATOR_HOST;
+
       new Storage(mockApp)
-      expect(process.env.STORAGE_EMULATOR_HOST).to.equal(`http://${EMULATOR_HOST}`);
+      expect(process.env.STORAGE_EMULATOR_HOST).to.equal(`http://${VALID_EMULATOR_HOST}`);
     });
 
     it('throws if FIREBASE_STORAGE_EMULATOR_HOST has a protocol', () => {
-      process.env.FIREBASE_STORAGE_EMULATOR_HOST = `https://${EMULATOR_HOST}`;
+      process.env.FIREBASE_STORAGE_EMULATOR_HOST = INVALID_EMULATOR_HOST;
 
       expect(() => new Storage(mockApp)).to.throw(
         'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol');
