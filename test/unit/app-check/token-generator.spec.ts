@@ -44,7 +44,7 @@ const expect = chai.expect;
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1alpha.TokenExchangeService';
+const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1beta.TokenExchangeService';
 
 /**
  * Verifies a token is signed with the private key corresponding to the provided public key.

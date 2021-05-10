@@ -27,7 +27,7 @@ import {
 import DecodedAppCheckToken = appCheck.DecodedAppCheckToken;
 
 const APP_CHECK_ISSUER = 'https://firebaseappcheck.googleapis.com/';
-const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1alpha/jwks';
+const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1beta/jwks';
 
 /**
  * Class for verifying Firebase App Check tokens.

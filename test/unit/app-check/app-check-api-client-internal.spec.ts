@@ -57,7 +57,7 @@ describe('AppCheckApiClient', () => {
 
   const TEST_RESPONSE = {
     attestationToken: 'token',
-    timeToLive: '3s'
+    ttl: '3s'
   };
 
   const mockOptions = {
@@ -182,15 +182,15 @@ describe('AppCheckApiClient', () => {
 
     ['', 'abc', '3s2', 'sssa', '3.000000001', '3.2', null, NaN, true, [], {}, 100, 1.2, -200, -2.4]
       .forEach((invalidDuration) => {
-        it(`should throw if the returned timeToLive duration is: ${invalidDuration}`, () => {
+        it(`should throw if the returned ttl duration is: ${invalidDuration}`, () => {
           const response = deepCopy(TEST_RESPONSE);
-          (response as any).timeToLive = invalidDuration;
+          (response as any).ttl = invalidDuration;
           const stub = sinon
             .stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom(response, 200));
           stubs.push(stub);
           const expected = new FirebaseAppCheckError(
-            'invalid-argument', '`timeToLive` must be a valid duration string with the suffix `s`.');
+            'invalid-argument', '`ttl` must be a valid duration string with the suffix `s`.');
           return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
             .should.eventually.be.rejected.and.deep.include(expected);
         });
@@ -207,7 +207,7 @@ describe('AppCheckApiClient', () => {
           expect(resp.ttlMillis).to.deep.equal(3000);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebaseappcheck.googleapis.com/v1alpha/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            url: `https://firebaseappcheck.googleapis.com/v1beta/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
             headers: EXPECTED_HEADERS,
             data: { customToken: TEST_TOKEN_TO_EXCHANGE }
           });
@@ -219,10 +219,10 @@ describe('AppCheckApiClient', () => {
         // 3 seconds with 0 nanoseconds expressed as "3s"
         // 3 seconds and 1 nanosecond expressed as "3.000000001s"
         // 3 seconds and 1 microsecond expressed as "3.000001s"
-        it(`should resolve with ttlMillis as ${ttlMillis} when timeToLive
+        it(`should resolve with ttlMillis as ${ttlMillis} when ttl
        from server is: ${ttlString}`, () => {
           const response = deepCopy(TEST_RESPONSE);
-          (response as any).timeToLive = ttlString;
+          (response as any).ttl = ttlString;
           const stub = sinon
             .stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom(response, 200));
