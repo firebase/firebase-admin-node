@@ -339,7 +339,7 @@ export namespace auth {
    * Interface representing common properties of a user enrolled second factor
    * for an `UpdateRequest`.
    */
-  export interface UpdateMultiFactorInfoRequest {
+  export interface BaseUpdateMultiFactorInfoRequest {
 
     /**
      * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
@@ -367,13 +367,21 @@ export namespace auth {
    * Interface representing a phone specific user enrolled second factor
    * for an `UpdateRequest`.
    */
-  export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+  export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
      */
     phoneNumber: string;
   }
+  
+  /**
+   * Interface representing properties of a user enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  export type UpdateMultiFactorInfoRequest = 
+    | UpdatePhoneMultiFactorInfoRequest;
+
 
   /**
    * Interface representing the properties to update on the provided user.
@@ -446,7 +454,7 @@ export namespace auth {
    * Interface representing base properties of a user enrolled second factor for a
    * `CreateRequest`.
    */
-  export interface CreateMultiFactorInfoRequest {
+  export interface BaseCreateMultiFactorInfoRequest {
 
     /**
      * The optional display name for an enrolled second factor.
@@ -463,13 +471,21 @@ export namespace auth {
    * Interface representing a phone specific user enrolled second factor for a
    * `CreateRequest`.
    */
-  export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+  export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
      */
     phoneNumber: string;
   }
+  
+  /**
+   * Interface representing properties of a user enrolled second factor for a
+   * `CreateRequest`.
+   */
+  export type CreateMultiFactorInfoRequest = 
+    | CreatePhoneMultiFactorInfoRequest;
+
 
   /**
    * Interface representing the properties to set on a new user record to be
