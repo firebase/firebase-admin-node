@@ -70,4 +70,34 @@ describe('admin.appCheck', () => {
       });
     });
   });
+
+  describe('verifyToken', () => {
+    let validToken: admin.appCheck.AppCheckToken;
+
+    before(async () => {
+      if (!appId) {
+        return;
+      }
+      // obtain a valid app check token
+      validToken = await admin.appCheck().createToken(appId as string);
+    });
+
+    it('should succeed with a decoded verifed token response', function() {
+      if (!appId) {
+        this.skip();
+      }
+      return admin.appCheck().verifyToken(validToken.token)
+        .then((verifedToken) => {
+          expect(verifedToken).to.have.keys(['token', 'appId']);
+          expect(verifedToken.token).to.have.keys(['iss', 'sub', 'aud', 'exp', 'iat', 'app_id']);
+          expect(verifedToken.token.app_id).to.be.a('string').and.equals(appId);
+        });
+    });
+
+    it('should propagate API errors', () => {
+      // rejects with invalid-argument when the token is invalid
+      return admin.appCheck().verifyToken('invalid-token')
+        .should.eventually.be.rejected.and.have.property('code', 'app-check/invalid-argument');
+    });
+  });
 });

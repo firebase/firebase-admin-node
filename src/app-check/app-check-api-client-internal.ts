@@ -28,7 +28,7 @@ import * as validator from '../utils/validator';
 import AppCheckToken = appCheck.AppCheckToken;
 
 // App Check backend constants
-const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1alpha/projects/{projectId}/apps/{appId}:exchangeCustomToken';
+const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}/apps/{appId}:exchangeCustomToken';
 
 const FIREBASE_APP_CHECK_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -147,9 +147,9 @@ export class AppCheckApiClient {
    */
   private toAppCheckToken(resp: HttpResponse): AppCheckToken {
     const token = resp.data.attestationToken;
-    // `timeToLive` is a string with the suffix "s" preceded by the number of seconds,
+    // `ttl` is a string with the suffix "s" preceded by the number of seconds,
     // with nanoseconds expressed as fractional seconds.
-    const ttlMillis = this.stringToMilliseconds(resp.data.timeToLive);
+    const ttlMillis = this.stringToMilliseconds(resp.data.ttl);
     return {
       token,
       ttlMillis
@@ -169,7 +169,7 @@ export class AppCheckApiClient {
   private stringToMilliseconds(duration: string): number {
     if (!validator.isNonEmptyString(duration) || !duration.endsWith('s')) {
       throw new FirebaseAppCheckError(
-        'invalid-argument', '`timeToLive` must be a valid duration string with the suffix `s`.');
+        'invalid-argument', '`ttl` must be a valid duration string with the suffix `s`.');
     }
     const seconds = duration.slice(0, -1);
     return Math.floor(Number(seconds) * 1000);
