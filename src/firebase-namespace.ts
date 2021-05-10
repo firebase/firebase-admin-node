@@ -23,6 +23,7 @@ import { FirebaseApp } from './firebase-app';
 import { cert, refreshToken, applicationDefault } from './credential/credential';
 import { getApplicationDefault } from './credential/credential-internal';
 
+import { appCheck } from './app-check/index';
 import { auth } from './auth/index';
 import { database } from './database/index';
 import { firestore } from './firestore/index';
@@ -38,6 +39,7 @@ import * as validator from './utils/validator';
 import { getSdkVersion } from './utils/index';
 
 import App = app.App;
+import AppCheck = appCheck.AppCheck;
 import Auth = auth.Auth;
 import Database = database.Database;
 import Firestore = firestore.Firestore;
@@ -355,6 +357,18 @@ export class FirebaseNamespace {
     };
     const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
     return Object.assign(fn, { RemoteConfig: remoteConfig });
+  }
+
+  /**
+   * Gets the `AppCheck` service namespace. The returned namespace can be used to get the
+   * `AppCheck` service for the default app or an explicitly specified app.
+   */
+  get appCheck(): FirebaseServiceNamespace<AppCheck> {
+    const fn: FirebaseServiceNamespace<AppCheck> = (app?: App) => {
+      return this.ensureApp(app).appCheck();
+    };
+    const appCheck = require('./app-check/app-check').AppCheck;
+    return Object.assign(fn, { AppCheck: appCheck });
   }
 
   // TODO: Change the return types to app.App in the following methods.

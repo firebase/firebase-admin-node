@@ -27,7 +27,8 @@ import { Agent } from 'http';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
+import { FirebaseTokenGenerator } from '../../../src/auth/token-generator';
+import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import * as verifier from '../../../src/auth/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';

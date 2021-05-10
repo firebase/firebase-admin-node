@@ -36,6 +36,8 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export const uid = 'someUid';
 export const projectId = 'project_id';
+export const projectNumber = '12345678';
+export const appId = '12345678:app:ID';
 export const developerClaims = {
   one: 'uno',
   two: 'dos',
@@ -146,6 +148,10 @@ export const refreshToken = {
   type: 'refreshToken',
 };
 
+// Randomly generated JSON Web Key Sets that do not correspond to anything related to Firebase.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const jwksResponse = require('./mock.jwks.json');
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
 
@@ -177,6 +183,14 @@ export const x509CertPairs = [
   },
   /* eslint-enable max-len */
 ];
+
+// Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
+export const jwksKeyPair = {
+  /* eslint-disable max-len */
+  // The private key for this key pair is identical to the one used in ./mock.jwks.json
+  private: '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEArFYQyEdjj43mnpXwj+3WgAE01TSYe1+XFE9mxUDShysFwtVZ\nOHFSMm6kl+B3Y/O8NcPt5osntLlH6KHvygExAE0tDmFYq8aKt7LQQF8rTv0rI6MP\n92ezyCEp4MPmAPFD/tY160XGrkqApuY2/+L8eEXdkRyH2H7lCYypFC0u3DIY25Vl\nq+ZDkxB2kGykGgb1zVazCDDViqV1p9hSltmm4el9AyF08FsMCpk/NvwKOY4pJ/sm\n99CDKxMhQBaT9lrIQt0B1VqTpEwlOoiFiyXASRXp9ZTeL4mrLPqSeozwPvspD81w\nbgecd62F640scKBr3ko73L8M8UWcwgd+moKCJwIDAQABAoIBAEDPJQSMhE6KKL5e\n2NbntJDy4zGC1A0hh6llqtpnZETc0w/QN/tX8ndw0IklKwD1ukPl6OOYVVhLjVVZ\nANpQ1GKuo1ETHsuKoMQwhMyQfbL41m5SdkCuSRfsENmsEiUslkuRtzlBRlRpRDR/\nwxM8A4IflBFsT1IFdpC+yx8BVuwLc35iVnaGQpo/jhSDibt07j+FdOKEWkMGj+rL\nsHC6cpB2NMTBl9CIDLW/eq1amBOAGtsSKqoGJvaQY/mZf7SPkRjYIfIl2PWSaduT\nfmMrsYYFtHUKVOMYAD7P5RWNkS8oERucnXT3ouAECvip3Ew2JqlQc0FP7FS5CxH3\nWdfvLuECgYEA8Q7rJrDOdO867s7P/lXMklbAGnuNnAZJdAEXUMIaPJi7al97F119\n4DKBuF7c/dDf8CdiOvMzP8r/F8+FFx2D61xxkQNeuxo5Xjlt23OzW5EI2S6ABesZ\n/3sQWqvKCGuqN7WENYF3EiKyByQ22MYXk8CE7KZuO57Aj88t6TsaNhkCgYEAtwSs\nhbqKSCneC1bQ3wfSAF2kPYRrQEEa2VCLlX1Mz7zHufxksUWAnAbU8O3hIGnXjz6T\nqzivyJJhFSgNGeYpwV67GfXnibpr3OZ/yx2YXIQfp0daivj++kvEU7aNfM9rHZA9\nS3Gh7hKELdB9b0DkrX5GpLiZWA6NnJdrIRYbAj8CgYBCZSyJvJsxBA+EZTxOvk0Z\nZYGGCc/oUKb8p6xHVx8o35yHYQMjXWHlVaP7J03RLy3vFLnuqLvN71ixszviMQP7\n2LuDCJ2YBVIVzNWgY07cgqcgQrmKZ8YCY2AOyVBdX2JD8+AVaLJmMV49r1DYBj/K\nN3WlRPYJv+Ej+xmXKus+SQKBgHh/Zkthxxu+HQigL0M4teYxwSoTnj2e39uGsXBK\nICGCLIniiDVDCmswAFFkfV3G8frI+5a26t2Gqs6wIPgVVxaOlWeBROGkUNIPHMKR\niLgY8XJEg3OOfuoyql9niP5M3jyHtCOQ/Elv/YDgjUWLl0Q3KLHZLHUSl+AqvYj6\nMewnAoGBANgYzPZgP+wreI55BFR470blKh1mFz+YGa+53DCd7JdMH2pdp4hoh303\nXxpOSVlAuyv9SgTsZ7WjGO5UdhaBzVPKgN0OO6JQmQ5ZrOR8ZJ7VB73FiVHCEerj\n1m2zyFv6OT7vqdg+V1/SzxMEmXXFQv1g69k6nWGazne3IJlzrSpj\n-----END RSA PRIVATE KEY-----\n',
+  public: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArFYQyEdjj43mnpXwj+3W\ngAE01TSYe1+XFE9mxUDShysFwtVZOHFSMm6kl+B3Y/O8NcPt5osntLlH6KHvygEx\nAE0tDmFYq8aKt7LQQF8rTv0rI6MP92ezyCEp4MPmAPFD/tY160XGrkqApuY2/+L8\neEXdkRyH2H7lCYypFC0u3DIY25Vlq+ZDkxB2kGykGgb1zVazCDDViqV1p9hSltmm\n4el9AyF08FsMCpk/NvwKOY4pJ/sm99CDKxMhQBaT9lrIQt0B1VqTpEwlOoiFiyXA\nSRXp9ZTeL4mrLPqSeozwPvspD81wbgecd62F640scKBr3ko73L8M8UWcwgd+moKC\nJwIDAQAB\n-----END PUBLIC KEY-----\n',
+};
 
 /**
  * Generates a mocked Firebase ID token.
@@ -225,6 +239,27 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
   }, overrides);
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
+}
+
+/**
+ * Generates a mocked App Check token.
+ *
+ * @param {object} overrides Overrides for the generated token's attributes.
+ * @return {string} A mocked App Check token with any provided overrides included.
+ */
+export function generateAppCheckToken(overrides?: object): string {
+  const options = _.assign({
+    audience: ['projects/' + projectNumber, 'projects/' + projectId],
+    expiresIn: ONE_HOUR_IN_SECONDS,
+    issuer: 'https://firebaseappcheck.googleapis.com/' + projectNumber,
+    subject: appId,
+    algorithm: ALGORITHM,
+    header: {
+      kid: jwksResponse.keys[0].kid,
+    },
+  }, overrides);
+
+  return jwt.sign(developerClaims, jwksKeyPair.private, options);
 }
 
 /** Mock socket emitter class. */
