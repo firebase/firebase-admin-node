@@ -128,7 +128,10 @@ describe('Storage', () => {
     });
 
     it('throws if FIREBASE_STORAGE_EMULATOR_HOST has a protocol', () => {
-      expect(() => new Storage(mockApp)).to.throw;
+      process.env.FIREBASE_STORAGE_EMULATOR_HOST = `https://${EMULATOR_HOST}`;
+
+      expect(() => new Storage(mockApp)).to.throw(
+        'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol');
     });
   
     after(() => {
