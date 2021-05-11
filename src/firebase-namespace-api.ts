@@ -15,6 +15,7 @@
  */
 
 import { Agent } from 'http';
+import { appCheck } from './app-check/index';
 import { auth } from './auth/index';
 import { credential } from './credential/index';
 import { database } from './database/index';
@@ -222,6 +223,7 @@ export namespace app {
      */
     options: AppOptions;
 
+    appCheck(): appCheck.AppCheck;
     auth(): auth.Auth;
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;

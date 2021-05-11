@@ -35,6 +35,7 @@ import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
+import { AppCheck } from './app-check/app-check';
 
 import Credential = credential.Credential;
 import Database = database.Database;
@@ -315,6 +316,18 @@ export class FirebaseApp implements app.App {
     return this.ensureService_('remoteConfig', () => {
       const remoteConfigService: typeof RemoteConfig = require('./remote-config/remote-config').RemoteConfig;
       return new remoteConfigService(this);
+    });
+  }
+
+  /**
+   * Returns the AppCheck service instance associated with this app.
+   *
+   * @return The AppCheck service instance of this app.
+   */
+  public appCheck(): AppCheck {
+    return this.ensureService_('appCheck', () => {
+      const appCheckService: typeof AppCheck = require('./app-check/app-check').AppCheck;
+      return new appCheckService(this);
     });
   }
 

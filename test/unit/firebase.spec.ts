@@ -235,6 +235,21 @@ describe('Firebase', () => {
     });
   });
 
+  describe('#appCheck', () => {
+    it('should throw if the app has not been initialized', () => {
+      expect(() => {
+        return firebaseAdmin.appCheck();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the appCheck service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.appCheck();
+      }).not.to.throw();
+    });
+  });
+
   describe('#storage', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {

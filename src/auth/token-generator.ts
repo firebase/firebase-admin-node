@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
-import { ServiceAccountCredential } from '../credential/credential-internal';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
+import { 
+  AuthClientErrorCode, ErrorInfo, FirebaseAuthError 
+} from '../utils/error';
+import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
 import { Algorithm } from 'jsonwebtoken';
+import { HttpError } from '../utils/api-request';
 
-
-const ALGORITHM_RS256: Algorithm = 'RS256' as const;
 const ALGORITHM_NONE: Algorithm = 'none' as const;
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -38,32 +37,6 @@ export const BLACKLISTED_CLAIMS = [
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
-
-/**
- * CryptoSigner interface represents an object that can be used to sign JWTs.
- */
-export interface CryptoSigner {
-
-  /**
-   * The name of the signing algorithm.
-   */
-  readonly algorithm: Algorithm;
-
-  /**
-   * Cryptographically signs a buffer of data.
-   *
-   * @param {Buffer} buffer The data to be signed.
-   * @return {Promise<Buffer>} A promise that resolves with the raw bytes of a signature.
-   */
-  sign(buffer: Buffer): Promise<Buffer>;
-
-  /**
-   * Returns the ID of the service account used to sign tokens.
-   *
-   * @return {Promise<string>} A promise that resolves with a service account ID.
-   */
-  getAccountId(): Promise<string>;
-}
 
 /**
  * Represents the header of a JWT.
@@ -88,148 +61,6 @@ interface JWTBody {
 }
 
 /**
- * A CryptoSigner implementation that uses an explicitly specified service account private key to
- * sign data. Performs all operations locally, and does not make any RPC calls.
- */
-export class ServiceAccountSigner implements CryptoSigner {
-
-  algorithm = ALGORITHM_RS256;
-
-  /**
-   * Creates a new CryptoSigner instance from the given service account credential.
-   *
-   * @param {ServiceAccountCredential} credential A service account credential.
-   */
-  constructor(private readonly credential: ServiceAccountCredential) {
-    if (!credential) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'INTERNAL ASSERT: Must provide a service account credential to initialize ServiceAccountSigner.',
-      );
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public sign(buffer: Buffer): Promise<Buffer> {
-    const crypto = require('crypto'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const sign = crypto.createSign('RSA-SHA256');
-    sign.update(buffer);
-    return Promise.resolve(sign.sign(this.credential.privateKey));
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getAccountId(): Promise<string> {
-    return Promise.resolve(this.credential.clientEmail);
-  }
-}
-
-/**
- * A CryptoSigner implementation that uses the remote IAM service to sign data. If initialized without
- * a service account ID, attempts to discover a service account ID by consulting the local Metadata
- * service. This will succeed in managed environments like Google Cloud Functions and App Engine.
- *
- * @see https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob
- * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
- */
-export class IAMSigner implements CryptoSigner {
-  algorithm = ALGORITHM_RS256;
-
-  private readonly httpClient: AuthorizedHttpClient;
-  private serviceAccountId?: string;
-
-  constructor(httpClient: AuthorizedHttpClient, serviceAccountId?: string) {
-    if (!httpClient) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        'INTERNAL ASSERT: Must provide a HTTP client to initialize IAMSigner.',
-      );
-    }
-    if (typeof serviceAccountId !== 'undefined' && !validator.isNonEmptyString(serviceAccountId)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        'INTERNAL ASSERT: Service account ID must be undefined or a non-empty string.',
-      );
-    }
-    this.httpClient = httpClient;
-    this.serviceAccountId = serviceAccountId;
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public sign(buffer: Buffer): Promise<Buffer> {
-    return this.getAccountId().then((serviceAccount) => {
-      const request: HttpRequestConfig = {
-        method: 'POST',
-        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
-        data: { payload: buffer.toString('base64') },
-      };
-      return this.httpClient.send(request);
-    }).then((response: any) => {
-      // Response from IAM is base64 encoded. Decode it into a buffer and return.
-      return Buffer.from(response.data.signedBlob, 'base64');
-    }).catch((err) => {
-      if (err instanceof HttpError) {
-        const error = err.response.data;
-        if (validator.isNonNullObject(error) && error.error) {
-          const errorCode = error.error.status;
-          const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
-            'for more details on how to use and troubleshoot this feature.';
-          const errorMsg = `${error.error.message}; ${description}`;
-
-          throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
-        }
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'Error returned from server: ' + error + '. Additionally, an ' +
-            'internal error occurred while attempting to extract the ' +
-            'errorcode from the error.',
-        );
-      }
-      throw err;
-    });
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public getAccountId(): Promise<string> {
-    if (validator.isNonEmptyString(this.serviceAccountId)) {
-      return Promise.resolve(this.serviceAccountId);
-    }
-    const request: HttpRequestConfig = {
-      method: 'GET',
-      url: 'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
-      headers: {
-        'Metadata-Flavor': 'Google',
-      },
-    };
-    const client = new HttpClient();
-    return client.send(request).then((response) => {
-      if (!response.text) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'HTTP Response missing payload',
-        );
-      }
-      this.serviceAccountId = response.text;
-      return response.text;
-    }).catch((err) => {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Failed to determine service account. Make sure to initialize ' +
-        'the SDK with a service account credential. Alternatively specify a service ' +
-        `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
-      );
-    });
-  }
-}
-
-/**
  * A CryptoSigner implementation that is used when communicating with the Auth emulator.
  * It produces unsigned tokens.
  */
@@ -251,22 +82,6 @@ export class EmulatedSigner implements CryptoSigner {
   public getAccountId(): Promise<string> {
     return Promise.resolve('firebase-auth-emulator@example.com');
   }
-}
-
-/**
- * Create a new CryptoSigner instance for the given app. If the app has been initialized with a service
- * account credential, creates a ServiceAccountSigner. Otherwise creates an IAMSigner.
- *
- * @param {FirebaseApp} app A FirebaseApp instance.
- * @return {CryptoSigner} A CryptoSigner instance.
- */
-export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
-  const credential = app.options.credential;
-  if (credential instanceof ServiceAccountCredential) {
-    return new ServiceAccountSigner(credential);
-  }
-
-  return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
 }
 
 /**
@@ -361,6 +176,8 @@ export class FirebaseTokenGenerator {
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
       return `${token}.${this.encodeSegment(signature)}`;
+    }).catch((err) => {
+      throw handleCryptoSignerError(err);
     });
   }
 
@@ -383,3 +200,44 @@ export class FirebaseTokenGenerator {
   }
 }
 
+/**
+ * Creates a new FirebaseAuthError by extracting the error code, message and other relevant
+ * details from a CryptoSignerError.
+ *
+ * @param {Error} err The Error to convert into a FirebaseAuthError error
+ * @return {FirebaseAuthError} A Firebase Auth error that can be returned to the user.
+ */
+export function handleCryptoSignerError(err: Error): Error {
+  if (!(err instanceof CryptoSignerError)) {
+    return err;
+  }
+  if (err.code === CryptoSignerErrorCode.SERVER_ERROR && validator.isNonNullObject(err.cause)) {
+    const httpError = err.cause;
+    const errorResponse = (httpError as HttpError).response.data;
+    if (validator.isNonNullObject(errorResponse) && errorResponse.error) {
+      const errorCode = errorResponse.error.status;
+      const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
+        'for more details on how to use and troubleshoot this feature.';
+      const errorMsg = `${errorResponse.error.message}; ${description}`;
+
+      return FirebaseAuthError.fromServerError(errorCode, errorMsg, errorResponse);
+    }
+    return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR,
+      'Error returned from server: ' + errorResponse + '. Additionally, an ' +
+      'internal error occurred while attempting to extract the ' +
+      'errorcode from the error.'
+    );
+  }
+  return new FirebaseAuthError(mapToAuthClientErrorCode(err.code), err.message);
+}
+
+function mapToAuthClientErrorCode(code: string): ErrorInfo {
+  switch (code) {
+  case CryptoSignerErrorCode.INVALID_CREDENTIAL:
+    return AuthClientErrorCode.INVALID_CREDENTIAL;
+  case CryptoSignerErrorCode.INVALID_ARGUMENT:
+    return AuthClientErrorCode.INVALID_ARGUMENT;
+  default:
+    return AuthClientErrorCode.INTERNAL_ERROR;
+  }
+}

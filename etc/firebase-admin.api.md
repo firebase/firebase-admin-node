@@ -16,6 +16,8 @@ export function app(name?: string): app.App;
 export namespace app {
     export interface App {
         // (undocumented)
+        appCheck(): appCheck.AppCheck;
+        // (undocumented)
         auth(): auth.Auth;
         // (undocumented)
         database(url?: string): database.Database;
@@ -38,6 +40,37 @@ export namespace app {
         securityRules(): securityRules.SecurityRules;
         // (undocumented)
         storage(): storage.Storage;
+    }
+}
+
+// @public
+export function appCheck(app?: app.App): appCheck.AppCheck;
+
+// @public (undocumented)
+export namespace appCheck {
+    export interface AppCheck {
+        // (undocumented)
+        app: app.App;
+        createToken(appId: string): Promise<AppCheckToken>;
+        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
+    }
+    export interface AppCheckToken {
+        token: string;
+        ttlMillis: number;
+    }
+    export interface DecodedAppCheckToken {
+        // (undocumented)
+        [key: string]: any;
+        app_id: string;
+        aud: string[];
+        exp: number;
+        iat: number;
+        iss: string;
+        sub: string;
+    }
+    export interface VerifyAppCheckTokenResponse {
+        appId: string;
+        token: appCheck.DecodedAppCheckToken;
     }
 }
 
