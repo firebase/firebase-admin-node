@@ -20,10 +20,12 @@
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
-    "apidocs": "node docgen/generate-docs.js --api node",
+    "apidocs": "npm run api-extractor:local && npm run api-documenter && npm run api-documenter:post",
     "api-extractor": "node generate-reports.js",
     "api-extractor:local": "npm run build && node generate-reports.js --local",
-    "esm-wrap": "node generate-esm-wrapper.js"
+    "esm-wrap": "node generate-esm-wrapper.js",
+    "api-documenter": "api-documenter-fire markdown --input temp --output docgen/markdown",
+    "api-documenter:post": "node docgen/post-process.js"
   },
   "nyc": {
     "extension": [
@@ -153,6 +155,7 @@
     "@google-cloud/storage": "^5.3.0"
   },
   "devDependencies": {
+    "@firebase/api-documenter": "^0.1.1",
     "@firebase/app": "^0.6.13",
     "@firebase/auth": "^0.16.2",
     "@firebase/auth-types": "^0.10.1",
@@ -186,7 +189,6 @@
     "gulp-replace": "^0.5.4",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
-    "jsdom": "^15.0.0",
     "lodash": "^4.17.15",
     "minimist": "^1.2.0",
     "mocha": "^8.0.0",
@@ -200,8 +202,7 @@
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^9.0.0",
-    "typedoc": "^0.19.2",
     "typescript": "^3.7.3",
-    "yargs": "^16.0.0"
+    "yargs": "^17.0.1"
   }
 }
