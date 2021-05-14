@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}AuthProviderConfigFilter interface{% endblock title %}
+{% block body %}
 The filter interface used for listing provider configurations. This is used when specifying how to list configured identity providers via .
 
 <b>Signature:</b>
@@ -43,3 +46,4 @@ The Auth provider configuration filter. This can be either `saml` or `oidc`<!-- 
 ```typescript
 type: 'saml' | 'oidc';
 ```
+{% endblock body %}

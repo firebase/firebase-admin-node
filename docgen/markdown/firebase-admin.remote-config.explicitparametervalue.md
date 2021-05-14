@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ExplicitParameterValue interface{% endblock title %}
+{% block body %}
 Interface representing an explicit parameter value.
 
 <b>Signature:</b>
@@ -21,3 +24,4 @@ The `string` value that the parameter is set to.
 ```typescript
 value: string;
 ```
+{% endblock body %}

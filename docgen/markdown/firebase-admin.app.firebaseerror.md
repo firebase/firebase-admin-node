@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}FirebaseError interface{% endblock title %}
+{% block body %}
 `FirebaseError` is a subclass of the standard JavaScript `Error` object. In addition to a message string and stack trace, it contains a string code.
 
 <b>Signature:</b>
@@ -18,7 +21,7 @@ export interface FirebaseError
 
 |  Method | Description |
 |  --- | --- |
-|  [toJSON()](./firebase-admin.app.firebaseerror.md#firebaseerrortojson) |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.app.firebaseerror.md#firebaseerrortojson) | Returns a JSON-serializable object representation of this error. |
 
 ## FirebaseError.code
 
@@ -58,7 +61,7 @@ stack?: string;
 
 ## FirebaseError.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable object representation of this error.
 
 <b>Signature:</b>
 
@@ -69,3 +72,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

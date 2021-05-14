@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}TenantManager class{% endblock title %}
+{% block body %}
 Defines the tenant manager used to help manage tenant related operations. This includes: <ul> <li>The ability to create, update, list, get and delete tenants for the underlying project.</li> <li>Getting a `TenantAwareAuth` instance for running Auth related operations (user management, provider configuration management, token verification, email link generation, etc) in the context of a specified tenant.</li> </ul>
 
 <b>Signature:</b>
@@ -31,11 +34,13 @@ authForTenant(tenantId: string): TenantAwareAuth;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  tenantId | string | The tenant ID whose <code>TenantAwareAuth</code> instance is to be returned. The <code>TenantAwareAuth</code> instance corresponding to this tenant identifier. |
+|  tenantId | string | The tenant ID whose <code>TenantAwareAuth</code> instance is to be returned. |
 
 <b>Returns:</b>
 
 [TenantAwareAuth](./firebase-admin.auth.tenantawareauth.md#tenantawareauth_class)
+
+The `TenantAwareAuth` instance corresponding to this tenant identifier.
 
 ## TenantManager.createTenant()
 
@@ -51,11 +56,13 @@ createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  tenantOptions | [CreateTenantRequest](./firebase-admin.auth.md#createtenantrequest) | The properties to set on the new tenant configuration to be created. A promise fulfilled with the tenant configuration corresponding to the newly created tenant. |
+|  tenantOptions | [CreateTenantRequest](./firebase-admin.auth.md#createtenantrequest) | The properties to set on the new tenant configuration to be created. |
 
 <b>Returns:</b>
 
 Promise&lt;[Tenant](./firebase-admin.auth.tenant.md#tenant_class)<!-- -->&gt;
+
+A promise fulfilled with the tenant configuration corresponding to the newly created tenant.
 
 ## TenantManager.deleteTenant()
 
@@ -71,11 +78,13 @@ deleteTenant(tenantId: string): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  tenantId | string | The <code>tenantId</code> corresponding to the tenant to delete. An empty promise fulfilled once the tenant has been deleted. |
+|  tenantId | string | The <code>tenantId</code> corresponding to the tenant to delete. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
+
+An empty promise fulfilled once the tenant has been deleted.
 
 ## TenantManager.getTenant()
 
@@ -91,11 +100,13 @@ getTenant(tenantId: string): Promise<Tenant>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  tenantId | string | The tenant identifier corresponding to the tenant whose data to fetch. A promise fulfilled with the tenant configuration to the provided <code>tenantId</code>. |
+|  tenantId | string | The tenant identifier corresponding to the tenant whose data to fetch. |
 
 <b>Returns:</b>
 
 Promise&lt;[Tenant](./firebase-admin.auth.tenant.md#tenant_class)<!-- -->&gt;
+
+A promise fulfilled with the tenant configuration to the provided `tenantId`<!-- -->.
 
 ## TenantManager.listTenants()
 
@@ -112,11 +123,13 @@ listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  maxResults | number | The page size, 1000 if undefined. This is also the maximum allowed limit. |
-|  pageToken | string | The next page token. If not specified, returns tenants starting without any offset. A promise that resolves with a batch of downloaded tenants and the next page token. |
+|  pageToken | string | The next page token. If not specified, returns tenants starting without any offset. |
 
 <b>Returns:</b>
 
 Promise&lt;[ListTenantsResult](./firebase-admin.auth.listtenantsresult.md#listtenantsresult_interface)<!-- -->&gt;
+
+A promise that resolves with a batch of downloaded tenants and the next page token.
 
 ## TenantManager.updateTenant()
 
@@ -133,9 +146,12 @@ updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tena
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  tenantId | string | The <code>tenantId</code> corresponding to the tenant to delete. |
-|  tenantOptions | [UpdateTenantRequest](./firebase-admin.auth.updatetenantrequest.md#updatetenantrequest_interface) | The properties to update on the provided tenant. A promise fulfilled with the update tenant data. |
+|  tenantOptions | [UpdateTenantRequest](./firebase-admin.auth.updatetenantrequest.md#updatetenantrequest_interface) | The properties to update on the provided tenant. |
 
 <b>Returns:</b>
 
 Promise&lt;[Tenant](./firebase-admin.auth.tenant.md#tenant_class)<!-- -->&gt;
 
+A promise fulfilled with the update tenant data.
+
+{% endblock body %}

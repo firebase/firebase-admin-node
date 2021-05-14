@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MultiFactorConfig interface{% endblock title %}
+{% block body %}
 Interface representing a multi-factor configuration. This can be used to define whether multi-factor authentication is enabled or disabled and the list of second factor challenges that are supported.
 
 <b>Signature:</b>
@@ -32,3 +35,4 @@ The multi-factor config state.
 ```typescript
 state: MultiFactorConfigState;
 ```
+{% endblock body %}

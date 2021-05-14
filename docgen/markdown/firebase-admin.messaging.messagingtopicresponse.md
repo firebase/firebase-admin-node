@@ -1,6 +1,9 @@
-Interface representing the server response from the legacy  method.
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MessagingTopicResponse interface{% endblock title %}
+{% block body %}
+Interface representing the server response from the legacy [Messaging.sendToTopic()](./firebase-admin.messaging.messaging.md#messagingsendtotopic) method.
 
-See \[Send to a topic\](/docs/cloud-messaging/admin/send-messages\#send\_to\_a\_topic) for code samples and detailed documentation.
+See [Send to a topic](https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_topic) for code samples and detailed documentation.
 
 <b>Signature:</b>
 
@@ -23,3 +26,4 @@ The message ID for a successfully received request which FCM will attempt to del
 ```typescript
 messageId: number;
 ```
+{% endblock body %}

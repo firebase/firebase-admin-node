@@ -1,6 +1,9 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MessagingPayload interface{% endblock title %}
+{% block body %}
 Interface representing a Firebase Cloud Messaging message payload. One or both of the `data` and `notification` keys are required.
 
-See \[Build send requests\](/docs/cloud-messaging/send-message) for code samples and detailed documentation.
+See [Build send requests](https://firebase.google.com/docs/cloud-messaging/send-message) for code samples and detailed documentation.
 
 <b>Signature:</b>
 
@@ -34,3 +37,4 @@ The notification message payload.
 ```typescript
 notification?: NotificationMessagePayload;
 ```
+{% endblock body %}

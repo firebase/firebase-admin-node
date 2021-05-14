@@ -1,6 +1,9 @@
-Interface representing the server response from the  method.
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MessagingDeviceGroupResponse interface{% endblock title %}
+{% block body %}
+Interface representing the server response from the [Messaging.sendToDeviceGroup()](./firebase-admin.messaging.messaging.md#messagingsendtodevicegroup) method.
 
-See \[Send messages to device groups\](/docs/cloud-messaging/send-message?authuser=0\#send\_messages\_to\_device\_groups) for code samples and detailed documentation.
+See [Send messages to device groups](https://firebase.google.com/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups) for code samples and detailed documentation.
 
 <b>Signature:</b>
 
@@ -45,3 +48,4 @@ The number of messages that could not be processed and resulted in an error.
 ```typescript
 successCount: number;
 ```
+{% endblock body %}

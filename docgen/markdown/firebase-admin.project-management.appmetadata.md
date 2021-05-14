@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}AppMetadata interface{% endblock title %}
+{% block body %}
 Metadata about a Firebase app.
 
 <b>Signature:</b>
@@ -108,3 +111,4 @@ var resourceName = androidAppMetadata.resourceName;
 
 ```
 
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}Ruleset class{% endblock title %}
+{% block body %}
 A set of Firebase security rules.
 
 <b>Signature:</b>
@@ -12,7 +15,7 @@ export declare class Ruleset implements RulesetMetadata
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [createTime](./firebase-admin.security-rules.ruleset.md#rulesetcreatetime) |  | string | Creation time of the <code>Ruleset</code> as a UTC timestamp string. |
-|  [name](./firebase-admin.security-rules.ruleset.md#rulesetname) |  | string | Name of the <code>Ruleset</code> as a short string. This can be directly passed into APIs like  and . |
+|  [name](./firebase-admin.security-rules.ruleset.md#rulesetname) |  | string | Name of the <code>Ruleset</code> as a short string. This can be directly passed into APIs like [SecurityRules.getRuleset()](./firebase-admin.security-rules.securityrules.md#securityrulesgetruleset) and [SecurityRules.deleteRuleset()](./firebase-admin.security-rules.securityrules.md#securityrulesdeleteruleset)<!-- -->. |
 |  [source](./firebase-admin.security-rules.ruleset.md#rulesetsource) |  | [RulesFile](./firebase-admin.security-rules.rulesfile.md#rulesfile_interface)<!-- -->\[\] |  |
 
 ## Ruleset.createTime
@@ -27,7 +30,7 @@ readonly createTime: string;
 
 ## Ruleset.name
 
-Name of the `Ruleset` as a short string. This can be directly passed into APIs like  and .
+Name of the `Ruleset` as a short string. This can be directly passed into APIs like [SecurityRules.getRuleset()](./firebase-admin.security-rules.securityrules.md#securityrulesgetruleset) and [SecurityRules.deleteRuleset()](./firebase-admin.security-rules.securityrules.md#securityrulesdeleteruleset)<!-- -->.
 
 <b>Signature:</b>
 
@@ -42,3 +45,4 @@ readonly name: string;
 ```typescript
 readonly source: RulesFile[];
 ```
+{% endblock body %}

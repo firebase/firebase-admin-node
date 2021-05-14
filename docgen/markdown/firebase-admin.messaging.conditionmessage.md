@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ConditionMessage interface{% endblock title %}
+{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -18,3 +21,4 @@ export interface ConditionMessage extends BaseMessage
 ```typescript
 condition: string;
 ```
+{% endblock body %}

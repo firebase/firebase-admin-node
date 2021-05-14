@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.machine-learning package{% endblock title %}
+{% block body %}
 
 ## Classes
 
@@ -10,7 +13,7 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [getMachineLearning(app)](./firebase-admin.machine-learning.md#getmachinelearning) | Gets the  service for the default app or a given app.<code>getMachineLearning()</code> can be called with no arguments to access the default app's  service or as <code>getMachineLearning(app)</code> to access the  service associated with a specific app. |
+|  [getMachineLearning(app)](./firebase-admin.machine-learning.md#getmachinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>getMachineLearning()</code> can be called with no arguments to access the default app's {<code>MachineLearning</code> service or as <code>getMachineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
 
 ## Interfaces
 
@@ -31,9 +34,9 @@
 
 ## getMachineLearning()
 
-Gets the  service for the default app or a given app.
+Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.
 
-`getMachineLearning()` can be called with no arguments to access the default app's  service or as `getMachineLearning(app)` to access the  service associated with a specific app.
+`getMachineLearning()` can be called with no arguments to access the default app's {`MachineLearning` service or as `getMachineLearning(app)` to access the `MachineLearning` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -45,11 +48,13 @@ export declare function getMachineLearning(app?: App): MachineLearning;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | App | Optional app whose <code>MachineLearning</code> service to return. If not provided, the default <code>MachineLearning</code> service will be returned. The default <code>MachineLearning</code> service if no app is provided or the <code>MachineLearning</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>MachineLearning</code> service to return. If not provided, the default <code>MachineLearning</code> service will be returned. |
 
 <b>Returns:</b>
 
 [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class)
+
+The default `MachineLearning` service if no app is provided or the `MachineLearning` service associated with the provided app.
 
 ### Example 1
 
@@ -76,3 +81,4 @@ const otherMachineLearning = getMachineLearning(otherApp);
 ```typescript
 export declare type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
 ```
+{% endblock body %}

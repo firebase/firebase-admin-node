@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}RemoteConfigTemplate interface{% endblock title %}
+{% block body %}
 Interface representing a Remote Config template.
 
 <b>Signature:</b>
@@ -69,3 +72,4 @@ Version information for the current Remote Config template.
 ```typescript
 version?: Version;
 ```
+{% endblock body %}

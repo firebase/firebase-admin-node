@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}RemoteConfigParameterGroup interface{% endblock title %}
+{% block body %}
 Interface representing a Remote Config parameter group. Grouping parameters is only for management purposes and does not affect client-side fetching of parameter values.
 
 <b>Signature:</b>
@@ -34,3 +37,4 @@ parameters: {
         [key: string]: RemoteConfigParameter;
     };
 ```
+{% endblock body %}

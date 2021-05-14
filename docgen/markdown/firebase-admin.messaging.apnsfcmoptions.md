@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ApnsFcmOptions interface{% endblock title %}
+{% block body %}
 Represents options for features provided by the FCM SDK for iOS.
 
 <b>Signature:</b>
@@ -32,3 +35,4 @@ URL of an image to be displayed in the notification.
 ```typescript
 imageUrl?: string;
 ```
+{% endblock body %}

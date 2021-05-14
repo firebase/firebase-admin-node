@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin package{% endblock title %}
+{% block body %}
 
 ## Functions
 
@@ -5,23 +8,22 @@
 |  --- | --- |
 |  [app(name)](./firebase-admin.md#app) |  |
 |  [auth(app)](./firebase-admin.md#auth) | Gets the  service for the default app or a given app.<code>admin.auth()</code> can be called with no arguments to access the default app's  service or as <code>admin.auth(app)</code> to access the  service associated with a specific app. |
-|  [database(app)](./firebase-admin.md#database) | Gets the  service for the default app or a given app.<code>admin.database()</code> can be called with no arguments to access the default app's  service or as <code>admin.database(app)</code> to access the  service associated with a specific app.<code>admin.database</code> is also a namespace that can be used to access global constants and methods associated with the <code>Database</code> service. |
+|  [database(app)](./firebase-admin.md#database) | Gets the [Database](./firebase-admin.database.database.md#database_interface) service for the default app or a given app.<code>admin.database()</code> can be called with no arguments to access the default app's <code>Database</code> service or as <code>admin.database(app)</code> to access the <code>Database</code> service associated with a specific app.<code>admin.database</code> is also a namespace that can be used to access global constants and methods associated with the <code>Database</code> service. |
 |  [firestore(app)](./firebase-admin.md#firestore) |  |
 |  [initializeApp(options, name)](./firebase-admin.md#initializeapp) |  |
-|  [instanceId(app)](./firebase-admin.md#instanceid) | Gets the  service for the default app or a given app.<code>admin.instanceId()</code> can be called with no arguments to access the default app's  service or as <code>admin.instanceId(app)</code> to access the  service associated with a specific app. |
-|  [machineLearning(app)](./firebase-admin.md#machinelearning) | Gets the  service for the default app or a given app.<code>admin.machineLearning()</code> can be called with no arguments to access the default app's  service or as <code>admin.machineLearning(app)</code> to access the  service associated with a specific app. |
-|  [messaging(app)](./firebase-admin.md#messaging) | Gets the  service for the default app or a given app.<code>admin.messaging()</code> can be called with no arguments to access the default app's  service or as <code>admin.messaging(app)</code> to access the  service associated with a specific app. |
-|  [projectManagement(app)](./firebase-admin.md#projectmanagement) | Gets the  service for the default app or a given app.<code>admin.projectManagement()</code> can be called with no arguments to access the default app's  service, or as <code>admin.projectManagement(app)</code> to access the  service associated with a specific app. |
-|  [remoteConfig(app)](./firebase-admin.md#remoteconfig) | Gets the  service for the default app or a given app.<code>admin.remoteConfig()</code> can be called with no arguments to access the default app's  service or as <code>admin.remoteConfig(app)</code> to access the  service associated with a specific app. |
+|  [instanceId(app)](./firebase-admin.md#instanceid) | Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.<code>admin.instanceId()</code> can be called with no arguments to access the default app's <code>InstanceId</code> service or as <code>admin.instanceId(app)</code> to access the <code>InstanceId</code> service associated with a specific app. |
+|  [machineLearning(app)](./firebase-admin.md#machinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>admin.machineLearning()</code> can be called with no arguments to access the default app's <code>MachineLearning</code> service or as <code>admin.machineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
+|  [messaging(app)](./firebase-admin.md#messaging) | Gets the [Messaging](./firebase-admin.messaging.messaging.md#messaging_class) service for the default app or a given app.<code>admin.messaging()</code> can be called with no arguments to access the default app's <code>Messaging</code> service or as <code>admin.messaging(app)</code> to access the <code>Messaging</code> service associated with a specific app. |
+|  [projectManagement(app)](./firebase-admin.md#projectmanagement) | Gets the [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) service for the default app or a given app.<code>admin.projectManagement()</code> can be called with no arguments to access the default app's <code>ProjectManagement</code> service, or as <code>admin.projectManagement(app)</code> to access the <code>ProjectManagement</code> service associated with a specific app. |
+|  [remoteConfig(app)](./firebase-admin.md#remoteconfig) | Gets the [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class) service for the default app or a given app.<code>admin.remoteConfig()</code> can be called with no arguments to access the default app's <code>RemoteConfig</code> service or as <code>admin.remoteConfig(app)</code> to access the <code>RemoteConfig</code> service associated with a specific app. |
 |  [securityRules(app)](./firebase-admin.md#securityrules) | Gets the  service for the default app or a given app.<code>admin.securityRules()</code> can be called with no arguments to access the default app's  service, or as <code>admin.securityRules(app)</code> to access the  service associated with a specific app. |
-|  [storage(app)](./firebase-admin.md#storage) | Gets the  service for the default app or a given app.<code>admin.storage()</code> can be called with no arguments to access the default app's  service or as <code>admin.storage(app)</code> to access the  service associated with a specific app. |
+|  [storage(app)](./firebase-admin.md#storage) | Gets the [Storage](./firebase-admin.storage.storage.md#storage_class) service for the default app or a given app.<code>admin.storage()</code> can be called with no arguments to access the default app's <code>Storage</code> service or as <code>admin.storage(app)</code> to access the <code>Storage</code> service associated with a specific app. |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
-|  [App](./firebase-admin.app.md#app_interface) | A Firebase app holds the initialization information for a collection of services.<!-- -->Do not call this constructor directly. Instead, use  to create an app. |
-|  [AppOptions](./firebase-admin.appoptions.md#appoptions_interface) | Available options to pass to \[<code>initializeApp()</code>\](admin\#.initializeApp). |
+|  [AppOptions](./firebase-admin.appoptions.md#appoptions_interface) | Available options to pass to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->. |
 |  [FirebaseArrayIndexError](./firebase-admin.firebasearrayindexerror.md#firebasearrayindexerror_interface) | Composite type which includes both a <code>FirebaseError</code> object and an index which can be used to get the errored item. |
 |  [FirebaseError](./firebase-admin.firebaseerror.md#firebaseerror_interface) | <code>FirebaseError</code> is a subclass of the standard JavaScript <code>Error</code> object. In addition to a message string and stack trace, it contains a string code. |
 |  [GoogleOAuthAccessToken](./firebase-admin.googleoauthaccesstoken.md#googleoauthaccesstoken_interface) | Interface for Google OAuth 2.0 access tokens. |
@@ -31,18 +33,18 @@
 
 |  Namespace | Description |
 |  --- | --- |
-|  [app](./firebase-admin.md#app_namespace) |  |
-|  [auth](./firebase-admin.md#auth_namespace) |  |
-|  [credential](./firebase-admin.md#credential_namespace) |  |
-|  [database](./firebase-admin.md#database_namespace) |  |
-|  [firestore](./firebase-admin.md#firestore_namespace) |  |
-|  [instanceId](./firebase-admin.md#instanceid_namespace) |  |
-|  [machineLearning](./firebase-admin.md#machinelearning_namespace) |  |
-|  [messaging](./firebase-admin.md#messaging_namespace) |  |
-|  [projectManagement](./firebase-admin.md#projectmanagement_namespace) |  |
-|  [remoteConfig](./firebase-admin.md#remoteconfig_namespace) |  |
-|  [securityRules](./firebase-admin.md#securityrules_namespace) |  |
-|  [storage](./firebase-admin.md#storage_namespace) |  |
+|  [app](./firebase-admin.app_n.md#app_namespace) |  |
+|  [auth](./firebase-admin.auth_n.md#auth_namespace) |  |
+|  [credential](./firebase-admin.credential_n.md#credential_namespace) |  |
+|  [database](./firebase-admin.database_n.md#database_namespace) |  |
+|  [firestore](./firebase-admin.firestore_n.md#firestore_namespace) |  |
+|  [instanceId](./firebase-admin.instanceid_n.md#instanceid_namespace) |  |
+|  [machineLearning](./firebase-admin.machinelearning_n.md#machinelearning_namespace) |  |
+|  [messaging](./firebase-admin.messaging_n.md#messaging_namespace) |  |
+|  [projectManagement](./firebase-admin.projectmanagement_n.md#projectmanagement_namespace) |  |
+|  [remoteConfig](./firebase-admin.remoteconfig_n.md#remoteconfig_namespace) |  |
+|  [securityRules](./firebase-admin.securityrules_n.md#securityrules_namespace) |  |
+|  [storage](./firebase-admin.storage_n.md#storage_namespace) |  |
 
 ## Variables
 
@@ -67,7 +69,7 @@ export declare function app(name?: string): app.App;
 
 <b>Returns:</b>
 
-[app.App](./firebase-admin.app.md#appapp_interface)
+[app.App](./firebase-admin.app_n.app.md#appapp_interface)
 
 ## auth()
 
@@ -85,11 +87,11 @@ export declare function auth(app?: App): auth.Auth;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) |  |
+|  app | App |  |
 
 <b>Returns:</b>
 
-[auth.Auth](./firebase-admin.md#authauth)
+[auth.Auth](./firebase-admin.auth_n.md#authauth)
 
 ### Example 1
 
@@ -111,9 +113,9 @@ var otherAuth = admin.auth(otherApp);
 
 ## database()
 
-Gets the  service for the default app or a given app.
+Gets the [Database](./firebase-admin.database.database.md#database_interface) service for the default app or a given app.
 
-`admin.database()` can be called with no arguments to access the default app's  service or as `admin.database(app)` to access the  service associated with a specific app.
+`admin.database()` can be called with no arguments to access the default app's `Database` service or as `admin.database(app)` to access the `Database` service associated with a specific app.
 
 `admin.database` is also a namespace that can be used to access global constants and methods associated with the `Database` service.
 
@@ -127,11 +129,13 @@ export declare function database(app?: App): database.Database;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) |  |
+|  app | App |  |
 
 <b>Returns:</b>
 
-[database.Database](./firebase-admin.md#databasedatabase)
+[database.Database](./firebase-admin.database_n.md#databasedatabase)
+
+The default `Database` service if no app is provided or the `Database` service associated with the provided app.
 
 ### Example 1
 
@@ -163,7 +167,7 @@ export declare function firestore(app?: App): _firestore.Firestore;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) |  |
+|  app | App |  |
 
 <b>Returns:</b>
 
@@ -186,13 +190,13 @@ export declare function initializeApp(options?: AppOptions, name?: string): app.
 
 <b>Returns:</b>
 
-[app.App](./firebase-admin.app.md#appapp_interface)
+[app.App](./firebase-admin.app_n.app.md#appapp_interface)
 
 ## instanceId()
 
-Gets the  service for the default app or a given app.
+Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.
 
-`admin.instanceId()` can be called with no arguments to access the default app's  service or as `admin.instanceId(app)` to access the  service associated with a specific app.
+`admin.instanceId()` can be called with no arguments to access the default app's `InstanceId` service or as `admin.instanceId(app)` to access the `InstanceId` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -204,11 +208,13 @@ export declare function instanceId(app?: App): instanceId.InstanceId;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app whose <code>InstanceId</code> service to return. If not provided, the default <code>InstanceId</code> service will be returned. The default <code>InstanceId</code> service if no app is provided or the <code>InstanceId</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>InstanceId</code> service to return. If not provided, the default <code>InstanceId</code> service will be returned. |
 
 <b>Returns:</b>
 
-[instanceId.InstanceId](./firebase-admin.md#instanceidinstanceid)
+[instanceId.InstanceId](./firebase-admin.instanceid_n.md#instanceidinstanceid)
+
+The default `InstanceId` service if no app is provided or the `InstanceId` service associated with the provided app.
 
 ### Example 1
 
@@ -230,9 +236,9 @@ var otherInstanceId = admin.instanceId(otherApp);
 
 ## machineLearning()
 
-Gets the  service for the default app or a given app.
+Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.
 
-`admin.machineLearning()` can be called with no arguments to access the default app's  service or as `admin.machineLearning(app)` to access the  service associated with a specific app.
+`admin.machineLearning()` can be called with no arguments to access the default app's `MachineLearning` service or as `admin.machineLearning(app)` to access the `MachineLearning` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -244,11 +250,13 @@ export declare function machineLearning(app?: App): machineLearning.MachineLearn
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app whose <code>MachineLearning</code> service to return. If not provided, the default <code>MachineLearning</code> service will be returned. The default <code>MachineLearning</code> service if no app is provided or the <code>MachineLearning</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>MachineLearning</code> service to return. If not provided, the default <code>MachineLearning</code> service will be returned. |
 
 <b>Returns:</b>
 
-[machineLearning.MachineLearning](./firebase-admin.md#machinelearningmachinelearning)
+[machineLearning.MachineLearning](./firebase-admin.machinelearning_n.md#machinelearningmachinelearning)
+
+The default `MachineLearning` service if no app is provided or the `MachineLearning` service associated with the provided app.
 
 ### Example 1
 
@@ -270,9 +278,9 @@ var otherMachineLearning = admin.machineLearning(otherApp);
 
 ## messaging()
 
-Gets the  service for the default app or a given app.
+Gets the [Messaging](./firebase-admin.messaging.messaging.md#messaging_class) service for the default app or a given app.
 
-`admin.messaging()` can be called with no arguments to access the default app's  service or as `admin.messaging(app)` to access the  service associated with a specific app.
+`admin.messaging()` can be called with no arguments to access the default app's `Messaging` service or as `admin.messaging(app)` to access the `Messaging` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -284,11 +292,13 @@ export declare function messaging(app?: App): messaging.Messaging;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app whose <code>Messaging</code> service to return. If not provided, the default <code>Messaging</code> service will be returned. The default <code>Messaging</code> service if no app is provided or the <code>Messaging</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>Messaging</code> service to return. If not provided, the default <code>Messaging</code> service will be returned. |
 
 <b>Returns:</b>
 
-[messaging.Messaging](./firebase-admin.md#messagingmessaging)
+[messaging.Messaging](./firebase-admin.messaging_n.md#messagingmessaging)
+
+The default `Messaging` service if no app is provided or the `Messaging` service associated with the provided app.
 
 ### Example 1
 
@@ -310,9 +320,9 @@ var otherMessaging = admin.messaging(otherApp);
 
 ## projectManagement()
 
-Gets the  service for the default app or a given app.
+Gets the [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) service for the default app or a given app.
 
-`admin.projectManagement()` can be called with no arguments to access the default app's  service, or as `admin.projectManagement(app)` to access the  service associated with a specific app.
+`admin.projectManagement()` can be called with no arguments to access the default app's `ProjectManagement` service, or as `admin.projectManagement(app)` to access the `ProjectManagement` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -324,11 +334,13 @@ export declare function projectManagement(app?: App): projectManagement.ProjectM
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app whose <code>ProjectManagement</code> service to return. If not provided, the default <code>ProjectManagement</code> service will be returned. \*  The default <code>ProjectManagement</code> service if no app is provided or the <code>ProjectManagement</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>ProjectManagement</code> service to return. If not provided, the default <code>ProjectManagement</code> service will be returned. \* |
 
 <b>Returns:</b>
 
-[projectManagement.ProjectManagement](./firebase-admin.md#projectmanagementprojectmanagement)
+[projectManagement.ProjectManagement](./firebase-admin.projectmanagement_n.md#projectmanagementprojectmanagement)
+
+The default `ProjectManagement` service if no app is provided or the `ProjectManagement` service associated with the provided app.
 
 ### Example 1
 
@@ -350,9 +362,9 @@ var otherProjectManagement = admin.projectManagement(otherApp);
 
 ## remoteConfig()
 
-Gets the  service for the default app or a given app.
+Gets the [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class) service for the default app or a given app.
 
-`admin.remoteConfig()` can be called with no arguments to access the default app's  service or as `admin.remoteConfig(app)` to access the  service associated with a specific app.
+`admin.remoteConfig()` can be called with no arguments to access the default app's `RemoteConfig` service or as `admin.remoteConfig(app)` to access the `RemoteConfig` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -364,11 +376,13 @@ export declare function remoteConfig(app?: App): remoteConfig.RemoteConfig;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app for which to return the <code>RemoteConfig</code> service. If not provided, the default <code>RemoteConfig</code> service is returned. The default <code>RemoteConfig</code> service if no app is provided, or the <code>RemoteConfig</code> service associated with the provided app. |
+|  app | App | Optional app for which to return the <code>RemoteConfig</code> service. If not provided, the default <code>RemoteConfig</code> service is returned. |
 
 <b>Returns:</b>
 
-[remoteConfig.RemoteConfig](./firebase-admin.md#remoteconfigremoteconfig)
+[remoteConfig.RemoteConfig](./firebase-admin.remoteconfig_n.md#remoteconfigremoteconfig)
+
+The default `RemoteConfig` service if no app is provided, or the `RemoteConfig` service associated with the provided app.
 
 ### Example 1
 
@@ -404,11 +418,13 @@ export declare function securityRules(app?: App): securityRules.SecurityRules;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) | Optional app to return the <code>SecurityRules</code> service for. If not provided, the default <code>SecurityRules</code> service is returned.  The default <code>SecurityRules</code> service if no app is provided, or the <code>SecurityRules</code> service associated with the provided app. |
+|  app | App | Optional app to return the <code>SecurityRules</code> service for. If not provided, the default <code>SecurityRules</code> service is returned. |
 
 <b>Returns:</b>
 
-[securityRules.SecurityRules](./firebase-admin.md#securityrulessecurityrules)
+[securityRules.SecurityRules](./firebase-admin.securityrules_n.md#securityrulessecurityrules)
+
+The default `SecurityRules` service if no app is provided, or the `SecurityRules` service associated with the provided app.
 
 ### Example 1
 
@@ -425,9 +441,9 @@ var defaultSecurityRules = admin.securityRules();
 
 ## storage()
 
-Gets the  service for the default app or a given app.
+Gets the [Storage](./firebase-admin.storage.storage.md#storage_class) service for the default app or a given app.
 
-`admin.storage()` can be called with no arguments to access the default app's  service or as `admin.storage(app)` to access the  service associated with a specific app.
+`admin.storage()` can be called with no arguments to access the default app's `Storage` service or as `admin.storage(app)` to access the `Storage` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -439,11 +455,11 @@ export declare function storage(app?: App): storage.Storage;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | [App](./firebase-admin.app.md#app_interface) |  |
+|  app | App |  |
 
 <b>Returns:</b>
 
-[storage.Storage](./firebase-admin.md#storagestorage)
+[storage.Storage](./firebase-admin.storage_n.md#storagestorage)
 
 ### Example 1
 
@@ -478,3 +494,4 @@ apps: (app.App | null)[]
 ```typescript
 SDK_VERSION: string
 ```
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ApsAlert interface{% endblock title %}
+{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -107,3 +110,4 @@ titleLocArgs?: string[];
 ```typescript
 titleLocKey?: string;
 ```
+{% endblock body %}

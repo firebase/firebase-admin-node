@@ -1,4 +1,7 @@
-Represents settings to control notification LED that can be included in .
+{% extends "_internal/templates/reference.html" %}
+{% block title %}LightSettings interface{% endblock title %}
+{% block body %}
+Represents settings to control notification LED that can be included in [AndroidNotification](./firebase-admin.messaging.androidnotification.md#androidnotification_interface)<!-- -->.
 
 <b>Signature:</b>
 
@@ -43,3 +46,4 @@ Required. Along with `light_off_duration`<!-- -->, defines the blink rate of LED
 ```typescript
 lightOnDurationMillis: number;
 ```
+{% endblock body %}

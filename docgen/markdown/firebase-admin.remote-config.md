@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.remote-config package{% endblock title %}
+{% block body %}
 
 ## Classes
 
@@ -9,7 +12,7 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [getRemoteConfig(app)](./firebase-admin.remote-config.md#getremoteconfig) | Gets the  service for the default app or a given app.<code>getRemoteConfig()</code> can be called with no arguments to access the default app's  service or as <code>getRemoteConfig(app)</code> to access the  service associated with a specific app. |
+|  [getRemoteConfig(app)](./firebase-admin.remote-config.md#getremoteconfig) | Gets the [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class) service for the default app or a given app.<code>getRemoteConfig()</code> can be called with no arguments to access the default app's <code>RemoteConfig</code> service or as <code>getRemoteConfig(app)</code> to access the <code>RemoteConfig</code> service associated with a specific app. |
 
 ## Interfaces
 
@@ -35,9 +38,9 @@
 
 ## getRemoteConfig()
 
-Gets the  service for the default app or a given app.
+Gets the [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class) service for the default app or a given app.
 
-`getRemoteConfig()` can be called with no arguments to access the default app's  service or as `getRemoteConfig(app)` to access the  service associated with a specific app.
+`getRemoteConfig()` can be called with no arguments to access the default app's `RemoteConfig` service or as `getRemoteConfig(app)` to access the `RemoteConfig` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -49,11 +52,13 @@ export declare function getRemoteConfig(app?: App): RemoteConfig;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | App | Optional app for which to return the <code>RemoteConfig</code> service. If not provided, the default <code>RemoteConfig</code> service is returned. The default <code>RemoteConfig</code> service if no app is provided, or the <code>RemoteConfig</code> service associated with the provided app. |
+|  app | App | Optional app for which to return the <code>RemoteConfig</code> service. If not provided, the default <code>RemoteConfig</code> service is returned. |
 
 <b>Returns:</b>
 
 [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class)
+
+The default `RemoteConfig` service if no app is provided, or the `RemoteConfig` service associated with the provided app.
 
 ### Example 1
 
@@ -92,3 +97,4 @@ Colors that are associated with conditions for display purposes.
 ```typescript
 export declare type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
 ```
+{% endblock body %}

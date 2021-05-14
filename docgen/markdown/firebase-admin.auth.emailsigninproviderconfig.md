@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}EmailSignInProviderConfig interface{% endblock title %}
+{% block body %}
 The email sign in provider configuration.
 
 <b>Signature:</b>
@@ -32,3 +35,4 @@ Whether password is required for email sign-in. When not required, email sign-in
 ```typescript
 passwordRequired?: boolean;
 ```
+{% endblock body %}

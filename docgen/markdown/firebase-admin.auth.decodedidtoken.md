@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}DecodedIdToken interface{% endblock title %}
+{% block body %}
 Interface representing a decoded Firebase ID token, returned from the  method.
 
 Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs). See the \[ID Token section of the OpenID Connect spec\](http://openid.net/specs/openid-connect-core-1\_0.html\#IDToken) for more information about the specific properties below.
@@ -169,3 +172,4 @@ This value is not actually in the JWT token claims itself. It is added as a conv
 ```typescript
 uid: string;
 ```
+{% endblock body %}

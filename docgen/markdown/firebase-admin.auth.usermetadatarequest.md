@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserMetadataRequest interface{% endblock title %}
+{% block body %}
 User metadata to include when importing a user.
 
 <b>Signature:</b>
@@ -32,3 +35,4 @@ The date the user last signed in, formatted as a UTC string.
 ```typescript
 lastSignInTime?: string;
 ```
+{% endblock body %}

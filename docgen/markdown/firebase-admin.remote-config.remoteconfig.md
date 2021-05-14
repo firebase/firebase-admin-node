@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}RemoteConfig class{% endblock title %}
+{% block body %}
 The Firebase `RemoteConfig` service interface.
 
 <b>Signature:</b>
@@ -17,12 +20,12 @@ export declare class RemoteConfig
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [createTemplateFromJSON(json)](./firebase-admin.remote-config.remoteconfig.md#remoteconfigcreatetemplatefromjson) |  | Creates and returns a new Remote Config template from a JSON string. |
-|  [getTemplate()](./firebase-admin.remote-config.remoteconfig.md#remoteconfiggettemplate) |  | Gets the current active version of the  of the project. A promise that fulfills with a <code>RemoteConfigTemplate</code>. |
-|  [getTemplateAtVersion(versionNumber)](./firebase-admin.remote-config.remoteconfig.md#remoteconfiggettemplateatversion) |  | Gets the requested version of the  of the project. |
+|  [getTemplate()](./firebase-admin.remote-config.remoteconfig.md#remoteconfiggettemplate) |  | Gets the current active version of the [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface) of the project. |
+|  [getTemplateAtVersion(versionNumber)](./firebase-admin.remote-config.remoteconfig.md#remoteconfiggettemplateatversion) |  | Gets the requested version of the [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface) of the project. |
 |  [listVersions(options)](./firebase-admin.remote-config.remoteconfig.md#remoteconfiglistversions) |  | Gets a list of Remote Config template versions that have been published, sorted in reverse chronological order. Only the last 300 versions are stored. All versions that correspond to non-active Remote Config templates (i.e., all except the template that is being fetched by clients) are also deleted if they are older than 90 days. |
 |  [publishTemplate(template, options)](./firebase-admin.remote-config.remoteconfig.md#remoteconfigpublishtemplate) |  | Publishes a Remote Config template. |
 |  [rollback(versionNumber)](./firebase-admin.remote-config.remoteconfig.md#remoteconfigrollback) |  | Rolls back a project's published Remote Config template to the specified version. A rollback is equivalent to getting a previously published Remote Config template and re-publishing it using a force update. |
-|  [validateTemplate(template)](./firebase-admin.remote-config.remoteconfig.md#remoteconfigvalidatetemplate) |  | Validates a . |
+|  [validateTemplate(template)](./firebase-admin.remote-config.remoteconfig.md#remoteconfigvalidatetemplate) |  | Validates a [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->. |
 
 ## RemoteConfig.app
 
@@ -46,17 +49,17 @@ createTemplateFromJSON(json: string): RemoteConfigTemplate;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  json | string | The JSON string to populate a Remote Config template. A new template instance. |
+|  json | string | The JSON string to populate a Remote Config template. |
 
 <b>Returns:</b>
 
 [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)
 
+A new template instance.
+
 ## RemoteConfig.getTemplate()
 
-Gets the current active version of the  of the project.
-
- A promise that fulfills with a `RemoteConfigTemplate`<!-- -->.
+Gets the current active version of the [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface) of the project.
 
 <b>Signature:</b>
 
@@ -67,9 +70,11 @@ getTemplate(): Promise<RemoteConfigTemplate>;
 
 Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->&gt;
 
+A promise that fulfills with a `RemoteConfigTemplate`<!-- -->.
+
 ## RemoteConfig.getTemplateAtVersion()
 
-Gets the requested version of the  of the project.
+Gets the requested version of the [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface) of the project.
 
 <b>Signature:</b>
 
@@ -81,11 +86,13 @@ getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTempla
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  versionNumber | number \| string | Version number of the Remote Config template to look up. A promise that fulfills with a <code>RemoteConfigTemplate</code>. |
+|  versionNumber | number \| string | Version number of the Remote Config template to look up. |
 
 <b>Returns:</b>
 
 Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->&gt;
+
+A promise that fulfills with a `RemoteConfigTemplate`<!-- -->.
 
 ## RemoteConfig.listVersions()
 
@@ -101,11 +108,13 @@ listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | [ListVersionsOptions](./firebase-admin.remote-config.listversionsoptions.md#listversionsoptions_interface) | Optional options object for getting a list of versions.  A promise that fulfills with a <code>ListVersionsResult</code>. |
+|  options | [ListVersionsOptions](./firebase-admin.remote-config.listversionsoptions.md#listversionsoptions_interface) | Optional options object for getting a list of versions. |
 
 <b>Returns:</b>
 
 Promise&lt;[ListVersionsResult](./firebase-admin.remote-config.listversionsresult.md#listversionsresult_interface)<!-- -->&gt;
+
+A promise that fulfills with a `ListVersionsResult`<!-- -->.
 
 ## RemoteConfig.publishTemplate()
 
@@ -124,11 +133,13 @@ publishTemplate(template: RemoteConfigTemplate, options?: {
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  template | [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface) | The Remote Config template to be published. |
-|  options | { force: boolean; } | Optional options object when publishing a Remote Config template: - {<!-- -->boolean<!-- -->} <code>force</code> Setting this to <code>true</code> forces the Remote Config template to be updated and circumvent the ETag. This approach is not recommended because it risks causing the loss of updates to your Remote Config template if multiple clients are updating the Remote Config template. See . A Promise that fulfills with the published <code>RemoteConfigTemplate</code>. |
+|  options | { force: boolean; } | Optional options object when publishing a Remote Config template: - <code>force</code>: Setting this to <code>true</code> forces the Remote Config template to be updated and circumvent the ETag. This approach is not recommended because it risks causing the loss of updates to your Remote Config template if multiple clients are updating the Remote Config template. See [ETag usage and forced updates](https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates)<!-- -->. |
 
 <b>Returns:</b>
 
 Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->&gt;
+
+A Promise that fulfills with the published `RemoteConfigTemplate`<!-- -->.
 
 ## RemoteConfig.rollback()
 
@@ -144,15 +155,17 @@ rollback(versionNumber: number | string): Promise<RemoteConfigTemplate>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  versionNumber | number \| string | The version number of the Remote Config template to roll back to. The specified version number must be lower than the current version number, and not have been deleted due to staleness. Only the last 300 versions are stored. All versions that correspond to non-active Remote Config templates (that is, all except the template that is being fetched by clients) are also deleted if they are more than 90 days old.  A promise that fulfills with the published <code>RemoteConfigTemplate</code>. |
+|  versionNumber | number \| string | The version number of the Remote Config template to roll back to. The specified version number must be lower than the current version number, and not have been deleted due to staleness. Only the last 300 versions are stored. All versions that correspond to non-active Remote Config templates (that is, all except the template that is being fetched by clients) are also deleted if they are more than 90 days old. |
 
 <b>Returns:</b>
 
 Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->&gt;
 
+A promise that fulfills with the published `RemoteConfigTemplate`<!-- -->.
+
 ## RemoteConfig.validateTemplate()
 
-Validates a .
+Validates a [RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtemplate.md#remoteconfigtemplate_interface)<!-- -->.
 
 <b>Signature:</b>
 
@@ -172,3 +185,4 @@ Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtem
 
 A promise that fulfills with the validated `RemoteConfigTemplate`<!-- -->.
 
+{% endblock body %}

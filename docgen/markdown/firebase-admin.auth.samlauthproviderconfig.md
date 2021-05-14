@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}SAMLAuthProviderConfig interface{% endblock title %}
+{% block body %}
 The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html) Auth provider configuration interface. A SAML provider can be created via .
 
 <b>Signature:</b>
@@ -66,3 +69,4 @@ The list of SAML IdP X.509 certificates issued by CA for this provider. Multiple
 ```typescript
 x509Certificates: string[];
 ```
+{% endblock body %}

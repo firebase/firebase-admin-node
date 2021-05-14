@@ -1,4 +1,7 @@
-A notification that can be included in .
+{% extends "_internal/templates/reference.html" %}
+{% block title %}Notification interface{% endblock title %}
+{% block body %}
+A notification that can be included in [Message](./firebase-admin.messaging.md#message)<!-- -->.
 
 <b>Signature:</b>
 
@@ -43,3 +46,4 @@ The title of the notification.
 ```typescript
 title?: string;
 ```
+{% endblock body %}

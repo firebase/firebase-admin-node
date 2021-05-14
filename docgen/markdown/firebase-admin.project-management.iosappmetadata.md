@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}IosAppMetadata interface{% endblock title %}
+{% block body %}
 Metadata about a Firebase iOS App.
 
 <b>Signature:</b>
@@ -39,3 +42,4 @@ var bundleId = iosAppMetadata.bundleId;
 ```typescript
 platform: AppPlatform.IOS;
 ```
+{% endblock body %}

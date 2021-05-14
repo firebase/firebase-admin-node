@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}OIDCAuthProviderConfig interface{% endblock title %}
+{% block body %}
 The \[OIDC\](https://openid.net/specs/openid-connect-core-1\_0-final.html) Auth provider configuration interface. An OIDC provider can be created via .
 
 <b>Signature:</b>
@@ -33,3 +36,4 @@ This is the required provider issuer used to match the provider issuer of the ID
 ```typescript
 issuer: string;
 ```
+{% endblock body %}

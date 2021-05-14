@@ -1,4 +1,7 @@
-Represents the Android-specific notification options that can be included in .
+{% extends "_internal/templates/reference.html" %}
+{% block title %}AndroidNotification interface{% endblock title %}
+{% block body %}
+Represents the Android-specific notification options that can be included in [AndroidConfig](./firebase-admin.messaging.androidconfig.md#androidconfig_interface)<!-- -->.
 
 <b>Signature:</b>
 
@@ -16,15 +19,15 @@ export interface AndroidNotification
 |  [channelId](./firebase-admin.messaging.androidnotification.md#androidnotificationchannelid) | string | The Android notification channel ID (new in Android O). The app must create a channel with this channel ID before any notification with this channel ID can be received. If you don't send this channel ID in the request, or if the channel ID provided has not yet been created by the app, FCM uses the channel ID specified in the app manifest. |
 |  [clickAction](./firebase-admin.messaging.androidnotification.md#androidnotificationclickaction) | string | Action associated with a user click on the notification. If specified, an activity with a matching Intent Filter is launched when a user clicks on the notification. |
 |  [color](./firebase-admin.messaging.androidnotification.md#androidnotificationcolor) | string | Notification icon color in <code>#rrggbb</code> format. |
-|  [defaultLightSettings](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultlightsettings) | boolean | If set to <code>true</code>, use the Android framework's default LED light settings for the notification. Default values are specified in \[<code>config.xml</code>\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). If <code>default_light_settings</code> is set to <code>true</code> and <code>light_settings</code> is also set, the user-specified <code>light_settings</code> is used instead of the default value. |
-|  [defaultSound](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultsound) | boolean | If set to <code>true</code>, use the Android framework's default sound for the notification. Default values are specified in \[<code>config.xml</code>\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). |
-|  [defaultVibrateTimings](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultvibratetimings) | boolean | If set to <code>true</code>, use the Android framework's default vibrate pattern for the notification. Default values are specified in \[<code>config.xml</code>\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). If <code>default_vibrate_timings</code> is set to <code>true</code> and <code>vibrate_timings</code> is also set, the default value is used instead of the user-specified <code>vibrate_timings</code>. |
+|  [defaultLightSettings](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultlightsettings) | boolean | If set to <code>true</code>, use the Android framework's default LED light settings for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->. If <code>default_light_settings</code> is set to <code>true</code> and <code>light_settings</code> is also set, the user-specified <code>light_settings</code> is used instead of the default value. |
+|  [defaultSound](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultsound) | boolean | If set to <code>true</code>, use the Android framework's default sound for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->. |
+|  [defaultVibrateTimings](./firebase-admin.messaging.androidnotification.md#androidnotificationdefaultvibratetimings) | boolean | If set to <code>true</code>, use the Android framework's default vibrate pattern for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->. If <code>default_vibrate_timings</code> is set to <code>true</code> and <code>vibrate_timings</code> is also set, the default value is used instead of the user-specified <code>vibrate_timings</code>. |
 |  [eventTimestamp](./firebase-admin.messaging.androidnotification.md#androidnotificationeventtimestamp) | Date | For notifications that inform users about events with an absolute time reference, sets the time that the event in the notification occurred. Notifications in the panel are sorted by this time. |
 |  [icon](./firebase-admin.messaging.androidnotification.md#androidnotificationicon) | string | Icon resource for the Android notification. |
 |  [imageUrl](./firebase-admin.messaging.androidnotification.md#androidnotificationimageurl) | string | URL of an image to be displayed in the notification. |
 |  [lightSettings](./firebase-admin.messaging.androidnotification.md#androidnotificationlightsettings) | [LightSettings](./firebase-admin.messaging.lightsettings.md#lightsettings_interface) | Settings to control the notification's LED blinking rate and color if LED is available on the device. The total blinking time is controlled by the OS. |
-|  [localOnly](./firebase-admin.messaging.androidnotification.md#androidnotificationlocalonly) | boolean | Sets whether or not this notification is relevant only to the current device. Some notifications can be bridged to other devices for remote display, such as a Wear OS watch. This hint can be set to recommend this notification not be bridged. See \[Wear OS guides\](https://developer.android.com/training/wearables/notifications/bridger\#existing-method-of-preventing-bridging) |
-|  [notificationCount](./firebase-admin.messaging.androidnotification.md#androidnotificationnotificationcount) | number | Sets the number of items this notification represents. May be displayed as a badge count for Launchers that support badging. See \[<code>NotificationBadge</code>(https://developer.android.com/training/notify-user/badges). For example, this might be useful if you're using just one notification to represent multiple new messages but you want the count here to represent the number of total new messages. If zero or unspecified, systems that support badging use the default, which is to increment a number displayed on the long-press menu each time a new notification arrives. |
+|  [localOnly](./firebase-admin.messaging.androidnotification.md#androidnotificationlocalonly) | boolean | Sets whether or not this notification is relevant only to the current device. Some notifications can be bridged to other devices for remote display, such as a Wear OS watch. This hint can be set to recommend this notification not be bridged. See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)<!-- -->. |
+|  [notificationCount](./firebase-admin.messaging.androidnotification.md#androidnotificationnotificationcount) | number | Sets the number of items this notification represents. May be displayed as a badge count for Launchers that support badging. See [NotificationBadge](https://developer.android.com/training/notify-user/badges)<!-- -->. For example, this might be useful if you're using just one notification to represent multiple new messages but you want the count here to represent the number of total new messages. If zero or unspecified, systems that support badging use the default, which is to increment a number displayed on the long-press menu each time a new notification arrives. |
 |  [priority](./firebase-admin.messaging.androidnotification.md#androidnotificationpriority) | ('min' \| 'low' \| 'default' \| 'high' \| 'max') | Sets the relative priority for this notification. Low-priority notifications may be hidden from the user in certain situations. Note this priority differs from <code>AndroidMessagePriority</code>. This priority is processed by the client after the message has been delivered. Whereas <code>AndroidMessagePriority</code> is an FCM concept that controls when the message is delivered. |
 |  [sound](./firebase-admin.messaging.androidnotification.md#androidnotificationsound) | string | File name of the sound to be played when the device receives the notification. |
 |  [sticky](./firebase-admin.messaging.androidnotification.md#androidnotificationsticky) | boolean | When set to <code>false</code> or unset, the notification is automatically dismissed when the user clicks it in the panel. When set to <code>true</code>, the notification persists even when the user clicks it. |
@@ -98,7 +101,7 @@ color?: string;
 
 ## AndroidNotification.defaultLightSettings
 
-If set to `true`<!-- -->, use the Android framework's default LED light settings for the notification. Default values are specified in \[`config.xml`<!-- -->\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). If `default_light_settings` is set to `true` and `light_settings` is also set, the user-specified `light_settings` is used instead of the default value.
+If set to `true`<!-- -->, use the Android framework's default LED light settings for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->. If `default_light_settings` is set to `true` and `light_settings` is also set, the user-specified `light_settings` is used instead of the default value.
 
 <b>Signature:</b>
 
@@ -108,7 +111,7 @@ defaultLightSettings?: boolean;
 
 ## AndroidNotification.defaultSound
 
-If set to `true`<!-- -->, use the Android framework's default sound for the notification. Default values are specified in \[`config.xml`<!-- -->\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+If set to `true`<!-- -->, use the Android framework's default sound for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->.
 
 <b>Signature:</b>
 
@@ -118,7 +121,7 @@ defaultSound?: boolean;
 
 ## AndroidNotification.defaultVibrateTimings
 
-If set to `true`<!-- -->, use the Android framework's default vibrate pattern for the notification. Default values are specified in \[`config.xml`<!-- -->\](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set, the default value is used instead of the user-specified `vibrate_timings`<!-- -->.
+If set to `true`<!-- -->, use the Android framework's default vibrate pattern for the notification. Default values are specified in [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml)<!-- -->. If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set, the default value is used instead of the user-specified `vibrate_timings`<!-- -->.
 
 <b>Signature:</b>
 
@@ -168,7 +171,7 @@ lightSettings?: LightSettings;
 
 ## AndroidNotification.localOnly
 
-Sets whether or not this notification is relevant only to the current device. Some notifications can be bridged to other devices for remote display, such as a Wear OS watch. This hint can be set to recommend this notification not be bridged. See \[Wear OS guides\](https://developer.android.com/training/wearables/notifications/bridger\#existing-method-of-preventing-bridging)
+Sets whether or not this notification is relevant only to the current device. Some notifications can be bridged to other devices for remote display, such as a Wear OS watch. This hint can be set to recommend this notification not be bridged. See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)<!-- -->.
 
 <b>Signature:</b>
 
@@ -178,7 +181,7 @@ localOnly?: boolean;
 
 ## AndroidNotification.notificationCount
 
-Sets the number of items this notification represents. May be displayed as a badge count for Launchers that support badging. See \[`NotificationBadge`<!-- -->(https://developer.android.com/training/notify-user/badges). For example, this might be useful if you're using just one notification to represent multiple new messages but you want the count here to represent the number of total new messages. If zero or unspecified, systems that support badging use the default, which is to increment a number displayed on the long-press menu each time a new notification arrives.
+Sets the number of items this notification represents. May be displayed as a badge count for Launchers that support badging. See [NotificationBadge](https://developer.android.com/training/notify-user/badges)<!-- -->. For example, this might be useful if you're using just one notification to represent multiple new messages but you want the count here to represent the number of total new messages. If zero or unspecified, systems that support badging use the default, which is to increment a number displayed on the long-press menu each time a new notification arrives.
 
 <b>Signature:</b>
 
@@ -285,3 +288,4 @@ Sets the visibility of the notification. Must be either `private`<!-- -->, `publ
 ```typescript
 visibility?: ('private' | 'public' | 'secret');
 ```
+{% endblock body %}

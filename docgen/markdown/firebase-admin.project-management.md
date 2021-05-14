@@ -1,11 +1,14 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.project-management package{% endblock title %}
+{% block body %}
 
 ## Classes
 
 |  Class | Description |
 |  --- | --- |
-|  [AndroidApp](./firebase-admin.project-management.androidapp.md#androidapp_class) | A reference to a Firebase Android app.<!-- -->Do not call this constructor directly. Instead, use \[<code>projectManagement.androidApp()</code>\](projectManagement.ProjectManagement\#androidApp). |
-|  [IosApp](./firebase-admin.project-management.iosapp.md#iosapp_class) | A reference to a Firebase iOS app.<!-- -->Do not call this constructor directly. Instead, use \[<code>projectManagement.iosApp()</code>\](projectManagement.ProjectManagement\#iosApp). |
-|  [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) | The Firebase ProjectManagement service interface.<!-- -->Do not call this constructor directly. Instead, use \[<code>admin.projectManagement()</code>\](projectManagement\#projectManagement). |
+|  [AndroidApp](./firebase-admin.project-management.androidapp.md#androidapp_class) | A reference to a Firebase Android app.<!-- -->Do not call this constructor directly. Instead, use [ProjectManagement.androidApp()](./firebase-admin.project-management.projectmanagement.md#projectmanagementandroidapp)<!-- -->. |
+|  [IosApp](./firebase-admin.project-management.iosapp.md#iosapp_class) | A reference to a Firebase iOS app.<!-- -->Do not call this constructor directly. Instead, use [ProjectManagement.iosApp()](./firebase-admin.project-management.projectmanagement.md#projectmanagementiosapp)<!-- -->. |
+|  [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) | The Firebase ProjectManagement service interface. |
 |  [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class) | A SHA-1 or SHA-256 certificate.<!-- -->Do not call this constructor directly. Instead, use \[<code>projectManagement.shaCertificate()</code>\](projectManagement.ProjectManagement\#shaCertificate). |
 
 ## Enumerations
@@ -18,7 +21,7 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [getProjectManagement(app)](./firebase-admin.project-management.md#getprojectmanagement) | Gets the  service for the default app or a given app.<code>getProjectManagement()</code> can be called with no arguments to access the default app's  service, or as <code>getProjectManagement(app)</code> to access the  service associated with a specific app. |
+|  [getProjectManagement(app)](./firebase-admin.project-management.md#getprojectmanagement) | Gets the [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) service for the default app or a given app.<code>getProjectManagement()</code> can be called with no arguments to access the default app's <code>ProjectManagement</code> service, or as <code>getProjectManagement(app)</code> to access the <code>ProjectManagement</code> service associated with a specific app. |
 
 ## Interfaces
 
@@ -30,9 +33,9 @@
 
 ## getProjectManagement()
 
-Gets the  service for the default app or a given app.
+Gets the [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) service for the default app or a given app.
 
-`getProjectManagement()` can be called with no arguments to access the default app's  service, or as `getProjectManagement(app)` to access the  service associated with a specific app.
+`getProjectManagement()` can be called with no arguments to access the default app's `ProjectManagement` service, or as `getProjectManagement(app)` to access the `ProjectManagement` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -44,11 +47,13 @@ export declare function getProjectManagement(app?: App): ProjectManagement;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | App | Optional app whose <code>ProjectManagement</code> service to return. If not provided, the default <code>ProjectManagement</code> service will be returned. \*  The default <code>ProjectManagement</code> service if no app is provided or the <code>ProjectManagement</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>ProjectManagement</code> service to return. If not provided, the default <code>ProjectManagement</code> service will be returned. \* |
 
 <b>Returns:</b>
 
 [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class)
+
+The default `ProjectManagement` service if no app is provided or the `ProjectManagement` service associated with the provided app.
 
 ### Example 1
 
@@ -86,3 +91,4 @@ export declare enum AppPlatform
 |  IOS | <code>&quot;IOS&quot;</code> | The Firebase App is associated with iOS. |
 |  PLATFORM\_UNKNOWN | <code>&quot;PLATFORM_UNKNOWN&quot;</code> | Unknown state. This is only used for distinguishing unset values. |
 
+{% endblock body %}

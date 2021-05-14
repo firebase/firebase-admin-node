@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UpdateRequest interface{% endblock title %}
+{% block body %}
 Interface representing the properties to update on the provided user.
 
 <b>Signature:</b>
@@ -18,6 +21,8 @@ export interface UpdateRequest
 |  [password](./firebase-admin.auth.updaterequest.md#updaterequestpassword) | string | The user's unhashed password. |
 |  [phoneNumber](./firebase-admin.auth.updaterequest.md#updaterequestphonenumber) | string \| null | The user's primary phone number. |
 |  [photoURL](./firebase-admin.auth.updaterequest.md#updaterequestphotourl) | string \| null | The user's photo URL. |
+|  [providersToUnlink](./firebase-admin.auth.updaterequest.md#updaterequestproviderstounlink) | string\[\] | Unlinks this user from the specified providers. |
+|  [providerToLink](./firebase-admin.auth.updaterequest.md#updaterequestprovidertolink) | [UserProvider](./firebase-admin.auth.userprovider.md#userprovider_interface) | Links this user to the specified provider.<!-- -->Linking a provider to an existing user account does not invalidate the refresh token of that account. In other words, the existing account would continue to be able to access resources, despite not having used the newly linked provider to log in. If you wish to force the user to authenticate with this new provider, you need to (a) revoke their refresh token (see https://firebase.google.com/docs/auth/admin/manage-sessions\#revoke\_refresh\_tokens), and (b) ensure no other authentication methods are present on this account. |
 
 ## UpdateRequest.disabled
 
@@ -98,3 +103,26 @@ The user's photo URL.
 ```typescript
 photoURL?: string | null;
 ```
+
+## UpdateRequest.providersToUnlink
+
+Unlinks this user from the specified providers.
+
+<b>Signature:</b>
+
+```typescript
+providersToUnlink?: string[];
+```
+
+## UpdateRequest.providerToLink
+
+Links this user to the specified provider.
+
+Linking a provider to an existing user account does not invalidate the refresh token of that account. In other words, the existing account would continue to be able to access resources, despite not having used the newly linked provider to log in. If you wish to force the user to authenticate with this new provider, you need to (a) revoke their refresh token (see https://firebase.google.com/docs/auth/admin/manage-sessions\#revoke\_refresh\_tokens), and (b) ensure no other authentication methods are present on this account.
+
+<b>Signature:</b>
+
+```typescript
+providerToLink?: UserProvider;
+```
+{% endblock body %}

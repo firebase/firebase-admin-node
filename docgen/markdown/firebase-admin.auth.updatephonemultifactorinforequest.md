@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UpdatePhoneMultiFactorInfoRequest interface{% endblock title %}
+{% block body %}
 Interface representing a phone specific user enrolled second factor for an `UpdateRequest`<!-- -->.
 
 <b>Signature:</b>
@@ -22,3 +25,4 @@ The phone number associated with a phone second factor.
 ```typescript
 phoneNumber: string;
 ```
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}AutoMLTfliteModelOptions interface{% endblock title %}
+{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -20,3 +23,4 @@ tfliteModel: {
         automlModel: string;
     };
 ```
+{% endblock body %}

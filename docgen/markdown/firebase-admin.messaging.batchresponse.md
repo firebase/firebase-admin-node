@@ -1,4 +1,7 @@
-Interface representing the server response from the  and  methods.
+{% extends "_internal/templates/reference.html" %}
+{% block title %}BatchResponse interface{% endblock title %}
+{% block body %}
+Interface representing the server response from the [Messaging.sendAll()](./firebase-admin.messaging.messaging.md#messagingsendall) and [Messaging.sendMulticast()](./firebase-admin.messaging.messaging.md#messagingsendmulticast) methods.
 
 <b>Signature:</b>
 
@@ -43,3 +46,4 @@ The number of messages that were successfully handed off for sending.
 ```typescript
 successCount: number;
 ```
+{% endblock body %}

@@ -1,4 +1,7 @@
-Represents the WebPush-specific notification options that can be included in . This supports most of the standard options as defined in the Web Notification \[specification\](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification).
+{% extends "_internal/templates/reference.html" %}
+{% block title %}WebpushNotification interface{% endblock title %}
+{% block body %}
+Represents the WebPush-specific notification options that can be included in [WebpushConfig](./firebase-admin.messaging.webpushconfig.md#webpushconfig_interface)<!-- -->. This supports most of the standard options as defined in the Web Notification [specification](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification)<!-- -->.
 
 <b>Signature:</b>
 
@@ -179,3 +182,4 @@ A vibration pattern for the device's vibration hardware to emit when the notific
 ```typescript
 vibrate?: number | number[];
 ```
+{% endblock body %}

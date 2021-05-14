@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserImportRecord interface{% endblock title %}
+{% block body %}
 Interface representing a user to import to Firebase Auth via the  method.
 
 <b>Signature:</b>
@@ -166,3 +169,4 @@ The user's `uid`<!-- -->.
 ```typescript
 uid: string;
 ```
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.storage package{% endblock title %}
+{% block body %}
 
 ## Classes
 
@@ -9,13 +12,13 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [getStorage(app)](./firebase-admin.storage.md#getstorage) | Gets the  service for the default app or a given app.<code>getStorage()</code> can be called with no arguments to access the default app's  service or as <code>getStorage(app)</code> to access the  service associated with a specific app. |
+|  [getStorage(app)](./firebase-admin.storage.md#getstorage) | Gets the [Storage](./firebase-admin.storage.storage.md#storage_class) service for the default app or a given app.<code>getStorage()</code> can be called with no arguments to access the default app's <code>Storage</code> service or as <code>getStorage(app)</code> to access the <code>Storage</code> service associated with a specific app. |
 
 ## getStorage()
 
-Gets the  service for the default app or a given app.
+Gets the [Storage](./firebase-admin.storage.storage.md#storage_class) service for the default app or a given app.
 
-`getStorage()` can be called with no arguments to access the default app's  service or as `getStorage(app)` to access the  service associated with a specific app.
+`getStorage()` can be called with no arguments to access the default app's `Storage` service or as `getStorage(app)` to access the `Storage` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -51,3 +54,4 @@ const otherStorage = getStorage(otherApp);
 
 ```
 
+{% endblock body %}

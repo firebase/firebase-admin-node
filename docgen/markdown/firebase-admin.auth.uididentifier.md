@@ -1,6 +1,9 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UidIdentifier interface{% endblock title %}
+{% block body %}
 Used for looking up an account by uid.
 
-See `auth.getUsers()`
+See [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers)<!-- -->.
 
 <b>Signature:</b>
 
@@ -21,3 +24,4 @@ export interface UidIdentifier
 ```typescript
 uid: string;
 ```
+{% endblock body %}

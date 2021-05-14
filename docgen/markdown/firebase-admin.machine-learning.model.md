@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}Model class{% endblock title %}
+{% block body %}
 A Firebase ML Model output object.
 
 <b>Signature:</b>
@@ -168,9 +171,12 @@ waitForUnlocked(maxTimeMillis?: number): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  maxTimeMillis | number | The maximum time in milliseconds to wait. If not specified, a default maximum of 2 minutes is used. A promise that resolves when the model is unlocked or the maximum wait time has passed. |
+|  maxTimeMillis | number | The maximum time in milliseconds to wait. If not specified, a default maximum of 2 minutes is used. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
 
+A promise that resolves when the model is unlocked or the maximum wait time has passed.
+
+{% endblock body %}

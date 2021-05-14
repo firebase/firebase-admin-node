@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MultiFactorSettings class{% endblock title %}
+{% block body %}
 The multi-factor related user settings.
 
 <b>Signature:</b>
@@ -16,7 +19,7 @@ export declare class MultiFactorSettings
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.multifactorsettings.md#multifactorsettingstojson) |  |  A JSON-serializable representation of this multi-factor object. |
+|  [toJSON()](./firebase-admin.auth.multifactorsettings.md#multifactorsettingstojson) |  | Returns a JSON-serializable representation of this multi-factor object. |
 
 ## MultiFactorSettings.enrolledFactors
 
@@ -30,7 +33,7 @@ enrolledFactors: MultiFactorInfo[];
 
 ## MultiFactorSettings.toJSON()
 
- A JSON-serializable representation of this multi-factor object.
+Returns a JSON-serializable representation of this multi-factor object.
 
 <b>Signature:</b>
 
@@ -41,3 +44,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this multi-factor object.
+
+{% endblock body %}

@@ -1,4 +1,7 @@
-Represents the APNs-specific options that can be included in an . Refer to \[Apple documentation\](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html) for various headers and payload fields supported by APNs.
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ApnsConfig interface{% endblock title %}
+{% block body %}
+Represents the APNs-specific options that can be included in an [Message](./firebase-admin.messaging.md#message)<!-- -->. Refer to [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html) for various headers and payload fields supported by APNs.
 
 <b>Signature:</b>
 
@@ -45,3 +48,4 @@ An APNs payload to be included in the message.
 ```typescript
 payload?: ApnsPayload;
 ```
+{% endblock body %}

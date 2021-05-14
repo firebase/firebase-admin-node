@@ -1,6 +1,9 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}IosApp class{% endblock title %}
+{% block body %}
 A reference to a Firebase iOS app.
 
-Do not call this constructor directly. Instead, use \[`projectManagement.iosApp()`<!-- -->\](projectManagement.ProjectManagement\#iosApp).
+Do not call this constructor directly. Instead, use [ProjectManagement.iosApp()](./firebase-admin.project-management.projectmanagement.md#projectmanagementiosapp)<!-- -->.
 
 <b>Signature:</b>
 
@@ -18,8 +21,8 @@ export declare class IosApp
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [getConfig()](./firebase-admin.project-management.iosapp.md#iosappgetconfig) |  | Gets the configuration artifact associated with this app. A promise that resolves to the iOS app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a plist file that gets shipped with your iOS app. |
-|  [getMetadata()](./firebase-admin.project-management.iosapp.md#iosappgetmetadata) |  | Retrieves metadata about this iOS app. A promise that resolves to the retrieved metadata about this iOS app. |
+|  [getConfig()](./firebase-admin.project-management.iosapp.md#iosappgetconfig) |  | Gets the configuration artifact associated with this app. |
+|  [getMetadata()](./firebase-admin.project-management.iosapp.md#iosappgetmetadata) |  | Retrieves metadata about this iOS app. |
 |  [setDisplayName(newDisplayName)](./firebase-admin.project-management.iosapp.md#iosappsetdisplayname) |  | Sets the optional user-assigned display name of the app. |
 
 ## IosApp.appId
@@ -34,8 +37,6 @@ readonly appId: string;
 
 Gets the configuration artifact associated with this app.
 
- A promise that resolves to the iOS app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a plist file that gets shipped with your iOS app.
-
 <b>Signature:</b>
 
 ```typescript
@@ -45,11 +46,11 @@ getConfig(): Promise<string>;
 
 Promise&lt;string&gt;
 
+A promise that resolves to the iOS app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a plist file that gets shipped with your iOS app.
+
 ## IosApp.getMetadata()
 
 Retrieves metadata about this iOS app.
-
- A promise that resolves to the retrieved metadata about this iOS app.
 
 <b>Signature:</b>
 
@@ -59,6 +60,8 @@ getMetadata(): Promise<IosAppMetadata>;
 <b>Returns:</b>
 
 Promise&lt;[IosAppMetadata](./firebase-admin.project-management.iosappmetadata.md#iosappmetadata_interface)<!-- -->&gt;
+
+A promise that resolves to the retrieved metadata about this iOS app.
 
 ## IosApp.setDisplayName()
 
@@ -74,9 +77,12 @@ setDisplayName(newDisplayName: string): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  newDisplayName | string | The new display name to set. A promise that resolves when the display name has been set. |
+|  newDisplayName | string | The new display name to set. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
 
+A promise that resolves when the display name has been set.
+
+{% endblock body %}

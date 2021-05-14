@@ -1,6 +1,9 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}AndroidApp class{% endblock title %}
+{% block body %}
 A reference to a Firebase Android app.
 
-Do not call this constructor directly. Instead, use \[`projectManagement.androidApp()`<!-- -->\](projectManagement.ProjectManagement\#androidApp).
+Do not call this constructor directly. Instead, use [ProjectManagement.androidApp()](./firebase-admin.project-management.projectmanagement.md#projectmanagementandroidapp)<!-- -->.
 
 <b>Signature:</b>
 
@@ -20,9 +23,9 @@ export declare class AndroidApp
 |  --- | --- | --- |
 |  [addShaCertificate(certificateToAdd)](./firebase-admin.project-management.androidapp.md#androidappaddshacertificate) |  | Adds the given SHA certificate to this Android app. |
 |  [deleteShaCertificate(certificateToDelete)](./firebase-admin.project-management.androidapp.md#androidappdeleteshacertificate) |  | Deletes the specified SHA certificate from this Android app. |
-|  [getConfig()](./firebase-admin.project-management.androidapp.md#androidappgetconfig) |  | Gets the configuration artifact associated with this app. A promise that resolves to the Android app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a JSON file that gets shipped with your Android app. |
-|  [getMetadata()](./firebase-admin.project-management.androidapp.md#androidappgetmetadata) |  | Retrieves metadata about this Android app. A promise that resolves to the retrieved metadata about this Android app. |
-|  [getShaCertificates()](./firebase-admin.project-management.androidapp.md#androidappgetshacertificates) |  | Gets the list of SHA certificates associated with this Android app in Firebase. The list of SHA-1 and SHA-256 certificates associated with this Android app in Firebase. |
+|  [getConfig()](./firebase-admin.project-management.androidapp.md#androidappgetconfig) |  | Gets the configuration artifact associated with this app. |
+|  [getMetadata()](./firebase-admin.project-management.androidapp.md#androidappgetmetadata) |  | Retrieves metadata about this Android app. |
+|  [getShaCertificates()](./firebase-admin.project-management.androidapp.md#androidappgetshacertificates) |  | Gets the list of SHA certificates associated with this Android app in Firebase. |
 |  [setDisplayName(newDisplayName)](./firebase-admin.project-management.androidapp.md#androidappsetdisplayname) |  | Sets the optional user-assigned display name of the app. |
 
 ## AndroidApp.appId
@@ -47,11 +50,13 @@ addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  certificateToAdd | [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class) | The SHA certificate to add. A promise that resolves when the given certificate has been added to the Android app. |
+|  certificateToAdd | [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class) | The SHA certificate to add. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
+
+A promise that resolves when the given certificate has been added to the Android app.
 
 ## AndroidApp.deleteShaCertificate()
 
@@ -67,17 +72,17 @@ deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  certificateToDelete | [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class) | The SHA certificate to delete. A promise that resolves when the specified certificate has been removed from the Android app. |
+|  certificateToDelete | [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class) | The SHA certificate to delete. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
 
+A promise that resolves when the specified certificate has been removed from the Android app.
+
 ## AndroidApp.getConfig()
 
 Gets the configuration artifact associated with this app.
-
- A promise that resolves to the Android app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a JSON file that gets shipped with your Android app.
 
 <b>Signature:</b>
 
@@ -88,11 +93,11 @@ getConfig(): Promise<string>;
 
 Promise&lt;string&gt;
 
+A promise that resolves to the Android app's Firebase config file, in UTF-8 string format. This string is typically intended to be written to a JSON file that gets shipped with your Android app.
+
 ## AndroidApp.getMetadata()
 
 Retrieves metadata about this Android app.
-
- A promise that resolves to the retrieved metadata about this Android app.
 
 <b>Signature:</b>
 
@@ -103,11 +108,11 @@ getMetadata(): Promise<AndroidAppMetadata>;
 
 Promise&lt;[AndroidAppMetadata](./firebase-admin.project-management.androidappmetadata.md#androidappmetadata_interface)<!-- -->&gt;
 
+A promise that resolves to the retrieved metadata about this Android app.
+
 ## AndroidApp.getShaCertificates()
 
 Gets the list of SHA certificates associated with this Android app in Firebase.
-
- The list of SHA-1 and SHA-256 certificates associated with this Android app in Firebase.
 
 <b>Signature:</b>
 
@@ -117,6 +122,8 @@ getShaCertificates(): Promise<ShaCertificate[]>;
 <b>Returns:</b>
 
 Promise&lt;[ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class)<!-- -->\[\]&gt;
+
+The list of SHA-1 and SHA-256 certificates associated with this Android app in Firebase.
 
 ## AndroidApp.setDisplayName()
 
@@ -132,9 +139,12 @@ setDisplayName(newDisplayName: string): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  newDisplayName | string | The new display name to set. A promise that resolves when the display name has been set. |
+|  newDisplayName | string | The new display name to set. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
 
+A promise that resolves when the display name has been set.
+
+{% endblock body %}

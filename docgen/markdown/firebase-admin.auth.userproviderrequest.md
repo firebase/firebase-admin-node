@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserProviderRequest interface{% endblock title %}
+{% block body %}
 User provider data to include when importing a user.
 
 <b>Signature:</b>
@@ -76,3 +79,4 @@ The user identifier for the linked provider.
 ```typescript
 uid: string;
 ```
+{% endblock body %}

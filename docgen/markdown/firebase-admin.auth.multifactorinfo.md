@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MultiFactorInfo class{% endblock title %}
+{% block body %}
 Interface representing the common properties of a user enrolled second factor.
 
 <b>Signature:</b>
@@ -19,7 +22,7 @@ export declare abstract class MultiFactorInfo
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.multifactorinfo.md#multifactorinfotojson) |  |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.auth.multifactorinfo.md#multifactorinfotojson) |  | Returns a JSON-serializable representation of this object. |
 
 ## MultiFactorInfo.displayName
 
@@ -63,7 +66,7 @@ readonly uid: string;
 
 ## MultiFactorInfo.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable representation of this object.
 
 <b>Signature:</b>
 
@@ -74,3 +77,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

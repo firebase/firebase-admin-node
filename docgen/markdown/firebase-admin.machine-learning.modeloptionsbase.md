@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ModelOptionsBase interface{% endblock title %}
+{% block body %}
 Firebase ML Model input objects
 
 <b>Signature:</b>
@@ -28,3 +31,4 @@ displayName?: string;
 ```typescript
 tags?: string[];
 ```
+{% endblock body %}

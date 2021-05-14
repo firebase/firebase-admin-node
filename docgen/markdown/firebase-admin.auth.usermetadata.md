@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserMetadata class{% endblock title %}
+{% block body %}
 Represents a user's metadata.
 
 <b>Signature:</b>
@@ -18,7 +21,7 @@ export declare class UserMetadata
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.usermetadata.md#usermetadatatojson) |  |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.auth.usermetadata.md#usermetadatatojson) |  | Returns a JSON-serializable representation of this object. |
 
 ## UserMetadata.creationTime
 
@@ -52,7 +55,7 @@ readonly lastSignInTime: string;
 
 ## UserMetadata.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable representation of this object.
 
 <b>Signature:</b>
 
@@ -63,3 +66,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

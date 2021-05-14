@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserInfo class{% endblock title %}
+{% block body %}
 Represents a user's info from a third-party identity provider such as Google or Facebook.
 
 <b>Signature:</b>
@@ -21,7 +24,7 @@ export declare class UserInfo
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.userinfo.md#userinfotojson) |  |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.auth.userinfo.md#userinfotojson) |  | Returns a JSON-serializable representation of this object. |
 
 ## UserInfo.displayName
 
@@ -85,7 +88,7 @@ readonly uid: string;
 
 ## UserInfo.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable representation of this object.
 
 <b>Signature:</b>
 
@@ -96,3 +99,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

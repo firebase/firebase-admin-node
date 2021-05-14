@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MultiFactorCreateSettings interface{% endblock title %}
+{% block body %}
 The multi-factor related user settings for create operations.
 
 <b>Signature:</b>
@@ -21,3 +24,4 @@ The created user's list of enrolled second factors.
 ```typescript
 enrolledFactors: CreateMultiFactorInfoRequest[];
 ```
+{% endblock body %}

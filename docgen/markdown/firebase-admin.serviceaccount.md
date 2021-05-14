@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ServiceAccount interface{% endblock title %}
+{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -35,3 +38,4 @@ privateKey?: string;
 ```typescript
 projectId?: string;
 ```
+{% endblock body %}

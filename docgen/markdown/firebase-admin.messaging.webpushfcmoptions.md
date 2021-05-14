@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}WebpushFcmOptions interface{% endblock title %}
+{% block body %}
 Represents options for features provided by the FCM SDK for Web (which are not part of the Webpush standard).
 
 <b>Signature:</b>
@@ -21,3 +24,4 @@ The link to open when the user clicks on the notification. For all URL values, H
 ```typescript
 link?: string;
 ```
+{% endblock body %}

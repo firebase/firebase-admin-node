@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MessagingDeviceResult interface{% endblock title %}
+{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -41,3 +44,4 @@ A unique ID for the successfully processed message.
 ```typescript
 messageId?: string;
 ```
+{% endblock body %}

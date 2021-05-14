@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}GoogleOAuthAccessToken interface{% endblock title %}
+{% block body %}
 Interface for Google OAuth 2.0 access tokens.
 
 <b>Signature:</b>
@@ -28,3 +31,4 @@ access_token: string;
 ```typescript
 expires_in: number;
 ```
+{% endblock body %}

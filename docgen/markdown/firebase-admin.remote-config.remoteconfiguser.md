@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}RemoteConfigUser interface{% endblock title %}
+{% block body %}
 Interface representing a Remote Config user.
 
 <b>Signature:</b>
@@ -43,3 +46,4 @@ Display name. Output only.
 ```typescript
 name?: string;
 ```
+{% endblock body %}

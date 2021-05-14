@@ -1,6 +1,9 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MessagingDevicesResponse interface{% endblock title %}
+{% block body %}
 Interface representing the status of a message sent to an individual device via the FCM legacy APIs.
 
-See \[Send to individual devices\](/docs/cloud-messaging/admin/send-messages\#send\_to\_individual\_devices) for code samples and detailed documentation.
+See [Send to individual devices](https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_individual_devices) for code samples and detailed documentation.
 
 <b>Signature:</b>
 
@@ -57,3 +60,4 @@ results: MessagingDeviceResult[];
 ```typescript
 successCount: number;
 ```
+{% endblock body %}

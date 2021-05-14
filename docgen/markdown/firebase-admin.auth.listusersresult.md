@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ListUsersResult interface{% endblock title %}
+{% block body %}
 Interface representing the object returned from a  operation. Contains the list of users for the current batch and the next page token if available.
 
 <b>Signature:</b>
@@ -32,3 +35,4 @@ The list of  objects for the current downloaded batch.
 ```typescript
 users: UserRecord[];
 ```
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserImportResult interface{% endblock title %}
+{% block body %}
 Interface representing the response from the  method for batch importing users to Firebase Auth.
 
 <b>Signature:</b>
@@ -43,3 +46,4 @@ The number of user records that successfully imported to Firebase Auth.
 ```typescript
 successCount: number;
 ```
+{% endblock body %}

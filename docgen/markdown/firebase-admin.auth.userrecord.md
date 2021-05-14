@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}UserRecord class{% endblock title %}
+{% block body %}
 Represents a user.
 
 <b>Signature:</b>
@@ -10,31 +13,31 @@ export declare class UserRecord
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [customClaims](./firebase-admin.auth.userrecord.md#userrecordcustomclaims) |  | { \[key: string\]: any; } | The user's custom claims object if available, typically used to define user roles and propagated to an authenticated user's ID token. This is set via  |
+|  [customClaims](./firebase-admin.auth.userrecord.md#userrecordcustomclaims) |  | { \[key: string\]: any; } | The user's custom claims object if available, typically used to define user roles and propagated to an authenticated user's ID token. This is set via [BaseAuth.setCustomUserClaims()](./firebase-admin.auth.baseauth.md#baseauthsetcustomuserclaims) |
 |  [disabled](./firebase-admin.auth.userrecord.md#userrecorddisabled) |  | boolean | Whether or not the user is disabled: <code>true</code> for disabled; <code>false</code> for enabled. |
 |  [displayName](./firebase-admin.auth.userrecord.md#userrecorddisplayname) |  | string | The user's display name. |
 |  [email](./firebase-admin.auth.userrecord.md#userrecordemail) |  | string | The user's primary email, if set. |
 |  [emailVerified](./firebase-admin.auth.userrecord.md#userrecordemailverified) |  | boolean | Whether or not the user's primary email is verified. |
 |  [metadata](./firebase-admin.auth.userrecord.md#userrecordmetadata) |  | [UserMetadata](./firebase-admin.auth.usermetadata.md#usermetadata_class) | Additional metadata about the user. |
 |  [multiFactor](./firebase-admin.auth.userrecord.md#userrecordmultifactor) |  | [MultiFactorSettings](./firebase-admin.auth.multifactorsettings.md#multifactorsettings_class) | The multi-factor related properties for the current user, if available. |
-|  [passwordHash](./firebase-admin.auth.userrecord.md#userrecordpasswordhash) |  | string | The user's hashed password (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used when uploading this user, as is typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from . |
-|  [passwordSalt](./firebase-admin.auth.userrecord.md#userrecordpasswordsalt) |  | string | The user's password salt (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used to upload this user, typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from . |
+|  [passwordHash](./firebase-admin.auth.userrecord.md#userrecordpasswordhash) |  | string | The user's hashed password (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used when uploading this user, as is typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from [BaseAuth.listUsers()](./firebase-admin.auth.baseauth.md#baseauthlistusers)<!-- -->. |
+|  [passwordSalt](./firebase-admin.auth.userrecord.md#userrecordpasswordsalt) |  | string | The user's password salt (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used to upload this user, typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from [BaseAuth.listUsers()](./firebase-admin.auth.baseauth.md#baseauthlistusers)<!-- -->. |
 |  [phoneNumber](./firebase-admin.auth.userrecord.md#userrecordphonenumber) |  | string | The user's primary phone number, if set. |
 |  [photoURL](./firebase-admin.auth.userrecord.md#userrecordphotourl) |  | string | The user's photo URL. |
 |  [providerData](./firebase-admin.auth.userrecord.md#userrecordproviderdata) |  | [UserInfo](./firebase-admin.auth.userinfo.md#userinfo_class)<!-- -->\[\] | An array of providers (for example, Google, Facebook) linked to the user. |
 |  [tenantId](./firebase-admin.auth.userrecord.md#userrecordtenantid) |  | string \| null | The ID of the tenant the user belongs to, if available. |
-|  [tokensValidAfterTime](./firebase-admin.auth.userrecord.md#userrecordtokensvalidaftertime) |  | string | The date the user's tokens are valid after, formatted as a UTC string. This is updated every time the user's refresh token are revoked either from the  API or from the Firebase Auth backend on big account changes (password resets, password or email updates, etc). |
+|  [tokensValidAfterTime](./firebase-admin.auth.userrecord.md#userrecordtokensvalidaftertime) |  | string | The date the user's tokens are valid after, formatted as a UTC string. This is updated every time the user's refresh token are revoked either from the [BaseAuth.revokeRefreshTokens()](./firebase-admin.auth.baseauth.md#baseauthrevokerefreshtokens) API or from the Firebase Auth backend on big account changes (password resets, password or email updates, etc). |
 |  [uid](./firebase-admin.auth.userrecord.md#userrecorduid) |  | string | The user's <code>uid</code>. |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.userrecord.md#userrecordtojson) |  |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.auth.userrecord.md#userrecordtojson) |  | Returns a JSON-serializable representation of this object. |
 
 ## UserRecord.customClaims
 
-The user's custom claims object if available, typically used to define user roles and propagated to an authenticated user's ID token. This is set via 
+The user's custom claims object if available, typically used to define user roles and propagated to an authenticated user's ID token. This is set via [BaseAuth.setCustomUserClaims()](./firebase-admin.auth.baseauth.md#baseauthsetcustomuserclaims)
 
 <b>Signature:</b>
 
@@ -106,7 +109,7 @@ readonly multiFactor?: MultiFactorSettings;
 
 ## UserRecord.passwordHash
 
-The user's hashed password (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used when uploading this user, as is typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from .
+The user's hashed password (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used when uploading this user, as is typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from [BaseAuth.listUsers()](./firebase-admin.auth.baseauth.md#baseauthlistusers)<!-- -->.
 
 <b>Signature:</b>
 
@@ -116,7 +119,7 @@ readonly passwordHash?: string;
 
 ## UserRecord.passwordSalt
 
-The user's password salt (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used to upload this user, typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from .
+The user's password salt (base64-encoded), only if Firebase Auth hashing algorithm (SCRYPT) is used. If a different hashing algorithm had been used to upload this user, typical when migrating from another Auth system, this will be an empty string. If no password is set, this is null. This is only available when the user is obtained from [BaseAuth.listUsers()](./firebase-admin.auth.baseauth.md#baseauthlistusers)<!-- -->.
 
 <b>Signature:</b>
 
@@ -166,7 +169,7 @@ readonly tenantId?: string | null;
 
 ## UserRecord.tokensValidAfterTime
 
-The date the user's tokens are valid after, formatted as a UTC string. This is updated every time the user's refresh token are revoked either from the  API or from the Firebase Auth backend on big account changes (password resets, password or email updates, etc).
+The date the user's tokens are valid after, formatted as a UTC string. This is updated every time the user's refresh token are revoked either from the [BaseAuth.revokeRefreshTokens()](./firebase-admin.auth.baseauth.md#baseauthrevokerefreshtokens) API or from the Firebase Auth backend on big account changes (password resets, password or email updates, etc).
 
 <b>Signature:</b>
 
@@ -186,7 +189,7 @@ readonly uid: string;
 
 ## UserRecord.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable representation of this object.
 
 <b>Signature:</b>
 
@@ -197,3 +200,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}CreateRequest interface{% endblock title %}
+{% block body %}
 Interface representing the properties to set on a new user record to be created.
 
 <b>Signature:</b>
@@ -33,3 +36,4 @@ The user's `uid`<!-- -->.
 ```typescript
 uid?: string;
 ```
+{% endblock body %}

@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}PhoneMultiFactorInfo class{% endblock title %}
+{% block body %}
 Interface representing a phone specific user enrolled second factor.
 
 <b>Signature:</b>
@@ -17,7 +20,7 @@ export declare class PhoneMultiFactorInfo extends MultiFactorInfo
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [toJSON()](./firebase-admin.auth.phonemultifactorinfo.md#phonemultifactorinfotojson) |  |  A JSON-serializable representation of this object. |
+|  [toJSON()](./firebase-admin.auth.phonemultifactorinfo.md#phonemultifactorinfotojson) |  | Returns a JSON-serializable representation of this object. |
 
 ## PhoneMultiFactorInfo.phoneNumber
 
@@ -31,7 +34,7 @@ readonly phoneNumber: string;
 
 ## PhoneMultiFactorInfo.toJSON()
 
- A JSON-serializable representation of this object.
+Returns a JSON-serializable representation of this object.
 
 <b>Signature:</b>
 
@@ -42,3 +45,6 @@ toJSON(): object;
 
 object
 
+A JSON-serializable representation of this object.
+
+{% endblock body %}

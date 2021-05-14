@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ShaCertificate class{% endblock title %}
+{% block body %}
 A SHA-1 or SHA-256 certificate.
 
 Do not call this constructor directly. Instead, use \[`projectManagement.shaCertificate()`<!-- -->\](projectManagement.ProjectManagement\#shaCertificate).
@@ -49,3 +52,4 @@ readonly resourceName?: string | undefined;
 ```typescript
 readonly shaHash: string;
 ```
+{% endblock body %}

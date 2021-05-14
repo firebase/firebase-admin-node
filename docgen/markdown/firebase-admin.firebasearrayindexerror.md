@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}FirebaseArrayIndexError interface{% endblock title %}
+{% block body %}
 Composite type which includes both a `FirebaseError` object and an index which can be used to get the errored item.
 
 <b>Signature:</b>
@@ -56,3 +59,4 @@ admin.messaging().subscribeToTopic(registrationTokens, 'topic-name')
 
 ```
 
+{% endblock body %}

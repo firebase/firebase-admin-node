@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.instance-id package{% endblock title %}
+{% block body %}
 
 ## Classes
 
@@ -9,13 +12,13 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [getInstanceId(app)](./firebase-admin.instance-id.md#getinstanceid) | Gets the  service for the default app or a given app.<code>getInstanceId()</code> can be called with no arguments to access the default app's  service or as <code>getInstanceId(app)</code> to access the  service associated with a specific app. |
+|  [getInstanceId(app)](./firebase-admin.instance-id.md#getinstanceid) | Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.<code>getInstanceId()</code> can be called with no arguments to access the default app's <code>InstanceId</code> service or as <code>getInstanceId(app)</code> to access the <code>InstanceId</code> service associated with a specific app. |
 
 ## getInstanceId()
 
-Gets the  service for the default app or a given app.
+Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.
 
-`getInstanceId()` can be called with no arguments to access the default app's  service or as `getInstanceId(app)` to access the  service associated with a specific app.
+`getInstanceId()` can be called with no arguments to access the default app's `InstanceId` service or as `getInstanceId(app)` to access the `InstanceId` service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -27,11 +30,13 @@ export declare function getInstanceId(app?: App): InstanceId;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  app | App | Optional app whose <code>InstanceId</code> service to return. If not provided, the default <code>InstanceId</code> service will be returned. The default <code>InstanceId</code> service if no app is provided or the <code>InstanceId</code> service associated with the provided app. |
+|  app | App | Optional app whose <code>InstanceId</code> service to return. If not provided, the default <code>InstanceId</code> service will be returned. |
 
 <b>Returns:</b>
 
 [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class)
+
+The default `InstanceId` service if no app is provided or the `InstanceId` service associated with the provided app.
 
 ### Example 1
 
@@ -51,3 +56,4 @@ const otherInstanceId = getInstanceId(otherApp);
 
 ```
 
+{% endblock body %}

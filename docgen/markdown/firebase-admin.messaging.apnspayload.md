@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}ApnsPayload interface{% endblock title %}
+{% block body %}
 Represents the payload of an APNs message. Mainly consists of the `aps` dictionary. But may also contain other arbitrary custom keys.
 
 <b>Signature:</b>
@@ -21,3 +24,4 @@ The `aps` dictionary to be included in the message.
 ```typescript
 aps: Aps;
 ```
+{% endblock body %}

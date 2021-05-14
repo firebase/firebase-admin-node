@@ -1,22 +1,25 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}firebase-admin.app package{% endblock title %}
+{% block body %}
 
 ## Functions
 
 |  Function | Description |
 |  --- | --- |
-|  [applicationDefault(httpAgent)](./firebase-admin.app.md#applicationdefault) | Returns a credential created from the  that grants admin access to Firebase services. This credential can be used in the call to .<!-- -->Google Application Default Credentials are available on any Google infrastructure, such as Google App Engine and Google Compute Engine.<!-- -->See  for more details. |
-|  [cert(serviceAccountPathOrObject, httpAgent)](./firebase-admin.app.md#cert) | Returns a credential created from the provided service account that grants admin access to Firebase services. This credential can be used in the call to .<!-- -->See  for more details. |
+|  [applicationDefault(httpAgent)](./firebase-admin.app.md#applicationdefault) | Returns a credential created from the [Google Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials) that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->Google Application Default Credentials are available on any Google infrastructure, such as Google App Engine and Google Compute Engine.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
+|  [cert(serviceAccountPathOrObject, httpAgent)](./firebase-admin.app.md#cert) | Returns a credential created from the provided service account that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
 |  [deleteApp(app)](./firebase-admin.app.md#deleteapp) | Renders this given <code>App</code> unusable and frees the resources of all associated services (though it does \*not\* clean up any backend resources). When running the SDK locally, this method must be called to ensure graceful termination of the process. |
 |  [getApp(name)](./firebase-admin.app.md#getapp) |  |
 |  [getApps()](./firebase-admin.app.md#getapps) |  |
 |  [initializeApp(options, name)](./firebase-admin.app.md#initializeapp) |  |
-|  [refreshToken(refreshTokenPathOrObject, httpAgent)](./firebase-admin.app.md#refreshtoken) | Returns a credential created from the provided refresh token that grants admin access to Firebase services. This credential can be used in the call to .<!-- -->See  for more details. |
+|  [refreshToken(refreshTokenPathOrObject, httpAgent)](./firebase-admin.app.md#refreshtoken) | Returns a credential created from the provided refresh token that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
-|  [App](./firebase-admin.app.app.md#app_interface) | A Firebase app holds the initialization information for a collection of services.<!-- -->Do not call this constructor directly. Instead, use  to create an app. |
-|  [AppOptions](./firebase-admin.app.appoptions.md#appoptions_interface) | Available options to pass to \[<code>initializeApp()</code>\](admin\#.initializeApp). |
+|  [App](./firebase-admin.app.app.md#app_interface) | A Firebase app holds the initialization information for a collection of services. |
+|  [AppOptions](./firebase-admin.app.appoptions.md#appoptions_interface) | Available options to pass to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->. |
 |  [Credential](./firebase-admin.app.credential.md#credential_interface) | Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.<!-- -->In most cases, you will not need to implement this yourself and can instead use the default implementations provided by . |
 |  [FirebaseArrayIndexError](./firebase-admin.app.firebasearrayindexerror.md#firebasearrayindexerror_interface) | Composite type which includes both a <code>FirebaseError</code> object and an index which can be used to get the errored item. |
 |  [FirebaseError](./firebase-admin.app.firebaseerror.md#firebaseerror_interface) | <code>FirebaseError</code> is a subclass of the standard JavaScript <code>Error</code> object. In addition to a message string and stack trace, it contains a string code. |
@@ -31,11 +34,11 @@
 
 ## applicationDefault()
 
-Returns a credential created from the  that grants admin access to Firebase services. This credential can be used in the call to .
+Returns a credential created from the [Google Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials) that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.
 
 Google Application Default Credentials are available on any Google infrastructure, such as Google App Engine and Google Compute Engine.
 
-See  for more details.
+See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details.
 
 <b>Signature:</b>
 
@@ -47,11 +50,13 @@ export declare function applicationDefault(httpAgent?: Agent): Credential;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  httpAgent | Agent | Optional \[HTTP Agent\](https://nodejs.org/api/http.html\#http\_class\_http\_agent) to be used when retrieving access tokens from Google token servers. A credential authenticated via Google Application Default Credentials that can be used to initialize an app. |
+|  httpAgent | Agent | Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent) to be used when retrieving access tokens from Google token servers. |
 
 <b>Returns:</b>
 
 [Credential](./firebase-admin.app.credential.md#credential_interface)
+
+A credential authenticated via Google Application Default Credentials that can be used to initialize an app.
 
 ### Example
 
@@ -66,9 +71,9 @@ initializeApp({
 
 ## cert()
 
-Returns a credential created from the provided service account that grants admin access to Firebase services. This credential can be used in the call to .
+Returns a credential created from the provided service account that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.
 
-See  for more details.
+See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details.
 
 <b>Signature:</b>
 
@@ -81,11 +86,13 @@ export declare function cert(serviceAccountPathOrObject: string | ServiceAccount
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serviceAccountPathOrObject | string \| [ServiceAccount](./firebase-admin.app.serviceaccount.md#serviceaccount_interface) | The path to a service account key JSON file or an object representing a service account key. |
-|  httpAgent | Agent | Optional \[HTTP Agent\](https://nodejs.org/api/http.html\#http\_class\_http\_agent) to be used when retrieving access tokens from Google token servers. A credential authenticated via the provided service account that can be used to initialize an app. |
+|  httpAgent | Agent | Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent) to be used when retrieving access tokens from Google token servers. |
 
 <b>Returns:</b>
 
 [Credential](./firebase-admin.app.credential.md#credential_interface)
+
+A credential authenticated via the provided service account that can be used to initialize an app.
 
 ### Example 1
 
@@ -200,9 +207,9 @@ export declare function initializeApp(options?: AppOptions, name?: string): App;
 
 ## refreshToken()
 
-Returns a credential created from the provided refresh token that grants admin access to Firebase services. This credential can be used in the call to .
+Returns a credential created from the provided refresh token that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.
 
-See  for more details.
+See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details.
 
 <b>Signature:</b>
 
@@ -215,11 +222,13 @@ export declare function refreshToken(refreshTokenPathOrObject: string | object, 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  refreshTokenPathOrObject | string \| object | The path to a Google OAuth2 refresh token JSON file or an object representing a Google OAuth2 refresh token. |
-|  httpAgent | Agent | Optional \[HTTP Agent\](https://nodejs.org/api/http.html\#http\_class\_http\_agent) to be used when retrieving access tokens from Google token servers. A credential authenticated via the provided service account that can be used to initialize an app. |
+|  httpAgent | Agent | Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent) to be used when retrieving access tokens from Google token servers. |
 
 <b>Returns:</b>
 
 [Credential](./firebase-admin.app.credential.md#credential_interface)
+
+A credential authenticated via the provided service account that can be used to initialize an app.
 
 ### Example
 
@@ -241,3 +250,4 @@ initializeApp({
 ```typescript
 SDK_VERSION: string
 ```
+{% endblock body %}

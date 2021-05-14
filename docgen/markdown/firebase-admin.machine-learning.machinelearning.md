@@ -1,3 +1,6 @@
+{% extends "_internal/templates/reference.html" %}
+{% block title %}MachineLearning class{% endblock title %}
+{% block body %}
 The Firebase `MachineLearning` service interface.
 
 <b>Signature:</b>
@@ -10,7 +13,7 @@ export declare class MachineLearning
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [app](./firebase-admin.machine-learning.machinelearning.md#machinelearningapp) |  | App | The  associated with the current <code>MachineLearning</code> service instance. |
+|  [app](./firebase-admin.machine-learning.machinelearning.md#machinelearningapp) |  | App | The [App](./firebase-admin.app.app.md#app_interface) associated with the current <code>MachineLearning</code> service instance. |
 
 ## Methods
 
@@ -26,7 +29,7 @@ export declare class MachineLearning
 
 ## MachineLearning.app
 
-The  associated with the current `MachineLearning` service instance.
+The [App](./firebase-admin.app.app.md#app_interface) associated with the current `MachineLearning` service instance.
 
 <b>Signature:</b>
 
@@ -48,11 +51,13 @@ createModel(model: ModelOptions): Promise<Model>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  model | [ModelOptions](./firebase-admin.machine-learning.md#modeloptions) | The model to create. A Promise fulfilled with the created model. |
+|  model | [ModelOptions](./firebase-admin.machine-learning.md#modeloptions) | The model to create. |
 
 <b>Returns:</b>
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
+
+A Promise fulfilled with the created model.
 
 ## MachineLearning.deleteModel()
 
@@ -88,11 +93,13 @@ getModel(modelId: string): Promise<Model>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  modelId | string | The ID of the model to get. A Promise fulfilled with the model object. |
+|  modelId | string | The ID of the model to get. |
 
 <b>Returns:</b>
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
+
+A Promise fulfilled with the model object.
 
 ## MachineLearning.listModels()
 
@@ -108,11 +115,13 @@ listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | [ListModelsOptions](./firebase-admin.machine-learning.listmodelsoptions.md#listmodelsoptions_interface) | The listing options. A promise that resolves with the current (filtered) list of models and the next page token. For the last page, an empty list of models and no page token are returned. |
+|  options | [ListModelsOptions](./firebase-admin.machine-learning.listmodelsoptions.md#listmodelsoptions_interface) | The listing options. |
 
 <b>Returns:</b>
 
 Promise&lt;[ListModelsResult](./firebase-admin.machine-learning.listmodelsresult.md#listmodelsresult_interface)<!-- -->&gt;
+
+A promise that resolves with the current (filtered) list of models and the next page token. For the last page, an empty list of models and no page token are returned.
 
 ## MachineLearning.publishModel()
 
@@ -130,11 +139,13 @@ publishModel(modelId: string): Promise<Model>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  modelId | string | The ID of the model to publish. A Promise fulfilled with the published model. |
+|  modelId | string | The ID of the model to publish. |
 
 <b>Returns:</b>
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
+
+A Promise fulfilled with the published model.
 
 ## MachineLearning.unpublishModel()
 
@@ -150,11 +161,13 @@ unpublishModel(modelId: string): Promise<Model>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  modelId | string | The ID of the model to unpublish. A Promise fulfilled with the unpublished model. |
+|  modelId | string | The ID of the model to unpublish. |
 
 <b>Returns:</b>
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
+
+A Promise fulfilled with the unpublished model.
 
 ## MachineLearning.updateModel()
 
@@ -171,9 +184,12 @@ updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  modelId | string | The ID of the model to update. |
-|  model | [ModelOptions](./firebase-admin.machine-learning.md#modeloptions) | The model fields to update. A Promise fulfilled with the updated model. |
+|  model | [ModelOptions](./firebase-admin.machine-learning.md#modeloptions) | The model fields to update. |
 
 <b>Returns:</b>
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
 
+A Promise fulfilled with the updated model.
+
+{% endblock body %}
