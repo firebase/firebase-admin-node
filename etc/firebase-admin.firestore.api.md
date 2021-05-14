@@ -62,7 +62,7 @@ export { GeoPoint }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getFirestore(app?: App): Firestore;
 
 export { GrpcStatus }

@@ -50,6 +50,33 @@ export {
   setLogFunction,
 } from '@google-cloud/firestore';
 
+/**
+ * Gets the {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the default app or a given app.
+ *
+ * `getFirestore()` can be called with no arguments to access the default
+ * app's `Firestore` service or as `getFirestore(app)` to access the
+ * `Firestore` service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for the default app
+ * const defaultFirestore = getFirestore();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a specific app
+ * const otherFirestore = getFirestore(app);
+ * ```
+ *
+ * @param App whose `Firestore` service to
+ *   return. If not provided, the default `Firestore` service will be returned.
+ *
+ * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ *   service if no app is provided or the `Firestore` service associated with the
+ *   provided app.
+ */
 export function getFirestore(app?: App): Firestore {
   if (typeof app === 'undefined') {
     app = getApp();
