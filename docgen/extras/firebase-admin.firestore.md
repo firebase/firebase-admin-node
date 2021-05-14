@@ -1,6 +1,6 @@
 ## External API Re-exports
 
-Following externally defined APIs are re-exported from this module entry point for convenience.
+The following externally defined APIs are re-exported from this module entry point for convenience.
 
 |  Symbol | Description |
 |  --- | --- |
