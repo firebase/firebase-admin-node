@@ -47,14 +47,12 @@ export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
 export const ServerValue: rtdb.ServerValue = serverValueConst;
 
 /**
- * Gets the {@link database.Database `Database`} service for the default
+ * Gets the {@link Database} service for the default
  * app or a given app.
  *
  * `getDatabase()` can be called with no arguments to access the default
- * app's {@link database.Database `Database`} service or as
- * `getDatabase(app)` to access the
- * {@link database.Database `Database`} service associated with a specific
- * app.
+ * app's `Database` service or as `getDatabase(app)` to access the
+ * `Database` service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -79,14 +77,12 @@ export function getDatabase(app?: App): Database {
 }
 
 /**
- * Gets the {@link database.Database `Database`} service for the default
+ * Gets the {@link Database} service for the default
  * app or a given app.
  *
  * `getDatabaseWithUrl()` can be called with no arguments to access the default
- * app's {@link database.Database `Database`} service or as
- * `getDatabaseWithUrl(app)` to access the
- * {@link database.Database `Database`} service associated with a specific
- * app.
+ * app's {@link Database} service or as `getDatabaseWithUrl(app)` to access the
+ * {@link Database} service associated with a specific app.
  *
  * @example
  * ```javascript
