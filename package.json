@@ -20,7 +20,7 @@
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
-    "apidocs": "npm run api-extractor:local && npm run api-documenter && npm run api-documenter:post",
+    "apidocs": "run-s api-extractor:local api-documenter api-documenter:post",
     "api-extractor": "node generate-reports.js",
     "api-extractor:local": "npm run build && node generate-reports.js --local",
     "esm-wrap": "node generate-esm-wrapper.js",
