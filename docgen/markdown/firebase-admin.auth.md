@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.auth package{% endblock title %}
+{% block title %}firebase-admin/auth module{% endblock title %}
 {% block body %}
 
 ## Classes

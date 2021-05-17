@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.security-rules package{% endblock title %}
+{% block title %}firebase-admin/security-rules module{% endblock title %}
 {% block body %}
 
 ## Classes

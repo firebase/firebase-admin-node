@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.app package{% endblock title %}
+{% block title %}firebase-admin/app module{% endblock title %}
 {% block body %}
 
 ## Functions

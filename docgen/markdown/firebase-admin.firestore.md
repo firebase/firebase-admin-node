@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.firestore package{% endblock title %}
+{% block title %}firebase-admin/firestore module{% endblock title %}
 {% block body %}
 
 ## External API Re-exports

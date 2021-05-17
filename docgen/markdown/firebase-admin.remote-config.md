@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.remote-config package{% endblock title %}
+{% block title %}firebase-admin/remote-config module{% endblock title %}
 {% block body %}
 
 ## Classes

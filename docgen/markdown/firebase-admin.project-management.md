@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.project-management package{% endblock title %}
+{% block title %}firebase-admin/project-management module{% endblock title %}
 {% block body %}
 
 ## Classes

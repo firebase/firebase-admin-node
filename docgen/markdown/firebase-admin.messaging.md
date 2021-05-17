@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.messaging package{% endblock title %}
+{% block title %}firebase-admin/messaging module{% endblock title %}
 {% block body %}
 
 ## Classes

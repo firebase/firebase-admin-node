@@ -1,5 +1,5 @@
 {% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.instance-id package{% endblock title %}
+{% block title %}firebase-admin/instance-id module{% endblock title %}
 {% block body %}
 
 ## Classes
