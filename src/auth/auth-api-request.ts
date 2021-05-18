@@ -274,8 +274,8 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
   // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
       request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
-  // Enrollment uid can be specified for update operations.
-  if ((typeof request.mfaEnrollmentId !== 'undefined') &&
+  // Enrollment uid may or may not be specified for update operations.
+  if (typeof request.mfaEnrollmentId !== 'undefined' &&
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_UID,
