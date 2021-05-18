@@ -114,7 +114,7 @@ describe('Storage', () => {
     });
   });
 
-  describe.only('Emulator mode', () => {
+  describe('Emulator mode', () => {
     const VALID_EMULATOR_HOST = 'localhost:9199';
     const INVALID_EMULATOR_HOST = 'https://localhost:9199';
 
@@ -136,7 +136,7 @@ describe('Storage', () => {
       expect(() => new Storage(mockApp)).to.throw(
         'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol');
     });
-  
+
     after(() => {
       delete process.env.STORAGE_EMULATOR_HOST;
       delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
