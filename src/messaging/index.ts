@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase Cloud Messaging (FCM).
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Messaging } from './messaging';

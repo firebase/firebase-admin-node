@@ -457,6 +457,4 @@ export namespace storage {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

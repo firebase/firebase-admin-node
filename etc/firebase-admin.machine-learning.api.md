@@ -90,6 +90,4 @@ export interface TFLiteModel {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

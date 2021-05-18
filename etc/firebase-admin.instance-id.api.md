@@ -18,6 +18,4 @@ export class InstanceId {
     }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

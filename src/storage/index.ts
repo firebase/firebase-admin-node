@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Cloud Storage for Firebase.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Storage } from './storage';

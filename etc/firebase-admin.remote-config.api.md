@@ -114,6 +114,4 @@ export interface Version {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

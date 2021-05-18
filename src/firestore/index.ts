@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Cloud Firestore.
+ *
+ * @packageDocumentation
+ */
+
 import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';

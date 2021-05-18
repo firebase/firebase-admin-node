@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase Realtime Database.
+ *
+ * @packageDocumentation
+ */
+
 import * as rtdb from '@firebase/database-types';
 import {
   enableLogging as enableLoggingFunc,

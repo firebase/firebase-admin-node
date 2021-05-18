@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase Remote Config.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { RemoteConfig } from './remote-config';
