@@ -535,6 +535,13 @@ describe('Credential', () => {
       const c = getApplicationDefault();
       expect(c).to.be.an.instanceof(RefreshTokenCredential);
       expect(isApplicationDefault(c)).to.be.true;
+    })
+    
+    it('should return true for ServiceAccountCredential loaded from GCLOUD_CREDENTIAL_PATH', () => {
+      process.env.GCLOUD_CREDENTIAL_PATH = path.resolve(__dirname, '../../resources/mock.key.json');
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ServiceAccountCredential);
+      expect(isApplicationDefault(c)).to.be.true;
     });
 
     it('should return true for ComputeEngineCredential', () => {
