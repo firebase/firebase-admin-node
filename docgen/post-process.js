@@ -20,9 +20,75 @@ const path = require('path');
 const readline = require('readline');
 
 async function main() {
+  await applyExtras();
+  await fixHomePage();
+  await fixTitles();
+}
+
+/**
+ * Adds extra content to the generated markdown files. Content in each file in the `extras/`
+ * directory is added/merged to the top of the corresponding markdown file in the `markdown/`
+ * directory.
+ */
+async function applyExtras() {
   const extras = await getExtraFiles();
   for (const source of extras) {
     await applyExtraContentFrom(source);
+  }
+}
+
+/**
+ * Replace dotted module names in the home page with the correct slash-separated names. For
+ * example, `firebase-admin.foo` becomes `firebase-admin/foo`. Also replaces the term "Package"
+ * with "Module" for accuracy.
+ */
+async function fixHomePage() {
+  const homePage = path.join(__dirname, 'markdown', 'index.md');
+  const content = await fs.readFile(homePage);
+  const updatedText = content.toString()
+    .replace(/\[firebase-admin\./g, '[firebase-admin/')
+    .replace(/_package/g, '_module')
+    .replace(/Package/g, 'Module');
+  console.log(`Updating module listings in ${homePage}`);
+  await fs.writeFile(homePage, updatedText);
+}
+
+/**
+ * Replaces dotted module names and the term "package" in page titles. For example, the title text
+ * `firebase-admin.foo package` becomes `firebase-admin/foo module`.
+ */
+async function fixTitles() {
+  const markdownDir = path.join(__dirname, 'markdown');
+  const files = await fs.readdir(markdownDir);
+  for (const file of files) {
+    await fixTitleOf(path.join(markdownDir, file));
+  }
+}
+
+async function fixTitleOf(file) {
+  const reader = readline.createInterface({
+    input: fs.createReadStream(file),
+  });
+
+  const buffer = [];
+  let updated = false;
+  for await (let line of reader) {
+    if (line.startsWith('{% block title %}')) {
+      if (line.match(/firebase-admin\./)) {
+        line = line.replace(/firebase-admin\./, 'firebase-admin/').replace('package', 'module');
+        updated = true;
+      } else {
+        break;
+      }
+    }
+
+    buffer.push(line);
+  }
+
+  if (updated) {
+    console.log(`Updating title in ${file}`);
+    const content = Buffer.from(buffer.join('\r\n'));
+    await fs.writeFile(file, content);
   }
 }
 
@@ -45,6 +111,18 @@ async function applyExtraContentFrom(source) {
   await writeExtraContentTo(target, extra);
 }
 
+async function readExtraContentFrom(source) {
+  const reader = readline.createInterface({
+    input: fs.createReadStream(source),
+  });
+  const content = [''];
+  for await (const line of reader) {
+    content.push(line);
+  }
+
+  return content;
+}
+
 async function writeExtraContentTo(target, extra) {
   const output = [];
   const reader = readline.createInterface({
@@ -60,18 +138,6 @@ async function writeExtraContentTo(target, extra) {
   const outputBuffer = Buffer.from(output.join('\r\n'));
   console.log(`Writing extra content to ${target}`);
   await fs.writeFile(target, outputBuffer);
-}
-
-async function readExtraContentFrom(source) {
-  const reader = readline.createInterface({
-    input: fs.createReadStream(source),
-  });
-  const content = [''];
-  for await (const line of reader) {
-    content.push(line);
-  }
-
-  return content;
 }
 
 (async () => {
