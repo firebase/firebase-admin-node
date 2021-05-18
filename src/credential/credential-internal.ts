@@ -354,9 +354,13 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
 
   // It is OK to not have this file. If it is present, it must be valid.
   if (GCLOUD_CREDENTIAL_PATH) {
-    const refreshToken = readCredentialFile(GCLOUD_CREDENTIAL_PATH, true);
-    if (refreshToken) {
-      return new RefreshTokenCredential(refreshToken, httpAgent, true);
+    const credentialFile = readCredentialFile(GCLOUD_CREDENTIAL_PATH, true);
+    if (credentialFile) {
+      if (credentialFile.type === 'service_account') {
+        return new ServiceAccountCredential(credentialFile, httpAgent, true);
+      }
+
+      return new RefreshTokenCredential(credentialFile, httpAgent, true);
     }
   }
 
