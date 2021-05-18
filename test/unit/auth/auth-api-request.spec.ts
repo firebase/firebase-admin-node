@@ -2071,6 +2071,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               phoneNumber: '+16505551000',
               factorId: 'phone',
             } as UpdateMultiFactorInfoRequest,
+            {
+              // No error should be thrown when no uid is specified.
+              phoneNumber: '+16505551234',
+              factorId: 'phone',
+            } as UpdateMultiFactorInfoRequest,
           ],
         },
       };
@@ -2095,6 +2100,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             {
               mfaEnrollmentId: 'enrolledSecondFactor2',
               phoneInfo: '+16505551000',
+            },
+            {
+              phoneInfo: '+16505551234',
             },
           ],
         },
