@@ -257,9 +257,8 @@ class AuthHttpClient extends AuthorizedHttpClient {
  * an error is thrown.
  *
  * @param request The AuthFactorInfo request object.
- * @param writeOperationType The write operation type.
  */
-function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: WriteOperationType): void {
+function validateAuthFactorInfo(request: AuthFactorInfo): void {
   const validKeys = {
     mfaEnrollmentId: true,
     displayName: true,
@@ -275,8 +274,8 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
   // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
       request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
-  const uidRequired = writeOperationType !== WriteOperationType.Create;
-  if ((typeof request.mfaEnrollmentId !== 'undefined' || uidRequired) &&
+  // Enrollment uid may or may not be specified for update operations.
+  if (typeof request.mfaEnrollmentId !== 'undefined' &&
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_UID,
@@ -573,7 +572,7 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
     }
     enrollments.forEach((authFactorInfoEntry: AuthFactorInfo) => {
-      validateAuthFactorInfo(authFactorInfoEntry, writeOperationType);
+      validateAuthFactorInfo(authFactorInfoEntry);
     });
   }
 }
