@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/app module{% endblock title %}
 {% block body %}
+Firebase App and SDK initialization.
 
 ## Functions
 

@@ -14,6 +14,7 @@ The following externally defined APIs are re-exported from this module entry poi
 |  [Query](https://firebase.google.com/docs/reference/js/firebase.database.Query) | `Query` type from the `@firebase/database` package. |
 |  [Reference](https://firebase.google.com/docs/reference/js/firebase.database.Reference) | `Reference` type from the `@firebase/database` package. |
 |  [ThenableReference](https://firebase.google.com/docs/reference/js/firebase.database.ThenableReference) | `ThenableReference` type from the `@firebase/database` package. |
+Firebase Realtime Database.
 
 ## Functions
 

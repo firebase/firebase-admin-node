@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/machine-learning module{% endblock title %}
 {% block body %}
+Firebase Machine Learning.
 
 ## Classes
 

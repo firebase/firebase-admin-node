@@ -29,6 +29,7 @@ The following externally defined APIs are re-exported from this module entry poi
 |  [WriteBatch](https://googleapis.dev/nodejs/firestore/latest/WriteBatch.html) | `WriteBatch` type from the `@google-cloud/firestore` package. |
 |  [WriteResult](https://googleapis.dev/nodejs/firestore/latest/WriteResult.html) | `WriteResult` type from the `@google-cloud/firestore` package. |
 |  [setLogFunction](https://googleapis.dev/nodejs/firestore/latest/global.html#setLogFunction) | `setLogFunction` function from the `@google-cloud/firestore` package. |
+Cloud Firestore.
 
 ## Functions
 

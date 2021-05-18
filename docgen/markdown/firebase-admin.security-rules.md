@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/security-rules module{% endblock title %}
 {% block body %}
+Security Rules for Cloud Firestore and Cloud Storage.
 
 ## Classes
 

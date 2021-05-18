@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/instance-id module{% endblock title %}
 {% block body %}
+Firebase Instance ID service.
 
 ## Classes
 

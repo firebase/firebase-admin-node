@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin package{% endblock title %}
 {% block body %}
+Firebase namespaced API (legacy).
 
 ## Functions
 

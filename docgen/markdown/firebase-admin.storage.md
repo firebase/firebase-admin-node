@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/storage module{% endblock title %}
 {% block body %}
+Cloud Storage for Firebase.
 
 ## Classes
 

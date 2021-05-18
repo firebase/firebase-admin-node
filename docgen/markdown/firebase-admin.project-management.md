@@ -1,6 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}firebase-admin/project-management module{% endblock title %}
 {% block body %}
+Firebase project management.
 
 ## Classes
 
