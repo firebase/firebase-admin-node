@@ -98,7 +98,7 @@
     "firebase-token-generator": "^2.0.0",
     "gulp": "^4.0.2",
     "gulp-filter": "^6.0.0",
-    "gulp-header": "^1.8.8",
+    "gulp-header": "^2.0.9",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
     "jsdom": "^15.0.0",
