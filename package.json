@@ -99,7 +99,6 @@
     "gulp": "^4.0.2",
     "gulp-filter": "^6.0.0",
     "gulp-header": "^1.8.8",
-    "gulp-replace": "^0.5.4",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
     "jsdom": "^15.0.0",
