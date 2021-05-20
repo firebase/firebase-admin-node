@@ -111,7 +111,7 @@
     "nyc": "^14.1.0",
     "request": "^2.75.0",
     "request-promise": "^4.1.1",
-    "run-sequence": "^1.1.5",
+    "run-sequence": "^2.2.1",
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^9.0.0",
