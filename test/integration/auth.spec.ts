@@ -638,14 +638,14 @@ describe('admin.auth', () => {
           uid: 'mfaUid1',
           phoneNumber: '+16505550001',
           displayName: 'Work phone number',
-          factorId: 'phone',
+          factorId: 'phone' as const,
           enrollmentTime: now,
         },
         {
           uid: 'mfaUid2',
           phoneNumber: '+16505550002',
           displayName: 'Personal phone number',
-          factorId: 'phone',
+          factorId: 'phone' as const,
           enrollmentTime: now,
         },
       ];
