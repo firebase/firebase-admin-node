@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { appCheck } from './app-check/index';
+import { appCheck } from './app-check/app-check-namespace';
 import { auth } from './auth/auth-namespace';
 import { database } from './database/database-namespace';
 import { firestore } from './firestore/firestore-namespace';
@@ -77,8 +77,8 @@ export namespace app {
 }
 
 export * from './credential/index';
+export { appCheck } from './app-check/app-check-namespace';
 export { auth } from './auth/auth-namespace';
-export { appCheck } from './app-check/index';
 export { database } from './database/database-namespace';
 export { firestore } from './firestore/firestore-namespace';
 export { instanceId } from './instance-id/instance-id-namespace';

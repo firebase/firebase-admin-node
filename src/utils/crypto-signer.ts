@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { ServiceAccountCredential } from '../app/credential-internal';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpClient, HttpError } from './api-request';
@@ -190,13 +191,13 @@ export class IAMSigner implements CryptoSigner {
  * @param app A FirebaseApp instance.
  * @returns A CryptoSigner instance.
  */
-export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
+export function cryptoSignerFromApp(app: App): CryptoSigner {
   const credential = app.options.credential;
   if (credential instanceof ServiceAccountCredential) {
     return new ServiceAccountSigner(credential);
   }
 
-  return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
+  return new IAMSigner(new AuthorizedHttpClient(app as FirebaseApp), app.options.serviceAccountId);
 }
 
 /**

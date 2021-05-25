@@ -24,7 +24,7 @@ import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
 import { Auth } from '../auth/index';
-import { AppCheck } from '../app-check/app-check';
+import { AppCheck } from '../app-check/index';
 import { MachineLearning } from '../machine-learning/index';
 import { Messaging } from '../messaging/index';
 import { Storage } from '../storage/index';
@@ -202,10 +202,8 @@ export class FirebaseApp implements app.App {
      * @returns The AppCheck service instance of this app.
      */
   public appCheck(): AppCheck {
-    return this.ensureService_('appCheck', () => {
-      const appCheckService: typeof AppCheck = require('../app-check/app-check').AppCheck;
-      return new appCheckService(this);
-    });
+    const fn = require('../app-check/index').getAppCheck;
+    return fn(this);
   }
 
   /**

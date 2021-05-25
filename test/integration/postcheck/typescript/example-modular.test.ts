@@ -18,6 +18,7 @@
 import { expect } from 'chai';
 
 import { cert, deleteApp, initializeApp, App } from 'firebase-admin/app';
+import { getAppCheck, AppCheck } from 'firebase-admin/app-check';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getDatabase, getDatabaseWithUrl, Database, ServerValue } from 'firebase-admin/database';
 import { getFirestore, DocumentReference, Firestore, FieldValue } from 'firebase-admin/firestore';
@@ -51,6 +52,11 @@ describe('Modular API', () => {
 
   it('Should return an initialized App', () => {
     expect(app.name).to.equal('TestApp');
+  });
+
+  it('Should return an AppCheck client', () => {
+    const client = getAppCheck(app);
+    expect(client).to.be.instanceOf(AppCheck);
   });
 
   it('Should return an Auth client', () => {

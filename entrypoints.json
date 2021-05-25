@@ -8,6 +8,10 @@
     "typings": "./lib/app/index.d.ts",
     "dist": "./lib/app/index.js"
   },
+  "firebase-admin/app-check": {
+    "typings": "./lib/app-check/index.d.ts",
+    "dist": "./lib/app-check/index.js"
+  },
   "firebase-admin/auth": {
     "typings": "./lib/auth/index.d.ts",
     "dist": "./lib/auth/index.js"

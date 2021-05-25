@@ -123,7 +123,7 @@ export function appCheckErrorFromCryptoSignerError(err: Error): Error {
         code = APP_CHECK_ERROR_CODE_MAPPING[status];
       }
       return new FirebaseAppCheckError(code,
-        `Error returned from server while siging a custom token: ${description}`
+        `Error returned from server while signing a custom token: ${description}`
       );
     }
     return new FirebaseAppCheckError('internal-error',

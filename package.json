@@ -65,6 +65,9 @@
       "app": [
         "lib/app"
       ],
+      "app-check": [
+        "lib/app-check"
+      ],
       "auth": [
         "lib/auth"
       ],
@@ -102,6 +105,10 @@
     "./app": {
       "require": "./lib/app/index.js",
       "import": "./lib/esm/app/index.js"
+    },
+    "./app-check": {
+      "require": "./lib/app-check/index.js",
+      "import": "./lib/esm/app-check/index.js"
     },
     "./auth": {
       "require": "./lib/auth/index.js",
