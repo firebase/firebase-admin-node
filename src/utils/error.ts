@@ -525,6 +525,10 @@ export class AuthClientErrorCode {
     code: 'invalid-provider-uid',
     message: 'The providerUid must be a valid provider uid string.',
   };
+  public static INVALID_OAUTH_RESPONSETYPE = {
+    code: 'invalid-oauth-responsetype',
+    message: 'Only exactly one OAuth responseType should be set to true.',
+  };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +
@@ -596,6 +600,10 @@ export class AuthClientErrorCode {
   public static MISSING_OAUTH_CLIENT_ID = {
     code: 'missing-oauth-client-id',
     message: 'The OAuth/OIDC configuration client ID must not be empty.',
+  };
+  public static MISSING_OAUTH_CLIENT_SECRET = {
+    code: 'missing-oauth-client-secret',
+    message: 'The OAuth configuration client secret is required to enable OIDC code flow.',
   };
   public static MISSING_PROVIDER_ID = {
     code: 'missing-provider-id',

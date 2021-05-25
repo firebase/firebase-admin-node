@@ -1290,6 +1290,25 @@ export namespace auth {
   }
 
   /**
+   * The interface representing OIDC provider's response object for OAuth
+   * authorization flow.
+   * We need either of them to be true, there are two cases:
+   * If set code to true, then we are doing code flow.
+   * If set idToken to true, then we are doing idToken flow.
+   */
+  export interface OAuthResponseType {
+    /**
+     * Whether ID token is returned from IdP's authorization endpoint.
+     */ 
+    idToken?: boolean;
+
+    /**
+     * Whether authorization code is returned from IdP's authorization endpoint.
+     */
+    code?: boolean;
+  }
+
+  /**
    * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
    * provider configuration interface. An OIDC provider can be created via
    * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
@@ -1321,6 +1340,16 @@ export namespace auth {
      * [spec](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
      */
     issuer: string;
+
+    /**
+     * The OIDC provider's client secret to enable OIDC code flow.
+     */
+    clientSecret?: string;
+    
+    /**
+     * The OIDC provider's response object for OAuth authorization flow.
+     */
+    responseType?: OAuthResponseType;
   }
 
   /**
@@ -1403,6 +1432,17 @@ export namespace auth {
      * configuration's value is not modified.
      */
     issuer?: string;
+
+    /**
+     * The OIDC provider's client secret to enable OIDC code flow.
+     * If not provided, the existing configuration's value is not modified.
+     */
+    clientSecret?: string;
+    
+    /**
+     * The OIDC provider's response object for OAuth authorization flow.
+     */
+    responseType?: OAuthResponseType;
   }
 
   /**

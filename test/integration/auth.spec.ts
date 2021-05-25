@@ -1334,12 +1334,21 @@ describe('admin.auth', () => {
         enabled: true,
         issuer: 'https://oidc.com/issuer1',
         clientId: 'CLIENT_ID1',
+        responseType: {
+          idToken: true,
+          code: false,
+        },
       };
       const modifiedConfigOptions = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
 
       before(function() {
@@ -1633,6 +1642,9 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer1',
       clientId: 'CLIENT_ID1',
+      responseType: {
+        idToken: true,
+      },
     };
     const authProviderConfig2 = {
       providerId: randomOidcProviderId(),
@@ -1640,6 +1652,10 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer2',
       clientId: 'CLIENT_ID2',
+      clientSecret: 'CLIENT_SECRET',
+      responseType: {
+        code: true,
+      },
     };
 
     const removeTempConfigs = (): Promise<any> => {
@@ -1706,39 +1722,65 @@ describe('admin.auth', () => {
         });
     });
 
-    it('updateProviderConfig() successfully overwrites an OIDC config', () => {
-      const modifiedConfigOptions = {
+    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
-      };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
-        .then((config) => {
-          const modifiedConfig = deepExtend(
-            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
-        });
-    });
-
-    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
-      const deltaChanges = {
-        displayName: 'OIDC_DISPLAY_NAME4',
-        issuer: 'https://oidc.com/issuer4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
       // Only above fields should be modified.
       const modifiedConfigOptions = {
-        displayName: 'OIDC_DISPLAY_NAME4',
+        providerId: authProviderConfig1.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
-        issuer: 'https://oidc.com/issuer4',
+        issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
-          const modifiedConfig = deepExtend(
-            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
+          assertDeepEqualUnordered(modifiedConfigOptions, config);
         });
+    });
+
+    it('updateProviderConfig() with invalid oauth response type should be rejected', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME4',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer4',
+        clientId: 'CLIENT_ID4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: false,
+        },
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/invalid-oauth-responsetype');
+    });
+
+    it('updateProviderConfig() code flow with no client secret should be rejected', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME5',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer5',
+        clientId: 'CLIENT_ID5',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/missing-oauth-client-secret');
     });
 
     it('deleteProviderConfig() successfully deletes an existing OIDC config', () => {

@@ -727,6 +727,11 @@ describe('OIDCConfig', () => {
     issuer: 'https://oidc.com/issuer',
     displayName: 'oidcProviderName',
     enabled: true,
+    clientSecret: 'CLIENT_SECRET',
+    responseType: {
+      idToken: false,
+      code: true,
+    },
   };
   const serverResponse: OIDCConfigServerResponse = {
     name: 'projects/project_id/oauthIdpConfigs/oidc.provider',
@@ -734,6 +739,10 @@ describe('OIDCConfig', () => {
     issuer: 'https://oidc.com/issuer',
     displayName: 'oidcProviderName',
     enabled: true,
+    clientSecret: 'CLIENT_SECRET',
+    responseType: {
+      code: true,
+    },
   };
   const clientRequest: OIDCAuthProviderConfig = {
     providerId: 'oidc.provider',
@@ -741,6 +750,11 @@ describe('OIDCConfig', () => {
     issuer: 'https://oidc.com/issuer',
     displayName: 'oidcProviderName',
     enabled: true,
+    clientSecret: 'CLIENT_SECRET',
+    responseType: {
+      idToken: false,
+      code: true,
+    },
   };
   const config = new OIDCConfig(serverResponse);
 
@@ -767,6 +781,21 @@ describe('OIDCConfig', () => {
 
     it('should set readonly property enabled', () => {
       expect(config.enabled).to.be.true;
+    });
+
+    it('should set readonly property clientSecret', () => {
+      expect(config.clientSecret).to.equal('CLIENT_SECRET');
+    });
+
+    it('should set readonly property expected responseType', () => {
+      expect(config.responseType).to.deep.equal({ code: true });
+    });
+
+    it('should not throw on no responseType and clientSecret', () => {
+      const testResponse = deepCopy(serverResponse);
+      delete testResponse.clientSecret;
+      delete testResponse.responseType;
+      expect(() => new OIDCConfig(testResponse)).not.to.throw();
     });
 
     it('should throw on missing issuer', () => {
@@ -831,6 +860,10 @@ describe('OIDCConfig', () => {
         providerId: 'oidc.provider',
         issuer: 'https://oidc.com/issuer',
         clientId: 'CLIENT_ID',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       });
     });
   });
@@ -844,12 +877,22 @@ describe('OIDCConfig', () => {
       const updateRequest: OIDCUpdateAuthProviderRequest = {
         clientId: 'CLIENT_ID',
         displayName: 'OIDC_PROVIDER_DISPLAY_NAME',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        }
       };
       const updateServerRequest: OIDCConfigServerRequest = {
         clientId: 'CLIENT_ID',
         displayName: 'OIDC_PROVIDER_DISPLAY_NAME',
         issuer: undefined,
         enabled: undefined,
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        }
       };
       expect(OIDCConfig.buildServerRequest(updateRequest, true)).to.deep.equal(updateServerRequest);
     });
@@ -890,6 +933,62 @@ describe('OIDCConfig', () => {
       const partialRequest = deepCopy(clientRequest) as any;
       delete partialRequest.issuer;
       expect(() => OIDCConfig.validate(partialRequest, true)).not.to.throw();
+    });
+
+    it('should throw on OAuth responseType contains invalid parameters', () => {
+      const invalidRequest = deepCopy(clientRequest) as any;
+      invalidRequest.responseType.unknownField = true;
+      expect(() => OIDCConfig.validate(invalidRequest, true))
+        .to.throw('"unknownField" is not a valid OAuthResponseType parameter.');
+    });
+
+    it('should not throw when exactly one OAuth responseType is true', () => {
+      const validRequest = deepCopy(clientRequest) as any;
+      validRequest.responseType.code = false;
+      validRequest.responseType.idToken = true;
+      expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
+    });
+
+    it('should not throw when only idToken responseType is set to true', () => {
+      const validRequest = deepCopy(clientRequest) as any;
+      validRequest.responseType = { idToken: true };
+      expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
+    });
+
+    it('should not throw when only code responseType is set to true', () => {
+      const validRequest = deepCopy(clientRequest) as any;
+      const validResponseType = { code: true };
+      validRequest.responseType = validResponseType;
+      expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
+    });
+
+    it('should throw on two OAuth responseTypes set to true', () => {
+      const invalidRequest = deepCopy(clientRequest) as any;
+      invalidRequest.responseType.idToken = true;
+      invalidRequest.responseType.code = true;
+      expect(() => OIDCConfig.validate(invalidRequest, true))
+        .to.throw('Only exactly one OAuth responseType should be set to true.');
+    });
+
+    it('should throw on no OAuth responseType set to true', () => {
+      const invalidRequest = deepCopy(clientRequest) as any;
+      invalidRequest.responseType.idToken = false;
+      invalidRequest.responseType.code = false;
+      expect(() => OIDCConfig.validate(invalidRequest, true))
+        .to.throw('Only exactly one OAuth responseType should be set to true.');
+    });
+
+    it('should not throw when responseType is empty', () => {
+      const testRequest = deepCopy(clientRequest) as any;
+      testRequest.responseType = {};
+      expect(() => OIDCConfig.validate(testRequest, true)).not.to.throw();
+    });
+
+    it('should throw on no client secret when OAuth responseType code flow set to true', () => {
+      const invalidRequest = deepCopy(clientRequest) as any;
+      delete invalidRequest.clientSecret;
+      expect(() => OIDCConfig.validate(invalidRequest, true))
+        .to.throw('The OAuth configuration client secret is required to enable OIDC code flow.');
     });
 
     const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -955,6 +1054,36 @@ describe('OIDCConfig', () => {
         invalidClientRequest.displayName = invalidDisplayName;
         expect(() => OIDCConfig.validate(invalidClientRequest))
           .to.throw('"OIDCAuthProviderConfig.displayName" must be a valid string.');
+      });
+    });
+
+    const invalidClientSecrets = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidClientSecrets.forEach((invalidClientSecret) => {
+      it('should throw on invalid clientSecret:' + JSON.stringify(invalidClientSecret), () => {
+        const invalidClientRequest = deepCopy(clientRequest) as any;
+        invalidClientRequest.clientSecret = invalidClientSecret;
+        expect(() => OIDCConfig.validate(invalidClientRequest))
+          .to.throw('"OIDCAuthProviderConfig.clientSecret" must be a valid string.');
+      });
+    });
+
+    const invalidOAuthResponseIdTokenBooleans = [null, NaN, 0, 1, 'invalid', '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidOAuthResponseIdTokenBooleans.forEach((invalidOAuthResponseIdTokenBoolean) => {
+      it('should throw on invalid responseType.idToken:' + JSON.stringify(invalidOAuthResponseIdTokenBoolean), () => {
+        const invalidClientRequest = deepCopy(clientRequest) as any;
+        invalidClientRequest.responseType.idToken = invalidOAuthResponseIdTokenBoolean;
+        expect(() => OIDCConfig.validate(invalidClientRequest))
+          .to.throw('"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.');
+      });
+    });
+
+    const invalidOAuthResponseCodeBooleans = [null, NaN, 0, 1, 'invalid', '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidOAuthResponseCodeBooleans.forEach((invalidOAuthResponseCodeBoolean) => {
+      it('should throw on invalid responseType.code:' + JSON.stringify(invalidOAuthResponseCodeBoolean), () => {
+        const invalidClientRequest = deepCopy(clientRequest) as any;
+        invalidClientRequest.responseType.code = invalidOAuthResponseCodeBoolean;
+        expect(() => OIDCConfig.validate(invalidClientRequest))
+          .to.throw('"OIDCAuthProviderConfig.responseType.code" must be a boolean.');
       });
     });
   });
