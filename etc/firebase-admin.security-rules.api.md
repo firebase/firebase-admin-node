@@ -57,6 +57,4 @@ export class SecurityRules {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

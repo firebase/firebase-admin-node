@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase Authentication.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
 import { Auth } from './auth';

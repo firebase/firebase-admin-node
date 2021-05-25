@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Security Rules for Cloud Firestore and Cloud Storage.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { SecurityRules } from './security-rules';

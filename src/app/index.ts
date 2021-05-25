@@ -17,6 +17,12 @@
 
 import { getSdkVersion } from '../utils';
 
+/**
+ * Firebase App and SDK initialization.
+ *
+ * @packageDocumentation
+ */
+
 export { App, AppOptions, FirebaseArrayIndexError, FirebaseError } from './core'
 export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 

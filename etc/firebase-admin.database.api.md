@@ -48,6 +48,4 @@ export const ServerValue: rtdb.ServerValue;
 export { ThenableReference }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

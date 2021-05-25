@@ -96,6 +96,4 @@ export { WriteBatch }
 export { WriteResult }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

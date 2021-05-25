@@ -454,6 +454,4 @@ export class UserRecord {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

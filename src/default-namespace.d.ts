@@ -14,4 +14,10 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase namespaced API (legacy).
+ *
+ * @packageDocumentation
+ */
+
 export * from './firebase-namespace-api';

@@ -351,6 +351,4 @@ export interface WebpushNotification {
 }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

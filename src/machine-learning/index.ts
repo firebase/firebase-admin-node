@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Firebase Machine Learning.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { MachineLearning } from './machine-learning';

@@ -19,6 +19,4 @@ export class Storage {
     }
 
 
-// (No @packageDocumentation comment for this package)
-
 ```

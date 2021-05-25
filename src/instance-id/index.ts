@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+/**
+ * Firebase Instance ID service.
+ *
+ * @packageDocumentation
+ */
+
 import { App, getApp } from '../app/index';
 import { InstanceId } from './instance-id';
+import { FirebaseApp } from '../app/firebase-app';
 
 export { InstanceId };
 
