@@ -356,6 +356,11 @@ export namespace auth {
      * The optional date the second factor was enrolled, formatted as a UTC string.
      */
     enrollmentTime?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
   }
 
   /**
@@ -363,11 +368,6 @@ export namespace auth {
    * for an `UpdateRequest`.
    */
   export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
-
-    /**
-     * The type identifier of the second factor. For SMS second factors, this is `phone`.
-     */
-    factorId: 'phone';
 
     /**
      * The phone number associated with a phone second factor.
@@ -458,6 +458,11 @@ export namespace auth {
      * The optional display name for an enrolled second factor.
      */
     displayName?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
   }
 
   /**
@@ -465,11 +470,6 @@ export namespace auth {
    * `CreateRequest`.
    */
   export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
-
-    /**
-     * The type identifier of the second factor. For SMS second factors, this is `phone`.
-     */
-    factorId: 'phone';
 
     /**
      * The phone number associated with a phone second factor.

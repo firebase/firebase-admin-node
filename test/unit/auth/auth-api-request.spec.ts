@@ -1422,7 +1422,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 uid: 'mfaUid1',
                 phoneNumber: '+16505550001',
                 displayName: 'Corp phone number',
-                factorId: 'phone' as const,
+                factorId: 'phone',
                 enrollmentTime: new Date().toUTCString(),
               },
             ],
@@ -2653,11 +2653,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               {
                 phoneNumber: '+16505557348',
                 displayName: 'Spouse\'s phone number',
-                factorId: 'phone' as const,
+                factorId: 'phone',
               },
               {
                 phoneNumber: '+16505551000',
-                factorId: 'phone' as const,
+                factorId: 'phone',
               },
             ],
           },
