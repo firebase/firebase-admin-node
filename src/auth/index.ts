@@ -479,7 +479,7 @@ export namespace auth {
 
   /**
    * Type representing the properties of a user enrolled second factor
-   * for an `CreateRequest`.
+   * for a `CreateRequest`.
    */
   export type CreateMultiFactorInfoRequest = | CreatePhoneMultiFactorInfoRequest;
 
@@ -1311,7 +1311,7 @@ export namespace auth {
   export interface OAuthResponseType {
     /**
      * Whether ID token is returned from IdP's authorization endpoint.
-     */ 
+     */
     idToken?: boolean;
 
     /**
@@ -1357,7 +1357,7 @@ export namespace auth {
      * The OIDC provider's client secret to enable OIDC code flow.
      */
     clientSecret?: string;
-    
+
     /**
      * The OIDC provider's response object for OAuth authorization flow.
      */
@@ -1456,7 +1456,7 @@ export namespace auth {
      * If not provided, the existing configuration's value is not modified.
      */
     clientSecret?: string;
-    
+
     /**
      * The OIDC provider's response object for OAuth authorization flow.
      */
