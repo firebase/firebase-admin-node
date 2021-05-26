@@ -20,11 +20,12 @@
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
-    "apidocs": "run-s api-extractor:local api-documenter api-documenter:post",
+    "apidocs": "run-s api-extractor:local api-documenter api-documenter:toc api-documenter:post",
     "api-extractor": "node generate-reports.js",
     "api-extractor:local": "npm run build && node generate-reports.js --local",
     "esm-wrap": "node generate-esm-wrapper.js",
     "api-documenter": "api-documenter-fire markdown --input temp --output docgen/markdown -s",
+    "api-documenter:toc": "api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s",
     "api-documenter:post": "node docgen/post-process.js"
   },
   "nyc": {
@@ -155,7 +156,7 @@
     "@google-cloud/storage": "^5.3.0"
   },
   "devDependencies": {
-    "@firebase/api-documenter": "^0.1.1",
+    "@firebase/api-documenter": "^0.1.2",
     "@firebase/app": "^0.6.13",
     "@firebase/auth": "^0.16.2",
     "@firebase/auth-types": "^0.10.1",

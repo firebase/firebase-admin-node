@@ -63,6 +63,9 @@ async function fixTitles() {
   for (const file of files) {
     await fixTitleOf(path.join(markdownDir, file));
   }
+
+  const tocFile = path.join(markdownDir, 'toc.yaml');
+  await fixTocTitles(tocFile);
 }
 
 async function fixTitleOf(file) {
@@ -90,6 +93,25 @@ async function fixTitleOf(file) {
     const content = Buffer.from(buffer.join('\r\n'));
     await fs.writeFile(file, content);
   }
+}
+
+async function fixTocTitles(file) {
+  const reader = readline.createInterface({
+    input: fs.createReadStream(file),
+  });
+
+  const buffer = [];
+  for await (let line of reader) {
+    if (line.includes('- title: firebase-admin.')) {
+      line = line.replace(/firebase-admin\./, 'firebase-admin/');
+    }
+
+    buffer.push(line);
+  }
+
+  console.log(`Updating titles in ${file}`);
+  const content = Buffer.from(buffer.join('\r\n'));
+  await fs.writeFile(file, content);
 }
 
 async function getExtraFiles() {
