@@ -249,15 +249,23 @@ export namespace auth {
     export interface MultiFactorUpdateSettings {
         enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
     }
+    export interface OAuthResponseType {
+        code?: boolean;
+        idToken?: boolean;
+    }
     export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
         clientId: string;
+        clientSecret?: string;
         issuer: string;
+        responseType?: OAuthResponseType;
     }
     export interface OIDCUpdateAuthProviderRequest {
         clientId?: string;
+        clientSecret?: string;
         displayName?: string;
         enabled?: boolean;
         issuer?: string;
+        responseType?: OAuthResponseType;
     }
     export interface PhoneIdentifier {
         // (undocumented)
