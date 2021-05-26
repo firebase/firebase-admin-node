@@ -1336,10 +1336,9 @@ describe('admin.auth', () => {
         clientId: 'CLIENT_ID1',
         responseType: {
           idToken: true,
-          code: false,
         },
       };
-      const modifiedConfigOptions = {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
@@ -1347,6 +1346,17 @@ describe('admin.auth', () => {
         clientSecret: 'CLIENT_SECRET',
         responseType: {
           idToken: false,
+          code: true,
+        },
+      };
+      const modifiedConfigOptions = {
+        providerId: authProviderConfig.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
           code: true,
         },
       };
@@ -1378,12 +1388,10 @@ describe('admin.auth', () => {
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
             return tenantAwareAuth.updateProviderConfig(
-              authProviderConfig.providerId, modifiedConfigOptions);
+              authProviderConfig.providerId, deltaChanges);
           })
           .then((config) => {
-            const modifiedConfig = deepExtend(
-              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
-            assertDeepEqualUnordered(modifiedConfig, config);
+            assertDeepEqualUnordered(modifiedConfigOptions, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
           .then(() => {
