@@ -112,7 +112,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing the common properties of a user enrolled second factor.
+   * Interface representing the common properties of a user-enrolled second factor.
    */
   export interface MultiFactorInfo {
 
@@ -143,7 +143,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor.
+   * Interface representing a phone specific user-enrolled second factor.
    */
   export interface PhoneMultiFactorInfo extends MultiFactorInfo {
 
@@ -336,7 +336,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing common properties of a user enrolled second factor
+   * Interface representing common properties of a user-enrolled second factor
    * for an `UpdateRequest`.
    */
   export interface BaseUpdateMultiFactorInfoRequest {
@@ -364,7 +364,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor
+   * Interface representing a phone specific user-enrolled second factor
    * for an `UpdateRequest`.
    */
   export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
@@ -376,7 +376,7 @@ export namespace auth {
   }
 
   /**
-   * Type representing the properties of a user enrolled second factor
+   * Type representing the properties of a user-enrolled second factor
    * for an `UpdateRequest`.
    */
   export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
@@ -449,7 +449,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing base properties of a user enrolled second factor for a
+   * Interface representing base properties of a user-enrolled second factor for a
    * `CreateRequest`.
    */
   export interface BaseCreateMultiFactorInfoRequest {
@@ -466,7 +466,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor for a
+   * Interface representing a phone specific user-enrolled second factor for a
    * `CreateRequest`.
    */
   export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
@@ -478,7 +478,7 @@ export namespace auth {
   }
 
   /**
-   * Type representing the properties of a user enrolled second factor
+   * Type representing the properties of a user-enrolled second factor
    * for a `CreateRequest`.
    */
   export type CreateMultiFactorInfoRequest = | CreatePhoneMultiFactorInfoRequest;
