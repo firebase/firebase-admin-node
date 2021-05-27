@@ -113,11 +113,7 @@ export namespace auth {
         tenantManager(): TenantManager;
     }
     export type AuthFactorType = 'phone';
-    export interface AuthProviderConfig {
-        displayName?: string;
-        enabled: boolean;
-        providerId: string;
-    }
+    export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
     export interface AuthProviderConfigFilter {
         maxResults?: number;
         pageToken?: string;
@@ -151,11 +147,23 @@ export namespace auth {
         verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
         verifySessionCookie(sessionCookie: string, checkForRevocation?: boolean): Promise<DecodedIdToken>;
     }
-    export interface CreateMultiFactorInfoRequest {
+    export interface BaseAuthProviderConfig {
+        displayName?: string;
+        enabled: boolean;
+        providerId: string;
+    }
+    export interface BaseCreateMultiFactorInfoRequest {
         displayName?: string;
         factorId: string;
     }
-    export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+    export interface BaseUpdateMultiFactorInfoRequest {
+        displayName?: string;
+        enrollmentTime?: string;
+        factorId: string;
+        uid?: string;
+    }
+    export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+    export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
         phoneNumber: string;
     }
     export interface CreateRequest extends UpdateRequest {
@@ -245,7 +253,7 @@ export namespace auth {
         code?: boolean;
         idToken?: boolean;
     }
-    export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+    export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
         clientId: string;
         clientSecret?: string;
         issuer: string;
@@ -272,7 +280,7 @@ export namespace auth {
         // (undocumented)
         providerUid: string;
     }
-    export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+    export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
         callbackURL?: string;
         idpEntityId: string;
         rpEntityId: string;
@@ -323,13 +331,8 @@ export namespace auth {
     }
     // (undocumented)
     export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-    export interface UpdateMultiFactorInfoRequest {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        uid?: string;
-    }
-    export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+    export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+    export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
         phoneNumber: string;
     }
     export interface UpdateRequest {

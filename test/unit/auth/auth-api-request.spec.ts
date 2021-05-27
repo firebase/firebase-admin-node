@@ -1425,12 +1425,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 factorId: 'phone',
                 enrollmentTime: new Date().toUTCString(),
               },
-              {
-                uid: 'mfaUid2',
-                phoneNumber: '+16505550002',
-                displayName: 'Personal phone number',
-                factorId: 'phone',
-              },
             ],
           },
           customClaims: { admin: true },

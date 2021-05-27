@@ -1480,7 +1480,12 @@ export abstract class AbstractAuthRequestHandler {
     }
 
     // Build the signupNewUser request.
-    const request: any = deepCopy(properties);
+    type SignUpNewUserRequest = CreateRequest & {
+      photoUrl?: string | null;
+      localId?: string;
+      mfaInfo?: AuthFactorInfo[];
+    };
+    const request: SignUpNewUserRequest = deepCopy(properties);
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
@@ -1496,14 +1501,14 @@ export abstract class AbstractAuthRequestHandler {
       if (validator.isNonEmptyArray(request.multiFactor.enrolledFactors)) {
         const mfaInfo: AuthFactorInfo[] = [];
         try {
-          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
             // Enrollment time and uid are not allowed for signupNewUser endpoint.
             // They will automatically be provisioned server side.
-            if (multiFactorInfo.enrollmentTime) {
+            if ('enrollmentTime' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"enrollmentTime" is not supported when adding second factors via "createUser()"');
-            } else if (multiFactorInfo.uid) {
+            } else if ('uid' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"uid" is not supported when adding second factors via "createUser()"');

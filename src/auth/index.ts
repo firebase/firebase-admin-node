@@ -112,7 +112,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing the common properties of a user enrolled second factor.
+   * Interface representing the common properties of a user-enrolled second factor.
    */
   export interface MultiFactorInfo {
 
@@ -143,7 +143,7 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor.
+   * Interface representing a phone specific user-enrolled second factor.
    */
   export interface PhoneMultiFactorInfo extends MultiFactorInfo {
 
@@ -336,10 +336,10 @@ export namespace auth {
   }
 
   /**
-   * Interface representing common properties of a user enrolled second factor
+   * Interface representing common properties of a user-enrolled second factor
    * for an `UpdateRequest`.
    */
-  export interface UpdateMultiFactorInfoRequest {
+  export interface BaseUpdateMultiFactorInfoRequest {
 
     /**
      * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
@@ -364,16 +364,22 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor
+   * Interface representing a phone specific user-enrolled second factor
    * for an `UpdateRequest`.
    */
-  export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+  export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
      */
     phoneNumber: string;
   }
+
+  /**
+   * Type representing the properties of a user-enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
 
   /**
    * Interface representing the properties to update on the provided user.
@@ -443,10 +449,10 @@ export namespace auth {
   }
 
   /**
-   * Interface representing base properties of a user enrolled second factor for a
+   * Interface representing base properties of a user-enrolled second factor for a
    * `CreateRequest`.
    */
-  export interface CreateMultiFactorInfoRequest {
+  export interface BaseCreateMultiFactorInfoRequest {
 
     /**
      * The optional display name for an enrolled second factor.
@@ -460,16 +466,22 @@ export namespace auth {
   }
 
   /**
-   * Interface representing a phone specific user enrolled second factor for a
+   * Interface representing a phone specific user-enrolled second factor for a
    * `CreateRequest`.
    */
-  export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+  export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
      */
     phoneNumber: string;
   }
+
+  /**
+   * Type representing the properties of a user-enrolled second factor
+   * for a `CreateRequest`.
+   */
+  export type CreateMultiFactorInfoRequest = | CreatePhoneMultiFactorInfoRequest;
 
   /**
    * Interface representing the properties to set on a new user record to be
@@ -1221,7 +1233,7 @@ export namespace auth {
   /**
    * The base Auth provider configuration interface.
    */
-  export interface AuthProviderConfig {
+  export interface BaseAuthProviderConfig {
 
     /**
      * The provider ID defined by the developer.
@@ -1249,7 +1261,7 @@ export namespace auth {
    * Auth provider configuration interface. A SAML provider can be created via
    * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
-  export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+  export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
 
     /**
      * The SAML IdP entity identifier.
@@ -1301,7 +1313,7 @@ export namespace auth {
   export interface OAuthResponseType {
     /**
      * Whether ID token is returned from IdP's authorization endpoint.
-     */ 
+     */
     idToken?: boolean;
 
     /**
@@ -1315,7 +1327,7 @@ export namespace auth {
    * provider configuration interface. An OIDC provider can be created via
    * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
-  export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+  export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
 
     /**
      * This is the required client ID used to confirm the audience of an OIDC
@@ -1347,12 +1359,18 @@ export namespace auth {
      * The OIDC provider's client secret to enable OIDC code flow.
      */
     clientSecret?: string;
-    
+
     /**
      * The OIDC provider's response object for OAuth authorization flow.
      */
     responseType?: OAuthResponseType;
   }
+
+  /**
+   * The Auth provider configuration type.
+   * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+   */
+  export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
 
   /**
    * The request interface for updating a SAML Auth provider. This is used
@@ -1440,7 +1458,7 @@ export namespace auth {
      * If not provided, the existing configuration's value is not modified.
      */
     clientSecret?: string;
-    
+
     /**
      * The OIDC provider's response object for OAuth authorization flow.
      */
