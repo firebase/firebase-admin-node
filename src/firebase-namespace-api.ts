@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { appCheck } from './app-check/index';
 import { auth } from './auth/auth-namespace';
 import { database } from './database/database-namespace';
 import { firestore } from './firestore/firestore-namespace';
@@ -42,6 +43,7 @@ export namespace app {
    * to create an app.
    */
   export interface App extends AppCore {
+    appCheck(): appCheck.AppCheck;
     auth(): auth.Auth;
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;

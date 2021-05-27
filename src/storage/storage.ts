@@ -46,9 +46,18 @@ export class Storage {
     }
 
     if (!process.env.STORAGE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
-      process.env.STORAGE_EMULATOR_HOST = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
-    }
+      const firebaseStorageEmulatorHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
 
+      if (firebaseStorageEmulatorHost.match(/https?:\/\//)) {
+        throw new FirebaseError({
+          code: 'storage/invalid-emulator-host',
+          message: 'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol (http or https).',
+        });
+      }
+
+      process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
+    }
+    
     let storage: typeof StorageClient;
     try {
       storage = require('@google-cloud/storage').Storage;

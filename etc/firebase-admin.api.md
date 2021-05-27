@@ -18,6 +18,8 @@ export namespace app {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point default-namespace.d.ts
     export interface App extends App {
         // (undocumented)
+        appCheck(): appCheck.AppCheck;
+        // (undocumented)
         auth(): auth.Auth;
         // (undocumented)
         database(url?: string): database.Database;
@@ -38,6 +40,37 @@ export namespace app {
         securityRules(): securityRules.SecurityRules;
         // (undocumented)
         storage(): storage.Storage;
+    }
+}
+
+// @public
+export function appCheck(app?: app.App): appCheck.AppCheck;
+
+// @public (undocumented)
+export namespace appCheck {
+    export interface AppCheck {
+        // (undocumented)
+        app: app.App;
+        createToken(appId: string): Promise<AppCheckToken>;
+        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
+    }
+    export interface AppCheckToken {
+        token: string;
+        ttlMillis: number;
+    }
+    export interface DecodedAppCheckToken {
+        // (undocumented)
+        [key: string]: any;
+        app_id: string;
+        aud: string[];
+        exp: number;
+        iat: number;
+        iss: string;
+        sub: string;
+    }
+    export interface VerifyAppCheckTokenResponse {
+        appId: string;
+        token: appCheck.DecodedAppCheckToken;
     }
 }
 

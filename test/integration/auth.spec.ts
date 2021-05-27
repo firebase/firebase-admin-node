@@ -275,6 +275,56 @@ describe('admin.auth', () => {
       });
   });
 
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: admin.auth.UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await admin.auth().importUsers([importUser]);
+
+    try {
+      await admin.auth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return admin.auth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return admin.auth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
   describe('getUsers()', () => {
     /**
      * Filters a list of object to another list of objects that only contains
@@ -778,6 +828,11 @@ describe('admin.auth', () => {
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
     return getAuth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
@@ -1338,12 +1393,31 @@ describe('admin.auth', () => {
         enabled: true,
         issuer: 'https://oidc.com/issuer1',
         clientId: 'CLIENT_ID1',
+        responseType: {
+          idToken: true,
+        },
       };
-      const modifiedConfigOptions = {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
+      };
+      const modifiedConfigOptions = {
+        providerId: authProviderConfig.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
 
       before(function() {
@@ -1373,12 +1447,10 @@ describe('admin.auth', () => {
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
             return tenantAwareAuth.updateProviderConfig(
-              authProviderConfig.providerId, modifiedConfigOptions);
+              authProviderConfig.providerId, deltaChanges);
           })
           .then((config) => {
-            const modifiedConfig = deepExtend(
-              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
-            assertDeepEqualUnordered(modifiedConfig, config);
+            assertDeepEqualUnordered(modifiedConfigOptions, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
           .then(() => {
@@ -1637,6 +1709,9 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer1',
       clientId: 'CLIENT_ID1',
+      responseType: {
+        idToken: true,
+      },
     };
     const authProviderConfig2 = {
       providerId: randomOidcProviderId(),
@@ -1644,6 +1719,10 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer2',
       clientId: 'CLIENT_ID2',
+      clientSecret: 'CLIENT_SECRET',
+      responseType: {
+        code: true,
+      },
     };
 
     const removeTempConfigs = (): Promise<any> => {
@@ -1710,39 +1789,65 @@ describe('admin.auth', () => {
         });
     });
 
-    it('updateProviderConfig() successfully overwrites an OIDC config', () => {
-      const modifiedConfigOptions = {
+    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
-      };
-      return getAuth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
-        .then((config) => {
-          const modifiedConfig = deepExtend(
-            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
-        });
-    });
-
-    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
-      const deltaChanges = {
-        displayName: 'OIDC_DISPLAY_NAME4',
-        issuer: 'https://oidc.com/issuer4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
       // Only above fields should be modified.
       const modifiedConfigOptions = {
+        providerId: authProviderConfig1.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
+      };
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+        .then((config) => {
+          assertDeepEqualUnordered(modifiedConfigOptions, config);
+        });
+    });
+
+    it('updateProviderConfig() with invalid oauth response type should be rejected', () => {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME4',
         enabled: false,
         issuer: 'https://oidc.com/issuer4',
-        clientId: 'CLIENT_ID3',
+        clientId: 'CLIENT_ID4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: false,
+        },
       };
-      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
-        .then((config) => {
-          const modifiedConfig = deepExtend(
-            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
-        });
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/invalid-oauth-responsetype');
+    });
+
+    it('updateProviderConfig() code flow with no client secret should be rejected', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME5',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer5',
+        clientId: 'CLIENT_ID5',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
+      };
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/missing-oauth-client-secret');
     });
 
     it('deleteProviderConfig() successfully deletes an existing OIDC config', () => {
