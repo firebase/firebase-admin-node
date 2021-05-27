@@ -1292,9 +1292,11 @@ export namespace auth {
   /**
    * The interface representing OIDC provider's response object for OAuth
    * authorization flow.
-   * We need either of them to be true, there are two cases:
-   * If set code to true, then we are doing code flow.
-   * If set idToken to true, then we are doing idToken flow.
+   * One of the following settings is required:
+   * <ul>
+   * <li>Set <code>code</code> to <code>true</code> for the code flow.</li>
+   * <li>Set <code>idToken</code> to <code>true</code> for the ID token flow.</li>
+   * </ul>
    */
   export interface OAuthResponseType {
     /**
