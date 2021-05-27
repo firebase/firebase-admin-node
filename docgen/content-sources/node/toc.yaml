@@ -64,6 +64,8 @@ toc:
     path: /docs/reference/admin/node/admin.auth.MultiFactorSettings
   - title: "MultiFactorUpdateSettings"
     path: /docs/reference/admin/node/admin.auth.MultiFactorUpdateSettings
+  - title: "OAuthResponseType"
+    path: /docs/reference/admin/node/admin.auth.OAuthResponseType
   - title: "OIDCAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
   - title: "OIDCUpdateAuthProviderRequest"
