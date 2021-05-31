@@ -32,11 +32,7 @@ export class Auth extends BaseAuth {
 export type AuthFactorType = 'phone';
 
 // @public
-export interface AuthProviderConfig {
-    displayName?: string;
-    enabled: boolean;
-    providerId: string;
-}
+export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
 
 // @public
 export interface AuthProviderConfigFilter {
@@ -75,13 +71,12 @@ export abstract class BaseAuth {
 }
 
 // @public
-export interface CreateMultiFactorInfoRequest {
-    displayName?: string;
-    factorId: string;
-}
+export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
 
+// Warning: (ae-forgotten-export) The symbol "BaseCreateMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
+//
 // @public
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
     phoneNumber: string;
 }
 
@@ -204,18 +199,25 @@ export interface MultiFactorUpdateSettings {
     enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
 }
 
+// Warning: (ae-forgotten-export) The symbol "BaseAuthProviderConfig" needs to be exported by the entry point index.d.ts
+//
 // @public
-export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
     clientId: string;
+    clientSecret?: string;
     issuer: string;
+    // Warning: (ae-forgotten-export) The symbol "OAuthResponseType" needs to be exported by the entry point index.d.ts
+    responseType?: OAuthResponseType;
 }
 
 // @public
 export interface OIDCUpdateAuthProviderRequest {
     clientId?: string;
+    clientSecret?: string;
     displayName?: string;
     enabled?: boolean;
     issuer?: string;
+    responseType?: OAuthResponseType;
 }
 
 // @public
@@ -239,7 +241,7 @@ export interface ProviderIdentifier {
 }
 
 // @public
-export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
     callbackURL?: string;
     idpEntityId: string;
     rpEntityId: string;
@@ -305,15 +307,12 @@ export interface UidIdentifier {
 export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
 // @public
-export interface UpdateMultiFactorInfoRequest {
-    displayName?: string;
-    enrollmentTime?: string;
-    factorId: string;
-    uid?: string;
-}
+export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
 
+// Warning: (ae-forgotten-export) The symbol "BaseUpdateMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
+//
 // @public
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
     phoneNumber: string;
 }
 
