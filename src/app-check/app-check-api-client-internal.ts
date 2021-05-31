@@ -19,7 +19,7 @@ import { appCheck } from './index';
 import {
   HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse
 } from '../utils/api-request';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { PrefixedFirebaseError } from '../utils/error';
 
 import * as utils from '../utils/index';

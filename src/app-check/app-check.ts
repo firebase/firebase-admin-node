@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
 import { appCheck } from './index';
 import { AppCheckApiClient } from './app-check-api-client-internal';
 import {
@@ -27,6 +26,7 @@ import { cryptoSignerFromApp } from '../utils/crypto-signer';
 import AppCheckInterface = appCheck.AppCheck;
 import AppCheckToken = appCheck.AppCheckToken;
 import VerifyAppCheckTokenResponse = appCheck.VerifyAppCheckTokenResponse;
+import { FirebaseApp } from '../app/firebase-app';
 
 /**
  * AppCheck service bound to the provided app.
@@ -57,7 +57,7 @@ export class AppCheck implements AppCheckInterface {
    *
    * @param appId The app ID to use as the JWT app_id.
    *
-   * @return A promise that fulfills with a `AppCheckToken`.
+   * @returns A promise that fulfills with a `AppCheckToken`.
    */
   public createToken(appId: string): Promise<AppCheckToken> {
     return this.tokenGenerator.createCustomToken(appId)
@@ -67,11 +67,11 @@ export class AppCheck implements AppCheckInterface {
   }
 
   /**
-   * Veifies an App Check token.
+   * Verifies an App Check token.
    *
    * @param appCheckToken The App Check token to verify.
    *
-   * @return A promise that fulfills with a `VerifyAppCheckTokenResponse` on successful
+   * @returns A promise that fulfills with a `VerifyAppCheckTokenResponse` on successful
    *     verification.
    */
   public verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse> {

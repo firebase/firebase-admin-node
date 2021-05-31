@@ -24,6 +24,7 @@ import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
 import { Auth } from '../auth/index';
+import { AppCheck } from '../app-check/app-check';
 import { MachineLearning } from '../machine-learning/index';
 import { Messaging } from '../messaging/index';
 import { Storage } from '../storage/index';
@@ -69,6 +70,10 @@ export class FirebaseAppInternals {
     return Promise.resolve(this.cachedToken_);
   }
 
+  public getCachedToken(): FirebaseAccessToken | null {
+    return this.cachedToken_ || null;
+  }
+
   private refreshToken(): Promise<FirebaseAccessToken> {
     return Promise.resolve(this.credential_.getAccessToken())
       .then((result) => {
@@ -92,6 +97,8 @@ export class FirebaseAppInternals {
         if (!this.cachedToken_
           || this.cachedToken_.accessToken !== token.accessToken
           || this.cachedToken_.expirationTime !== token.expirationTime) {
+          // Update the cache before firing listeners. Listeners may directly query the
+          // cached token state.
           this.cachedToken_ = token;
           this.tokenListeners_.forEach((listener) => {
             listener(token.accessToken);
@@ -187,6 +194,18 @@ export class FirebaseApp implements app.App {
     }
 
     this.INTERNAL = new FirebaseAppInternals(credential);
+  }
+
+  /**
+     * Returns the AppCheck service instance associated with this app.
+     *
+     * @returns The AppCheck service instance of this app.
+     */
+  public appCheck(): AppCheck {
+    return this.ensureService_('appCheck', () => {
+      const appCheckService: typeof AppCheck = require('./app-check/app-check').AppCheck;
+      return new appCheckService(this);
+    });
   }
 
   /**

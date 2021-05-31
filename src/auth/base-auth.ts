@@ -20,7 +20,7 @@ import { deepCopy } from '../utils/deep-copy';
 import * as validator from '../utils/validator';
 
 import { AbstractAuthRequestHandler, useEmulator } from './auth-api-request';
-import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, EmulatedSigner } from './token-generator';
 import {
   FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
   DecodedIdToken,
@@ -36,6 +36,8 @@ import {
 } from './identifier';
 import { UserImportOptions, UserImportRecord, UserImportResult } from './user-import-builder';
 import { ActionCodeSettings } from './action-code-settings-builder';
+import { cryptoSignerFromApp } from '../utils/crypto-signer';
+import { FirebaseApp } from '../app/firebase-app';
 
 /** Represents the result of the {@link BaseAuth.getUsers} API. */
 export interface GetUsersResult {
@@ -137,7 +139,7 @@ export abstract class BaseAuth {
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app as FirebaseApp);
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 

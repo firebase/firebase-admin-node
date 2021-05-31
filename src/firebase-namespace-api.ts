@@ -78,6 +78,7 @@ export namespace app {
 
 export * from './credential/index';
 export { auth } from './auth/auth-namespace';
+export { appCheck } from './app-check/index';
 export { database } from './database/database-namespace';
 export { firestore } from './firestore/firestore-namespace';
 export { instanceId } from './instance-id/instance-id-namespace';
