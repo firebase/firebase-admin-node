@@ -22,7 +22,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheck } from '../../../src/app-check/app-check';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';

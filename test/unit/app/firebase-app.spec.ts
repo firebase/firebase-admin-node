@@ -34,7 +34,7 @@ import {
 } from '../../../src/app/firebase-namespace';
 import {
   auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, projectManagement, securityRules , remoteConfig,
+  instanceId, projectManagement, securityRules , remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
 import { FirebaseAppError, AppErrorCodes } from '../../../src/utils/error';
 

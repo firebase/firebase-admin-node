@@ -358,7 +358,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<AppCheck> = (app?: App) => {
       return this.ensureApp(app).appCheck();
     };
-    const appCheck = require('./app-check/app-check').AppCheck;
+    const appCheck = require('../app-check/app-check').AppCheck;
     return Object.assign(fn, { AppCheck: appCheck });
   }
 

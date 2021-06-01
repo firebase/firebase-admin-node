@@ -172,7 +172,7 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('sendToDeviceGroup() returns a response with success count', () => {
+  xit('sendToDeviceGroup() returns a response with success count', () => {
     return getMessaging().sendToDeviceGroup(notificationKey, payload, options)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');

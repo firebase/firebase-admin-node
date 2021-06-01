@@ -203,7 +203,7 @@ export class FirebaseApp implements app.App {
      */
   public appCheck(): AppCheck {
     return this.ensureService_('appCheck', () => {
-      const appCheckService: typeof AppCheck = require('./app-check/app-check').AppCheck;
+      const appCheckService: typeof AppCheck = require('../app-check/app-check').AppCheck;
       return new appCheckService(this);
     });
   }

@@ -32,7 +32,7 @@ import {
 import {
   CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner
 } from '../../../src/utils/crypto-signer';
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
 import * as utils from '../utils';
 
