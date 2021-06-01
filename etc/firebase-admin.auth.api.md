@@ -71,10 +71,29 @@ export abstract class BaseAuth {
 }
 
 // @public
+export interface BaseAuthProviderConfig {
+    displayName?: string;
+    enabled: boolean;
+    providerId: string;
+}
+
+// @public
+export interface BaseCreateMultiFactorInfoRequest {
+    displayName?: string;
+    factorId: string;
+}
+
+// @public
+export interface BaseUpdateMultiFactorInfoRequest {
+    displayName?: string;
+    enrollmentTime?: string;
+    factorId: string;
+    uid?: string;
+}
+
+// @public
 export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
 
-// Warning: (ae-forgotten-export) The symbol "BaseCreateMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
-//
 // @public
 export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
     phoneNumber: string;
@@ -199,14 +218,17 @@ export interface MultiFactorUpdateSettings {
     enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
 }
 
-// Warning: (ae-forgotten-export) The symbol "BaseAuthProviderConfig" needs to be exported by the entry point index.d.ts
-//
+// @public
+export interface OAuthResponseType {
+    code?: boolean;
+    idToken?: boolean;
+}
+
 // @public
 export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
     clientId: string;
     clientSecret?: string;
     issuer: string;
-    // Warning: (ae-forgotten-export) The symbol "OAuthResponseType" needs to be exported by the entry point index.d.ts
     responseType?: OAuthResponseType;
 }
 
@@ -309,8 +331,6 @@ export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpda
 // @public
 export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
 
-// Warning: (ae-forgotten-export) The symbol "BaseUpdateMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
-//
 // @public
 export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
     phoneNumber: string;

@@ -370,7 +370,7 @@ export class FirebaseTokenVerifier {
     fullDecodedToken: DecodedToken,
     projectId: string | null,
     isEmulator: boolean): void {
-  
+
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 
@@ -430,7 +430,7 @@ export class FirebaseTokenVerifier {
 
   /**
    * Maps JwtError to FirebaseAuthError
-   * 
+   *
    * @param error JwtError to be mapped.
    * @returns FirebaseAuthError or Error instance.
    */
