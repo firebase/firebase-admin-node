@@ -42,7 +42,7 @@ import { app } from '../firebase-namespace-api';
  * @param app Optional app for which to return the `AppCheck` service.
  *   If not provided, the default `AppCheck` service is returned.
  *
- * @return The default `AppCheck` service if no
+ * @returns The default `AppCheck` service if no
  *   app is provided, or the `AppCheck` service associated with the provided
  *   app.
  */
@@ -59,10 +59,10 @@ export namespace appCheck {
     /**
      * Creates a new {@link appCheck.AppCheckToken `AppCheckToken`} that can be sent
      * back to a client.
-     * 
+     *
      * @param appId The App ID of the Firebase App the token belongs to.
      *
-     * @return A promise that fulfills with a `AppCheckToken`.
+     * @returns A promise that fulfills with a `AppCheckToken`.
      */
     createToken(appId: string): Promise<AppCheckToken>;
 
@@ -73,7 +73,7 @@ export namespace appCheck {
      *
      * @param appCheckToken The App Check token to verify.
      *
-     * @return A promise fulfilled with the
+     * @returns A promise fulfilled with the
      *   token's decoded claims if the App Check token is valid; otherwise, a rejected
      *   promise.
      */
@@ -146,7 +146,7 @@ export namespace appCheck {
     app_id: string;
     [key: string]: any;
   }
-  
+
   /**
    * Interface representing a verified App Check token response.
    */
