@@ -151,16 +151,16 @@ async function writeExtraContentTo(target, extra) {
     input: fs.createReadStream(target),
   });
 
-  let firstHeaderSeen = false;
+  let firstHeadingSeen = false;
   for await (const line of reader) {
-    // Insert extra just before first markdown header
-    if (line.startsWith('#')) {
-      if (!firstHeaderSeen) {
+    // Insert extra content just before the first markdown heading.
+    if (line.match(/^\#+ /)) {
+      if (!firstHeadingSeen) {
         output.push(...extra);
         output.push('');
       }
 
-      firstHeaderSeen = true;
+      firstHeadingSeen = true;
     }
 
     output.push(line);
