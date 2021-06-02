@@ -28,6 +28,7 @@ import './utils/error.spec';
 import './utils/validator.spec';
 import './utils/api-request.spec';
 import './utils/jwt.spec';
+import './utils/crypto-signer.spec';
 
 // Auth
 import './auth/auth.spec';
@@ -85,3 +86,9 @@ import './security-rules/security-rules-api-client.spec';
 import './remote-config/index.spec';
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';
+
+// AppCheck
+import './app-check/app-check.spec';
+import './app-check/app-check-api-client-internal.spec';
+import './app-check/token-generator.spec';
+import './app-check/token-verifier.spec.ts';

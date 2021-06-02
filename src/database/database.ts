@@ -81,7 +81,7 @@ export class DatabaseService {
     this.appInternal = app;
   }
 
-  private get firebsaeApp(): FirebaseApp {
+  private get firebaseApp(): FirebaseApp {
     return this.app as FirebaseApp;
   }
 
@@ -90,7 +90,7 @@ export class DatabaseService {
    */
   public delete(): Promise<void> {
     if (this.tokenListener) {
-      this.firebsaeApp.INTERNAL.removeAuthTokenListener(this.tokenListener);
+      this.firebaseApp.INTERNAL.removeAuthTokenListener(this.tokenListener);
       clearTimeout(this.tokenRefreshTimeout);
     }
 
@@ -143,7 +143,7 @@ export class DatabaseService {
 
     if (!this.tokenListener) {
       this.tokenListener = this.onTokenChange.bind(this);
-      this.firebsaeApp.INTERNAL.addAuthTokenListener(this.tokenListener);
+      this.firebaseApp.INTERNAL.addAuthTokenListener(this.tokenListener);
     }
 
     return db;
@@ -151,24 +151,21 @@ export class DatabaseService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onTokenChange(_: string): void {
-    this.firebsaeApp.INTERNAL.getToken()
-      .then((token) => {
-        const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
-        // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
-        // notice and refresh the token, at which point this callback will fire again.
-        if (delayMillis > 0) {
-          this.scheduleTokenRefresh(delayMillis);
-        }
-      })
-      .catch((err) => {
-        console.error('Unexpected error while attempting to schedule a token refresh:', err);
-      });
+    const token = this.firebaseApp.INTERNAL.getCachedToken();
+    if (token) {
+      const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
+      // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
+      // notice and refresh the token, at which point this callback will fire again.
+      if (delayMillis > 0) {
+        this.scheduleTokenRefresh(delayMillis);
+      }
+    }
   }
 
   private scheduleTokenRefresh(delayMillis: number): void {
     clearTimeout(this.tokenRefreshTimeout);
     this.tokenRefreshTimeout = setTimeout(() => {
-      this.firebsaeApp.INTERNAL.getToken(/*forceRefresh=*/ true)
+      this.firebaseApp.INTERNAL.getToken(/*forceRefresh=*/ true)
         .catch(() => {
           // Ignore the error since this might just be an intermittent failure. If we really cannot
           // refresh the token, an error will be logged once the existing token expires and we try

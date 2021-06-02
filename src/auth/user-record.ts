@@ -87,7 +87,7 @@ enum MultiFactorId {
 }
 
 /**
- * Interface representing the common properties of a user enrolled second factor.
+ * Interface representing the common properties of a user-enrolled second factor.
  */
 export abstract class MultiFactorInfo {
 
@@ -194,7 +194,7 @@ export abstract class MultiFactorInfo {
 }
 
 /**
- * Interface representing a phone specific user enrolled second factor.
+ * Interface representing a phone specific user-enrolled second factor.
  */
 export class PhoneMultiFactorInfo extends MultiFactorInfo {
 

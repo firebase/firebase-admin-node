@@ -19,10 +19,10 @@ import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 /**
- * Interface representing base properties of a user enrolled second factor for a
+ * Interface representing base properties of a user-enrolled second factor for a
  * `CreateRequest`.
  */
-export interface CreateMultiFactorInfoRequest {
+export interface BaseCreateMultiFactorInfoRequest {
 
   /**
    * The optional display name for an enrolled second factor.
@@ -36,10 +36,10 @@ export interface CreateMultiFactorInfoRequest {
 }
 
 /**
- * Interface representing a phone specific user enrolled second factor for a
+ * Interface representing a phone specific user-enrolled second factor for a
  * `CreateRequest`.
  */
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
 
   /**
    * The phone number associated with a phone second factor.
@@ -48,10 +48,16 @@ export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfo
 }
 
 /**
- * Interface representing common properties of a user enrolled second factor
+ * Type representing the properties of a user-enrolled second factor
+ * for a `CreateRequest`.
+ */
+export type CreateMultiFactorInfoRequest = | CreatePhoneMultiFactorInfoRequest;
+
+/**
+ * Interface representing common properties of a user-enrolled second factor
  * for an `UpdateRequest`.
  */
-export interface UpdateMultiFactorInfoRequest {
+export interface BaseUpdateMultiFactorInfoRequest {
 
   /**
    * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
@@ -76,16 +82,22 @@ export interface UpdateMultiFactorInfoRequest {
 }
 
 /**
- * Interface representing a phone specific user enrolled second factor
+ * Interface representing a phone specific user-enrolled second factor
  * for an `UpdateRequest`.
  */
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
 
   /**
    * The phone number associated with a phone second factor.
    */
   phoneNumber: string;
 }
+
+/**
+ * Type representing the properties of a user-enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
 
 /**
  * The multi-factor related user settings for create operations.
@@ -357,6 +369,17 @@ export interface OIDCUpdateAuthProviderRequest {
    * configuration's value is not modified.
    */
   issuer?: string;
+
+  /**
+   * The OIDC provider's client secret to enable OIDC code flow.
+   * If not provided, the existing configuration's value is not modified.
+   */
+  clientSecret?: string;
+
+  /**
+   * The OIDC provider's response object for OAuth authorization flow.
+   */
+  responseType?: OAuthResponseType;
 }
 
 export type UpdateAuthProviderRequest =
@@ -411,6 +434,8 @@ export interface OIDCConfigServerRequest {
   issuer?: string;
   displayName?: string;
   enabled?: boolean;
+  clientSecret?: string;
+  responseType?: OAuthResponseType;
   [key: string]: any;
 }
 
@@ -423,6 +448,8 @@ export interface OIDCConfigServerResponse {
   issuer?: string;
   displayName?: string;
   enabled?: boolean;
+  clientSecret?: string;
+  responseType?: OAuthResponseType;
 }
 
 /** The server side email configuration request interface. */
@@ -764,7 +791,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
 /**
  * The base Auth provider configuration interface.
  */
-export interface AuthProviderConfig {
+export interface BaseAuthProviderConfig {
 
   /**
    * The provider ID defined by the developer.
@@ -792,7 +819,7 @@ export interface AuthProviderConfig {
  * Auth provider configuration interface. A SAML provider can be created via
  * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
  */
-export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
 
   /**
    * The SAML IdP entity identifier.
@@ -833,11 +860,32 @@ export interface SAMLAuthProviderConfig extends AuthProviderConfig {
 }
 
 /**
+ * The interface representing OIDC provider's response object for OAuth
+ * authorization flow.
+ * One of the following settings is required:
+ * <ul>
+ * <li>Set <code>code</code> to <code>true</code> for the code flow.</li>
+ * <li>Set <code>idToken</code> to <code>true</code> for the ID token flow.</li>
+ * </ul>
+ */
+export interface OAuthResponseType {
+  /**
+   * Whether ID token is returned from IdP's authorization endpoint.
+   */
+  idToken?: boolean;
+
+  /**
+   * Whether authorization code is returned from IdP's authorization endpoint.
+   */
+  code?: boolean;
+}
+
+/**
  * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
  * provider configuration interface. An OIDC provider can be created via
  * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
  */
-export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
 
   /**
    * This is the required client ID used to confirm the audience of an OIDC
@@ -864,8 +912,23 @@ export interface OIDCAuthProviderConfig extends AuthProviderConfig {
    * [spec](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
    */
   issuer: string;
+
+  /**
+   * The OIDC provider's client secret to enable OIDC code flow.
+   */
+  clientSecret?: string;
+
+  /**
+   * The OIDC provider's response object for OAuth authorization flow.
+   */
+  responseType?: OAuthResponseType;
 }
 
+/**
+ * The Auth provider configuration type.
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
 
 /**
  * Defines the SAMLConfig class used to convert a client side configuration to its
@@ -1145,6 +1208,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly providerId: string;
   public readonly issuer: string;
   public readonly clientId: string;
+  public readonly clientSecret?: string;
+  public readonly responseType: OAuthResponseType;
 
   /**
    * Converts a client side request to a OIDCConfigServerRequest which is the format
@@ -1171,6 +1236,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     request.displayName = options.displayName;
     request.issuer = options.issuer;
     request.clientId = options.clientId;
+    if (typeof options.clientSecret !== 'undefined') {
+      request.clientSecret = options.clientSecret;
+    }
+    if (typeof options.responseType !== 'undefined') {
+      request.responseType = options.responseType;
+    } 
     return request;
   }
 
@@ -1210,6 +1281,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       providerId: true,
       clientId: true,
       issuer: true,
+      clientSecret: true,
+      responseType: true,
+    };
+    const validResponseTypes = {
+      idToken: true,
+      code: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -1268,6 +1345,59 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         '"OIDCAuthProviderConfig.displayName" must be a valid string.',
       );
     }
+    if (typeof options.clientSecret !== 'undefined' &&
+        !validator.isNonEmptyString(options.clientSecret)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"OIDCAuthProviderConfig.clientSecret" must be a valid string.',
+      );
+    }
+    if (validator.isNonNullObject(options.responseType) && typeof options.responseType !== 'undefined') {
+      Object.keys(options.responseType).forEach((key) => {
+        if (!(key in validResponseTypes)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid OAuthResponseType parameter.`,
+          );          
+        }
+      });
+      
+      const idToken = options.responseType.idToken;
+      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) { 
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
+        );
+      }
+      
+      const code = options.responseType.code;
+      if (typeof code !== 'undefined') {
+        if (!validator.isBoolean(code)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
+          );
+        }
+        
+        // If code flow is enabled, client secret must be provided.
+        if (code && typeof options.clientSecret === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
+            'The OAuth configuration client secret is required to enable OIDC code flow.',
+          );          
+        }
+      }
+      
+      const allKeys = Object.keys(options.responseType).length;
+      const enabledCount = Object.values(options.responseType).filter(Boolean).length;
+      // Only one of OAuth response types can be set to true.
+      if (allKeys > 1 && enabledCount != 1) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
+          'Only exactly one OAuth responseType should be set to true.',
+        );
+      }
+    }
   }
 
   /**
@@ -1301,6 +1431,13 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
     this.displayName = response.displayName;
+
+    if (typeof response.clientSecret !== 'undefined') {
+      this.clientSecret = response.clientSecret;
+    }
+    if (typeof response.responseType !== 'undefined') {
+      this.responseType = response.responseType;
+    }
   }
 
   /** @returns The plain object representation of the OIDCConfig. */
@@ -1311,6 +1448,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       providerId: this.providerId,
       issuer: this.issuer,
       clientId: this.clientId,
+      clientSecret: deepCopy(this.clientSecret),
+      responseType: deepCopy(this.responseType),
     };
   }
 }

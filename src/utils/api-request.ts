@@ -728,7 +728,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
-    let port: string | undefined = parsed.port;
+    let port: string | null = parsed.port;
     if (!port) {
       const isHttps = protocol === 'https:';
       port = isHttps ? '443' : '80';

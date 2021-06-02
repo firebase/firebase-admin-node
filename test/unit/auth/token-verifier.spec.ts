@@ -27,7 +27,8 @@ import { Agent } from 'http';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
+import { FirebaseTokenGenerator } from '../../../src/auth/token-generator';
+import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import * as verifier from '../../../src/auth/token-verifier';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
@@ -43,7 +44,7 @@ const expect = chai.expect;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 function createTokenVerifier(
-  app: FirebaseApp,
+  app: FirebaseApp
 ): verifier.FirebaseTokenVerifier {
   return new verifier.FirebaseTokenVerifier(
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
@@ -447,7 +448,7 @@ describe('FirebaseTokenVerifier', () => {
       createTokenVerifier(mockAppWithAgent);
 
       expect(verifierSpy.args[0][1]).to.equal(agentForApp);
-
+      
       verifierSpy.restore();
     });
 

@@ -1862,6 +1862,109 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
       });
 
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        let getAccountInfoByUidStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+          getAccountInfoByUidStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+          getAccountInfoByUidStub.restore();
+        });
+
+        it('specifying both email and providerId=email should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              email: 'user@example.com',
+              providerToLink: {
+                providerId: 'email',
+                uid: 'user@example.com',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('specifying both phoneNumber and providerId=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: '+15555550001',
+              providerToLink: {
+                providerId: 'phone',
+                uid: '+15555550001',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('email linking should use email field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              email: 'user@example.com',
+            });
+        });
+
+        it('phone linking should use phoneNumber field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'phone',
+              uid: '+15555550001',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              phoneNumber: '+15555550001',
+            });
+        });
+
+        it('specifying both phoneNumber=null and providersToUnlink=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: null,
+              providersToUnlink: ['phone'],
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('doesnt mutate the properties parameter', async () => {
+          const properties: UpdateRequest = {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          };
+          await auth.updateUser(uid, properties);
+          expect(properties).to.deep.equal({
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+        });
+      });
+
       it('should be rejected given an app which returns null access tokens', () => {
         return nullAccessTokenAuth.updateUser(uid, propertiesToEdit)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
