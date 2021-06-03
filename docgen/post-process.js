@@ -137,7 +137,7 @@ async function readExtraContentFrom(source) {
   const reader = readline.createInterface({
     input: fs.createReadStream(source),
   });
-  const content = [''];
+  const content = [];
   for await (const line of reader) {
     content.push(line);
   }
@@ -150,11 +150,20 @@ async function writeExtraContentTo(target, extra) {
   const reader = readline.createInterface({
     input: fs.createReadStream(target),
   });
+
+  let firstHeadingSeen = false;
   for await (const line of reader) {
-    output.push(line);
-    if (line.startsWith('{% block body %}')) {
-      output.push(...extra);
+    // Insert extra content just before the first markdown heading.
+    if (line.match(/^\#+ /)) {
+      if (!firstHeadingSeen) {
+        output.push(...extra);
+        output.push('');
+      }
+
+      firstHeadingSeen = true;
     }
+
+    output.push(line);
   }
 
   const outputBuffer = Buffer.from(output.join('\r\n'));
