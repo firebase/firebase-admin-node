@@ -32,28 +32,25 @@ export interface AppCheckToken {
 
 /**
  * Interface representing a decoded Firebase App Check token, returned from the
- * {@link appCheck.AppCheck.verifyToken `verifyToken()`} method.
+ * {@link AppCheck.verifyToken} method.
  */
 export interface DecodedAppCheckToken {
   /**
    * The issuer identifier for the issuer of the response.
-   *
    * This value is a URL with the format
    * `https://firebaseappcheck.googleapis.com/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
-   * same project number specified in the [`aud`](#aud) property.
+   * same project number specified in the {@link DecodedAppCheckToken.aud | aud} property.
    */
   iss: string;
 
   /**
    * The Firebase App ID corresponding to the app the token belonged to.
-   *
-   * As a convenience, this value is copied over to the [`app_id`](#app_id) property.
+   * As a convenience, this value is copied over to the {@link DecodedAppCheckToken.app_id | app_id} property.
    */
   sub: string;
 
   /**
    * The audience for which this token is intended.
-   *
    * This value is a JSON array of two strings, the first is the project number of your
    * Firebase project, and the second is the project ID of the same project.
    */
@@ -74,9 +71,8 @@ export interface DecodedAppCheckToken {
 
   /**
    * The App ID corresponding to the App the App Check token belonged to.
-   *
    * This value is not actually one of the JWT token claims. It is added as a
-   * convenience, and is set as the value of the [`sub`](#sub) property.
+   * convenience, and is set as the value of the {@link DecodedAppCheckToken.sub | sub} property.
    */
   app_id: string;
   [key: string]: any;
