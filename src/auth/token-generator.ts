@@ -187,8 +187,8 @@ export class FirebaseTokenGenerator {
   /**
    * Returns whether or not the provided developer claims are valid.
    *
-   * @param {object} [developerClaims] Optional developer claims to validate.
-   * @returns {boolean} True if the provided claims are valid; otherwise, false.
+   * @param developerClaims Optional developer claims to validate.
+   * @returns True if the provided claims are valid; otherwise, false.
    */
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
     if (typeof developerClaims === 'undefined') {

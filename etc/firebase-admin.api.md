@@ -44,34 +44,18 @@ export namespace app {
 }
 
 // @public
-export function appCheck(app?: app.App): appCheck.AppCheck;
+export function appCheck(app?: App): appCheck.AppCheck;
 
 // @public (undocumented)
 export namespace appCheck {
-    export interface AppCheck {
-        // (undocumented)
-        app: app.App;
-        createToken(appId: string): Promise<AppCheckToken>;
-        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
-    }
-    export interface AppCheckToken {
-        token: string;
-        ttlMillis: number;
-    }
-    export interface DecodedAppCheckToken {
-        // (undocumented)
-        [key: string]: any;
-        app_id: string;
-        aud: string[];
-        exp: number;
-        iat: number;
-        iss: string;
-        sub: string;
-    }
-    export interface VerifyAppCheckTokenResponse {
-        appId: string;
-        token: appCheck.DecodedAppCheckToken;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AppCheck" needs to be exported by the entry point default-namespace.d.ts
+    export type AppCheck = AppCheck;
+    // Warning: (ae-forgotten-export) The symbol "AppCheckToken" needs to be exported by the entry point default-namespace.d.ts
+    export type AppCheckToken = AppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "DecodedAppCheckToken" needs to be exported by the entry point default-namespace.d.ts
+    export type DecodedAppCheckToken = DecodedAppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type VerifyAppCheckTokenResponse = VerifyAppCheckTokenResponse;
 }
 
 // @public

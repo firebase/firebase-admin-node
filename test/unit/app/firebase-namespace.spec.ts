@@ -51,8 +51,8 @@ import {
   app, auth, messaging, machineLearning, storage, firestore, database,
   instanceId, projectManagement, securityRules , remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
-import { Auth as AuthImpl } from '../../../src/auth/auth';
 import { AppCheck as AppCheckImpl } from '../../../src/app-check/app-check';
+import { Auth as AuthImpl } from '../../../src/auth/auth';
 import { InstanceId as InstanceIdImpl } from '../../../src/instance-id/instance-id';
 import { MachineLearning as MachineLearningImpl } from '../../../src/machine-learning/machine-learning';
 import { Messaging as MessagingImpl } from '../../../src/messaging/messaging';

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { appCheck } from './index';
+import { App } from '../app';
 import { AppCheckApiClient } from './app-check-api-client-internal';
 import {
   appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator
@@ -23,15 +23,15 @@ import {
 import { AppCheckTokenVerifier } from './token-verifier';
 import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
-import AppCheckInterface = appCheck.AppCheck;
-import AppCheckToken = appCheck.AppCheckToken;
-import VerifyAppCheckTokenResponse = appCheck.VerifyAppCheckTokenResponse;
-import { FirebaseApp } from '../app/firebase-app';
+import {
+  AppCheckToken,
+  VerifyAppCheckTokenResponse,
+} from './app-check-api';
 
 /**
- * AppCheck service bound to the provided app.
+ * The Firebase `AppCheck` service interface.
  */
-export class AppCheck implements AppCheckInterface {
+export class AppCheck {
 
   private readonly client: AppCheckApiClient;
   private readonly tokenGenerator: AppCheckTokenGenerator;
@@ -40,8 +40,9 @@ export class AppCheck implements AppCheckInterface {
   /**
    * @param app The app for this AppCheck service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     this.client = new AppCheckApiClient(app);
     try {
       this.tokenGenerator = new AppCheckTokenGenerator(cryptoSignerFromApp(app));
@@ -67,12 +68,14 @@ export class AppCheck implements AppCheckInterface {
   }
 
   /**
-   * Verifies an App Check token.
+   * Verifies a Firebase App Check token (JWT). If the token is valid, the promise is
+   * fulfilled with the token's decoded claims; otherwise, the promise is
+   * rejected.
    *
    * @param appCheckToken The App Check token to verify.
    *
-   * @returns A promise that fulfills with a `VerifyAppCheckTokenResponse` on successful
-   *     verification.
+   * @returns A promise fulfilled with the token's decoded claims
+   *   if the App Check token is valid; otherwise, a rejected promise.
    */
   public verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse> {
     return this.appCheckTokenVerifier.verifyToken(appCheckToken)
