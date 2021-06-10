@@ -1,0 +1,141 @@
+{
+  "schema": "1.0",
+  "comment": "This file maps proto services/RPCs to the corresponding library clients/methods",
+  "language": "typescript",
+  "protoPackage": "google.example.library.v1",
+  "libraryPackage": "@google-cloud/library",
+  "services": {
+    "LibraryService": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "LibraryServiceClient",
+          "rpcs": {
+            "CreateShelf": {
+              "methods": [
+                "createShelf"
+              ]
+            },
+            "GetShelf": {
+              "methods": [
+                "getShelf"
+              ]
+            },
+            "DeleteShelf": {
+              "methods": [
+                "deleteShelf"
+              ]
+            },
+            "MergeShelves": {
+              "methods": [
+                "mergeShelves"
+              ]
+            },
+            "CreateBook": {
+              "methods": [
+                "createBook"
+              ]
+            },
+            "GetBook": {
+              "methods": [
+                "getBook"
+              ]
+            },
+            "DeleteBook": {
+              "methods": [
+                "deleteBook"
+              ]
+            },
+            "UpdateBook": {
+              "methods": [
+                "updateBook"
+              ]
+            },
+            "MoveBook": {
+              "methods": [
+                "moveBook"
+              ]
+            },
+            "ListShelves": {
+              "methods": [
+                "listShelves",
+                "listShelvesStream",
+                "listShelvesAsync"
+              ]
+            },
+            "ListBooks": {
+              "methods": [
+                "listBooks",
+                "listBooksStream",
+                "listBooksAsync"
+              ]
+            }
+          }
+        },
+        "grpc-fallback": {
+          "libraryClient": "LibraryServiceClient",
+          "rpcs": {
+            "CreateShelf": {
+              "methods": [
+                "createShelf"
+              ]
+            },
+            "GetShelf": {
+              "methods": [
+                "getShelf"
+              ]
+            },
+            "DeleteShelf": {
+              "methods": [
+                "deleteShelf"
+              ]
+            },
+            "MergeShelves": {
+              "methods": [
+                "mergeShelves"
+              ]
+            },
+            "CreateBook": {
+              "methods": [
+                "createBook"
+              ]
+            },
+            "GetBook": {
+              "methods": [
+                "getBook"
+              ]
+            },
+            "DeleteBook": {
+              "methods": [
+                "deleteBook"
+              ]
+            },
+            "UpdateBook": {
+              "methods": [
+                "updateBook"
+              ]
+            },
+            "MoveBook": {
+              "methods": [
+                "moveBook"
+              ]
+            },
+            "ListShelves": {
+              "methods": [
+                "listShelves",
+                "listShelvesStream",
+                "listShelvesAsync"
+              ]
+            },
+            "ListBooks": {
+              "methods": [
+                "listBooks",
+                "listBooksStream",
+                "listBooksAsync"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
