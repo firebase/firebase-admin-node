@@ -1425,12 +1425,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 factorId: 'phone',
                 enrollmentTime: new Date().toUTCString(),
               },
-              {
-                uid: 'mfaUid2',
-                phoneNumber: '+16505550002',
-                displayName: 'Personal phone number',
-                factorId: 'phone',
-              },
             ],
           },
           customClaims: { admin: true },
@@ -2071,6 +2065,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               phoneNumber: '+16505551000',
               factorId: 'phone',
             } as UpdateMultiFactorInfoRequest,
+            {
+              // No error should be thrown when no uid is specified.
+              phoneNumber: '+16505551234',
+              factorId: 'phone',
+            } as UpdateMultiFactorInfoRequest,
           ],
         },
       };
@@ -2095,6 +2094,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             {
               mfaEnrollmentId: 'enrolledSecondFactor2',
               phoneInfo: '+16505551000',
+            },
+            {
+              phoneInfo: '+16505551234',
             },
           ],
         },
@@ -3497,6 +3499,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const providerId = 'oidc.provider';
       const path = handler.path('v2', `/oauthIdpConfigs?oauthIdpConfigId=${providerId}`, 'project_id');
       const expectedHttpMethod = 'POST';
+      const clientSecret = 'CLIENT_SECRET';
+      const responseType = { code: true };
       const configOptions = {
         providerId,
         displayName: 'OIDC_DISPLAY_NAME',
@@ -3513,6 +3517,26 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const expectedResult = utils.responseFrom(deepExtend({
         name: `projects/project1/oauthIdpConfigs/${providerId}`,
       }, expectedRequest));
+      const expectedCodeFlowOptions = {
+        providerId,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+        clientSecret,
+        responseType,
+      };
+      const expectedCodeFlowRequest = {
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+        clientSecret,
+        responseType,
+      };
+      const expectedCodeFlowResult = utils.responseFrom(deepExtend({
+        name: `projects/project1/oauthIdpConfigs/${providerId}`,
+      }, expectedCodeFlowRequest));
 
       it('should be fulfilled given valid parameters', () => {
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
@@ -3524,6 +3548,19 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, expectedRequest));
+          });
+      });
+
+      it('should be fulfilled given valid parameters for OIDC code flow', () => {
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedCodeFlowResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.createOAuthIdpConfig(expectedCodeFlowOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(expectedCodeFlowResult.data);
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedCodeFlowRequest));
           });
       });
 
@@ -3589,6 +3626,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const providerId = 'oidc.provider';
       const path = handler.path('v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
       const expectedHttpMethod = 'PATCH';
+      const clientSecret = 'CLIENT_SECRET';
+      const responseType = { code: true };
       const configOptions = {
         displayName: 'OIDC_DISPLAY_NAME',
         enabled: true,
@@ -3612,6 +3651,26 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         clientId: 'NEW_CLIENT_ID',
         issuer: 'https://oidc.com/issuer2',
       }));
+      const expectedCodeFlowOptions = {
+        providerId,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+        clientSecret,
+        responseType,
+      };
+      const expectedCodeFlowRequest = {
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+        clientSecret,
+        responseType,
+      };
+      const expectedCodeFlowResult = utils.responseFrom(deepExtend({
+        name: `projects/project1/oauthIdpConfigs/${providerId}`,
+      }, expectedCodeFlowRequest));
 
       it('should be fulfilled given full parameters', () => {
         const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
@@ -3624,6 +3683,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(expectedPath, expectedHttpMethod, expectedRequest));
+          });
+      });
+
+      it('should be fulfilled given full parameters for OIDC code flow', () => {
+        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId,clientSecret,responseType.code';
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedCodeFlowResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.updateOAuthIdpConfig(providerId, expectedCodeFlowOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(expectedCodeFlowResult.data);
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedCodeFlowRequest));
           });
       });
 

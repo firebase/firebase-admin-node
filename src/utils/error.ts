@@ -391,6 +391,10 @@ export class AuthClientErrorCode {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
   };
+  public static EMAIL_NOT_FOUND = {
+    code: 'email-not-found',
+    message: 'There is no user record corresponding to the provided email.',
+  };
   public static FORBIDDEN_CLAIM = {
     code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
@@ -538,6 +542,10 @@ export class AuthClientErrorCode {
     code: 'invalid-provider-uid',
     message: 'The providerUid must be a valid provider uid string.',
   };
+  public static INVALID_OAUTH_RESPONSETYPE = {
+    code: 'invalid-oauth-responsetype',
+    message: 'Only exactly one OAuth responseType should be set to true.',
+  };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +
@@ -609,6 +617,10 @@ export class AuthClientErrorCode {
   public static MISSING_OAUTH_CLIENT_ID = {
     code: 'missing-oauth-client-id',
     message: 'The OAuth/OIDC configuration client ID must not be empty.',
+  };
+  public static MISSING_OAUTH_CLIENT_SECRET = {
+    code: 'missing-oauth-client-secret',
+    message: 'The OAuth configuration client secret is required to enable OIDC code flow.',
   };
   public static MISSING_PROVIDER_ID = {
     code: 'missing-provider-id',
@@ -878,6 +890,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   DUPLICATE_MFA_ENROLLMENT_ID: 'SECOND_FACTOR_UID_ALREADY_EXISTS',
   // setAccountInfo email already exists.
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  // /accounts:sendOobCode for password reset when user is not found.
+  EMAIL_NOT_FOUND: 'EMAIL_NOT_FOUND',
   // Reserved claim name.
   FORBIDDEN_CLAIM: 'FORBIDDEN_CLAIM',
   // Invalid claims provided.

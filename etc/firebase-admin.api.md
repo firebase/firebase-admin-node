@@ -16,6 +16,8 @@ export function app(name?: string): app.App;
 export namespace app {
     export interface App {
         // (undocumented)
+        appCheck(): appCheck.AppCheck;
+        // (undocumented)
         auth(): auth.Auth;
         // (undocumented)
         database(url?: string): database.Database;
@@ -40,6 +42,37 @@ export namespace app {
         securityRules(): securityRules.SecurityRules;
         // (undocumented)
         storage(): storage.Storage;
+    }
+}
+
+// @public
+export function appCheck(app?: app.App): appCheck.AppCheck;
+
+// @public (undocumented)
+export namespace appCheck {
+    export interface AppCheck {
+        // (undocumented)
+        app: app.App;
+        createToken(appId: string): Promise<AppCheckToken>;
+        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
+    }
+    export interface AppCheckToken {
+        token: string;
+        ttlMillis: number;
+    }
+    export interface DecodedAppCheckToken {
+        // (undocumented)
+        [key: string]: any;
+        app_id: string;
+        aud: string[];
+        exp: number;
+        iat: number;
+        iss: string;
+        sub: string;
+    }
+    export interface VerifyAppCheckTokenResponse {
+        appId: string;
+        token: appCheck.DecodedAppCheckToken;
     }
 }
 
@@ -82,11 +115,7 @@ export namespace auth {
         tenantManager(): TenantManager;
     }
     export type AuthFactorType = 'phone';
-    export interface AuthProviderConfig {
-        displayName?: string;
-        enabled: boolean;
-        providerId: string;
-    }
+    export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
     export interface AuthProviderConfigFilter {
         maxResults?: number;
         pageToken?: string;
@@ -120,11 +149,23 @@ export namespace auth {
         verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
         verifySessionCookie(sessionCookie: string, checkForRevocation?: boolean): Promise<DecodedIdToken>;
     }
-    export interface CreateMultiFactorInfoRequest {
+    export interface BaseAuthProviderConfig {
+        displayName?: string;
+        enabled: boolean;
+        providerId: string;
+    }
+    export interface BaseCreateMultiFactorInfoRequest {
         displayName?: string;
         factorId: string;
     }
-    export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+    export interface BaseUpdateMultiFactorInfoRequest {
+        displayName?: string;
+        enrollmentTime?: string;
+        factorId: string;
+        uid?: string;
+    }
+    export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+    export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
         phoneNumber: string;
     }
     export interface CreateRequest extends UpdateRequest {
@@ -210,15 +251,23 @@ export namespace auth {
     export interface MultiFactorUpdateSettings {
         enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
     }
-    export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+    export interface OAuthResponseType {
+        code?: boolean;
+        idToken?: boolean;
+    }
+    export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
         clientId: string;
+        clientSecret?: string;
         issuer: string;
+        responseType?: OAuthResponseType;
     }
     export interface OIDCUpdateAuthProviderRequest {
         clientId?: string;
+        clientSecret?: string;
         displayName?: string;
         enabled?: boolean;
         issuer?: string;
+        responseType?: OAuthResponseType;
     }
     export interface PhoneIdentifier {
         // (undocumented)
@@ -233,7 +282,7 @@ export namespace auth {
         // (undocumented)
         providerUid: string;
     }
-    export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+    export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
         callbackURL?: string;
         idpEntityId: string;
         rpEntityId: string;
@@ -284,13 +333,8 @@ export namespace auth {
     }
     // (undocumented)
     export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-    export interface UpdateMultiFactorInfoRequest {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        uid?: string;
-    }
-    export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+    export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+    export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
         phoneNumber: string;
     }
     export interface UpdateRequest {

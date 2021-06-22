@@ -26,14 +26,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {
-  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner, EmulatedSigner
+  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError
 } from '../../../src/auth/token-generator';
+import { CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
-import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
-import { FirebaseApp } from '../../../src/firebase-app';
-import * as utils from '../utils';
 import { FirebaseAuthError } from '../../../src/utils/error';
+import * as utils from '../utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -65,195 +64,6 @@ function verifyToken(token: string, publicKey: string): Promise<object> {
     });
   });
 }
-
-describe('CryptoSigner', () => {
-  describe('ServiceAccountSigner', () => {
-    it('should throw given no arguments', () => {
-      expect(() => {
-        const anyServiceAccountSigner: any = ServiceAccountSigner;
-        return new anyServiceAccountSigner();
-      }).to.throw('Must provide a service account credential to initialize ServiceAccountSigner');
-    });
-
-    it('should not throw given a valid certificate', () => {
-      expect(() => {
-        return new ServiceAccountSigner(new ServiceAccountCredential(mocks.certificateObject));
-      }).not.to.throw();
-    });
-
-    it('should sign using the private_key in the certificate', () => {
-      const payload = Buffer.from('test');
-      const cert = new ServiceAccountCredential(mocks.certificateObject);
-
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const crypto = require('crypto');
-      const rsa = crypto.createSign('RSA-SHA256');
-      rsa.update(payload);
-      const result = rsa.sign(cert.privateKey, 'base64');
-
-      const signer = new ServiceAccountSigner(cert);
-      return signer.sign(payload).then((signature) => {
-        expect(signature.toString('base64')).to.equal(result);
-      });
-    });
-
-    it('should return the client_email from the certificate', () => {
-      const cert = new ServiceAccountCredential(mocks.certificateObject);
-      const signer = new ServiceAccountSigner(cert);
-      return signer.getAccountId().should.eventually.equal(cert.clientEmail);
-    });
-  });
-
-  describe('IAMSigner', () => {
-    let mockApp: FirebaseApp;
-    let getTokenStub: sinon.SinonStub;
-    const mockAccessToken: string = utils.generateRandomAccessToken();
-
-    beforeEach(() => {
-      mockApp = mocks.app();
-      getTokenStub = utils.stubGetAccessToken(mockAccessToken, mockApp);
-      return mockApp.INTERNAL.getToken();
-    });
-
-    afterEach(() => {
-      getTokenStub.restore();
-      return mockApp.delete();
-    });
-
-    it('should throw given no arguments', () => {
-      expect(() => {
-        const anyIAMSigner: any = IAMSigner;
-        return new anyIAMSigner();
-      }).to.throw('Must provide a HTTP client to initialize IAMSigner');
-    });
-
-    describe('explicit service account ID', () => {
-      const response = { signedBlob: Buffer.from('testsignature').toString('base64') };
-      const input = Buffer.from('input');
-      const signRequest = {
-        method: 'POST',
-        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob',
-        headers: { Authorization: `Bearer ${mockAccessToken}` },
-        data: { payload: input.toString('base64') },
-      };
-      let stub: sinon.SinonStub;
-
-      afterEach(() => {
-        stub.restore();
-      });
-
-      it('should sign using the IAM service', () => {
-        const expectedResult = utils.responseFrom(response);
-        stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
-        const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler, 'test-service-account');
-        return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signedBlob);
-          expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
-        });
-      });
-
-      it('should fail if the IAM service responds with an error', () => {
-        const expectedResult = utils.errorFrom({
-          error: {
-            status: 'PROJECT_NOT_FOUND',
-            message: 'test reason',
-          },
-        });
-        stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
-        const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler, 'test-service-account');
-        return signer.sign(input).catch((err) => {
-          const message = 'test reason; Please refer to ' +
-            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on ' +
-            'how to use and troubleshoot this feature.';
-          expect(err.message).to.equal(message);
-          expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
-        });
-      });
-
-      it('should return the explicitly specified service account', () => {
-        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp), 'test-service-account');
-        return signer.getAccountId().should.eventually.equal('test-service-account');
-      });
-    });
-
-    describe('auto discovered service account', () => {
-      const input = Buffer.from('input');
-      const response = { signedBlob: Buffer.from('testsignature').toString('base64') };
-      const metadataRequest = {
-        method: 'GET',
-        url: 'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
-        headers: { 'Metadata-Flavor': 'Google' },
-      };
-      const signRequest = {
-        method: 'POST',
-        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
-        headers: { Authorization: `Bearer ${mockAccessToken}` },
-        data: { payload: input.toString('base64') },
-      };
-      let stub: sinon.SinonStub;
-
-      afterEach(() => {
-        stub.restore();
-      });
-
-      it('should sign using the IAM service', () => {
-        stub = sinon.stub(HttpClient.prototype, 'send');
-        stub.onCall(0).resolves(utils.responseFrom('discovered-service-account'));
-        stub.onCall(1).resolves(utils.responseFrom(response));
-        const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler);
-        return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signedBlob);
-          expect(stub).to.have.been.calledTwice;
-          expect(stub.getCall(0).args[0]).to.deep.equal(metadataRequest);
-          expect(stub.getCall(1).args[0]).to.deep.equal(signRequest);
-        });
-      });
-
-      it('should fail if the IAM service responds with an error', () => {
-        const expectedResult = {
-          error: {
-            status: 'PROJECT_NOT_FOUND',
-            message: 'test reason',
-          },
-        };
-        stub = sinon.stub(HttpClient.prototype, 'send');
-        stub.onCall(0).resolves(utils.responseFrom('discovered-service-account'));
-        stub.onCall(1).rejects(utils.errorFrom(expectedResult));
-        const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler);
-        return signer.sign(input).catch((err) => {
-          const message = 'test reason; Please refer to ' +
-            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on ' +
-            'how to use and troubleshoot this feature.';
-          expect(err.message).to.equal(message);
-          expect(stub).to.have.been.calledTwice;
-          expect(stub.getCall(0).args[0]).to.deep.equal(metadataRequest);
-          expect(stub.getCall(1).args[0]).to.deep.equal(signRequest);
-        });
-      });
-
-      it('should return the discovered service account', () => {
-        stub = sinon.stub(HttpClient.prototype, 'send');
-        stub.onCall(0).resolves(utils.responseFrom('discovered-service-account'));
-        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp));
-        return signer.getAccountId().should.eventually.equal('discovered-service-account');
-      });
-
-      it('should return the expected error when failed to contact the Metadata server', () => {
-        stub = sinon.stub(HttpClient.prototype, 'send');
-        stub.onCall(0).rejects(utils.errorFrom('test error'));
-        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp));
-        const expected = 'Failed to determine service account. Make sure to initialize the SDK with ' +
-          'a service account credential. Alternatively specify a service account with ' +
-          'iam.serviceAccounts.signBlob permission.';
-        return signer.getAccountId().should.eventually.be.rejectedWith(expected);
-      });
-    });
-  });
-});
 
 describe('FirebaseTokenGenerator', () => {
   const tenantId = 'tenantId1';
@@ -384,7 +194,7 @@ describe('FirebaseTokenGenerator', () => {
 
       BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
         it('should throw given a developer claims object with a blacklisted claim: ' + blacklistedClaim, () => {
-          const blacklistedDeveloperClaims: {[key: string]: any} = _.clone(mocks.developerClaims);
+          const blacklistedDeveloperClaims: { [key: string]: any } = _.clone(mocks.developerClaims);
           blacklistedDeveloperClaims[blacklistedClaim] = true;
           expect(() => {
             tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
@@ -415,7 +225,7 @@ describe('FirebaseTokenGenerator', () => {
         return tokenGenerator.createCustomToken(mocks.uid)
           .then((token) => {
             const decoded = jwt.decode(token);
-            const expected: {[key: string]: any} = {
+            const expected: { [key: string]: any } = {
               uid: mocks.uid,
               iat: 1,
               exp: ONE_HOUR_IN_SECONDS + 1,
@@ -440,7 +250,7 @@ describe('FirebaseTokenGenerator', () => {
           .then((token) => {
             const decoded = jwt.decode(token);
 
-            const expected: {[key: string]: any} = {
+            const expected: { [key: string]: any } = {
               uid: mocks.uid,
               iat: 1,
               exp: ONE_HOUR_IN_SECONDS + 1,
@@ -524,6 +334,49 @@ describe('FirebaseTokenGenerator', () => {
             expect(originalClaims).to.deep.equal(clonedClaims);
           });
       });
+    });
+  });
+
+  describe('handleCryptoSignerError', () => {
+    it('should convert CryptoSignerError to FirebaseAuthError', () => {
+      const cryptoError = new CryptoSignerError({
+        code: CryptoSignerErrorCode.INVALID_ARGUMENT,
+        message: 'test error.',
+      });
+      const authError = handleCryptoSignerError(cryptoError);
+      expect(authError).to.be.an.instanceof(FirebaseAuthError);
+      expect(authError).to.have.property('code', 'auth/argument-error');
+      expect(authError).to.have.property('message', 'test error.');
+    });
+
+    it('should convert CryptoSignerError HttpError to FirebaseAuthError', () => {
+      const cryptoError = new CryptoSignerError({
+        code: CryptoSignerErrorCode.SERVER_ERROR,
+        message: 'test error.',
+        cause: utils.errorFrom({
+          error: {
+            message: 'server error.',
+          },
+        })
+      });
+      const authError = handleCryptoSignerError(cryptoError);
+      expect(authError).to.be.an.instanceof(FirebaseAuthError);
+      expect(authError).to.have.property('code', 'auth/internal-error');
+      expect(authError).to.have.property('message', 'server error.; Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how to use and troubleshoot this feature. Raw server response: "{"error":{"message":"server error."}}"');
+    });
+
+    it('should convert CryptoSignerError HttpError with no errorcode to FirebaseAuthError', () => {
+      const cryptoError = new CryptoSignerError({
+        code: CryptoSignerErrorCode.SERVER_ERROR,
+        message: 'test error.',
+        cause: utils.errorFrom('server error.')
+      });
+      const authError = handleCryptoSignerError(cryptoError);
+      expect(authError).to.be.an.instanceof(FirebaseAuthError);
+      expect(authError).to.have.property('code', 'auth/internal-error');
+      expect(authError).to.have.property('message',
+        'Error returned from server: null. Additionally, an internal error occurred ' +
+        'while attempting to extract the errorcode from the error.');
     });
   });
 });

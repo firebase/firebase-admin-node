@@ -24,6 +24,7 @@ import MultiFactorConfigState = auth.MultiFactorConfigState;
 import AuthFactorType = auth.AuthFactorType;
 import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
 import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import OAuthResponseType = auth.OAuthResponseType;
 import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
 
 /** A maximum of 10 test phone number / code pairs can be configured. */
@@ -75,6 +76,8 @@ export interface OIDCConfigServerRequest {
   issuer?: string;
   displayName?: string;
   enabled?: boolean;
+  clientSecret?: string;
+  responseType?: OAuthResponseType;
   [key: string]: any;
 }
 
@@ -87,6 +90,8 @@ export interface OIDCConfigServerResponse {
   issuer?: string;
   displayName?: string;
   enabled?: boolean;
+  clientSecret?: string;
+  responseType?: OAuthResponseType;
 }
 
 /** The server side email configuration request interface. */
@@ -650,6 +655,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly providerId: string;
   public readonly issuer: string;
   public readonly clientId: string;
+  public readonly clientSecret?: string;
+  public readonly responseType: OAuthResponseType;
 
   /**
    * Converts a client side request to a OIDCConfigServerRequest which is the format
@@ -676,6 +683,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     request.displayName = options.displayName;
     request.issuer = options.issuer;
     request.clientId = options.clientId;
+    if (typeof options.clientSecret !== 'undefined') {
+      request.clientSecret = options.clientSecret;
+    }
+    if (typeof options.responseType !== 'undefined') {
+      request.responseType = options.responseType;
+    } 
     return request;
   }
 
@@ -715,6 +728,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       providerId: true,
       clientId: true,
       issuer: true,
+      clientSecret: true,
+      responseType: true,
+    };
+    const validResponseTypes = {
+      idToken: true,
+      code: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -773,6 +792,59 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         '"OIDCAuthProviderConfig.displayName" must be a valid string.',
       );
     }
+    if (typeof options.clientSecret !== 'undefined' &&
+        !validator.isNonEmptyString(options.clientSecret)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"OIDCAuthProviderConfig.clientSecret" must be a valid string.',
+      );
+    }
+    if (validator.isNonNullObject(options.responseType) && typeof options.responseType !== 'undefined') {
+      Object.keys(options.responseType).forEach((key) => {
+        if (!(key in validResponseTypes)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid OAuthResponseType parameter.`,
+          );          
+        }
+      });
+      
+      const idToken = options.responseType.idToken;
+      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) { 
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
+        );
+      }
+      
+      const code = options.responseType.code;
+      if (typeof code !== 'undefined') {
+        if (!validator.isBoolean(code)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
+          );
+        }
+        
+        // If code flow is enabled, client secret must be provided.
+        if (code && typeof options.clientSecret === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
+            'The OAuth configuration client secret is required to enable OIDC code flow.',
+          );          
+        }
+      }
+      
+      const allKeys = Object.keys(options.responseType).length;
+      const enabledCount = Object.values(options.responseType).filter(Boolean).length;
+      // Only one of OAuth response types can be set to true.
+      if (allKeys > 1 && enabledCount != 1) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
+          'Only exactly one OAuth responseType should be set to true.',
+        );
+      }
+    }
   }
 
   /**
@@ -806,6 +878,13 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
     this.displayName = response.displayName;
+
+    if (typeof response.clientSecret !== 'undefined') {
+      this.clientSecret = response.clientSecret;
+    }
+    if (typeof response.responseType !== 'undefined') {
+      this.responseType = response.responseType;
+    }
   }
 
   /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
@@ -816,6 +895,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       providerId: this.providerId,
       issuer: this.issuer,
       clientId: this.clientId,
+      clientSecret: deepCopy(this.clientSecret),
+      responseType: deepCopy(this.responseType),
     };
   }
 }

@@ -257,9 +257,8 @@ class AuthHttpClient extends AuthorizedHttpClient {
  * an error is thrown.
  *
  * @param request The AuthFactorInfo request object.
- * @param writeOperationType The write operation type.
  */
-function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: WriteOperationType): void {
+function validateAuthFactorInfo(request: AuthFactorInfo): void {
   const validKeys = {
     mfaEnrollmentId: true,
     displayName: true,
@@ -275,8 +274,8 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
   // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
       request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
-  const uidRequired = writeOperationType !== WriteOperationType.Create;
-  if ((typeof request.mfaEnrollmentId !== 'undefined' || uidRequired) &&
+  // Enrollment uid may or may not be specified for update operations.
+  if (typeof request.mfaEnrollmentId !== 'undefined' &&
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_UID,
@@ -573,7 +572,7 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
     }
     enrollments.forEach((authFactorInfoEntry: AuthFactorInfo) => {
-      validateAuthFactorInfo(authFactorInfoEntry, writeOperationType);
+      validateAuthFactorInfo(authFactorInfoEntry);
     });
   }
 }
@@ -1481,7 +1480,12 @@ export abstract class AbstractAuthRequestHandler {
     }
 
     // Build the signupNewUser request.
-    const request: any = deepCopy(properties);
+    type SignUpNewUserRequest = CreateRequest & {
+      photoUrl?: string | null;
+      localId?: string;
+      mfaInfo?: AuthFactorInfo[];
+    };
+    const request: SignUpNewUserRequest = deepCopy(properties);
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
@@ -1497,14 +1501,14 @@ export abstract class AbstractAuthRequestHandler {
       if (validator.isNonEmptyArray(request.multiFactor.enrolledFactors)) {
         const mfaInfo: AuthFactorInfo[] = [];
         try {
-          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
             // Enrollment time and uid are not allowed for signupNewUser endpoint.
             // They will automatically be provisioned server side.
-            if (multiFactorInfo.enrollmentTime) {
+            if ('enrollmentTime' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"enrollmentTime" is not supported when adding second factors via "createUser()"');
-            } else if (multiFactorInfo.uid) {
+            } else if ('uid' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"uid" is not supported when adding second factors via "createUser()"');
