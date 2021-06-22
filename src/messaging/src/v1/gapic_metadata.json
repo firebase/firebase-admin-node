@@ -1,0 +1,33 @@
+{
+  "schema": "1.0",
+  "comment": "This file maps proto services/RPCs to the corresponding library clients/methods",
+  "language": "typescript",
+  "protoPackage": "google.firebase.fcm.v1",
+  "libraryPackage": "@google-cloud/fcm",
+  "services": {
+    "FcmService": {
+      "clients": {
+        "grpc": {
+          "libraryClient": "FcmServiceClient",
+          "rpcs": {
+            "SendMessage": {
+              "methods": [
+                "sendMessage"
+              ]
+            }
+          }
+        },
+        "grpc-fallback": {
+          "libraryClient": "FcmServiceClient",
+          "rpcs": {
+            "SendMessage": {
+              "methods": [
+                "sendMessage"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
