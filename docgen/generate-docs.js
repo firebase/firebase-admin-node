@@ -117,6 +117,7 @@ function fixLinks(file) {
   return fs.readFile(file, 'utf8').then(data => {
     const flattenedLinks = data
       .replace(/\.\.\//g, '')
+      .replace(/globals\.html/g, 'admin.html')
       .replace(/(modules|interfaces|classes|enums)\//g, '');
     let caseFixedLinks = flattenedLinks;
     for (const lower in lowerToUpperLookup) {
