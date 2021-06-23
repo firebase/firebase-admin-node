@@ -38,12 +38,14 @@ toc:
     path: /docs/reference/admin/node/admin.auth.Auth-1
   - title: "ActionCodeSettings"
     path: /docs/reference/admin/node/admin.auth.ActionCodeSettings
-  - title: "AuthProviderConfig"
-    path: /docs/reference/admin/node/admin.auth.AuthProviderConfig
   - title: "AuthProviderConfigFilter"
     path: /docs/reference/admin/node/admin.auth.AuthProviderConfigFilter
-  - title: "CreateMultiFactorInfoRequest"
-    path: /docs/reference/admin/node/admin.auth.CreateMultiFactorInfoRequest
+  - title: "BaseAuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.BaseAuthProviderConfig
+  - title: "BaseCreateMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.BaseCreateMultiFactorInfoRequest
+  - title: "BaseUpdateMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.BaseUpdateMultiFactorInfoRequest
   - title: "CreatePhoneMultiFactorInfoRequest"
     path: /docs/reference/admin/node/admin.auth.CreatePhoneMultiFactorInfoRequest
   - title: "CreateRequest"
@@ -82,8 +84,6 @@ toc:
     path: /docs/reference/admin/node/admin.auth.TenantAwareAuth
   - title: "TenantManager"
     path: /docs/reference/admin/node/admin.auth.TenantManager
-  - title: "UpdateMultiFactorInfoRequest"
-    path: /docs/reference/admin/node/admin.auth.UpdateMultiFactorInfoRequest
   - title: "UpdatePhoneMultiFactorInfoRequest"
     path: /docs/reference/admin/node/admin.auth.UpdatePhoneMultiFactorInfoRequest
   - title: "UpdateRequest"
