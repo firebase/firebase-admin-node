@@ -31,6 +31,7 @@ import { database } from './database/index';
 import { DatabaseService } from './database/database-internal';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore-internal';
+import { Installations } from './installations/installations';
 import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
@@ -257,7 +258,21 @@ export class FirebaseApp implements app.App {
   }
 
   /**
+   * Returns the `Installations` service instance associated with this app.
+   *
+   * @return The `Installations` service instance of this app.
+   */
+  public installations(): Installations {
+    return this.ensureService_('installations', () => {
+      const fisService: typeof Installations = require('./installations/installations').Installations;
+      return new fisService(this);
+    });
+  }
+
+  /**
    * Returns the InstanceId service instance associated with this app.
+   *
+   * This API is deprecated. Use the `installations()` API instead.
    *
    * @return The InstanceId service instance of this app.
    */

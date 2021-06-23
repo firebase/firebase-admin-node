@@ -37,6 +37,7 @@ import { machineLearning } from '../../src/machine-learning/index';
 import { storage } from '../../src/storage/index';
 import { firestore } from '../../src/firestore/index';
 import { database } from '../../src/database/index';
+import { installations } from '../../src/installations/index';
 import { instanceId } from '../../src/instance-id/index';
 import { projectManagement } from '../../src/project-management/index';
 import { securityRules } from '../../src/security-rules/index';
@@ -50,6 +51,7 @@ import Messaging = messaging.Messaging;
 import MachineLearning = machineLearning.MachineLearning;
 import Storage = storage.Storage;
 import Firestore = firestore.Firestore;
+import Installations = installations.Installations;
 import InstanceId = instanceId.InstanceId;
 import ProjectManagement = projectManagement.ProjectManagement;
 import SecurityRules = securityRules.SecurityRules;
@@ -564,6 +566,32 @@ describe('FirebaseApp', () => {
       const service1: Firestore = app.firestore();
       const service2: Firestore = app.firestore();
       expect(service1).to.deep.equal(service2);
+    });
+  });
+
+  describe('installations()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.installations();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the InstanceId client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const fis: Installations = app.installations();
+      expect(fis).not.be.null;
+    });
+
+    it('should return a cached version of InstanceId on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: Installations = app.installations();
+      const service2: Installations = app.installations();
+      expect(service1).to.equal(service2);
     });
   });
 

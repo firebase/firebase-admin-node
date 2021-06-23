@@ -60,9 +60,12 @@ import './storage/storage.spec';
 // Firestore
 import './firestore/firestore.spec';
 
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
+
 // InstanceId
 import './instance-id/instance-id.spec';
-import './instance-id/instance-id-request.spec';
 
 // ProjectManagement
 import './project-management/project-management.spec';

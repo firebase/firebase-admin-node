@@ -38,6 +38,9 @@ import { app } from '../firebase-namespace-api';
  * var otherInstanceId = admin.instanceId(otherApp);
  *```
  *
+ * This API is deprecated. Developers are advised to use the `admin.installations()`
+ * API to delete their instance IDs and Firebase installation IDs.
+ *
  * @param app Optional app whose `InstanceId` service to
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
@@ -45,24 +48,18 @@ import { app } from '../firebase-namespace-api';
  * @return The default `InstanceId` service if
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
+ *
+ * @deprecated
  */
 export declare function instanceId(app?: app.App): instanceId.InstanceId;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace instanceId {
   /**
-   * Gets the {@link InstanceId `InstanceId`} service for the
+   * The {@link InstanceId `InstanceId`} service for the
    * current app.
    *
-   * @example
-   * ```javascript
-   * var instanceId = app.instanceId();
-   * // The above is shorthand for:
-   * // var instanceId = admin.instanceId(app);
-   * ```
-   *
-   * @return The `InstanceId` service for the
-   *   current app.
+   * @deprecated
    */
   export interface InstanceId {
     app: app.App;
@@ -76,9 +73,14 @@ export namespace instanceId {
      * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
      * for more information.
      *
+     * This API is deprecated. Developers are advised to use the `Installations.deleteInstallation()`
+     * API instead.
+     *
      * @param instanceId The instance ID to be deleted.
      *
      * @return A promise fulfilled when the instance ID is deleted.
+     *
+     * @deprecated
      */
     deleteInstanceId(instanceId: string): Promise<void>;
   }

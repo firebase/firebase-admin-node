@@ -20,6 +20,7 @@ import { auth } from './auth/index';
 import { credential } from './credential/index';
 import { database } from './database/index';
 import { firestore } from './firestore/index';
+import { installations } from './installations/index';
 import { instanceId } from './instance-id/index';
 import { machineLearning } from './machine-learning/index';
 import { messaging } from './messaging/index';
@@ -227,6 +228,8 @@ export namespace app {
     auth(): auth.Auth;
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;
+    installations(): installations.Installations;
+    /** @deprecated */
     instanceId(): instanceId.InstanceId;
     machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;

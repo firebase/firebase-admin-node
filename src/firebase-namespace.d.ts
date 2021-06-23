@@ -20,6 +20,7 @@ export * from './app-check/index';
 export * from './auth/index';
 export * from './database/index';
 export * from './firestore/index';
+export * from './installations/index';
 export * from './instance-id/index';
 export * from './machine-learning/index';
 export * from './messaging/index';

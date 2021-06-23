@@ -25,6 +25,8 @@ export namespace app {
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
+        installations(): installations.Installations;
+        // @deprecated (undocumented)
         instanceId(): instanceId.InstanceId;
         // (undocumented)
         machineLearning(): machineLearning.MachineLearning;
@@ -542,13 +544,27 @@ export interface GoogleOAuthAccessToken {
 export function initializeApp(options?: AppOptions, name?: string): app.App;
 
 // @public
+export function installations(app?: app.App): installations.Installations;
+
+// @public (undocumented)
+export namespace installations {
+    export interface Installations {
+        // (undocumented)
+        app: app.App;
+        deleteInstallation(fid: string): Promise<void>;
+    }
+}
+
+// @public @deprecated
 export function instanceId(app?: app.App): instanceId.InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {
+    // @deprecated
     export interface InstanceId {
         // (undocumented)
         app: app.App;
+        // @deprecated
         deleteInstanceId(instanceId: string): Promise<void>;
     }
 }

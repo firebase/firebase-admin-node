@@ -144,6 +144,12 @@ toc:
 - title: "admin.firestore"
   path: /docs/reference/admin/node/admin.firestore
 
+- title: "admin.installations"
+  path: /docs/reference/admin/node/admin.installations
+  section:
+  - title: "Installations"
+    path: /docs/reference/admin/node/admin.installations.Installations-1
+
 - title: "admin.instanceId"
   path: /docs/reference/admin/node/admin.instanceId
   section:
