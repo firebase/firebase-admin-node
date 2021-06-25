@@ -16,7 +16,8 @@
     //"strictPropertyInitialization": true,
     "lib": [
       "es2018",
-      "dom"],
+      "dom"
+    ],
     "outDir": "lib",
     "rootDir": "."
   },
