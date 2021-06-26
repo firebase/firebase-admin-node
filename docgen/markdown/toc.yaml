@@ -1,0 +1,344 @@
+toc:
+  - title: firebase-admin
+    path: /docs/reference/admin/node/firebase-admin.md
+    section:
+      - title: AppOptions
+        path: /docs/reference/admin/node/firebase-admin.appoptions.md
+      - title: FirebaseArrayIndexError
+        path: /docs/reference/admin/node/firebase-admin.firebasearrayindexerror.md
+      - title: FirebaseError
+        path: /docs/reference/admin/node/firebase-admin.firebaseerror.md
+      - title: GoogleOAuthAccessToken
+        path: /docs/reference/admin/node/firebase-admin.googleoauthaccesstoken.md
+      - title: ServiceAccount
+        path: /docs/reference/admin/node/firebase-admin.serviceaccount.md
+  - title: firebase-admin/app
+    path: /docs/reference/admin/node/firebase-admin.app.md
+    section:
+      - title: App
+        path: /docs/reference/admin/node/firebase-admin.app.app.md
+      - title: AppOptions
+        path: /docs/reference/admin/node/firebase-admin.app.appoptions.md
+      - title: Credential
+        path: /docs/reference/admin/node/firebase-admin.app.credential.md
+      - title: FirebaseArrayIndexError
+        path: >-
+          /docs/reference/admin/node/firebase-admin.app.firebasearrayindexerror.md
+      - title: FirebaseError
+        path: /docs/reference/admin/node/firebase-admin.app.firebaseerror.md
+      - title: GoogleOAuthAccessToken
+        path: >-
+          /docs/reference/admin/node/firebase-admin.app.googleoauthaccesstoken.md
+      - title: ServiceAccount
+        path: /docs/reference/admin/node/firebase-admin.app.serviceaccount.md
+  - title: firebase-admin/auth
+    path: /docs/reference/admin/node/firebase-admin.auth.md
+    section:
+      - title: ActionCodeSettings
+        path: /docs/reference/admin/node/firebase-admin.auth.actioncodesettings.md
+      - title: Auth
+        path: /docs/reference/admin/node/firebase-admin.auth.auth.md
+      - title: AuthProviderConfig
+        path: /docs/reference/admin/node/firebase-admin.auth.authproviderconfig.md
+      - title: AuthProviderConfigFilter
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.authproviderconfigfilter.md
+      - title: BaseAuth
+        path: /docs/reference/admin/node/firebase-admin.auth.baseauth.md
+      - title: CreateMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.createmultifactorinforequest.md
+      - title: CreatePhoneMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.createphonemultifactorinforequest.md
+      - title: CreateRequest
+        path: /docs/reference/admin/node/firebase-admin.auth.createrequest.md
+      - title: DecodedIdToken
+        path: /docs/reference/admin/node/firebase-admin.auth.decodedidtoken.md
+      - title: DeleteUsersResult
+        path: /docs/reference/admin/node/firebase-admin.auth.deleteusersresult.md
+      - title: EmailIdentifier
+        path: /docs/reference/admin/node/firebase-admin.auth.emailidentifier.md
+      - title: EmailSignInProviderConfig
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.emailsigninproviderconfig.md
+      - title: GetUsersResult
+        path: /docs/reference/admin/node/firebase-admin.auth.getusersresult.md
+      - title: ListProviderConfigResults
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.listproviderconfigresults.md
+      - title: ListTenantsResult
+        path: /docs/reference/admin/node/firebase-admin.auth.listtenantsresult.md
+      - title: ListUsersResult
+        path: /docs/reference/admin/node/firebase-admin.auth.listusersresult.md
+      - title: MultiFactorConfig
+        path: /docs/reference/admin/node/firebase-admin.auth.multifactorconfig.md
+      - title: MultiFactorCreateSettings
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.multifactorcreatesettings.md
+      - title: MultiFactorInfo
+        path: /docs/reference/admin/node/firebase-admin.auth.multifactorinfo.md
+      - title: MultiFactorSettings
+        path: /docs/reference/admin/node/firebase-admin.auth.multifactorsettings.md
+      - title: MultiFactorUpdateSettings
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.multifactorupdatesettings.md
+      - title: OIDCAuthProviderConfig
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.oidcauthproviderconfig.md
+      - title: OIDCUpdateAuthProviderRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.oidcupdateauthproviderrequest.md
+      - title: PhoneIdentifier
+        path: /docs/reference/admin/node/firebase-admin.auth.phoneidentifier.md
+      - title: PhoneMultiFactorInfo
+        path: /docs/reference/admin/node/firebase-admin.auth.phonemultifactorinfo.md
+      - title: ProviderIdentifier
+        path: /docs/reference/admin/node/firebase-admin.auth.provideridentifier.md
+      - title: SAMLAuthProviderConfig
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.samlauthproviderconfig.md
+      - title: SAMLUpdateAuthProviderRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.samlupdateauthproviderrequest.md
+      - title: SessionCookieOptions
+        path: /docs/reference/admin/node/firebase-admin.auth.sessioncookieoptions.md
+      - title: Tenant
+        path: /docs/reference/admin/node/firebase-admin.auth.tenant.md
+      - title: TenantAwareAuth
+        path: /docs/reference/admin/node/firebase-admin.auth.tenantawareauth.md
+      - title: TenantManager
+        path: /docs/reference/admin/node/firebase-admin.auth.tenantmanager.md
+      - title: UidIdentifier
+        path: /docs/reference/admin/node/firebase-admin.auth.uididentifier.md
+      - title: UpdateMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.updatemultifactorinforequest.md
+      - title: UpdatePhoneMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.updatephonemultifactorinforequest.md
+      - title: UpdateRequest
+        path: /docs/reference/admin/node/firebase-admin.auth.updaterequest.md
+      - title: UpdateTenantRequest
+        path: /docs/reference/admin/node/firebase-admin.auth.updatetenantrequest.md
+      - title: UserImportOptions
+        path: /docs/reference/admin/node/firebase-admin.auth.userimportoptions.md
+      - title: UserImportRecord
+        path: /docs/reference/admin/node/firebase-admin.auth.userimportrecord.md
+      - title: UserImportResult
+        path: /docs/reference/admin/node/firebase-admin.auth.userimportresult.md
+      - title: UserInfo
+        path: /docs/reference/admin/node/firebase-admin.auth.userinfo.md
+      - title: UserMetadata
+        path: /docs/reference/admin/node/firebase-admin.auth.usermetadata.md
+      - title: UserMetadataRequest
+        path: /docs/reference/admin/node/firebase-admin.auth.usermetadatarequest.md
+      - title: UserProvider
+        path: /docs/reference/admin/node/firebase-admin.auth.userprovider.md
+      - title: UserProviderRequest
+        path: /docs/reference/admin/node/firebase-admin.auth.userproviderrequest.md
+      - title: UserRecord
+        path: /docs/reference/admin/node/firebase-admin.auth.userrecord.md
+  - title: firebase-admin/database
+    path: /docs/reference/admin/node/firebase-admin.database.md
+    section:
+      - title: Database
+        path: /docs/reference/admin/node/firebase-admin.database.database.md
+  - title: firebase-admin/firestore
+    path: /docs/reference/admin/node/firebase-admin.firestore.md
+    section: []
+  - title: firebase-admin/instance-id
+    path: /docs/reference/admin/node/firebase-admin.instance-id.md
+    section:
+      - title: InstanceId
+        path: /docs/reference/admin/node/firebase-admin.instance-id.instanceid.md
+  - title: firebase-admin/machine-learning
+    path: /docs/reference/admin/node/firebase-admin.machine-learning.md
+    section:
+      - title: AutoMLTfliteModelOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.automltflitemodeloptions.md
+      - title: GcsTfliteModelOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.gcstflitemodeloptions.md
+      - title: ListModelsOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.listmodelsoptions.md
+      - title: ListModelsResult
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.listmodelsresult.md
+      - title: MachineLearning
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.machinelearning.md
+      - title: Model
+        path: /docs/reference/admin/node/firebase-admin.machine-learning.model.md
+      - title: ModelOptionsBase
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.modeloptionsbase.md
+      - title: TFLiteModel
+        path: >-
+          /docs/reference/admin/node/firebase-admin.machine-learning.tflitemodel.md
+  - title: firebase-admin/messaging
+    path: /docs/reference/admin/node/firebase-admin.messaging.md
+    section:
+      - title: AndroidConfig
+        path: /docs/reference/admin/node/firebase-admin.messaging.androidconfig.md
+      - title: AndroidFcmOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.androidfcmoptions.md
+      - title: AndroidNotification
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.androidnotification.md
+      - title: ApnsConfig
+        path: /docs/reference/admin/node/firebase-admin.messaging.apnsconfig.md
+      - title: ApnsFcmOptions
+        path: /docs/reference/admin/node/firebase-admin.messaging.apnsfcmoptions.md
+      - title: ApnsPayload
+        path: /docs/reference/admin/node/firebase-admin.messaging.apnspayload.md
+      - title: Aps
+        path: /docs/reference/admin/node/firebase-admin.messaging.aps.md
+      - title: ApsAlert
+        path: /docs/reference/admin/node/firebase-admin.messaging.apsalert.md
+      - title: BaseMessage
+        path: /docs/reference/admin/node/firebase-admin.messaging.basemessage.md
+      - title: BatchResponse
+        path: /docs/reference/admin/node/firebase-admin.messaging.batchresponse.md
+      - title: ConditionMessage
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.conditionmessage.md
+      - title: CriticalSound
+        path: /docs/reference/admin/node/firebase-admin.messaging.criticalsound.md
+      - title: DataMessagePayload
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.datamessagepayload.md
+      - title: FcmOptions
+        path: /docs/reference/admin/node/firebase-admin.messaging.fcmoptions.md
+      - title: LightSettings
+        path: /docs/reference/admin/node/firebase-admin.messaging.lightsettings.md
+      - title: Messaging
+        path: /docs/reference/admin/node/firebase-admin.messaging.messaging.md
+      - title: MessagingConditionResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingconditionresponse.md
+      - title: MessagingDeviceGroupResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingdevicegroupresponse.md
+      - title: MessagingDeviceResult
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingdeviceresult.md
+      - title: MessagingDevicesResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingdevicesresponse.md
+      - title: MessagingOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingoptions.md
+      - title: MessagingPayload
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingpayload.md
+      - title: MessagingTopicManagementResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingtopicmanagementresponse.md
+      - title: MessagingTopicResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.messagingtopicresponse.md
+      - title: MulticastMessage
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.multicastmessage.md
+      - title: Notification
+        path: /docs/reference/admin/node/firebase-admin.messaging.notification.md
+      - title: NotificationMessagePayload
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.notificationmessagepayload.md
+      - title: SendResponse
+        path: /docs/reference/admin/node/firebase-admin.messaging.sendresponse.md
+      - title: TokenMessage
+        path: /docs/reference/admin/node/firebase-admin.messaging.tokenmessage.md
+      - title: TopicMessage
+        path: /docs/reference/admin/node/firebase-admin.messaging.topicmessage.md
+      - title: WebpushConfig
+        path: /docs/reference/admin/node/firebase-admin.messaging.webpushconfig.md
+      - title: WebpushFcmOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.webpushfcmoptions.md
+      - title: WebpushNotification
+        path: >-
+          /docs/reference/admin/node/firebase-admin.messaging.webpushnotification.md
+  - title: firebase-admin/project-management
+    path: /docs/reference/admin/node/firebase-admin.project-management.md
+    section:
+      - title: AndroidApp
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.androidapp.md
+      - title: AndroidAppMetadata
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.androidappmetadata.md
+      - title: AppMetadata
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.appmetadata.md
+      - title: IosApp
+        path: /docs/reference/admin/node/firebase-admin.project-management.iosapp.md
+      - title: IosAppMetadata
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.iosappmetadata.md
+      - title: ProjectManagement
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.projectmanagement.md
+      - title: ShaCertificate
+        path: >-
+          /docs/reference/admin/node/firebase-admin.project-management.shacertificate.md
+  - title: firebase-admin/remote-config
+    path: /docs/reference/admin/node/firebase-admin.remote-config.md
+    section:
+      - title: ExplicitParameterValue
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.explicitparametervalue.md
+      - title: InAppDefaultValue
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.inappdefaultvalue.md
+      - title: ListVersionsOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.listversionsoptions.md
+      - title: ListVersionsResult
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.listversionsresult.md
+      - title: RemoteConfig
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfig.md
+      - title: RemoteConfigCondition
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfigcondition.md
+      - title: RemoteConfigParameter
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfigparameter.md
+      - title: RemoteConfigParameterGroup
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfigparametergroup.md
+      - title: RemoteConfigTemplate
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfigtemplate.md
+      - title: RemoteConfigUser
+        path: >-
+          /docs/reference/admin/node/firebase-admin.remote-config.remoteconfiguser.md
+      - title: Version
+        path: /docs/reference/admin/node/firebase-admin.remote-config.version.md
+  - title: firebase-admin/security-rules
+    path: /docs/reference/admin/node/firebase-admin.security-rules.md
+    section:
+      - title: Ruleset
+        path: /docs/reference/admin/node/firebase-admin.security-rules.ruleset.md
+      - title: RulesetMetadata
+        path: >-
+          /docs/reference/admin/node/firebase-admin.security-rules.rulesetmetadata.md
+      - title: RulesetMetadataList
+        path: >-
+          /docs/reference/admin/node/firebase-admin.security-rules.rulesetmetadatalist.md
+      - title: RulesFile
+        path: /docs/reference/admin/node/firebase-admin.security-rules.rulesfile.md
+      - title: SecurityRules
+        path: >-
+          /docs/reference/admin/node/firebase-admin.security-rules.securityrules.md
+  - title: firebase-admin/storage
+    path: /docs/reference/admin/node/firebase-admin.storage.md
+    section:
+      - title: Storage
+        path: /docs/reference/admin/node/firebase-admin.storage.storage.md
