@@ -233,6 +233,15 @@ export class Messaging implements MessagingInterface {
     return this.appInternal;
   }
 
+  /**
+   * Converts from the public {@link messaging.Message `Message`} type to the
+   * internal/generated {@link protos.google.firebase.fcm.v1.Message `clientMessage`}
+   * type.
+   *
+   * @param message The {@link messaging.Message `Message`} to be converted
+   * @returns A {@link protos.google.firebase.fcm.v1.Message `clientMessage`},
+   * where like fields are the same as the inptuted message.
+   */
   private convertToClientMessage(message: Message): ClientMessage {
     const data = message.data ?? null;
 
