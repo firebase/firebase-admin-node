@@ -43,7 +43,7 @@ import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
 // GAPIC Generated client types
 import * as protos from '../generated/messaging/protos/protos';
-import ClientMessage = protos.google.firebase.fcm.v1.Message;
+import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
 import ClientSendRequest = protos.google.firebase.fcm.v1.SendMessageRequest;
 
 /* eslint-disable @typescript-eslint/camelcase */
@@ -245,31 +245,15 @@ export class Messaging implements MessagingInterface {
   private convertToClientMessage(message: Message): ClientMessage {
     const data = message.data ?? null;
 
-    const notification = message.notification ?? null;
-    let clientNotification = null;
-    if (notification) {
-      clientNotification = new protos.google.firebase.fcm.v1.Notification({
-        title: notification.title,
-        body: notification.body,
-        image: notification.imageUrl
-      });
-    }
-
-    const fcmOptions = message.fcmOptions ?? null;
-    let clientFcmOpts = null;
-    if (fcmOptions) {
-      clientFcmOpts = new protos.google.firebase.fcm.v1.FcmOptions({
-        analyticsLabel: fcmOptions.analyticsLabel
-      });
-    }
-
     //TODO: Add conversion for android, webpush, apns
 
-    return new ClientMessage({
-      data: data,
-      notification: clientNotification,
-      fcmOptions: clientFcmOpts
-    });
+    const clientMessage: ClientMessage = {
+      data: message.data,
+      notification: message.notification,
+      fcmOptions: message.fcmOptions
+    }
+
+    return clientMessage;
   }
 
   /**
