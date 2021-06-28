@@ -41,6 +41,11 @@ import MessagingConditionResponse = messaging.MessagingConditionResponse;
 import DataMessagePayload = messaging.DataMessagePayload;
 import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
+// GAPIC Generated client types
+import * as protos from '../generated/messaging/protos/protos';
+import ClientMessage = protos.google.firebase.fcm.v1.Message;
+import ClientSendRequest = protos.google.firebase.fcm.v1.SendMessageRequest;
+
 /* eslint-disable @typescript-eslint/camelcase */
 
 // FCM endpoints
@@ -228,6 +233,36 @@ export class Messaging implements MessagingInterface {
     return this.appInternal;
   }
 
+  private convertToClientMessage(message: Message): ClientMessage {
+    const data = message.data ?? null;
+
+    const notification = message.notification ?? null;
+    let clientNotification = null;
+    if (notification) {
+      clientNotification = new protos.google.firebase.fcm.v1.Notification({
+        title: notification.title,
+        body: notification.body,
+        image: notification.imageUrl
+      });
+    }
+
+    const fcmOptions = message.fcmOptions ?? null;
+    let clientFcmOpts = null;
+    if (fcmOptions) {
+      clientFcmOpts = new protos.google.firebase.fcm.v1.FcmOptions({
+        analyticsLabel: fcmOptions.analyticsLabel
+      });
+    }
+
+    //TODO: Add conversion for android, webpush, apns
+
+    return new ClientMessage({
+      data: data,
+      notification: clientNotification,
+      fcmOptions: clientFcmOpts
+    });
+  }
+
   /**
    * Sends the given message via FCM.
    *
@@ -239,6 +274,7 @@ export class Messaging implements MessagingInterface {
    *   service for delivery.
    */
   public send(message: Message, dryRun?: boolean): Promise<string> {
+    //TODO: Convert message to fcmServiceClient message
     const copy: Message = deepCopy(message);
     validateMessage(copy);
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
