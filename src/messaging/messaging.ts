@@ -253,6 +253,14 @@ export class Messaging implements MessagingInterface {
       fcmOptions: message.fcmOptions
     }
 
+    if ('token' in message) {
+      clientMessage.token = message.token;
+    } else if ('topic' in message) {
+      clientMessage.topic = message.topic;
+    } else if ('condition' in message) {
+      clientMessage.condition = message.condition;
+    }
+
     return clientMessage;
   }
 
