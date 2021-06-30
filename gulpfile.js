@@ -101,7 +101,7 @@ gulp.task('compile', function() {
  */
 gulp.task('compile_test', function() {
   return gulp.src(paths.test)
-    // Compile Typescript ianto .js and .d.ts files
+    // Compile Typescript into .js and .d.ts files
     .pipe(buildTest())
 });
 
