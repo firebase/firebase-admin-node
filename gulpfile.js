@@ -101,18 +101,33 @@ gulp.task('compile', function() {
  */
 gulp.task('compile_test', function() {
   return gulp.src(paths.test)
-    // Compile Typescript into .js and .d.ts files
+    // Compile Typescript ianto .js and .d.ts files
     .pipe(buildTest())
 });
 
 gulp.task('copyTypings', function() {
-  return gulp.src(['src/index.d.ts', 'src/firebase-namespace.d.ts'])
+  return gulp.src([
+    'src/index.d.ts',
+    'src/firebase-namespace.d.ts',
+    'src/**/protos/*.d.ts',
+  ])
     // Add header
     .pipe(header(banner))
     .pipe(gulp.dest(paths.build))
 });
 
-gulp.task('compile_all', gulp.series('compile', 'copyTypings', 'compile_test'));
+gulp.task('copyJSON', function() {
+  return gulp.src([
+    'src/**/protos/*.json',
+    // This isn't ideal, but doing something like
+    // 'src/generated/**/*.json' results in incorrect paths in the /lib dir
+    'src/**/*.json'
+  ])
+    .pipe(gulp.dest(paths.build))
+});
+
+gulp.task('compile_all', gulp.series('compile', 'copyTypings',
+  'copyJSON', 'compile_test'));
 
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
@@ -120,7 +135,7 @@ gulp.task('watch', function() {
 });
 
 // Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyTypings'));
+gulp.task('build', gulp.series('cleanup', 'compile', 'copyTypings', 'copyJSON'));
 
 // Default task
 gulp.task('default', gulp.series('build'));
