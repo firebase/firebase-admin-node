@@ -118,7 +118,6 @@ gulp.task('copyTypings', function() {
 
 gulp.task('copyJSON', function() {
   return gulp.src([
-    'src/**/protos/*.json',
     // This isn't ideal, but doing something like
     // 'src/generated/**/*.json' results in incorrect paths in the /lib dir
     'src/**/*.json'
