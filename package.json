@@ -84,7 +84,7 @@
     "@types/nock": "^11.1.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
-    "@types/sinon": "^9.0.0",
+    "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
