@@ -81,7 +81,7 @@
     "@types/lodash": "^4.14.104",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^8.2.2",
-    "@types/nock": "^9.1.0",
+    "@types/nock": "^11.1.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^9.0.0",
