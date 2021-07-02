@@ -44,8 +44,9 @@ import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
 // GAPIC Generated client types
 import * as protos from '../generated/messaging/protos/protos';
+import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
 import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
-import ClientSendRequest = protos.google.firebase.fcm.v1.SendMessageRequest;
+import ClientSendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -244,8 +245,6 @@ export class Messaging implements MessagingInterface {
    * where like fields are the same as the inptuted message.
    */
   private convertToClientMessage(message: Message): ClientMessage {
-    const data = message.data ?? null;
-
     //TODO: Add conversion for android, webpush, apns
 
     const clientMessage: ClientMessage = {
@@ -303,15 +302,26 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    return this.getUrlPath()
-      .then((urlPath) => {
-        const request: { message: Message; validate_only?: boolean } = { message: copy };
-        if (dryRun) {
-          request.validate_only = true;
-        }
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
+
+    const clientMessage = this.convertToClientMessage(copy);
+    //!! May need to include api key in constructor
+    const client = new FcmServiceClient({
+      credentials: this.getAppKey(),
+      fallback: 'rest'
+    });
+
+    return client.getProjectId()
+      .then((projectId) => {
+        const parent = `projects/${projectId}`;
+
+        const request: ClientSendRequest = {
+          parent: parent,
+          message: clientMessage,
+          validateOnly: dryRun
+        };
+        return client.sendMessage(request);
       })
-      .then((response) => {
+      .then(([response]) => {
         return (response as any).name;
       });
   }
