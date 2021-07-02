@@ -295,7 +295,6 @@ export class Messaging implements MessagingInterface {
    *   service for delivery.
    */
   public send(message: Message, dryRun?: boolean): Promise<string> {
-    //TODO: Convert message to fcmServiceClient message
     const copy: Message = deepCopy(message);
     validateMessage(copy);
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
@@ -304,7 +303,7 @@ export class Messaging implements MessagingInterface {
     }
 
     const clientMessage = this.convertToClientMessage(copy);
-    //!! May need to include api key in constructor
+
     const client = new FcmServiceClient({
       credentials: this.getAppKey(),
       fallback: 'rest'
