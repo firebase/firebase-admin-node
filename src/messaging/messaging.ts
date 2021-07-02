@@ -22,6 +22,7 @@ import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEY
 import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
+import { ServiceAccountCredential } from '../credential/credential-internal';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 
@@ -262,6 +263,26 @@ export class Messaging implements MessagingInterface {
     }
 
     return clientMessage;
+  }
+
+  /**
+   * Method that gets the current App's credentials
+   * @returns The credential key of the current Firebase App
+   */
+  private getAppKey(): object{
+    const credential = this.app.options.credential;
+    if (credential instanceof ServiceAccountCredential) {
+      return {
+        private_key: credential.privateKey,
+        client_email: credential.clientEmail
+      };
+    } else {
+      throw new FirebaseMessagingError({
+        code: 'invalid-credential',
+        message: 'Unable to get credentials of a non service account' +
+                 ' - this may change in the future'
+      });
+    }
   }
 
   /**
