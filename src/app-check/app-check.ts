@@ -26,6 +26,7 @@ import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
 import AppCheckInterface = appCheck.AppCheck;
 import AppCheckToken = appCheck.AppCheckToken;
+import AppCheckTokenOptions = appCheck.AppCheckTokenOptions;
 import VerifyAppCheckTokenResponse = appCheck.VerifyAppCheckTokenResponse;
 
 /**
@@ -56,18 +57,19 @@ export class AppCheck implements AppCheckInterface {
    * back to a client.
    *
    * @param appId The app ID to use as the JWT app_id.
+   * @param options Optional options object when creating a new App Check Token.
    *
-   * @return A promise that fulfills with a `AppCheckToken`.
+   * @returns A promise that fulfills with a `AppCheckToken`.
    */
-  public createToken(appId: string): Promise<AppCheckToken> {
-    return this.tokenGenerator.createCustomToken(appId)
+  public createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken> {
+    return this.tokenGenerator.createCustomToken(appId, options)
       .then((customToken) => {
         return this.client.exchangeToken(customToken, appId);
       });
   }
 
   /**
-   * Veifies an App Check token.
+   * Verifies an App Check token.
    *
    * @param appCheckToken The App Check token to verify.
    *
