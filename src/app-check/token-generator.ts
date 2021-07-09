@@ -124,9 +124,9 @@ export class AppCheckTokenGenerator {
         'AppCheckTokenOptions must be a non-null object.');
     }
     if (typeof options.ttlMillis !== 'undefined') {
-      if (!validator.isNumber(options.ttlMillis) || options.ttlMillis < 0) {
+      if (!validator.isNumber(options.ttlMillis)) {
         throw new FirebaseAppCheckError('invalid-argument',
-          'ttlMillis must be a non-negative duration in milliseconds.');
+          'ttlMillis must be a duration in milliseconds.');
       }
       // ttlMillis must be between 30 minutes and 7 days (inclusive)
       if (options.ttlMillis < (ONE_MINUTE_IN_MILLIS * 30) || options.ttlMillis > (ONE_DAY_IN_MILLIS * 7)) {

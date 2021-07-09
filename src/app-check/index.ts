@@ -97,7 +97,7 @@ export namespace appCheck {
   }
 
   /**
-   * Interface representing an App Check token options.
+   * Interface representing App Check token options.
    */
   export interface AppCheckTokenOptions {
     /**

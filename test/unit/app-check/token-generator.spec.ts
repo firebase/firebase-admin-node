@@ -131,19 +131,19 @@ describe('AppCheckTokenGenerator', () => {
       });
     });
 
-    const invalidTtls = [null, NaN, '0', 'abc', '', -100, -1, true, false, [], {}, { a: 1 }, _.noop];
+    const invalidTtls = [null, NaN, '0', 'abc', '', true, false, [], {}, { a: 1 }, _.noop];
     invalidTtls.forEach((invalidTtl) => {
       it('should throw given an options object with invalid ttl: ' + JSON.stringify(invalidTtl), () => {
         expect(() => {
           tokenGenerator.createCustomToken(APP_ID, { ttlMillis: invalidTtl as any });
         }).to.throw(FirebaseAppCheckError).with.property('message',
-          'ttlMillis must be a non-negative duration in milliseconds.');
+          'ttlMillis must be a duration in milliseconds.');
       });
     });
 
     const THIRTY_MIN_IN_MS = 1800000;
     const SEVEN_DAYS_IN_MS = 604800000;
-    [0, 10, THIRTY_MIN_IN_MS - 1, SEVEN_DAYS_IN_MS + 1, SEVEN_DAYS_IN_MS * 2].forEach((ttlMillis) => {
+    [-100, -1, 0, 10, THIRTY_MIN_IN_MS - 1, SEVEN_DAYS_IN_MS + 1, SEVEN_DAYS_IN_MS * 2].forEach((ttlMillis) => {
       it('should throw given options with ttl < 30 minutes or ttl > 7 days:' + JSON.stringify(ttlMillis), () => {
         expect(() => {
           tokenGenerator.createCustomToken(APP_ID, { ttlMillis });
@@ -157,11 +157,16 @@ describe('AppCheckTokenGenerator', () => {
         .should.eventually.be.a('string').and.not.be.empty;
     });
 
-    [THIRTY_MIN_IN_MS, THIRTY_MIN_IN_MS + 1, SEVEN_DAYS_IN_MS / 2, SEVEN_DAYS_IN_MS - 1, SEVEN_DAYS_IN_MS]
-      .forEach((ttlMillis) => {
-        it('should be fulfilled with a Firebase Custom JWT with a valid custom ttl' + JSON.stringify(ttlMillis), () => {
-          return tokenGenerator.createCustomToken(APP_ID, { ttlMillis })
-            .should.eventually.be.a('string').and.not.be.empty;
+    [[THIRTY_MIN_IN_MS, '1800s'], [THIRTY_MIN_IN_MS + 1, '1800.001000000s'],
+      [SEVEN_DAYS_IN_MS / 2, '302400s'], [SEVEN_DAYS_IN_MS - 1, '604799.999000000s'], [SEVEN_DAYS_IN_MS, '604800s']]
+      .forEach((ttl) => {
+        it('should be fulfilled with a Firebase Custom JWT with a valid custom ttl' + JSON.stringify(ttl[0]), () => {
+          return tokenGenerator.createCustomToken(APP_ID, { ttlMillis: ttl[0] as number })
+            .then((token) => {
+              const decoded = jwt.decode(token) as { [key: string]: any };
+
+              expect(decoded['ttl']).to.equal(ttl[1]);
+            });
         });
       });
 
@@ -207,7 +212,7 @@ describe('AppCheckTokenGenerator', () => {
       });
     });
 
-    [[1800000.000001, '1800.000000001s'], [1800000.001, '1800.000001000s'], [172800000, '172800s'],
+    [[1800000.000001, '1800.000000001s'], [1800000.001, '1800.000000999s'], [172800000, '172800s'],
       [604799999, '604799.999000000s'], [604800000, '604800s']
     ].forEach((ttl) => {
       it('should be fulfilled with a JWT with custom ttl in decoded payload', () => {

@@ -387,7 +387,7 @@ describe('generateUpdateMask()', () => {
 
 describe('transformMillisecondsToSecondsString()', () => {
   [
-    [3000.000001, '3.000000001s'], [3000.001, '3.000001000s'],
+    [3000.000001, '3s'], [3000.001, '3.000001000s'],
     [3000, '3s'], [3500, '3.500000000s']
   ].forEach((duration) => {
     it('should transform to protobuf duration string when provided milliseconds:' + JSON.stringify(duration[0]),

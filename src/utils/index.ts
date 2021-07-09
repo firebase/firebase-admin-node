@@ -204,7 +204,7 @@ export function generateUpdateMask(
 export function transformMillisecondsToSecondsString(milliseconds: number): string {
   let duration: string;
   const seconds = Math.floor(milliseconds / 1000);
-  const nanos = Math.round((milliseconds - seconds * 1000) * 1000000);
+  const nanos = Math.floor((milliseconds - seconds * 1000) * 1000000);
   if (nanos > 0) {
     let nanoString = nanos.toString();
     while (nanoString.length < 9) {
