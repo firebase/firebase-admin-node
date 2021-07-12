@@ -101,9 +101,8 @@ export namespace appCheck {
    */
   export interface AppCheckTokenOptions {
     /**
-     * The length of time measured in milliseconds starting from when the server
-     * mints the token for which the returned FAC token will be valid.
-     * This value must be in milliseconds and between 30 minutes and 7 days, inclusive.
+     * The length of time, in milliseconds, for which the App Check token will
+     * be valid. This value must be between 30 minutes and 7 days, inclusive.
      */
     ttlMillis?: number;
   }

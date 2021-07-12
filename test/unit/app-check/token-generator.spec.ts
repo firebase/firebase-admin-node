@@ -157,18 +157,22 @@ describe('AppCheckTokenGenerator', () => {
         .should.eventually.be.a('string').and.not.be.empty;
     });
 
-    [[THIRTY_MIN_IN_MS, '1800s'], [THIRTY_MIN_IN_MS + 1, '1800.001000000s'],
-      [SEVEN_DAYS_IN_MS / 2, '302400s'], [SEVEN_DAYS_IN_MS - 1, '604799.999000000s'], [SEVEN_DAYS_IN_MS, '604800s']]
-      .forEach((ttl) => {
-        it('should be fulfilled with a Firebase Custom JWT with a valid custom ttl' + JSON.stringify(ttl[0]), () => {
-          return tokenGenerator.createCustomToken(APP_ID, { ttlMillis: ttl[0] as number })
-            .then((token) => {
-              const decoded = jwt.decode(token) as { [key: string]: any };
+    [
+      [THIRTY_MIN_IN_MS, '1800s'],
+      [THIRTY_MIN_IN_MS + 1, '1800.001000000s'],
+      [SEVEN_DAYS_IN_MS / 2, '302400s'],
+      [SEVEN_DAYS_IN_MS - 1, '604799.999000000s'],
+      [SEVEN_DAYS_IN_MS, '604800s']
+    ].forEach((ttl) => {
+      it('should be fulfilled with a Firebase Custom JWT with a valid custom ttl' + JSON.stringify(ttl[0]), () => {
+        return tokenGenerator.createCustomToken(APP_ID, { ttlMillis: ttl[0] as number })
+          .then((token) => {
+            const decoded = jwt.decode(token) as { [key: string]: any };
 
-              expect(decoded['ttl']).to.equal(ttl[1]);
-            });
-        });
+            expect(decoded['ttl']).to.equal(ttl[1]);
+          });
       });
+    });
 
     it('should be fulfilled with a JWT with the correct decoded payload', () => {
       clock = sinon.useFakeTimers(1000);
@@ -212,8 +216,12 @@ describe('AppCheckTokenGenerator', () => {
       });
     });
 
-    [[1800000.000001, '1800.000000001s'], [1800000.001, '1800.000000999s'], [172800000, '172800s'],
-      [604799999, '604799.999000000s'], [604800000, '604800s']
+    [
+      [1800000.000001, '1800.000000001s'],
+      [1800000.001, '1800.000000999s'],
+      [172800000, '172800s'],
+      [604799999, '604799.999000000s'],
+      [604800000, '604800s']
     ].forEach((ttl) => {
       it('should be fulfilled with a JWT with custom ttl in decoded payload', () => {
         clock = sinon.useFakeTimers(1000);
