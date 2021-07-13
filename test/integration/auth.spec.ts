@@ -2183,6 +2183,7 @@ describe('admin.auth', () => {
         metadata: {
           lastSignInTime: now,
           creationTime: now,
+          lastRefreshTime: null,  // TODO(rsgowman): Switch to 'now' once importing users supports lastRefreshTime
         },
         providerData: [
           {

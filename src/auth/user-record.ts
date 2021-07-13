@@ -285,6 +285,7 @@ export class UserMetadata implements UserMetadataInterface {
     return {
       lastSignInTime: this.lastSignInTime,
       creationTime: this.creationTime,
+      lastRefreshTime: this.lastRefreshTime,
     };
   }
 }
