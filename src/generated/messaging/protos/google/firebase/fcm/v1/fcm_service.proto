@@ -1,0 +1,559 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package google.firebase.fcm.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "google/type/color.proto";
+import "google/api/client.proto";
+
+option go_package = "google.golang.org/genproto/googleapis/firebase/fcm/v1;fcm";
+option java_multiple_files = true;
+option java_outer_classname = "FcmServiceProto";
+option java_package = "com.google.firebase.fcm.v1";
+
+// Firebase Cloud Messaging service (FCM) to target cross-platform messaging.
+service FcmService {
+  option (google.api.default_host) = "fcm.googleapis.com";
+  option (google.api.oauth_scopes) = "https://www.googleapis.com/auth/cloud-platform";
+
+  // Send a message to specified target (a registration token, topic
+  // or condition).
+  rpc SendMessage(SendMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      post: "/v1/{parent=projects/*}/messages:send"
+      body: "*"
+    };
+  }
+}
+
+// Request to send a message to specified target.
+message SendMessageRequest {
+  // Required. It contains the Firebase project id (i.e. the unique identifier
+  // for your Firebase project), in the format of `projects/{project_id}`.
+  // For legacy support, the numeric project number with no padding is also
+  // supported in the format of `projects/{project_number}`.
+  string parent = 1;
+
+  // Flag for testing the request without actually delivering the message.
+  bool validate_only = 2;
+
+  // Required. Message to send.
+  Message message = 3;
+}
+
+// Message to send by Firebase Cloud Messaging Service.
+message Message {
+  // Output Only. The identifier of the message sent, in the format of
+  // `projects/*/messages/{message_id}`.
+  string name = 1;
+
+  // Required. Input only. Target to send a message to.
+  oneof target {
+    // Registration token to send a message to.
+    string token = 2;
+
+    // Topic name to send a message to, e.g. "weather".
+    // Note: "/topics/" prefix should not be provided.
+    string topic = 3;
+
+    // Condition to send a message to,
+    // e.g. "'foo' in topics && 'bar' in topics".
+    string condition = 4;
+  }
+
+  // Input only. Arbitrary key/value payload, which must be UTF-8
+  // encoded. The key should not be a reserved
+  // word ("from", "message_type", or any word starting with "google" or "gcm").
+  // When sending payloads containing only data fields to iOS devices,
+  // only normal priority (`"apns-priority": "5"`) is allowed in
+  // [`ApnsConfig`](/docs/reference/fcm/rest/v1/projects.messages#apnsconfig).
+  map<string, string> data = 11;
+
+  // Input only. Basic notification template to use across all platforms.
+  Notification notification = 12;
+
+  // Input only. Android specific options for messages sent through
+  // [FCM connection server](https://goo.gl/4GLdUl).
+  AndroidConfig android = 13;
+
+  // Input only. [Webpush protocol](https://tools.ietf.org/html/rfc8030)
+  // options.
+  WebpushConfig webpush = 14;
+
+  // Input only. [Apple Push Notification Service](https://goo.gl/MXRTPa)
+  // specific options.
+  ApnsConfig apns = 15;
+
+  // Input only. Template for FCM SDK feature options to use across all
+  // platforms.
+  FcmOptions fcm_options = 16;
+}
+
+// Basic notification template to use across all platforms.
+message Notification {
+  // The notification's title.
+  string title = 1;
+
+  // The notification's body text.
+  string body = 2;
+
+  // Contains the URL of an image that is going to be downloaded on the device
+  // and displayed in a notification.
+  // JPEG, PNG, BMP have full support across platforms. Animated GIF and video
+  // only work on iOS. WebP and HEIF have varying levels of support across
+  // platforms and platform versions.
+  // Android has 1MB image size limit.
+  // Quota usage and implications/costs for hosting image on Firebase Storage:
+  // https://firebase.google.com/pricing
+  string image = 3;
+}
+
+// Android specific options for messages sent through
+// [FCM connection server](https://goo.gl/4GLdUl).
+message AndroidConfig {
+  // Priority of a message to send to Android devices.
+  // Note this priority is an FCM concept that controls when the message is
+  // delivered. See [FCM
+  // guides](https://firebase.google.com/docs/cloud-messaging/concept-options?authuser=0#setting-the-priority-of-a-message).
+  // Additionally, you can determine notification display priority on targeted
+  // Android devices using
+  // [AndroidNotification.NotificationPriority](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#androidnotification).
+  enum AndroidMessagePriority {
+    // Default priority for data messages. Normal priority messages won't open
+    // network connections on a sleeping device, and their delivery may be
+    // delayed to conserve the battery. For less time-sensitive messages, such
+    // as notifications of new email or other data to sync, choose normal
+    // delivery priority.
+    NORMAL = 0;
+
+    // Default priority for notification messages. FCM attempts to deliver high
+    // priority messages immediately, allowing the FCM service to wake a
+    // sleeping device when possible and open a network connection to your app
+    // server. Apps with instant messaging, chat, or voice call alerts, for
+    // example, generally need to open a network connection and make sure FCM
+    // delivers the message to the device without delay. Set high priority if
+    // the message is time-critical and requires the user's immediate
+    // interaction, but beware that setting your messages to high priority
+    // contributes more to battery drain compared with normal priority messages.
+    HIGH = 1;
+  }
+
+  // An identifier of a group of messages that can be collapsed, so that only
+  // the last message gets sent when delivery can be resumed. A maximum of 4
+  // different collapse keys is allowed at any given time.
+  string collapse_key = 1;
+
+  // Message priority. Can take "normal" and "high" values.
+  // For more information, see [Setting the priority of a
+  // message](https://goo.gl/GjONJv).
+  AndroidMessagePriority priority = 2;
+
+  // How long (in seconds) the message should be kept in FCM storage if the
+  // device is offline. The maximum time to live supported is 4 weeks, and the
+  // default value is 4 weeks if not set. Set it to 0 if want to send the
+  // message immediately.
+  // In JSON format, the Duration type is encoded as a string rather than an
+  // object, where the string ends in the suffix "s" (indicating seconds) and
+  // is preceded by the number of seconds, with nanoseconds expressed as
+  // fractional seconds. For example, 3 seconds with 0 nanoseconds should be
+  // encoded in JSON format as "3s", while 3 seconds and 1 nanosecond should
+  // be expressed in JSON format as "3.000000001s". The ttl will be rounded down
+  // to the nearest second.
+  google.protobuf.Duration ttl = 3;
+
+  // Package name of the application where the registration token must match in
+  // order to receive the message.
+  string restricted_package_name = 4;
+
+  // Arbitrary key/value payload. If present, it will override
+  // [google.firebase.fcm.v1.Message.data] [google.firebase.fcm.v1.Message.data].
+  map<string, string> data = 5;
+
+  // Notification to send to android devices.
+  AndroidNotification notification = 6;
+
+  // Options for features provided by the FCM SDK for Android.
+  AndroidFcmOptions fcm_options = 7;
+
+  // If set to true, messages will be allowed to be delivered to the app while
+  // the device is in direct boot mode. See [Support Direct Boot
+  // mode](https://developer.android.com/training/articles/direct-boot).
+  bool direct_boot_ok = 8;
+}
+
+// Notification to send to android devices.
+message AndroidNotification {
+  // Settings to control notification LED.
+  message LightSettings {
+    // Required. Set `color` of the LED with
+    // [google.type.Color](https://github.com/googleapis/googleapis/blob/master/google/type/color.proto).
+    google.type.Color color = 1;
+
+    // Required. Along with `light_off_duration`, define the blink rate of LED
+    // flashes. Resolution defined by
+    // [proto.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration)
+    google.protobuf.Duration light_on_duration = 2;
+
+    // Required. Along with `light_on_duration `, define the blink rate of LED
+    // flashes. Resolution defined by
+    // [proto.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration)
+    google.protobuf.Duration light_off_duration = 3;
+  }
+
+  // Priority levels of a notification.
+  enum NotificationPriority {
+    // If priority is unspecified, notification priority is set to
+    // `PRIORITY_DEFAULT`.
+    PRIORITY_UNSPECIFIED = 0;
+
+    // Lowest notification priority. Notifications with this `PRIORITY_MIN`
+    // might not be shown to the user except under special circumstances,
+    // such as detailed notification logs.
+    PRIORITY_MIN = 1;
+
+    // Lower notification priority. The UI may choose to show the notifications
+    // smaller, or at a different position in the list, compared with
+    // notifications with `PRIORITY_DEFAULT`.
+    PRIORITY_LOW = 2;
+
+    // Default notification priority. If the application does not prioritize its
+    // own notifications, use this value for all notifications.
+    PRIORITY_DEFAULT = 3;
+
+    // Higher notification priority. Use this for more important notifications
+    // or alerts. The UI may choose to show these notifications larger, or at a
+    // different position in the notification lists, compared with notifications
+    // with `PRIORITY_DEFAULT`.
+    PRIORITY_HIGH = 4;
+
+    // Highest notification priority. Use this for the application's most
+    // important items that require the user's prompt attention or input.
+    PRIORITY_MAX = 5;
+  }
+
+  // Different visibility levels of a notification.
+  enum Visibility {
+    // If unspecified, default to `Visibility.PRIVATE`.
+    VISIBILITY_UNSPECIFIED = 0;
+
+    // Show this notification on all lockscreens, but conceal sensitive or
+    // private information on secure lockscreens.
+    PRIVATE = 1;
+
+    // Show this notification in its entirety on all lockscreens.
+    PUBLIC = 2;
+
+    // Do not reveal any part of this notification on a secure lockscreen.
+    SECRET = 3;
+  }
+
+  // The notification's title. If present, it will override
+  // [google.firebase.fcm.v1.Notification.title] [google.firebase.fcm.v1.Notification.title].
+  string title = 1;
+
+  // The notification's body text. If present, it will override
+  // [google.firebase.fcm.v1.Notification.body] [google.firebase.fcm.v1.Notification.body].
+  string body = 2;
+
+  // The notification's icon.
+  // Sets the notification icon to myicon for drawable resource myicon.
+  // If you don't send this key in the request, FCM displays the launcher icon
+  // specified in your app manifest.
+  string icon = 3;
+
+  // The notification's icon color, expressed in #rrggbb format.
+  string color = 4;
+
+  // The sound to play when the device receives the notification.
+  // Supports "default" or the filename of a sound resource bundled in the app.
+  // Sound files must reside in /res/raw/.
+  string sound = 5;
+
+  // Identifier used to replace existing notifications in the notification
+  // drawer.
+  // If not specified, each request creates a new notification.
+  // If specified and a notification with the same tag is already being shown,
+  // the new notification replaces the existing one in the notification drawer.
+  string tag = 6;
+
+  // The action associated with a user click on the notification.
+  // If specified, an activity with a matching intent filter is launched when
+  // a user clicks on the notification.
+  string click_action = 7;
+
+  // The key to the body string in the app's string resources to use to localize
+  // the body text to the user's current localization.
+  // See [String Resources](https://goo.gl/NdFZGI) for more information.
+  string body_loc_key = 8;
+
+  // Variable string values to be used in place of the format specifiers in
+  // body_loc_key to use to localize the body text to the user's current
+  // localization.
+  // See [Formatting and Styling](https://goo.gl/MalYE3) for more information.
+  repeated string body_loc_args = 9;
+
+  // The key to the title string in the app's string resources to use to
+  // localize the title text to the user's current localization.
+  // See [String Resources](https://goo.gl/NdFZGI) for more information.
+  string title_loc_key = 10;
+
+  // Variable string values to be used in place of the format specifiers in
+  // title_loc_key to use to localize the title text to the user's current
+  // localization.
+  // See [Formatting and Styling](https://goo.gl/MalYE3) for more information.
+  repeated string title_loc_args = 11;
+
+  // The [notification's channel
+  // id](https://developer.android.com/guide/topics/ui/notifiers/notifications#ManageChannels)
+  // (new in Android O). The app must create a channel with this channel ID
+  // before any notification with this channel ID is received. If you don't send
+  // this channel ID in the request, or if the channel ID provided has not yet
+  // been created by the app, FCM uses the channel ID specified in the app
+  // manifest.
+  string channel_id = 12;
+
+  // Sets the "ticker" text, which is sent to accessibility services.
+  // Prior to API level 21 (`Lollipop`), sets the text that is displayed in the
+  // status bar when the notification first arrives.
+  string ticker = 13;
+
+  // When set to false or unset, the notification is automatically
+  // dismissed when the user clicks it in the panel. When set to true, the
+  // notification persists even when the user clicks it.
+  bool sticky = 14;
+
+  // Set the time that the event in the notification occurred. Notifications in
+  // the panel are sorted by this time. A point in time is represented using
+  // [protobuf.Timestamp](https://developers.google.com/protocol-buffers/docs/reference/java/com/google/protobuf/Timestamp).
+  google.protobuf.Timestamp event_time = 15;
+
+  // Set whether or not this notification is relevant only to the current
+  // device. Some notifications can be bridged to other devices for remote
+  // display, such as a Wear OS watch. This hint can be set to recommend this
+  // notification not be bridged. See [Wear OS
+  // guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
+  bool local_only = 16;
+
+  // Set the relative priority for this notification. Priority is an indication
+  // of how much of the user's attention should be consumed by this
+  // notification. Low-priority notifications may be hidden from the user in
+  // certain situations, while the user might be interrupted for a
+  // higher-priority notification. The effect of setting the same priorities may
+  // differ slightly on different platforms. Note this priority differs from
+  // `AndroidMessagePriority`. This priority is processed by the client after
+  // the message has been delivered, whereas
+  // [AndroidMessagePriority](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#androidmessagepriority)
+  // is an FCM concept that controls when the message is delivered.
+  NotificationPriority notification_priority = 17;
+
+  // If set to true, use the Android framework's default sound for the
+  // notification. Default values are specified in
+  // [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+  bool default_sound = 18;
+
+  // If set to true, use the Android framework's default vibrate pattern for the
+  // notification. Default values are specified in
+  // [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+  // If `default_vibrate_timings` is set to true and `vibrate_timings` is also
+  // set, the default value is used instead of the user-specified
+  // `vibrate_timings`.
+  bool default_vibrate_timings = 19;
+
+  // If set to true, use the Android framework's default LED light settings for
+  // the notification. Default values are specified in
+  // [config.xml](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+  // If `default_light_settings` is set to true and `light_settings` is also
+  // set, the user-specified `light_settings` is used instead of the
+  // default value.
+  bool default_light_settings = 20;
+
+  // Set the vibration pattern to use. Pass in an array of
+  // [protobuf.Duration](https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#google.protobuf.Duration)
+  // to turn on or off the vibrator. The first value indicates the `Duration` to
+  // wait before turning the vibrator on. The next value indicates the
+  // `Duration` to keep the vibrator on. Subsequent values alternate between
+  // `Duration` to turn the vibrator off and to turn the vibrator on.
+  // If `vibrate_timings` is set and `default_vibrate_timings` is set to `true`,
+  // the default value is used instead of the user-specified `vibrate_timings`.
+  repeated google.protobuf.Duration vibrate_timings = 21;
+
+  // Set the
+  // [Notification.visibility](https://developer.android.com/reference/android/app/Notification.html#visibility)
+  // of the notification.
+  Visibility visibility = 22;
+
+  // Sets the number of items this notification represents. May be displayed as
+  // a badge count for launchers that support badging.See [Notification
+  // Badge](https://developer.android.com/training/notify-user/badges).
+  // For example, this might be useful if you're using just one notification to
+  // represent multiple new messages but you want the count here to represent
+  // the number of total new messages.
+  // If zero or unspecified, systems that support badging use the default, which
+  // is to increment a number displayed on the long-press menu each time a new
+  // notification arrives.
+  int32 notification_count = 23;
+
+  // Settings to control the notification's LED blinking rate and color if LED
+  // is available on the device. The total blinking time is controlled by the
+  // OS.
+  LightSettings light_settings = 24;
+
+  // Contains the URL of an image that is going to be displayed in a
+  // notification. If present, it will override
+  // [google.firebase.fcm.v1.Notification.image] [google.firebase.fcm.v1.Notification.image].
+  string image = 25;
+}
+
+// Options for features provided by the FCM SDK for Android.
+message AndroidFcmOptions {
+  // Label associated with the message's analytics data.
+  string analytics_label = 1;
+}
+
+// [Webpush protocol](https://tools.ietf.org/html/rfc8030) options.
+message WebpushConfig {
+  // HTTP headers defined in webpush protocol. Refer to
+  // [Webpush protocol](https://tools.ietf.org/html/rfc8030#section-5) for
+  // supported headers, e.g. "TTL": "15".
+  map<string, string> headers = 1;
+
+  // Arbitrary key/value payload. If present, it will override
+  // [google.firebase.fcm.v1.Message.data] [google.firebase.fcm.v1.Message.data].
+  map<string, string> data = 2;
+
+  // Web Notification options as a JSON object. Supports Notification instance
+  // properties as defined in [Web Notification
+  // API](https://developer.mozilla.org/en-US/docs/Web/API/Notification). If
+  // present, "title" and "body" fields override
+  // [google.firebase.fcm.v1.Notification.title] and
+  // [google.firebase.fcm.v1.Notification.body].
+  google.protobuf.Struct notification = 3;
+
+  // Options for features provided by the FCM SDK for Web.
+  WebpushFcmOptions fcm_options = 4;
+}
+
+// Options for features provided by the FCM SDK for Web.
+message WebpushFcmOptions {
+  // The link to open when the user clicks on the notification.
+  // For all URL values, HTTPS is required.
+  string link = 1;
+
+  // Label associated with the message's analytics data.
+  string analytics_label = 2;
+}
+
+// [Apple Push Notification Service](https://goo.gl/MXRTPa) specific options.
+message ApnsConfig {
+  // HTTP request headers defined in Apple Push Notification Service. Refer to
+  // [APNs request
+  // headers](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/sending_notification_requests_to_apns)
+  // for supported headers such as  `apns-expiration` and `apns-priority`.
+  map<string, string> headers = 1;
+
+  // APNs payload as a JSON object, including both `aps` dictionary and custom
+  // payload. See [Payload Key
+  // Reference](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification).
+  // If present, it overrides [google.firebase.fcm.v1.Notification.title] [google.firebase.fcm.v1.Notification.title]
+  // and [google.firebase.fcm.v1.Notification.body] [google.firebase.fcm.v1.Notification.body].
+  //
+  // The backend sets a default value for `apns-expiration` of 30 days
+  // and a default value for `apns-priority` of 10 if not explicitly set.
+  google.protobuf.Struct payload = 2;
+
+  // Options for features provided by the FCM SDK for iOS.
+  ApnsFcmOptions fcm_options = 3;
+}
+
+// Options for features provided by the FCM SDK for iOS.
+message ApnsFcmOptions {
+  // Label associated with the message's analytics data.
+  string analytics_label = 1;
+
+  // Contains the URL of an image that is going to be displayed in a
+  // notification. If present, it will override
+  // [google.firebase.fcm.v1.Notification.image] [google.firebase.fcm.v1.Notification.image].
+  string image = 2;
+}
+
+// Platform independent options for features provided by the FCM SDKs.
+message FcmOptions {
+  // Label associated with the message's analytics data.
+  string analytics_label = 1;
+}
+
+// Message that may be returned in an error response to add details.
+message FcmError {
+  // Error codes for FCM failure conditions.
+  enum ErrorCode {
+    // No more information is available about this error.
+    UNSPECIFIED_ERROR = 0;
+
+    // (HTTP error code = 400) Request parameters were invalid. An extension of
+    // type [google.rpc.BadRequest] [] is returned to specify which field was
+    // invalid.
+    INVALID_ARGUMENT = 1;
+
+    // (HTTP error code = 404) App instance was unregistered from FCM. This
+    // usually means that the token used is no longer valid and a new one must
+    // be used.
+    UNREGISTERED = 2;
+
+    // (HTTP error code = 403) The authenticated sender ID is different from the
+    // sender ID for the registration token.
+    SENDER_ID_MISMATCH = 3;
+
+    // (HTTP error code = 429) Sending limit exceeded for the message target. An
+    // extension of type [google.rpc.QuotaFailure] [] is returned to specify
+    // which quota got exceeded.
+    QUOTA_EXCEEDED = 4;
+
+    // (HTTP error code = 401) APNs certificate or auth key was invalid or
+    // missing.
+    // Deprecated. Use THIRD_PARTY_AUTH_ERROR.
+    APNS_AUTH_ERROR = 5 [deprecated = true];
+
+    // (HTTP error code = 503) The server is overloaded.
+    UNAVAILABLE = 6;
+
+    // (HTTP error code = 500) An unknown internal error occurred.
+    INTERNAL = 7;
+
+    // (HTTP error code = 401) APNs certificate or web push auth key was invalid
+    // or missing.
+    THIRD_PARTY_AUTH_ERROR = 8;
+  }
+
+  // Error code specifying why the message failed.
+  ErrorCode error_code = 1;
+}
+
+// Error details directly from the
+// [Apple Push Notification service (APNs)](https://goo.gl/MXRTPa).
+message ApnsError {
+  // Status code in the response from APNs. See
+  // [APNs status codes](https://goo.gl/BtPJLj) for explanations of possible
+  // values.
+  int32 status_code = 1;
+
+  // Failure reason in the response from APNs. See
+  // [values](https://goo.gl/oFSRPg) for explanations of possible values.
+  string reason = 2;
+}

@@ -6,6 +6,7 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
+    "resolveJsonModule": true,
     // TODO(rsgowman): enable `"strict": true,` and remove explicit setting of: noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictNullChecks, strictFunctionTypes, strictPropertyInitialization.
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -13,7 +14,10 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     //"strictPropertyInitialization": true,
-    "lib": ["es2018"],
+    "lib": [
+      "es2018",
+      "dom"
+    ],
     "outDir": "lib",
     "rootDir": "."
   },

@@ -25,6 +25,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
+  ignorePatterns: ["src/generated/*"],
   rules: {
     // Following checks are temporarily disabled. We shall incrementally enable them in the
     // future, fixing any violations as we go.
