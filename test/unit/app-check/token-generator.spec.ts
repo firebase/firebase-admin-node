@@ -43,7 +43,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const ALGORITHM = 'RS256';
-const ONE_HOUR_IN_SECONDS = 60 * 60;
+const FIVE_MIN_IN_SECONDS = 60 * 5;
 const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1beta.TokenExchangeService';
 
 /**
@@ -184,7 +184,7 @@ describe('AppCheckTokenGenerator', () => {
             // eslint-disable-next-line @typescript-eslint/camelcase
             app_id: APP_ID,
             iat: 1,
-            exp: ONE_HOUR_IN_SECONDS + 1,
+            exp: FIVE_MIN_IN_SECONDS + 1,
             aud: FIREBASE_APP_CHECK_AUDIENCE,
             iss: mocks.certificateObject.client_email,
             sub: mocks.certificateObject.client_email,
@@ -205,7 +205,7 @@ describe('AppCheckTokenGenerator', () => {
               // eslint-disable-next-line @typescript-eslint/camelcase
               app_id: APP_ID,
               iat: 1,
-              exp: ONE_HOUR_IN_SECONDS + 1,
+              exp: FIVE_MIN_IN_SECONDS + 1,
               aud: FIREBASE_APP_CHECK_AUDIENCE,
               iss: mocks.certificateObject.client_email,
               sub: mocks.certificateObject.client_email,
@@ -233,7 +233,7 @@ describe('AppCheckTokenGenerator', () => {
               // eslint-disable-next-line @typescript-eslint/camelcase
               app_id: APP_ID,
               iat: 1,
-              exp: ONE_HOUR_IN_SECONDS + 1,
+              exp: FIVE_MIN_IN_SECONDS + 1,
               aud: FIREBASE_APP_CHECK_AUDIENCE,
               iss: mocks.certificateObject.client_email,
               sub: mocks.certificateObject.client_email,
@@ -275,7 +275,7 @@ describe('AppCheckTokenGenerator', () => {
         });
     });
 
-    it('should be fulfilled with a JWT which expires after one hour', () => {
+    it('should be fulfilled with a JWT which expires after five minutes', () => {
       clock = sinon.useFakeTimers(1000);
 
       let token: string;
@@ -283,7 +283,7 @@ describe('AppCheckTokenGenerator', () => {
         .then((result) => {
           token = result;
 
-          clock!.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+          clock!.tick((FIVE_MIN_IN_SECONDS * 1000) - 1);
 
           // Token should still be valid
           return verifyToken(token, mocks.keyPairs[0].public);

@@ -30,8 +30,8 @@ import { HttpError } from '../utils/api-request';
 
 import AppCheckTokenOptions = appCheck.AppCheckTokenOptions;
 
-const ONE_HOUR_IN_SECONDS = 60 * 60;
-const ONE_MINUTE_IN_MILLIS = 60 * 1000;
+const ONE_MINUTE_IN_SECONDS = 60;
+const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
 const ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 
 // Audience to use for Firebase App Check Custom tokens
@@ -91,7 +91,7 @@ export class AppCheckTokenGenerator {
         // eslint-disable-next-line @typescript-eslint/camelcase
         app_id: appId,
         aud: FIREBASE_APP_CHECK_AUDIENCE,
-        exp: iat + ONE_HOUR_IN_SECONDS,
+        exp: iat + (ONE_MINUTE_IN_SECONDS * 5),
         iat,
         ...customOptions,
       };
