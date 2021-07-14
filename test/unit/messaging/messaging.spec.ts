@@ -318,6 +318,7 @@ describe('Messaging', () => {
   let mockedRequests: nock.Scope[] = [];
   let httpsRequestStub: sinon.SinonStub;
   let getTokenStub: sinon.SinonStub;
+  let generatedClientStub: sinon.SinonStub | null;
   let nullAccessTokenMessaging: Messaging;
 
   let messagingService: {[key: string]: any};
@@ -351,6 +352,12 @@ describe('Messaging', () => {
       httpsRequestStub.restore();
     }
     getTokenStub.restore();
+
+    if (generatedClientStub) {
+      generatedClientStub.restore();
+    }
+    generatedClientStub = null;
+
     return mockApp.delete();
   });
 
@@ -413,15 +420,6 @@ describe('Messaging', () => {
       }).to.throw('Message must be a non-null object');
     });
 
-    let stub: sinon.SinonStub | null;
-
-    afterEach(() => {
-      if (stub) {
-        stub.restore();
-      }
-      stub = null;
-    });
-
     const noTarget = [
       {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' },
     ];
@@ -476,7 +474,7 @@ describe('Messaging', () => {
     ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
-        stub = sinon
+        generatedClientStub = sinon
           .stub(FcmServiceClient.prototype, 'sendMessage')
           .resolves(SEND_SUCCESSFUL_RETURN);
         return messaging.send(
@@ -486,7 +484,7 @@ describe('Messaging', () => {
     });
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID in dryRun mode: ${JSON.stringify(message)}`, () => {
-        stub = sinon
+        generatedClientStub = sinon
           .stub(FcmServiceClient.prototype, 'sendMessage')
           .resolves(SEND_SUCCESSFUL_RETURN);
         return messaging.send(
