@@ -61,10 +61,11 @@ export namespace appCheck {
      * back to a client.
      * 
      * @param appId The App ID of the Firebase App the token belongs to.
+     * @param options Optional options object when creating a new App Check Token.
      *
-     * @return A promise that fulfills with a `AppCheckToken`.
+     * @returns A promise that fulfills with a `AppCheckToken`.
      */
-    createToken(appId: string): Promise<AppCheckToken>;
+    createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken>;
 
     /**
      * Verifies a Firebase App Check token (JWT). If the token is valid, the promise is
@@ -93,6 +94,17 @@ export namespace appCheck {
      * The time-to-live duration of the token in milliseconds.
      */
     ttlMillis: number;
+  }
+
+  /**
+   * Interface representing App Check token options.
+   */
+  export interface AppCheckTokenOptions {
+    /**
+     * The length of time, in milliseconds, for which the App Check token will
+     * be valid. This value must be between 30 minutes and 7 days, inclusive.
+     */
+    ttlMillis?: number;
   }
 
   /**

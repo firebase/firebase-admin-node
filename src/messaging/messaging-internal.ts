@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { renameProperties } from '../utils/index';
+import { renameProperties, transformMillisecondsToSecondsString } from '../utils/index';
 import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
 import { messaging } from './index';
 import * as validator from '../utils/validator';
@@ -588,29 +588,4 @@ function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined): v
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
-}
-
-/**
- * Transforms milliseconds to the format expected by FCM service.
- * Returns the duration in seconds with up to nine fractional
- * digits, terminated by 's'. Example: "3.5s".
- *
- * @param {number} milliseconds The duration in milliseconds.
- * @return {string} The resulting formatted string in seconds with up to nine fractional
- * digits, terminated by 's'.
- */
-function transformMillisecondsToSecondsString(milliseconds: number): string {
-  let duration: string;
-  const seconds = Math.floor(milliseconds / 1000);
-  const nanos = (milliseconds - seconds * 1000) * 1000000;
-  if (nanos > 0) {
-    let nanoString = nanos.toString();
-    while (nanoString.length < 9) {
-      nanoString = '0' + nanoString;
-    }
-    duration = `${seconds}.${nanoString}s`;
-  } else {
-    duration = `${seconds}s`;
-  }
-  return duration;
 }

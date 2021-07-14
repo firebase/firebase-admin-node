@@ -22,7 +22,7 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
-  toWebSafeBase64, formatString, generateUpdateMask,
+  toWebSafeBase64, formatString, generateUpdateMask, transformMillisecondsToSecondsString,
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
 import { FirebaseApp } from '../../../src/firebase-app';
@@ -381,5 +381,18 @@ describe('generateUpdateMask()', () => {
       .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l', 'n']);
     expect(generateUpdateMask(obj, ['notfound', 'b', 'f', 'k', 'l']))
       .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l', 'n']);
+  });
+});
+
+
+describe('transformMillisecondsToSecondsString()', () => {
+  [
+    [3000.000001, '3s'], [3000.001, '3.000001000s'],
+    [3000, '3s'], [3500, '3.500000000s']
+  ].forEach((duration) => {
+    it('should transform to protobuf duration string when provided milliseconds:' + JSON.stringify(duration[0]),
+      () => {
+        expect(transformMillisecondsToSecondsString(duration[0] as number)).to.equal(duration[1]);
+      });
   });
 });

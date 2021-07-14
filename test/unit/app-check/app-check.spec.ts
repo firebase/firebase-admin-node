@@ -147,6 +147,15 @@ describe('AppCheck', () => {
         .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
     });
 
+    it('should propagate API errors with custom options', () => {
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { ttlMillis: 1800000 })
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
     it('should resolve with AppCheckToken on success', () => {
       const response = { token: 'token', ttlMillis: 3000 };
       const stub = sinon
