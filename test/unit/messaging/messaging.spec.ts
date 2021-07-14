@@ -33,6 +33,7 @@ import { Messaging } from '../../../src/messaging/messaging';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getSdkVersion } from '../../../src/utils/index';
+import { FcmServiceClient } from '../../../src/generated/messaging/src/v1/fcm_service_client';
 
 chai.should();
 chai.use(sinonChai);
@@ -83,13 +84,6 @@ const STATUS_CODE_TO_ERROR_MAP = {
   503: 'messaging/server-unavailable',
 };
 
-function mockSendRequest(): nock.Scope {
-  return nock(`https://${FCM_SEND_HOST}:443`)
-    .post('/v1/projects/project_id/messages:send')
-    .reply(200, {
-      name: 'projects/projec_id/messages/message_id',
-    });
-}
 
 function mockBatchRequest(ids: string[]): nock.Scope {
   return mockBatchRequestWithErrors(ids);
@@ -419,6 +413,15 @@ describe('Messaging', () => {
       }).to.throw('Message must be a non-null object');
     });
 
+    let stub: sinon.SinonStub | null;
+
+    afterEach(() => {
+      if (stub) {
+        stub.restore();
+      }
+      stub = null;
+    });
+
     const noTarget = [
       {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' },
     ];
@@ -466,9 +469,16 @@ describe('Messaging', () => {
       { token: 'mock-token' }, { topic: 'mock-topic' },
       { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
     ];
+    const SEND_SUCCESSFUL_RETURN = [
+      // An examle IMessage that is normally returned by the generated client
+      // when sendMessage() is ran successfully
+      { name: 'projects/projec_id/messages/message_id' }
+    ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
-        mockedRequests.push(mockSendRequest());
+        stub = sinon
+          .stub(FcmServiceClient.prototype, 'sendMessage')
+          .resolves(SEND_SUCCESSFUL_RETURN);
         return messaging.send(
           message,
         ).should.eventually.equal('projects/projec_id/messages/message_id');
@@ -476,7 +486,9 @@ describe('Messaging', () => {
     });
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID in dryRun mode: ${JSON.stringify(message)}`, () => {
-        mockedRequests.push(mockSendRequest());
+        stub = sinon
+          .stub(FcmServiceClient.prototype, 'sendMessage')
+          .resolves(SEND_SUCCESSFUL_RETURN);
         return messaging.send(
           message,
           true,
@@ -838,9 +850,9 @@ describe('Messaging', () => {
       const topicMessage: TopicMessage = { topic: 'test' };
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
-      
+
       mockedRequests.push(mockBatchRequest(messageIds));
-      
+
       return messaging.sendAll(messages)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -851,7 +863,7 @@ describe('Messaging', () => {
             expect(resp.error).to.be.undefined;
           });
         });
-    });    
+    });
   });
 
   describe('sendMulticast()', () => {
