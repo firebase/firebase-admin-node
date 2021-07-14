@@ -77,7 +77,7 @@ export namespace messaging {
   export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
   /**
-   * Payload for the admin.messaing.sendMulticase() method. The payload contains all the fields
+   * Payload for the admin.messaing.sendMulticast() method. The payload contains all the fields
    * in the BaseMessage type, and a list of tokens.
    */
   export interface MulticastMessage extends BaseMessage {
