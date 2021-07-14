@@ -22,6 +22,7 @@ import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEY
 import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
+import { ServiceAccountCredential } from '../credential/credential-internal';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 
@@ -40,6 +41,12 @@ import MessagingTopicResponse = messaging.MessagingTopicResponse;
 import MessagingConditionResponse = messaging.MessagingConditionResponse;
 import DataMessagePayload = messaging.DataMessagePayload;
 import NotificationMessagePayload = messaging.NotificationMessagePayload;
+
+// GAPIC Generated client types
+import * as protos from '../generated/messaging/protos/protos';
+import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
+import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
+import ClientSendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -229,6 +236,55 @@ export class Messaging implements MessagingInterface {
   }
 
   /**
+   * Converts from the public {@link messaging.Message `Message`} type to the
+   * internal/generated {@link protos.google.firebase.fcm.v1.Message `clientMessage`}
+   * type.
+   *
+   * @param message The {@link messaging.Message `Message`} to be converted
+   * @returns A {@link protos.google.firebase.fcm.v1.Message `clientMessage`},
+   * where like fields are the same as the inptuted message.
+   */
+  private convertToClientMessage(message: Message): ClientMessage {
+    //TODO: Add conversion for android, webpush, apns
+
+    const clientMessage: ClientMessage = {
+      data: message.data,
+      notification: message.notification,
+      fcmOptions: message.fcmOptions
+    }
+
+    if ('token' in message) {
+      clientMessage.token = message.token;
+    } else if ('topic' in message) {
+      clientMessage.topic = message.topic;
+    } else if ('condition' in message) {
+      clientMessage.condition = message.condition;
+    }
+
+    return clientMessage;
+  }
+
+  /**
+   * Method that gets the current App's credentials
+   * @returns The credential key of the current Firebase App
+   */
+  private getAppKey(): object{
+    const credential = this.app.options.credential;
+    if (credential instanceof ServiceAccountCredential) {
+      return {
+        private_key: credential.privateKey,
+        client_email: credential.clientEmail
+      };
+    } else {
+      throw new FirebaseMessagingError({
+        code: 'invalid-credential',
+        message: 'Unable to get credentials of a non service account' +
+                 ' - this may change in the future'
+      });
+    }
+  }
+
+  /**
    * Sends the given message via FCM.
    *
    * @param message The message payload.
@@ -245,15 +301,26 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    return this.getUrlPath()
-      .then((urlPath) => {
-        const request: { message: Message; validate_only?: boolean } = { message: copy };
-        if (dryRun) {
-          request.validate_only = true;
-        }
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
+
+    const clientMessage = this.convertToClientMessage(copy);
+
+    const client = new FcmServiceClient({
+      credentials: this.getAppKey(),
+      fallback: 'rest'
+    });
+
+    return client.getProjectId()
+      .then((projectId) => {
+        const parent = `projects/${projectId}`;
+
+        const request: ClientSendRequest = {
+          parent: parent,
+          message: clientMessage,
+          validateOnly: dryRun
+        };
+        return client.sendMessage(request);
       })
-      .then((response) => {
+      .then(([response]) => {
         return (response as any).name;
       });
   }

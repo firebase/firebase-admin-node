@@ -30,7 +30,9 @@ import jsonProtos = require('../../protos/protos.json');
  */
 import * as gapicConfig from './fcm_service_client_config.json';
 
-const version = require('../../../package.json').version;
+//! Temporary change, this modification should be avoidable with the suggested
+//  directory refactoring.
+const version = require('../../../../../package.json').version;
 
 /**
  *  Firebase Cloud Messaging service (FCM) to target cross-platform messaging.
