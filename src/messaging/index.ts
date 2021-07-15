@@ -71,14 +71,14 @@ export namespace messaging {
   }
 
   /**
-   * Payload for the admin.messaging.send() operation. The payload contains all the fields
-   * in the BaseMessage type, and exactly one of token, topic or condition.
+   * Payload for the `admin.messaging.send()` operation. The payload contains all the fields
+   * in the `BaseMessage` type, and exactly one of token, topic or condition.
    */
   export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
   /**
-   * Payload for the admin.messaing.sendMulticast() method. The payload contains all the fields
-   * in the BaseMessage type, and a list of tokens.
+   * Payload for the `admin.messaging.sendMulticast()` method. The payload contains all the fields
+   * in the `BaseMessage` type, and a list of tokens.
    */
   export interface MulticastMessage extends BaseMessage {
     tokens: string[];
