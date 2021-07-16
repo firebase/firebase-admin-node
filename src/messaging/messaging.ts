@@ -47,6 +47,7 @@ import * as protos from '../generated/messaging/protos/protos';
 import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
 import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
 import ClientSendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
+import { createFirebaseErrorFromGapicError } from './messaging-errors-internal';
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -322,6 +323,8 @@ export class Messaging implements MessagingInterface {
       })
       .then(([response]) => {
         return (response as any).name;
+      }).catch(err => {
+        throw createFirebaseErrorFromGapicError(err);
       });
   }
 
