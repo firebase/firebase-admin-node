@@ -19,6 +19,41 @@ import { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error
 import * as validator from '../utils/validator';
 
 /**
+ * Creates a new FirebaseMessagingError by extracting the error code, message, and
+ * other relevant details from an error thrown by the generated GAPIC client.
+ *
+ * @param err
+ * @returns
+ */
+export function createFirebaseErrorFromGapicError(err: any): FirebaseMessagingError {
+  let error: {code: string; message: string};
+  switch (err.code) {
+  case 400:
+    error = MessagingClientErrorCode.INVALID_ARGUMENT;
+    break;
+  case 401:
+  case 403:
+    error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
+    break;
+  case 500:
+    error = MessagingClientErrorCode.INTERNAL_ERROR;
+    break;
+  case 503:
+    error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
+    break;
+  default:
+    // Treat errors with unexpected status codes as unknown.
+    error = MessagingClientErrorCode.UNKNOWN_ERROR;
+  }
+
+  return new FirebaseMessagingError({
+    code: error.code,
+    message: `${ error.message } Raw server error message: "${ err.message }". `
+    + `Server status code, status: "${ err.code }, ${ err.status }".`
+  });
+}
+
+/**
  * Creates a new FirebaseMessagingError by extracting the error code, message and other relevant
  * details from an HTTP error response.
  *
