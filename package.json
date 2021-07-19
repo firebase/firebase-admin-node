@@ -73,7 +73,7 @@
     "@firebase/auth": "^0.16.5",
     "@firebase/auth-types": "^0.10.3",
     "@microsoft/api-extractor": "^7.11.2",
-    "@types/bcrypt": "^2.0.0",
+    "@types/bcrypt": "^5.0.0",
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/firebase-token-generator": "^2.0.28",
