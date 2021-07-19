@@ -25,32 +25,13 @@ import * as validator from '../utils/validator';
  * @param err
  * @returns
  */
-export function createFirebaseErrorFromGapicError(err: any): FirebaseMessagingError {
-  let error: {code: string; message: string};
-  switch (err.code) {
-  case 400:
-    error = MessagingClientErrorCode.INVALID_ARGUMENT;
-    break;
-  case 401:
-  case 403:
-    error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
-    break;
-  case 500:
-    error = MessagingClientErrorCode.INTERNAL_ERROR;
-    break;
-  case 503:
-    error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
-    break;
-  default:
-    // Treat errors with unexpected status codes as unknown.
-    error = MessagingClientErrorCode.UNKNOWN_ERROR;
-  }
+export function createFirebaseErrorFromGapicError(err: Error): FirebaseMessagingError {
+  const json = { error: err };
 
-  return new FirebaseMessagingError({
-    code: error.code,
-    message: `${ error.message } Raw server error message: "${ err.message }". `
-    + `Server status code, status: "${ err.code }, ${ err.status }".`
-  });
+  const errorCode = getErrorCode(json);
+  const errorMessage = getErrorMessage(json);
+
+  return FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
 }
 
 /**
