@@ -322,7 +322,7 @@ export class Messaging implements MessagingInterface {
         return client.sendMessage(request);
       })
       .then(([response]) => {
-        return (response as any).name;
+        return response.name!;
       }).catch(err => {
         throw createFirebaseErrorFromGapicError(err);
       });
