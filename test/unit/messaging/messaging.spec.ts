@@ -123,14 +123,6 @@ function createMultipartPayloadWithErrors(
   return payload;
 }
 
-function mockSendError(
-  statusCode: number,
-  errorFormat: 'json' | 'text',
-  responseOverride?: any,
-): nock.Scope {
-  return mockErrorResponse(
-    '/v1/projects/project_id/messages:send', statusCode, errorFormat, responseOverride);
-}
 
 function mockBatchError(
   statusCode: number,
@@ -495,19 +487,25 @@ describe('Messaging', () => {
     });
 
     it('should fail when the backend server returns a detailed error', () => {
-      const resp = {
-        error: {
-          status: 'INVALID_ARGUMENT',
-          message: 'test error message',
-        },
-      };
-      mockedRequests.push(mockSendError(400, 'json', resp));
+      generatedClientStub = sinon
+        .stub(FcmServiceClient.prototype, 'sendMessage')
+        .rejects({
+          'message': 'The registration token is not a valid FCM registration token',
+          'code': 400,
+          'status':'INVALID_ARGUMENT',
+          'details': [
+            { '@type':'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+              'errorCode':'INVALID_ARGUMENT'
+            }
+          ],
+          'note': 'Exception occurred in retry method that was not classified as transient'
+        });
       return messaging.send(
         { token: 'mock-token' },
-      ).should.eventually.be.rejectedWith('test error message')
-        .and.have.property('code', 'messaging/invalid-argument');
+      ).should.eventually.be.rejectedWith('The registration token is not ' +
+          'a valid FCM registration token');
     });
-
+    /*
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
       const resp = {
         error: {
@@ -522,6 +520,9 @@ describe('Messaging', () => {
         },
       };
       mockedRequests.push(mockSendError(404, 'json', resp));
+      // generatedClientStub = sinon
+      //   .stub(FcmServiceClient.prototype, 'sendMessage')
+      //   .throws({ token: 'mock-token' });
       return messaging.send(
         { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('test error message')
@@ -578,7 +579,7 @@ describe('Messaging', () => {
       return messaging.send(
         { token: 'mock-token' },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
-    });
+    });*/
   });
 
   describe('sendAll()', () => {
@@ -3544,13 +3545,18 @@ describe('Messaging', () => {
       },
     ];
 
+    const GAPIC_RESPONSE = [
+      // An example IMessage that is normally returned by the generated client
+      // when sendMessage() is ran successfully
+      { name: 'projects/projec_id/messages/message_id' }
+    ];
+
     validMessages.forEach((config) => {
       it(`should serialize well-formed Message: ${config.label}`, () => {
         // Wait for the initial getToken() call to complete before stubbing https.request.
         return mockApp.INTERNAL.getToken()
           .then(() => {
-            const resp = utils.responseFrom({ message: 'test' });
-            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
+            httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
             const req = config.req;
             req.token = 'mock-token';
             return messaging.send(req);
@@ -3558,13 +3564,20 @@ describe('Messaging', () => {
           .then(() => {
             const expectedReq = config.expectedReq || config.req;
             expectedReq.token = 'mock-token';
-            expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith({
-              method: 'POST',
-              data: { message: expectedReq },
-              timeout: 10000,
-              url: 'https://fcm.googleapis.com/v1/projects/project_id/messages:send',
-              headers: expectedHeaders,
-            });
+            expectedHeaders;
+            expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith(
+              {
+                parent: 'projects/project_id',
+                message: {
+                  data: expectedReq.data,
+                  notification: expectedReq.notification,
+                  fcmOptions: expectedReq.fcmOptions,
+                  token: expectedReq.token,
+                  //TODO: Expand for android, webpush, apns once functionality is added
+                },
+                validateOnly: undefined,
+              }
+            );
           });
       });
     });
@@ -3572,14 +3585,20 @@ describe('Messaging', () => {
     it('should not throw when the message is addressed to the prefixed topic name', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          const resp = utils.responseFrom({ message: 'test' });
-          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
+          //const resp = utils.responseFrom({ message: 'test' });
+          httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
           return messaging.send({ topic: '/topics/mock-topic' });
         })
         .then(() => {
           expect(httpsRequestStub).to.have.been.calledOnce;
-          const requestData = httpsRequestStub.args[0][0].data;
-          const expectedReq = { topic: 'mock-topic' };
+          console.log(httpsRequestStub.args[0]);
+          const requestData = httpsRequestStub.args[0][0];
+          const expectedReq = {
+            topic: 'mock-topic',
+            data: undefined,
+            fcmOptions: undefined,
+            notification: undefined,
+          };
           expect(requestData.message).to.deep.equal(expectedReq);
         });
     });
