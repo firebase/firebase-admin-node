@@ -201,6 +201,7 @@ export class Messaging implements MessagingInterface {
   private urlPath: string;
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private fcmServiceClient: FcmServiceClient;
 
   /**
    * Gets the {@link messaging.Messaging `Messaging`} service for the
@@ -236,6 +237,7 @@ export class Messaging implements MessagingInterface {
     return this.appInternal;
   }
 
+
   /**
    * Converts from the public {@link messaging.Message `Message`} type to the
    * internal/generated {@link protos.google.firebase.fcm.v1.Message `clientMessage`}
@@ -266,23 +268,30 @@ export class Messaging implements MessagingInterface {
   }
 
   /**
-   * Method that gets the current App's credentials
-   * @returns The credential key of the current Firebase App
+   * Method that returns a fully instantiated service client.
+   *
+   * @returns an instantiated service client with either the application's
+   * service account credentials or the default credentials
    */
-  private getAppKey(): object{
+  private getFcmServiceClient(): FcmServiceClient {
+    if (this.fcmServiceClient) {
+      this.fcmServiceClient;
+    }
+
     const credential = this.app.options.credential;
+    const options: { credentials?: object; fallback: 'rest' } = {
+      fallback: 'rest'
+    };
+
     if (credential instanceof ServiceAccountCredential) {
-      return {
+      options.credentials = {
         private_key: credential.privateKey,
         client_email: credential.clientEmail
       };
-    } else {
-      throw new FirebaseMessagingError({
-        code: 'invalid-credential',
-        message: 'Unable to get credentials of a non service account' +
-                 ' - this may change in the future'
-      });
     }
+
+    this.fcmServiceClient = new FcmServiceClient(options);
+    return this.fcmServiceClient;
   }
 
   /**
@@ -305,10 +314,7 @@ export class Messaging implements MessagingInterface {
 
     const clientMessage = this.convertToClientMessage(copy);
 
-    const client = new FcmServiceClient({
-      credentials: this.getAppKey(),
-      fallback: 'rest'
-    });
+    const client = this.getFcmServiceClient();
 
     return client.getProjectId()
       .then((projectId) => {
