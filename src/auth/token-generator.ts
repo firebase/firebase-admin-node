@@ -27,7 +27,7 @@ import { HttpError } from '../utils/api-request';
 
 const ALGORITHM_NONE: Algorithm = 'none' as const;
 
-const MIN_JWT_EXPIRES_IN_MS = 1000;
+const MIN_JWT_EXPIRES_IN_MS = 5 * 60 * 1000;
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 // List of blacklisted claims which cannot be provided when creating a custom token

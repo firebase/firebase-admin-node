@@ -212,7 +212,7 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       it('should throw given an invalid expiresIn', () => {
-        const invalidExpiresIns: any[] = [null, NaN, Infinity, _.noop, 0, 999, 3600001];
+        const invalidExpiresIns: any[] = [null, NaN, Infinity, _.noop, 0, 299999, 3600001];
         invalidExpiresIns.forEach((invalidExpiresIn) => {
           expect(() => {
             tokenGenerator.createCustomToken(mocks.uid, { expiresIn: invalidExpiresIn });
@@ -233,7 +233,7 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       it('should be fulfilled given a valid uid, empty object developer claims and valid expiresIn', () => {
-        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: {}, expiresIn: 1000 });
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: {}, expiresIn: 300000 });
       });
 
       it('should be fulfilled given a valid uid, valid developer claims and valid expiresIn', () => {

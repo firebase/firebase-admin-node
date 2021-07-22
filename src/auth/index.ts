@@ -951,7 +951,7 @@ export namespace auth {
     developerClaims?: { [key: string]: any };
 
     /** 
-     * The JWT expiration in milliseconds. The minimum allowed is X and the maximum allowed is 1 hour.
+     * The JWT expiration in milliseconds. The minimum allowed is 5 minutes and the maximum allowed is 1 hour.
      * Defaults to 1 hour. 
      */
     expiresIn?: number;
