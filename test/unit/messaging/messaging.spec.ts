@@ -348,7 +348,6 @@ describe('Messaging', () => {
     if (generatedClientStub) {
       generatedClientStub.restore();
     }
-    generatedClientStub = null;
 
     return mockApp.delete();
   });
