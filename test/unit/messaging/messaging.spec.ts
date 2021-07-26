@@ -502,7 +502,8 @@ describe('Messaging', () => {
       return messaging.send(
         { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('The registration token is not ' +
-          'a valid FCM registration token');
+          'a valid FCM registration token')
+        .and.have.property('code', 'messaging/invalid-argument');
     });
   });
 
