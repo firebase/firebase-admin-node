@@ -275,7 +275,7 @@ export class Messaging implements MessagingInterface {
    */
   private getFcmServiceClient(): FcmServiceClient {
     if (this.fcmServiceClient) {
-      this.fcmServiceClient;
+      return this.fcmServiceClient;
     }
 
     const credential = this.app.options.credential;
