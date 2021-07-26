@@ -3478,32 +3478,28 @@ describe('Messaging', () => {
 
     validMessages.forEach((config) => {
       it(`should serialize well-formed Message: ${config.label}`, () => {
-        // Wait for the initial getToken() call to complete before stubbing https.request.
-        return mockApp.INTERNAL.getToken()
-          .then(() => {
-            httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
-            const req = config.req;
-            req.token = 'mock-token';
-            return messaging.send(req);
-          })
-          .then(() => {
-            const expectedReq = config.expectedReq || config.req;
-            expectedReq.token = 'mock-token';
-            expectedHeaders;
-            expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith(
-              {
-                parent: 'projects/project_id',
-                message: {
-                  data: expectedReq.data,
-                  notification: expectedReq.notification,
-                  fcmOptions: expectedReq.fcmOptions,
-                  token: expectedReq.token,
-                  //TODO: Expand for android, webpush, apns once functionality is added
-                },
-                validateOnly: undefined,
-              }
-            );
-          });
+        generatedClientStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
+        const req = config.req;
+        req.token = 'mock-token';
+
+        return messaging.send(req).then(() => {
+          const expectedReq = config.expectedReq || config.req;
+          expectedReq.token = 'mock-token';
+          expectedHeaders;
+          expect(generatedClientStub).to.have.been.calledOnce.and.calledWith(
+            {
+              parent: 'projects/project_id',
+              message: {
+                data: expectedReq.data,
+                notification: expectedReq.notification,
+                fcmOptions: expectedReq.fcmOptions,
+                token: expectedReq.token,
+                //TODO: Expand for android, webpush, apns once functionality is added
+              },
+              validateOnly: undefined,
+            }
+          );
+        });
       });
     });
 
