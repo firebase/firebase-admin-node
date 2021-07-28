@@ -53,6 +53,20 @@ describe('admin.appCheck', () => {
           expect(token).to.have.keys(['token', 'ttlMillis']);
           expect(token.token).to.be.a('string').and.to.not.be.empty;
           expect(token.ttlMillis).to.be.a('number');
+          expect(token.ttlMillis).to.equals(3600000);
+        });
+    });
+
+    it('should succeed with a valid token and a custom ttl', function() {
+      if (!appId) {
+        this.skip();
+      }
+      return admin.appCheck().createToken(appId as string, { ttlMillis: 1800000 })
+        .then((token) => {
+          expect(token).to.have.keys(['token', 'ttlMillis']);
+          expect(token.token).to.be.a('string').and.to.not.be.empty;
+          expect(token.ttlMillis).to.be.a('number');
+          expect(token.ttlMillis).to.equals(1800000);
         });
     });
 

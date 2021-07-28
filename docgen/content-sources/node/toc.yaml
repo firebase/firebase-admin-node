@@ -26,6 +26,8 @@ toc:
     path: /docs/reference/admin/node/admin.appCheck.AppCheck-1
   - title: "AppCheckToken"
     path: /docs/reference/admin/node/admin.appCheck.AppCheckToken
+  - title: "AppCheckTokenOptions"
+    path: /docs/reference/admin/node/admin.appCheck.AppCheckTokenOptions
   - title: "DecodedAppCheckToken"
     path: /docs/reference/admin/node/admin.appCheck.DecodedAppCheckToken
   - title: "VerifyAppCheckTokenResponse"

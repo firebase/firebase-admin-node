@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "9.10.0",
+  "version": "9.11.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -73,7 +73,7 @@
     "@firebase/auth": "^0.16.5",
     "@firebase/auth-types": "^0.10.3",
     "@microsoft/api-extractor": "^7.11.2",
-    "@types/bcrypt": "^2.0.0",
+    "@types/bcrypt": "^5.0.0",
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/firebase-token-generator": "^2.0.28",
@@ -81,10 +81,10 @@
     "@types/lodash": "^4.14.104",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^8.2.2",
-    "@types/nock": "^9.1.0",
+    "@types/nock": "^11.1.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
-    "@types/sinon": "^9.0.0",
+    "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
@@ -117,6 +117,6 @@
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.2",
     "typescript": "^3.7.3",
-    "yargs": "^16.0.0"
+    "yargs": "^17.0.1"
   }
 }
