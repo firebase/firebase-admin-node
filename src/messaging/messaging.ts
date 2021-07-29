@@ -22,9 +22,12 @@ import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEY
 import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
+import { createFirebaseErrorFromGapicError } from './messaging-errors-internal';
 import { ServiceAccountCredential } from '../credential/credential-internal';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+import * as protos from '../generated/messaging/protos/protos';
+import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
 
 import MessagingInterface = messaging.Messaging;
 import Message = messaging.Message;
@@ -43,11 +46,8 @@ import DataMessagePayload = messaging.DataMessagePayload;
 import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
 // GAPIC Generated client types
-import * as protos from '../generated/messaging/protos/protos';
-import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
 import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
 import ClientSendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
-import { createFirebaseErrorFromGapicError } from './messaging-errors-internal';
 
 /* eslint-disable @typescript-eslint/camelcase */
 
