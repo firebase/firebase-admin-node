@@ -74,6 +74,12 @@ const expectedErrorCodes = {
   unknownError: 'messaging/unknown-error',
 };
 
+const successfulGapicResponse = [
+  // An example IMessage that is normally returned by the generated client
+  // when sendMessage() is ran successfully
+  { name: 'projects/projec_id/messages/message_id' }
+];
+
 const STATUS_CODE_TO_ERROR_MAP = {
   200: 'messaging/unknown-error',
   400: 'messaging/invalid-argument',
@@ -458,16 +464,12 @@ describe('Messaging', () => {
       { token: 'mock-token' }, { topic: 'mock-topic' },
       { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
     ];
-    const SEND_SUCCESSFUL_RETURN = [
-      // An example IMessage that is normally returned by the generated client
-      // when sendMessage() is ran successfully
-      { name: 'projects/projec_id/messages/message_id' }
-    ];
+
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
         generatedClientStub = sinon
           .stub(FcmServiceClient.prototype, 'sendMessage')
-          .resolves(SEND_SUCCESSFUL_RETURN);
+          .resolves(successfulGapicResponse);
         return messaging.send(
           message,
         ).should.eventually.equal('projects/projec_id/messages/message_id');
@@ -477,7 +479,7 @@ describe('Messaging', () => {
       it(`should be fulfilled with a message ID in dryRun mode: ${JSON.stringify(message)}`, () => {
         generatedClientStub = sinon
           .stub(FcmServiceClient.prototype, 'sendMessage')
-          .resolves(SEND_SUCCESSFUL_RETURN);
+          .resolves(successfulGapicResponse);
         return messaging.send(
           message,
           true,
@@ -3470,15 +3472,9 @@ describe('Messaging', () => {
       },
     ];
 
-    const GAPIC_RESPONSE = [
-      // An example IMessage that is normally returned by the generated client
-      // when sendMessage() is ran successfully
-      { name: 'projects/projec_id/messages/message_id' }
-    ];
-
     validMessages.forEach((config) => {
       it(`should serialize well-formed Message: ${config.label}`, () => {
-        generatedClientStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
+        generatedClientStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(successfulGapicResponse);
         const req = config.req;
         req.token = 'mock-token';
 
@@ -3507,7 +3503,7 @@ describe('Messaging', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
           //const resp = utils.responseFrom({ message: 'test' });
-          httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(GAPIC_RESPONSE);
+          httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(successfulGapicResponse);
           return messaging.send({ topic: '/topics/mock-topic' });
         })
         .then(() => {
