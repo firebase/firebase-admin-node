@@ -3500,12 +3500,9 @@ describe('Messaging', () => {
     });
 
     it('should not throw when the message is addressed to the prefixed topic name', () => {
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          //const resp = utils.responseFrom({ message: 'test' });
-          httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(successfulGapicResponse);
-          return messaging.send({ topic: '/topics/mock-topic' });
-        })
+
+      httpsRequestStub = sinon.stub(FcmServiceClient.prototype, 'sendMessage').resolves(successfulGapicResponse);
+      return messaging.send({ topic: '/topics/mock-topic' })
         .then(() => {
           expect(httpsRequestStub).to.have.been.calledOnce;
           console.log(httpsRequestStub.args[0]);
