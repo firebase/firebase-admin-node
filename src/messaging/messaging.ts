@@ -273,13 +273,13 @@ export class Messaging implements MessagingInterface {
    * @returns an instantiated service client with either the application's
    * service account credentials or the default credentials
    */
-  private getFcmServiceClient(): FcmServiceClient {
+  private getFcmServiceClient(): Promise<FcmServiceClient> {
     if (this.fcmServiceClient) {
-      return this.fcmServiceClient;
+      return Promise.resolve(this.fcmServiceClient);
     }
 
     const credential = this.app.options.credential;
-    const options: { credentials?: object; fallback: 'rest' } = {
+    const options: { credentials?: object; fallback: 'rest'; projectId?: string } = {
       fallback: 'rest'
     };
 
@@ -290,8 +290,22 @@ export class Messaging implements MessagingInterface {
       };
     }
 
-    this.fcmServiceClient = new FcmServiceClient(options);
-    return this.fcmServiceClient;
+    return utils.findProjectId(this.appInternal).then(projectId => {
+      if (!validator.isNonEmptyString(projectId)) {
+        // Assert for an explicit project ID (either via AppOptions or the cert itself).
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_ARGUMENT,
+          'Failed to determine project ID for Messaging. Initialize the '
+          + 'SDK with service account credentials or set project ID as an app option. '
+          + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+        );
+      }
+
+      options.projectId = projectId;
+    }).then(() => {
+      this.fcmServiceClient = new FcmServiceClient(options);
+      return this.fcmServiceClient;
+    })
   }
 
   /**
@@ -314,23 +328,24 @@ export class Messaging implements MessagingInterface {
 
     const IMessage = this.convertToIMessage(copy);
 
-    const client = this.getFcmServiceClient();
+    return this.getFcmServiceClient()
+      .then(client => {
+        return client.getProjectId()
+          .then((projectId) => {
+            const parent = `projects/${projectId}`;
 
-    return client.getProjectId()
-      .then((projectId) => {
-        const parent = `projects/${projectId}`;
-
-        const request: ISendRequest = {
-          parent: parent,
-          message: IMessage,
-          validateOnly: dryRun
-        };
-        return client.sendMessage(request);
-      })
-      .then(([response]) => {
-        return response.name!;
-      }).catch(err => {
-        throw createFirebaseErrorFromGapicError(err);
+            const request: ISendRequest = {
+              parent: parent,
+              message: IMessage,
+              validateOnly: dryRun
+            };
+            return client.sendMessage(request);
+          })
+          .then(([response]) => {
+            return response.name!;
+          }).catch(err => {
+            throw createFirebaseErrorFromGapicError(err);
+          });
       });
   }
 
