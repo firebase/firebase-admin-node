@@ -46,8 +46,8 @@ import DataMessagePayload = messaging.DataMessagePayload;
 import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
 // GAPIC Generated client types
-import ClientMessage = protos.google.firebase.fcm.v1.IMessage;
-import ClientSendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
+import IMessage = protos.google.firebase.fcm.v1.IMessage;
+import ISendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -247,24 +247,24 @@ export class Messaging implements MessagingInterface {
    * @returns A {@link protos.google.firebase.fcm.v1.Message `clientMessage`},
    * where like fields are the same as the inptuted message.
    */
-  private convertToClientMessage(message: Message): ClientMessage {
+  private convertToIMessage(message: Message): IMessage {
     //TODO: Add conversion for android, webpush, apns
 
-    const clientMessage: ClientMessage = {
+    const convertedMessage: IMessage = {
       data: message.data,
       notification: message.notification,
       fcmOptions: message.fcmOptions
     }
 
     if ('token' in message) {
-      clientMessage.token = message.token;
+      convertedMessage.token = message.token;
     } else if ('topic' in message) {
-      clientMessage.topic = message.topic;
+      convertedMessage.topic = message.topic;
     } else if ('condition' in message) {
-      clientMessage.condition = message.condition;
+      convertedMessage.condition = message.condition;
     }
 
-    return clientMessage;
+    return convertedMessage;
   }
 
   /**
@@ -312,7 +312,7 @@ export class Messaging implements MessagingInterface {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    const clientMessage = this.convertToClientMessage(copy);
+    const IMessage = this.convertToIMessage(copy);
 
     const client = this.getFcmServiceClient();
 
@@ -320,9 +320,9 @@ export class Messaging implements MessagingInterface {
       .then((projectId) => {
         const parent = `projects/${projectId}`;
 
-        const request: ClientSendRequest = {
+        const request: ISendRequest = {
           parent: parent,
-          message: clientMessage,
+          message: IMessage,
           validateOnly: dryRun
         };
         return client.sendMessage(request);
