@@ -459,7 +459,7 @@ describe('Messaging', () => {
       { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
     ];
     const SEND_SUCCESSFUL_RETURN = [
-      // An examle IMessage that is normally returned by the generated client
+      // An example IMessage that is normally returned by the generated client
       // when sendMessage() is ran successfully
       { name: 'projects/projec_id/messages/message_id' }
     ];
