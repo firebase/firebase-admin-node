@@ -482,6 +482,25 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
       });
 
+      it('should be rejected with checkRevoked set to true and corresponding user disabled', () =>  {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        expectedAccountInfoResponse.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponse);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifyIdToken(mockIdToken, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+          });        
+      });
+
       it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
         process.env.GOOGLE_CLOUD_PROJECT = mocks.projectId;
 
@@ -528,7 +547,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifyIdToken(mockIdToken, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             expect(result).to.deep.equal(decodedIdToken);
           });
       });
@@ -551,7 +570,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/id-token-revoked');
           });
@@ -610,7 +629,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifyIdToken(mockIdToken, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             expect(result).to.deep.equal(decodedIdToken);
           });
       });
@@ -772,7 +791,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifySessionCookie(mockSessionCookie, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             expect(result).to.deep.equal(decodedSessionCookie);
           });
       });
@@ -795,7 +814,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/session-cookie-revoked');
           });
@@ -838,6 +857,25 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
+      it('should be rejected with checkRevoked set to true and corresponding user disabled', () =>  {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        expectedAccountInfoResponse.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponse);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifyIdToken(mockSessionCookie, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+          });        
+      });
+
       it('should be fulfilled with checkRevoked set to true when no validSince available', () => {
         // Simulate no validSince set on the user.
         const noValidSinceGetAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
@@ -854,7 +892,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifySessionCookie(mockSessionCookie, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
             expect(result).to.deep.equal(decodedSessionCookie);
           });
       });

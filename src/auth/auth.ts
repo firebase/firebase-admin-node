@@ -105,10 +105,13 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
 
   /**
    * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the ID token was revoked. If the corresponding
-   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
-   * the check is not applied.
+   * the promise if the token could not be verified.
+   * If checkRevoked is set to true, first verifies whether the corresponding userinfo.disabled
+   * is true:
+   * If yes, an auth/user-disabled error is thrown.
+   * If no, verifies if the session corresponding to the ID token was revoked.
+   * If the corresponding user's session was invalidated, an auth/id-token-revoked error is thrown.
+   * If not specified the check is not applied.
    *
    * @param {string} idToken The JWT to verify.
    * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
@@ -121,6 +124,20 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
+          // Whether user has been disabled.
+          if (checkRevoked) {
+            const uid = decodedIdToken.uid;
+            return this.getUser(uid)
+              .then((userInfo: UserRecord) => {
+                if (userInfo.disabled) {
+                  throw new FirebaseAuthError(
+                    AuthClientErrorCode.USER_DISABLED, 'The user account has been disabled by an administrator');
+                } 
+                return this.verifyDecodedJWTNotRevoked(
+                  decodedIdToken,
+                  AuthClientErrorCode.ID_TOKEN_REVOKED);
+              });
+          }
           return this.verifyDecodedJWTNotRevoked(
             decodedIdToken,
             AuthClientErrorCode.ID_TOKEN_REVOKED);
@@ -507,10 +524,14 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
 
   /**
    * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the session cookie was revoked. If the corresponding
-   * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
-   * specified the check is not performed.
+   * the promise if the token could not be verified. 
+   * If checkRevoked is set to true, first verifies whether the corresponding userinfo.disabled
+   * is true:
+   * If yes, an auth/user-disabled error is thrown.
+   * If no, verifies if the session corresponding to the ID token was revoked.
+   * If the corresponding user's session was invalidated, an auth/session-cookie-revoked error
+   * is thrown.
+   * If not specified the check is not performed.
    *
    * @param {string} sessionCookie The session cookie to verify.
    * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
@@ -524,6 +545,20 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
+          // Whether user has been disabled.
+          if (checkRevoked) {
+            const uid = decodedIdToken.uid;
+            return this.getUser(uid)
+              .then((userInfo: UserRecord) => {
+                if (userInfo.disabled) {
+                  throw new FirebaseAuthError(
+                    AuthClientErrorCode.USER_DISABLED, 'The user account has been disabled by an administrator');
+                } 
+                return this.verifyDecodedJWTNotRevoked(
+                  decodedIdToken,
+                  AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+              });
+          }          
           return this.verifyDecodedJWTNotRevoked(
             decodedIdToken,
             AuthClientErrorCode.SESSION_COOKIE_REVOKED);
