@@ -547,7 +547,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifyIdToken(mockIdToken, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             expect(result).to.deep.equal(decodedIdToken);
           });
       });
@@ -570,7 +570,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/id-token-revoked');
           });
@@ -629,7 +629,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifyIdToken(mockIdToken, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             expect(result).to.deep.equal(decodedIdToken);
           });
       });
@@ -791,7 +791,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifySessionCookie(mockSessionCookie, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             expect(result).to.deep.equal(decodedSessionCookie);
           });
       });
@@ -814,7 +814,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/session-cookie-revoked');
           });
@@ -892,7 +892,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         return auth.verifySessionCookie(mockSessionCookie, true)
           .then((result) => {
             // Confirm underlying API called with expected parameters.
-            expect(getUserStub).to.have.been.calledTwice.and.calledWith(uid);
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             expect(result).to.deep.equal(decodedSessionCookie);
           });
       });

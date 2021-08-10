@@ -723,7 +723,7 @@ export class AuthClientErrorCode {
   };
   public static USER_DISABLED = {
     code: 'user-disabled',
-    message: 'The user account has been disabled by an administrator.',
+    message: 'The user record is disabled.',
   }
   public static USER_NOT_DISABLED = {
     code: 'user-not-disabled',

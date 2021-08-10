@@ -760,6 +760,20 @@ describe('admin.auth', () => {
         safeDelete(userRecord.uid);
       }
     });
+
+    it('A user with user record disabled is unable to sign in', async () => {
+      const password = 'password';
+      const email = 'updatedEmail@example.com';
+      return admin.auth().updateUser(updateUser.uid, { disabled : true , password, email })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(email, password);
+        })
+        .then(() => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        });
+    });
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
@@ -865,37 +879,37 @@ describe('admin.auth', () => {
 
     it('verifyIdToken() fails with checkRevoked set to true and corresponding user disabled', () => {
       let currentIdToken: string;
+      let currentUser: User;
       return clientAuth().signInWithEmailAndPassword(email, password)
-        .then((result) => {
-          expect(result.user).to.exist;
-          expect(result.user!.email).to.equal(email);
-          return result.user!.getIdToken()
+        .then(({ user }) => {
+          expect(user).to.exist;
+          expect(user!.email).to.equal(email);
+          currentUser = user!;
+          return user!.getIdToken();
         })
         .then((idToken) => {
           currentIdToken = idToken;
-          return admin.auth().verifyIdToken(currentIdToken, true)
+          return admin.auth().verifyIdToken(currentIdToken, true);
         })
         .then((decodedIdToken) => {
           expect(decodedIdToken.uid).to.equal(uid);
           expect(decodedIdToken.email).to.equal(email);
-          return admin.auth().updateUser(uid, { disabled: true })
+          return admin.auth().updateUser(uid, { disabled: true });
         })
         .then((userRecord) => {
           // Ensure disabled field has been updated.
           expect(userRecord.uid).to.equal(uid);
           expect(userRecord.email).to.equal(email);
           expect(userRecord.disabled).to.equal(true);
-          return clientAuth().signInWithEmailAndPassword(email, password)
+          return admin.auth().verifyIdToken(currentIdToken, false);
         })
-        .then((result) => {
-          expect(result.user).to.exist;
-          expect(result.user!.email).to.equal(email);
-          return result.user!.getIdToken()
+        .then(() => {
+          // Verification should be successful.
+          // Need to reload user to ensure currentUser been updated.
+          return currentUser.reload();
         })
-        .then((idToken) => {
-          // Ensure idToken is the same before verifying.
-          expect(currentIdToken).to.equal(idToken);
-          return admin.auth().verifyIdToken(idToken, true)
+        .then(() => {
+          return admin.auth().verifyIdToken(currentIdToken, true);
         })
         .then(() => {
           throw new Error('Unexpected success');
@@ -2053,15 +2067,15 @@ describe('admin.auth', () => {
     it('fails with checkRevoked set to true and corresponding user disabled', () => {
       const expiresIn = 24 * 60 * 60 * 1000;
       let currentIdToken: string;
-      let currentCustomToken: string;
       let currentSessioncookie: string;
+      let currentUser: User;
       return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => {
-          currentCustomToken = customToken;
-          return clientAuth().signInWithCustomToken(customToken)
+          return clientAuth().signInWithCustomToken(customToken);
         })
         .then(({ user }) => {
           expect(user).to.exist;
+          currentUser = user!;
           return user!.getIdToken();
         })
         .then((idToken) => {
@@ -2074,7 +2088,7 @@ describe('admin.auth', () => {
         })
         .then((sessionCookie) => {
           currentSessioncookie = sessionCookie;
-          admin.auth().verifySessionCookie(sessionCookie, true)
+          return admin.auth().verifySessionCookie(sessionCookie, true);
         })
         .then(() => {
           return admin.auth().updateUser(uid, { disabled : true });
@@ -2083,9 +2097,13 @@ describe('admin.auth', () => {
           // Ensure disabled field has been updated.
           expect(userRecord.uid).to.equal(uid);
           expect(userRecord.disabled).to.equal(true);
-          return clientAuth().signInWithCustomToken(currentCustomToken)
+          return admin.auth().verifySessionCookie(currentSessioncookie, false);
+        })
+        .then(() => {
+          // Need to reload user to ensure currentUser been updated.
+          return currentUser.reload();
         }).then(() => {
-          admin.auth().verifySessionCookie(currentSessioncookie, true)
+          admin.auth().verifySessionCookie(currentSessioncookie, true);
         })
         .then(() => {
           throw new Error('Unexpected success');

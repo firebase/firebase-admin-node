@@ -124,21 +124,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
-          // Whether user has been disabled.
-          if (checkRevoked) {
-            const uid = decodedIdToken.uid;
-            return this.getUser(uid)
-              .then((userInfo: UserRecord) => {
-                if (userInfo.disabled) {
-                  throw new FirebaseAuthError(
-                    AuthClientErrorCode.USER_DISABLED, 'The user account has been disabled by an administrator');
-                } 
-                return this.verifyDecodedJWTNotRevoked(
-                  decodedIdToken,
-                  AuthClientErrorCode.ID_TOKEN_REVOKED);
-              });
-          }
-          return this.verifyDecodedJWTNotRevoked(
+          return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
             AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
@@ -524,11 +510,11 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
 
   /**
    * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. 
+   * the promise if the cookie could not be verified. 
    * If checkRevoked is set to true, first verifies whether the corresponding userinfo.disabled
    * is true:
    * If yes, an auth/user-disabled error is thrown.
-   * If no, verifies if the session corresponding to the ID token was revoked.
+   * If no, verifies if the session corresponding to the session cookie was revoked.
    * If the corresponding user's session was invalidated, an auth/session-cookie-revoked error
    * is thrown.
    * If not specified the check is not performed.
@@ -543,23 +529,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     const isEmulator = useEmulator();
     return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
-        // Whether to check if the token was revoked.
-        if (checkRevoked || isEmulator) {
-          // Whether user has been disabled.
-          if (checkRevoked) {
-            const uid = decodedIdToken.uid;
-            return this.getUser(uid)
-              .then((userInfo: UserRecord) => {
-                if (userInfo.disabled) {
-                  throw new FirebaseAuthError(
-                    AuthClientErrorCode.USER_DISABLED, 'The user account has been disabled by an administrator');
-                } 
-                return this.verifyDecodedJWTNotRevoked(
-                  decodedIdToken,
-                  AuthClientErrorCode.SESSION_COOKIE_REVOKED);
-              });
-          }          
-          return this.verifyDecodedJWTNotRevoked(
+        // Whether to check if the cookie was revoked.
+        if (checkRevoked || isEmulator) {         
+          return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
             AuthClientErrorCode.SESSION_COOKIE_REVOKED);
         }
@@ -758,8 +730,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   }
 
   /**
-   * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
-   * with the decoded claims on success. Rejects the promise with revocation error if revoked.
+   * Verifies the decoded Firebase issued JWT is not revoked or disabled. Returns a promise that
+   * resolves with the decoded claims on success. Rejects the promise with revocation error if revoked
+   * or user disabled.
    *
    * @param {DecodedIdToken} decodedIdToken The JWT's decoded claims.
    * @param {ErrorInfo} revocationErrorInfo The revocation error info to throw on revocation
@@ -767,11 +740,17 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  private verifyDecodedJWTNotRevoked(
+  private verifyDecodedJWTNotRevokedOrDisabled(
     decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
+        // If user disabled, throw an auth/user-disabled error.
+        if (user.disabled) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.USER_DISABLED,
+            'The user account has been disabled by an administrator');
+        }
         // If no tokens valid after time available, token is not revoked.
         if (user.tokensValidAfterTime) {
           // Get the ID token authentication time and convert to milliseconds UTC.
