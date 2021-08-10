@@ -745,7 +745,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
-        // If user disabled, throw an auth/user-disabled error.
         if (user.disabled) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.USER_DISABLED,

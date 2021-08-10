@@ -879,12 +879,10 @@ describe('admin.auth', () => {
 
     it('verifyIdToken() fails with checkRevoked set to true and corresponding user disabled', () => {
       let currentIdToken: string;
-      let currentUser: User;
       return clientAuth().signInWithEmailAndPassword(email, password)
         .then(({ user }) => {
           expect(user).to.exist;
           expect(user!.email).to.equal(email);
-          currentUser = user!;
           return user!.getIdToken();
         })
         .then((idToken) => {
@@ -902,11 +900,6 @@ describe('admin.auth', () => {
           expect(userRecord.email).to.equal(email);
           expect(userRecord.disabled).to.equal(true);
           return admin.auth().verifyIdToken(currentIdToken, false);
-        })
-        .then(() => {
-          // Verification should be successful.
-          // Need to reload user to ensure currentUser been updated.
-          return currentUser.reload();
         })
         .then(() => {
           return admin.auth().verifyIdToken(currentIdToken, true);
@@ -2068,14 +2061,12 @@ describe('admin.auth', () => {
       const expiresIn = 24 * 60 * 60 * 1000;
       let currentIdToken: string;
       let currentSessioncookie: string;
-      let currentUser: User;
       return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => {
           return clientAuth().signInWithCustomToken(customToken);
         })
         .then(({ user }) => {
           expect(user).to.exist;
-          currentUser = user!;
           return user!.getIdToken();
         })
         .then((idToken) => {
@@ -2098,10 +2089,6 @@ describe('admin.auth', () => {
           expect(userRecord.uid).to.equal(uid);
           expect(userRecord.disabled).to.equal(true);
           return admin.auth().verifySessionCookie(currentSessioncookie, false);
-        })
-        .then(() => {
-          // Need to reload user to ensure currentUser been updated.
-          return currentUser.reload();
         }).then(() => {
           admin.auth().verifySessionCookie(currentSessioncookie, true);
         })
