@@ -2090,7 +2090,7 @@ describe('admin.auth', () => {
           expect(userRecord.disabled).to.equal(true);
           return admin.auth().verifySessionCookie(currentSessioncookie, false);
         }).then(() => {
-          admin.auth().verifySessionCookie(currentSessioncookie, true);
+          return admin.auth().verifySessionCookie(currentSessioncookie, true);
         })
         .then(() => {
           throw new Error('Unexpected success');
