@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
@@ -923,7 +925,7 @@ export namespace messaging {
         title?: string;
         vibrate?: number | number[];
     }
-    {};
+        {};
 }
 
 // @public
@@ -1137,7 +1139,6 @@ export namespace storage {
         bucket(name?: string): Bucket;
     }
 }
-
 
 // (No @packageDocumentation comment for this package)
 
