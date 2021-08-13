@@ -877,42 +877,28 @@ describe('admin.auth', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
     });
 
-    it('verifyIdToken() fails with checkRevoked set to true and corresponding user disabled', () => {
-      let currentIdToken: string;
-      return clientAuth().signInWithEmailAndPassword(email, password)
-        .then(({ user }) => {
-          expect(user).to.exist;
-          expect(user!.email).to.equal(email);
-          return user!.getIdToken();
-        })
-        .then((idToken) => {
-          currentIdToken = idToken;
-          return admin.auth().verifyIdToken(currentIdToken, true);
-        })
-        .then((decodedIdToken) => {
-          expect(decodedIdToken.sub).to.equal(uid);
-          expect(decodedIdToken.uid).to.equal(uid);
-          expect(decodedIdToken.email).to.equal(email);
-          return admin.auth().updateUser(uid, { disabled: true });
-        })
-        .then((userRecord) => {
-          // Ensure disabled field has been updated.
-          expect(userRecord.uid).to.equal(uid);
-          expect(userRecord.email).to.equal(email);
-          expect(userRecord.disabled).to.equal(true);
-          return admin.auth().verifyIdToken(currentIdToken, false);
-        })
-        .then((decodedIdToken) => {
-          expect(decodedIdToken.sub).to.equal(uid);
-          expect(decodedIdToken.uid).to.equal(uid);
-          expect(decodedIdToken.email).to.equal(email);
-          return admin.auth().verifyIdToken(currentIdToken, true);
-        })
-        .then(() => {
-          throw new Error('Unexpected success');
-        }, (error) => {
-          expect(error).to.have.property('code', 'auth/user-disabled');
-        });
+    it('verifyIdToken() fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const { user } = await clientAuth().signInWithEmailAndPassword(email, password);
+      expect(user).to.exist;
+      expect(user!.email).to.equal(email);
+
+      const idToken = await user!.getIdToken();
+      let decodedIdToken = await admin.auth().verifyIdToken(idToken, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+      expect(decodedIdToken.email).to.equal(email);
+
+      const userRecord = await admin.auth().updateUser(uid, { disabled: true });
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.email).to.equal(email);
+      expect(userRecord.disabled).to.equal(true);
+
+      decodedIdToken = await admin.auth().verifyIdToken(idToken, false);
+      expect(decodedIdToken.uid).to.equal(uid);
+      try {
+        await admin.auth().verifyIdToken(idToken, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
 
     if (authEmulatorHost) {
@@ -2061,50 +2047,32 @@ describe('admin.auth', () => {
         });
     });
 
-    it('fails with checkRevoked set to true and corresponding user disabled', () => {
+    it('fails with checkRevoked set to true and corresponding user disabled', async () => {
       const expiresIn = 24 * 60 * 60 * 1000;
-      let currentIdToken: string;
-      let currentSessioncookie: string;
-      return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
-        .then((customToken) => {
-          return clientAuth().signInWithCustomToken(customToken);
-        })
-        .then(({ user }) => {
-          expect(user).to.exist;
-          return user!.getIdToken();
-        })
-        .then((idToken) => {
-          currentIdToken = idToken;
-          return admin.auth().verifyIdToken(idToken);
-        }).then((decodedIdTokenClaims) => {
-          expect(decodedIdTokenClaims.uid).to.be.equal(uid);
-          // One day long session cookie.
-          return admin.auth().createSessionCookie(currentIdToken, { expiresIn });
-        })
-        .then((sessionCookie) => {
-          currentSessioncookie = sessionCookie;
-          return admin.auth().verifySessionCookie(sessionCookie, true);
-        })
-        .then((decodedIdToken) => {
-          expect(decodedIdToken.sub).to.equal(uid);
-          expect(decodedIdToken.uid).to.equal(uid);
-          return admin.auth().updateUser(uid, { disabled : true });
-        })
-        .then((userRecord) => {
-          // Ensure disabled field has been updated.
-          expect(userRecord.uid).to.equal(uid);
-          expect(userRecord.disabled).to.equal(true);
-          return admin.auth().verifySessionCookie(currentSessioncookie, false);
-        }).then((decodedIdToken) => {
-          expect(decodedIdToken.sub).to.equal(uid);
-          expect(decodedIdToken.uid).to.equal(uid);
-          return admin.auth().verifySessionCookie(currentSessioncookie, true);
-        })
-        .then(() => {
-          throw new Error('Unexpected success');
-        }, (error) => {
-          expect(error).to.have.property('code', 'auth/user-disabled');
-        });
+      const customToken = await admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await admin.auth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid);
+
+      const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
+      let decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+
+      const userRecord = await admin.auth().updateUser(uid, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.disabled).to.equal(true);
+
+      decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
+      expect(decodedIdToken.uid).to.equal(uid);
+      try {
+        admin.auth().verifySessionCookie(sessionCookie, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
   });
 
