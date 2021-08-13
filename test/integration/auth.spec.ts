@@ -2069,7 +2069,7 @@ describe('admin.auth', () => {
       decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
       expect(decodedIdToken.uid).to.equal(uid);
       try {
-        admin.auth().verifySessionCookie(sessionCookie, true);
+        await admin.auth().verifySessionCookie(sessionCookie, true);
       } catch (error) {
         expect(error).to.have.property('code', 'auth/user-disabled');
       }
