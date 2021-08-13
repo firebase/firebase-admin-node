@@ -865,7 +865,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .resolves(expectedUserRecordDisabled);
         expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
         stubs.push(getUserStub);
-        return auth.verifyIdToken(mockSessionCookie, true)
+        return auth.verifySessionCookie(mockSessionCookie, true)
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
@@ -3534,9 +3534,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     describe('auth emulator support', () => {
-
       let mockAuth = testConfig.init(mocks.app());
-      const userRecord = getValidUserRecord(getValidGetAccountInfoResponse());
+      const expectedAccountInfoResponse = getValidGetAccountInfoResponse();
+      const userRecord = getValidUserRecord(expectedAccountInfoResponse);
       const validSince = new Date(userRecord.tokensValidAfterTime!);
 
       const stubs: sinon.SinonStub[] = [];
@@ -3595,6 +3595,38 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
+      it('verifyIdToken() should reject user disabled before ID tokens revoked', () => {
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
+        expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: expectedUserRecordDisabled.uid,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        // verifyIdToken should force checking revocation in emulator mode,
+        // even if checkRevoked=false.
+        return mockAuth.verifyIdToken(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(expectedUserRecordDisabled.uid);
+          });
+      });
+
       it('verifySessionCookie() should reject revoked session cookies', () => {
         const uid = userRecord.uid;
         // One second before validSince.
@@ -3623,6 +3655,38 @@ AUTH_CONFIGS.forEach((testConfig) => {
             // Confirm underlying API called with expected parameters.
             expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
           });
+      });
+
+
+      it('verifySessionCookie() should reject user disabled before ID tokens revoked', () =>  {
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
+        expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: expectedUserRecordDisabled.uid,
+          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        return auth.verifySessionCookie(unsignedToken, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(expectedUserRecordDisabled.uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+          });        
       });
 
       it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {

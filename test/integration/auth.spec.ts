@@ -890,6 +890,7 @@ describe('admin.auth', () => {
           return admin.auth().verifyIdToken(currentIdToken, true);
         })
         .then((decodedIdToken) => {
+          expect(decodedIdToken.sub).to.equal(uid);
           expect(decodedIdToken.uid).to.equal(uid);
           expect(decodedIdToken.email).to.equal(email);
           return admin.auth().updateUser(uid, { disabled: true });
@@ -901,7 +902,10 @@ describe('admin.auth', () => {
           expect(userRecord.disabled).to.equal(true);
           return admin.auth().verifyIdToken(currentIdToken, false);
         })
-        .then(() => {
+        .then((decodedIdToken) => {
+          expect(decodedIdToken.sub).to.equal(uid);
+          expect(decodedIdToken.uid).to.equal(uid);
+          expect(decodedIdToken.email).to.equal(email);
           return admin.auth().verifyIdToken(currentIdToken, true);
         })
         .then(() => {
@@ -2081,7 +2085,9 @@ describe('admin.auth', () => {
           currentSessioncookie = sessionCookie;
           return admin.auth().verifySessionCookie(sessionCookie, true);
         })
-        .then(() => {
+        .then((decodedIdToken) => {
+          expect(decodedIdToken.sub).to.equal(uid);
+          expect(decodedIdToken.uid).to.equal(uid);
           return admin.auth().updateUser(uid, { disabled : true });
         })
         .then((userRecord) => {
@@ -2089,7 +2095,9 @@ describe('admin.auth', () => {
           expect(userRecord.uid).to.equal(uid);
           expect(userRecord.disabled).to.equal(true);
           return admin.auth().verifySessionCookie(currentSessioncookie, false);
-        }).then(() => {
+        }).then((decodedIdToken) => {
+          expect(decodedIdToken.sub).to.equal(uid);
+          expect(decodedIdToken.uid).to.equal(uid);
           return admin.auth().verifySessionCookie(currentSessioncookie, true);
         })
         .then(() => {

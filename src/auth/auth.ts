@@ -104,19 +104,20 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   }
 
   /**
-   * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified.
-   * If checkRevoked is set to true, first verifies whether the corresponding userinfo.disabled
-   * is true:
+   * Verifies a JWT auth token. Returns a Promise with the tokens claims.
+   * Rejects the promise if the token could not be verified.
+   * If checkRevoked is set to true, first verifies whether the corresponding
+   * user is disabled.
    * If yes, an auth/user-disabled error is thrown.
    * If no, verifies if the session corresponding to the ID token was revoked.
-   * If the corresponding user's session was invalidated, an auth/id-token-revoked error is thrown.
+   * If the corresponding user's session was invalidated, an
+   * auth/id-token-revoked error is thrown.
    * If not specified the check is not applied.
    *
    * @param {string} idToken The JWT to verify.
    * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after
+   *   a successful verification.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     const isEmulator = useEmulator();
@@ -509,20 +510,22 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   }
 
   /**
-   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
-   * the promise if the cookie could not be verified. 
-   * If checkRevoked is set to true, first verifies whether the corresponding userinfo.disabled
-   * is true:
+   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims.
+   * Rejects the promise if the cookie could not be verified. 
+   * If checkRevoked is set to true, first verifies whether the corresponding
+   * user is true:
    * If yes, an auth/user-disabled error is thrown.
-   * If no, verifies if the session corresponding to the session cookie was revoked.
-   * If the corresponding user's session was invalidated, an auth/session-cookie-revoked error
-   * is thrown.
+   * If no, verifies if the session corresponding to the session cookie was
+   * revoked.
+   * If the corresponding user's session was invalidated, an
+   * auth/session-cookie-revoked error is thrown.
    * If not specified the check is not performed.
    *
    * @param {string} sessionCookie The session cookie to verify.
-   * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
+   * @param {boolean=} checkRevoked Whether to check if the session cookie is
+   *     revoked.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after
+   *     a successful verification.
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
@@ -530,7 +533,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the cookie was revoked.
-        if (checkRevoked || isEmulator) {         
+        if (checkRevoked || isEmulator) {
           return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
             AuthClientErrorCode.SESSION_COOKIE_REVOKED);
@@ -748,7 +751,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
         if (user.disabled) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.USER_DISABLED,
-            'The user account has been disabled by an administrator');
+            'The user record is disabled.');
         }
         // If no tokens valid after time available, token is not revoked.
         if (user.tokensValidAfterTime) {
