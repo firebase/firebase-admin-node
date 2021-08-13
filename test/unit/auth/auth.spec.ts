@@ -3597,10 +3597,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('verifyIdToken() should reject user disabled before ID tokens revoked', () => {
         // One second before validSince.
-        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
         const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
         expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
         const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .resolves(expectedUserRecordDisabled);
         expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
@@ -3660,10 +3661,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('verifySessionCookie() should reject user disabled before ID tokens revoked', () =>  {
         // One second before validSince.
-        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
         const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
         expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
         const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .resolves(expectedUserRecordDisabled);
         expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
