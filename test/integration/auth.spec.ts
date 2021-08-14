@@ -899,8 +899,9 @@ describe('admin.auth', () => {
       } catch (error) {
         if (authEmulatorHost) {
           expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
         }
-        throw new Error(error);
       }
 
       try {
@@ -2078,12 +2079,13 @@ describe('admin.auth', () => {
       try {
         // If it is in emulator mode, a user-disabled error will be thrown.
         decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
-        expect(decodedIdToken.uid).to.equal(uid);  
+        expect(decodedIdToken.uid).to.equal(uid);
       } catch (error) {
         if (authEmulatorHost) {
           expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
         }
-        throw new Error(error);
       }
 
       try {
