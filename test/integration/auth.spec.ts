@@ -892,8 +892,17 @@ describe('admin.auth', () => {
       expect(userRecord.email).to.equal(email);
       expect(userRecord.disabled).to.equal(true);
 
-      decodedIdToken = await admin.auth().verifyIdToken(idToken, false);
-      expect(decodedIdToken.uid).to.equal(uid);
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await admin.auth().verifyIdToken(idToken, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        }
+        throw new Error(error);
+      }
+
       try {
         await admin.auth().verifyIdToken(idToken, true);
       } catch (error) {
@@ -2065,9 +2074,18 @@ describe('admin.auth', () => {
       // Ensure disabled field has been updated.
       expect(userRecord.uid).to.equal(uid);
       expect(userRecord.disabled).to.equal(true);
+      
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
+        expect(decodedIdToken.uid).to.equal(uid);  
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        }
+        throw new Error(error);
+      }
 
-      decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
-      expect(decodedIdToken.uid).to.equal(uid);
       try {
         await admin.auth().verifySessionCookie(sessionCookie, true);
       } catch (error) {
