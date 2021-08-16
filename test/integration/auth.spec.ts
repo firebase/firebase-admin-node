@@ -760,6 +760,20 @@ describe('admin.auth', () => {
         safeDelete(userRecord.uid);
       }
     });
+
+    it('A user with user record disabled is unable to sign in', async () => {
+      const password = 'password';
+      const email = 'updatedEmail@example.com';
+      return admin.auth().updateUser(updateUser.uid, { disabled : true , password, email })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(email, password);
+        })
+        .then(() => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        });
+    });
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
@@ -833,53 +847,113 @@ describe('admin.auth', () => {
       });
   });
 
-  it('verifyIdToken() fails when called with an invalid token', () => {
-    return admin.auth().verifyIdToken('invalid-token')
-      .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
-  });
+  describe('verifyIdToken()', () => {
+    const uid = generateRandomString(20).toLowerCase();
+    const email = uid + '@example.com';
+    const password = 'password';
+    const userData = {
+      uid,
+      email,
+      emailVerified: false,
+      password,
+    };
 
-  if (authEmulatorHost) {
-    describe('Auth emulator support', () => {
-      const uid = 'authEmulatorUser';
-      before(() => {
-        return admin.auth().createUser({
-          uid,
-          email: 'lastRefreshTimeUser@example.com',
-          password: 'p4ssword',
-        });
-      });
-      after(() => {
-        return admin.auth().deleteUser(uid);
-      });
-
-      it('verifyIdToken() succeeds when called with an unsigned token', () => {
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none',
-          audience: projectId,
-          issuer: 'https://securetoken.google.com/' + projectId,
-          subject: uid,
-        });
-        return admin.auth().verifyIdToken(unsignedToken);
-      });
-
-      it('verifyIdToken() fails when called with a token with wrong project', () => {
-        const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
-        return admin.auth().verifyIdToken(unsignedToken)
-          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
-      });
-
-      it('verifyIdToken() fails when called with a token that does not belong to a user', () => {
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none',
-          audience: projectId,
-          issuer: 'https://securetoken.google.com/' + projectId,
-          subject: 'nosuch',
-        });
-        return admin.auth().verifyIdToken(unsignedToken)
-          .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
-      });
+    // Create the test user before running this suite of tests.
+    before(() => {
+      return admin.auth().createUser(userData);
     });
-  }
+
+    // Sign out after each test.
+    afterEach(() => {
+      return clientAuth().signOut();
+    });
+
+    after(() => {
+      return safeDelete(uid);
+    });
+
+    it('verifyIdToken() fails when called with an invalid token', () => {
+      return admin.auth().verifyIdToken('invalid-token')
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('verifyIdToken() fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const { user } = await clientAuth().signInWithEmailAndPassword(email, password);
+      expect(user).to.exist;
+      expect(user!.email).to.equal(email);
+
+      const idToken = await user!.getIdToken();
+      let decodedIdToken = await admin.auth().verifyIdToken(idToken, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+      expect(decodedIdToken.email).to.equal(email);
+
+      const userRecord = await admin.auth().updateUser(uid, { disabled: true });
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.email).to.equal(email);
+      expect(userRecord.disabled).to.equal(true);
+
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await admin.auth().verifyIdToken(idToken, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
+        }
+      }
+
+      try {
+        await admin.auth().verifyIdToken(idToken, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
+    });
+
+    if (authEmulatorHost) {
+      describe('Auth emulator support', () => {
+        const uid = 'authEmulatorUser';
+        before(() => {
+          return admin.auth().createUser({
+            uid,
+            email: 'lastRefreshTimeUser@example.com',
+            password: 'p4ssword',
+          });
+        });
+        after(() => {
+          return admin.auth().deleteUser(uid);
+        });
+
+        it('verifyIdToken() succeeds when called with an unsigned token', () => {
+          const unsignedToken = mocks.generateIdToken({
+            algorithm: 'none',
+            audience: projectId,
+            issuer: 'https://securetoken.google.com/' + projectId,
+            subject: uid,
+          });
+          return admin.auth().verifyIdToken(unsignedToken);
+        });
+
+        it('verifyIdToken() fails when called with a token with wrong project', () => {
+          const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
+          return admin.auth().verifyIdToken(unsignedToken)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+
+        it('verifyIdToken() fails when called with a token that does not belong to a user', () => {
+          const unsignedToken = mocks.generateIdToken({
+            algorithm: 'none',
+            audience: projectId,
+            issuer: 'https://securetoken.google.com/' + projectId,
+            subject: 'nosuch',
+          });
+          return admin.auth().verifyIdToken(unsignedToken)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+        });
+      });
+    }
+  });
 
   describe('Link operations', () => {
     const uid = generateRandomString(20).toLowerCase();
@@ -1981,6 +2055,44 @@ describe('admin.auth', () => {
           return admin.auth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
+    });
+
+    it('fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await admin.auth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid);
+
+      const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
+      let decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+
+      const userRecord = await admin.auth().updateUser(uid, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.disabled).to.equal(true);
+      
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
+        }
+      }
+
+      try {
+        await admin.auth().verifySessionCookie(sessionCookie, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
   });
 

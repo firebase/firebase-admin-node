@@ -482,6 +482,53 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
       });
 
+      it('should be rejected with checkRevoked set to true and corresponding user disabled', () =>  {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        expectedAccountInfoResponse.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponse);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifyIdToken(mockIdToken, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+          });        
+      });
+
+      it('verifyIdToken() should reject user disabled before ID tokens revoked', () => {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
+        expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        // Restore verifyIdToken stub.
+        stub.restore();
+        // One second before validSince.
+        const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+          .resolves(getDecodedIdToken(expectedUserRecordDisabled.uid, oneSecBeforeValidSince));
+        stubs.push(stub);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifyIdToken(mockIdToken, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(expectedUserRecordDisabled.uid);
+          });
+      });
+
       it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
         process.env.GOOGLE_CLOUD_PROJECT = mocks.projectId;
 
@@ -835,6 +882,53 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.equal(expectedError);
+          });
+      });
+
+      it('should be rejected with checkRevoked set to true and corresponding user disabled', () =>  {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        expectedAccountInfoResponse.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponse);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifySessionCookie(mockSessionCookie, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
+          });        
+      });
+
+      it('verifySessionCookie() should reject user disabled before ID tokens revoked', () =>  {
+        const expectedAccountInfoResponse = getValidGetAccountInfoResponse(tenantId);
+        const expectedAccountInfoResponseUserDisabled = Object.assign({}, expectedAccountInfoResponse);
+        expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
+        const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
+        const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        // Restore verifySessionCookie stub.
+        stub.restore();
+        // One second before validSince.
+        const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+          .resolves(getDecodedIdToken(expectedUserRecordDisabled.uid, oneSecBeforeValidSince));
+        stubs.push(stub);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(expectedUserRecordDisabled);
+        expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
+        stubs.push(getUserStub);
+        return auth.verifySessionCookie(mockSessionCookie, true)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(expectedUserRecordDisabled.uid);
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/user-disabled');
           });
       });
 
@@ -3496,7 +3590,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     describe('auth emulator support', () => {
-
       let mockAuth = testConfig.init(mocks.app());
       const userRecord = getValidUserRecord(getValidGetAccountInfoResponse());
       const validSince = new Date(userRecord.tokensValidAfterTime!);
