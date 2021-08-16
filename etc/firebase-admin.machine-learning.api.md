@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public (undocumented)
@@ -88,6 +90,5 @@ export interface TFLiteModel {
     readonly gcsTfliteUri?: string;
     readonly sizeBytes: number;
 }
-
 
 ```

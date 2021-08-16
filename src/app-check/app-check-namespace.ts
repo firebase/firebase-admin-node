@@ -17,6 +17,7 @@
 import { App } from '../app';
 import {
   AppCheckToken as TAppCheckToken,
+  AppCheckTokenOptions as TAppCheckTokenOptions,
   DecodedAppCheckToken as TDecodedAppCheckToken,
   VerifyAppCheckTokenResponse as TVerifyAppCheckTokenResponse,
 } from './app-check-api';
@@ -71,4 +72,6 @@ export namespace appCheck {
    * Type alias to {@link firebase-admin.app-check#VerifyAppCheckTokenResponse}.
    */
   export type VerifyAppCheckTokenResponse = TVerifyAppCheckTokenResponse;
+
+  export type AppCheckTokenOptions = TAppCheckTokenOptions;
 }

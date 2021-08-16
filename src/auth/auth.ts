@@ -16,6 +16,7 @@
  */
 
 import { App } from '../app/index';
+import { FirebaseApp } from '../app/firebase-app';
 import { AuthRequestHandler } from './auth-api-request';
 import { TenantManager } from './tenant-manager';
 import { BaseAuth } from './base-auth';
@@ -35,7 +36,7 @@ export class Auth extends BaseAuth {
    * @internal
    */
   constructor(app: App) {
-    super(app, new AuthRequestHandler(app));
+    super(app, new AuthRequestHandler(app as FirebaseApp));
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
   }

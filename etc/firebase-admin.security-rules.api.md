@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -55,6 +57,5 @@ export class SecurityRules {
     releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
     releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
 }
-
 
 ```

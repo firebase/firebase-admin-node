@@ -18,13 +18,14 @@
 import { App } from '../app';
 import { AppCheckApiClient } from './app-check-api-client-internal';
 import {
-  appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator
+  appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator,
 } from './token-generator';
 import { AppCheckTokenVerifier } from './token-verifier';
 import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
 import {
   AppCheckToken,
+  AppCheckTokenOptions,
   VerifyAppCheckTokenResponse,
 } from './app-check-api';
 
@@ -57,11 +58,12 @@ export class AppCheck {
    * back to a client.
    *
    * @param appId The app ID to use as the JWT app_id.
+   * @param options Optional options object when creating a new App Check Token.
    *
    * @returns A promise that fulfills with a `AppCheckToken`.
    */
-  public createToken(appId: string): Promise<AppCheckToken> {
-    return this.tokenGenerator.createCustomToken(appId)
+  public createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken> {
+    return this.tokenGenerator.createCustomToken(appId, options)
       .then((customToken) => {
         return this.client.exchangeToken(customToken, appId);
       });

@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -112,6 +114,5 @@ export interface Version {
     updateUser?: RemoteConfigUser;
     versionNumber?: string;
 }
-
 
 ```

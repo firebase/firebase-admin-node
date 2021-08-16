@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -83,6 +85,5 @@ export interface ServiceAccount {
     // (undocumented)
     projectId?: string;
 }
-
 
 ```

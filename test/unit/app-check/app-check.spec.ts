@@ -23,7 +23,7 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { AppCheck } from '../../../src/app-check/app-check';
+import { AppCheck } from '../../../src/app-check/index';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -147,6 +147,15 @@ describe('AppCheck', () => {
         .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
     });
 
+    it('should propagate API errors with custom options', () => {
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { ttlMillis: 1800000 })
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
     it('should resolve with AppCheckToken on success', () => {
       const response = { token: 'token', ttlMillis: 3000 };
       const stub = sinon
@@ -172,7 +181,7 @@ describe('AppCheck', () => {
     });
 
     it('should resolve with VerifyAppCheckTokenResponse on success', () => {
-      const response = { 
+      const response = {
         sub: 'app-id',
         iss: 'https://firebaseappcheck.googleapis.com/123456',
         // eslint-disable-next-line @typescript-eslint/camelcase

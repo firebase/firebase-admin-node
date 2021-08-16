@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -190,7 +192,7 @@ export class Messaging {
     sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
-    }
+}
 
 // @public
 export interface MessagingConditionResponse {
@@ -349,6 +351,5 @@ export interface WebpushNotification {
     title?: string;
     vibrate?: number | number[];
 }
-
 
 ```
