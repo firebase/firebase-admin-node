@@ -910,7 +910,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
         const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
         const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
-        // Restore verifyIdToken stub.
+        // Restore verifySessionCookie stub.
         stub.restore();
         // One second before validSince.
         const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
