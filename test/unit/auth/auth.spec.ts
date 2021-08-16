@@ -507,22 +507,18 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
         const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
         const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        // Restore verifyIdToken stub.
+        stub.restore();
         // One second before validSince.
-        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+          .resolves(getDecodedIdToken(expectedUserRecordDisabled.uid, oneSecBeforeValidSince));
+        stubs.push(stub);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .resolves(expectedUserRecordDisabled);
         expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
         stubs.push(getUserStub);
-
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none',
-          subject: expectedUserRecordDisabled.uid,
-        }, {
-          iat: oneSecBeforeValidSince,
-          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
-        });
-
-        return auth.verifyIdToken(unsignedToken, true)
+        return auth.verifyIdToken(mockIdToken, true)
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
@@ -914,23 +910,18 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expectedAccountInfoResponseUserDisabled.users[0].disabled = true;
         const expectedUserRecordDisabled = getValidUserRecord(expectedAccountInfoResponseUserDisabled);
         const validSince = new Date(expectedUserRecordDisabled.tokensValidAfterTime!);
+        // Restore verifyIdToken stub.
+        stub.restore();
         // One second before validSince.
-        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+          .resolves(getDecodedIdToken(expectedUserRecordDisabled.uid, oneSecBeforeValidSince));
+        stubs.push(stub);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .resolves(expectedUserRecordDisabled);
         expect(expectedUserRecordDisabled.disabled).to.be.equal(true);
         stubs.push(getUserStub);
-
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none',
-          subject: expectedUserRecordDisabled.uid,
-          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
-        }, {
-          iat: oneSecBeforeValidSince,
-          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
-        });
-
-        return auth.verifySessionCookie(unsignedToken, true)
+        return auth.verifySessionCookie(mockSessionCookie, true)
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
