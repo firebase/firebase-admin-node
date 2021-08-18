@@ -19,6 +19,7 @@ import { auth } from './auth/auth-namespace';
 import { database } from './database/database-namespace';
 import { firestore } from './firestore/firestore-namespace';
 import { instanceId } from './instance-id/instance-id-namespace';
+import { installations } from './installations/installations-namespace';
 import { machineLearning } from './machine-learning/machine-learning-namespace';
 import { messaging } from './messaging/messaging-namespace';
 import { projectManagement } from './project-management/project-management-namespace';
@@ -47,6 +48,8 @@ export namespace app {
     auth(): auth.Auth;
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;
+    installations(): installations.Installations;
+    /** @deprecated */
     instanceId(): instanceId.InstanceId;
     machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;
@@ -82,6 +85,7 @@ export { auth } from './auth/auth-namespace';
 export { database } from './database/database-namespace';
 export { firestore } from './firestore/firestore-namespace';
 export { instanceId } from './instance-id/instance-id-namespace';
+export { installations } from './installations/installations-namespace';
 export { machineLearning } from './machine-learning/machine-learning-namespace';
 export { messaging } from './messaging/messaging-namespace';
 export { projectManagement } from './project-management/project-management-namespace';

@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -75,7 +77,7 @@ export class ProjectManagement {
     listIosApps(): Promise<IosApp[]>;
     setDisplayName(newDisplayName: string): Promise<void>;
     shaCertificate(shaHash: string): ShaCertificate;
-    }
+}
 
 // @public
 export class ShaCertificate {
@@ -85,6 +87,5 @@ export class ShaCertificate {
     // (undocumented)
     readonly shaHash: string;
 }
-
 
 ```

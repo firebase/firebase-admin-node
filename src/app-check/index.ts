@@ -27,6 +27,7 @@ import { AppCheck } from './app-check';
 
 export {
   AppCheckToken,
+  AppCheckTokenOptions,
   DecodedAppCheckToken,
   VerifyAppCheckTokenResponse,
 } from './app-check-api';

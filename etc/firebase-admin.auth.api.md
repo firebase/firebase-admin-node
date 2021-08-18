@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -26,7 +28,7 @@ export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
     tenantManager(): TenantManager;
-    }
+}
 
 // @public
 export type AuthFactorType = 'phone';
@@ -299,7 +301,7 @@ export class Tenant {
         [phoneNumber: string]: string;
     };
     toJSON(): object;
-    }
+}
 
 // @public
 export class TenantAwareAuth extends BaseAuth {
@@ -471,6 +473,5 @@ export class UserRecord {
     readonly tokensValidAfterTime?: string;
     readonly uid: string;
 }
-
 
 ```

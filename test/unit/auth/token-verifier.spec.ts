@@ -448,7 +448,7 @@ describe('FirebaseTokenVerifier', () => {
       createTokenVerifier(mockAppWithAgent);
 
       expect(verifierSpy.args[0][1]).to.equal(agentForApp);
-      
+
       verifierSpy.restore();
     });
 

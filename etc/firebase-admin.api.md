@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { FirebaseDatabase } from '@firebase/database-types';
@@ -27,6 +29,8 @@ export namespace app {
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
+        installations(): installations.Installations;
+        // @deprecated (undocumented)
         instanceId(): instanceId.InstanceId;
         // (undocumented)
         machineLearning(): machineLearning.MachineLearning;
@@ -52,6 +56,10 @@ export namespace appCheck {
     export type AppCheck = AppCheck;
     // Warning: (ae-forgotten-export) The symbol "AppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type AppCheckToken = AppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "AppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AppCheckTokenOptions = AppCheckTokenOptions;
     // Warning: (ae-forgotten-export) The symbol "DecodedAppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type DecodedAppCheckToken = DecodedAppCheckToken;
     // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenResponse" needs to be exported by the entry point default-namespace.d.ts
@@ -272,6 +280,15 @@ export interface GoogleOAuthAccessToken {
 export function initializeApp(options?: AppOptions, name?: string): app.App;
 
 // @public
+export function installations(app?: App): installations.Installations;
+
+// @public (undocumented)
+export namespace installations {
+    // Warning: (ae-forgotten-export) The symbol "Installations" needs to be exported by the entry point default-namespace.d.ts
+    export type Installations = Installations;
+}
+
+// @public
 export function instanceId(app?: App): instanceId.InstanceId;
 
 // @public (undocumented)
@@ -472,6 +489,5 @@ export namespace storage {
     // Warning: (ae-forgotten-export) The symbol "Storage" needs to be exported by the entry point default-namespace.d.ts
     export type Storage = Storage;
 }
-
 
 ```

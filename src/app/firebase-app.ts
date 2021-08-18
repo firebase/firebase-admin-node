@@ -31,6 +31,7 @@ import { Storage } from '../storage/index';
 import { Database } from '../database/index';
 import { Firestore } from '../firestore/index';
 import { InstanceId } from '../instance-id/index';
+import { Installations } from '../installations/index';
 import { ProjectManagement } from '../project-management/index';
 import { SecurityRules } from '../security-rules/index';
 import { RemoteConfig } from '../remote-config/index';
@@ -258,6 +259,16 @@ export class FirebaseApp implements app.App {
    */
   public instanceId(): InstanceId {
     const fn = require('../instance-id/index').getInstanceId;
+    return fn(this);
+  }
+
+  /**
+   * Returns the InstanceId service instance associated with this app.
+   *
+   * @returns The InstanceId service instance of this app.
+   */
+  public installations(): Installations {
+    const fn = require('../installations/index').getInstallations;
     return fn(this);
   }
 

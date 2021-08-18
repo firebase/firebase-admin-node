@@ -16,24 +16,26 @@
  */
 
 import * as validator from '../utils/validator';
-import { toWebSafeBase64 } from '../utils';
-
+import { toWebSafeBase64, transformMillisecondsToSecondsString } from '../utils';
 import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
-import { 
+import {
   FirebaseAppCheckError,
   AppCheckErrorCode,
-  APP_CHECK_ERROR_CODE_MAPPING,  
+  APP_CHECK_ERROR_CODE_MAPPING,
 } from './app-check-api-client-internal';
+import { AppCheckTokenOptions } from './app-check-api';
 import { HttpError } from '../utils/api-request';
 
-const ONE_HOUR_IN_SECONDS = 60 * 60;
+const ONE_MINUTE_IN_SECONDS = 60;
+const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
+const ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 
 // Audience to use for Firebase App Check Custom tokens
 const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1beta.TokenExchangeService';
 
 /**
  * Class for generating Firebase App Check tokens.
- * 
+ *
  * @internal
  */
 export class AppCheckTokenGenerator {
@@ -59,15 +61,19 @@ export class AppCheckTokenGenerator {
    * Creates a new custom token that can be exchanged to an App Check token.
    *
    * @param appId The Application ID to use for the generated token.
-   * 
+   *
    * @return A Promise fulfilled with a custom token signed with a service account key
    * that can be exchanged to an App Check token.
    */
-  public createCustomToken(appId: string): Promise<string> {
+  public createCustomToken(appId: string, options?: AppCheckTokenOptions): Promise<string> {
     if (!validator.isNonEmptyString(appId)) {
       throw new FirebaseAppCheckError(
         'invalid-argument',
         '`appId` must be a non-empty string.');
+    }
+    let customOptions = {};
+    if (typeof options !== 'undefined') {
+      customOptions = this.validateTokenOptions(options);
     }
     return this.signer.getAccountId().then((account) => {
       const header = {
@@ -81,8 +87,9 @@ export class AppCheckTokenGenerator {
         // eslint-disable-next-line @typescript-eslint/camelcase
         app_id: appId,
         aud: FIREBASE_APP_CHECK_AUDIENCE,
-        exp: iat + ONE_HOUR_IN_SECONDS,
+        exp: iat + (ONE_MINUTE_IN_SECONDS * 5),
         iat,
+        ...customOptions,
       };
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
       return this.signer.sign(Buffer.from(token))
@@ -97,6 +104,35 @@ export class AppCheckTokenGenerator {
   private encodeSegment(segment: object | Buffer): string {
     const buffer: Buffer = (segment instanceof Buffer) ? segment : Buffer.from(JSON.stringify(segment));
     return toWebSafeBase64(buffer).replace(/=+$/, '');
+  }
+
+  /**
+   * Checks if a given `AppCheckTokenOptions` object is valid. If successful, returns an object with
+   * custom properties.
+   *
+   * @param options An options object to be validated.
+   * @returns A custom object with ttl converted to protobuf Duration string format.
+   */
+  private validateTokenOptions(options: AppCheckTokenOptions): {[key: string]: any} {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAppCheckError(
+        'invalid-argument',
+        'AppCheckTokenOptions must be a non-null object.');
+    }
+    if (typeof options.ttlMillis !== 'undefined') {
+      if (!validator.isNumber(options.ttlMillis)) {
+        throw new FirebaseAppCheckError('invalid-argument',
+          'ttlMillis must be a duration in milliseconds.');
+      }
+      // ttlMillis must be between 30 minutes and 7 days (inclusive)
+      if (options.ttlMillis < (ONE_MINUTE_IN_MILLIS * 30) || options.ttlMillis > (ONE_DAY_IN_MILLIS * 7)) {
+        throw new FirebaseAppCheckError(
+          'invalid-argument',
+          'ttlMillis must be a duration in milliseconds between 30 minutes and 7 days (inclusive).');
+      }
+      return { ttl: transformMillisecondsToSecondsString(options.ttlMillis) };
+    }
+    return {};
   }
 }
 

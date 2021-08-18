@@ -65,10 +65,13 @@ import './storage/index.spec';
 import './firestore/firestore.spec';
 import './firestore/index.spec';
 
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
+
 // InstanceId
 import './instance-id/index.spec';
 import './instance-id/instance-id.spec';
-import './instance-id/instance-id-request.spec';
 
 // ProjectManagement
 import './project-management/index.spec';

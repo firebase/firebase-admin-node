@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // @public
@@ -12,7 +14,7 @@ export class AppCheck {
     //
     // (undocumented)
     readonly app: App;
-    createToken(appId: string): Promise<AppCheckToken>;
+    createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken>;
     verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
 }
 
@@ -20,6 +22,11 @@ export class AppCheck {
 export interface AppCheckToken {
     token: string;
     ttlMillis: number;
+}
+
+// @public
+export interface AppCheckTokenOptions {
+    ttlMillis?: number;
 }
 
 // @public
@@ -42,6 +49,5 @@ export interface VerifyAppCheckTokenResponse {
     appId: string;
     token: DecodedAppCheckToken;
 }
-
 
 ```

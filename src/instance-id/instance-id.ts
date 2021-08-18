@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
+import { FirebaseApp } from '../app/firebase-app';
 import { App } from '../app/index';
-import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
-import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
+import {
+  FirebaseInstallationsError, FirebaseInstanceIdError,
+  InstallationsClientErrorCode, InstanceIdClientErrorCode,
+} from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**
  * The `InstanceId` service enables deleting the Firebase instance IDs
  * associated with Firebase client app instances.
+ *
+ * @deprecated
  */
 export class InstanceId {
 
   private app_: App;
-  private requestHandler: FirebaseInstanceIdRequestHandler;
 
   /**
    * @param app The app for this InstanceId service.
@@ -42,7 +46,6 @@ export class InstanceId {
     }
 
     this.app_ = app;
-    this.requestHandler = new FirebaseInstanceIdRequestHandler(app);
   }
 
   /**
@@ -60,9 +63,18 @@ export class InstanceId {
    * @returns A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
-    return this.requestHandler.deleteInstanceId(instanceId)
-      .then(() => {
-        // Return nothing on success
+    return (this.app as FirebaseApp).installations().deleteInstallation(instanceId)
+      .catch((err) => {
+        if (err instanceof FirebaseInstallationsError) {
+          let code = err.code.replace('installations/', '');
+          if (code === InstallationsClientErrorCode.INVALID_INSTALLATION_ID.code) {
+            code = InstanceIdClientErrorCode.INVALID_INSTANCE_ID.code;
+          }
+
+          throw new FirebaseInstanceIdError({ code, message: err.message });
+        }
+
+        throw err;
       });
   }
 

@@ -4,18 +4,19 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public
+// @public @deprecated
 export function getInstanceId(app?: App): InstanceId;
 
-// @public
+// @public @deprecated
 export class InstanceId {
     get app(): App;
     deleteInstanceId(instanceId: string): Promise<void>;
-    }
-
+}
 
 ```

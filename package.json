@@ -77,6 +77,9 @@
       "firestore": [
         "lib/firestore"
       ],
+      "installations": [
+        "lib/installations"
+      ],
       "instance-id": [
         "lib/instance-id"
       ],
@@ -122,6 +125,10 @@
       "require": "./lib/firestore/index.js",
       "import": "./lib/esm/firestore/index.js"
     },
+    "./installations": {
+      "require": "./lib/installations/index.js",
+      "import": "./lib/esm/installations/index.js"
+    },
     "./instance-id": {
       "require": "./lib/instance-id/index.js",
       "import": "./lib/esm/instance-id/index.js"
@@ -166,22 +173,22 @@
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.1.2",
-    "@firebase/app": "^0.6.13",
-    "@firebase/auth": "^0.16.2",
-    "@firebase/auth-types": "^0.10.1",
+    "@firebase/app": "^0.6.21",
+    "@firebase/auth": "^0.16.5",
+    "@firebase/auth-types": "^0.10.3",
     "@microsoft/api-extractor": "^7.11.2",
-    "@types/bcrypt": "^2.0.0",
+    "@types/bcrypt": "^5.0.0",
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/firebase-token-generator": "^2.0.28",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/lodash": "^4.14.104",
     "@types/minimist": "^1.2.0",
-    "@types/mocha": "^2.2.48",
-    "@types/nock": "^9.1.0",
+    "@types/mocha": "^8.2.2",
+    "@types/nock": "^11.1.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
-    "@types/sinon": "^9.0.0",
+    "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
@@ -190,11 +197,11 @@
     "chai-as-promised": "^7.0.0",
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
-    "del": "^2.2.1",
+    "del": "^6.0.0",
     "eslint": "^6.8.0",
     "firebase-token-generator": "^2.0.0",
     "gulp": "^4.0.2",
-    "gulp-filter": "^6.0.0",
+    "gulp-filter": "^7.0.0",
     "gulp-header": "^2.0.9",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
@@ -210,7 +217,7 @@
     "run-sequence": "^2.2.1",
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
-    "ts-node": "^9.0.0",
+    "ts-node": "^10.2.0",
     "typescript": "^3.7.3",
     "yargs": "^17.0.1"
   }

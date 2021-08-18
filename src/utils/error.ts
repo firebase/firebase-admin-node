@@ -224,6 +224,23 @@ export class FirebaseInstanceIdError extends FirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({ code: 'instance-id/' + info.code, message: message || info.message });
+    (this as any).__proto__ = FirebaseInstanceIdError.prototype;
+  }
+}
+
+/**
+ * Firebase Installations service error code structure. This extends `FirebaseError`.
+ *
+ * @param info The error code info.
+ * @param message The error message. This will override the default
+ *     message if provided.
+ * @constructor
+ */
+export class FirebaseInstallationsError extends FirebaseError {
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super({ code: 'installations/' + info.code, message: message || info.message });
+    (this as any).__proto__ = FirebaseInstallationsError.prototype;
   }
 }
 
@@ -808,7 +825,7 @@ export class MessagingClientErrorCode {
   };
 }
 
-export class InstanceIdClientErrorCode {
+export class InstallationsClientErrorCode {
   public static INVALID_ARGUMENT = {
     code: 'invalid-argument',
     message: 'Invalid argument provided.',
@@ -817,13 +834,20 @@ export class InstanceIdClientErrorCode {
     code: 'invalid-project-id',
     message: 'Invalid project ID provided.',
   };
-  public static INVALID_INSTANCE_ID = {
-    code: 'invalid-instance-id',
-    message: 'Invalid instance ID provided.',
+  public static INVALID_INSTALLATION_ID = {
+    code: 'invalid-installation-id',
+    message: 'Invalid installation ID provided.',
   };
   public static API_ERROR = {
     code: 'api-error',
-    message: 'Instance ID API call failed.',
+    message: 'Installation ID API call failed.',
+  };
+}
+
+export class InstanceIdClientErrorCode extends InstallationsClientErrorCode {
+  public static INVALID_INSTANCE_ID = {
+    code: 'invalid-instance-id',
+    message: 'Invalid instance ID provided.',
   };
 }
 

@@ -29,6 +29,10 @@ export { InstanceId };
 /**
  * Gets the {@link InstanceId} service for the default app or a given app.
  *
+ * This API is deprecated. Developers are advised to use the
+ * {@link firebase-admin.installations#getInstallations}
+ * API to delete their instance IDs and Firebase installation IDs.
+ *
  * `getInstanceId()` can be called with no arguments to access the default
  * app's `InstanceId` service or as `getInstanceId(app)` to access the
  * `InstanceId` service associated with a specific app.
@@ -52,6 +56,8 @@ export { InstanceId };
  * @returns The default `InstanceId` service if
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
+ *
+ * @deprecated
  */
 export function getInstanceId(app?: App): InstanceId {
   if (typeof app === 'undefined') {

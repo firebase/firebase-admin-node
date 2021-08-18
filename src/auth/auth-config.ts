@@ -1241,7 +1241,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     }
     if (typeof options.responseType !== 'undefined') {
       request.responseType = options.responseType;
-    } 
+    }
     return request;
   }
 
@@ -1358,18 +1358,18 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid OAuthResponseType parameter.`,
-          );          
+          );
         }
       });
-      
+
       const idToken = options.responseType.idToken;
-      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) { 
+      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
           '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
         );
       }
-      
+
       const code = options.responseType.code;
       if (typeof code !== 'undefined') {
         if (!validator.isBoolean(code)) {
@@ -1378,16 +1378,16 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
             '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
           );
         }
-        
+
         // If code flow is enabled, client secret must be provided.
         if (code && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(
             AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
             'The OAuth configuration client secret is required to enable OIDC code flow.',
-          );          
+          );
         }
       }
-      
+
       const allKeys = Object.keys(options.responseType).length;
       const enabledCount = Object.values(options.responseType).filter(Boolean).length;
       // Only one of OAuth response types can be set to true.

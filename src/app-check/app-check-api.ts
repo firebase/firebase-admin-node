@@ -31,6 +31,17 @@ export interface AppCheckToken {
 }
 
 /**
+ * Interface representing App Check token options.
+ */
+export interface AppCheckTokenOptions {
+  /**
+   * The length of time, in milliseconds, for which the App Check token will
+   * be valid. This value must be between 30 minutes and 7 days, inclusive.
+   */
+  ttlMillis?: number;
+}
+
+/**
  * Interface representing a decoded Firebase App Check token, returned from the
  * {@link AppCheck.verifyToken} method.
  */

@@ -20,7 +20,7 @@ import fs = require('fs');
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, projectManagement, securityRules , remoteConfig, AppOptions,
+  instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
 import { FirebaseApp } from './firebase-app';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
@@ -34,6 +34,7 @@ import AppCheck = appCheck.AppCheck;
 import Auth = auth.Auth;
 import Database = database.Database;
 import Firestore = firestore.Firestore;
+import Installations = installations.Installations;
 import InstanceId = instanceId.InstanceId;
 import MachineLearning = machineLearning.MachineLearning;
 import Messaging = messaging.Messaging;
@@ -300,6 +301,18 @@ export class FirebaseNamespace {
     const machineLearning =
         require('../machine-learning/machine-learning').MachineLearning;
     return Object.assign(fn, { MachineLearning: machineLearning });
+  }
+
+  /**
+   * Gets the `Installations` service namespace. The returned namespace can be used to get the
+   * `Installations` service for the default app or an explicitly specified app.
+   */
+  get installations(): FirebaseServiceNamespace<Installations> {
+    const fn: FirebaseServiceNamespace<Installations> = (app?: App) => {
+      return this.ensureApp(app).installations();
+    };
+    const installations = require('../installations/installations').Installations;
+    return Object.assign(fn, { Installations: installations });
   }
 
   /**

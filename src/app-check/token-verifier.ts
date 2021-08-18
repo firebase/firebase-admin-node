@@ -30,7 +30,7 @@ const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1beta/jwks';
 
 /**
  * Class for verifying Firebase App Check tokens.
- * 
+ *
  * @internal
  */
 export class AppCheckTokenVerifier {
@@ -141,7 +141,7 @@ export class AppCheckTokenVerifier {
 
   /**
    * Maps JwtError to FirebaseAppCheckError
-   * 
+   *
    * @param error JwtError to be mapped.
    * @returns FirebaseAppCheckError instance.
    */

@@ -52,7 +52,7 @@ export class AppCheckApiClient {
 
   /**
    * Exchange a signed custom token to App Check token
-   * 
+   *
    * @param customToken The custom token to be exchanged.
    * @param appId The mobile App ID.
    * @returns A promise that fulfills with a `AppCheckToken`.
@@ -159,9 +159,9 @@ export class AppCheckApiClient {
    *
    * @param duration The duration as a string with the suffix "s" preceded by the
    * number of seconds, with fractional seconds. For example, 3 seconds with 0 nanoseconds
-   * is expressed as "3s", while 3 seconds and 1 nanosecond is expressed as "3.000000001s", 
+   * is expressed as "3s", while 3 seconds and 1 nanosecond is expressed as "3.000000001s",
    * and 3 seconds and 1 microsecond is expressed as "3.000001s".
-   * 
+   *
    * @returns The duration in milliseconds.
    */
   private stringToMilliseconds(duration: string): number {

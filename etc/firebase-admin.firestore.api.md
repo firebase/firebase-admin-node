@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 import { BulkWriter } from '@google-cloud/firestore';
 import { BulkWriterOptions } from '@google-cloud/firestore';
@@ -94,6 +96,5 @@ export { v1 }
 export { WriteBatch }
 
 export { WriteResult }
-
 
 ```

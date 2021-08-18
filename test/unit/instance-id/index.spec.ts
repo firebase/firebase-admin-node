@@ -35,7 +35,7 @@ describe('InstanceId', () => {
   let mockApp: App;
   let mockCredentialApp: App;
 
-  const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
+  const noProjectIdError = 'Failed to determine project ID for Installations. Initialize the SDK '
   + 'with service account credentials or set project ID as an app option. Alternatively set the '
   + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
