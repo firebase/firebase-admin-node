@@ -1707,14 +1707,14 @@ export namespace auth {
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
 
     /**
-     * Verifies a JWT auth token. Returns a promise with the tokens claims.
+     * Verifies a JWT auth token. Returns a promise with the token‘s claims.
      * Rejects the promise if the token cannot be verified.
      * If `checkRevoked` is set to true, first verifies whether the corresponding
      * user is disabled.
-     * If yes, an auth/user-disabled error is thrown.
+     * If yes, an `auth/user-disabled` error is thrown.
      * If no, verifies if the session corresponding to the ID token was revoked.
      * If the corresponding user's session was invalidated, an
-     * auth/id-token-revoked error is thrown.
+     * `auth/id-token-revoked` error is thrown.
      * If not specified the check is not applied.
      *
      * See [Verify ID Tokens](/docs/auth/admin/verify-id-tokens) for code samples
@@ -1825,15 +1825,15 @@ export namespace auth {
     ): Promise<string>;
 
     /**
-     * Verifies a Firebase session cookie. Returns a promise with the tokens claims.
+     * Verifies a Firebase session cookie. Returns a promise with the token’s claims.
      * Rejects the promise if the cookie could not be verified. 
      * If `checkRevoked` is set to true, first verifies whether the corresponding
      * user is disabled:
-     * If yes, an auth/user-disabled error is thrown.
+     * If yes, an `auth/user-disabled` error is thrown.
      * If no, verifies if the session corresponding to the session cookie was
      * revoked.
      * If the corresponding user's session was invalidated, an
-     * auth/session-cookie-revoked error is thrown.
+     * `auth/session-cookie-revoked` error is thrown.
      * If not specified the check is not performed.
      *
      * See [Verify Session Cookies](/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions)
