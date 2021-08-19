@@ -108,7 +108,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    * Rejects the promise if the token cannot be verified.
    * If `checkRevoked` is set to true, first verifies whether the corresponding
    * user is disabled.
-   * If yes, an `auth/user-disabled`s error is thrown.
+   * If yes, an `auth/user-disabled` error is thrown.
    * If no, verifies if the session corresponding to the ID token was revoked.
    * If the corresponding user's session was invalidated, an
    * `auth/id-token-revoked` error is thrown.
