@@ -104,7 +104,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   }
 
   /**
-   * Verifies a JWT auth token. Returns a promise with the tokens claims.
+   * Verifies a JWT auth token. Returns a promise with the token‘s claims.
    * Rejects the promise if the token cannot be verified.
    * If `checkRevoked` is set to true, first verifies whether the corresponding
    * user is disabled.
@@ -510,7 +510,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   }
 
   /**
-   * Verifies a Firebase session cookie. Returns a promise with the tokens claims.
+   * Verifies a Firebase session cookie. Returns a promise with the token’s claims.
    * Rejects the promise if the cookie could not be verified. 
    * If `checkRevoked` is set to true, first verifies whether the corresponding
    * user is disabled:
