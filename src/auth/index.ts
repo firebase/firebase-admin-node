@@ -1707,11 +1707,15 @@ export namespace auth {
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
 
     /**
-     * Verifies a Firebase ID token (JWT). If the token is valid, the promise is
-     * fulfilled with the token's decoded claims; otherwise, the promise is
-     * rejected.
-     * An optional flag can be passed to additionally check whether the ID token
-     * was revoked.
+     * Verifies a JWT auth token. Returns a promise with the token‘s claims.
+     * Rejects the promise if the token cannot be verified.
+     * If `checkRevoked` is set to true, first verifies whether the corresponding
+     * user is disabled.
+     * If yes, an `auth/user-disabled` error is thrown.
+     * If no, verifies if the session corresponding to the ID token was revoked.
+     * If the corresponding user's session was invalidated, an
+     * `auth/id-token-revoked` error is thrown.
+     * If not specified the check is not applied.
      *
      * See [Verify ID Tokens](/docs/auth/admin/verify-id-tokens) for code samples
      * and detailed documentation.
@@ -1821,18 +1825,22 @@ export namespace auth {
     ): Promise<string>;
 
     /**
-     * Verifies a Firebase session cookie. Returns a Promise with the cookie claims.
-     * Rejects the promise if the cookie could not be verified. If `checkRevoked` is
-     * set to true, verifies if the session corresponding to the session cookie was
-     * revoked. If the corresponding user's session was revoked, an
-     * `auth/session-cookie-revoked` error is thrown. If not specified the check is
-     * not performed.
+     * Verifies a Firebase session cookie. Returns a promise with the token’s claims.
+     * Rejects the promise if the cookie could not be verified. 
+     * If `checkRevoked` is set to true, first verifies whether the corresponding
+     * user is disabled:
+     * If yes, an `auth/user-disabled` error is thrown.
+     * If no, verifies if the session corresponding to the session cookie was
+     * revoked.
+     * If the corresponding user's session was invalidated, an
+     * `auth/session-cookie-revoked` error is thrown.
+     * If not specified the check is not performed.
      *
      * See [Verify Session Cookies](/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions)
      * for code samples and detailed documentation
      *
      * @param sessionCookie The session cookie to verify.
-     * @param checkForRevocation  Whether to check if the session cookie was
+     * @param checkRevoked  Whether to check if the session cookie was
      *   revoked. This requires an extra request to the Firebase Auth backend to
      *   check the `tokensValidAfterTime` time for the corresponding user.
      *   When not specified, this additional check is not performed.
@@ -1843,7 +1851,7 @@ export namespace auth {
      */
     verifySessionCookie(
       sessionCookie: string,
-      checkForRevocation?: boolean,
+      checkRevoked?: boolean,
     ): Promise<DecodedIdToken>;
 
     /**

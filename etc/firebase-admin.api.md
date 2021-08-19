@@ -152,7 +152,7 @@ export namespace auth {
         updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
         updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
         verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-        verifySessionCookie(sessionCookie: string, checkForRevocation?: boolean): Promise<DecodedIdToken>;
+        verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     }
     export interface BaseAuthProviderConfig {
         displayName?: string;
