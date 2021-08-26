@@ -150,6 +150,12 @@ export namespace remoteConfig {
      * Unicode characters.
      */
     description?: string;
+
+    /**
+     * The data type for all values of this parameter in the current version of the template.
+     * Defaults to `ParameterValueType.STRING` if unspecified.
+     */
+    valueType?: ParameterValueType;
   }
 
   /**
@@ -258,6 +264,12 @@ export namespace remoteConfig {
    */
   export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' |
     'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
+
+  /**
+   * Type representing a Remote Config parameter value data type.
+   * Defaults to `STRING` if unspecified.
+   */
+  export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON'
 
   /**
    * Interface representing a Remote Config template version.

@@ -1014,6 +1014,7 @@ export namespace remoteConfig {
         nextPageToken?: string;
         versions: Version[];
     }
+    export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
     export interface RemoteConfig {
         // (undocumented)
         app: app.App;
@@ -1038,6 +1039,7 @@ export namespace remoteConfig {
         };
         defaultValue?: RemoteConfigParameterValue;
         description?: string;
+        valueType?: ParameterValueType;
     }
     export interface RemoteConfigParameterGroup {
         description?: string;
