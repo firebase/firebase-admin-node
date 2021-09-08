@@ -29,9 +29,8 @@ import * as mocks from '../../resources/mocks';
 import { GoogleOAuthAccessToken } from '../../../src/app/index';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseApp, FirebaseAccessToken } from '../../../src/app/firebase-app';
-import {
-  FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR
-} from '../../../src/app/firebase-namespace';
+import { FirebaseNamespace } from '../../../src/app/firebase-namespace';
+import { AppStore, FIREBASE_CONFIG_VAR } from '../../../src/app/lifecycle';
 import {
   auth, messaging, machineLearning, storage, firestore, database,
   instanceId, installations, projectManagement, securityRules , remoteConfig, appCheck,
@@ -77,7 +76,6 @@ describe('FirebaseApp', () => {
   let clock: sinon.SinonFakeTimers;
   let getTokenStub: sinon.SinonStub;
   let firebaseNamespace: FirebaseNamespace;
-  let firebaseNamespaceInternals: FirebaseNamespaceInternals;
   let firebaseConfigVar: string | undefined;
 
   beforeEach(() => {
@@ -90,10 +88,7 @@ describe('FirebaseApp', () => {
     firebaseConfigVar = process.env[FIREBASE_CONFIG_VAR];
     delete process.env[FIREBASE_CONFIG_VAR];
     firebaseNamespace = new FirebaseNamespace();
-    firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
-
-    sinon.stub(firebaseNamespaceInternals, 'removeApp');
-    mockApp = new FirebaseApp(mocks.appOptions, mocks.appName, firebaseNamespaceInternals);
+    mockApp = new FirebaseApp(mocks.appOptions, mocks.appName);
   });
 
   afterEach(() => {
@@ -106,7 +101,6 @@ describe('FirebaseApp', () => {
     }
 
     deleteSpy.resetHistory();
-    (firebaseNamespaceInternals.removeApp as any).restore();
   });
 
   describe('#name', () => {
@@ -124,14 +118,14 @@ describe('FirebaseApp', () => {
 
     it('should be case sensitive', () => {
       const newMockAppName = mocks.appName.toUpperCase();
-      mockApp = new FirebaseApp(mocks.appOptions, newMockAppName, firebaseNamespaceInternals);
+      mockApp = new FirebaseApp(mocks.appOptions, newMockAppName);
       expect(mockApp.name).to.not.equal(mocks.appName);
       expect(mockApp.name).to.equal(newMockAppName);
     });
 
     it('should respect leading and trailing whitespace', () => {
       const newMockAppName = '  ' + mocks.appName + '  ';
-      mockApp = new FirebaseApp(mocks.appOptions, newMockAppName, firebaseNamespaceInternals);
+      mockApp = new FirebaseApp(mocks.appOptions, newMockAppName);
       expect(mockApp.name).to.not.equal(mocks.appName);
       expect(mockApp.name).to.equal(newMockAppName);
     });
@@ -328,10 +322,11 @@ describe('FirebaseApp', () => {
     });
 
     it('should call removeApp() on the Firebase namespace internals', () => {
-      return mockApp.delete().then(() => {
-        expect(firebaseNamespaceInternals.removeApp)
-          .to.have.been.calledOnce
-          .and.calledWith(mocks.appName);
+      const store = new AppStore();
+      const stub = sinon.stub(store, 'removeApp').resolves();
+      const app = new FirebaseApp(mockApp.options, mockApp.name, store);
+      return app.delete().then(() => {
+        expect(stub).to.have.been.calledOnce.and.calledWith(mocks.appName);
       });
     });
 

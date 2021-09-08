@@ -15,33 +15,15 @@
  * limitations under the License.
  */
 
-import { AppOptions, app } from '../firebase-namespace-api';
+import { AppOptions, App } from './core';
+import { AppStore } from './lifecycle';
 import { Credential } from './credential';
 import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
-import { Auth } from '../auth/index';
-import { AppCheck } from '../app-check/index';
-import { MachineLearning } from '../machine-learning/index';
-import { Messaging } from '../messaging/index';
-import { Storage } from '../storage/index';
-import { Database } from '../database/index';
-import { Firestore } from '../firestore/index';
-import { InstanceId } from '../instance-id/index';
-import { Installations } from '../installations/index';
-import { ProjectManagement } from '../project-management/index';
-import { SecurityRules } from '../security-rules/index';
-import { RemoteConfig } from '../remote-config/index';
-
 const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
-
-/**
- * Type representing a callback which is called every time an app lifecycle event occurs.
- */
-export type AppHook = (event: string, app: app.App) => void;
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
@@ -159,7 +141,8 @@ export class FirebaseAppInternals {
  *
  * @internal
  */
-export class FirebaseApp implements app.App {
+export class FirebaseApp implements App {
+
   public INTERNAL: FirebaseAppInternals;
 
   private name_: string;
@@ -167,7 +150,7 @@ export class FirebaseApp implements app.App {
   private services_: {[name: string]: unknown} = {};
   private isDeleted_ = false;
 
-  constructor(options: AppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
+  constructor(options: AppOptions, name: string, private readonly appStore?: AppStore) {
     this.name_ = name;
     this.options_ = deepCopy(options);
 
@@ -195,121 +178,6 @@ export class FirebaseApp implements app.App {
     }
 
     this.INTERNAL = new FirebaseAppInternals(credential);
-  }
-
-  /**
-     * Returns the AppCheck service instance associated with this app.
-     *
-     * @returns The AppCheck service instance of this app.
-     */
-  public appCheck(): AppCheck {
-    const fn = require('../app-check/index').getAppCheck;
-    return fn(this);
-  }
-
-  /**
-   * Returns the Auth service instance associated with this app.
-   *
-   * @returns The Auth service instance of this app.
-   */
-  public auth(): Auth {
-    const fn = require('../auth/index').getAuth;
-    return fn(this);
-  }
-
-  /**
-   * Returns the Database service for the specified URL, and the current app.
-   *
-   * @returns The Database service instance of this app.
-   */
-  public database(url?: string): Database {
-    const fn = require('../database/index').getDatabaseWithUrl;
-    return fn(url, this);
-  }
-
-  /**
-   * Returns the Messaging service instance associated with this app.
-   *
-   * @returns The Messaging service instance of this app.
-   */
-  public messaging(): Messaging {
-    const fn = require('../messaging/index').getMessaging;
-    return fn(this);
-  }
-
-  /**
-   * Returns the Storage service instance associated with this app.
-   *
-   * @returns The Storage service instance of this app.
-   */
-  public storage(): Storage {
-    const fn = require('../storage/index').getStorage;
-    return fn(this);
-  }
-
-  public firestore(): Firestore {
-    const fn = require('../firestore/index').getFirestore;
-    return fn(this);
-  }
-
-  /**
-   * Returns the InstanceId service instance associated with this app.
-   *
-   * @returns The InstanceId service instance of this app.
-   */
-  public instanceId(): InstanceId {
-    const fn = require('../instance-id/index').getInstanceId;
-    return fn(this);
-  }
-
-  /**
-   * Returns the InstanceId service instance associated with this app.
-   *
-   * @returns The InstanceId service instance of this app.
-   */
-  public installations(): Installations {
-    const fn = require('../installations/index').getInstallations;
-    return fn(this);
-  }
-
-  /**
-   * Returns the MachineLearning service instance associated with this app.
-   *
-   * @returns The Machine Learning service instance of this app
-   */
-  public machineLearning(): MachineLearning {
-    const fn = require('../machine-learning/index').getMachineLearning;
-    return fn(this);
-  }
-
-  /**
-   * Returns the ProjectManagement service instance associated with this app.
-   *
-   * @returns The ProjectManagement service instance of this app.
-   */
-  public projectManagement(): ProjectManagement {
-    const fn = require('../project-management/index').getProjectManagement;
-    return fn(this);
-  }
-
-  /**
-   * Returns the SecurityRules service instance associated with this app.
-   *
-   * @returns The SecurityRules service instance of this app.
-   */
-  public securityRules(): SecurityRules {
-    const fn = require('../security-rules/index').getSecurityRules;
-    return fn(this);
-  }
-
-  /**
-   * Returns the RemoteConfig service instance associated with this app.
-   *
-   * @returns The RemoteConfig service instance of this app.
-   */
-  public remoteConfig(): RemoteConfig {
-    const fn = require('../remote-config/index').getRemoteConfig;
-    return fn(this);
   }
 
   /**
@@ -346,7 +214,11 @@ export class FirebaseApp implements app.App {
    */
   public delete(): Promise<void> {
     this.checkDestroyed_();
-    this.firebaseInternals_.removeApp(this.name_);
+
+    // Also remove the instance from the AppStore. This is needed to support the existing
+    // app.delete() use case. In the future we can remove this API, and deleteApp() will
+    // become the only way to tear down an App.
+    this.appStore?.removeApp(this.name);
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
       const service = this.services_[serviceName];

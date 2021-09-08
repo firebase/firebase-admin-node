@@ -26,7 +26,6 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
 import { AppOptions } from '../../src/firebase-namespace-api';
-import { FirebaseNamespace } from '../../src/app/firebase-namespace';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 
@@ -91,22 +90,18 @@ export class MockCredential implements Credential {
 }
 
 export function app(): FirebaseApp {
-  const namespaceInternals = new FirebaseNamespace().INTERNAL;
-  namespaceInternals.removeApp = _.noop;
-  return new FirebaseApp(appOptions, appName, namespaceInternals);
+  return new FirebaseApp(appOptions, appName);
 }
 
 export function mockCredentialApp(): FirebaseApp {
   return new FirebaseApp({
     credential: new MockCredential(),
     databaseURL,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export function appWithOptions(options: AppOptions): FirebaseApp {
-  const namespaceInternals = new FirebaseNamespace().INTERNAL;
-  namespaceInternals.removeApp = _.noop;
-  return new FirebaseApp(options, appName, namespaceInternals);
+  return new FirebaseApp(options, appName);
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {
@@ -117,7 +112,7 @@ export function appReturningNullAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export function appReturningMalformedAccessToken(): FirebaseApp {
@@ -127,7 +122,7 @@ export function appReturningMalformedAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
@@ -137,7 +132,7 @@ export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export const refreshToken = {

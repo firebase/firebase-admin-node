@@ -54,7 +54,7 @@ export interface FirebaseError {
 }
 
 // @public (undocumented)
-export function getApp(name?: string): App;
+export function getApp(appName?: string): App;
 
 // @public (undocumented)
 export function getApps(): App[];
@@ -68,7 +68,7 @@ export interface GoogleOAuthAccessToken {
 }
 
 // @public (undocumented)
-export function initializeApp(options?: AppOptions, name?: string): App;
+export function initializeApp(options?: AppOptions, appName?: string): App;
 
 // @public
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;

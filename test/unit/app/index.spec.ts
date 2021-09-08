@@ -30,6 +30,7 @@ import {
   Credential, applicationDefault, cert, refreshToken,
 } from '../../../src/app/index';
 import { clearGlobalAppDefaultCred } from '../../../src/app/credential-factory';
+import { defaultAppStore } from '../../../src/app/lifecycle';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -39,12 +40,7 @@ const expect = chai.expect;
 
 describe('firebase-admin/app', () => {
   afterEach(() => {
-    const deletePromises: Array<Promise<void>> = [];
-    getApps().forEach((app) => {
-      deletePromises.push(deleteApp(app));
-    });
-
-    return Promise.all(deletePromises);
+    return defaultAppStore.clearAllApps();
   });
 
   describe('#initializeApp()', () => {
@@ -94,6 +90,12 @@ describe('firebase-admin/app', () => {
           },
         } as any);
       }).to.throw('Invalid Firebase app options');
+    });
+
+    it('should initialize App instance without extended service methods', () => {
+      const app = initializeApp(mocks.appOptions);
+      expect((app as any).__extended).to.be.undefined;
+      expect((app as any).auth).to.be.undefined;
     });
   });
 

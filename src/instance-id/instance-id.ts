@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { getInstallations } from '../installations';
 import { App } from '../app/index';
 import {
   FirebaseInstallationsError, FirebaseInstanceIdError,
@@ -63,7 +63,7 @@ export class InstanceId {
    * @returns A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
-    return (this.app as FirebaseApp).installations().deleteInstallation(instanceId)
+    return getInstallations(this.app).deleteInstallation(instanceId)
       .catch((err) => {
         if (err instanceof FirebaseInstallationsError) {
           let code = err.code.replace('installations/', '');

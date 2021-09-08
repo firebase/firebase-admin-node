@@ -15,30 +15,116 @@
  * limitations under the License.
  */
 
+import fs = require('fs');
+
+import * as validator from '../utils/validator';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { App, AppOptions } from './core';
-import { FirebaseNamespace } from './firebase-namespace';
+import { getApplicationDefault } from './credential-internal';
+import { FirebaseApp } from './firebase-app';
 
-/**
- * In order to maintain backward compatibility, we instantiate a default namespace instance in
- * this module, and delegate all app lifecycle operations to it. In a future implementation where
- * the old admin namespace is no longer supported, we should remove this, and implement app
- * lifecycle management in this module itself.
- *
- * @internal
- */
-export const defaultNamespace = new FirebaseNamespace();
+const DEFAULT_APP_NAME = '[DEFAULT]';
 
-export function initializeApp(options?: AppOptions, name?: string): App {
-  return defaultNamespace.initializeApp(options, name);
+export class AppStore {
+
+  private readonly appStore = new Map<string, FirebaseApp>();
+
+  public initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
+    if (typeof options === 'undefined') {
+      options = loadOptionsFromEnvVar();
+      options.credential = getApplicationDefault();
+    }
+
+    if (typeof appName !== 'string' || appName === '') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_NAME,
+        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+      );
+    } else if (this.appStore.has(appName)) {
+      if (appName === DEFAULT_APP_NAME) {
+        throw new FirebaseAppError(
+          AppErrorCodes.DUPLICATE_APP,
+          'The default Firebase app already exists. This means you called initializeApp() ' +
+          'more than once without providing an app name as the second argument. In most cases ' +
+          'you only need to call initializeApp() once. But if you do want to initialize ' +
+          'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
+          'name.',
+        );
+      } else {
+        throw new FirebaseAppError(
+          AppErrorCodes.DUPLICATE_APP,
+          `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
+          'more than once with the same app name as the second argument. Make sure you provide a ' +
+          'unique name every time you call initializeApp().',
+        );
+      }
+    }
+
+    const app = new FirebaseApp(options, appName, this);
+    this.appStore.set(app.name, app);
+    return app;
+  }
+
+  public getApp(appName: string = DEFAULT_APP_NAME): App {
+    if (typeof appName !== 'string' || appName === '') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_NAME,
+        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+      );
+    } else if (!this.appStore.has(appName)) {
+      let errorMessage: string = (appName === DEFAULT_APP_NAME)
+        ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
+      errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
+
+      throw new FirebaseAppError(AppErrorCodes.NO_APP, errorMessage);
+    }
+
+    return this.appStore.get(appName)!;
+  }
+
+  public getApps(): App[] {
+    // Return a copy so the caller cannot mutate the array
+    return Array.from(this.appStore.values());
+  }
+
+  public deleteApp(app: App): Promise<void> {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
+      throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'Invalid app argument.');
+    }
+
+    // Make sure the given app already exists.
+    const existingApp = getApp(app.name);
+
+    // Delegate delete operation to the App instance itself.
+    return (existingApp as FirebaseApp).delete();
+  }
+
+  public clearAllApps(): Promise<void> {
+    const promises: Array<Promise<void>> = [];
+    this.getApps().forEach((app) => {
+      promises.push(this.deleteApp(app));
+    })
+
+    return Promise.all(promises).then();
+  }
+
+  public removeApp(appName: string): void {
+    this.appStore.delete(appName);
+  }
 }
 
-export function getApp(name?: string): App {
-  return defaultNamespace.app(name);
+export const defaultAppStore = new AppStore();
+
+export function initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
+  return defaultAppStore.initializeApp(options, appName);
+}
+
+export function getApp(appName: string = DEFAULT_APP_NAME): App {
+  return defaultAppStore.getApp(appName);
 }
 
 export function getApps(): App[] {
-  return defaultNamespace.apps;
+  return defaultAppStore.getApps();
 }
 
 /**
@@ -59,14 +145,36 @@ export function getApps(): App[] {
  * ```
  */
 export function deleteApp(app: App): Promise<void> {
-  if (typeof app !== 'object' || app === null || !('options' in app)) {
-    throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'Invalid app argument.');
+  return defaultAppStore.deleteApp(app);
+}
+
+/**
+ * Constant holding the environment variable name with the default config.
+ * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
+ * otherwise it will be assumed to be pointing to a file.
+ */
+export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
+
+/**
+ * Parse the file pointed to by the FIREBASE_CONFIG_VAR, if it exists.
+ * Or if the FIREBASE_CONFIG_ENV contains a valid JSON object, parse it directly.
+ * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
+ * otherwise it will be assumed to be pointing to a file.
+ */
+function loadOptionsFromEnvVar(): AppOptions {
+  const config = process.env[FIREBASE_CONFIG_VAR];
+  if (!validator.isNonEmptyString(config)) {
+    return {};
   }
 
-  // Make sure the given app already exists.
-  const existingApp = getApp(app.name);
-
-  // Delegate delete operation to the App instance itself for now. This will tear down any
-  // local app state, and also remove it from the global map.
-  return (existingApp as any).delete();
+  try {
+    const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
+    return JSON.parse(contents) as AppOptions;
+  } catch (error) {
+    // Throw a nicely formed error message if the file contents cannot be parsed
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_APP_OPTIONS,
+      'Failed to parse app options file: ' + error,
+    );
+  }
 }
