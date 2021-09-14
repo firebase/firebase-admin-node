@@ -95,7 +95,8 @@ export class AppStore {
     // Make sure the given app already exists.
     const existingApp = getApp(app.name);
 
-    // Delegate delete operation to the App instance itself.
+    // Delegate delete operation to the App instance itself. That will also remove the App
+    // instance from the AppStore.
     return (existingApp as FirebaseApp).delete();
   }
 
@@ -108,6 +109,11 @@ export class AppStore {
     return Promise.all(promises).then();
   }
 
+  /**
+   * Removes the specified App instance from the store. This is currently called by the
+   * {@link FirebaseApp.delete} method. Can be removed once the app deletion is handled
+   * entirely by the {@link deleteApp} top-level function.
+   */
   public removeApp(appName: string): void {
     this.appStore.delete(appName);
   }
