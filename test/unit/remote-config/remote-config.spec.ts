@@ -51,6 +51,7 @@ describe('RemoteConfig', () => {
             'android_en': { value: 'A Droid must love a pumpkin spice latte.' },
           },
           description: 'Description of the parameter.',
+          valueType: 'STRING' as remoteConfig.ParameterValueType,
         },
       },
     },
@@ -91,6 +92,7 @@ describe('RemoteConfig', () => {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
         description: 'this is a promo',
+        valueType: 'BOOLEAN',
       },
     },
     parameterGroups: PARAMETER_GROUPS,
@@ -110,6 +112,7 @@ describe('RemoteConfig', () => {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
         description: 'this is a promo',
+        valueType: 'BOOLEAN',
       },
     },
     parameterGroups: PARAMETER_GROUPS,
@@ -383,7 +386,7 @@ describe('RemoteConfig', () => {
       });
     });
 
-    it('should resolve with an empty versions list if the no results are availble for requested list options', () => {
+    it('should resolve with an empty versions list if no results are available for requested list options', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'listVersions')
         .resolves({} as any);
@@ -498,6 +501,7 @@ describe('RemoteConfig', () => {
       expect(p1.defaultValue).deep.equals({ value: 'true' });
       expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
       expect(p1.description).equals('this is a promo');
+      expect(p1.valueType).equals('BOOLEAN');
 
       expect(newTemplate.parameterGroups).deep.equals(PARAMETER_GROUPS);
 
@@ -662,6 +666,7 @@ describe('RemoteConfig', () => {
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
+          expect(p1.valueType).equals('BOOLEAN');
 
           expect(template.parameterGroups).deep.equals(PARAMETER_GROUPS);
 

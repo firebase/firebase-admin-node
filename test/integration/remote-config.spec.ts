@@ -28,11 +28,13 @@ const VALID_PARAMETERS = {
   // eslint-disable-next-line @typescript-eslint/camelcase
   holiday_promo_enabled: {
     defaultValue: { useInAppDefault: true },
-    description: 'promo indicator'
+    description: 'promo indicator',
+    valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
   },
   // eslint-disable-next-line @typescript-eslint/camelcase
   welcome_message: {
     defaultValue: { value: `welcome text ${Date.now()}` },
+    valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
     conditionalValues: {
       ios: { value: 'welcome ios text' },
       android: { value: 'welcome android text' },
@@ -52,6 +54,7 @@ const VALID_PARAMETER_GROUPS = {
           'android': { value: 'A Droid must love a pumpkin spice latte.' },
         },
         description: 'Description of the parameter.',
+        valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
       },
     },
   },
