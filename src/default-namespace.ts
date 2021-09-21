@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { defaultNamespace as firebaseAdmin } from './app/lifecycle';
+import { defaultNamespace as firebaseAdmin } from './app/firebase-namespace';
 
 // Inject a circular default export to allow users to use both:
 //

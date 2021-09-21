@@ -15,18 +15,13 @@
  * limitations under the License.
  */
 
-import fs = require('fs');
-
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { App as AppCore } from './core';
+import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
   instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
-import { FirebaseApp } from './firebase-app';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
-import { getApplicationDefault } from './credential-internal';
-
-import * as validator from '../utils/validator';
 import { getSdkVersion } from '../utils/index';
 
 import App = app.App;
@@ -43,15 +38,6 @@ import RemoteConfig = remoteConfig.RemoteConfig;
 import SecurityRules = securityRules.SecurityRules;
 import Storage = storage.Storage;
 
-const DEFAULT_APP_NAME = '[DEFAULT]';
-
-/**
- * Constant holding the environment variable name with the default config.
- * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
- * otherwise it will be assumed to be pointing to a file.
- */
-export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
-
 export interface FirebaseServiceNamespace <T> {
   (app?: App): T;
   [key: string]: any;
@@ -62,8 +48,7 @@ export interface FirebaseServiceNamespace <T> {
  */
 export class FirebaseNamespaceInternals {
 
-  private apps_: {[appName: string]: App} = {};
-  constructor(public firebase_: {[key: string]: any}) {}
+  constructor(private readonly appStore: AppStore) {}
 
   /**
    * Initializes the App instance.
@@ -76,39 +61,9 @@ export class FirebaseNamespaceInternals {
    *
    * @returns A new App instance.
    */
-  public initializeApp(options?: AppOptions, appName = DEFAULT_APP_NAME): App {
-    if (typeof options === 'undefined') {
-      options = this.loadOptionsFromEnvVar();
-      options.credential = getApplicationDefault();
-    }
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (appName in this.apps_) {
-      if (appName === DEFAULT_APP_NAME) {
-        throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          'The default Firebase app already exists. This means you called initializeApp() ' +
-          'more than once without providing an app name as the second argument. In most cases ' +
-          'you only need to call initializeApp() once. But if you do want to initialize ' +
-          'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
-          'name.',
-        );
-      } else {
-        throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
-          'more than once with the same app name as the second argument. Make sure you provide a ' +
-          'unique name every time you call initializeApp().',
-        );
-      }
-    }
-
-    const app = new FirebaseApp(options, appName, this);
-    this.apps_[appName] = app;
-    return app;
+  public initializeApp(options?: AppOptions, appName?: string): App {
+    const app = this.appStore.initializeApp(options, appName);
+    return extendApp(app);
   }
 
   /**
@@ -118,67 +73,16 @@ export class FirebaseNamespaceInternals {
    * @param appName Optional name of the FirebaseApp instance to return.
    * @returns The App instance which has the provided name.
    */
-  public app(appName = DEFAULT_APP_NAME): App {
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (!(appName in this.apps_)) {
-      let errorMessage: string = (appName === DEFAULT_APP_NAME)
-        ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
-      errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
-
-      throw new FirebaseAppError(AppErrorCodes.NO_APP, errorMessage);
-    }
-
-    return this.apps_[appName];
+  public app(appName?: string): App {
+    const app = this.appStore.getApp(appName);
+    return extendApp(app);
   }
 
   /*
    * Returns an array of all the non-deleted App instances.
    */
   public get apps(): App[] {
-    // Return a copy so the caller cannot mutate the array
-    return Object.keys(this.apps_).map((appName) => this.apps_[appName]);
-  }
-
-  /*
-   * Removes the specified App instance.
-   */
-  public removeApp(appName: string): void {
-    if (typeof appName === 'undefined') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        'No Firebase app name provided. App name must be a non-empty string.',
-      );
-    }
-
-    const appToRemove = this.app(appName);
-    delete this.apps_[appToRemove.name];
-  }
-
-  /**
-   * Parse the file pointed to by the FIREBASE_CONFIG_VAR, if it exists.
-   * Or if the FIREBASE_CONFIG_ENV contains a valid JSON object, parse it directly.
-   * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
-   * otherwise it will be assumed to be pointing to a file.
-   */
-  private loadOptionsFromEnvVar(): AppOptions {
-    const config = process.env[FIREBASE_CONFIG_VAR];
-    if (!validator.isNonEmptyString(config)) {
-      return {};
-    }
-    try {
-      const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
-      return JSON.parse(contents) as AppOptions;
-    } catch (error) {
-      // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Failed to parse app options file: ' + error,
-      );
-    }
+    return this.appStore.getApps().map((app) => extendApp(app));
   }
 }
 
@@ -205,8 +109,8 @@ export class FirebaseNamespace {
   public Promise: any = Promise;
   /* tslint:enable */
 
-  constructor() {
-    this.INTERNAL = new FirebaseNamespaceInternals(this);
+  constructor(appStore?: AppStore) {
+    this.INTERNAL = new FirebaseNamespaceInternals(appStore ?? new AppStore());
   }
 
   /**
@@ -416,4 +320,83 @@ export class FirebaseNamespace {
     }
     return app;
   }
+}
+
+/**
+ * In order to maintain backward compatibility, we instantiate a default namespace instance in
+ * this module, and delegate all app lifecycle operations to it. In a future implementation where
+ * the old admin namespace is no longer supported, we should remove this.
+ *
+ * @internal
+ */
+export const defaultNamespace = new FirebaseNamespace(defaultAppStore);
+
+function extendApp(app: AppCore): App {
+  const result: App = app as App;
+  if ((result as any).__extended) {
+    return result;
+  }
+
+  result.auth = () => {
+    const fn = require('../auth/index').getAuth;
+    return fn(app);
+  };
+
+  result.appCheck = () => {
+    const fn = require('../app-check/index').getAppCheck;
+    return fn(app);
+  };
+
+  result.database = (url?: string) => {
+    const fn = require('../database/index').getDatabaseWithUrl;
+    return fn(url, app);
+  };
+
+  result.messaging = () => {
+    const fn = require('../messaging/index').getMessaging;
+    return fn(app);
+  };
+
+  result.storage = () => {
+    const fn = require('../storage/index').getStorage;
+    return fn(app);
+  };
+
+  result.firestore = () => {
+    const fn = require('../firestore/index').getFirestore;
+    return fn(app);
+  };
+
+  result.instanceId = () => {
+    const fn = require('../instance-id/index').getInstanceId;
+    return fn(app);
+  }
+
+  result.installations = () => {
+    const fn = require('../installations/index').getInstallations;
+    return fn(app);
+  };
+
+  result.machineLearning = () => {
+    const fn = require('../machine-learning/index').getMachineLearning;
+    return fn(app);
+  }
+
+  result.projectManagement = () => {
+    const fn = require('../project-management/index').getProjectManagement;
+    return fn(app);
+  };
+
+  result.securityRules = () => {
+    const fn = require('../security-rules/index').getSecurityRules;
+    return fn(app);
+  };
+
+  result.remoteConfig = () => {
+    const fn = require('../remote-config/index').getRemoteConfig;
+    return fn(app);
+  };
+
+  (result as any).__extended = true;
+  return result;
 }
