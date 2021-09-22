@@ -25,11 +25,14 @@ import stream = require('stream');
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
+import * as validator from '../../src/utils/validator';
+
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { FirebaseApp } from '../../src/firebase-app';
 import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
+import { SignOptions } from 'jsonwebtoken';
 
 const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -207,6 +210,7 @@ export function generateIdToken(overrides?: object, claims?: object): string {
     subject: uid,
     algorithm: ALGORITHM,
     header: {
+      alg: ALGORITHM,
       kid: certificateObject.private_key_id,
     },
   }, overrides);
@@ -216,7 +220,7 @@ export function generateIdToken(overrides?: object, claims?: object): string {
     ...claims,
   };
 
-  return jwt.sign(payload, certificateObject.private_key, options);
+  return jwt.sign(payload, certificateObject.private_key, copyAlgorithmToHeader(options, overrides));
 }
 
 /**
@@ -234,11 +238,12 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
     subject: uid,
     algorithm: ALGORITHM,
     header: {
+      alg: ALGORITHM,
       kid: certificateObject.private_key_id,
     },
   }, overrides);
 
-  return jwt.sign(developerClaims, certificateObject.private_key, options);
+  return jwt.sign(developerClaims, certificateObject.private_key, copyAlgorithmToHeader(options, overrides));
 }
 
 /**
@@ -255,11 +260,12 @@ export function generateAppCheckToken(overrides?: object): string {
     subject: appId,
     algorithm: ALGORITHM,
     header: {
+      alg: ALGORITHM,
       kid: jwksResponse.keys[0].kid,
     },
   }, overrides);
 
-  return jwt.sign(developerClaims, jwksKeyPair.private, options);
+  return jwt.sign(developerClaims, jwksKeyPair.private, copyAlgorithmToHeader(options, overrides));
 }
 
 /** Mock socket emitter class. */
@@ -309,3 +315,12 @@ export const messaging = {
     dryRun: true,
   },
 };
+
+function copyAlgorithmToHeader(options: SignOptions, overrides?: object): SignOptions {
+  // The following allows us to override the alg in header without replacing the kid.
+  if (validator.isNonNullObject(overrides) && validator.isNonNullObject(options.header) &&
+    Object.prototype.hasOwnProperty.call(overrides, 'algorithm')) {
+    options.header['alg'] = (overrides as any)['algorithm'];
+  }
+  return options;
+}
