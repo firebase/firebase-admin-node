@@ -308,7 +308,7 @@ describe('AppCheckTokenGenerator', () => {
         expect(appCheckError).to.have.property('code', 'app-check/invalid-argument');
         expect(appCheckError).to.have.property('message', 'test error.');
       });
-  
+
       it('should convert CryptoSignerError HttpError to FirebaseAppCheckError', () => {
         const cryptoError = new CryptoSignerError({
           code: CryptoSignerErrorCode.SERVER_ERROR,
@@ -341,7 +341,7 @@ describe('AppCheckTokenGenerator', () => {
           'Error returned from server while signing a custom token: '+
           '{"status":500,"headers":{},"data":{"error":{}},"text":"{\\"error\\":{}}"}');
       });
-  
+
       it('should convert CryptoSignerError HttpError with no errorcode to FirebaseAppCheckError', () => {
         const cryptoError = new CryptoSignerError({
           code: CryptoSignerErrorCode.SERVER_ERROR,

@@ -19,7 +19,7 @@ import * as path from 'path';
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { Database as DatabaseImpl } from '@firebase/database';
+import { Database as DatabaseImpl } from '@firebase/database-compat';
 import { database } from './index';
 
 import * as validator from '../utils/validator';
@@ -89,7 +89,7 @@ export class DatabaseService {
 
     let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
-      const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const rtdb = require('@firebase/database-compat'); // eslint-disable-line @typescript-eslint/no-var-requires
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);

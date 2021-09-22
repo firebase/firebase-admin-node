@@ -33,7 +33,7 @@ import {
   Query,
   Reference,
   ServerValue,
-} from '@firebase/database';
+} from '@firebase/database-compat';
 
 import {
   FieldPath,
