@@ -77,7 +77,7 @@
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/firebase-token-generator": "^2.0.28",
-    "@types/jsonwebtoken": "^8.5.0",
+    "@types/jsonwebtoken": "8.5.1",
     "@types/lodash": "^4.14.104",
     "@types/minimist": "^1.2.0",
     "@types/mocha": "^8.2.2",
