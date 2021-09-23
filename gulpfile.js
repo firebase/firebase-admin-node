@@ -54,7 +54,7 @@ var paths = {
 // emitted.
 var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declarationMap: true });
 
-var buildTest = ts.createProject('tsconfig.json');
+var buildTest = ts.createProject('tsconfig.json', { lib: ["es2018", "dom"] });
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
