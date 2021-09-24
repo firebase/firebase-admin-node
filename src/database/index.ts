@@ -15,7 +15,7 @@
  */
 
 import { app } from '../firebase-namespace-api';
-import { ServerValue as sv } from '@firebase/database-compat';
+import { ServerValue as sv } from '@firebase/database-compat/standalone';
 import * as rtdb from '@firebase/database-types';
 
 /**
