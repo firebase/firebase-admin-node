@@ -33,7 +33,7 @@ import {
 const expect = chai.expect;
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-const ONE_DAY_IN_SECONDS = 86400;
+const SIX_HOURS_IN_SECONDS = ONE_HOUR_IN_SECONDS * 6;
 const publicCertPath = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 const jwksPath = '/v1alpha/jwks';
 
@@ -709,24 +709,24 @@ describe('JwksFetcher', () => {
 
       return keyFetcher.fetchPublicKeys().then(() => {
         expect(https.request).to.have.been.calledOnce;
-        clock!.tick((ONE_DAY_IN_SECONDS - 1) * 1000);
+        clock!.tick((SIX_HOURS_IN_SECONDS - 1) * 1000);
         return keyFetcher.fetchPublicKeys();
       }).then(() => {
         expect(https.request).to.have.been.calledOnce;
-        clock!.tick(ONE_DAY_IN_SECONDS * 1000); // 24 hours in milliseconds
+        clock!.tick(SIX_HOURS_IN_SECONDS * 1000); // 6 hours in milliseconds
         return keyFetcher.fetchPublicKeys();
       }).then(() => {
-        // App check keys do not contain cache headers so we cache the keys for 24 hours.
-        // 24 hours has passed
+        // App check keys do not contain cache headers so we cache the keys for 6 hours.
+        // 6 hours has passed
         expect(https.request).to.have.been.calledTwice;
-        clock!.tick((ONE_DAY_IN_SECONDS - 1) * 1000);
+        clock!.tick((SIX_HOURS_IN_SECONDS - 1) * 1000);
         return keyFetcher.fetchPublicKeys();
       }).then(() => {
         expect(https.request).to.have.been.calledTwice;
-        clock!.tick(ONE_DAY_IN_SECONDS * 1000);
+        clock!.tick(SIX_HOURS_IN_SECONDS * 1000);
         return keyFetcher.fetchPublicKeys();
       }).then(() => {
-        // 48 hours have passed
+        // 12 hours have passed
         expect(https.request).to.have.been.calledThrice;
       });
     });
