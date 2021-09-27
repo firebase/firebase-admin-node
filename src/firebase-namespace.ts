@@ -241,7 +241,7 @@ export class FirebaseNamespace {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return Object.assign(fn, require('@firebase/database'));
+    return Object.assign(fn, require('@firebase/database-compat/standalone'));
   }
 
   /**

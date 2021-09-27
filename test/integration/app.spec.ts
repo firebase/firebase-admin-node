@@ -28,7 +28,7 @@ describe('admin', () => {
   });
 
   it('does not load RTDB by default', () => {
-    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
     expect(firebaseRtdb).to.be.undefined;
     const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
     expect(rtdbInternal).to.be.undefined;
@@ -37,7 +37,7 @@ describe('admin', () => {
   it('loads RTDB when calling admin.database', () => {
     const rtdbNamespace = admin.database;
     expect(rtdbNamespace).to.not.be.null;
-    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
     expect(firebaseRtdb).to.not.be.undefined;
   });
 

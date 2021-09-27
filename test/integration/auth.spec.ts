@@ -19,8 +19,8 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import firebase from '@firebase/app';
-import '@firebase/auth';
+import firebase from '@firebase/app-compat';
+import '@firebase/auth-compat';
 import { clone } from 'lodash';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
@@ -2075,7 +2075,7 @@ describe('admin.auth', () => {
       // Ensure disabled field has been updated.
       expect(userRecord.uid).to.equal(uid);
       expect(userRecord.disabled).to.equal(true);
-      
+
       try {
         // If it is in emulator mode, a user-disabled error will be thrown.
         decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);

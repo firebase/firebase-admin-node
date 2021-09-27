@@ -685,7 +685,7 @@ describe('JwksFetcher', () => {
       expect(https.request).not.to.have.been.called;
 
       return jwksFetcher.fetchPublicKeys()
-        .then((result) => { 
+        .then((result) => {
           expect(https.request).to.have.been.calledOnce;
           expect(result).to.have.key(mocks.jwksResponse.keys[0].kid);
         });
