@@ -31,7 +31,7 @@ const JWT_CALLBACK_ERROR_PREFIX = 'error in secret or public key callback: ';
 const NO_MATCHING_KID_ERROR_MESSAGE = 'no-matching-kid-error';
 const NO_KID_IN_HEADER_ERROR_MESSAGE = 'no-kid-in-header-error';
 
-const ONE_DAY_IN_SECONDS = 24 * 3600;
+const HOUR_IN_SECONDS = 3600;
 
 export type Dictionary = { [key: string]: any }
 
@@ -60,7 +60,7 @@ export class JwksFetcher implements KeyFetcher {
 
     this.client = jwks({
       jwksUri: jwksUrl,
-      cache: false, // disable jwks-rsa LRU cache as the keys are always cahced for 24 hours.
+      cache: false, // disable jwks-rsa LRU cache as the keys are always cached for 6 hours.
     });
   }
 
@@ -84,7 +84,7 @@ export class JwksFetcher implements KeyFetcher {
           map[signingKey.kid] = signingKey.getPublicKey();
           return map;
         }, {});
-        this.publicKeysExpireAt = Date.now() + (ONE_DAY_IN_SECONDS * 1000);
+        this.publicKeysExpireAt = Date.now() + (HOUR_IN_SECONDS * 6 * 1000);
         this.publicKeys = newKeys;
         return newKeys;
       }).catch((err) => {
