@@ -62,7 +62,7 @@ export class AppCheckTokenGenerator {
    *
    * @param appId The Application ID to use for the generated token.
    *
-   * @return A Promise fulfilled with a custom token signed with a service account key
+   * @returns A Promise fulfilled with a custom token signed with a service account key
    * that can be exchanged to an App Check token.
    */
   public createCustomToken(appId: string, options?: AppCheckTokenOptions): Promise<string> {

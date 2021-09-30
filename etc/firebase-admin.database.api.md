@@ -8,6 +8,7 @@
 
 import { Agent } from 'http';
 import { DataSnapshot } from '@firebase/database-types';
+import { enableLogging as enableLogging_2 } from '@firebase/database-compat/standalone';
 import { EventType } from '@firebase/database-types';
 import { FirebaseDatabase } from '@firebase/database-types';
 import { OnDisconnect } from '@firebase/database-types';
@@ -26,7 +27,7 @@ export interface Database extends FirebaseDatabase {
 export { DataSnapshot }
 
 // @public
-export const enableLogging: typeof rtdb.enableLogging;
+export const enableLogging: typeof enableLogging_2;
 
 export { EventType }
 

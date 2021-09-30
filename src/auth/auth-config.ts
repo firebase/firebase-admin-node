@@ -1369,7 +1369,6 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
           '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
         );
       }
-
       const code = options.responseType.code;
       if (typeof code !== 'undefined') {
         if (!validator.isBoolean(code)) {
@@ -1378,7 +1377,6 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
             '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
           );
         }
-
         // If code flow is enabled, client secret must be provided.
         if (code && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(

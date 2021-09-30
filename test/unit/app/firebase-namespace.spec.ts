@@ -35,7 +35,7 @@ import {
   Query,
   Reference,
   ServerValue,
-} from '@firebase/database';
+} from '@firebase/database-compat/standalone';
 
 import {
   FieldPath,

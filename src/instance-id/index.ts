@@ -49,6 +49,9 @@ export { InstanceId };
  * const otherInstanceId = getInstanceId(otherApp);
  *```
  *
+ * This API is deprecated. Developers are advised to use the `admin.installations()`
+ * API to delete their instance IDs and Firebase installation IDs.
+ *
  * @param app Optional app whose `InstanceId` service to
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.

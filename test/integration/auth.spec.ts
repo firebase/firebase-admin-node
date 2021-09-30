@@ -325,6 +325,56 @@ describe('admin.auth', () => {
       });
   });
 
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: admin.auth.UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await admin.auth().importUsers([importUser]);
+
+    try {
+      await admin.auth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return admin.auth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return admin.auth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
   describe('getUsers()', () => {
     /**
      * Filters a list of object to another list of objects that only contains
@@ -843,6 +893,11 @@ describe('admin.auth', () => {
 
   it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
     return getAuth().getUserByProviderUid('google.com', nonexistentUid)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return admin.auth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
@@ -2045,6 +2100,44 @@ describe('admin.auth', () => {
           return getAuth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
+    });
+
+    it('fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await admin.auth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid);
+
+      const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
+      let decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+
+      const userRecord = await admin.auth().updateUser(uid, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.disabled).to.equal(true);
+
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await admin.auth().verifySessionCookie(sessionCookie, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
+        }
+      }
+
+      try {
+        await admin.auth().verifySessionCookie(sessionCookie, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
   });
 

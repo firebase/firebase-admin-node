@@ -29,6 +29,7 @@ export {
   InAppDefaultValue,
   ListVersionsOptions,
   ListVersionsResult,
+  ParameterValueType,
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,

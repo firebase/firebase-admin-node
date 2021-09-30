@@ -17,12 +17,12 @@
 import { URL } from 'url';
 import * as path from 'path';
 
-import { Database as DatabaseImpl } from '@firebase/database';
 import { FirebaseDatabase } from '@firebase/database-types';
+import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
@@ -124,7 +124,8 @@ export class DatabaseService {
 
     let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
-      const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const rtdb = require('@firebase/database-compat/standalone');
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);

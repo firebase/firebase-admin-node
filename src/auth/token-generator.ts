@@ -84,6 +84,8 @@ export class EmulatedSigner implements CryptoSigner {
 
 /**
  * Class for generating different types of Firebase Auth tokens (JWTs).
+ *
+ * @internal
  */
 export class FirebaseTokenGenerator {
 

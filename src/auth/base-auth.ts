@@ -20,7 +20,7 @@ import { deepCopy } from '../utils/deep-copy';
 import * as validator from '../utils/validator';
 
 import { AbstractAuthRequestHandler, useEmulator } from './auth-api-request';
-import { FirebaseTokenGenerator, EmulatedSigner } from './token-generator';
+import { FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError } from './token-generator';
 import {
   FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
   DecodedIdToken,
@@ -37,7 +37,6 @@ import {
 import { UserImportOptions, UserImportRecord, UserImportResult } from './user-import-builder';
 import { ActionCodeSettings } from './action-code-settings-builder';
 import { cryptoSignerFromApp } from '../utils/crypto-signer';
-import { FirebaseApp } from '../app/firebase-app';
 
 /** Represents the result of the {@link BaseAuth.getUsers} API. */
 export interface GetUsersResult {
@@ -109,6 +108,16 @@ export interface SessionCookieOptions {
   expiresIn: number;
 }
 
+export function createFirebaseTokenGenerator(app: App,
+  tenantId?: string): FirebaseTokenGenerator {
+  try {
+    const signer = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+    return new FirebaseTokenGenerator(signer, tenantId);
+  } catch (err) {
+    throw handleCryptoSignerError(err);
+  }
+}
+
 /**
  * Common parent interface for both `Auth` and `TenantAwareAuth` APIs.
  */
@@ -139,8 +148,7 @@ export abstract class BaseAuth {
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app as FirebaseApp);
-      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
+      this.tokenGenerator = createFirebaseTokenGenerator(app);
     }
 
     this.sessionCookieVerifier = createSessionCookieVerifier(app);

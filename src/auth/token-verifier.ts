@@ -370,7 +370,6 @@ export class FirebaseTokenVerifier {
     fullDecodedToken: DecodedToken,
     projectId: string | null,
     isEmulator: boolean): void {
-
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 

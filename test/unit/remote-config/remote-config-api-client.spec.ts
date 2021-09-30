@@ -71,7 +71,7 @@ describe('RemoteConfigApiClient', () => {
 
   const TEST_RESPONSE = {
     conditions: [{ name: 'ios', expression: 'exp' }],
-    parameters: { param: { defaultValue: { value: 'true' } } },
+    parameters: { param: { defaultValue: { value: 'true' }, valueType: 'BOOLEAN' } },
     parameterGroups: { group: { parameters: { paramabc: { defaultValue: { value: 'true' } } }, } },
     version: VERSION_INFO,
   };
@@ -130,6 +130,7 @@ describe('RemoteConfigApiClient', () => {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
         description: 'this is a promo',
+        valueType: 'BOOLEAN'
       },
     },
     parameterGroups: {
@@ -427,7 +428,7 @@ describe('RemoteConfigApiClient', () => {
     });
 
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
-      it('should reject with failed-precondition when a validation error occurres', () => {
+      it('should reject with failed-precondition when a validation error occurs', () => {
         const stub = sinon
           .stub(HttpClient.prototype, 'send')
           .rejects(utils.errorFrom({
