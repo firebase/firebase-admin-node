@@ -31,7 +31,7 @@ describe('admin', () => {
 
   describe('Dependency lazy loading', () => {
     const tempCache: {[key: string]: any} = {};
-    const dependencies = ['@firebase/database', '@google-cloud/firestore'];
+    const dependencies = ['@firebase/database-compat/standalone', '@google-cloud/firestore'];
     let lazyLoadingApp: App;
 
     before(() => {
@@ -49,14 +49,14 @@ describe('admin', () => {
     });
 
     it('does not load RTDB by default', () => {
-      const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+      const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
       expect(firebaseRtdb).to.be.undefined;
     });
 
     it('loads RTDB when calling admin.database', () => {
       const rtdbNamespace = admin.database;
       expect(rtdbNamespace).to.not.be.null;
-      const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+      const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
       expect(firebaseRtdb).to.not.be.undefined;
     });
 

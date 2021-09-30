@@ -17,7 +17,12 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { deepCopy } from '../../src/utils/deep-copy';
-import { RemoteConfigCondition, RemoteConfigTemplate, getRemoteConfig, } from '../../lib/remote-config/index';
+import {
+  getRemoteConfig,
+  ParameterValueType,
+  RemoteConfigCondition,
+  RemoteConfigTemplate,
+} from '../../lib/remote-config/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -29,12 +34,12 @@ const VALID_PARAMETERS = {
   holiday_promo_enabled: {
     defaultValue: { useInAppDefault: true },
     description: 'promo indicator',
-    valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
+    valueType: 'STRING' as ParameterValueType,
   },
   // eslint-disable-next-line @typescript-eslint/camelcase
   welcome_message: {
     defaultValue: { value: `welcome text ${Date.now()}` },
-    valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
+    valueType: 'STRING' as ParameterValueType,
     conditionalValues: {
       ios: { value: 'welcome ios text' },
       android: { value: 'welcome android text' },
@@ -54,7 +59,7 @@ const VALID_PARAMETER_GROUPS = {
           'android': { value: 'A Droid must love a pumpkin spice latte.' },
         },
         description: 'Description of the parameter.',
-        valueType: 'STRING' as admin.remoteConfig.ParameterValueType,
+        valueType: 'STRING' as ParameterValueType,
       },
     },
   },
