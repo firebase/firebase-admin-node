@@ -8,9 +8,11 @@
 |  --- | --- |
 |  [firebase-admin](./firebase-admin.md#firebase-admin_module) | Firebase namespaced API (legacy). |
 |  [firebase-admin/app](./firebase-admin.app.md#firebase-adminapp_module) | Firebase App and SDK initialization. |
+|  [firebase-admin/app-check](./firebase-admin.app-check.md#firebase-adminapp-check_module) | Firebase App Check. |
 |  [firebase-admin/auth](./firebase-admin.auth.md#firebase-adminauth_module) | Firebase Authentication. |
 |  [firebase-admin/database](./firebase-admin.database.md#firebase-admindatabase_module) | Firebase Realtime Database. |
 |  [firebase-admin/firestore](./firebase-admin.firestore.md#firebase-adminfirestore_module) | Cloud Firestore. |
+|  [firebase-admin/installations](./firebase-admin.installations.md#firebase-admininstallations_module) | Firebase Instance ID service. |
 |  [firebase-admin/instance-id](./firebase-admin.instance-id.md#firebase-admininstance-id_module) | Firebase Instance ID service. |
 |  [firebase-admin/machine-learning](./firebase-admin.machine-learning.md#firebase-adminmachine-learning_module) | Firebase Machine Learning. |
 |  [firebase-admin/messaging](./firebase-admin.messaging.md#firebase-adminmessaging_module) | Firebase Cloud Messaging (FCM). |

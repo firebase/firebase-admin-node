@@ -36,8 +36,8 @@ export declare abstract class BaseAuth
 |  [setCustomUserClaims(uid, customUserClaims)](./firebase-admin.auth.baseauth.md#baseauthsetcustomuserclaims) |  | Sets additional developer claims on an existing user identified by the provided <code>uid</code>, typically used to define user roles and levels of access. These claims should propagate to all devices where the user is already signed in (after token expiration or when token refresh is forced) and the next time the user signs in. If a reserved OIDC claim name is used (sub, iat, iss, etc), an error is thrown. They are set on the authenticated user's ID token JWT.<!-- -->See [Defining user roles and access levels](https://firebase.google.com/docs/auth/admin/custom-claims) for code samples and detailed documentation. |
 |  [updateProviderConfig(providerId, updatedConfig)](./firebase-admin.auth.baseauth.md#baseauthupdateproviderconfig) |  | Returns a promise that resolves with the updated <code>AuthProviderConfig</code> corresponding to the provider ID specified. If the specified ID does not exist, an <code>auth/configuration-not-found</code> error is thrown.<!-- -->SAML and OIDC provider support requires Google Cloud's Identity Platform (GCIP). To learn more about GCIP, including pricing and features, see the [GCIP documentation](https://cloud.google.com/identity-platform)<!-- -->. |
 |  [updateUser(uid, properties)](./firebase-admin.auth.baseauth.md#baseauthupdateuser) |  | Updates an existing user.<!-- -->See [Update a user](https://firebsae.google.com/docs/auth/admin/manage-users#update_a_user) for code samples and detailed documentation. |
-|  [verifyIdToken(idToken, checkRevoked)](./firebase-admin.auth.baseauth.md#baseauthverifyidtoken) |  | Verifies a Firebase ID token (JWT). If the token is valid, the promise is fulfilled with the token's decoded claims; otherwise, the promise is rejected. An optional flag can be passed to additionally check whether the ID token was revoked.<!-- -->See [Verify ID Tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens) for code samples and detailed documentation. |
-|  [verifySessionCookie(sessionCookie, checkRevoked)](./firebase-admin.auth.baseauth.md#baseauthverifysessioncookie) |  | Verifies a Firebase session cookie. Returns a Promise with the cookie claims. Rejects the promise if the cookie could not be verified. If <code>checkRevoked</code> is set to true, verifies if the session corresponding to the session cookie was revoked. If the corresponding user's session was revoked, an <code>auth/session-cookie-revoked</code> error is thrown. If not specified the check is not performed.<!-- -->See [Verify Session Cookies](https://firebase.google.com/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions) for code samples and detailed documentation |
+|  [verifyIdToken(idToken, checkRevoked)](./firebase-admin.auth.baseauth.md#baseauthverifyidtoken) |  | Verifies a Firebase ID token (JWT). If the token is valid, the promise is fulfilled with the token's decoded claims; otherwise, the promise is rejected.<!-- -->If <code>checkRevoked</code> is set to true, first verifies whether the corresponding user is disabled. If yes, an <code>auth/user-disabled</code> error is thrown. If no, verifies if the session corresponding to the ID token was revoked. If the corresponding user's session was invalidated, an <code>auth/id-token-revoked</code> error is thrown. If not specified the check is not applied.<!-- -->See [Verify ID Tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens) for code samples and detailed documentation. |
+|  [verifySessionCookie(sessionCookie, checkRevoked)](./firebase-admin.auth.baseauth.md#baseauthverifysessioncookie) |  | Verifies a Firebase session cookie. Returns a Promise with the cookie claims. Rejects the promise if the cookie could not be verified.<!-- -->If <code>checkRevoked</code> is set to true, first verifies whether the corresponding user is disabled: If yes, an <code>auth/user-disabled</code> error is thrown. If no, verifies if the session corresponding to the session cookie was revoked. If the corresponding user's session was invalidated, an <code>auth/session-cookie-revoked</code> error is thrown. If not specified the check is not performed.<!-- -->See [Verify Session Cookies](https://firebase.google.com/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions) for code samples and detailed documentation |
 
 ## BaseAuth.createCustomToken()
 
@@ -80,11 +80,11 @@ createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  config | [AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface) | The provider configuration to create. |
+|  config | [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig) | The provider configuration to create. |
 
 <b>Returns:</b>
 
-Promise&lt;[AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->&gt;
+Promise&lt;[AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->&gt;
 
 A promise that resolves with the created provider configuration.
 
@@ -386,7 +386,7 @@ getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
 
 <b>Returns:</b>
 
-Promise&lt;[AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->&gt;
+Promise&lt;[AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->&gt;
 
 A promise that resolves with the configuration corresponding to the provided ID.
 
@@ -661,7 +661,7 @@ updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderReques
 
 <b>Returns:</b>
 
-Promise&lt;[AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->&gt;
+Promise&lt;[AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->&gt;
 
 A promise that resolves with the updated provider configuration.
 
@@ -692,7 +692,9 @@ A promise fulfilled with the updated user data.
 
 ## BaseAuth.verifyIdToken()
 
-Verifies a Firebase ID token (JWT). If the token is valid, the promise is fulfilled with the token's decoded claims; otherwise, the promise is rejected. An optional flag can be passed to additionally check whether the ID token was revoked.
+Verifies a Firebase ID token (JWT). If the token is valid, the promise is fulfilled with the token's decoded claims; otherwise, the promise is rejected.
+
+If `checkRevoked` is set to true, first verifies whether the corresponding user is disabled. If yes, an `auth/user-disabled` error is thrown. If no, verifies if the session corresponding to the ID token was revoked. If the corresponding user's session was invalidated, an `auth/id-token-revoked` error is thrown. If not specified the check is not applied.
 
 See [Verify ID Tokens](https://firebase.google.com/docs/auth/admin/verify-id-tokens) for code samples and detailed documentation.
 
@@ -717,7 +719,9 @@ A promise fulfilled with the token's decoded claims if the ID token is valid; ot
 
 ## BaseAuth.verifySessionCookie()
 
-Verifies a Firebase session cookie. Returns a Promise with the cookie claims. Rejects the promise if the cookie could not be verified. If `checkRevoked` is set to true, verifies if the session corresponding to the session cookie was revoked. If the corresponding user's session was revoked, an `auth/session-cookie-revoked` error is thrown. If not specified the check is not performed.
+Verifies a Firebase session cookie. Returns a Promise with the cookie claims. Rejects the promise if the cookie could not be verified.
+
+If `checkRevoked` is set to true, first verifies whether the corresponding user is disabled: If yes, an `auth/user-disabled` error is thrown. If no, verifies if the session corresponding to the session cookie was revoked. If the corresponding user's session was invalidated, an `auth/session-cookie-revoked` error is thrown. If not specified the check is not performed.
 
 See [Verify Session Cookies](https://firebase.google.com/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions) for code samples and detailed documentation
 

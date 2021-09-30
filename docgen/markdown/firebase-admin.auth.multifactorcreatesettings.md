@@ -13,7 +13,7 @@ export interface MultiFactorCreateSettings
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [enrolledFactors](./firebase-admin.auth.multifactorcreatesettings.md#multifactorcreatesettingsenrolledfactors) | [CreateMultiFactorInfoRequest](./firebase-admin.auth.createmultifactorinforequest.md#createmultifactorinforequest_interface)<!-- -->\[\] | The created user's list of enrolled second factors. |
+|  [enrolledFactors](./firebase-admin.auth.multifactorcreatesettings.md#multifactorcreatesettingsenrolledfactors) | [CreateMultiFactorInfoRequest](./firebase-admin.auth.md#createmultifactorinforequest)<!-- -->\[\] | The created user's list of enrolled second factors. |
 
 ## MultiFactorCreateSettings.enrolledFactors
 

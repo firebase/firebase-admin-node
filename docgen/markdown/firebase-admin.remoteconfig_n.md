@@ -15,6 +15,7 @@ export declare namespace remoteConfig
 |  [InAppDefaultValue](./firebase-admin.remoteconfig_n.md#remoteconfiginappdefaultvalue) | Type alias to [InAppDefaultValue](./firebase-admin.remote-config.inappdefaultvalue.md#inappdefaultvalue_interface)<!-- -->. |
 |  [ListVersionsOptions](./firebase-admin.remoteconfig_n.md#remoteconfiglistversionsoptions) | Type alias to [ListVersionsOptions](./firebase-admin.remote-config.listversionsoptions.md#listversionsoptions_interface)<!-- -->. |
 |  [ListVersionsResult](./firebase-admin.remoteconfig_n.md#remoteconfiglistversionsresult) | Type alias to [ListVersionsResult](./firebase-admin.remote-config.listversionsresult.md#listversionsresult_interface)<!-- -->. |
+|  [ParameterValueType](./firebase-admin.remoteconfig_n.md#remoteconfigparametervaluetype) | Type alias to [ParameterValueType](./firebase-admin.remote-config.md#parametervaluetype)<!-- -->. |
 |  [RemoteConfig](./firebase-admin.remoteconfig_n.md#remoteconfigremoteconfig) | Type alias to [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class)<!-- -->. |
 |  [RemoteConfigCondition](./firebase-admin.remoteconfig_n.md#remoteconfigremoteconfigcondition) | Type alias to [RemoteConfigCondition](./firebase-admin.remote-config.remoteconfigcondition.md#remoteconfigcondition_interface)<!-- -->. |
 |  [RemoteConfigParameter](./firebase-admin.remoteconfig_n.md#remoteconfigremoteconfigparameter) | Type alias to [RemoteConfigParameter](./firebase-admin.remote-config.remoteconfigparameter.md#remoteconfigparameter_interface)<!-- -->. |
@@ -63,6 +64,16 @@ Type alias to [ListVersionsResult](./firebase-admin.remote-config.listversionsre
 
 ```typescript
 type ListVersionsResult = TListVersionsResult;
+```
+
+## remoteConfig.ParameterValueType
+
+Type alias to [ParameterValueType](./firebase-admin.remote-config.md#parametervaluetype)<!-- -->.
+
+<b>Signature:</b>
+
+```typescript
+type ParameterValueType = TParameterValueType;
 ```
 
 ## remoteConfig.RemoteConfig

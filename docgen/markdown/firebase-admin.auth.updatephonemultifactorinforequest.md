@@ -1,14 +1,14 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}UpdatePhoneMultiFactorInfoRequest interface{% endblock title %}
 {% block body %}
-Interface representing a phone specific user enrolled second factor for an `UpdateRequest`<!-- -->.
+Interface representing a phone specific user-enrolled second factor for an `UpdateRequest`<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest 
+export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest 
 ```
-<b>Extends:</b> [UpdateMultiFactorInfoRequest](./firebase-admin.auth.updatemultifactorinforequest.md#updatemultifactorinforequest_interface)
+<b>Extends:</b> [BaseUpdateMultiFactorInfoRequest](./firebase-admin.auth.baseupdatemultifactorinforequest.md#baseupdatemultifactorinforequest_interface)
 
 ## Properties
 

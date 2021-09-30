@@ -31,6 +31,22 @@ toc:
           /docs/reference/admin/node/firebase-admin.app.googleoauthaccesstoken.md
       - title: ServiceAccount
         path: /docs/reference/admin/node/firebase-admin.app.serviceaccount.md
+  - title: firebase-admin/app-check
+    path: /docs/reference/admin/node/firebase-admin.app-check.md
+    section:
+      - title: AppCheck
+        path: /docs/reference/admin/node/firebase-admin.app-check.appcheck.md
+      - title: AppCheckToken
+        path: /docs/reference/admin/node/firebase-admin.app-check.appchecktoken.md
+      - title: AppCheckTokenOptions
+        path: >-
+          /docs/reference/admin/node/firebase-admin.app-check.appchecktokenoptions.md
+      - title: DecodedAppCheckToken
+        path: >-
+          /docs/reference/admin/node/firebase-admin.app-check.decodedappchecktoken.md
+      - title: VerifyAppCheckTokenResponse
+        path: >-
+          /docs/reference/admin/node/firebase-admin.app-check.verifyappchecktokenresponse.md
   - title: firebase-admin/auth
     path: /docs/reference/admin/node/firebase-admin.auth.md
     section:
@@ -38,16 +54,20 @@ toc:
         path: /docs/reference/admin/node/firebase-admin.auth.actioncodesettings.md
       - title: Auth
         path: /docs/reference/admin/node/firebase-admin.auth.auth.md
-      - title: AuthProviderConfig
-        path: /docs/reference/admin/node/firebase-admin.auth.authproviderconfig.md
       - title: AuthProviderConfigFilter
         path: >-
           /docs/reference/admin/node/firebase-admin.auth.authproviderconfigfilter.md
       - title: BaseAuth
         path: /docs/reference/admin/node/firebase-admin.auth.baseauth.md
-      - title: CreateMultiFactorInfoRequest
+      - title: BaseAuthProviderConfig
         path: >-
-          /docs/reference/admin/node/firebase-admin.auth.createmultifactorinforequest.md
+          /docs/reference/admin/node/firebase-admin.auth.baseauthproviderconfig.md
+      - title: BaseCreateMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.basecreatemultifactorinforequest.md
+      - title: BaseUpdateMultiFactorInfoRequest
+        path: >-
+          /docs/reference/admin/node/firebase-admin.auth.baseupdatemultifactorinforequest.md
       - title: CreatePhoneMultiFactorInfoRequest
         path: >-
           /docs/reference/admin/node/firebase-admin.auth.createphonemultifactorinforequest.md
@@ -83,6 +103,8 @@ toc:
       - title: MultiFactorUpdateSettings
         path: >-
           /docs/reference/admin/node/firebase-admin.auth.multifactorupdatesettings.md
+      - title: OAuthResponseType
+        path: /docs/reference/admin/node/firebase-admin.auth.oauthresponsetype.md
       - title: OIDCAuthProviderConfig
         path: >-
           /docs/reference/admin/node/firebase-admin.auth.oidcauthproviderconfig.md
@@ -111,9 +133,6 @@ toc:
         path: /docs/reference/admin/node/firebase-admin.auth.tenantmanager.md
       - title: UidIdentifier
         path: /docs/reference/admin/node/firebase-admin.auth.uididentifier.md
-      - title: UpdateMultiFactorInfoRequest
-        path: >-
-          /docs/reference/admin/node/firebase-admin.auth.updatemultifactorinforequest.md
       - title: UpdatePhoneMultiFactorInfoRequest
         path: >-
           /docs/reference/admin/node/firebase-admin.auth.updatephonemultifactorinforequest.md
@@ -147,6 +166,12 @@ toc:
   - title: firebase-admin/firestore
     path: /docs/reference/admin/node/firebase-admin.firestore.md
     section: []
+  - title: firebase-admin/installations
+    path: /docs/reference/admin/node/firebase-admin.installations.md
+    section:
+      - title: Installations
+        path: >-
+          /docs/reference/admin/node/firebase-admin.installations.installations.md
   - title: firebase-admin/instance-id
     path: /docs/reference/admin/node/firebase-admin.instance-id.md
     section:

@@ -10,9 +10,9 @@ Firebase App and SDK initialization.
 |  [applicationDefault(httpAgent)](./firebase-admin.app.md#applicationdefault) | Returns a credential created from the [Google Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials) that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->Google Application Default Credentials are available on any Google infrastructure, such as Google App Engine and Google Compute Engine.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
 |  [cert(serviceAccountPathOrObject, httpAgent)](./firebase-admin.app.md#cert) | Returns a credential created from the provided service account that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
 |  [deleteApp(app)](./firebase-admin.app.md#deleteapp) | Renders this given <code>App</code> unusable and frees the resources of all associated services (though it does \*not\* clean up any backend resources). When running the SDK locally, this method must be called to ensure graceful termination of the process. |
-|  [getApp(name)](./firebase-admin.app.md#getapp) |  |
+|  [getApp(appName)](./firebase-admin.app.md#getapp) |  |
 |  [getApps()](./firebase-admin.app.md#getapps) |  |
-|  [initializeApp(options, name)](./firebase-admin.app.md#initializeapp) |  |
+|  [initializeApp(options, appName)](./firebase-admin.app.md#initializeapp) |  |
 |  [refreshToken(refreshTokenPathOrObject, httpAgent)](./firebase-admin.app.md#refreshtoken) | Returns a credential created from the provided refresh token that grants admin access to Firebase services. This credential can be used in the call to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for more details. |
 
 ## Interfaces
@@ -163,14 +163,14 @@ deleteApp(app)
 <b>Signature:</b>
 
 ```typescript
-export declare function getApp(name?: string): App;
+export declare function getApp(appName?: string): App;
 ```
 
 ### Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | string |  |
+|  appName | string |  |
 
 <b>Returns:</b>
 
@@ -192,7 +192,7 @@ export declare function getApps(): App[];
 <b>Signature:</b>
 
 ```typescript
-export declare function initializeApp(options?: AppOptions, name?: string): App;
+export declare function initializeApp(options?: AppOptions, appName?: string): App;
 ```
 
 ### Parameters
@@ -200,7 +200,7 @@ export declare function initializeApp(options?: AppOptions, name?: string): App;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  options | [AppOptions](./firebase-admin.app.appoptions.md#appoptions_interface) |  |
-|  name | string |  |
+|  appName | string |  |
 
 <b>Returns:</b>
 

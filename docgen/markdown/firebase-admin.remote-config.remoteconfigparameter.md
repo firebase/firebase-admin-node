@@ -16,6 +16,7 @@ export interface RemoteConfigParameter
 |  [conditionalValues](./firebase-admin.remote-config.remoteconfigparameter.md#remoteconfigparameterconditionalvalues) | { \[key: string\]: [RemoteConfigParameterValue](./firebase-admin.remote-config.md#remoteconfigparametervalue)<!-- -->; } | A <code>(condition name, value)</code> map. The condition name of the highest priority (the one listed first in the Remote Config template's conditions list) determines the value of this parameter. |
 |  [defaultValue](./firebase-admin.remote-config.remoteconfigparameter.md#remoteconfigparameterdefaultvalue) | [RemoteConfigParameterValue](./firebase-admin.remote-config.md#remoteconfigparametervalue) | The value to set the parameter to, when none of the named conditions evaluate to <code>true</code>. |
 |  [description](./firebase-admin.remote-config.remoteconfigparameter.md#remoteconfigparameterdescription) | string | A description for this parameter. Should not be over 100 characters and may contain any Unicode characters. |
+|  [valueType](./firebase-admin.remote-config.remoteconfigparameter.md#remoteconfigparametervaluetype) | [ParameterValueType](./firebase-admin.remote-config.md#parametervaluetype) | The data type for all values of this parameter in the current version of the template. Defaults to <code>ParameterValueType.STRING</code> if unspecified. |
 
 ## RemoteConfigParameter.conditionalValues
 
@@ -47,5 +48,15 @@ A description for this parameter. Should not be over 100 characters and may cont
 
 ```typescript
 description?: string;
+```
+
+## RemoteConfigParameter.valueType
+
+The data type for all values of this parameter in the current version of the template. Defaults to `ParameterValueType.STRING` if unspecified.
+
+<b>Signature:</b>
+
+```typescript
+valueType?: ParameterValueType;
 ```
 {% endblock body %}

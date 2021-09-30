@@ -34,6 +34,7 @@ Firebase Remote Config.
 
 |  Type Alias | Description |
 |  --- | --- |
+|  [ParameterValueType](./firebase-admin.remote-config.md#parametervaluetype) | Type representing a Remote Config parameter value data type. Defaults to <code>STRING</code> if unspecified. |
 |  [RemoteConfigParameterValue](./firebase-admin.remote-config.md#remoteconfigparametervalue) | Type representing a Remote Config parameter value. A <code>RemoteConfigParameterValue</code> could be either an <code>ExplicitParameterValue</code> or an <code>InAppDefaultValue</code>. |
 |  [TagColor](./firebase-admin.remote-config.md#tagcolor) | Colors that are associated with conditions for display purposes. |
 
@@ -77,6 +78,16 @@ const defaultRemoteConfig = getRemoteConfig();
 // Get the `RemoteConfig` service for a given app
 const otherRemoteConfig = getRemoteConfig(otherApp);
 
+```
+
+## ParameterValueType
+
+Type representing a Remote Config parameter value data type. Defaults to `STRING` if unspecified.
+
+<b>Signature:</b>
+
+```typescript
+export declare type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
 ```
 
 ## RemoteConfigParameterValue

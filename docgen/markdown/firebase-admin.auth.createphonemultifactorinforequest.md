@@ -1,14 +1,14 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}CreatePhoneMultiFactorInfoRequest interface{% endblock title %}
 {% block body %}
-Interface representing a phone specific user enrolled second factor for a `CreateRequest`<!-- -->.
+Interface representing a phone specific user-enrolled second factor for a `CreateRequest`<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest 
+export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest 
 ```
-<b>Extends:</b> [CreateMultiFactorInfoRequest](./firebase-admin.auth.createmultifactorinforequest.md#createmultifactorinforequest_interface)
+<b>Extends:</b> [BaseCreateMultiFactorInfoRequest](./firebase-admin.auth.basecreatemultifactorinforequest.md#basecreatemultifactorinforequest_interface)
 
 ## Properties
 

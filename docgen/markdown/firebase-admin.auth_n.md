@@ -14,10 +14,10 @@ export declare namespace auth
 |  [ActionCodeSettings](./firebase-admin.auth_n.md#authactioncodesettings) | Type alias to [ActionCodeSettings](./firebase-admin.auth.actioncodesettings.md#actioncodesettings_interface)<!-- -->. |
 |  [Auth](./firebase-admin.auth_n.md#authauth) | Type alias to [Auth](./firebase-admin.auth.auth.md#auth_class)<!-- -->. |
 |  [AuthFactorType](./firebase-admin.auth_n.md#authauthfactortype) | Type alias to [AuthFactorType](./firebase-admin.auth.md#authfactortype)<!-- -->. |
-|  [AuthProviderConfig](./firebase-admin.auth_n.md#authauthproviderconfig) | Type alias to [AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->. |
+|  [AuthProviderConfig](./firebase-admin.auth_n.md#authauthproviderconfig) | Type alias to [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->. |
 |  [AuthProviderConfigFilter](./firebase-admin.auth_n.md#authauthproviderconfigfilter) | Type alias to [AuthProviderConfigFilter](./firebase-admin.auth.authproviderconfigfilter.md#authproviderconfigfilter_interface)<!-- -->. |
 |  [BaseAuth](./firebase-admin.auth_n.md#authbaseauth) | Type alias to [BaseAuth](./firebase-admin.auth.baseauth.md#baseauth_class)<!-- -->. |
-|  [CreateMultiFactorInfoRequest](./firebase-admin.auth_n.md#authcreatemultifactorinforequest) | Type alias to [CreateMultiFactorInfoRequest](./firebase-admin.auth.createmultifactorinforequest.md#createmultifactorinforequest_interface)<!-- -->. |
+|  [CreateMultiFactorInfoRequest](./firebase-admin.auth_n.md#authcreatemultifactorinforequest) | Type alias to [CreateMultiFactorInfoRequest](./firebase-admin.auth.md#createmultifactorinforequest)<!-- -->. |
 |  [CreatePhoneMultiFactorInfoRequest](./firebase-admin.auth_n.md#authcreatephonemultifactorinforequest) | Type alias to [CreatePhoneMultiFactorInfoRequest](./firebase-admin.auth.createphonemultifactorinforequest.md#createphonemultifactorinforequest_interface)<!-- -->. |
 |  [CreateRequest](./firebase-admin.auth_n.md#authcreaterequest) | Type alias to [CreateRequest](./firebase-admin.auth.createrequest.md#createrequest_interface)<!-- -->. |
 |  [CreateTenantRequest](./firebase-admin.auth_n.md#authcreatetenantrequest) | Type alias to [CreateTenantRequest](./firebase-admin.auth.md#createtenantrequest)<!-- -->. |
@@ -49,7 +49,7 @@ export declare namespace auth
 |  [TenantManager](./firebase-admin.auth_n.md#authtenantmanager) | Type alias to [TenantManager](./firebase-admin.auth.tenantmanager.md#tenantmanager_class)<!-- -->. |
 |  [UidIdentifier](./firebase-admin.auth_n.md#authuididentifier) | Type alias to [UidIdentifier](./firebase-admin.auth.uididentifier.md#uididentifier_interface)<!-- -->. |
 |  [UpdateAuthProviderRequest](./firebase-admin.auth_n.md#authupdateauthproviderrequest) | Type alias to [UpdateAuthProviderRequest](./firebase-admin.auth.md#updateauthproviderrequest)<!-- -->. |
-|  [UpdateMultiFactorInfoRequest](./firebase-admin.auth_n.md#authupdatemultifactorinforequest) | Type alias to [UpdateMultiFactorInfoRequest](./firebase-admin.auth.updatemultifactorinforequest.md#updatemultifactorinforequest_interface)<!-- -->. |
+|  [UpdateMultiFactorInfoRequest](./firebase-admin.auth_n.md#authupdatemultifactorinforequest) | Type alias to [UpdateMultiFactorInfoRequest](./firebase-admin.auth.md#updatemultifactorinforequest)<!-- -->. |
 |  [UpdatePhoneMultiFactorInfoRequest](./firebase-admin.auth_n.md#authupdatephonemultifactorinforequest) | Type alias to [UpdatePhoneMultiFactorInfoRequest](./firebase-admin.auth.updatephonemultifactorinforequest.md#updatephonemultifactorinforequest_interface)<!-- -->. |
 |  [UpdateRequest](./firebase-admin.auth_n.md#authupdaterequest) | Type alias to [UpdateRequest](./firebase-admin.auth.updaterequest.md#updaterequest_interface)<!-- -->. |
 |  [UpdateTenantRequest](./firebase-admin.auth_n.md#authupdatetenantrequest) | Type alias to [UpdateTenantRequest](./firebase-admin.auth.updatetenantrequest.md#updatetenantrequest_interface)<!-- -->. |
@@ -95,7 +95,7 @@ type AuthFactorType = TAuthFactorType;
 
 ## auth.AuthProviderConfig
 
-Type alias to [AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->.
+Type alias to [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->.
 
 <b>Signature:</b>
 
@@ -125,7 +125,7 @@ type BaseAuth = TBaseAuth;
 
 ## auth.CreateMultiFactorInfoRequest
 
-Type alias to [CreateMultiFactorInfoRequest](./firebase-admin.auth.createmultifactorinforequest.md#createmultifactorinforequest_interface)<!-- -->.
+Type alias to [CreateMultiFactorInfoRequest](./firebase-admin.auth.md#createmultifactorinforequest)<!-- -->.
 
 <b>Signature:</b>
 
@@ -445,7 +445,7 @@ type UpdateAuthProviderRequest = TUpdateAuthProviderRequest;
 
 ## auth.UpdateMultiFactorInfoRequest
 
-Type alias to [UpdateMultiFactorInfoRequest](./firebase-admin.auth.updatemultifactorinforequest.md#updatemultifactorinforequest_interface)<!-- -->.
+Type alias to [UpdateMultiFactorInfoRequest](./firebase-admin.auth.md#updatemultifactorinforequest)<!-- -->.
 
 <b>Signature:</b>
 

@@ -1,6 +1,10 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}InstanceId class{% endblock title %}
 {% block body %}
+> Warning: This API is now obsolete.
+> 
+> 
+
 The `InstanceId` service enables deleting the Firebase instance IDs associated with Firebase client app instances.
 
 <b>Signature:</b>

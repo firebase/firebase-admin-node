@@ -14,7 +14,7 @@ export interface ListProviderConfigResults
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [pageToken](./firebase-admin.auth.listproviderconfigresults.md#listproviderconfigresultspagetoken) | string | The next page token, if available. |
-|  [providerConfigs](./firebase-admin.auth.listproviderconfigresults.md#listproviderconfigresultsproviderconfigs) | [AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)<!-- -->\[\] | The list of providers for the specified type in the current page. |
+|  [providerConfigs](./firebase-admin.auth.listproviderconfigresults.md#listproviderconfigresultsproviderconfigs) | [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig)<!-- -->\[\] | The list of providers for the specified type in the current page. |
 
 ## ListProviderConfigResults.pageToken
 

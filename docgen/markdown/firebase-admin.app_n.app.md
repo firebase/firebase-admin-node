@@ -16,10 +16,12 @@ interface App extends AppCore
 
 |  Method | Description |
 |  --- | --- |
+|  [appCheck()](./firebase-admin.app_n.app.md#appappappcheck) |  |
 |  [auth()](./firebase-admin.app_n.app.md#appappauth) |  |
 |  [database(url)](./firebase-admin.app_n.app.md#appappdatabase) |  |
 |  [delete()](./firebase-admin.app_n.app.md#appappdelete) | Renders this local <code>FirebaseApp</code> unusable and frees the resources of all associated services (though it does \*not\* clean up any backend resources). When running the SDK locally, this method must be called to ensure graceful termination of the process. |
 |  [firestore()](./firebase-admin.app_n.app.md#appappfirestore) |  |
+|  [installations()](./firebase-admin.app_n.app.md#appappinstallations) |  |
 |  [instanceId()](./firebase-admin.app_n.app.md#appappinstanceid) |  |
 |  [machineLearning()](./firebase-admin.app_n.app.md#appappmachinelearning) |  |
 |  [messaging()](./firebase-admin.app_n.app.md#appappmessaging) |  |
@@ -27,6 +29,17 @@ interface App extends AppCore
 |  [remoteConfig()](./firebase-admin.app_n.app.md#appappremoteconfig) |  |
 |  [securityRules()](./firebase-admin.app_n.app.md#appappsecurityrules) |  |
 |  [storage()](./firebase-admin.app_n.app.md#appappstorage) |  |
+
+## app.App.appCheck()
+
+<b>Signature:</b>
+
+```typescript
+appCheck(): appCheck.AppCheck;
+```
+<b>Returns:</b>
+
+[appCheck.AppCheck](./firebase-admin.appcheck_n.md#appcheckappcheck)
 
 ## app.App.auth()
 
@@ -95,7 +108,22 @@ firestore(): firestore.Firestore;
 
 firestore.Firestore
 
+## app.App.installations()
+
+<b>Signature:</b>
+
+```typescript
+installations(): installations.Installations;
+```
+<b>Returns:</b>
+
+[installations.Installations](./firebase-admin.installations_n.md#installationsinstallations)
+
 ## app.App.instanceId()
+
+> Warning: This API is now obsolete.
+> 
+> 
 
 <b>Signature:</b>
 

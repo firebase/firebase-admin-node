@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}PhoneMultiFactorInfo class{% endblock title %}
 {% block body %}
-Interface representing a phone specific user enrolled second factor.
+Interface representing a phone specific user-enrolled second factor.
 
 <b>Signature:</b>
 

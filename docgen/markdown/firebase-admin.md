@@ -8,10 +8,12 @@ Firebase namespaced API (legacy).
 |  Function | Description |
 |  --- | --- |
 |  [app(name)](./firebase-admin.md#app) |  |
+|  [appCheck(app)](./firebase-admin.md#appcheck) | Gets the [AppCheck](./firebase-admin.app-check.appcheck.md#appcheck_class) service for the default app or a given app.<code>admin.appCheck()</code> can be called with no arguments to access the default app's <code>AppCheck</code> service or as <code>admin.appCheck(app)</code> to access the <code>AppCheck</code> service associated with a specific app. |
 |  [auth(app)](./firebase-admin.md#auth) | Gets the  service for the default app or a given app.<code>admin.auth()</code> can be called with no arguments to access the default app's  service or as <code>admin.auth(app)</code> to access the  service associated with a specific app. |
 |  [database(app)](./firebase-admin.md#database) | Gets the [Database](./firebase-admin.database.database.md#database_interface) service for the default app or a given app.<code>admin.database()</code> can be called with no arguments to access the default app's <code>Database</code> service or as <code>admin.database(app)</code> to access the <code>Database</code> service associated with a specific app.<code>admin.database</code> is also a namespace that can be used to access global constants and methods associated with the <code>Database</code> service. |
 |  [firestore(app)](./firebase-admin.md#firestore) |  |
 |  [initializeApp(options, name)](./firebase-admin.md#initializeapp) |  |
+|  [installations(app)](./firebase-admin.md#installations) | Gets the  service for the default app or a given app.<code>admin.installations()</code> can be called with no arguments to access the default app's  service or as <code>admin.installations(app)</code> to access the  service associated with a specific app. |
 |  [instanceId(app)](./firebase-admin.md#instanceid) | Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.<code>admin.instanceId()</code> can be called with no arguments to access the default app's <code>InstanceId</code> service or as <code>admin.instanceId(app)</code> to access the <code>InstanceId</code> service associated with a specific app. |
 |  [machineLearning(app)](./firebase-admin.md#machinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>admin.machineLearning()</code> can be called with no arguments to access the default app's <code>MachineLearning</code> service or as <code>admin.machineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
 |  [messaging(app)](./firebase-admin.md#messaging) | Gets the [Messaging](./firebase-admin.messaging.messaging.md#messaging_class) service for the default app or a given app.<code>admin.messaging()</code> can be called with no arguments to access the default app's <code>Messaging</code> service or as <code>admin.messaging(app)</code> to access the <code>Messaging</code> service associated with a specific app. |
@@ -35,10 +37,12 @@ Firebase namespaced API (legacy).
 |  Namespace | Description |
 |  --- | --- |
 |  [app](./firebase-admin.app_n.md#app_namespace) |  |
+|  [appCheck](./firebase-admin.appcheck_n.md#appcheck_namespace) |  |
 |  [auth](./firebase-admin.auth_n.md#auth_namespace) |  |
 |  [credential](./firebase-admin.credential_n.md#credential_namespace) |  |
 |  [database](./firebase-admin.database_n.md#database_namespace) |  |
 |  [firestore](./firebase-admin.firestore_n.md#firestore_namespace) |  |
+|  [installations](./firebase-admin.installations_n.md#installations_namespace) |  |
 |  [instanceId](./firebase-admin.instanceid_n.md#instanceid_namespace) |  |
 |  [machineLearning](./firebase-admin.machinelearning_n.md#machinelearning_namespace) |  |
 |  [messaging](./firebase-admin.messaging_n.md#messaging_namespace) |  |
@@ -71,6 +75,48 @@ export declare function app(name?: string): app.App;
 <b>Returns:</b>
 
 [app.App](./firebase-admin.app_n.app.md#appapp_interface)
+
+## appCheck()
+
+Gets the [AppCheck](./firebase-admin.app-check.appcheck.md#appcheck_class) service for the default app or a given app.
+
+`admin.appCheck()` can be called with no arguments to access the default app's `AppCheck` service or as `admin.appCheck(app)` to access the `AppCheck` service associated with a specific app.
+
+<b>Signature:</b>
+
+```typescript
+export declare function appCheck(app?: App): appCheck.AppCheck;
+```
+
+### Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  app | App | Optional app for which to return the <code>AppCheck</code> service. If not provided, the default <code>AppCheck</code> service is returned. |
+
+<b>Returns:</b>
+
+[appCheck.AppCheck](./firebase-admin.appcheck_n.md#appcheckappcheck)
+
+The default `AppCheck` service if no app is provided, or the `AppCheck` service associated with the provided app.
+
+### Example 1
+
+
+```javascript
+// Get the `AppCheck` service for the default app
+var defaultAppCheck = admin.appCheck();
+
+```
+
+### Example 2
+
+
+```javascript
+// Get the `AppCheck` service for a given app
+var otherAppCheck = admin.appCheck(otherApp);
+
+```
 
 ## auth()
 
@@ -192,6 +238,48 @@ export declare function initializeApp(options?: AppOptions, name?: string): app.
 <b>Returns:</b>
 
 [app.App](./firebase-admin.app_n.app.md#appapp_interface)
+
+## installations()
+
+Gets the  service for the default app or a given app.
+
+`admin.installations()` can be called with no arguments to access the default app's  service or as `admin.installations(app)` to access the  service associated with a specific app.
+
+<b>Signature:</b>
+
+```typescript
+export declare function installations(app?: App): installations.Installations;
+```
+
+### Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  app | App | Optional app whose <code>Installations</code> service to return. If not provided, the default <code>Installations</code> service is returned. |
+
+<b>Returns:</b>
+
+[installations.Installations](./firebase-admin.installations_n.md#installationsinstallations)
+
+The default `Installations` service if no app is provided or the `Installations` service associated with the provided app.
+
+### Example 1
+
+
+```javascript
+// Get the Installations service for the default app
+var defaultInstallations = admin.installations();
+
+```
+
+### Example 2
+
+
+```javascript
+// Get the Installations service for a given app
+var otherInstallations = admin.installations(otherApp);
+
+```
 
 ## instanceId()
 

@@ -6,9 +6,9 @@ The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-ove
 <b>Signature:</b>
 
 ```typescript
-export interface SAMLAuthProviderConfig extends AuthProviderConfig 
+export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig 
 ```
-<b>Extends:</b> [AuthProviderConfig](./firebase-admin.auth.authproviderconfig.md#authproviderconfig_interface)
+<b>Extends:</b> [BaseAuthProviderConfig](./firebase-admin.auth.baseauthproviderconfig.md#baseauthproviderconfig_interface)
 
 ## Properties
 

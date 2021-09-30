@@ -13,7 +13,7 @@ export interface MultiFactorUpdateSettings
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [enrolledFactors](./firebase-admin.auth.multifactorupdatesettings.md#multifactorupdatesettingsenrolledfactors) | [UpdateMultiFactorInfoRequest](./firebase-admin.auth.updatemultifactorinforequest.md#updatemultifactorinforequest_interface)<!-- -->\[\] \| null | The updated list of enrolled second factors. The provided list overwrites the user's existing list of second factors. When null is passed, all of the user's existing second factors are removed. |
+|  [enrolledFactors](./firebase-admin.auth.multifactorupdatesettings.md#multifactorupdatesettingsenrolledfactors) | [UpdateMultiFactorInfoRequest](./firebase-admin.auth.md#updatemultifactorinforequest)<!-- -->\[\] \| null | The updated list of enrolled second factors. The provided list overwrites the user's existing list of second factors. When null is passed, all of the user's existing second factors are removed. |
 
 ## MultiFactorUpdateSettings.enrolledFactors
 
