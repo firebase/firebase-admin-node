@@ -90,7 +90,7 @@ async function fixTitleOf(file) {
 
   if (updated) {
     console.log(`Updating title in ${file}`);
-    const content = Buffer.from(buffer.join('\r\n'));
+    const content = Buffer.from(buffer.join('\n'));
     await fs.writeFile(file, content);
   }
 }
@@ -110,7 +110,7 @@ async function fixTocTitles(file) {
   }
 
   console.log(`Updating titles in ${file}`);
-  const content = Buffer.from(buffer.join('\r\n'));
+  const content = Buffer.from(buffer.join('\n'));
   await fs.writeFile(file, content);
 }
 
@@ -166,7 +166,7 @@ async function writeExtraContentTo(target, extra) {
     output.push(line);
   }
 
-  const outputBuffer = Buffer.from(output.join('\r\n'));
+  const outputBuffer = Buffer.from(output.join('\n'));
   console.log(`Writing extra content to ${target}`);
   await fs.writeFile(target, outputBuffer);
 }
