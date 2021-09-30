@@ -108,6 +108,9 @@ export interface SessionCookieOptions {
   expiresIn: number;
 }
 
+/**
+ * @internal
+ */
 export function createFirebaseTokenGenerator(app: App,
   tenantId?: string): FirebaseTokenGenerator {
   try {
@@ -143,7 +146,7 @@ export abstract class BaseAuth {
    */
   constructor(
     app: App,
-    /** @internal */protected readonly authRequestHandler: AbstractAuthRequestHandler,
+    /** @internal */ protected readonly authRequestHandler: AbstractAuthRequestHandler,
     tokenGenerator?: FirebaseTokenGenerator) {
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
@@ -179,8 +182,12 @@ export abstract class BaseAuth {
    * Verifies a Firebase ID token (JWT). If the token is valid, the promise is
    * fulfilled with the token's decoded claims; otherwise, the promise is
    * rejected.
-   * An optional flag can be passed to additionally check whether the ID token
-   * was revoked.
+   *
+   * If `checkRevoked` is set to true, first verifies whether the corresponding
+   * user is disabled. If yes, an `auth/user-disabled` error is thrown. If no,
+   * verifies if the session corresponding to the ID token was revoked. If the
+   * corresponding user's session was invalidated, an `auth/id-token-revoked`
+   * error is thrown. If not specified the check is not applied.
    *
    * See {@link https://firebase.google.com/docs/auth/admin/verify-id-tokens | Verify ID Tokens}
    * for code samples and detailed documentation.
@@ -201,7 +208,7 @@ export abstract class BaseAuth {
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
-          return this.verifyDecodedJWTNotRevoked(
+          return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
             AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
@@ -677,11 +684,14 @@ export abstract class BaseAuth {
 
   /**
    * Verifies a Firebase session cookie. Returns a Promise with the cookie claims.
-   * Rejects the promise if the cookie could not be verified. If `checkRevoked` is
-   * set to true, verifies if the session corresponding to the session cookie was
-   * revoked. If the corresponding user's session was revoked, an
-   * `auth/session-cookie-revoked` error is thrown. If not specified the check is
-   * not performed.
+   * Rejects the promise if the cookie could not be verified.
+   *
+   * If `checkRevoked` is set to true, first verifies whether the corresponding
+   * user is disabled: If yes, an `auth/user-disabled` error is thrown. If no,
+   * verifies if the session corresponding to the session cookie was revoked.
+   * If the corresponding user's session was invalidated, an
+   * `auth/session-cookie-revoked` error is thrown. If not specified the check
+   * is not performed.
    *
    * See {@link https://firebase.google.com/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions |
    * Verify Session Cookies}
@@ -704,7 +714,7 @@ export abstract class BaseAuth {
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
-          return this.verifyDecodedJWTNotRevoked(
+          return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
             AuthClientErrorCode.SESSION_COOKIE_REVOKED);
         }
@@ -1046,19 +1056,25 @@ export abstract class BaseAuth {
   }
 
   /**
-   * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
-   * with the decoded claims on success. Rejects the promise with revocation error if revoked.
+   * Verifies the decoded Firebase issued JWT is not revoked or disabled. Returns a promise that
+   * resolves with the decoded claims on success. Rejects the promise with revocation error if revoked
+   * or user disabled.
    *
    * @param decodedIdToken The JWT's decoded claims.
    * @param revocationErrorInfo The revocation error info to throw on revocation
    *     detection.
-   * @returns A Promise that will be fulfilled after a successful verification.
+   * @returns A promise that will be fulfilled after a successful verification.
    */
-  private verifyDecodedJWTNotRevoked(
+  private verifyDecodedJWTNotRevokedOrDisabled(
     decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
+        if (user.disabled) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.USER_DISABLED,
+            'The user record is disabled.');
+        }
         // If no tokens valid after time available, token is not revoked.
         if (user.tokensValidAfterTime) {
           // Get the ID token authentication time and convert to milliseconds UTC.
