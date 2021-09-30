@@ -47,7 +47,7 @@ export interface CryptoSigner {
   /**
    * Returns the ID of the service account used to sign tokens.
    *
-   * @return {Promise<string>} A promise that resolves with a service account ID.
+   * @returns A promise that resolves with a service account ID.
    */
   getAccountId(): Promise<string>;
 }
@@ -224,17 +224,17 @@ export class CryptoSignerError extends Error {
     (this as any).__proto__ = CryptoSignerError.prototype;
   }
 
-  /** @return {string} The error code. */
+  /** @returns The error code. */
   public get code(): string {
     return this.errorInfo.code;
   }
 
-  /** @return {string} The error message. */
+  /** @returns The error message. */
   public get message(): string {
     return this.errorInfo.message;
   }
 
-  /** @return {object} The error data. */
+  /** @returns The error data. */
   public get cause(): Error | undefined {
     return this.errorInfo.cause;
   }

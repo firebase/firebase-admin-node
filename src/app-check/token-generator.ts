@@ -141,7 +141,7 @@ export class AppCheckTokenGenerator {
  * details from a CryptoSignerError.
  *
  * @param err The Error to convert into a FirebaseAppCheckError error
- * @return A Firebase App Check error that can be returned to the user.
+ * @returns A Firebase App Check error that can be returned to the user.
  */
 export function appCheckErrorFromCryptoSignerError(err: Error): Error {
   if (!(err instanceof CryptoSignerError)) {

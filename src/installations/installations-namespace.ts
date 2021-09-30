@@ -43,7 +43,7 @@ import { Installations as TInstallations } from './installations';
  *   return. If not provided, the default `Installations` service is
  *   returned.
  *
- * @return The default `Installations` service if
+ * @returns The default `Installations` service if
  *   no app is provided or the `Installations` service associated with the
  *   provided app.
  */

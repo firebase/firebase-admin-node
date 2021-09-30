@@ -15,7 +15,6 @@ export function getInstallations(app?: App): Installations;
 
 // @public
 export class Installations {
-    constructor(app: App);
     get app(): App;
     deleteInstallation(fid: string): Promise<void>;
 }
