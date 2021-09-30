@@ -19,15 +19,12 @@ import { App } from '../app';
 import * as utils from '../utils/index';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
-import { BaseAuth, SessionCookieOptions } from './base-auth';
+import { BaseAuth, createFirebaseTokenGenerator, SessionCookieOptions } from './base-auth';
 import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
-import { FirebaseTokenGenerator, EmulatedSigner } from './token-generator';
 import {
-  AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
+  AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
 import { DecodedIdToken } from './token-verifier';
-import { FirebaseApp } from '../app/firebase-app';
-import { cryptoSignerFromApp } from '../utils/crypto-signer';
 
 /**
  * Interface representing the object returned from a
@@ -83,9 +80,8 @@ export class TenantAwareAuth extends BaseAuth {
    * @internal
    */
   constructor(app: App, tenantId: string) {
-    const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app as FirebaseApp);
-    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
-    super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
+    super(app, new TenantAwareAuthRequestHandler(
+      app, tenantId), createFirebaseTokenGenerator(app, tenantId));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 

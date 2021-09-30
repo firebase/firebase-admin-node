@@ -19,8 +19,8 @@ import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import firebase from '@firebase/app';
-import '@firebase/auth';
+import firebase from '@firebase/app-compat';
+import '@firebase/auth-compat';
 import { clone } from 'lodash';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import {
@@ -220,6 +220,56 @@ describe('admin.auth', () => {
 
   it('getUserByPhoneNumber() returns a user record with the matching phone number', () => {
     return getAuth().getUserByPhoneNumber(mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await getAuth().importUsers([importUser]);
+
+    try {
+      await getAuth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return getAuth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return getAuth().getUserByProviderUid('phone', mockUserData.phoneNumber)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
@@ -828,6 +878,11 @@ describe('admin.auth', () => {
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
     return getAuth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
@@ -2045,6 +2100,44 @@ describe('admin.auth', () => {
           return getAuth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
+    });
+
+    it('fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await getAuth().createCustomToken(uid, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await getAuth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid);
+
+      const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+      let decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+
+      const userRecord = await getAuth().updateUser(uid, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.disabled).to.equal(true);
+
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
+        }
+      }
+
+      try {
+        await getAuth().verifySessionCookie(sessionCookie, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
   });
 

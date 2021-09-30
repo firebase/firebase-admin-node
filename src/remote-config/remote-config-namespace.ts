@@ -20,6 +20,7 @@ import {
   InAppDefaultValue as TInAppDefaultValue,
   ListVersionsOptions as TListVersionsOptions,
   ListVersionsResult as TListVersionsResult,
+  ParameterValueType as TParameterValueType,
   RemoteConfigCondition as TRemoteConfigCondition,
   RemoteConfigParameter as TRemoteConfigParameter,
   RemoteConfigParameterGroup as TRemoteConfigParameterGroup,
@@ -81,6 +82,11 @@ export namespace remoteConfig {
    * Type alias to {@link firebase-admin.remote-config#ListVersionsResult}.
    */
   export type ListVersionsResult = TListVersionsResult;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ParameterValueType}.
+   */
+  export type ParameterValueType = TParameterValueType;
 
   /**
    * Type alias to {@link firebase-admin.remote-config#RemoteConfig}.

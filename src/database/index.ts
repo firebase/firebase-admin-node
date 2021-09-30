@@ -24,7 +24,7 @@ import * as rtdb from '@firebase/database-types';
 import {
   enableLogging as enableLoggingFunc,
   ServerValue as serverValueConst,
-} from '@firebase/database';
+} from '@firebase/database-compat/standalone';
 
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
@@ -40,11 +40,13 @@ export {
   ThenableReference,
 } from '@firebase/database-types';
 
+// TODO: Remove the following any-cast once the typins in @firebase/database-types are fixed.
+
 /**
  * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
  * function from the `@firebase/database` package.
  */
-export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
+export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc as any;
 
 /**
  * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}

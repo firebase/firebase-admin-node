@@ -30,6 +30,7 @@ export class Installations {
   /**
    * @param app The app for this Installations service.
    * @constructor
+   * @internal
    */
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -48,7 +49,7 @@ export class Installations {
    *
    * @param fid The Firebase installation ID to be deleted.
    *
-   * @return A promise fulfilled when the installation ID is deleted.
+   * @returns A promise fulfilled when the installation ID is deleted.
    */
   public deleteInstallation(fid: string): Promise<void> {
     return this.requestHandler.deleteInstallation(fid);

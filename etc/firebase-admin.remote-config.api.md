@@ -39,6 +39,9 @@ export interface ListVersionsResult {
 }
 
 // @public
+export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
+
+// @public
 export class RemoteConfig {
     // (undocumented)
     readonly app: App;
@@ -67,6 +70,7 @@ export interface RemoteConfigParameter {
     };
     defaultValue?: RemoteConfigParameterValue;
     description?: string;
+    valueType?: ParameterValueType;
 }
 
 // @public

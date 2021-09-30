@@ -62,7 +62,7 @@ export class AppCheckTokenGenerator {
    *
    * @param appId The Application ID to use for the generated token.
    *
-   * @return A Promise fulfilled with a custom token signed with a service account key
+   * @returns A Promise fulfilled with a custom token signed with a service account key
    * that can be exchanged to an App Check token.
    */
   public createCustomToken(appId: string, options?: AppCheckTokenOptions): Promise<string> {
@@ -141,7 +141,7 @@ export class AppCheckTokenGenerator {
  * details from a CryptoSignerError.
  *
  * @param err The Error to convert into a FirebaseAppCheckError error
- * @return A Firebase App Check error that can be returned to the user.
+ * @returns A Firebase App Check error that can be returned to the user.
  */
 export function appCheckErrorFromCryptoSignerError(err: Error): Error {
   if (!(err instanceof CryptoSignerError)) {

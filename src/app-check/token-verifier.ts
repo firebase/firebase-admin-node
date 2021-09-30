@@ -44,7 +44,7 @@ export class AppCheckTokenVerifier {
    * Verifies the format and signature of a Firebase App Check token.
    *
    * @param token The Firebase Auth JWT token to verify.
-   * @return A promise fulfilled with the decoded claims of the Firebase App Check token.
+   * @returns A promise fulfilled with the decoded claims of the Firebase App Check token.
    */
   public verifyToken(token: string): Promise<DecodedAppCheckToken> {
     if (!validator.isString(token)) {

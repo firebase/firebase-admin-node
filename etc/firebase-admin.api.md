@@ -431,6 +431,8 @@ export namespace remoteConfig {
     export type ListVersionsOptions = ListVersionsOptions;
     // Warning: (ae-forgotten-export) The symbol "ListVersionsResult" needs to be exported by the entry point default-namespace.d.ts
     export type ListVersionsResult = ListVersionsResult;
+    // Warning: (ae-forgotten-export) The symbol "ParameterValueType" needs to be exported by the entry point default-namespace.d.ts
+    export type ParameterValueType = ParameterValueType;
     // Warning: (ae-forgotten-export) The symbol "RemoteConfig" needs to be exported by the entry point default-namespace.d.ts
     export type RemoteConfig = RemoteConfig;
     // Warning: (ae-forgotten-export) The symbol "RemoteConfigCondition" needs to be exported by the entry point default-namespace.d.ts

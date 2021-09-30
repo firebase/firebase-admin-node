@@ -84,6 +84,8 @@ export class EmulatedSigner implements CryptoSigner {
 
 /**
  * Class for generating different types of Firebase Auth tokens (JWTs).
+ *
+ * @internal
  */
 export class FirebaseTokenGenerator {
 
@@ -202,8 +204,8 @@ export class FirebaseTokenGenerator {
  * Creates a new FirebaseAuthError by extracting the error code, message and other relevant
  * details from a CryptoSignerError.
  *
- * @param {Error} err The Error to convert into a FirebaseAuthError error
- * @return {FirebaseAuthError} A Firebase Auth error that can be returned to the user.
+ * @param err The Error to convert into a FirebaseAuthError error
+ * @returns A Firebase Auth error that can be returned to the user.
  */
 export function handleCryptoSignerError(err: Error): Error {
   if (!(err instanceof CryptoSignerError)) {
