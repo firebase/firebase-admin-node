@@ -41,7 +41,7 @@ import { Database as TDatabase } from './database';
  * var otherDatabase = admin.database(app);
  * ```
  *
- * @param App whose `Database` service to
+ * @param App - whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
  * @returns The default `Database` service if no app

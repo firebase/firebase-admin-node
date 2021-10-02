@@ -45,7 +45,7 @@ export class AppCheckTokenGenerator {
   /**
    * The AppCheckTokenGenerator class constructor.
    *
-   * @param signer The CryptoSigner instance for this token generator.
+   * @param signer - The CryptoSigner instance for this token generator.
    * @constructor
    */
   constructor(signer: CryptoSigner) {
@@ -60,7 +60,7 @@ export class AppCheckTokenGenerator {
   /**
    * Creates a new custom token that can be exchanged to an App Check token.
    *
-   * @param appId The Application ID to use for the generated token.
+   * @param appId - The Application ID to use for the generated token.
    *
    * @returns A Promise fulfilled with a custom token signed with a service account key
    * that can be exchanged to an App Check token.
@@ -110,7 +110,7 @@ export class AppCheckTokenGenerator {
    * Checks if a given `AppCheckTokenOptions` object is valid. If successful, returns an object with
    * custom properties.
    *
-   * @param options An options object to be validated.
+   * @param options - An options object to be validated.
    * @returns A custom object with ttl converted to protobuf Duration string format.
    */
   private validateTokenOptions(options: AppCheckTokenOptions): {[key: string]: any} {
@@ -140,7 +140,7 @@ export class AppCheckTokenGenerator {
  * Creates a new FirebaseAppCheckError by extracting the error code, message and other relevant
  * details from a CryptoSignerError.
  *
- * @param err The Error to convert into a FirebaseAppCheckError error
+ * @param err - The Error to convert into a FirebaseAppCheckError error
  * @returns A Firebase App Check error that can be returned to the user.
  */
 export function appCheckErrorFromCryptoSignerError(err: Error): Error {

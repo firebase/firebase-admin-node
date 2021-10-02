@@ -28,7 +28,7 @@ const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
 /**
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
- * @param time The unix timestamp string or number in milliseconds.
+ * @param time - The unix timestamp string or number in milliseconds.
  * @returns The corresponding date as a UTC string, if valid. Otherwise, null.
  */
 function parseDate(time: any): string | null {
@@ -115,7 +115,7 @@ export abstract class MultiFactorInfo {
    * Initializes the MultiFactorInfo associated subclass using the server side.
    * If no MultiFactorInfo is associated with the response, null is returned.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @internal
    */
   public static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
@@ -132,7 +132,7 @@ export abstract class MultiFactorInfo {
   /**
    * Initializes the MultiFactorInfo object using the server side response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
    * @internal
    */
@@ -157,7 +157,7 @@ export abstract class MultiFactorInfo {
   /**
    * Returns the factor ID based on the response provided.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    *
@@ -168,7 +168,7 @@ export abstract class MultiFactorInfo {
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    */
   private initFromServerResponse(response: MultiFactorInfoResponse): void {
     const factorId = response && this.getFactorId(response);
@@ -206,7 +206,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   /**
    * Initializes the PhoneMultiFactorInfo object using the server side response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
    * @internal
    */
@@ -229,7 +229,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   /**
    * Returns the factor ID based on the response provided.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    *
@@ -254,7 +254,7 @@ export class MultiFactorSettings {
   /**
    * Initializes the MultiFactor object using the server side or JWT format response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
    * @internal
    */
@@ -312,7 +312,7 @@ export class UserMetadata {
   public readonly lastRefreshTime?: string | null;
 
   /**
-   * @param response The server side response returned from the getAccountInfo
+   * @param response - The server side response returned from the getAccountInfo
    *     endpoint.
    * @constructor
    * @internal
@@ -379,7 +379,7 @@ export class UserInfo {
 
 
   /**
-   * @param response The server side response returned from the getAccountInfo
+   * @param response - The server side response returned from the getAccountInfo
    *     endpoint.
    * @constructor
    * @internal
@@ -514,7 +514,7 @@ export class UserRecord {
   public readonly multiFactor?: MultiFactorSettings;
 
   /**
-   * @param response The server side response returned from the getAccountInfo
+   * @param response - The server side response returned from the getAccountInfo
    *     endpoint.
    * @constructor
    * @internal

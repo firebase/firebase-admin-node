@@ -29,7 +29,7 @@ export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
 
 /**
    * Interface representing the user import options needed for
-   * {@link auth.Auth.importUsers `importUsers()`} method. This is used to
+   * {@link BaseAuth.importUsers} method. This is used to
    * provide the password hashing algorithm information.
    */
 export interface UserImportOptions {
@@ -95,7 +95,7 @@ export interface UserImportOptions {
 
 /**
  * Interface representing a user to import to Firebase Auth via the
- * {@link auth.Auth.importUsers `importUsers()`} method.
+ * {@link BaseAuth.importUsers} method.
  */
 export interface UserImportRecord {
 
@@ -154,7 +154,7 @@ export interface UserImportRecord {
   /**
    * The buffer of bytes representing the user's hashed password.
    * When a user is to be imported with a password hash,
-   * {@link auth.UserImportOptions `UserImportOptions`} are required to be
+   * {@link UserImportOptions} are required to be
    * specified to identify the hashing algorithm used to generate this hash.
    */
   passwordHash?: Buffer;
@@ -233,7 +233,7 @@ export interface UserProviderRequest {
 
 /**
    * Interface representing the response from the
-   * {@link auth.Auth.importUsers `importUsers()`} method for batch
+   * {@link BaseAuth.importUsers} method for batch
    * importing users to Firebase Auth.
    */
 export interface UserImportResult {
@@ -318,7 +318,7 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
 
 /**
  * Converts a client format second factor object to server format.
- * @param multiFactorInfo The client format second factor.
+ * @param multiFactorInfo - The client format second factor.
  * @returns The corresponding AuthFactorInfo server request format.
  */
 export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {

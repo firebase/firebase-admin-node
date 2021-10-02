@@ -20,7 +20,7 @@ import url = require('url');
 /**
  * Validates that a value is a byte buffer.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is byte buffer or not.
  */
 export function isBuffer(value: any): value is Buffer {
@@ -30,7 +30,7 @@ export function isBuffer(value: any): value is Buffer {
 /**
  * Validates that a value is an array.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is an array or not.
  */
 export function isArray<T>(value: any): value is T[] {
@@ -40,7 +40,7 @@ export function isArray<T>(value: any): value is T[] {
 /**
  * Validates that a value is a non-empty array.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a non-empty array or not.
  */
 export function isNonEmptyArray<T>(value: any): value is T[] {
@@ -51,7 +51,7 @@ export function isNonEmptyArray<T>(value: any): value is T[] {
 /**
  * Validates that a value is a boolean.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a boolean or not.
  */
 export function isBoolean(value: any): boolean {
@@ -62,7 +62,7 @@ export function isBoolean(value: any): boolean {
 /**
  * Validates that a value is a number.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a number or not.
  */
 export function isNumber(value: any): boolean {
@@ -73,7 +73,7 @@ export function isNumber(value: any): boolean {
 /**
  * Validates that a value is a string.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a string or not.
  */
 export function isString(value: any): value is string {
@@ -84,7 +84,7 @@ export function isString(value: any): value is string {
 /**
  * Validates that a value is a base64 string.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a base64 string or not.
  */
 export function isBase64String(value: any): boolean {
@@ -98,7 +98,7 @@ export function isBase64String(value: any): boolean {
 /**
  * Validates that a value is a non-empty string.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a non-empty string or not.
  */
 export function isNonEmptyString(value: any): value is string {
@@ -109,7 +109,7 @@ export function isNonEmptyString(value: any): value is string {
 /**
  * Validates that a value is a nullable object.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is an object or not.
  */
 export function isObject(value: any): boolean {
@@ -120,7 +120,7 @@ export function isObject(value: any): boolean {
 /**
  * Validates that a value is a non-null object.
  *
- * @param value The value to validate.
+ * @param value - The value to validate.
  * @returns Whether the value is a non-null object or not.
  */
 export function isNonNullObject<T>(value: T | null | undefined): value is T {
@@ -131,7 +131,7 @@ export function isNonNullObject<T>(value: T | null | undefined): value is T {
 /**
  * Validates that a string is a valid Firebase Auth uid.
  *
- * @param uid The string to validate.
+ * @param uid - The string to validate.
  * @returns Whether the string is a valid Firebase Auth uid.
  */
 export function isUid(uid: any): boolean {
@@ -142,7 +142,7 @@ export function isUid(uid: any): boolean {
 /**
  * Validates that a string is a valid Firebase Auth password.
  *
- * @param password The password string to validate.
+ * @param password - The password string to validate.
  * @returns Whether the string is a valid Firebase Auth password.
  */
 export function isPassword(password: any): boolean {
@@ -154,7 +154,7 @@ export function isPassword(password: any): boolean {
 /**
  * Validates that a string is a valid email.
  *
- * @param email The string to validate.
+ * @param email - The string to validate.
  * @returns Whether the string is valid email or not.
  */
 export function isEmail(email: any): boolean {
@@ -170,7 +170,7 @@ export function isEmail(email: any): boolean {
 /**
  * Validates that a string is a valid phone number.
  *
- * @param phoneNumber The string to validate.
+ * @param phoneNumber - The string to validate.
  * @returns Whether the string is a valid phone number or not.
  */
 export function isPhoneNumber(phoneNumber: any): boolean {
@@ -189,7 +189,7 @@ export function isPhoneNumber(phoneNumber: any): boolean {
 /**
  * Validates that a string is a valid ISO date string.
  *
- * @param dateString The string to validate.
+ * @param dateString - The string to validate.
  * @returns Whether the string is a valid ISO date string.
  */
 export function isISODateString(dateString: any): boolean {
@@ -205,7 +205,7 @@ export function isISODateString(dateString: any): boolean {
 /**
  * Validates that a string is a valid UTC date string.
  *
- * @param dateString The string to validate.
+ * @param dateString - The string to validate.
  * @returns Whether the string is a valid UTC date string.
  */
 export function isUTCDateString(dateString: any): boolean {
@@ -221,7 +221,7 @@ export function isUTCDateString(dateString: any): boolean {
 /**
  * Validates that a string is a valid web URL.
  *
- * @param urlStr The string to validate.
+ * @param urlStr - The string to validate.
  * @returns Whether the string is valid web URL or not.
  */
 export function isURL(urlStr: any): boolean {
@@ -267,7 +267,7 @@ export function isURL(urlStr: any): boolean {
 /**
  * Validates that the provided topic is a valid FCM topic name.
  *
- * @param topic The topic to validate.
+ * @param topic - The topic to validate.
  * @returns Whether the provided topic is a valid FCM topic name.
  */
 export function isTopic(topic: any): boolean {

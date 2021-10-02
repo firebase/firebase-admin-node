@@ -52,7 +52,7 @@ export { AppCheck } from './app-check';
  * const otherAppCheck = getAppCheck(otherApp);
  * ```
  *
- * @param app Optional app for which to return the `AppCheck` service.
+ * @param app - Optional app for which to return the `AppCheck` service.
  *   If not provided, the default `AppCheck` service is returned.
  *
  * @returns The default `AppCheck` service if no

@@ -117,7 +117,7 @@ export class FirebaseAppInternals {
   /**
    * Adds a listener that is called each time a token changes.
    *
-   * @param listener The listener that will be called with each new token.
+   * @param listener - The listener that will be called with each new token.
    */
   public addAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_.push(listener);
@@ -129,7 +129,7 @@ export class FirebaseAppInternals {
   /**
    * Removes a token listener.
    *
-   * @param listener The listener to remove.
+   * @param listener - The listener to remove.
    */
   public removeAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);

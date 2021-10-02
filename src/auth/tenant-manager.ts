@@ -74,8 +74,8 @@ export class TenantAwareAuth extends BaseAuth {
   /**
    * The TenantAwareAuth class constructor.
    *
-   * @param app The app that created this tenant.
-   * @param tenantId The corresponding tenant ID.
+   * @param app - The app that created this tenant.
+   * @param tenantId - The corresponding tenant ID.
    * @constructor
    * @internal
    */
@@ -152,7 +152,7 @@ export class TenantManager {
   /**
    * Initializes a TenantManager instance for a specified FirebaseApp.
    *
-   * @param app The app for this TenantManager instance.
+   * @param app - The app for this TenantManager instance.
    *
    * @constructor
    * @internal
@@ -165,7 +165,7 @@ export class TenantManager {
   /**
    * Returns a `TenantAwareAuth` instance bound to the given tenant ID.
    *
-   * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
+   * @param tenantId - The tenant ID whose `TenantAwareAuth` instance is to be returned.
    *
    * @returns The `TenantAwareAuth` instance corresponding to this tenant identifier.
    */
@@ -182,7 +182,7 @@ export class TenantManager {
   /**
    * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
    *
-   * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
+   * @param tenantId - The tenant identifier corresponding to the tenant whose data to fetch.
    *
    * @returns A promise fulfilled with the tenant configuration to the provided `tenantId`.
    */
@@ -198,9 +198,9 @@ export class TenantManager {
    * starting from the offset as specified by `pageToken`. This is used to
    * retrieve all the tenants of a specified project in batches.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also
+   * @param maxResults - The page size, 1000 if undefined. This is also
    *   the maximum allowed limit.
-   * @param pageToken The next page token. If not specified, returns
+   * @param pageToken - The next page token. If not specified, returns
    *   tenants starting without any offset.
    *
    * @returns A promise that resolves with
@@ -233,7 +233,7 @@ export class TenantManager {
   /**
    * Deletes an existing tenant.
    *
-   * @param tenantId The `tenantId` corresponding to the tenant to delete.
+   * @param tenantId - The `tenantId` corresponding to the tenant to delete.
    *
    * @returns An empty promise fulfilled once the tenant has been deleted.
    */
@@ -246,7 +246,7 @@ export class TenantManager {
    * When creating new tenants, tenants that use separate billing and quota will require their
    * own project and must be defined as `full_service`.
    *
-   * @param tenantOptions The properties to set on the new tenant configuration to be created.
+   * @param tenantOptions - The properties to set on the new tenant configuration to be created.
    *
    * @returns A promise fulfilled with the tenant configuration corresponding to the newly
    *   created tenant.
@@ -261,8 +261,8 @@ export class TenantManager {
   /**
    * Updates an existing tenant configuration.
    *
-   * @param tenantId The `tenantId` corresponding to the tenant to delete.
-   * @param tenantOptions The properties to update on the provided tenant.
+   * @param tenantId - The `tenantId` corresponding to the tenant to delete.
+   * @param tenantOptions - The properties to update on the provided tenant.
    *
    * @returns A promise fulfilled with the update tenant data.
    */

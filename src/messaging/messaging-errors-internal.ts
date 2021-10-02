@@ -22,7 +22,7 @@ import * as validator from '../utils/validator';
  * Creates a new FirebaseMessagingError by extracting the error code, message and other relevant
  * details from an HTTP error response.
  *
- * @param err The HttpError to convert into a Firebase error
+ * @param err - The HttpError to convert into a Firebase error
  * @returns A Firebase error that can be returned to the user.
  */
 export function createFirebaseError(err: HttpError): FirebaseMessagingError {
@@ -62,7 +62,7 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
 }
 
 /**
- * @param response The response to check for errors.
+ * @param response - The response to check for errors.
  * @returns The error code if present; null otherwise.
  */
 export function getErrorCode(response: any): string | null {
@@ -92,7 +92,7 @@ export function getErrorCode(response: any): string | null {
 /**
  * Extracts error message from the given response object.
  *
- * @param response The response to check for errors.
+ * @param response - The response to check for errors.
  * @returns The error message if present; null otherwise.
  */
 function getErrorMessage(response: any): string | null {

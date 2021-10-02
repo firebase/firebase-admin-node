@@ -212,7 +212,7 @@ export function defaultRetryConfig(): RetryConfig {
 /**
  * Ensures that the given RetryConfig object is valid.
  *
- * @param retry The configuration to be validated.
+ * @param retry - The configuration to be validated.
  */
 function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
@@ -260,7 +260,7 @@ export class HttpClient {
    * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
    * and pass as a string or a Buffer along with the appropriate content-type header.
    *
-   * @param config HTTP request to be sent.
+   * @param config - HTTP request to be sent.
    * @returns A promise that resolves with the response details.
    */
   public send(config: HttpRequestConfig): Promise<HttpResponse> {
@@ -271,8 +271,8 @@ export class HttpClient {
    * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
    * RetryConfig set on the HttpClient.
    *
-   * @param config HTTP request to be sent.
-   * @param retryAttempts Number of retries performed up to now.
+   * @param config - HTTP request to be sent.
+   * @param retryAttempts - Number of retries performed up to now.
    * @returns A promise that resolves with the response details.
    */
   private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
@@ -323,8 +323,8 @@ export class HttpClient {
    * Checks if a failed request is eligible for a retry, and if so returns the duration to wait before initiating
    * the retry.
    *
-   * @param retryAttempts Number of retries completed up to now.
-   * @param err The last encountered error.
+   * @param retryAttempts - Number of retries completed up to now.
+   * @param err - The last encountered error.
    * @returns A 2-tuple where the 1st element is the duration to wait before another retry, and the
    *     2nd element is a boolean indicating whether the request is eligible for a retry or not.
    */
@@ -401,8 +401,8 @@ export class HttpClient {
 /**
  * Parses a full HTTP response message containing both a header and a body.
  *
- * @param response The HTTP response to be parsed.
- * @param config The request configuration that resulted in the HTTP response.
+ * @param response - The HTTP response to be parsed.
+ * @param config - The request configuration that resulted in the HTTP response.
  * @returns An object containing the parsed HTTP status, headers and the body.
  */
 export function parseHttpResponse(
@@ -839,8 +839,8 @@ export class AuthorizedHttpClient extends HttpClient {
 /**
  * Class that defines all the settings for the backend API endpoint.
  *
- * @param endpoint The Firebase Auth backend endpoint.
- * @param httpMethod The http method for that endpoint.
+ * @param endpoint - The Firebase Auth backend endpoint.
+ * @param httpMethod - The http method for that endpoint.
  * @constructor
  */
 export class ApiSettings {
@@ -863,7 +863,7 @@ export class ApiSettings {
   }
 
   /**
-   * @param requestValidator The request validator.
+   * @param requestValidator - The request validator.
    * @returns The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
@@ -878,7 +878,7 @@ export class ApiSettings {
   }
 
   /**
-   * @param responseValidator The response validator.
+   * @param responseValidator - The response validator.
    * @returns The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
@@ -938,7 +938,7 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
   /**
    * Poll the provided callback with exponential backoff.
    *
-   * @param callback The callback to be called for each poll. If the
+   * @param callback - The callback to be called for each poll. If the
    *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
    *     resolution will be used to resolve the promise returned by this method.
    * @returns A Promise which resolves to the truthy value returned by the provided

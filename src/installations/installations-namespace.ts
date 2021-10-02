@@ -18,13 +18,13 @@ import { App } from '../app/index';
 import { Installations as TInstallations } from './installations';
 
 /**
- * Gets the {@link installations.Installations `Installations`} service for the
+ * Gets the {@link firebase-admin.installations#Installations} service for the
  * default app or a given app.
  *
  * `admin.installations()` can be called with no arguments to access the default
- * app's {@link installations.Installations `Installations`} service or as
+ * app's {@link firebase-admin.installations#Installations} service or as
  * `admin.installations(app)` to access the
- * {@link installations.Installations `Installations`} service associated with a
+ * {@link firebase-admin.installations#Installations} service associated with a
  * specific app.
  *
  * @example
@@ -39,7 +39,7 @@ import { Installations as TInstallations } from './installations';
  * var otherInstallations = admin.installations(otherApp);
  *```
  *
- * @param app Optional app whose `Installations` service to
+ * @param app - Optional app whose `Installations` service to
  *   return. If not provided, the default `Installations` service is
  *   returned.
  *

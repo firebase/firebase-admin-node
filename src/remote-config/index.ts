@@ -60,7 +60,7 @@ export { RemoteConfig } from './remote-config';
  * const otherRemoteConfig = getRemoteConfig(otherApp);
  * ```
  *
- * @param app Optional app for which to return the `RemoteConfig` service.
+ * @param app - Optional app for which to return the `RemoteConfig` service.
  *   If not provided, the default `RemoteConfig` service is returned.
  *
  * @returns The default `RemoteConfig` service if no

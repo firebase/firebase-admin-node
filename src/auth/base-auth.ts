@@ -53,13 +53,13 @@ export interface GetUsersResult {
 
 /**
  * Interface representing the object returned from a
- * {@link auth.Auth.listUsers `listUsers()`} operation. Contains the list
+ * {@link BaseAuth.listUsers} operation. Contains the list
  * of users for the current batch and the next page token if available.
  */
 export interface ListUsersResult {
 
   /**
-   * The list of {@link auth.UserRecord `UserRecord`} objects for the
+   * The list of {@link UserRecord} objects for the
    * current downloaded batch.
    */
   users: UserRecord[];
@@ -136,9 +136,9 @@ export abstract class BaseAuth {
   /**
    * The BaseAuth class constructor.
    *
-   * @param app The FirebaseApp to associate with this Auth instance.
-   * @param authRequestHandler The RPC request handler for this instance.
-   * @param tokenGenerator Optional token generator. If not specified, a
+   * @param app - The FirebaseApp to associate with this Auth instance.
+   * @param authRequestHandler - The RPC request handler for this instance.
+   * @param tokenGenerator - Optional token generator. If not specified, a
    *     (non-tenant-aware) instance will be created. Use this paramter to
    *     specify a tenant-aware tokenGenerator.
    * @constructor
@@ -167,8 +167,8 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/create-custom-tokens | Create Custom Tokens}
    * for code samples and detailed documentation.
    *
-   * @param uid The `uid` to use as the custom token's subject.
-   * @param developerClaims Optional additional claims to include
+   * @param uid - The `uid` to use as the custom token's subject.
+   * @param developerClaims - Optional additional claims to include
    *   in the custom token's payload.
    *
    * @returns A promise fulfilled with a custom token for the
@@ -192,8 +192,8 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/verify-id-tokens | Verify ID Tokens}
    * for code samples and detailed documentation.
    *
-   * @param idToken The ID token to verify.
-   * @param checkRevoked Whether to check if the ID token was revoked.
+   * @param idToken - The ID token to verify.
+   * @param checkRevoked - Whether to check if the ID token was revoked.
    *   This requires an extra request to the Firebase Auth backend to check
    *   the `tokensValidAfterTime` time for the corresponding user.
    *   When not specified, this additional check is not applied.
@@ -222,7 +222,7 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
-   * @param uid The `uid` corresponding to the user whose data to fetch.
+   * @param uid - The `uid` corresponding to the user whose data to fetch.
    *
    * @returns A promise fulfilled with the user
    *   data corresponding to the provided `uid`.
@@ -241,7 +241,7 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
-   * @param email The email corresponding to the user whose data to
+   * @param email - The email corresponding to the user whose data to
    *   fetch.
    *
    * @returns A promise fulfilled with the user
@@ -262,7 +262,7 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
-   * @param phoneNumber The phone number corresponding to the user whose
+   * @param phoneNumber - The phone number corresponding to the user whose
    *   data to fetch.
    *
    * @returns A promise fulfilled with the user
@@ -282,9 +282,9 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#retrieve_user_data | Retrieve user data}
    * for code samples and detailed documentation.
    *
-   * @param providerId The provider ID, for example, "google.com" for the
+   * @param providerId - The provider ID, for example, "google.com" for the
    *   Google provider.
-   * @param uid The user identifier for the given provider.
+   * @param uid - The user identifier for the given provider.
    *
    * @returns A promise fulfilled with the user data corresponding to the
    *   given provider id.
@@ -315,8 +315,8 @@ export abstract class BaseAuth {
    * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
    * this method throws a FirebaseAuthError.
    *
-   * @param identifiers The identifiers used to indicate which user records should be returned.
-   *     Must have <= 100 entries.
+   * @param identifiers - The identifiers used to indicate which user records should be returned.
+   *     Must not have more than 100 entries.
    * @returns A promise that resolves to the corresponding user records.
    * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
    *     identifiers are specified.
@@ -369,9 +369,9 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#list_all_users | List all users}
    * for code samples and detailed documentation.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also
+   * @param maxResults - The page size, 1000 if undefined. This is also
    *   the maximum allowed limit.
-   * @param pageToken The next page token. If not specified, returns
+   * @param pageToken - The next page token. If not specified, returns
    *   users starting without any offset.
    * @returns A promise that resolves with
    *   the current batch of downloaded users and the next page token.
@@ -404,7 +404,7 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#create_a_user | Create a user}
    * for code samples and detailed documentation.
    *
-   * @param properties The properties to set on the
+   * @param properties - The properties to set on the
    *   new user record to be created.
    *
    * @returns A promise fulfilled with the user
@@ -433,7 +433,7 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-users#delete_a_user | Delete a user}
    * for code samples and detailed documentation.
    *
-   * @param uid The `uid` corresponding to the user to delete.
+   * @param uid - The `uid` corresponding to the user to delete.
    *
    * @returns An empty promise fulfilled once the user has been
    *   deleted.
@@ -461,7 +461,7 @@ export abstract class BaseAuth {
    * delete more than 1000 users, you may need to add a delay to ensure you
    * don't go over this limit.
    *
-   * @param uids The `uids` corresponding to the users to delete.
+   * @param uids - The `uids` corresponding to the users to delete.
    *
    * @returns A Promise that resolves to the total number of successful/failed
    *     deletions, as well as the array of errors that corresponds to the
@@ -517,8 +517,8 @@ export abstract class BaseAuth {
    * See {@link https://firebsae.google.com/docs/auth/admin/manage-users#update_a_user | Update a user}
    * for code samples and detailed documentation.
    *
-   * @param uid The `uid` corresponding to the user to update.
-   * @param properties The properties to update on
+   * @param uid - The `uid` corresponding to the user to update.
+   * @param properties - The properties to update on
    *   the provided user.
    *
    * @returns A promise fulfilled with the
@@ -589,8 +589,8 @@ export abstract class BaseAuth {
    * Defining user roles and access levels}
    * for code samples and detailed documentation.
    *
-   * @param uid The `uid` of the user to edit.
-   * @param customUserClaims The developer claims to set. If null is
+   * @param uid - The `uid` of the user to edit.
+   * @param customUserClaims - The developer claims to set. If null is
    *   passed, existing custom claims are deleted. Passing a custom claims payload
    *   larger than 1000 bytes will throw an error. Custom claims are added to the
    *   user's ID token which is transmitted on every authenticated request.
@@ -619,7 +619,7 @@ export abstract class BaseAuth {
    * ID tokens are revoked, use {@link BaseAuth.verifyIdToken}
    * where `checkRevoked` is set to true.
    *
-   * @param uid The `uid` corresponding to the user whose refresh tokens
+   * @param uid - The `uid` corresponding to the user whose refresh tokens
    *   are to be revoked.
    *
    * @returns An empty promise fulfilled once the user's refresh
@@ -641,8 +641,8 @@ export abstract class BaseAuth {
    * This operation is optimized for bulk imports and will ignore checks on `uid`,
    * `email` and other identifier uniqueness which could result in duplications.
    *
-   * @param users The list of user records to import to Firebase Auth.
-   * @param options The user import options, required when the users provided include
+   * @param users - The list of user records to import to Firebase Auth.
+   * @param options - The user import options, required when the users provided include
    *   password credentials.
    * @returns A promise that resolves when
    *   the operation completes with the result of the import. This includes the
@@ -663,9 +663,9 @@ export abstract class BaseAuth {
    * See {@link https://firebase.google.com/docs/auth/admin/manage-cookies | Manage Session Cookies}
    * for code samples and detailed documentation.
    *
-   * @param idToken The Firebase ID token to exchange for a session
+   * @param idToken - The Firebase ID token to exchange for a session
    *   cookie.
-   * @param sessionCookieOptions The session
+   * @param sessionCookieOptions - The session
    *   cookie options which includes custom session duration.
    *
    * @returns A promise that resolves on success with the
@@ -697,8 +697,8 @@ export abstract class BaseAuth {
    * Verify Session Cookies}
    * for code samples and detailed documentation
    *
-   * @param sessionCookie The session cookie to verify.
-   * @param checkForRevocation  Whether to check if the session cookie was
+   * @param sessionCookie - The session cookie to verify.
+   * @param checkForRevocation -  Whether to check if the session cookie was
    *   revoked. This requires an extra request to the Firebase Auth backend to
    *   check the `tokensValidAfterTime` time for the corresponding user.
    *   When not specified, this additional check is not performed.
@@ -754,9 +754,9 @@ export abstract class BaseAuth {
    *     });
    * ```
    *
-   * @param email The email address of the user whose password is to be
+   * @param email - The email address of the user whose password is to be
    *   reset.
-   * @param actionCodeSettings The action
+   * @param actionCodeSettings - The action
    *     code settings. If specified, the state/continue URL is set as the
    *     "continueUrl" parameter in the password reset link. The default password
    *     reset landing page will use this to display a link to go back to the app
@@ -807,8 +807,8 @@ export abstract class BaseAuth {
    *     });
    * ```
    *
-   * @param email The email account to verify.
-   * @param actionCodeSettings The action
+   * @param email - The email account to verify.
+   * @param actionCodeSettings - The action
    *     code settings. If specified, the state/continue URL is set as the
    *     "continueUrl" parameter in the email verification link. The default email
    *     verification landing page will use this to display a link to go back to
@@ -859,8 +859,8 @@ export abstract class BaseAuth {
    *     });
    * ```
    *
-   * @param email The email account to verify.
-   * @param actionCodeSettings The action
+   * @param email - The email account to verify.
+   * @param actionCodeSettings - The action
    *     code settings. If specified, the state/continue URL is set as the
    *     "continueUrl" parameter in the email verification link. The default email
    *     verification landing page will use this to display a link to go back to
@@ -887,7 +887,7 @@ export abstract class BaseAuth {
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
-   * @param options The provider config filter to apply.
+   * @param options - The provider config filter to apply.
    * @returns A promise that resolves with the list of provider configs meeting the
    *   filter requirements.
    */
@@ -944,7 +944,7 @@ export abstract class BaseAuth {
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
-   * @param providerId The provider ID corresponding to the provider
+   * @param providerId - The provider ID corresponding to the provider
    *     config to return.
    * @returns A promise that resolves
    *     with the configuration corresponding to the provided ID.
@@ -973,7 +973,7 @@ export abstract class BaseAuth {
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
-   * @param providerId The provider ID corresponding to the provider
+   * @param providerId - The provider ID corresponding to the provider
    *     config to delete.
    * @returns A promise that resolves on completion.
    */
@@ -996,9 +996,9 @@ export abstract class BaseAuth {
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
-   * @param providerId The provider ID corresponding to the provider
+   * @param providerId - The provider ID corresponding to the provider
    *     config to update.
-   * @param updatedConfig The updated configuration.
+   * @param updatedConfig - The updated configuration.
    * @returns A promise that resolves with the updated provider configuration.
    */
   public updateProviderConfig(
@@ -1031,7 +1031,7 @@ export abstract class BaseAuth {
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
    *
-   * @param config The provider configuration to create.
+   * @param config - The provider configuration to create.
    * @returns A promise that resolves with the created provider configuration.
    */
   public createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig> {
@@ -1060,8 +1060,8 @@ export abstract class BaseAuth {
    * resolves with the decoded claims on success. Rejects the promise with revocation error if revoked
    * or user disabled.
    *
-   * @param decodedIdToken The JWT's decoded claims.
-   * @param revocationErrorInfo The revocation error info to throw on revocation
+   * @param decodedIdToken - The JWT's decoded claims.
+   * @param revocationErrorInfo - The revocation error info to throw on revocation
    *     detection.
    * @returns A promise that will be fulfilled after a successful verification.
    */

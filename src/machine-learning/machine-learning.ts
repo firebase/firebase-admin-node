@@ -66,7 +66,7 @@ export class MachineLearning {
   private readonly appInternal: App;
 
   /**
-   * @param app The app for this ML service.
+   * @param app - The app for this ML service.
    * @constructor
    * @internal
    */
@@ -94,7 +94,7 @@ export class MachineLearning {
   /**
    * Creates a model in the current Firebase project.
    *
-   * @param model The model to create.
+   * @param model - The model to create.
    *
    * @returns A Promise fulfilled with the created model.
    */
@@ -108,8 +108,8 @@ export class MachineLearning {
   /**
    * Updates a model's metadata or model file.
    *
-   * @param modelId The ID of the model to update.
-   * @param model The model fields to update.
+   * @param modelId - The ID of the model to update.
+   * @param model - The model fields to update.
    *
    * @returns A Promise fulfilled with the updated model.
    */
@@ -126,7 +126,7 @@ export class MachineLearning {
    *
    * A published model can be downloaded to client apps.
    *
-   * @param modelId The ID of the model to publish.
+   * @param modelId - The ID of the model to publish.
    *
    * @returns A Promise fulfilled with the published model.
    */
@@ -137,7 +137,7 @@ export class MachineLearning {
   /**
    * Unpublishes a Firebase ML model.
    *
-   * @param modelId The ID of the model to unpublish.
+   * @param modelId - The ID of the model to unpublish.
    *
    * @returns A Promise fulfilled with the unpublished model.
    */
@@ -148,7 +148,7 @@ export class MachineLearning {
   /**
    * Gets the model specified by the given ID.
    *
-   * @param modelId The ID of the model to get.
+   * @param modelId - The ID of the model to get.
    *
    * @returns A Promise fulfilled with the model object.
    */
@@ -160,7 +160,7 @@ export class MachineLearning {
   /**
    * Lists the current project's models.
    *
-   * @param options The listing options.
+   * @param options - The listing options.
    *
    * @returns A promise that
    *     resolves with the current (filtered) list of models and the next page
@@ -190,7 +190,7 @@ export class MachineLearning {
   /**
    * Deletes a model from the current project.
    *
-   * @param modelId The ID of the model to delete.
+   * @param modelId - The ID of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
@@ -323,7 +323,7 @@ export class Model {
 
   /**
    * True if the model is locked by a server-side operation. You can't make
-   * changes to a locked model. See {@link waitForUnlocked `waitForUnlocked()`}.
+   * changes to a locked model. See {@link Model.waitForUnlocked}.
    */
   public get locked(): boolean {
     return (this.model.activeOperations?.length ?? 0) > 0;
@@ -366,7 +366,7 @@ export class Model {
   /**
    * Wait for the model to be unlocked.
    *
-   * @param maxTimeMillis The maximum time in milliseconds to wait.
+   * @param maxTimeMillis - The maximum time in milliseconds to wait.
    *     If not specified, a default maximum of 2 minutes is used.
    *
    * @returns A promise that resolves when the model is unlocked

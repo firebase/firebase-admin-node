@@ -85,7 +85,7 @@ export {
  * const otherMessaging = getMessaging(otherApp);
  * ```
  *
- * @param app Optional app whose `Messaging` service to
+ * @param app - Optional app whose `Messaging` service to
  *   return. If not provided, the default `Messaging` service will be returned.
  *
  * @returns The default `Messaging` service if no

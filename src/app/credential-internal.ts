@@ -68,9 +68,9 @@ export class ServiceAccountCredential implements Credential {
   /**
    * Creates a new ServiceAccountCredential from the given parameters.
    *
-   * @param serviceAccountPathOrObject Service account json object or path to a service account json file.
-   * @param httpAgent Optional http.Agent to use when calling the remote token server.
-   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   * @param serviceAccountPathOrObject - Service account json object or path to a service account json file.
+   * @param httpAgent - Optional http.Agent to use when calling the remote token server.
+   * @param implicit - An optinal boolean indicating whether this credential was implicitly discovered from the
    *   environment, as opposed to being explicitly specified by the developer.
    *
    * @constructor
@@ -248,9 +248,9 @@ export class RefreshTokenCredential implements Credential {
   /**
    * Creates a new RefreshTokenCredential from the given parameters.
    *
-   * @param refreshTokenPathOrObject Refresh token json object or path to a refresh token (user credentials) json file.
-   * @param httpAgent Optional http.Agent to use when calling the remote token server.
-   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   * @param refreshTokenPathOrObject - Refresh token json object or path to a refresh token (user credentials) json file.
+   * @param httpAgent - Optional http.Agent to use when calling the remote token server.
+   * @param implicit - An optinal boolean indicating whether this credential was implicitly discovered from the
    *   environment, as opposed to being explicitly specified by the developer.
    *
    * @constructor
@@ -338,7 +338,7 @@ class RefreshToken {
  * instances that were loaded from well-known files or environment variables, rather than being explicitly
  * instantiated.
  *
- * @param credential The credential instance to check.
+ * @param credential - The credential instance to check.
  */
 export function isApplicationDefault(credential?: Credential): boolean {
   return credential instanceof ComputeEngineCredential ||
@@ -368,10 +368,10 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
  * If no property exists by the given "key", looks for a property identified by "alt", and copies it instead.
  * This can be used to implement behaviors such as "copy property myKey or my_key".
  *
- * @param to Target object to copy the property into.
- * @param from Source object to copy the property from.
- * @param key Name of the property to copy.
- * @param alt Alternative name of the property to copy.
+ * @param to - Target object to copy the property into.
+ * @param from - Source object to copy the property from.
+ * @param key - Name of the property to copy.
+ * @param alt - Alternative name of the property to copy.
  */
 function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string): void {
   const tmp = from[key] || from[alt];

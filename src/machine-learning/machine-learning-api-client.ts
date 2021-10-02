@@ -258,8 +258,8 @@ export class MachineLearningApiClient {
   /**
    * Handles a Long Running Operation coming back from the server.
    *
-   * @param op The operation to handle
-   * @param options The options for polling
+   * @param op - The operation to handle
+   * @param options - The options for polling
    */
   public handleOperation(
     op: OperationResponse,
@@ -354,7 +354,7 @@ export class MachineLearningApiClient {
   /**
    * Gets the specified resource from the ML API. Resource names must be the full names including project
    * number prefix.
-   * @param fullName Full resource name of the resource to get. e.g. projects/123465/operations/987654
+   * @param fullName - Full resource name of the resource to get. e.g. projects/123465/operations/987654
    * @returns {Promise<T>} A promise that fulfulls with the resource.
    */
   private getResourceWithFullName<T>(fullName: string): Promise<T> {

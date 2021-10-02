@@ -18,7 +18,7 @@
 /**
  * Returns a deep copy of an object or array.
  *
- * @param value The object or array to deep copy.
+ * @param value - The object or array to deep copy.
  * @returns A deep copy of the provided object or array.
  */
 export function deepCopy<T>(value: T): T {
@@ -37,8 +37,8 @@ export function deepCopy<T>(value: T): T {
  * Note that the target can be a function, in which case the properties in the source object are
  * copied onto it as static properties of the function.
  *
- * @param target The value which is being extended.
- * @param source The value whose properties are extending the target.
+ * @param target - The value which is being extended.
+ * @param source - The value whose properties are extending the target.
  * @returns The target value.
  */
 export function deepExtend(target: any, source: any): any {

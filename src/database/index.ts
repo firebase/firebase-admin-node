@@ -74,7 +74,7 @@ export const ServerValue: rtdb.ServerValue = serverValueConst;
  * const otherDatabase = getDatabase(app);
  * ```
  *
- * @param App whose `Database` service to
+ * @param App - whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
  * @returns The default `Database` service if no app
@@ -104,7 +104,7 @@ export function getDatabase(app?: App): Database {
  * const otherDatabase = getDatabaseWithUrl('https://example.firebaseio.com', app);
  * ```
  *
- * @param App whose `Database` service to
+ * @param App - whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
  * @returns The default `Database` service if no app

@@ -42,7 +42,7 @@ export {
  * Gets the {@link MachineLearning} service for the default app or a given app.
  *
  * `getMachineLearning()` can be called with no arguments to access the
- * default app's {`MachineLearning` service or as `getMachineLearning(app)` to access
+ * default app's `MachineLearning` service or as `getMachineLearning(app)` to access
  * the `MachineLearning` service associated with a specific app.
  *
  * @example
@@ -57,7 +57,7 @@ export {
  * const otherMachineLearning = getMachineLearning(otherApp);
  * ```
  *
- * @param app Optional app whose `MachineLearning` service to
+ * @param app - Optional app whose `MachineLearning` service to
  *   return. If not provided, the default `MachineLearning` service
  *   will be returned.
  *

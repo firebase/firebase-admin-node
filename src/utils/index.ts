@@ -37,8 +37,8 @@ export function getSdkVersion(): string {
  *
  * For example, this can be used to map underscore_cased properties to camelCase.
  *
- * @param obj The object whose properties to rename.
- * @param keyMap The mapping from old to new property names.
+ * @param obj - The object whose properties to rename.
+ * @param keyMap - The mapping from old to new property names.
  */
 export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
@@ -54,9 +54,9 @@ export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: stri
 /**
  * Defines a new read-only property directly on an object and returns the object.
  *
- * @param obj The object on which to define the property.
- * @param prop The name of the property to be defined or modified.
- * @param value The value associated with the property.
+ * @param obj - The object on which to define the property.
+ * @param prop - The name of the property to be defined or modified.
+ * @param value - The value associated with the property.
  */
 export function addReadonlyGetter(obj: object, prop: string, value: any): void {
   Object.defineProperty(obj, prop, {
@@ -73,7 +73,7 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  * specified in either the Firebase app options, credentials or the local environment.
  * Otherwise returns null.
  *
- * @param app A Firebase app to get the project ID from.
+ * @param app - A Firebase app to get the project ID from.
  *
  * @returns A project ID string or null.
  */
@@ -102,7 +102,7 @@ export function getExplicitProjectId(app: App): string | null {
  * configured, but the SDK has been initialized with ComputeEngineCredentials, this
  * method attempts to discover the project ID from the local metadata service.
  *
- * @param app A Firebase app to get the project ID from.
+ * @param app - A Firebase app to get the project ID from.
  *
  * @returns A project ID string or null.
  */
@@ -123,7 +123,7 @@ export function findProjectId(app: App): Promise<string | null> {
 /**
  * Encodes data using web-safe-base64.
  *
- * @param data The raw data byte input.
+ * @param data - The raw data byte input.
  * @returns The base64-encoded result.
  */
 export function toWebSafeBase64(data: Buffer): string {
@@ -135,9 +135,9 @@ export function toWebSafeBase64(data: Buffer): string {
  * with corresponding arguments {projectId: '1234', api: 'resource'}
  * and returns output: 'project/1234/resource'.
  *
- * @param str The original string where the param need to be
+ * @param str - The original string where the param need to be
  *     replaced.
- * @param params The optional parameters to replace in the
+ * @param params - The optional parameters to replace in the
  *     string.
  * @returns The resulting formatted string.
  */
@@ -155,11 +155,11 @@ export function formatString(str: string, params?: object): string {
  * Generates the update mask for the provided object.
  * Note this will ignore the last key with value undefined.
  *
- * @param obj The object to generate the update mask for.
- * @param terminalPaths The optional map of keys for maximum paths to traverse.
+ * @param obj - The object to generate the update mask for.
+ * @param terminalPaths - The optional map of keys for maximum paths to traverse.
  *      Nested objects beyond that path will be ignored. This is useful for
  *      keys with variable object values.
- * @param root The path so far.
+ * @param root - The path so far.
  * @returns The computed update mask list.
  */
 export function generateUpdateMask(
@@ -195,10 +195,10 @@ export function generateUpdateMask(
 /**
  * Transforms milliseconds to a protobuf Duration type string.
  * Returns the duration in seconds with up to nine fractional
- * digits, terminated by 's'. Example: "3 seconds 0 nano seconds as 3s, 
+ * digits, terminated by 's'. Example: "3 seconds 0 nano seconds as 3s,
  * 3 seconds 1 nano seconds as 3.000000001s".
  *
- * @param milliseconds The duration in milliseconds.
+ * @param milliseconds - The duration in milliseconds.
  * @returns The resulting formatted string in seconds with up to nine fractional
  * digits, terminated by 's'.
  */

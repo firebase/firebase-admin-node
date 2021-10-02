@@ -251,7 +251,7 @@ export class EmulatorSignatureVerifier implements SignatureVerifier {
 /**
  * Provides a callback to fetch public keys.
  *
- * @param fetcher KeyFetcher to fetch the keys from.
+ * @param fetcher - KeyFetcher to fetch the keys from.
  * @returns A callback function that can be used to get keys in `jsonwebtoken`.
  */
 function getKeyCallback(fetcher: KeyFetcher): jwt.GetPublicKeyOrSecret {
@@ -277,9 +277,9 @@ function getKeyCallback(fetcher: KeyFetcher): jwt.GetPublicKeyOrSecret {
  * Verifies the signature of a JWT using the provided secret or a function to fetch
  * the secret or public key.
  *
- * @param token The JWT to be verified.
- * @param secretOrPublicKey The secret or a function to fetch the secret or public key.
- * @param options JWT verification options.
+ * @param token - The JWT to be verified.
+ * @param secretOrPublicKey - The secret or a function to fetch the secret or public key.
+ * @param options - JWT verification options.
  * @returns A Promise resolving for a token with a valid signature.
  */
 export function verifyJwtSignature(token: string, secretOrPublicKey: jwt.Secret | jwt.GetPublicKeyOrSecret,
@@ -319,7 +319,7 @@ export function verifyJwtSignature(token: string, secretOrPublicKey: jwt.Secret 
 /**
  * Decodes general purpose Firebase JWTs.
  *
- * @param jwtToken JWT token to be decoded.
+ * @param jwtToken - JWT token to be decoded.
  * @returns Decoded token containing the header and payload.
  */
 export function decodeJwt(jwtToken: string): Promise<DecodedToken> {
@@ -345,8 +345,8 @@ export function decodeJwt(jwtToken: string): Promise<DecodedToken> {
 /**
  * Jwt error code structure.
  *
- * @param code The error code.
- * @param message The error message.
+ * @param code - The error code.
+ * @param message - The error message.
  * @constructor
  */
 export class JwtError extends Error {

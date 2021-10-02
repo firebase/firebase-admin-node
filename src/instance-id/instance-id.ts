@@ -26,14 +26,14 @@ import * as validator from '../utils/validator';
  * The `InstanceId` service enables deleting the Firebase instance IDs
  * associated with Firebase client app instances.
  *
- * @deprecated
+ * @deprecated Use {@link firebase-admin.installations#Installations} instead.
  */
 export class InstanceId {
 
   private app_: App;
 
   /**
-   * @param app The app for this InstanceId service.
+   * @param app - The app for this InstanceId service.
    * @constructor
    * @internal
    */
@@ -58,7 +58,7 @@ export class InstanceId {
    * Delete an Instance ID}
    * for more information.
    *
-   * @param instanceId The instance ID to be deleted.
+   * @param instanceId - The instance ID to be deleted.
    *
    * @returns A promise fulfilled when the instance ID is deleted.
    */

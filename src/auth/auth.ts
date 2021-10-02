@@ -30,7 +30,7 @@ export class Auth extends BaseAuth {
   private readonly app_: App;
 
   /**
-   * @param app The app for this Auth service.
+   * @param app - The app for this Auth service.
    * @constructor
    * @internal
    */

@@ -28,7 +28,7 @@ export class Installations {
   private requestHandler: FirebaseInstallationsRequestHandler;
 
   /**
-   * @param app The app for this Installations service.
+   * @param app - The app for this Installations service.
    * @constructor
    * @internal
    */
@@ -47,7 +47,7 @@ export class Installations {
   /**
    * Deletes the specified installation ID and the associated data from Firebase.
    *
-   * @param fid The Firebase installation ID to be deleted.
+   * @param fid - The Firebase installation ID to be deleted.
    *
    * @returns A promise fulfilled when the installation ID is deleted.
    */

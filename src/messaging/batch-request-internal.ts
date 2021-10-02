@@ -56,7 +56,7 @@ export class BatchRequestClient {
    * Sends the given array of sub requests as a single batch, and parses the results into an array
    * of HttpResponse objects.
    *
-   * @param requests An array of sub requests to send.
+   * @param requests - An array of sub requests to send.
    * @returns A promise that resolves when the send operation is complete.
    */
   public send(requests: SubRequest[]): Promise<HttpResponse[]> {
@@ -100,9 +100,9 @@ export class BatchRequestClient {
  * API, sets the content-type header to application/http, and the content-transfer-encoding to
  * binary.
  *
- * @param request A sub request that will be used to populate the part.
- * @param boundary Multipart boundary string.
- * @param idx An index number that is used to set the content-id header.
+ * @param request - A sub request that will be used to populate the part.
+ * @param boundary - Multipart boundary string.
+ * @param idx - An index number that is used to set the content-id header.
  * @returns The part as a string that can be included in the HTTP body.
  */
 function createPart(request: SubRequest, boundary: string, idx: number): string {
@@ -122,7 +122,7 @@ function createPart(request: SubRequest, boundary: string, idx: number): string 
  * format of the string is the wire format of a typical HTTP request, consisting of a header and a
  * body.
  *
- * @param request The sub request to be serialized.
+ * @param request - The sub request to be serialized.
  * @returns String representation of the SubRequest.
  */
 function serializeSubRequest(request: SubRequest): string {

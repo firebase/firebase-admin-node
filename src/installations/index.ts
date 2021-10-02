@@ -45,7 +45,7 @@ export { Installations };
   * const otherInstallations = getInstallations(otherApp);
   *```
   *
-  * @param app Optional app whose `Installations` service to
+  * @param app - Optional app whose `Installations` service to
   *   return. If not provided, the default `Installations` service will be
   *   returned.
   *

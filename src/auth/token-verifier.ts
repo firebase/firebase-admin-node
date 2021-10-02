@@ -25,7 +25,7 @@ import { App } from '../app/index';
 
 /**
  * Interface representing a decoded Firebase ID token, returned from the
- * {@link auth.Auth.verifyIdToken `verifyIdToken()`} method.
+ * {@link BaseAuth.verifyIdToken} method.
  *
  * Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs).
  * See the
@@ -95,7 +95,7 @@ export interface DecodedIdToken {
      * The ID of the provider used to sign in the user.
      * One of `"anonymous"`, `"password"`, `"facebook.com"`, `"github.com"`,
      * `"google.com"`, `"twitter.com"`, `"apple.com"`, `"microsoft.com"`,
-     * "yahoo.com"`, `"phone"`, `"playgames.google.com"`, `"gc.apple.com"`,
+     * `"yahoo.com"`, `"phone"`, `"playgames.google.com"`, `"gc.apple.com"`,
      * or `"custom"`.
      *
      * Additional Identity Platform provider IDs include `"linkedin.com"`,
@@ -297,8 +297,8 @@ export class FirebaseTokenVerifier {
   /**
    * Verifies the format and signature of a Firebase Auth JWT token.
    *
-   * @param jwtToken The Firebase Auth JWT token to verify.
-   * @param isEmulator Whether to accept Auth Emulator tokens.
+   * @param jwtToken - The Firebase Auth JWT token to verify.
+   * @param isEmulator - Whether to accept Auth Emulator tokens.
    * @returns A promise fulfilled with the decoded claims of the Firebase Auth ID token.
    */
   public verifyJWT(jwtToken: string, isEmulator = false): Promise<DecodedIdToken> {
@@ -362,9 +362,9 @@ export class FirebaseTokenVerifier {
   /**
    * Verifies the content of a Firebase Auth JWT.
    *
-   * @param fullDecodedToken The decoded JWT.
-   * @param projectId The Firebase Project Id.
-   * @param isEmulator Whether the token is an Emulator token.
+   * @param fullDecodedToken - The decoded JWT.
+   * @param projectId - The Firebase Project Id.
+   * @param isEmulator - Whether the token is an Emulator token.
    */
   private verifyContent(
     fullDecodedToken: DecodedToken,
@@ -430,7 +430,7 @@ export class FirebaseTokenVerifier {
   /**
    * Maps JwtError to FirebaseAuthError
    *
-   * @param error JwtError to be mapped.
+   * @param error - JwtError to be mapped.
    * @returns FirebaseAuthError or Error instance.
    */
   private mapJwtErrorToAuthError(error: JwtError): Error {
@@ -458,7 +458,7 @@ export class FirebaseTokenVerifier {
  * Creates a new FirebaseTokenVerifier to verify Firebase ID tokens.
  *
  * @internal
- * @param app Firebase app instance.
+ * @param app - Firebase app instance.
  * @returns FirebaseTokenVerifier
  */
 export function createIdTokenVerifier(app: App): FirebaseTokenVerifier {
@@ -474,7 +474,7 @@ export function createIdTokenVerifier(app: App): FirebaseTokenVerifier {
  * Creates a new FirebaseTokenVerifier to verify Firebase session cookies.
  *
  * @internal
- * @param app Firebase app instance.
+ * @param app - Firebase app instance.
  * @returns FirebaseTokenVerifier
  */
 export function createSessionCookieVerifier(app: App): FirebaseTokenVerifier {

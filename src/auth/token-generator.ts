@@ -92,7 +92,7 @@ export class FirebaseTokenGenerator {
   private readonly signer: CryptoSigner;
 
   /**
-   * @param tenantId The tenant ID to use for the generated Firebase Auth
+   * @param tenantId - The tenant ID to use for the generated Firebase Auth
    *     Custom token. If absent, then no tenant ID claim will be set in the
    *     resulting JWT.
    */
@@ -114,8 +114,8 @@ export class FirebaseTokenGenerator {
   /**
    * Creates a new Firebase Auth Custom token.
    *
-   * @param uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param developerClaims Optional developer claims to include in the generated Firebase
+   * @param uid - The user ID to use for the generated Firebase Auth Custom token.
+   * @param developerClaims - Optional developer claims to include in the generated Firebase
    *     Auth Custom token.
    * @returns A Promise fulfilled with a Firebase Auth Custom token signed with a
    *     service account key and containing the provided payload.
@@ -189,7 +189,7 @@ export class FirebaseTokenGenerator {
   /**
    * Returns whether or not the provided developer claims are valid.
    *
-   * @param developerClaims Optional developer claims to validate.
+   * @param developerClaims - Optional developer claims to validate.
    * @returns True if the provided claims are valid; otherwise, false.
    */
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
@@ -204,7 +204,7 @@ export class FirebaseTokenGenerator {
  * Creates a new FirebaseAuthError by extracting the error code, message and other relevant
  * details from a CryptoSignerError.
  *
- * @param err The Error to convert into a FirebaseAuthError error
+ * @param err - The Error to convert into a FirebaseAuthError error
  * @returns A Firebase Auth error that can be returned to the user.
  */
 export function handleCryptoSignerError(err: Error): Error {

@@ -76,7 +76,7 @@ export {
  * const otherFirestore = getFirestore(app);
  * ```
  *
- * @param App whose `Firestore` service to
+ * @param App - whose `Firestore` service to
  *   return. If not provided, the default `Firestore` service will be returned.
  *
  * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
