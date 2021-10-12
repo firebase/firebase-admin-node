@@ -1183,10 +1183,9 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
-      testPhoneNumbers: {
-        '+16505551234': '019287',
-        '+16505550676': '985235',
-      },
+      // Test phone numbers are ignored in auth emulator. For more information,
+      // please refer to this section of the auth emulator DD:
+      // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -1199,9 +1198,10 @@ describe('admin.auth', () => {
         state: 'DISABLED',
         factorIds: [],
       },
-      testPhoneNumbers: {
-        '+16505551234': '123456',
-      },
+      // Though test phone numbers are ignored in the auth emulator,
+      // non-standard update behavior will still initialize this to an empty
+      // object.
+      testPhoneNumbers: {},
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1214,6 +1214,10 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
+      // Though test phone numbers are ignored in the auth emulator,
+      // non-standard update behavior will still initialize this to an empty
+      // object.
+      testPhoneNumbers: {},
     };
 
     // https://mochajs.org/
@@ -1490,7 +1494,8 @@ describe('admin.auth', () => {
         }
       });
 
-      it('should support CRUD operations', () => {
+      // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+      it.skip('should support CRUD operations', () => {
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1567,7 +1572,8 @@ describe('admin.auth', () => {
         }
       });
 
-      it('should support CRUD operations', () => {
+      // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+      it.skip('should support CRUD operations', () => {
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1675,15 +1681,28 @@ describe('admin.auth', () => {
     });
 
     it('deleteTenant() should successfully delete the provided tenant', () => {
+      const allTenantIds: string[] = [];
+      const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+        return getAuth().tenantManager().listTenants(100, nextPageToken)
+          .then((result) => {
+            result.tenants.forEach((tenant) => {
+              tenantIds.push(tenant.tenantId);
+            });
+            if (result.pageToken) {
+              return listAllTenantIds(tenantIds, result.pageToken);
+            }
+          });
+      };
+
       return getAuth().tenantManager().deleteTenant(createdTenantId)
         .then(() => {
-          return getAuth().tenantManager().getTenant(createdTenantId);
+          // Use listTenants() instead of getTenant() to check that the tenant
+          // is no longer present, because Auth Emulator implicitly creates the
+          // tenant in getTenant() when it is not found
+          return listAllTenantIds(allTenantIds);
         })
         .then(() => {
-          throw new Error('unexpected success');
-        })
-        .catch((error) => {
-          expect(error.code).to.equal('auth/tenant-not-found');
+          expect(allTenantIds).to.not.contain(createdTenantId);
         });
     });
   });
