@@ -4554,7 +4554,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return requestHandler.deleteTenant(tenantId)
             .then((result) => {
               expect(result).to.be.undefined;
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, undefined));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
             });
         });
 
@@ -4589,7 +4589,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.include(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, undefined));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
             });
         });
       });

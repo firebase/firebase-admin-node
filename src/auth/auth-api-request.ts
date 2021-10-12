@@ -1827,14 +1827,12 @@ export abstract class AbstractAuthRequestHandler {
    */
   protected invokeRequestHandler(
     urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
-    requestData: object | undefined, additionalResourceParams?: object): Promise<object> {
+    requestData: object, additionalResourceParams?: object): Promise<object> {
     return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
       .then((url) => {
         // Validate request.
-        if (requestData != null) {
-          const requestValidator = apiSettings.getRequestValidator();
-          requestValidator(requestData);
-        }
+        const requestValidator = apiSettings.getRequestValidator();
+        requestValidator(requestData);
         // Process request.
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
@@ -2062,7 +2060,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, undefined, { tenantId })
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, { tenantId })
       .then(() => {
         // Return nothing.
       });
