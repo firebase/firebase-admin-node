@@ -22,8 +22,12 @@ import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEY
 import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
+import { createFirebaseErrorFromGapicError } from './messaging-errors-internal';
+import { ServiceAccountCredential } from '../credential/credential-internal';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+import * as protos from '../generated/messaging/protos/protos';
+import { FcmServiceClient } from '../generated/messaging/src/v1/fcm_service_client'
 
 import MessagingInterface = messaging.Messaging;
 import Message = messaging.Message;
@@ -40,6 +44,10 @@ import MessagingTopicResponse = messaging.MessagingTopicResponse;
 import MessagingConditionResponse = messaging.MessagingConditionResponse;
 import DataMessagePayload = messaging.DataMessagePayload;
 import NotificationMessagePayload = messaging.NotificationMessagePayload;
+
+// GAPIC Generated client types
+import IMessage = protos.google.firebase.fcm.v1.IMessage;
+import ISendRequest = protos.google.firebase.fcm.v1.ISendMessageRequest;
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -193,6 +201,7 @@ export class Messaging implements MessagingInterface {
   private urlPath: string;
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private fcmServiceClient: FcmServiceClient;
 
   /**
    * Gets the {@link messaging.Messaging `Messaging`} service for the
@@ -228,6 +237,77 @@ export class Messaging implements MessagingInterface {
     return this.appInternal;
   }
 
+
+  /**
+   * Converts from the public {@link messaging.Message `Message`} type to the
+   * internal/generated {@link protos.google.firebase.fcm.v1.Message `clientMessage`}
+   * type.
+   *
+   * @param message The {@link messaging.Message `Message`} to be converted
+   * @returns A {@link protos.google.firebase.fcm.v1.Message `clientMessage`},
+   * where like fields are the same as the inptuted message.
+   */
+  private convertToIMessage(message: Message): IMessage {
+    //TODO: Add conversion for android, webpush, apns
+
+    const convertedMessage: IMessage = {
+      data: message.data,
+      notification: message.notification,
+      fcmOptions: message.fcmOptions
+    }
+
+    if ('token' in message) {
+      convertedMessage.token = message.token;
+    } else if ('topic' in message) {
+      convertedMessage.topic = message.topic;
+    } else if ('condition' in message) {
+      convertedMessage.condition = message.condition;
+    }
+
+    return convertedMessage;
+  }
+
+  /**
+   * Method that returns a fully instantiated service client.
+   *
+   * @returns an instantiated service client with either the application's
+   * service account credentials or the default credentials
+   */
+  private getFcmServiceClient(): Promise<FcmServiceClient> {
+    if (this.fcmServiceClient) {
+      return Promise.resolve(this.fcmServiceClient);
+    }
+
+    const credential = this.app.options.credential;
+    const options: { credentials?: object; fallback: 'rest'; projectId?: string } = {
+      fallback: 'rest'
+    };
+
+    if (credential instanceof ServiceAccountCredential) {
+      options.credentials = {
+        private_key: credential.privateKey,
+        client_email: credential.clientEmail
+      };
+    }
+
+    return utils.findProjectId(this.appInternal).then(projectId => {
+      if (!validator.isNonEmptyString(projectId)) {
+        // Assert for an explicit project ID (either via AppOptions or the cert itself).
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_ARGUMENT,
+          'Failed to determine project ID for Messaging. Initialize the '
+          + 'SDK with service account credentials or set project ID as an app option. '
+          + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+        );
+      }
+
+      options.projectId = projectId;
+    }).then(() => {
+      this.fcmServiceClient = new FcmServiceClient(options);
+      return this.fcmServiceClient;
+    })
+  }
+
   /**
    * Sends the given message via FCM.
    *
@@ -245,16 +325,27 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    return this.getUrlPath()
-      .then((urlPath) => {
-        const request: { message: Message; validate_only?: boolean } = { message: copy };
-        if (dryRun) {
-          request.validate_only = true;
-        }
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
-      })
-      .then((response) => {
-        return (response as any).name;
+
+    const IMessage = this.convertToIMessage(copy);
+
+    return this.getFcmServiceClient()
+      .then(client => {
+        return client.getProjectId()
+          .then((projectId) => {
+            const parent = `projects/${projectId}`;
+
+            const request: ISendRequest = {
+              parent: parent,
+              message: IMessage,
+              validateOnly: dryRun
+            };
+            return client.sendMessage(request);
+          })
+          .then(([response]) => {
+            return response.name!;
+          }).catch(err => {
+            throw createFirebaseErrorFromGapicError(err);
+          });
       });
   }
 
