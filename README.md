@@ -36,13 +36,17 @@ $ npm install --save firebase-admin
 To use the module in your application, `require` it from any JavaScript file:
 
 ```js
-var admin = require("firebase-admin");
+const { initializeApp } = require("firebase-admin/app");
+
+initializeApp();
 ```
 
 If you are using ES2015, you can `import` the module instead:
 
 ```js
-import * as admin from "firebase-admin";
+import { initializeApp } from "firebase-admin/app";
+
+initializeApp();
 ```
 
 
@@ -55,7 +59,7 @@ requests, code review feedback, and also pull requests.
 
 ## Supported Environments
 
-We support Node.js 10.13.0 and higher.
+We support Node.js 12 and higher.
 
 Please also note that the Admin SDK should only
 be used in server-side/back-end environments controlled by the app developer.
