@@ -248,10 +248,11 @@ export class RefreshTokenCredential implements Credential {
   /**
    * Creates a new RefreshTokenCredential from the given parameters.
    *
-   * @param refreshTokenPathOrObject - Refresh token json object or path to a refresh token (user credentials) json file.
+   * @param refreshTokenPathOrObject - Refresh token json object or path to a refresh token
+   *   (user credentials) json file.
    * @param httpAgent - Optional http.Agent to use when calling the remote token server.
-   * @param implicit - An optinal boolean indicating whether this credential was implicitly discovered from the
-   *   environment, as opposed to being explicitly specified by the developer.
+   * @param implicit - An optinal boolean indicating whether this credential was implicitly
+   *   discovered from the environment, as opposed to being explicitly specified by the developer.
    *
    * @constructor
    */
