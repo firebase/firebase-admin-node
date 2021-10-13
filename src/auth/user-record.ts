@@ -379,7 +379,7 @@ export class UserInfo {
 
 
   /**
-   * @param response - The server side response returned from the getAccountInfo
+   * @param response - The server side response returned from the `getAccountInfo`
    *     endpoint.
    * @constructor
    * @internal

@@ -155,7 +155,7 @@ export interface FirebaseError {
    * A string value containing the execution backtrace when the error originally
    * occurred.
    *
-   * This information can be useful to you and can be sent to
+   * This information can be useful for troubleshooting the cause of the error with
    * {@link https://firebase.google.com/support | Firebase Support} to help
    * explain the cause of an error.
    */

@@ -137,10 +137,10 @@ export class AppCheckTokenGenerator {
 }
 
 /**
- * Creates a new FirebaseAppCheckError by extracting the error code, message and other relevant
- * details from a CryptoSignerError.
+ * Creates a new `FirebaseAppCheckError` by extracting the error code, message and other relevant
+ * details from a `CryptoSignerError`.
  *
- * @param err - The Error to convert into a FirebaseAppCheckError error
+ * @param err - The Error to convert into a `FirebaseAppCheckError` error
  * @returns A Firebase App Check error that can be returned to the user.
  */
 export function appCheckErrorFromCryptoSignerError(err: Error): Error {
