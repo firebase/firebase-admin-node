@@ -17,12 +17,9 @@
 
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-
 import * as mocks from '../resources/mocks';
-
-import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { AppOptions } from '../../src/firebase-namespace-api';
-import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/firebase-app';
+import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/app/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
@@ -32,8 +29,7 @@ import { HttpError, HttpResponse } from '../../src/utils/api-request';
  * @return A new FirebaseApp instance with the provided options.
  */
 export function createAppWithOptions(options: object): FirebaseApp {
-  const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
-  return new FirebaseApp(options as AppOptions, mocks.appName, mockFirebaseNamespaceInternals);
+  return new FirebaseApp(options as AppOptions, mocks.appName);
 }
 
 

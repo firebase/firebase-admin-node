@@ -19,4 +19,4 @@ test/resources/appid.txt
 # Release tarballs should not be checked in
 firebase-admin-*.tgz
 
-docgen/html/
+docgen/markdown/

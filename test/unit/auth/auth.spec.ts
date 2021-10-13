@@ -27,9 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
-import { UserRecord } from '../../../src/auth/user-record';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
@@ -41,14 +39,12 @@ import {
   OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { auth } from '../../../src/auth/index';
-
-import DecodedIdToken = auth.DecodedIdToken;
-import UpdateRequest = auth.UpdateRequest;
-import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
+import {
+  Auth, TenantAwareAuth, BaseAuth, UserRecord, DecodedIdToken,
+  UpdateRequest, AuthProviderConfigFilter, TenantManager,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -60,9 +56,9 @@ const expect = chai.expect;
 interface AuthTest {
   name: string;
   supportsTenantManagement: boolean;
-  Auth: new (...args: any[]) => BaseAuth<AbstractAuthRequestHandler>;
+  Auth: new (...args: any[]) => BaseAuth;
   RequestHandler: new (...args: any[]) => AbstractAuthRequestHandler;
-  init(app: FirebaseApp): BaseAuth<AbstractAuthRequestHandler>;
+  init(app: FirebaseApp): BaseAuth;
 }
 
 
@@ -266,13 +262,13 @@ const AUTH_CONFIGS: AuthTest[] = [
 ];
 AUTH_CONFIGS.forEach((testConfig) => {
   describe(testConfig.name, () => {
-    let auth: BaseAuth<AbstractAuthRequestHandler>;
+    let auth: BaseAuth;
     let mockApp: FirebaseApp;
     let getTokenStub: sinon.SinonStub;
     let oldProcessEnv: NodeJS.ProcessEnv;
-    let nullAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let malformedAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let rejectedPromiseAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
+    let nullAccessTokenAuth: BaseAuth;
+    let malformedAccessTokenAuth: BaseAuth;
+    let rejectedPromiseAccessTokenAuth: BaseAuth;
 
     beforeEach(() => {
       mockApp = mocks.app();
@@ -498,7 +494,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/user-disabled');
-          });        
+          });
       });
 
       it('verifyIdToken() should reject user disabled before ID tokens revoked', () => {
@@ -901,7 +897,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected error returned.
             expect(error).to.have.property('code', 'auth/user-disabled');
-          });        
+          });
       });
 
       it('verifySessionCookie() should reject user disabled before ID tokens revoked', () =>  {
@@ -1855,6 +1851,109 @@ AUTH_CONFIGS.forEach((testConfig) => {
             localId: uid,
             deleteProvider: [ 'phone', 'google.com' ],
           });
+      });
+
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        let getAccountInfoByUidStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+          getAccountInfoByUidStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+          getAccountInfoByUidStub.restore();
+        });
+
+        it('specifying both email and providerId=email should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              email: 'user@example.com',
+              providerToLink: {
+                providerId: 'email',
+                uid: 'user@example.com',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('specifying both phoneNumber and providerId=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: '+15555550001',
+              providerToLink: {
+                providerId: 'phone',
+                uid: '+15555550001',
+              },
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('email linking should use email field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              email: 'user@example.com',
+            });
+        });
+
+        it('phone linking should use phoneNumber field', async () => {
+          await auth.updateUser(uid, {
+            providerToLink: {
+              providerId: 'phone',
+              uid: '+15555550001',
+            },
+          });
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              localId: uid,
+              phoneNumber: '+15555550001',
+            });
+        });
+
+        it('specifying both phoneNumber=null and providersToUnlink=phone should be rejected', () => {
+          expect(() => {
+            auth.updateUser(uid, {
+              phoneNumber: null,
+              providersToUnlink: ['phone'],
+            });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+
+        it('doesnt mutate the properties parameter', async () => {
+          const properties: UpdateRequest = {
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          };
+          await auth.updateUser(uid, properties);
+          expect(properties).to.deep.equal({
+            providerToLink: {
+              providerId: 'email',
+              uid: 'user@example.com',
+            },
+          });
+        });
       });
 
       describe('non-federated providers', () => {

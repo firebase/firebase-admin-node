@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import { random } from 'lodash';
-import { GoogleOAuthAccessToken } from '../../src/credential/index';
+import {
+  App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
+} from '../../lib/app/index'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -29,17 +30,17 @@ export let storageBucket: string;
 export let projectId: string;
 export let apiKey: string;
 
-export let defaultApp: admin.app.App;
-export let nullApp: admin.app.App;
-export let nonNullApp: admin.app.App;
-export let noServiceAccountApp: admin.app.App;
+export let defaultApp: App;
+export let nullApp: App;
+export let nonNullApp: App;
+export let noServiceAccountApp: App;
 
 export let cmdArgs: any;
 
 export const isEmulator = !!process.env.FIREBASE_EMULATOR_HUB;
 
 before(() => {
-  let getCredential: () => {credential?: admin.credential.Credential};
+  let getCredential: () => {credential?: Credential};
   let serviceAccountId: string;
 
   /* tslint:disable:no-console */
@@ -75,7 +76,7 @@ before(() => {
       ));
       throw error;
     }
-    getCredential = () => ({ credential: admin.credential.cert(serviceAccount) });
+    getCredential = () => ({ credential: cert(serviceAccount) });
     projectId = serviceAccount.project_id;
     serviceAccountId = serviceAccount.client_email;
   }
@@ -84,14 +85,14 @@ before(() => {
   databaseUrl = 'https://' + projectId + '.firebaseio.com';
   storageBucket = projectId + '.appspot.com';
 
-  defaultApp = admin.initializeApp({
+  defaultApp = initializeApp({
     ...getCredential(),
     projectId,
     databaseURL: databaseUrl,
     storageBucket,
   });
 
-  nullApp = admin.initializeApp({
+  nullApp = initializeApp({
     ...getCredential(),
     projectId,
     databaseURL: databaseUrl,
@@ -99,7 +100,7 @@ before(() => {
     storageBucket,
   }, 'null');
 
-  nonNullApp = admin.initializeApp({
+  nonNullApp = initializeApp({
     ...getCredential(),
     projectId,
     databaseURL: databaseUrl,
@@ -114,7 +115,7 @@ before(() => {
     noServiceAccountAppCreds.credential = new CertificatelessCredential(
       noServiceAccountAppCreds.credential)
   }
-  noServiceAccountApp = admin.initializeApp({
+  noServiceAccountApp = initializeApp({
     ...noServiceAccountAppCreds,
     serviceAccountId,
     projectId,
@@ -125,17 +126,17 @@ before(() => {
 
 after(() => {
   return Promise.all([
-    defaultApp.delete(),
-    nullApp.delete(),
-    nonNullApp.delete(),
-    noServiceAccountApp.delete(),
+    deleteApp(defaultApp),
+    deleteApp(nullApp),
+    deleteApp(nonNullApp),
+    deleteApp(noServiceAccountApp),
   ]);
 });
 
-class CertificatelessCredential implements admin.credential.Credential {
-  private readonly delegate: admin.credential.Credential;
+class CertificatelessCredential implements Credential {
+  private readonly delegate: Credential;
 
-  constructor(delegate: admin.credential.Credential) {
+  constructor(delegate: Credential) {
     this.delegate = delegate;
   }
 

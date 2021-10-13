@@ -14,42 +14,34 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { getInstallations } from '../installations';
+import { App } from '../app/index';
 import {
-  FirebaseInstallationsError, FirebaseInstanceIdError, InstallationsClientErrorCode, InstanceIdClientErrorCode,
+  FirebaseInstallationsError, FirebaseInstanceIdError,
+  InstallationsClientErrorCode, InstanceIdClientErrorCode,
 } from '../utils/error';
-import { instanceId } from './index';
 import * as validator from '../utils/validator';
 
-import InstanceIdInterface = instanceId.InstanceId;
-
 /**
- * Gets the {@link InstanceId `InstanceId`} service for the
- * current app.
+ * The `InstanceId` service enables deleting the Firebase instance IDs
+ * associated with Firebase client app instances.
  *
- * @example
- * ```javascript
- * var instanceId = app.instanceId();
- * // The above is shorthand for:
- * // var instanceId = admin.instanceId(app);
- * ```
- *
- * @return The `InstanceId` service for the
- *   current app.
+ * @deprecated
  */
-export class InstanceId implements InstanceIdInterface {
+export class InstanceId {
 
-  private app_: FirebaseApp;
+  private app_: App;
 
   /**
    * @param app The app for this InstanceId service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
+        'First argument passed to instanceId() must be a valid Firebase app instance.',
       );
     }
 
@@ -62,15 +54,16 @@ export class InstanceId implements InstanceIdInterface {
    * Note that Google Analytics for Firebase uses its own form of Instance ID to
    * keep track of analytics data. Therefore deleting a Firebase Instance ID does
    * not delete Analytics data. See
-   * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
+   * {@link https://firebase.google.com/support/privacy/manage-iids#delete_an_instance_id |
+   * Delete an Instance ID}
    * for more information.
    *
    * @param instanceId The instance ID to be deleted.
    *
-   * @return A promise fulfilled when the instance ID is deleted.
+   * @returns A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
-    return this.app.installations().deleteInstallation(instanceId)
+    return getInstallations(this.app).deleteInstallation(instanceId)
       .catch((err) => {
         if (err instanceof FirebaseInstallationsError) {
           let code = err.code.replace('installations/', '');
@@ -88,9 +81,9 @@ export class InstanceId implements InstanceIdInterface {
   /**
    * Returns the app associated with this InstanceId instance.
    *
-   * @return The app associated with this InstanceId instance.
+   * @returns The app associated with this InstanceId instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.app_;
   }
 }

@@ -14,25 +14,56 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
 } from './security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from './security-rules-internal';
-import { securityRules } from './index';
 
-import RulesFile = securityRules.RulesFile;
-import RulesetMetadata = securityRules.RulesetMetadata;
-import RulesetMetadataList = securityRules.RulesetMetadataList;
-import RulesetInterface = securityRules.Ruleset;
-import SecurityRulesInterface = securityRules.SecurityRules;
+/**
+ * A source file containing some Firebase security rules. The content includes raw
+ * source code including text formatting, indentation and comments. Use the
+ * {@link SecurityRules.createRulesFileFromSource} method to create new instances of this type.
+ */
+export interface RulesFile {
+  readonly name: string;
+  readonly content: string;
+}
 
-class RulesetMetadataListImpl implements RulesetMetadataList {
+/**
+ * Required metadata associated with a ruleset.
+ */
+export interface RulesetMetadata {
+  /**
+   * Name of the `Ruleset` as a short string. This can be directly passed into APIs
+   * like {@link SecurityRules.getRuleset} and {@link SecurityRules.deleteRuleset}.
+   */
+  readonly name: string;
+  /**
+   * Creation time of the `Ruleset` as a UTC timestamp string.
+   */
+  readonly createTime: string;
+}
 
+/**
+ * A page of ruleset metadata.
+ */
+export class RulesetMetadataList {
+
+  /**
+   * A batch of ruleset metadata.
+   */
   public readonly rulesets: RulesetMetadata[];
+
+  /**
+   * The next page token if available. This is needed to retrieve the next batch.
+   */
   public readonly nextPageToken?: string;
 
+  /**
+   * @internal
+   */
   constructor(response: ListRulesetsResponse) {
     if (!validator.isNonNullObject(response) || !validator.isArray(response.rulesets)) {
       throw new FirebaseSecurityRulesError(
@@ -54,14 +85,25 @@ class RulesetMetadataListImpl implements RulesetMetadataList {
 }
 
 /**
- * Represents a set of Firebase security rules.
+ * A set of Firebase security rules.
  */
-export class Ruleset implements RulesetInterface {
+export class Ruleset implements RulesetMetadata {
 
+  /**
+   * {@inheritdoc RulesetMetadata.name}
+   */
   public readonly name: string;
+
+  /**
+   * {@inheritdoc RulesetMetadata.createTime}
+   */
   public readonly createTime: string;
+
   public readonly source: RulesFile[];
 
+  /**
+   * @internal
+   */
   constructor(ruleset: RulesetResponse) {
     if (!validator.isNonNullObject(ruleset) ||
       !validator.isNonEmptyString(ruleset.name) ||
@@ -80,11 +122,8 @@ export class Ruleset implements RulesetInterface {
 
 /**
  * The Firebase `SecurityRules` service interface.
- *
- * Do not call this constructor directly. Instead, use
- * [`admin.securityRules()`](securityRules#securityRules).
  */
-export class SecurityRules implements SecurityRulesInterface {
+export class SecurityRules {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
   private static readonly FIREBASE_STORAGE = 'firebase.storage';
@@ -92,20 +131,23 @@ export class SecurityRules implements SecurityRulesInterface {
   private readonly client: SecurityRulesApiClient;
 
   /**
-   * @param {object} app The app for this SecurityRules service.
+   * @param app The app for this SecurityRules service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     this.client = new SecurityRulesApiClient(app);
   }
 
   /**
-   * Gets the Ruleset identified by the given name. The input name should be the short name string without
-   * the project ID prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`, pass the
-   * short name "my-ruleset". Rejects with a `not-found` error if the specified Ruleset cannot be found.
+   * Gets the {@link Ruleset} identified by the given
+   * name. The input name should be the short name string without the project ID
+   * prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`,
+   * pass the short name "my-ruleset". Rejects with a `not-found` error if the
+   * specified `Ruleset` cannot be found.
    *
-   * @param {string} name Name of the Ruleset to retrieve.
-   * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
+   * @param name Name of the `Ruleset` to retrieve.
+   * @returns A promise that fulfills with the specified `Ruleset`.
    */
   public getRuleset(name: string): Promise<Ruleset> {
     return this.client.getRuleset(name)
@@ -115,20 +157,22 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Gets the Ruleset currently applied to Cloud Firestore. Rejects with a `not-found` error if no Ruleset is
-   * applied on Firestore.
+   * Gets the {@link Ruleset} currently applied to
+   * Cloud Firestore. Rejects with a `not-found` error if no ruleset is applied
+   * on Firestore.
    *
-   * @returns {Promise<Ruleset>} A promise that fulfills with the Firestore Ruleset.
+   * @returns A promise that fulfills with the Firestore ruleset.
    */
   public getFirestoreRuleset(): Promise<Ruleset> {
     return this.getRulesetForRelease(SecurityRules.CLOUD_FIRESTORE);
   }
 
   /**
-   * Creates a new ruleset from the given source, and applies it to Cloud Firestore.
+   * Creates a new {@link Ruleset} from the given
+   * source, and applies it to Cloud Firestore.
    *
-   * @param {string|Buffer} source Rules source to apply.
-   * @returns {Promise<Ruleset>} A promise that fulfills when the ruleset is created and released.
+   * @param source Rules source to apply.
+   * @returns A promise that fulfills when the ruleset is created and released.
    */
   public releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset> {
     return Promise.resolve()
@@ -145,23 +189,26 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Makes the specified ruleset the currently applied ruleset for Cloud Firestore.
+   * Applies the specified {@link Ruleset} ruleset
+   * to Cloud Firestore.
    *
-   * @param {string|RulesetMetadata} ruleset Name of the ruleset to apply or a RulesetMetadata object containing
-   *   the name.
-   * @returns {Promise<void>} A promise that fulfills when the ruleset is released.
+   * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+   *   containing the name.
+   * @returns A promise that fulfills when the ruleset is released.
    */
   public releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void> {
     return this.releaseRuleset(ruleset, SecurityRules.CLOUD_FIRESTORE);
   }
 
   /**
-   * Gets the Ruleset currently applied to a Cloud Storage bucket. Rejects with a `not-found` error if no Ruleset is
-   * applied on the bucket.
+   * Gets the {@link Ruleset} currently applied to a
+   * Cloud Storage bucket. Rejects with a `not-found` error if no ruleset is applied
+   * on the bucket.
    *
-   * @param {string=} bucket Optional name of the Cloud Storage bucket to be retrieved. If not specified,
-   *   retrieves the ruleset applied on the default bucket configured via `AppOptions`.
-   * @returns {Promise<Ruleset>} A promise that fulfills with the Cloud Storage Ruleset.
+   * @param bucket Optional name of the Cloud Storage bucket to be retrieved. If not
+   *   specified, retrieves the ruleset applied on the default bucket configured via
+   *   `AppOptions`.
+   * @returns A promise that fulfills with the Cloud Storage ruleset.
    */
   public getStorageRuleset(bucket?: string): Promise<Ruleset> {
     return Promise.resolve()
@@ -174,12 +221,14 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Creates a new ruleset from the given source, and applies it to a Cloud Storage bucket.
+   * Creates a new {@link Ruleset} from the given
+   * source, and applies it to a Cloud Storage bucket.
    *
-   * @param {string|Buffer} source Rules source to apply.
-   * @param {string=} bucket Optional name of the Cloud Storage bucket to apply the rules on. If not specified,
-   *   applies the ruleset on the default bucket configured via `AppOptions`.
-   * @returns {Promise<Ruleset>} A promise that fulfills when the ruleset is created and released.
+   * @param source Rules source to apply.
+   * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+   *   not specified, applies the ruleset on the default bucket configured via
+   *   {@link firebase-admin.app#AppOptions}.
+   * @returns A promise that fulfills when the ruleset is created and released.
    */
   public releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset> {
     return Promise.resolve()
@@ -199,13 +248,15 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Makes the specified ruleset the currently applied ruleset for a Cloud Storage bucket.
+   * Applies the specified {@link Ruleset} ruleset
+   * to a Cloud Storage bucket.
    *
-   * @param {string|RulesetMetadata} ruleset Name of the ruleset to apply or a RulesetMetadata object containing
-   *   the name.
-   * @param {string=} bucket Optional name of the Cloud Storage bucket to apply the rules on. If not specified,
-   *   applies the ruleset on the default bucket configured via `AppOptions`.
-   * @returns {Promise<void>} A promise that fulfills when the ruleset is released.
+   * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+   *   containing the name.
+   * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+   *   not specified, applies the ruleset on the default bucket configured via
+   *   {@link firebase-admin.app#AppOptions}.
+   * @returns A promise that fulfills when the ruleset is released.
    */
   public releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void> {
     return Promise.resolve()
@@ -218,7 +269,7 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Creates a {@link securityRules.RulesFile `RuleFile`} with the given name
+   * Creates a {@link RulesFile} with the given name
    * and source. Throws an error if any of the arguments are invalid. This is a local
    * operation, and does not involve any network API calls.
    *
@@ -232,7 +283,7 @@ export class SecurityRules implements SecurityRulesInterface {
    * @param name Name to assign to the rules file. This is usually a short file name that
    *   helps identify the file in a ruleset.
    * @param source Contents of the rules file.
-   * @return A new rules file instance.
+   * @returns A new rules file instance.
    */
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
     if (!validator.isNonEmptyString(name)) {
@@ -257,8 +308,7 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Creates a new {@link securityRules.Ruleset `Ruleset`} from the given
-   * {@link securityRules.RulesFile `RuleFile`}.
+   * Creates a new {@link Ruleset} from the given {@link RulesFile}.
    *
    * @param file Rules file to include in the new `Ruleset`.
    * @returns A promise that fulfills with the newly created `Ruleset`.
@@ -277,14 +327,14 @@ export class SecurityRules implements SecurityRulesInterface {
   }
 
   /**
-   * Deletes the {@link securityRules.Ruleset `Ruleset`} identified by the given
+   * Deletes the {@link Ruleset} identified by the given
    * name. The input name should be the short name string without the project ID
    * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
    * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
    * specified `Ruleset` cannot be found.
    *
    * @param name Name of the `Ruleset` to delete.
-   * @return A promise that fulfills when the `Ruleset` is deleted.
+   * @returns A promise that fulfills when the `Ruleset` is deleted.
    */
   public deleteRuleset(name: string): Promise<void> {
     return this.client.deleteRuleset(name);
@@ -297,12 +347,12 @@ export class SecurityRules implements SecurityRulesInterface {
    *   limit.
    * @param nextPageToken The next page token. If not specified, returns rulesets
    *   starting without any offset.
-   * @return A promise that fulfills with a page of rulesets.
+   * @returns A promise that fulfills with a page of rulesets.
    */
   public listRulesetMetadata(pageSize = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
     return this.client.listRulesets(pageSize, nextPageToken)
       .then((response) => {
-        return new RulesetMetadataListImpl(response);
+        return new RulesetMetadataList(response);
       });
   }
 

@@ -26,12 +26,12 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { InstanceId } from '../../../src/instance-id/instance-id';
-import { Installations } from '../../../src/installations/installations';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { InstanceId } from '../../../src/instance-id/index';
+import { Installations } from '../../../src/installations/index';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  FirebaseInstallationsError, FirebaseInstanceIdError,
-  InstallationsClientErrorCode, InstanceIdClientErrorCode,
+  FirebaseInstanceIdError, InstanceIdClientErrorCode,
+  FirebaseInstallationsError, InstallationsClientErrorCode,
 } from '../../../src/utils/error';
 
 chai.should();
@@ -86,7 +86,7 @@ describe('InstanceId', () => {
         expect(() => {
           const iidAny: any = InstanceId;
           return new iidAny(invalidApp);
-        }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+        }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
       });
     });
 
@@ -94,7 +94,7 @@ describe('InstanceId', () => {
       expect(() => {
         const iidAny: any = InstanceId;
         return new iidAny();
-      }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+      }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
     });
 
     it('should reject given an invalid credential without project ID', () => {

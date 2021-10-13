@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
 import { FirebaseFirestoreError } from '../utils/error';
-import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
+import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Firestore, Settings } from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
+import { App } from '../app';
 
 export class FirestoreService {
 
-  private appInternal: FirebaseApp;
+  private appInternal: App;
   private firestoreClient: Firestore;
 
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     this.firestoreClient = initFirestore(app);
     this.appInternal = app;
   }
@@ -36,9 +36,9 @@ export class FirestoreService {
   /**
    * Returns the app associated with this Storage instance.
    *
-   * @return {FirebaseApp} The app associated with this Storage instance.
+   * @returns The app associated with this Storage instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 
@@ -47,7 +47,7 @@ export class FirestoreService {
   }
 }
 
-export function getFirestoreOptions(app: FirebaseApp): Settings {
+export function getFirestoreOptions(app: App): Settings {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
       code: 'invalid-argument',
@@ -85,7 +85,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
   });
 }
 
-function initFirestore(app: FirebaseApp): Firestore {
+function initFirestore(app: App): Firestore {
   const options = getFirestoreOptions(app);
   let firestoreDatabase: typeof Firestore;
   try {

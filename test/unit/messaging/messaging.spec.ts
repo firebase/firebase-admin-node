@@ -24,34 +24,23 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-
-import { FirebaseApp } from '../../../src/firebase-app';
-import { messaging } from '../../../src/messaging/index';
-import { Messaging } from '../../../src/messaging/messaging';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import {
+  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  MessagingDeviceGroupResponse, MessagingTopicManagementResponse, BatchResponse,
+  SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage,
+} from '../../../src/messaging/index';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getSdkVersion } from '../../../src/utils/index';
+import * as utils from '../utils';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
-
-import Message = messaging.Message;
-import TokenMessage = messaging.TokenMessage;
-import TopicMessage = messaging.TopicMessage;
-import ConditionMessage = messaging.ConditionMessage;
-import MessagingOptions = messaging.MessagingOptions;
-import MessagingPayload = messaging.MessagingPayload;
-import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
-import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse
-import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
-import BatchResponse = messaging.BatchResponse;
-import SendResponse = messaging.SendResponse;
-import MulticastMessage = messaging.MulticastMessage;
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -838,9 +827,9 @@ describe('Messaging', () => {
       const topicMessage: TopicMessage = { topic: 'test' };
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
-      
+
       mockedRequests.push(mockBatchRequest(messageIds));
-      
+
       return messaging.sendAll(messages)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -851,7 +840,7 @@ describe('Messaging', () => {
             expect(resp.error).to.be.undefined;
           });
         });
-    });    
+    });
   });
 
   describe('sendMulticast()', () => {

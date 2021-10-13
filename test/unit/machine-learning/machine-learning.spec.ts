@@ -19,9 +19,8 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { MachineLearning, Model } from '../../../src/machine-learning/machine-learning';
 import {
   MachineLearningApiClient,
   StatusErrorResponse,
@@ -30,9 +29,7 @@ import {
 } from '../../../src/machine-learning/machine-learning-api-client';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { machineLearning } from '../../../src/machine-learning/index';
-
-import ModelOptions = machineLearning.ModelOptions;
+import { MachineLearning, Model, ModelOptions } from '../../../src/machine-learning/index';
 
 const expect = chai.expect;
 

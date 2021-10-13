@@ -17,16 +17,40 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { projectManagement } from './index';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
-import AndroidAppInterface = projectManagement.AndroidApp;
-import AndroidAppMetadata = projectManagement.AndroidAppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
-import ShaCertificateInterface = projectManagement.ShaCertificate;
 
-export class AndroidApp implements AndroidAppInterface {
+/**
+ * Metadata about a Firebase Android App.
+ */
+export interface AndroidAppMetadata extends AppMetadata {
+
+  platform: AppPlatform.ANDROID;
+
+  /**
+   * The canonical package name of the Android App, as would appear in the Google Play Developer
+   * Console.
+   *
+   * @example
+   * ```javascript
+   * var packageName = androidAppMetadata.packageName;
+   * ```
+   */
+  packageName: string;
+}
+
+/**
+ * A reference to a Firebase Android app.
+ *
+ * Do not call this constructor directly. Instead, use {@link ProjectManagement.androidApp}.
+ */
+export class AndroidApp {
+
   private readonly resourceName: string;
 
+  /**
+   * @internal
+   */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -41,7 +65,7 @@ export class AndroidApp implements AndroidAppInterface {
   /**
    * Retrieves metadata about this Android app.
    *
-   * @return A promise that resolves to the retrieved metadata about this Android app.
+   * @returns A promise that resolves to the retrieved metadata about this Android app.
    */
   public getMetadata(): Promise<AndroidAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
@@ -76,7 +100,7 @@ export class AndroidApp implements AndroidAppInterface {
    *
    * @param newDisplayName The new display name to set.
    *
-   * @return A promise that resolves when the display name has been set.
+   * @returns A promise that resolves when the display name has been set.
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
@@ -85,7 +109,7 @@ export class AndroidApp implements AndroidAppInterface {
   /**
    * Gets the list of SHA certificates associated with this Android app in Firebase.
    *
-   * @return The list of SHA-1 and SHA-256 certificates associated with this Android app in
+   * @returns The list of SHA-1 and SHA-256 certificates associated with this Android app in
    *     Firebase.
    */
   public getShaCertificates(): Promise<ShaCertificate[]> {
@@ -126,7 +150,7 @@ export class AndroidApp implements AndroidAppInterface {
    *
    * @param certificateToAdd The SHA certificate to add.
    *
-   * @return A promise that resolves when the given certificate
+   * @returns A promise that resolves when the given certificate
    *     has been added to the Android app.
    */
   public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
@@ -138,7 +162,7 @@ export class AndroidApp implements AndroidAppInterface {
    *
    * @param  certificateToDelete The SHA certificate to delete.
    *
-   * @return A promise that resolves when the specified
+   * @returns A promise that resolves when the specified
    *     certificate has been removed from the Android app.
    */
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
@@ -154,7 +178,7 @@ export class AndroidApp implements AndroidAppInterface {
   /**
    * Gets the configuration artifact associated with this app.
    *
-   * @return A promise that resolves to the Android app's
+   * @returns A promise that resolves to the Android app's
    *     Firebase config file, in UTF-8 string format. This string is typically
    *     intended to be written to a JSON file that gets shipped with your Android
    *     app.
@@ -184,7 +208,7 @@ export class AndroidApp implements AndroidAppInterface {
  * Do not call this constructor directly. Instead, use
  * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
  */
-export class ShaCertificate implements ShaCertificateInterface {
+export class ShaCertificate {
   /**
    * The SHA certificate type.
    *
@@ -210,6 +234,8 @@ export class ShaCertificate implements ShaCertificateInterface {
    * ```javascript
    * var resourceName = shaCertificate.resourceName;
    * ```
+   *
+   * @internal
    */
   constructor(public readonly shaHash: string, public readonly resourceName?: string) {
     if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {

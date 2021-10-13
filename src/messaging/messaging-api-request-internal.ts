@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
-import { messaging } from './index';
 import { getSdkVersion } from '../utils/index';
+import { SendResponse, BatchResponse } from './messaging-api';
 
-import SendResponse = messaging.SendResponse;
-import BatchResponse = messaging.BatchResponse;
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
@@ -48,11 +47,11 @@ export class FirebaseMessagingRequestHandler {
   private readonly batchClient: BatchRequestClient;
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
     this.batchClient = new BatchRequestClient(
       this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
@@ -60,10 +59,10 @@ export class FirebaseMessagingRequestHandler {
   /**
    * Invokes the request handler with the provided request data.
    *
-   * @param {string} host The host to which to send the request.
-   * @param {string} path The path to which to send the request.
-   * @param {object} requestData The request data.
-   * @return {Promise<object>} A promise that resolves with the response.
+   * @param host The host to which to send the request.
+   * @param path The path to which to send the request.
+   * @param requestData The request data.
+   * @returns A promise that resolves with the response.
    */
   public invokeRequestHandler(host: string, path: string, requestData: object): Promise<object> {
     const request: HttpRequestConfig = {
@@ -101,8 +100,8 @@ export class FirebaseMessagingRequestHandler {
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
    * a BatchResponse object.
    *
-   * @param {SubRequest[]} requests An array of sub requests to send.
-   * @return {Promise<BatchResponse>} A promise that resolves when the send operation is complete.
+   * @param requests An array of sub requests to send.
+   * @returns A promise that resolves when the send operation is complete.
    */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
     return this.batchClient.send(requests)

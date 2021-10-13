@@ -22,8 +22,8 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 
-import { FirebaseApp } from '../../../src/firebase-app';
-import { AppCheck } from '../../../src/app-check/app-check';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import { AppCheck } from '../../../src/app-check/index';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -181,7 +181,7 @@ describe('AppCheck', () => {
     });
 
     it('should resolve with VerifyAppCheckTokenResponse on success', () => {
-      const response = { 
+      const response = {
         sub: 'app-id',
         iss: 'https://firebaseappcheck.googleapis.com/123456',
         // eslint-disable-next-line @typescript-eslint/camelcase

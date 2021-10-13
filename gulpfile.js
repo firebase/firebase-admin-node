@@ -41,7 +41,7 @@ var paths = {
 
   test: [
     'test/**/*.ts',
-    '!test/integration/typescript/src/example*.ts',
+    '!test/integration/postcheck/typescript/*.ts',
   ],
 
   build: 'lib/',
@@ -86,9 +86,7 @@ gulp.task('compile', function() {
 
   const configuration = [
     'lib/**/*.js',
-    'lib/**/index.d.ts',
-    'lib/firebase-namespace-api.d.ts',
-    '!lib/utils/index.d.ts',
+    'lib/**/*.d.ts',
   ];
 
   workflow = workflow.pipe(filter(configuration));
@@ -108,7 +106,7 @@ gulp.task('compile_test', function() {
 });
 
 gulp.task('copyTypings', function() {
-  return gulp.src(['src/index.d.ts', 'src/firebase-namespace.d.ts'])
+  return gulp.src(['src/index.d.ts', 'src/default-namespace.d.ts'])
     // Add header
     .pipe(header(banner))
     .pipe(gulp.dest(paths.build))

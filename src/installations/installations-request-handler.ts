@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app/index';
+import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
@@ -58,8 +59,8 @@ export class FirebaseInstallationsRequestHandler {
    *
    * @constructor
    */
-  constructor(private readonly app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(private readonly app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   public deleteInstallation(fid: string): Promise<void> {
@@ -76,7 +77,7 @@ export class FirebaseInstallationsRequestHandler {
    * Invokes the request handler based on the API settings object passed.
    *
    * @param apiSettings The API endpoint settings to apply to request and response.
-   * @return A promise that resolves when the request is complete.
+   * @returns A promise that resolves when the request is complete.
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {
     return this.getPathPrefix()

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseError as FirebaseErrorInterface } from '../firebase-namespace-api';
+import { FirebaseError as FirebaseErrorInterface } from '../app';
 import { deepCopy } from '../utils/deep-copy';
 
 /**
@@ -36,7 +36,7 @@ interface ServerToClientCode {
 /**
  * Firebase error code structure. This extends Error.
  *
- * @param {ErrorInfo} errorInfo The error information (code and message).
+ * @param errorInfo The error information (code and message).
  * @constructor
  */
 export class FirebaseError extends Error implements FirebaseErrorInterface {
@@ -50,17 +50,17 @@ export class FirebaseError extends Error implements FirebaseErrorInterface {
     (this as any).__proto__ = FirebaseError.prototype;
   }
 
-  /** @return {string} The error code. */
+  /** @returns The error code. */
   public get code(): string {
     return this.errorInfo.code;
   }
 
-  /** @return {string} The error message. */
+  /** @returns The error message. */
   public get message(): string {
     return this.errorInfo.message;
   }
 
-  /** @return {object} The object representation of the error. */
+  /** @returns The object representation of the error. */
   public toJSON(): object {
     return {
       code: this.code,
@@ -72,9 +72,9 @@ export class FirebaseError extends Error implements FirebaseErrorInterface {
 /**
  * A FirebaseError with a prefix in front of the error code.
  *
- * @param {string} codePrefix The prefix to apply to the error code.
- * @param {string} code The error code.
- * @param {string} message The error message.
+ * @param codePrefix The prefix to apply to the error code.
+ * @param code The error code.
+ * @param message The error message.
  * @constructor
  */
 export class PrefixedFirebaseError extends FirebaseError {
@@ -95,8 +95,8 @@ export class PrefixedFirebaseError extends FirebaseError {
    * Allows the error type to be checked without needing to know implementation details
    * of the code prefixing.
    *
-   * @param {string} code The non-prefixed error code to test against.
-   * @return {boolean} True if the code matches, false otherwise.
+   * @param code The non-prefixed error code to test against.
+   * @returns True if the code matches, false otherwise.
    */
   public hasCode(code: string): boolean {
     return `${this.codePrefix}/${code}` === this.code;
@@ -106,8 +106,8 @@ export class PrefixedFirebaseError extends FirebaseError {
 /**
  * Firebase App error code structure. This extends PrefixedFirebaseError.
  *
- * @param {string} code The error code.
- * @param {string} message The error message.
+ * @param code The error code.
+ * @param message The error message.
  * @constructor
  */
 export class FirebaseAppError extends PrefixedFirebaseError {
@@ -125,8 +125,8 @@ export class FirebaseAppError extends PrefixedFirebaseError {
 /**
  * Firebase Auth error code structure. This extends PrefixedFirebaseError.
  *
- * @param {ErrorInfo} info The error code info.
- * @param {string} [message] The error message. This will override the default
+ * @param info The error code info.
+ * @param [message] The error message. This will override the default
  *     message if provided.
  * @constructor
  */
@@ -134,11 +134,11 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
-   * @param {string} serverErrorCode The server error code.
-   * @param {string} [message] The error message. The default message is used
+   * @param serverErrorCode The server error code.
+   * @param [message] The error message. The default message is used
    *     if not provided.
-   * @param {object} [rawServerResponse] The error's raw server response.
-   * @return {FirebaseAuthError} The corresponding developer-facing error.
+   * @param [rawServerResponse] The error's raw server response.
+   * @returns The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string,
@@ -185,8 +185,8 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
 /**
  * Firebase Database error code structure. This extends FirebaseError.
  *
- * @param {ErrorInfo} info The error code info.
- * @param {string} [message] The error message. This will override the default
+ * @param info The error code info.
+ * @param [message] The error message. This will override the default
  *     message if provided.
  * @constructor
  */
@@ -200,8 +200,8 @@ export class FirebaseDatabaseError extends FirebaseError {
 /**
  * Firebase Firestore error code structure. This extends FirebaseError.
  *
- * @param {ErrorInfo} info The error code info.
- * @param {string} [message] The error message. This will override the default
+ * @param info The error code info.
+ * @param [message] The error message. This will override the default
  *     message if provided.
  * @constructor
  */
@@ -215,8 +215,8 @@ export class FirebaseFirestoreError extends FirebaseError {
 /**
  * Firebase instance ID error code structure. This extends FirebaseError.
  *
- * @param {ErrorInfo} info The error code info.
- * @param {string} [message] The error message. This will override the default
+ * @param info The error code info.
+ * @param [message] The error message. This will override the default
  *     message if provided.
  * @constructor
  */
@@ -248,19 +248,19 @@ export class FirebaseInstallationsError extends FirebaseError {
 /**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
  *
- * @param {ErrorInfo} info The error code info.
- * @param {string} [message] The error message. This will override the default message if provided.
+ * @param info The error code info.
+ * @param [message] The error message. This will override the default message if provided.
  * @constructor
  */
 export class FirebaseMessagingError extends PrefixedFirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
-   * @param {string} serverErrorCode The server error code.
-   * @param {string} [message] The error message. The default message is used
+   * @param serverErrorCode The server error code.
+   * @param [message] The error message. The default message is used
    *     if not provided.
-   * @param {object} [rawServerResponse] The error's raw server response.
-   * @return {FirebaseMessagingError} The corresponding developer-facing error.
+   * @param [rawServerResponse] The error's raw server response.
+   * @returns The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string | null,
@@ -322,8 +322,8 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 /**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.
  *
- * @param {ProjectManagementErrorCode} code The error code.
- * @param {string} message The error message.
+ * @param code The error code.
+ * @param message The error message.
  * @constructor
  */
 export class FirebaseProjectManagementError extends PrefixedFirebaseError {

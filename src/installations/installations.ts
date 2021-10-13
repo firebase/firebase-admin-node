@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app/index';
 import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
 import { FirebaseInstallationsRequestHandler } from './installations-request-handler';
-import { installations } from './index';
 import * as validator from '../utils/validator';
-
-import InstallationsInterface = installations.Installations;
 
 /**
  * The `Installations` service for the current app.
  */
-export class Installations implements InstallationsInterface {
+export class Installations {
 
-  private app_: FirebaseApp;
+  private app_: App;
   private requestHandler: FirebaseInstallationsRequestHandler;
 
   /**
    * @param app The app for this Installations service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstallationsError(
         InstallationsClientErrorCode.INVALID_ARGUMENT,
@@ -51,7 +49,7 @@ export class Installations implements InstallationsInterface {
    *
    * @param fid The Firebase installation ID to be deleted.
    *
-   * @return A promise fulfilled when the installation ID is deleted.
+   * @returns A promise fulfilled when the installation ID is deleted.
    */
   public deleteInstallation(fid: string): Promise<void> {
     return this.requestHandler.deleteInstallation(fid);
@@ -60,9 +58,9 @@ export class Installations implements InstallationsInterface {
   /**
    * Returns the app associated with this Installations instance.
    *
-   * @return The app associated with this Installations instance.
+   * @returns The app associated with this Installations instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.app_;
   }
 }

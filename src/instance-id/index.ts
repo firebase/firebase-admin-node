@@ -14,28 +14,39 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
+/**
+ * Firebase Instance ID service.
+ *
+ * @packageDocumentation
+ */
+
+import { App, getApp } from '../app/index';
+import { InstanceId } from './instance-id';
+import { FirebaseApp } from '../app/firebase-app';
+
+export { InstanceId };
 
 /**
- * Gets the {@link instanceId.InstanceId `InstanceId`} service for the
- * default app or a given app.
+ * Gets the {@link InstanceId} service for the default app or a given app.
  *
- * `admin.instanceId()` can be called with no arguments to access the default
- * app's {@link instanceId.InstanceId `InstanceId`} service or as
- * `admin.instanceId(app)` to access the
- * {@link instanceId.InstanceId `InstanceId`} service associated with a
- * specific app.
+ * This API is deprecated. Developers are advised to use the
+ * {@link firebase-admin.installations#getInstallations}
+ * API to delete their instance IDs and Firebase installation IDs.
+ *
+ * `getInstanceId()` can be called with no arguments to access the default
+ * app's `InstanceId` service or as `getInstanceId(app)` to access the
+ * `InstanceId` service associated with a specific app.
  *
  * @example
  * ```javascript
  * // Get the Instance ID service for the default app
- * var defaultInstanceId = admin.instanceId();
+ * const defaultInstanceId = getInstanceId();
  * ```
  *
  * @example
  * ```javascript
  * // Get the Instance ID service for a given app
- * var otherInstanceId = admin.instanceId(otherApp);
+ * const otherInstanceId = getInstanceId(otherApp);
  *```
  *
  * This API is deprecated. Developers are advised to use the `admin.installations()`
@@ -45,43 +56,17 @@ import { app } from '../firebase-namespace-api';
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
  *
- * @return The default `InstanceId` service if
+ * @returns The default `InstanceId` service if
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
  *
  * @deprecated
  */
-export declare function instanceId(app?: app.App): instanceId.InstanceId;
-
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace instanceId {
-  /**
-   * The {@link InstanceId `InstanceId`} service for the
-   * current app.
-   *
-   * @deprecated
-   */
-  export interface InstanceId {
-    app: app.App;
-
-    /**
-     * Deletes the specified instance ID and the associated data from Firebase.
-     *
-     * Note that Google Analytics for Firebase uses its own form of Instance ID to
-     * keep track of analytics data. Therefore deleting a Firebase Instance ID does
-     * not delete Analytics data. See
-     * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
-     * for more information.
-     *
-     * This API is deprecated. Developers are advised to use the `Installations.deleteInstallation()`
-     * API instead.
-     *
-     * @param instanceId The instance ID to be deleted.
-     *
-     * @return A promise fulfilled when the instance ID is deleted.
-     *
-     * @deprecated
-     */
-    deleteInstanceId(instanceId: string): Promise<void>;
+export function getInstanceId(app?: App): InstanceId {
+  if (typeof app === 'undefined') {
+    app = getApp();
   }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
 }

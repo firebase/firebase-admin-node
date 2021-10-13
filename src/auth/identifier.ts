@@ -14,13 +14,48 @@
  * limitations under the License.
  */
 
-import { auth } from './index';
+/**
+ * Used for looking up an account by uid.
+ *
+ * See {@link BaseAuth.getUsers}.
+ */
+export interface UidIdentifier {
+  uid: string;
+}
 
-import UserIdentifier = auth.UserIdentifier;
-import UidIdentifier = auth.UidIdentifier;
-import EmailIdentifier = auth.EmailIdentifier;
-import PhoneIdentifier = auth.PhoneIdentifier;
-import ProviderIdentifier = auth.ProviderIdentifier;
+/**
+ * Used for looking up an account by email.
+ *
+ * See {@link BaseAuth.getUsers}.
+ */
+export interface EmailIdentifier {
+  email: string;
+}
+
+/**
+ * Used for looking up an account by phone number.
+ *
+ * See {@link BaseAuth.getUsers}.
+ */
+export interface PhoneIdentifier {
+  phoneNumber: string;
+}
+
+/**
+ * Used for looking up an account by federated provider.
+ *
+ * See {@link BaseAuth.getUsers}.
+ */
+export interface ProviderIdentifier {
+  providerId: string;
+  providerUid: string;
+}
+
+/**
+ * Identifies a user to be looked up.
+ */
+export type UserIdentifier =
+  UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
 
 /*
  * User defined type guards. See

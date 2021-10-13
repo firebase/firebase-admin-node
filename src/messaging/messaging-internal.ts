@@ -16,23 +16,13 @@
 
 import { renameProperties, transformMillisecondsToSecondsString } from '../utils/index';
 import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
-import { messaging } from './index';
 import * as validator from '../utils/validator';
 
-import AndroidConfig = messaging.AndroidConfig;
-import AndroidFcmOptions = messaging.AndroidFcmOptions;
-import AndroidNotification = messaging.AndroidNotification;
-import ApsAlert = messaging.ApsAlert;
-import ApnsConfig = messaging.ApnsConfig;
-import ApnsFcmOptions = messaging.ApnsFcmOptions;
-import ApnsPayload = messaging.ApnsPayload;
-import Aps = messaging.Aps;
-import CriticalSound = messaging.CriticalSound;
-import FcmOptions = messaging.FcmOptions;
-import LightSettings = messaging.LightSettings;
-import Message = messaging.Message;
-import Notification = messaging.Notification;
-import WebpushConfig = messaging.WebpushConfig;
+import {
+  AndroidConfig, AndroidFcmOptions, AndroidNotification, ApsAlert, ApnsConfig,
+  ApnsFcmOptions, ApnsPayload, Aps, CriticalSound, FcmOptions, LightSettings, Message,
+  Notification, WebpushConfig,
+} from './messaging-api';
 
 // Keys which are not allowed in the messaging data payload object.
 export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];
@@ -382,7 +372,7 @@ function validateApsAlert(alert: string | ApsAlert | undefined): void {
  * and notification fields. If successful, transforms the input object by renaming keys to valid
  * Android keys. Also transforms the ttl value to the format expected by FCM service.
  *
- * @param {AndroidConfig} config An object to be validated.
+ * @param config An object to be validated.
  */
 function validateAndroidConfig(config: AndroidConfig | undefined): void {
   if (typeof config === 'undefined') {

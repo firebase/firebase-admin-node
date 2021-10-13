@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -38,7 +38,7 @@ const condition = '"test0" in topics || ("test1" in topics && "test2" in topics)
 
 const invalidTopic = 'topic-$%#^';
 
-const message: admin.messaging.Message = {
+const message: Message = {
   data: {
     foo: 'bar',
   },
@@ -102,15 +102,15 @@ const options = {
 
 describe('admin.messaging', () => {
   it('send(message, dryRun) returns a message ID', () => {
-    return admin.messaging().send(message, true)
+    return getMessaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
       });
   });
 
   it('sendAll()', () => {
-    const messages: admin.messaging.Message[] = [message, message, message];
-    return admin.messaging().sendAll(messages, true)
+    const messages: Message[] = [message, message, message];
+    return getMessaging().sendAll(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -123,11 +123,11 @@ describe('admin.messaging', () => {
   });
 
   it('sendAll(500)', () => {
-    const messages: admin.messaging.Message[] = [];
+    const messages: Message[] = [];
     for (let i = 0; i < 500; i++) {
       messages.push({ topic: `foo-bar-${i % 10}` });
     }
-    return admin.messaging().sendAll(messages, true)
+    return getMessaging().sendAll(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -140,12 +140,12 @@ describe('admin.messaging', () => {
   });
 
   it('sendMulticast()', () => {
-    const multicastMessage: admin.messaging.MulticastMessage = {
+    const multicastMessage: MulticastMessage = {
       data: message.data,
       android: message.android,
       tokens: ['not-a-token', 'also-not-a-token'],
     };
-    return admin.messaging().sendMulticast(multicastMessage, true)
+    return getMessaging().sendMulticast(multicastMessage, true)
       .then((response) => {
         expect(response.responses.length).to.equal(2);
         expect(response.successCount).to.equal(0);
@@ -159,86 +159,86 @@ describe('admin.messaging', () => {
   });
 
   it('sendToDevice(token) returns a response with multicast ID', () => {
-    return admin.messaging().sendToDevice(registrationToken, payload, options)
+    return getMessaging().sendToDevice(registrationToken, payload, options)
       .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
   it('sendToDevice(token-list) returns a response with multicat ID', () => {
-    return admin.messaging().sendToDevice(registrationTokens, payload, options)
+    return getMessaging().sendToDevice(registrationTokens, payload, options)
       .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
   xit('sendToDeviceGroup() returns a response with success count', () => {
-    return admin.messaging().sendToDeviceGroup(notificationKey, payload, options)
+    return getMessaging().sendToDeviceGroup(notificationKey, payload, options)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
   it('sendToTopic() returns a response with message ID', () => {
-    return admin.messaging().sendToTopic(topic, payload, options)
+    return getMessaging().sendToTopic(topic, payload, options)
       .then((response) => {
         expect(typeof response.messageId).to.equal('number');
       });
   });
 
   it('sendToCondition() returns a response with message ID', () => {
-    return admin.messaging().sendToCondition(condition, payload, options)
+    return getMessaging().sendToCondition(condition, payload, options)
       .then((response) => {
         expect(typeof response.messageId).to.equal('number');
       });
   });
 
   it('sendToDevice(token) fails when called with invalid payload', () =>  {
-    return admin.messaging().sendToDevice(registrationToken, invalidPayload, options)
+    return getMessaging().sendToDevice(registrationToken, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
   it('sendToDevice(token-list) fails when called with invalid payload', () =>  {
-    return admin.messaging().sendToDevice(registrationTokens, invalidPayload, options)
+    return getMessaging().sendToDevice(registrationTokens, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
   it('sendToDeviceGroup() fails when called with invalid payload', () =>  {
-    return admin.messaging().sendToDeviceGroup(notificationKey, invalidPayload, options)
+    return getMessaging().sendToDeviceGroup(notificationKey, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
   it('sendToTopic() fails when called with invalid payload', () =>  {
-    return admin.messaging().sendToTopic(topic, invalidPayload, options)
+    return getMessaging().sendToTopic(topic, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
   it('sendToCondition() fails when called with invalid payload', () =>  {
-    return admin.messaging().sendToCondition(condition, invalidPayload, options)
+    return getMessaging().sendToCondition(condition, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
   it('subscribeToTopic() returns a response with success count', () => {
-    return admin.messaging().subscribeToTopic(registrationToken, topic)
+    return getMessaging().subscribeToTopic(registrationToken, topic)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
   it('unsubscribeFromTopic() returns a response with success count', () => {
-    return admin.messaging().unsubscribeFromTopic(registrationToken, topic)
+    return getMessaging().unsubscribeFromTopic(registrationToken, topic)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
   it('subscribeToTopic() fails when called with invalid topic', () => {
-    return admin.messaging().subscribeToTopic(registrationToken, invalidTopic)
+    return getMessaging().subscribeToTopic(registrationToken, invalidTopic)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
   });
 
   it('unsubscribeFromTopic() fails when called with invalid topic', () => {
-    return admin.messaging().unsubscribeFromTopic(registrationToken, invalidTopic)
+    return getMessaging().unsubscribeFromTopic(registrationToken, invalidTopic)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
   });
 });

@@ -14,44 +14,160 @@
  * limitations under the License.
  */
 
-import { AuthRequestHandler } from './auth-api-request';
-import { FirebaseApp } from '../firebase-app';
-import { TenantAwareAuth } from './auth';
-import { Tenant, TenantServerResponse } from './tenant';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { auth } from './index';
+import { App } from '../app';
+import * as utils from '../utils/index';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
-import ListTenantsResult = auth.ListTenantsResult;
-import TenantManagerInterface = auth.TenantManager;
-import CreateTenantRequest = auth.CreateTenantRequest;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
+import { BaseAuth, createFirebaseTokenGenerator, SessionCookieOptions } from './base-auth';
+import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
+import {
+  AuthRequestHandler, TenantAwareAuthRequestHandler,
+} from './auth-api-request';
+import { DecodedIdToken } from './token-verifier';
 
 /**
- * Data structure used to help manage tenant related operations.
- * This includes:
- * - The ability to create, update, list, get and delete tenants for the underlying project.
- * - Getting a TenantAwareAuth instance for running Auth related operations (user mgmt, provider config mgmt, etc)
- *   in the context of a specified tenant.
+ * Interface representing the object returned from a
+ * {@link TenantManager.listTenants}
+ * operation.
+ * Contains the list of tenants for the current batch and the next page token if available.
  */
-export class TenantManager implements TenantManagerInterface {
+export interface ListTenantsResult {
+
+  /**
+   * The list of {@link Tenant} objects for the downloaded batch.
+   */
+  tenants: Tenant[];
+
+  /**
+   * The next page token if available. This is needed for the next batch download.
+   */
+  pageToken?: string;
+}
+
+/**
+ * Tenant-aware `Auth` interface used for managing users, configuring SAML/OIDC providers,
+ * generating email links for password reset, email verification, etc for specific tenants.
+ *
+ * Multi-tenancy support requires Google Cloud's Identity Platform
+ * (GCIP). To learn more about GCIP, including pricing and features,
+ * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
+ *
+ * Each tenant contains its own identity providers, settings and sets of users.
+ * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
+ * configurations can also be managed, ID tokens for users signed in to a specific tenant
+ * can be verified, and email action links can also be generated for users belonging to the
+ * tenant.
+ *
+ * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
+ * {@link TenantManager.authForTenant}.
+ */
+export class TenantAwareAuth extends BaseAuth {
+
+  /**
+   * The tenant identifier corresponding to this `TenantAwareAuth` instance.
+   * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
+   * generation APIs, etc will only be applied within the scope of this tenant.
+   */
+  public readonly tenantId: string;
+
+  /**
+   * The TenantAwareAuth class constructor.
+   *
+   * @param app The app that created this tenant.
+   * @param tenantId The corresponding tenant ID.
+   * @constructor
+   * @internal
+   */
+  constructor(app: App, tenantId: string) {
+    super(app, new TenantAwareAuthRequestHandler(
+      app, tenantId), createFirebaseTokenGenerator(app, tenantId));
+    utils.addReadonlyGetter(this, 'tenantId', tenantId);
+  }
+
+  /**
+   * {@inheritdoc BaseAuth.verifyIdToken}
+   */
+  public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
+    return super.verifyIdToken(idToken, checkRevoked)
+      .then((decodedClaims) => {
+        // Validate tenant ID.
+        if (decodedClaims.firebase.tenant !== this.tenantId) {
+          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+        }
+        return decodedClaims;
+      });
+  }
+
+  /**
+   * {@inheritdoc BaseAuth.createSessionCookie}
+   */
+  public createSessionCookie(
+    idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    // Validate arguments before processing.
+    if (!validator.isNonEmptyString(idToken)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
+    }
+    if (!validator.isNonNullObject(sessionCookieOptions) ||
+        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+    }
+    // This will verify the ID token and then match the tenant ID before creating the session cookie.
+    return this.verifyIdToken(idToken)
+      .then(() => {
+        return super.createSessionCookie(idToken, sessionCookieOptions);
+      });
+  }
+
+  /**
+   * {@inheritdoc BaseAuth.verifySessionCookie}
+   */
+  public verifySessionCookie(
+    sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
+    return super.verifySessionCookie(sessionCookie, checkRevoked)
+      .then((decodedClaims) => {
+        if (decodedClaims.firebase.tenant !== this.tenantId) {
+          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+        }
+        return decodedClaims;
+      });
+  }
+}
+
+/**
+ * Defines the tenant manager used to help manage tenant related operations.
+ * This includes:
+ * <ul>
+ * <li>The ability to create, update, list, get and delete tenants for the underlying
+ *     project.</li>
+ * <li>Getting a `TenantAwareAuth` instance for running Auth related operations
+ *     (user management, provider configuration management, token verification,
+ *     email link generation, etc) in the context of a specified tenant.</li>
+ * </ul>
+ */
+export class TenantManager {
   private readonly authRequestHandler: AuthRequestHandler;
   private readonly tenantsMap: {[key: string]: TenantAwareAuth};
 
   /**
    * Initializes a TenantManager instance for a specified FirebaseApp.
+   *
    * @param app The app for this TenantManager instance.
+   *
+   * @constructor
+   * @internal
    */
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     this.authRequestHandler = new AuthRequestHandler(app);
     this.tenantsMap = {};
   }
 
   /**
-   * Returns a TenantAwareAuth instance for the corresponding tenant ID.
+   * Returns a `TenantAwareAuth` instance bound to the given tenant ID.
    *
-   * @param tenantId The tenant ID whose TenantAwareAuth is to be returned.
-   * @return The corresponding TenantAwareAuth instance.
+   * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
+   *
+   * @returns The `TenantAwareAuth` instance corresponding to this tenant identifier.
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
     if (!validator.isNonEmptyString(tenantId)) {
@@ -64,11 +180,11 @@ export class TenantManager implements TenantManagerInterface {
   }
 
   /**
-   * Looks up the tenant identified by the provided tenant ID and returns a promise that is
-   * fulfilled with the corresponding tenant if it is found.
+   * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
    *
-   * @param tenantId The tenant ID of the tenant to look up.
-   * @return A promise that resolves with the corresponding tenant.
+   * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
+   *
+   * @returns A promise fulfilled with the tenant configuration to the provided `tenantId`.
    */
   public getTenant(tenantId: string): Promise<Tenant> {
     return this.authRequestHandler.getTenant(tenantId)
@@ -78,16 +194,17 @@ export class TenantManager implements TenantManagerInterface {
   }
 
   /**
-   * Exports a batch of tenant accounts. Batch size is determined by the maxResults argument.
-   * Starting point of the batch is determined by the pageToken argument.
+   * Retrieves a list of tenants (single batch only) with a size of `maxResults`
+   * starting from the offset as specified by `pageToken`. This is used to
+   * retrieve all the tenants of a specified project in batches.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also the maximum
-   *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns users starting
-   *     without any offset.
-   * @return A promise that resolves with
-   *     the current batch of downloaded tenants and the next page token. For the last page, an
-   *     empty list of tenants and no page token are returned.
+   * @param maxResults The page size, 1000 if undefined. This is also
+   *   the maximum allowed limit.
+   * @param pageToken The next page token. If not specified, returns
+   *   tenants starting without any offset.
+   *
+   * @returns A promise that resolves with
+   *   a batch of downloaded tenants and the next page token.
    */
   public listTenants(
     maxResults?: number,
@@ -114,21 +231,25 @@ export class TenantManager implements TenantManagerInterface {
   }
 
   /**
-   * Deletes the tenant identified by the provided tenant ID and returns a promise that is
-   * fulfilled when the tenant is found and successfully deleted.
+   * Deletes an existing tenant.
    *
-   * @param tenantId The tenant ID of the tenant to delete.
-   * @return A promise that resolves when the tenant is successfully deleted.
+   * @param tenantId The `tenantId` corresponding to the tenant to delete.
+   *
+   * @returns An empty promise fulfilled once the tenant has been deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
     return this.authRequestHandler.deleteTenant(tenantId);
   }
 
   /**
-   * Creates a new tenant with the properties provided.
+   * Creates a new tenant.
+   * When creating new tenants, tenants that use separate billing and quota will require their
+   * own project and must be defined as `full_service`.
    *
-   * @param tenantOptions The properties to set on the new tenant to be created.
-   * @return A promise that resolves with the newly created tenant.
+   * @param tenantOptions The properties to set on the new tenant configuration to be created.
+   *
+   * @returns A promise fulfilled with the tenant configuration corresponding to the newly
+   *   created tenant.
    */
   public createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.createTenant(tenantOptions)
@@ -138,11 +259,12 @@ export class TenantManager implements TenantManagerInterface {
   }
 
   /**
-   * Updates an existing tenant identified by the tenant ID with the properties provided.
+   * Updates an existing tenant configuration.
    *
-   * @param tenantId The tenant identifier of the tenant to update.
-   * @param tenantOptions The properties to update on the existing tenant.
-   * @return A promise that resolves with the modified tenant.
+   * @param tenantId The `tenantId` corresponding to the tenant to delete.
+   * @param tenantOptions The properties to update on the provided tenant.
+   *
+   * @returns A promise fulfilled with the update tenant data.
    */
   public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)

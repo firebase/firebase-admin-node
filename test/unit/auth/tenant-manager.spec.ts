@@ -23,16 +23,13 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
-import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
-import { TenantManager } from '../../../src/auth/tenant-manager';
+import { TenantServerResponse } from '../../../src/auth/tenant';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
-import { auth } from '../../../src/auth/index';
-
-import CreateTenantRequest = auth.CreateTenantRequest;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
-import ListTenantsResult = auth.ListTenantsResult;
+import {
+  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult, Tenant, TenantManager,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);

@@ -15,20 +15,16 @@
  * limitations under the License.
  */
 
-import { appCheck } from './index';
-
 import * as validator from '../utils/validator';
 import { toWebSafeBase64, transformMillisecondsToSecondsString } from '../utils';
-
 import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
-import { 
+import {
   FirebaseAppCheckError,
   AppCheckErrorCode,
-  APP_CHECK_ERROR_CODE_MAPPING,  
+  APP_CHECK_ERROR_CODE_MAPPING,
 } from './app-check-api-client-internal';
+import { AppCheckTokenOptions } from './app-check-api';
 import { HttpError } from '../utils/api-request';
-
-import AppCheckTokenOptions = appCheck.AppCheckTokenOptions;
 
 const ONE_MINUTE_IN_SECONDS = 60;
 const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
@@ -39,7 +35,7 @@ const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/goo
 
 /**
  * Class for generating Firebase App Check tokens.
- * 
+ *
  * @internal
  */
 export class AppCheckTokenGenerator {
@@ -65,8 +61,8 @@ export class AppCheckTokenGenerator {
    * Creates a new custom token that can be exchanged to an App Check token.
    *
    * @param appId The Application ID to use for the generated token.
-   * 
-   * @return A Promise fulfilled with a custom token signed with a service account key
+   *
+   * @returns A Promise fulfilled with a custom token signed with a service account key
    * that can be exchanged to an App Check token.
    */
   public createCustomToken(appId: string, options?: AppCheckTokenOptions): Promise<string> {
@@ -113,7 +109,7 @@ export class AppCheckTokenGenerator {
   /**
    * Checks if a given `AppCheckTokenOptions` object is valid. If successful, returns an object with
    * custom properties.
-   * 
+   *
    * @param options An options object to be validated.
    * @returns A custom object with ttl converted to protobuf Duration string format.
    */
@@ -134,7 +130,7 @@ export class AppCheckTokenGenerator {
           'invalid-argument',
           'ttlMillis must be a duration in milliseconds between 30 minutes and 7 days (inclusive).');
       }
-      return { ttl: transformMillisecondsToSecondsString(options.ttlMillis) }; 
+      return { ttl: transformMillisecondsToSecondsString(options.ttlMillis) };
     }
     return {};
   }
@@ -145,7 +141,7 @@ export class AppCheckTokenGenerator {
  * details from a CryptoSignerError.
  *
  * @param err The Error to convert into a FirebaseAppCheckError error
- * @return A Firebase App Check error that can be returned to the user.
+ * @returns A Firebase App Check error that can be returned to the user.
  */
 export function appCheckErrorFromCryptoSignerError(err: Error): Error {
   if (!(err instanceof CryptoSignerError)) {

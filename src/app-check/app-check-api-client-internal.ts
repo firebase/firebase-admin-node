@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-import { appCheck } from './index';
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse
 } from '../utils/api-request';
-import { FirebaseApp } from '../firebase-app';
 import { PrefixedFirebaseError } from '../utils/error';
-
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-
-import AppCheckToken = appCheck.AppCheckToken;
+import { AppCheckToken } from './app-check-api'
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}/apps/{appId}:exchangeCustomToken';
@@ -43,21 +41,21 @@ export class AppCheckApiClient {
   private readonly httpClient: HttpClient;
   private projectId?: string;
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseAppCheckError(
         'invalid-argument',
         'First argument passed to admin.appCheck() must be a valid Firebase app instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   /**
    * Exchange a signed custom token to App Check token
-   * 
+   *
    * @param customToken The custom token to be exchanged.
    * @param appId The mobile App ID.
-   * @return A promise that fulfills with a `AppCheckToken`.
+   * @returns A promise that fulfills with a `AppCheckToken`.
    */
   public exchangeToken(customToken: string, appId: string): Promise<AppCheckToken> {
     if (!validator.isNonEmptyString(appId)) {
@@ -143,7 +141,7 @@ export class AppCheckApiClient {
    * Creates an AppCheckToken from the API response.
    *
    * @param resp API response object.
-   * @return An AppCheckToken instance.
+   * @returns An AppCheckToken instance.
    */
   private toAppCheckToken(resp: HttpResponse): AppCheckToken {
     const token = resp.data.attestationToken;
@@ -161,10 +159,10 @@ export class AppCheckApiClient {
    *
    * @param duration The duration as a string with the suffix "s" preceded by the
    * number of seconds, with fractional seconds. For example, 3 seconds with 0 nanoseconds
-   * is expressed as "3s", while 3 seconds and 1 nanosecond is expressed as "3.000000001s", 
+   * is expressed as "3s", while 3 seconds and 1 nanosecond is expressed as "3.000000001s",
    * and 3 seconds and 1 microsecond is expressed as "3.000001s".
-   * 
-   * @return The duration in milliseconds.
+   *
+   * @returns The duration in milliseconds.
    */
   private stringToMilliseconds(duration: string): number {
     if (!validator.isNonEmptyString(duration) || !duration.endsWith('s')) {
@@ -211,8 +209,8 @@ export type AppCheckErrorCode =
 /**
  * Firebase App Check error code structure. This extends PrefixedFirebaseError.
  *
- * @param {AppCheckErrorCode} code The error code.
- * @param {string} message The error message.
+ * @param code The error code.
+ * @param message The error message.
  * @constructor
  */
 export class FirebaseAppCheckError extends PrefixedFirebaseError {

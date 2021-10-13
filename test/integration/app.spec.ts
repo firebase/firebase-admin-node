@@ -15,6 +15,8 @@
  */
 
 import * as admin from '../../lib/index';
+import { App, deleteApp, getApp, initializeApp } from '../../lib/app/index';
+import { getAuth } from '../../lib/auth/index';
 import { expect } from 'chai';
 import {
   defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket,
@@ -27,30 +29,56 @@ describe('admin', () => {
     expect(storageBucket).to.be.not.empty;
   });
 
-  it('does not load RTDB by default', () => {
-    const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
-    expect(firebaseRtdb).to.be.undefined;
-    const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
-    expect(rtdbInternal).to.be.undefined;
-  });
+  describe('Dependency lazy loading', () => {
+    const tempCache: {[key: string]: any} = {};
+    const dependencies = ['@firebase/database-compat/standalone', '@google-cloud/firestore'];
+    let lazyLoadingApp: App;
 
-  it('loads RTDB when calling admin.database', () => {
-    const rtdbNamespace = admin.database;
-    expect(rtdbNamespace).to.not.be.null;
-    const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
-    expect(firebaseRtdb).to.not.be.undefined;
-  });
+    before(() => {
+      // Unload dependencies if already loaded. Some of the other test files have imports
+      // to firebase-admin/database and firebase-admin/firestore, which cause the corresponding
+      // dependencies to get loaded before the tests are executed.
+      dependencies.forEach((name) => {
+        const resolvedName = require.resolve(name);
+        tempCache[name] = require.cache[resolvedName];
+        delete require.cache[resolvedName];
+      });
 
-  it('does not load Firestore by default', () => {
-    const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
-    expect(gcloud).to.be.undefined;
-  });
+      // Initialize the SDK
+      lazyLoadingApp = initializeApp(defaultApp.options, 'lazyLoadingApp');
+    });
 
-  it('loads Firestore when calling admin.firestore', () => {
-    const firestoreNamespace = admin.firestore;
-    expect(firestoreNamespace).to.not.be.null;
-    const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
-    expect(gcloud).to.not.be.undefined;
+    it('does not load RTDB by default', () => {
+      const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
+      expect(firebaseRtdb).to.be.undefined;
+    });
+
+    it('loads RTDB when calling admin.database', () => {
+      const rtdbNamespace = admin.database;
+      expect(rtdbNamespace).to.not.be.null;
+      const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
+      expect(firebaseRtdb).to.not.be.undefined;
+    });
+
+    it('does not load Firestore by default', () => {
+      const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+      expect(gcloud).to.be.undefined;
+    });
+
+    it('loads Firestore when calling admin.firestore', () => {
+      const firestoreNamespace = admin.firestore;
+      expect(firestoreNamespace).to.not.be.null;
+      const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+      expect(gcloud).to.not.be.undefined;
+    });
+
+    after(() => {
+      dependencies.forEach((name) => {
+        const resolvedName = require.resolve(name);
+        require.cache[resolvedName] = tempCache[name];
+      });
+      return deleteApp(lazyLoadingApp);
+    })
   });
 });
 
@@ -96,5 +124,44 @@ describe('admin.app', () => {
     expect(admin.database(app).app).to.deep.equal(app);
     expect(admin.messaging(app).app).to.deep.equal(app);
     expect(admin.storage(app).app).to.deep.equal(app);
+  });
+});
+
+describe('getApp', () => {
+  it('getApp() returns the default App', () => {
+    const app = getApp();
+    expect(app).to.deep.equal(defaultApp);
+    expect(app.name).to.equal('[DEFAULT]');
+    expect(app.options.databaseURL).to.equal(databaseUrl);
+    expect(app.options.databaseAuthVariableOverride).to.be.undefined;
+    expect(app.options.storageBucket).to.equal(storageBucket);
+  });
+
+  it('getApp("null") returns the App named "null"', () => {
+    const app = getApp('null');
+    expect(app).to.deep.equal(nullApp);
+    expect(app.name).to.equal('null');
+    expect(app.options.databaseURL).to.equal(databaseUrl);
+    expect(app.options.databaseAuthVariableOverride).to.be.null;
+    expect(app.options.storageBucket).to.equal(storageBucket);
+  });
+
+  it('getApp("nonNull") returns the App named "nonNull"', () => {
+    const app = getApp('nonNull');
+    expect(app).to.deep.equal(nonNullApp);
+    expect(app.name).to.equal('nonNull');
+    expect(app.options.databaseURL).to.equal(databaseUrl);
+    expect((app.options.databaseAuthVariableOverride as any).uid).to.be.ok;
+    expect(app.options.storageBucket).to.equal(storageBucket);
+  });
+
+  it('namespace services are attached to the default App', () => {
+    const app = getApp();
+    expect(getAuth(app).app).to.deep.equal(app);
+  });
+
+  it('namespace services are attached to the named App', () => {
+    const app = getApp('null');
+    expect(getAuth(app).app).to.deep.equal(app);
   });
 });

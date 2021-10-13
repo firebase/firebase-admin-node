@@ -25,8 +25,8 @@ import {
   toWebSafeBase64, formatString, generateUpdateMask, transformMillisecondsToSecondsString,
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
-import { FirebaseApp } from '../../../src/firebase-app';
-import { ComputeEngineCredential } from '../../../src/credential/credential-internal';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import { ComputeEngineCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';

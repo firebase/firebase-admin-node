@@ -86,7 +86,7 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 /**
  * Returns a mocked out success JWKS response.
  *
- * @return {Object} A nock response object.
+ * @returns A nock response object.
  */
 function mockFetchJsonWebKeys(path: string = jwksPath): nock.Scope {
   return nock('https://firebaseappcheck.googleapis.com')
@@ -98,7 +98,7 @@ function mockFetchJsonWebKeys(path: string = jwksPath): nock.Scope {
  * Returns a mocked out error response for JWKS.
  * The status code is 200 but the response itself will contain an 'error' key.
  *
- * @return {Object} A nock response object.
+ * @returns A nock response object.
  */
 function mockFetchJsonWebKeysWithErrorResponse(): nock.Scope {
   return nock('https://firebaseappcheck.googleapis.com')
@@ -113,7 +113,7 @@ function mockFetchJsonWebKeysWithErrorResponse(): nock.Scope {
  * Returns a mocked out failed JSON Web Keys response.
  * The status code is non-200 and the response itself will fail.
  *
- * @return {Object} A nock response object.
+ * @returns A nock response object.
  */
 function mockFailedFetchJsonWebKeys(): nock.Scope {
   return nock('https://firebaseappcheck.googleapis.com')
@@ -401,7 +401,7 @@ describe('PublicKeySignatureVerifier', () => {
         .should.eventually.be.rejectedWith('jwt must be provided');
     });
 
-    it('should be fullfilled given a valid token', () => {
+    it('should be fulfilled given a valid token', () => {
       const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .resolves(VALID_PUBLIC_KEYS_RESPONSE);
       stubs.push(keyFetcherStub);
@@ -410,7 +410,7 @@ describe('PublicKeySignatureVerifier', () => {
       return verifier.verify(mockIdToken).should.eventually.be.fulfilled;
     });
 
-    it('should be fullfilled given a valid token without a kid (should check against all the keys)', () => {
+    it('should be fulfilled given a valid token without a kid (should check against all the keys)', () => {
       const keyFetcherStub = sinon.stub(UrlKeyFetcher.prototype, 'fetchPublicKeys')
         .resolves({ 'kid-other': 'key-other', ...VALID_PUBLIC_KEYS_RESPONSE });
       stubs.push(keyFetcherStub);

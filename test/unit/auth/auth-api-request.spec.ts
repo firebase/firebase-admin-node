@@ -27,7 +27,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { deepCopy, deepExtend } from '../../../src/utils/deep-copy';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
@@ -43,18 +43,11 @@ import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-setting
 import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
 import { expectUserImportResult } from './user-import-builder.spec';
 import { getSdkVersion } from '../../../src/utils/index';
-import { auth } from '../../../src/auth/index';
-
-import UserImportRecord = auth.UserImportRecord;
-import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
-import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
-import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
-import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
-import UserIdentifier = auth.UserIdentifier;
-import UpdateRequest = auth.UpdateRequest;
-import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
-import CreateTenantRequest = auth.CreateTenantRequest;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
+import {
+  UserImportRecord, OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
+  SAMLUpdateAuthProviderRequest, UserIdentifier, UpdateRequest, UpdateMultiFactorInfoRequest,
+  CreateTenantRequest, UpdateTenantRequest,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);

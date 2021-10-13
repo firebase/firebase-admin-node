@@ -14,44 +14,82 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
-import * as _firestore from '@google-cloud/firestore';
+/**
+ * Cloud Firestore.
+ *
+ * @packageDocumentation
+ */
 
-export declare function firestore(app?: app.App): _firestore.Firestore;
+import { Firestore } from '@google-cloud/firestore';
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { FirestoreService } from './firestore-internal';
 
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace firestore {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import v1beta1 = _firestore.v1beta1;
-  export import v1 = _firestore.v1;
+export {
+  BulkWriter,
+  BulkWriterOptions,
+  CollectionGroup,
+  CollectionReference,
+  DocumentChangeType,
+  DocumentData,
+  DocumentReference,
+  DocumentSnapshot,
+  FieldPath,
+  FieldValue,
+  Firestore,
+  FirestoreDataConverter,
+  GeoPoint,
+  GrpcStatus,
+  Precondition,
+  Query,
+  QueryDocumentSnapshot,
+  QueryPartition,
+  QuerySnapshot,
+  ReadOptions,
+  Settings,
+  Timestamp,
+  Transaction,
+  UpdateData,
+  WriteBatch,
+  WriteResult,
+  v1,
+  setLogFunction,
+} from '@google-cloud/firestore';
 
-  export import BulkWriter = _firestore.BulkWriter;
-  export import BulkWriterOptions = _firestore.BulkWriterOptions;
-  export import CollectionGroup = _firestore.CollectionGroup;
-  export import CollectionReference = _firestore.CollectionReference;
-  export import DocumentChangeType = _firestore.DocumentChangeType;
-  export import DocumentData = _firestore.DocumentData;
-  export import DocumentReference = _firestore.DocumentReference;
-  export import DocumentSnapshot = _firestore.DocumentSnapshot;
-  export import FieldPath = _firestore.FieldPath;
-  export import FieldValue = _firestore.FieldValue;
-  export import Firestore = _firestore.Firestore;
-  export import FirestoreDataConverter = _firestore.FirestoreDataConverter;
-  export import GeoPoint = _firestore.GeoPoint;
-  export import GrpcStatus = _firestore.GrpcStatus;
-  export import Precondition = _firestore.Precondition;
-  export import Query = _firestore.Query;
-  export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
-  export import QueryPartition = _firestore.QueryPartition;
-  export import QuerySnapshot = _firestore.QuerySnapshot;
-  export import ReadOptions = _firestore.ReadOptions;
-  export import Settings = _firestore.Settings;
-  export import Timestamp = _firestore.Timestamp;
-  export import Transaction = _firestore.Transaction;
-  export import UpdateData = _firestore.UpdateData;
-  export import WriteBatch = _firestore.WriteBatch;
-  export import WriteResult = _firestore.WriteResult;
+/**
+ * Gets the {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the default app or a given app.
+ *
+ * `getFirestore()` can be called with no arguments to access the default
+ * app's `Firestore` service or as `getFirestore(app)` to access the
+ * `Firestore` service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for the default app
+ * const defaultFirestore = getFirestore();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a specific app
+ * const otherFirestore = getFirestore(app);
+ * ```
+ *
+ * @param App whose `Firestore` service to
+ *   return. If not provided, the default `Firestore` service will be returned.
+ *
+ * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ *   service if no app is provided or the `Firestore` service associated with the
+ *   provided app.
+ */
+export function getFirestore(app?: App): Firestore {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
 
-  export import setLogFunction = _firestore.setLogFunction;
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  const firestoreService = firebaseApp.getOrInitService(
+    'firestore', (app) => new FirestoreService(app));
+  return firestoreService.client;
 }

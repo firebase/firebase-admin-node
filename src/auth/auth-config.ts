@@ -17,15 +17,373 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { auth } from './index';
 
-import MultiFactorConfigInterface = auth.MultiFactorConfig;
-import MultiFactorConfigState = auth.MultiFactorConfigState;
-import AuthFactorType = auth.AuthFactorType;
-import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
-import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
-import OAuthResponseType = auth.OAuthResponseType;
-import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+/**
+ * Interface representing base properties of a user-enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface BaseCreateMultiFactorInfoRequest {
+
+  /**
+   * The optional display name for an enrolled second factor.
+   */
+  displayName?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
+  factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user-enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
+  phoneNumber: string;
+}
+
+/**
+ * Type representing the properties of a user-enrolled second factor
+ * for a `CreateRequest`.
+ */
+export type CreateMultiFactorInfoRequest = | CreatePhoneMultiFactorInfoRequest;
+
+/**
+ * Interface representing common properties of a user-enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface BaseUpdateMultiFactorInfoRequest {
+
+  /**
+   * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
+   * a new one is provisioned by the Auth server.
+   */
+  uid?: string;
+
+  /**
+   * The optional display name for an enrolled second factor.
+   */
+  displayName?: string;
+
+  /**
+   * The optional date the second factor was enrolled, formatted as a UTC string.
+   */
+  enrollmentTime?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
+  factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user-enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
+  phoneNumber: string;
+}
+
+/**
+ * Type representing the properties of a user-enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
+
+/**
+ * The multi-factor related user settings for create operations.
+ */
+export interface MultiFactorCreateSettings {
+
+  /**
+   * The created user's list of enrolled second factors.
+   */
+  enrolledFactors: CreateMultiFactorInfoRequest[];
+}
+
+/**
+ * The multi-factor related user settings for update operations.
+ */
+export interface MultiFactorUpdateSettings {
+
+  /**
+   * The updated list of enrolled second factors. The provided list overwrites the user's
+   * existing list of second factors.
+   * When null is passed, all of the user's existing second factors are removed.
+   */
+  enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
+}
+
+/**
+ * Interface representing the properties to update on the provided user.
+ */
+export interface UpdateRequest {
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled;
+   * `false` for enabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * The user's display name.
+   */
+  displayName?: string | null;
+
+  /**
+   * The user's primary email.
+   */
+  email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  emailVerified?: boolean;
+
+  /**
+   * The user's unhashed password.
+   */
+  password?: string;
+
+  /**
+   * The user's primary phone number.
+   */
+  phoneNumber?: string | null;
+
+  /**
+   * The user's photo URL.
+   */
+  photoURL?: string | null;
+
+  /**
+   * The user's updated multi-factor related properties.
+   */
+  multiFactor?: MultiFactorUpdateSettings;
+
+  /**
+   * Links this user to the specified provider.
+   *
+   * Linking a provider to an existing user account does not invalidate the
+   * refresh token of that account. In other words, the existing account
+   * would continue to be able to access resources, despite not having used
+   * the newly linked provider to log in. If you wish to force the user to
+   * authenticate with this new provider, you need to (a) revoke their
+   * refresh token (see
+   * https://firebase.google.com/docs/auth/admin/manage-sessions#revoke_refresh_tokens),
+   * and (b) ensure no other authentication methods are present on this
+   * account.
+   */
+  providerToLink?: UserProvider;
+
+  /**
+   * Unlinks this user from the specified providers.
+   */
+  providersToUnlink?: string[];
+}
+
+/**
+ * Represents a user identity provider that can be associated with a Firebase user.
+ */
+export interface UserProvider {
+
+  /**
+   * The user identifier for the linked provider.
+   */
+  uid?: string;
+
+  /**
+   * The display name for the linked provider.
+   */
+  displayName?: string;
+
+  /**
+   * The email for the linked provider.
+   */
+  email?: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
+  photoURL?: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
+  providerId?: string;
+}
+
+
+/**
+ * Interface representing the properties to set on a new user record to be
+ * created.
+ */
+export interface CreateRequest extends UpdateRequest {
+
+  /**
+   * The user's `uid`.
+   */
+  uid?: string;
+
+  /**
+   * The user's multi-factor related properties.
+   */
+  multiFactor?: MultiFactorCreateSettings;
+}
+
+/**
+ * The response interface for listing provider configs. This is only available
+ * when listing all identity providers' configurations via
+ * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ */
+export interface ListProviderConfigResults {
+
+  /**
+   * The list of providers for the specified type in the current page.
+   */
+  providerConfigs: AuthProviderConfig[];
+
+  /**
+   * The next page token, if available.
+   */
+  pageToken?: string;
+}
+
+/**
+ * The filter interface used for listing provider configurations. This is used
+ * when specifying how to list configured identity providers via
+ * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ */
+export interface AuthProviderConfigFilter {
+
+  /**
+   * The Auth provider configuration filter. This can be either `saml` or `oidc`.
+   * The former is used to look up SAML providers only, while the latter is used
+   * for OIDC providers.
+   */
+  type: 'saml' | 'oidc';
+
+  /**
+   * The maximum number of results to return per page. The default and maximum is
+   * 100.
+   */
+  maxResults?: number;
+
+  /**
+   * The next page token. When not specified, the lookup starts from the beginning
+   * of the list.
+   */
+  pageToken?: string;
+}
+
+/**
+ * The request interface for updating a SAML Auth provider. This is used
+ * when updating a SAML provider's configuration via
+ * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ */
+export interface SAMLUpdateAuthProviderRequest {
+
+  /**
+   * The SAML provider's updated display name. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the SAML provider is enabled or not. If not provided, the existing
+   * configuration's setting is not modified.
+   */
+  enabled?: boolean;
+
+  /**
+   * The SAML provider's updated IdP entity ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  idpEntityId?: string;
+
+  /**
+   * The SAML provider's updated SSO URL. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  ssoURL?: string;
+
+  /**
+   * The SAML provider's updated list of X.509 certificated. If not provided, the
+   * existing configuration list is not modified.
+   */
+  x509Certificates?: string[];
+
+  /**
+   * The SAML provider's updated RP entity ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  rpEntityId?: string;
+
+  /**
+   * The SAML provider's callback URL. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  callbackURL?: string;
+}
+
+/**
+ * The request interface for updating an OIDC Auth provider. This is used
+ * when updating an OIDC provider's configuration via
+ * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ */
+export interface OIDCUpdateAuthProviderRequest {
+
+  /**
+   * The OIDC provider's updated display name. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the OIDC provider is enabled or not. If not provided, the existing
+   * configuration's setting is not modified.
+   */
+  enabled?: boolean;
+
+  /**
+   * The OIDC provider's updated client ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  clientId?: string;
+
+  /**
+   * The OIDC provider's updated issuer. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  issuer?: string;
+
+  /**
+   * The OIDC provider's client secret to enable OIDC code flow.
+   * If not provided, the existing configuration's value is not modified.
+   */
+  clientSecret?: string;
+
+  /**
+   * The OIDC provider's response object for OAuth authorization flow.
+   */
+  responseType?: OAuthResponseType;
+}
+
+export type UpdateAuthProviderRequest =
+  SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
 /** A maximum of 10 test phone number / code pairs can be configured. */
 export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
@@ -123,10 +481,39 @@ export interface MultiFactorAuthServerConfig {
 }
 
 /**
+ * Identifies a second factor type.
+ */
+export type AuthFactorType = 'phone';
+
+/**
+ * Identifies a multi-factor configuration state.
+ */
+export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
+
+/**
+ * Interface representing a multi-factor configuration.
+ * This can be used to define whether multi-factor authentication is enabled
+ * or disabled and the list of second factor challenges that are supported.
+ */
+export interface MultiFactorConfig {
+  /**
+   * The multi-factor config state.
+   */
+  state: MultiFactorConfigState;
+
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
+  factorIds?: AuthFactorType[];
+}
+
+/**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
  */
-export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
+export class MultiFactorAuthConfig implements MultiFactorConfig {
+
   public readonly state: MultiFactorConfigState;
   public readonly factorIds: AuthFactorType[];
 
@@ -135,9 +522,10 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    * Throws an error if validation fails.
    *
    * @param options The options object to convert to a server request.
-   * @return The resulting server request.
+   * @returns The resulting server request.
+   * @internal
    */
-  public static buildServerRequest(options: MultiFactorConfigInterface): MultiFactorAuthServerConfig {
+  public static buildServerRequest(options: MultiFactorConfig): MultiFactorAuthServerConfig {
     const request: MultiFactorAuthServerConfig = {};
     MultiFactorAuthConfig.validate(options);
     if (Object.prototype.hasOwnProperty.call(options, 'state')) {
@@ -163,7 +551,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    *
    * @param options The options object to validate.
    */
-  private static validate(options: MultiFactorConfigInterface): void {
+  private static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
@@ -219,6 +607,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    * @param response The server side response used to initialize the
    *     MultiFactorAuthConfig object.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorAuthServerConfig) {
     if (typeof response.state === 'undefined') {
@@ -237,7 +626,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
     })
   }
 
-  /** @return The plain object representation of the multi-factor config instance. */
+  /** @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,
@@ -283,10 +672,28 @@ export function validateTestPhoneNumbers(
   }
 }
 
+/**
+ * The email sign in provider configuration.
+ */
+export interface EmailSignInProviderConfig {
+  /**
+   * Whether email provider is enabled.
+   */
+  enabled: boolean;
+
+  /**
+   * Whether password is required for email sign-in. When not required,
+   * email sign-in can be performed with password or via email link sign-in.
+   */
+  passwordRequired?: boolean; // In the backend API, default is true if not provided
+}
+
 
 /**
  * Defines the email sign-in config class used to convert client side EmailSignInConfig
  * to a format that is understood by the Auth server.
+ *
+ * @internal
  */
 export class EmailSignInConfig implements EmailSignInProviderConfig {
   public readonly enabled: boolean;
@@ -296,8 +703,9 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    * Static method to convert a client side request to a EmailSignInConfigServerRequest.
    * Throws an error if validation fails.
    *
-   * @param {any} options The options object to convert to a server request.
-   * @return {EmailSignInConfigServerRequest} The resulting server request.
+   * @param options The options object to convert to a server request.
+   * @returns The resulting server request.
+   * @internal
    */
   public static buildServerRequest(options: EmailSignInProviderConfig): EmailSignInConfigServerRequest {
     const request: EmailSignInConfigServerRequest = {};
@@ -314,7 +722,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * Validates the EmailSignInConfig options object. Throws an error on failure.
    *
-   * @param {any} options The options object to validate.
+   * @param options The options object to validate.
    */
   private static validate(options: EmailSignInProviderConfig): void {
     // TODO: Validate the request.
@@ -357,7 +765,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * The EmailSignInConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the
+   * @param response The server side response used to initialize the
    *     EmailSignInConfig object.
    * @constructor
    */
@@ -371,7 +779,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
     this.passwordRequired = !response.enableEmailLinkSignin;
   }
 
-  /** @return {object} The plain object representation of the email sign-in config. */
+  /** @returns The plain object representation of the email sign-in config. */
   public toJSON(): object {
     return {
       enabled: this.enabled,
@@ -380,10 +788,153 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   }
 }
 
+/**
+ * The base Auth provider configuration interface.
+ */
+export interface BaseAuthProviderConfig {
+
+  /**
+   * The provider ID defined by the developer.
+   * For a SAML provider, this is always prefixed by `saml.`.
+   * For an OIDC provider, this is always prefixed by `oidc.`.
+   */
+  providerId: string;
+
+  /**
+   * The user-friendly display name to the current configuration. This name is
+   * also used as the provider label in the Cloud Console.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the provider configuration is enabled or disabled. A user
+   * cannot sign in using a disabled provider.
+   */
+  enabled: boolean;
+}
+
+/**
+ * The
+ * [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)
+ * Auth provider configuration interface. A SAML provider can be created via
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
+
+  /**
+   * The SAML IdP entity identifier.
+   */
+  idpEntityId: string;
+
+  /**
+   * The SAML IdP SSO URL. This must be a valid URL.
+   */
+  ssoURL: string;
+
+  /**
+   * The list of SAML IdP X.509 certificates issued by CA for this provider.
+   * Multiple certificates are accepted to prevent outages during
+   * IdP key rotation (for example ADFS rotates every 10 days). When the Auth
+   * server receives a SAML response, it will match the SAML response with the
+   * certificate on record. Otherwise the response is rejected.
+   * Developers are expected to manage the certificate updates as keys are
+   * rotated.
+   */
+  x509Certificates: string[];
+
+  /**
+   * The SAML relying party (service provider) entity ID.
+   * This is defined by the developer but needs to be provided to the SAML IdP.
+   */
+  rpEntityId: string;
+
+  /**
+   * This is fixed and must always be the same as the OAuth redirect URL
+   * provisioned by Firebase Auth,
+   * `https://project-id.firebaseapp.com/__/auth/handler` unless a custom
+   * `authDomain` is used.
+   * The callback URL should also be provided to the SAML IdP during
+   * configuration.
+   */
+  callbackURL?: string;
+}
+
+/**
+ * The interface representing OIDC provider's response object for OAuth
+ * authorization flow.
+ * One of the following settings is required:
+ * <ul>
+ * <li>Set <code>code</code> to <code>true</code> for the code flow.</li>
+ * <li>Set <code>idToken</code> to <code>true</code> for the ID token flow.</li>
+ * </ul>
+ */
+export interface OAuthResponseType {
+  /**
+   * Whether ID token is returned from IdP's authorization endpoint.
+   */
+  idToken?: boolean;
+
+  /**
+   * Whether authorization code is returned from IdP's authorization endpoint.
+   */
+  code?: boolean;
+}
+
+/**
+ * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
+ * provider configuration interface. An OIDC provider can be created via
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
+
+  /**
+   * This is the required client ID used to confirm the audience of an OIDC
+   * provider's
+   * [ID token](https://openid.net/specs/openid-connect-core-1_0-final.html#IDToken).
+   */
+  clientId: string;
+
+  /**
+   * This is the required provider issuer used to match the provider issuer of
+   * the ID token and to determine the corresponding OIDC discovery document, eg.
+   * [`/.well-known/openid-configuration`](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig).
+   * This is needed for the following:
+   * <ul>
+   * <li>To verify the provided issuer.</li>
+   * <li>Determine the authentication/authorization endpoint during the OAuth
+   *     `id_token` authentication flow.</li>
+   * <li>To retrieve the public signing keys via `jwks_uri` to verify the OIDC
+   *     provider's ID token's signature.</li>
+   * <li>To determine the claims_supported to construct the user attributes to be
+   *     returned in the additional user info response.</li>
+   * </ul>
+   * ID token validation will be performed as defined in the
+   * [spec](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
+   */
+  issuer: string;
+
+  /**
+   * The OIDC provider's client secret to enable OIDC code flow.
+   */
+  clientSecret?: string;
+
+  /**
+   * The OIDC provider's response object for OAuth authorization flow.
+   */
+  responseType?: OAuthResponseType;
+}
+
+/**
+ * The Auth provider configuration type.
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
 
 /**
  * Defines the SAMLConfig class used to convert a client side configuration to its
  * server side representation.
+ *
+ * @internal
  */
 export class SAMLConfig implements SAMLAuthProviderConfig {
   public readonly enabled: boolean;
@@ -402,9 +953,9 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a SAMLConfig request,
    * returns null.
    *
-   * @param {SAMLAuthProviderRequest} options The options object to convert to a server request.
-   * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
-   * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
+   * @param options The options object to convert to a server request.
+   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
     options: Partial<SAMLAuthProviderConfig>,
@@ -446,8 +997,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name.
-   * @return {?string} The provider ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name.
+   * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/inboundSamlConfigs/providerId1
@@ -459,8 +1010,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   }
 
   /**
-   * @param {any} providerId The provider ID to check.
-   * @return {boolean} Whether the provider ID corresponds to a SAML provider.
+   * @param providerId The provider ID to check.
+   * @returns Whether the provider ID corresponds to a SAML provider.
    */
   public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('saml.') === 0;
@@ -469,8 +1020,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Validates the SAMLConfig options object. Throws an error on failure.
    *
-   * @param {SAMLAuthProviderRequest} options The options object to validate.
-   * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
+   * @param options The options object to validate.
+   * @param ignoreMissingFields Whether to ignore missing fields.
    */
   public static validate(options: Partial<SAMLAuthProviderConfig>, ignoreMissingFields = false): void {
     const validKeys = {
@@ -584,7 +1135,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * The SAMLConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the SAMLConfig object.
+   * @param response The server side response used to initialize the SAMLConfig object.
    * @constructor
    */
   constructor(response: SAMLConfigServerResponse) {
@@ -629,7 +1180,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     this.displayName = response.displayName;
   }
 
-  /** @return The plain object representation of the SAMLConfig. */
+  /** @returns The plain object representation of the SAMLConfig. */
   public toJSON(): object {
     return {
       enabled: this.enabled,
@@ -648,6 +1199,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
 /**
  * Defines the OIDCConfig class used to convert a client side configuration to its
  * server side representation.
+ *
+ * @internal
  */
 export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly enabled: boolean;
@@ -666,7 +1219,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    *
    * @param options The options object to convert to a server request.
    * @param ignoreMissingFields Whether to ignore missing fields.
-   * @return The resulting server request or null if not valid.
+   * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
     options: Partial<OIDCAuthProviderConfig>,
@@ -688,15 +1241,15 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     }
     if (typeof options.responseType !== 'undefined') {
       request.responseType = options.responseType;
-    } 
+    }
     return request;
   }
 
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The provider ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name
+   * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/oauthIdpConfigs/providerId1
@@ -708,8 +1261,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   }
 
   /**
-   * @param {any} providerId The provider ID to check.
-   * @return {boolean} Whether the provider ID corresponds to an OIDC provider.
+   * @param providerId The provider ID to check.
+   * @returns Whether the provider ID corresponds to an OIDC provider.
    */
   public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('oidc.') === 0;
@@ -805,18 +1358,17 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid OAuthResponseType parameter.`,
-          );          
+          );
         }
       });
-      
+
       const idToken = options.responseType.idToken;
-      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) { 
+      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
           '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
         );
       }
-      
       const code = options.responseType.code;
       if (typeof code !== 'undefined') {
         if (!validator.isBoolean(code)) {
@@ -825,16 +1377,15 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
             '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
           );
         }
-        
         // If code flow is enabled, client secret must be provided.
         if (code && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(
             AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
             'The OAuth configuration client secret is required to enable OIDC code flow.',
-          );          
+          );
         }
       }
-      
+
       const allKeys = Object.keys(options.responseType).length;
       const enabledCount = Object.values(options.responseType).filter(Boolean).length;
       // Only one of OAuth response types can be set to true.
@@ -850,7 +1401,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * The OIDCConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the OIDCConfig object.
+   * @param response The server side response used to initialize the OIDCConfig object.
    * @constructor
    */
   constructor(response: OIDCConfigServerResponse) {
@@ -887,7 +1438,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     }
   }
 
-  /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
+  /** @returns The plain object representation of the OIDCConfig. */
   public toJSON(): OIDCAuthProviderConfig {
     return {
       enabled: this.enabled,

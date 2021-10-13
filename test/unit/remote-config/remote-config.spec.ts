@@ -19,20 +19,21 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { RemoteConfig } from '../../../src/remote-config/remote-config';
-import { FirebaseApp } from '../../../src/firebase-app';
+import {
+  ParameterValueType,
+  RemoteConfig,
+  RemoteConfigTemplate,
+  RemoteConfigCondition,
+  TagColor,
+  ListVersionsResult,
+} from '../../../src/remote-config/index';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { remoteConfig } from '../../../src/remote-config/index';
 import {
   FirebaseRemoteConfigError,
   RemoteConfigApiClient
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
-
-import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
-import RemoteConfigCondition = remoteConfig.RemoteConfigCondition;
-import TagColor = remoteConfig.TagColor;
-import ListVersionsResult = remoteConfig.ListVersionsResult;
 
 const expect = chai.expect;
 
@@ -51,7 +52,7 @@ describe('RemoteConfig', () => {
             'android_en': { value: 'A Droid must love a pumpkin spice latte.' },
           },
           description: 'Description of the parameter.',
-          valueType: 'STRING' as remoteConfig.ParameterValueType,
+          valueType: 'STRING' as ParameterValueType,
         },
       },
     },

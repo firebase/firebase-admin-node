@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { getInstanceId } from '../../lib/instance-id/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -24,7 +24,7 @@ chai.use(chaiAsPromised);
 describe('admin.instanceId', () => {
   it('deleteInstanceId() fails when called with fictive-ID0 instance ID', () => {
     // instance ids have to conform to /[cdef][A-Za-z0-9_-]{9}[AEIMQUYcgkosw048]/
-    return admin.instanceId().deleteInstanceId('fictive-ID0')
+    return getInstanceId().deleteInstanceId('fictive-ID0')
       .should.eventually.be
       .rejectedWith('Installation ID "fictive-ID0": Failed to find the installation ID.');
   });

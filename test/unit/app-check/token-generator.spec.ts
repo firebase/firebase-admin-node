@@ -32,7 +32,7 @@ import {
 import {
   CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner
 } from '../../../src/utils/crypto-signer';
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
 import * as utils from '../utils';
 
@@ -43,7 +43,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const ALGORITHM = 'RS256';
-const FIVE_MIN_IN_SECONDS = 60 * 5;
+const FIVE_MIN_IN_SECONDS = 5 * 60;
 const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1beta.TokenExchangeService';
 
 /**

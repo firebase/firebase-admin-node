@@ -28,10 +28,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import { FirebaseApp, FirebaseAppInternals } from '../../src/firebase-app';
+import { FirebaseApp, FirebaseAppInternals } from '../../src/app/firebase-app';
 import {
   RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
-} from '../../src/credential/credential-internal';
+} from '../../src/app/credential-internal';
+import { defaultAppStore, initializeApp } from '../../src/app/lifecycle';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -54,12 +55,7 @@ describe('Firebase', () => {
   });
 
   afterEach(() => {
-    const deletePromises: Array<Promise<void>> = [];
-    firebaseAdmin.apps.forEach((app) => {
-      deletePromises.push(app.delete());
-    });
-
-    return Promise.all(deletePromises);
+    return defaultAppStore.clearAllApps();
   });
 
   describe('#initializeApp()', () => {
@@ -165,6 +161,23 @@ describe('Firebase', () => {
       return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
+
+    it('should initialize App instance with extended service methods', () => {
+      const app = firebaseAdmin.initializeApp(mocks.appOptions);
+      expect((app as any).__extended).to.be.true;
+      expect(app.auth).to.be.not.undefined;
+    });
+
+    it('should add extended service methods when retrieved via namespace', () => {
+      const app = initializeApp(mocks.appOptions);
+      expect((app as any).__extended).to.be.undefined;
+      expect((app as any).auth).to.be.undefined;
+
+      const extendedApp = firebaseAdmin.app();
+      expect(app).to.equal(extendedApp);
+      expect((app as any).__extended).to.be.true;
+      expect((app as any).auth).to.be.not.undefined;
+    });
   });
 
   describe('#database()', () => {
@@ -266,6 +279,6 @@ describe('Firebase', () => {
   });
 
   function getAppInternals(): FirebaseAppInternals {
-    return (firebaseAdmin.app() as FirebaseApp).INTERNAL;
+    return (firebaseAdmin.app() as unknown as FirebaseApp).INTERNAL;
   }
 });

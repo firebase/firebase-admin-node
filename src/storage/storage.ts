@@ -15,32 +15,29 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
 import { FirebaseError } from '../utils/error';
-import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
+import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { storage } from './index';
-
-import StorageInterface  = storage.Storage;
 
 /**
  * The default `Storage` service if no
  * app is provided or the `Storage` service associated with the provided
  * app.
  */
-export class Storage implements StorageInterface {
+export class Storage {
 
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly storageClient: StorageClient;
 
   /**
-   * @param {FirebaseApp} app The app for this Storage service.
+   * @param app The app for this Storage service.
    * @constructor
    * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
@@ -100,9 +97,11 @@ export class Storage implements StorageInterface {
   }
 
   /**
+   * Gets a reference to a Cloud Storage bucket.
+   *
    * @param name Optional name of the bucket to be retrieved. If name is not specified,
    * retrieves a reference to the default bucket.
-   * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
+   * @returns A {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket | Bucket}
    * instance as defined in the `@google-cloud/storage` package.
    */
   public bucket(name?: string): Bucket {
@@ -120,9 +119,10 @@ export class Storage implements StorageInterface {
   }
 
   /**
-   * @return The app associated with this Storage instance.
+   * Optional app whose `Storage` service to
+   * return. If not provided, the default `Storage` service will be returned.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 }

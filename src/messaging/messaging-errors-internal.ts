@@ -22,8 +22,8 @@ import * as validator from '../utils/validator';
  * Creates a new FirebaseMessagingError by extracting the error code, message and other relevant
  * details from an HTTP error response.
  *
- * @param {HttpError} err The HttpError to convert into a Firebase error
- * @return {FirebaseMessagingError} A Firebase error that can be returned to the user.
+ * @param err The HttpError to convert into a Firebase error
+ * @returns A Firebase error that can be returned to the user.
  */
 export function createFirebaseError(err: HttpError): FirebaseMessagingError {
   if (err.response.isJson()) {
@@ -62,8 +62,8 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
 }
 
 /**
- * @param {object} response The response to check for errors.
- * @return {string|null} The error code if present; null otherwise.
+ * @param response The response to check for errors.
+ * @returns The error code if present; null otherwise.
  */
 export function getErrorCode(response: any): string | null {
   if (validator.isNonNullObject(response) && 'error' in response) {
@@ -92,8 +92,8 @@ export function getErrorCode(response: any): string | null {
 /**
  * Extracts error message from the given response object.
  *
- * @param {object} response The response to check for errors.
- * @return {string|null} The error message if present; null otherwise.
+ * @param response The response to check for errors.
+ * @returns The error message if present; null otherwise.
  */
 function getErrorMessage(response: any): string | null {
   if (validator.isNonNullObject(response) &&

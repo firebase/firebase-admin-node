@@ -14,84 +14,113 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
-import { ServerValue as sv } from '@firebase/database-compat/standalone';
+/**
+ * Firebase Realtime Database.
+ *
+ * @packageDocumentation
+ */
+
 import * as rtdb from '@firebase/database-types';
+import {
+  enableLogging as enableLoggingFunc,
+  ServerValue as serverValueConst,
+} from '@firebase/database-compat/standalone';
+
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { Database, DatabaseService } from './database';
+
+export { Database };
+export {
+  DataSnapshot,
+  EventType,
+  OnDisconnect,
+  Query,
+  Reference,
+  ThenableReference,
+} from '@firebase/database-types';
+
+// TODO: Remove the following any-cast once the typins in @firebase/database-types are fixed.
 
 /**
- * Gets the {@link database.Database `Database`} service for the default
+ * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
+ * function from the `@firebase/database` package.
+ */
+export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc as any;
+
+/**
+ * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
+ * constant from the `@firebase/database` package.
+ */
+export const ServerValue: rtdb.ServerValue = serverValueConst;
+
+/**
+ * Gets the {@link Database} service for the default
  * app or a given app.
  *
- * `admin.database()` can be called with no arguments to access the default
- * app's {@link database.Database `Database`} service or as
- * `admin.database(app)` to access the
- * {@link database.Database `Database`} service associated with a specific
- * app.
- *
- * `admin.database` is also a namespace that can be used to access global
- * constants and methods associated with the `Database` service.
+ * `getDatabase()` can be called with no arguments to access the default
+ * app's `Database` service or as `getDatabase(app)` to access the
+ * `Database` service associated with a specific app.
  *
  * @example
  * ```javascript
  * // Get the Database service for the default app
- * var defaultDatabase = admin.database();
+ * const defaultDatabase = getDatabase();
  * ```
  *
  * @example
  * ```javascript
  * // Get the Database service for a specific app
- * var otherDatabase = admin.database(app);
+ * const otherDatabase = getDatabase(app);
  * ```
  *
  * @param App whose `Database` service to
  *   return. If not provided, the default `Database` service will be returned.
  *
- * @return The default `Database` service if no app
+ * @returns The default `Database` service if no app
  *   is provided or the `Database` service associated with the provided app.
  */
-export declare function database(app?: app.App): database.Database;
+export function getDatabase(app?: App): Database {
+  return getDatabaseInstance({ app });
+}
 
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace database {
-  export interface Database extends rtdb.FirebaseDatabase {
-    /**
-     * Gets the currently applied security rules as a string. The return value consists of
-     * the rules source including comments.
-     *
-     * @return A promise fulfilled with the rules as a raw string.
-     */
-    getRules(): Promise<string>;
+/**
+ * Gets the {@link Database} service for the default
+ * app or a given app.
+ *
+ * `getDatabaseWithUrl()` can be called with no arguments to access the default
+ * app's {@link Database} service or as `getDatabaseWithUrl(app)` to access the
+ * {@link Database} service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for the default app
+ * const defaultDatabase = getDatabaseWithUrl('https://example.firebaseio.com');
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for a specific app
+ * const otherDatabase = getDatabaseWithUrl('https://example.firebaseio.com', app);
+ * ```
+ *
+ * @param App whose `Database` service to
+ *   return. If not provided, the default `Database` service will be returned.
+ *
+ * @returns The default `Database` service if no app
+ *   is provided or the `Database` service associated with the provided app.
+ */
+export function getDatabaseWithUrl(url: string, app?: App): Database {
+  return getDatabaseInstance({ url, app });
+}
 
-    /**
-     * Gets the currently applied security rules as a parsed JSON object. Any comments in
-     * the original source are stripped away.
-     *
-     * @return A promise fulfilled with the parsed rules object.
-     */
-    getRulesJSON(): Promise<object>;
-
-    /**
-     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
-     * specified as a string or a Buffer, it may include comments.
-     *
-     * @param source Source of the rules to apply. Must not be `null` or empty.
-     * @return Resolves when the rules are set on the Realtime Database.
-     */
-    setRules(source: string | Buffer | object): Promise<void>;
+function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
+  let { app } = options;
+  if (typeof app === 'undefined') {
+    app = getApp();
   }
 
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  export import DataSnapshot = rtdb.DataSnapshot;
-  export import EventType = rtdb.EventType;
-  export import OnDisconnect = rtdb.OnDisconnect;
-  export import Query = rtdb.Query;
-  export import Reference = rtdb.Reference;
-  export import ThenableReference = rtdb.ThenableReference;
-  export import enableLogging = rtdb.enableLogging;
-
-  /**
-   * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
-   * module from the `@firebase/database` package.
-   */
-  export const ServerValue: rtdb.ServerValue = sv;
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  const dbService = firebaseApp.getOrInitService('database', (app) => new DatabaseService(app));
+  return dbService.getDatabase(options.url);
 }

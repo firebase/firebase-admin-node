@@ -15,8 +15,9 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
-import { ServiceAccountCredential } from '../credential/credential-internal';
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { ServiceAccountCredential } from '../app/credential-internal';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpClient, HttpError } from './api-request';
 
 import { Algorithm } from 'jsonwebtoken';
@@ -38,15 +39,15 @@ export interface CryptoSigner {
   /**
    * Cryptographically signs a buffer of data.
    *
-   * @param {Buffer} buffer The data to be signed.
-   * @return {Promise<Buffer>} A promise that resolves with the raw bytes of a signature.
+   * @param buffer The data to be signed.
+   * @returns A promise that resolves with the raw bytes of a signature.
    */
   sign(buffer: Buffer): Promise<Buffer>;
 
   /**
    * Returns the ID of the service account used to sign tokens.
    *
-   * @return {Promise<string>} A promise that resolves with a service account ID.
+   * @returns A promise that resolves with a service account ID.
    */
   getAccountId(): Promise<string>;
 }
@@ -62,7 +63,7 @@ export class ServiceAccountSigner implements CryptoSigner {
   /**
    * Creates a new CryptoSigner instance from the given service account credential.
    *
-   * @param {ServiceAccountCredential} credential A service account credential.
+   * @param credential A service account credential.
    */
   constructor(private readonly credential: ServiceAccountCredential) {
     if (!credential) {
@@ -187,16 +188,16 @@ export class IAMSigner implements CryptoSigner {
  * Creates a new CryptoSigner instance for the given app. If the app has been initialized with a
  * service account credential, creates a ServiceAccountSigner.
  *
- * @param {FirebaseApp} app A FirebaseApp instance.
- * @return {CryptoSigner} A CryptoSigner instance.
+ * @param app A FirebaseApp instance.
+ * @returns A CryptoSigner instance.
  */
-export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
+export function cryptoSignerFromApp(app: App): CryptoSigner {
   const credential = app.options.credential;
   if (credential instanceof ServiceAccountCredential) {
     return new ServiceAccountSigner(credential);
   }
 
-  return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
+  return new IAMSigner(new AuthorizedHttpClient(app as FirebaseApp), app.options.serviceAccountId);
 }
 
 /**
@@ -209,7 +210,7 @@ export interface ExtendedErrorInfo extends ErrorInfo {
 /**
  * CryptoSigner error code structure.
  *
- * @param {ErrorInfo} errorInfo The error information (code and message).
+ * @param errorInfo The error information (code and message).
  * @constructor
  */
 export class CryptoSignerError extends Error {
@@ -223,17 +224,17 @@ export class CryptoSignerError extends Error {
     (this as any).__proto__ = CryptoSignerError.prototype;
   }
 
-  /** @return {string} The error code. */
+  /** @returns The error code. */
   public get code(): string {
     return this.errorInfo.code;
   }
 
-  /** @return {string} The error message. */
+  /** @returns The error message. */
   public get message(): string {
     return this.errorInfo.message;
   }
 
-  /** @return {object} The error data. */
+  /** @returns The error data. */
   public get cause(): Error | undefined {
     return this.errorInfo.cause;
   }

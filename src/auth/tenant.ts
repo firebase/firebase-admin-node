@@ -17,14 +17,50 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
-  MultiFactorAuthConfig, validateTestPhoneNumbers,
+  MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
+  MultiFactorAuthConfig,
 } from './auth-config';
-import { auth } from './index';
 
-import TenantInterface = auth.Tenant;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
+/**
+ * Interface representing the properties to update on the provided tenant.
+ */
+export interface UpdateTenantRequest {
+
+  /**
+   * The tenant display name.
+   */
+  displayName?: string;
+
+  /**
+   * The email sign in configuration.
+   */
+  emailSignInConfig?: EmailSignInProviderConfig;
+
+  /**
+   * Whether the anonymous provider is enabled.
+   */
+  anonymousSignInEnabled?: boolean;
+
+  /**
+   * The multi-factor auth configuration to update on the tenant.
+   */
+  multiFactorConfig?: MultiFactorConfig;
+
+  /**
+   * The updated map containing the test phone number / code pairs for the tenant.
+   * Passing null clears the previously save phone number / code pairs.
+   */
+  testPhoneNumbers?: { [phoneNumber: string]: string } | null;
+}
+
+/**
+ * Interface representing the properties to set on a new tenant.
+ */
+export type CreateTenantRequest = UpdateTenantRequest;
+
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
@@ -46,22 +82,55 @@ export interface TenantServerResponse {
 }
 
 /**
- * Tenant class that defines a Firebase Auth tenant.
+ * Represents a tenant configuration.
+ *
+ * Multi-tenancy support requires Google Cloud's Identity Platform
+ * (GCIP). To learn more about GCIP, including pricing and features,
+ * see the {@link https://cloud.google.com/identity-platform | GCIP documentation}.
+ *
+ * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
+ * tenants must be allowed on that project via the Cloud Console UI.
+ *
+ * A tenant configuration provides information such as the display name, tenant
+ * identifier and email authentication configuration.
+ * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
+ * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+ * When configuring these providers, note that tenants will inherit
+ * whitelisted domains and authenticated redirect URIs of their parent project.
+ *
+ * All other settings of a tenant will also be inherited. These will need to be managed
+ * from the Cloud Console UI.
  */
-export class Tenant implements TenantInterface {
+export class Tenant {
+
+  /**
+   * The tenant identifier.
+   */
   public readonly tenantId: string;
+
+  /**
+   * The tenant display name.
+   */
   public readonly displayName?: string;
-  public readonly emailSignInConfig?: EmailSignInConfig;
+
   public readonly anonymousSignInEnabled: boolean;
-  public readonly multiFactorConfig?: MultiFactorAuthConfig;
+
+  /**
+   * The map containing the test phone number / code pairs for the tenant.
+   */
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
+
+  private readonly emailSignInConfig_?: EmailSignInConfig;
+  private readonly multiFactorConfig_?: MultiFactorAuthConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
-   * @param {TenantOptions} tenantOptions The properties to convert to a server request.
-   * @param {boolean} createRequest Whether this is a create request.
-   * @return {object} The equivalent server request.
+   * @param tenantOptions The properties to convert to a server request.
+   * @param createRequest Whether this is a create request.
+   * @returns The equivalent server request.
+   *
+   * @internal
    */
   public static buildServerRequest(
     tenantOptions: UpdateTenantRequest, createRequest: boolean): TenantOptionsServerRequest {
@@ -89,8 +158,10 @@ export class Tenant implements TenantInterface {
   /**
    * Returns the tenant ID corresponding to the resource name if available.
    *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The tenant ID corresponding to the resource, null otherwise.
+   * @param resourceName The server side resource name
+   * @returns The tenant ID corresponding to the resource, null otherwise.
+   *
+   * @internal
    */
   public static getTenantIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/tenants/tenant1
@@ -167,6 +238,7 @@ export class Tenant implements TenantInterface {
    *
    * @param response The server side response used to initialize the Tenant object.
    * @constructor
+   * @internal
    */
   constructor(response: TenantServerResponse) {
     const tenantId = Tenant.getTenantIdFromResourceName(response.name);
@@ -179,30 +251,48 @@ export class Tenant implements TenantInterface {
     this.tenantId = tenantId;
     this.displayName = response.displayName;
     try {
-      this.emailSignInConfig = new EmailSignInConfig(response);
+      this.emailSignInConfig_ = new EmailSignInConfig(response);
     } catch (e) {
       // If allowPasswordSignup is undefined, it is disabled by default.
-      this.emailSignInConfig = new EmailSignInConfig({
+      this.emailSignInConfig_ = new EmailSignInConfig({
         allowPasswordSignup: false,
       });
     }
     this.anonymousSignInEnabled = !!response.enableAnonymousUser;
     if (typeof response.mfaConfig !== 'undefined') {
-      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfaConfig);
     }
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
   }
 
-  /** @return {object} The plain object representation of the tenant. */
+  /**
+   * The email sign in provider configuration.
+   */
+  get emailSignInConfig(): EmailSignInProviderConfig | undefined {
+    return this.emailSignInConfig_;
+  }
+
+  /**
+   * The multi-factor auth configuration on the current tenant.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
+  }
+
+  /**
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig?.toJSON(),
+      emailSignInConfig: this.emailSignInConfig_?.toJSON(),
+      multiFactorConfig: this.multiFactorConfig_?.toJSON(),
       anonymousSignInEnabled: this.anonymousSignInEnabled,
-      multiFactorConfig: this.multiFactorConfig?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

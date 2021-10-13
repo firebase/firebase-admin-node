@@ -19,7 +19,8 @@ import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 const FIREBASE_VERSION_HEADER = {
@@ -59,7 +60,7 @@ export class SecurityRulesApiClient {
   private readonly httpClient: HttpClient;
   private projectIdPrefix?: string;
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseSecurityRulesError(
         'invalid-argument',
@@ -67,7 +68,7 @@ export class SecurityRulesApiClient {
           + 'instance.');
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   public getRuleset(name: string): Promise<RulesetResponse> {

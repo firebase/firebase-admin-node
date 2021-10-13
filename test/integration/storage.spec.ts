@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';
+import { getStorage } from '../../lib/storage/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -28,19 +28,19 @@ const expect = chai.expect;
 
 describe('admin.storage', () => {
   it('bucket() returns a handle to the default bucket', () => {
-    const bucket: Bucket = admin.storage().bucket();
+    const bucket: Bucket = getStorage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
       .should.eventually.be.fulfilled;
   });
 
   it('bucket(string) returns a handle to the specified bucket', () => {
-    const bucket: Bucket = admin.storage().bucket(projectId + '.appspot.com');
+    const bucket: Bucket = getStorage().bucket(projectId + '.appspot.com');
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
 
   it('bucket(non-existing) returns a handle which can be queried for existence', () => {
-    const bucket: Bucket = admin.storage().bucket('non.existing');
+    const bucket: Bucket = getStorage().bucket('non.existing');
     return bucket.exists()
       .then((data) => {
         expect(data[0]).to.be.false;

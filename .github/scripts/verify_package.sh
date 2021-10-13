@@ -53,7 +53,7 @@ trap cleanup EXIT
 
 # Copy package and test sources into working directory
 cp "${PKG_NAME}" "${WORK_DIR}"
-cp -r test/integration/typescript/* "${WORK_DIR}"
+cp -r test/integration/postcheck/* "${WORK_DIR}"
 cp test/resources/mock.key.json "${WORK_DIR}"
 
 # Enter work dir
@@ -68,6 +68,10 @@ npm install -S "${PKG_NAME}"
 echo "> tsc -p tsconfig.json"
 ./node_modules/.bin/tsc -p tsconfig.json
 
-MOCHA_CLI="./node_modules/.bin/mocha -r ts-node/register"
-echo "> $MOCHA_CLI src/*.test.ts"
-$MOCHA_CLI src/*.test.ts
+MOCHA_CLI="./node_modules/.bin/mocha"
+TS_MOCHA_CLI="${MOCHA_CLI} -r ts-node/register"
+echo "> $TS_MOCHA_CLI typescript/*.test.ts"
+$TS_MOCHA_CLI typescript/*.test.ts
+
+echo "> $MOCHA_CLI esm/*.js"
+$MOCHA_CLI esm/*.js

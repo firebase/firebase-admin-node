@@ -14,30 +14,29 @@
  * limitations under the License.
  */
 
-import { appCheck } from '.';
 import * as validator from '../utils/validator';
 import * as util from '../utils/index';
 import { FirebaseAppCheckError } from './app-check-api-client-internal';
-import { FirebaseApp } from '../firebase-app';
 import {
   ALGORITHM_RS256, DecodedToken, decodeJwt, JwtError,
   JwtErrorCode, PublicKeySignatureVerifier, SignatureVerifier
 } from '../utils/jwt';
 
-import DecodedAppCheckToken = appCheck.DecodedAppCheckToken;
+import { DecodedAppCheckToken } from './app-check-api'
+import { App } from '../app';
 
 const APP_CHECK_ISSUER = 'https://firebaseappcheck.googleapis.com/';
 const JWKS_URL = 'https://firebaseappcheck.googleapis.com/v1beta/jwks';
 
 /**
  * Class for verifying Firebase App Check tokens.
- * 
+ *
  * @internal
  */
 export class AppCheckTokenVerifier {
   private readonly signatureVerifier: SignatureVerifier;
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(JWKS_URL);
   }
 
@@ -45,7 +44,7 @@ export class AppCheckTokenVerifier {
    * Verifies the format and signature of a Firebase App Check token.
    *
    * @param token The Firebase Auth JWT token to verify.
-   * @return A promise fulfilled with the decoded claims of the Firebase App Check token.
+   * @returns A promise fulfilled with the decoded claims of the Firebase App Check token.
    */
   public verifyToken(token: string): Promise<DecodedAppCheckToken> {
     if (!validator.isString(token)) {
@@ -142,7 +141,7 @@ export class AppCheckTokenVerifier {
 
   /**
    * Maps JwtError to FirebaseAppCheckError
-   * 
+   *
    * @param error JwtError to be mapped.
    * @returns FirebaseAppCheckError instance.
    */

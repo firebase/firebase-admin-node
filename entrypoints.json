@@ -1,0 +1,59 @@
+{
+  "firebase-admin": {
+    "legacy": true,
+    "typings": "./lib/default-namespace.d.ts",
+    "dist": "./lib/index.js"
+  },
+  "firebase-admin/app": {
+    "typings": "./lib/app/index.d.ts",
+    "dist": "./lib/app/index.js"
+  },
+  "firebase-admin/app-check": {
+    "typings": "./lib/app-check/index.d.ts",
+    "dist": "./lib/app-check/index.js"
+  },
+  "firebase-admin/auth": {
+    "typings": "./lib/auth/index.d.ts",
+    "dist": "./lib/auth/index.js"
+  },
+  "firebase-admin/database": {
+    "typings": "./lib/database/index.d.ts",
+    "dist": "./lib/database/index.js"
+  },
+  "firebase-admin/firestore": {
+    "typings": "./lib/firestore/index.d.ts",
+    "dist": "./lib/firestore/index.js"
+  },
+  "firebase-admin/installations": {
+    "typings": "./lib/installations/index.d.ts",
+    "dist": "./lib/installations/index.js"
+  },
+  "firebase-admin/instance-id": {
+    "typings": "./lib/instance-id/index.d.ts",
+    "dist": "./lib/instance-id/index.js"
+  },
+  "firebase-admin/messaging": {
+    "typings": "./lib/messaging/index.d.ts",
+    "dist": "./lib/messaging/index.js"
+  },
+  "firebase-admin/machine-learning": {
+    "typings": "./lib/machine-learning/index.d.ts",
+    "dist": "./lib/machine-learning/index.js"
+  },
+  "firebase-admin/project-management": {
+    "typings": "./lib/project-management/index.d.ts",
+    "dist": "./lib/project-management/index.js"
+  },
+  "firebase-admin/security-rules": {
+    "typings": "./lib/security-rules/index.d.ts",
+    "dist": "./lib/security-rules/index.js"
+  },
+  "firebase-admin/storage": {
+    "typings": "./lib/storage/index.d.ts",
+    "dist": "./lib/storage/index.js"
+  },
+  "firebase-admin/remote-config": {
+    "typings": "./lib/remote-config/index.d.ts",
+    "dist": "./lib/remote-config/index.js"
+  }
+}

@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   AuthorizedHttpClient, HttpError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
 import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
+import { getSdkVersion } from '../utils/index';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
-import { getSdkVersion } from '../utils/index';
+
 
 /** Project management backend host and port. */
 const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
@@ -56,7 +58,7 @@ export function assertServerResponse(
  * Class that provides mechanism to send requests to the Firebase project management backend
  * endpoints.
  *
- * @private
+ * @internal
  */
 export class ProjectManagementRequestHandler {
   private readonly baseUrl: string =
@@ -112,15 +114,15 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the project whose Android
+   * @param parentResourceName Fully-qualified resource name of the project whose Android
    *     apps you want to list.
    */
   public listAndroidApps(parentResourceName: string): Promise<object> {
@@ -132,7 +134,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the project whose iOS apps
+   * @param parentResourceName Fully-qualified resource name of the project whose iOS apps
    *     you want to list.
    */
   public listIosApps(parentResourceName: string): Promise<object> {
@@ -144,7 +146,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the project whose iOS apps
+   * @param parentResourceName Fully-qualified resource name of the project whose iOS apps
    *     you want to list.
    */
   public listAppMetadata(parentResourceName: string): Promise<object> {
@@ -156,7 +158,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the project that you want
+   * @param parentResourceName Fully-qualified resource name of the project that you want
    *     to create the Android app within.
    */
   public createAndroidApp(
@@ -183,7 +185,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the project that you want
+   * @param parentResourceName Fully-qualified resource name of the project that you want
    *     to create the iOS app within.
    */
   public createIosApp(
@@ -210,7 +212,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} resourceName Fully-qualified resource name of the entity whose display name you
+   * @param resourceName Fully-qualified resource name of the entity whose display name you
    *     want to set.
    */
   public setDisplayName(resourceName: string, newDisplayName: string): Promise<void> {
@@ -224,7 +226,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the Android app whose SHA
+   * @param parentResourceName Fully-qualified resource name of the Android app whose SHA
    *     certificates you want to get.
    */
   public getAndroidShaCertificates(parentResourceName: string): Promise<object> {
@@ -233,7 +235,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the Android app that you
+   * @param parentResourceName Fully-qualified resource name of the Android app that you
    *     want to add the given SHA certificate to.
    */
   public addAndroidShaCertificate(
@@ -248,7 +250,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the app whose config you
+   * @param parentResourceName Fully-qualified resource name of the app whose config you
    *     want to get.
    */
   public getConfig(parentResourceName: string): Promise<object> {
@@ -257,7 +259,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} parentResourceName Fully-qualified resource name of the entity that you want to
+   * @param parentResourceName Fully-qualified resource name of the entity that you want to
    *     get.
    */
   public getResource(parentResourceName: string): Promise<object> {
@@ -265,7 +267,7 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {string} resourceName Fully-qualified resource name of the entity that you want to
+   * @param resourceName Fully-qualified resource name of the entity that you want to
    *     delete.
    */
   public deleteResource(resourceName: string): Promise<void> {

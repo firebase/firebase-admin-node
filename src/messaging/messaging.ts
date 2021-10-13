@@ -15,31 +15,32 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
-import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
-import { messaging } from './index';
-import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
+import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 
-import MessagingInterface = messaging.Messaging;
-import Message = messaging.Message;
-import BatchResponse = messaging.BatchResponse;
-import MulticastMessage = messaging.MulticastMessage;
-import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
+import {
+  BatchResponse,
+  Message,
+  MessagingTopicManagementResponse,
+  MulticastMessage,
 
-// Legacy API types
-import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
-import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse;
-import MessagingPayload = messaging.MessagingPayload;
-import MessagingOptions = messaging.MessagingOptions;
-import MessagingTopicResponse = messaging.MessagingTopicResponse;
-import MessagingConditionResponse = messaging.MessagingConditionResponse;
-import DataMessagePayload = messaging.DataMessagePayload;
-import NotificationMessagePayload = messaging.NotificationMessagePayload;
+  // Legacy API types
+  MessagingDevicesResponse,
+  MessagingDeviceGroupResponse,
+  MessagingPayload,
+  MessagingOptions,
+  MessagingTopicResponse,
+  MessagingConditionResponse,
+  DataMessagePayload,
+  NotificationMessagePayload,
+} from './messaging-api';
+
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -106,9 +107,9 @@ const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.
  *
- * @param {object} response The raw FCM server response to map.
+ * @param response The raw FCM server response to map.
  *
- * @return {MessagingDeviceGroupResponse} The mapped MessagingDevicesResponse object.
+ * @returns The mapped MessagingDevicesResponse object.
  */
 function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResponse {
   // Rename properties on the server response
@@ -133,9 +134,9 @@ function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResp
 /**
  * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
  *
- * @param {object} response The raw FCM server response to map.
+ * @param response The raw FCM server response to map.
  *
- * @return {MessagingDeviceGroupResponse} The mapped MessagingDeviceGroupResponse object.
+ * @returns The mapped MessagingDeviceGroupResponse object.
  */
 function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceGroupResponse {
   // Rename properties on the server response
@@ -153,7 +154,7 @@ function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceG
  *
  * @param {object} response The raw FCM server response to map.
  *
- * @return {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
+ * @returns {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
  */
 function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
@@ -188,26 +189,16 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 /**
  * Messaging service bound to the provided app.
  */
-export class Messaging implements MessagingInterface {
+export class Messaging {
 
   private urlPath: string;
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * Gets the {@link messaging.Messaging `Messaging`} service for the
-   * current app.
-   *
-   * @example
-   * ```javascript
-   * var messaging = app.messaging();
-   * // The above is shorthand for:
-   * // var messaging = admin.messaging(app);
-   * ```
-   *
-   * @return The `Messaging` service for the current app.
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
@@ -220,11 +211,15 @@ export class Messaging implements MessagingInterface {
   }
 
   /**
-   * Returns the app associated with this Messaging instance.
+   * The {@link firebase-admin.app#App} associated with the current `Messaging` service
+   * instance.
    *
-   * @return {FirebaseApp} The app associated with this Messaging instance.
+   * @example
+   * ```javascript
+   * var app = messaging.app;
+   * ```
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 
@@ -234,7 +229,7 @@ export class Messaging implements MessagingInterface {
    * @param message The message payload.
    * @param dryRun Whether to send the message in the dry-run
    *   (validation only) mode.
-   * @return A promise fulfilled with a unique message ID
+   * @returns A promise fulfilled with a unique message ID
    *   string after the message has been successfully handed off to the FCM
    *   service for delivery.
    */
@@ -274,7 +269,7 @@ export class Messaging implements MessagingInterface {
    *   containing up to 500 messages.
    * @param dryRun Whether to send the messages in the dry-run
    *   (validation only) mode.
-   * @return A Promise fulfilled with an object representing the result of the
+   * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
   public sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
@@ -332,7 +327,7 @@ export class Messaging implements MessagingInterface {
    *   containing up to 500 tokens.
    * @param dryRun Whether to send the message in the dry-run
    *   (validation only) mode.
-   * @return A Promise fulfilled with an object representing the result of the
+   * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
   public sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
@@ -369,8 +364,8 @@ export class Messaging implements MessagingInterface {
    * Sends an FCM message to a single device corresponding to the provided
    * registration token.
    *
-   * See
-   * [Send to individual devices](/docs/cloud-messaging/admin/legacy-fcm#send_to_individual_devices)
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_individual_devices |
+   * Send to individual devices}
    * for code samples and detailed documentation. Takes either a
    * `registrationToken` to send to a single device or a
    * `registrationTokens` parameter containing an array of tokens to send
@@ -382,7 +377,7 @@ export class Messaging implements MessagingInterface {
    * @param options Optional options to
    *   alter the message.
    *
-   * @return A promise fulfilled with the server's response after the message
+   * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
    */
   public sendToDevice(
@@ -442,9 +437,8 @@ export class Messaging implements MessagingInterface {
    * Sends an FCM message to a device group corresponding to the provided
    * notification key.
    *
-   * See
-   * [Send to a device group](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group)
-   * for code samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group |
+   * Send to a device group} for code samples and detailed documentation.
    *
    * @param notificationKey The notification key for the device group to
    *   which to send the message.
@@ -452,7 +446,7 @@ export class Messaging implements MessagingInterface {
    * @param options Optional options to
    *   alter the message.
    *
-   * @return A promise fulfilled with the server's response after the message
+   * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
    */
   public sendToDeviceGroup(
@@ -526,16 +520,15 @@ export class Messaging implements MessagingInterface {
   /**
    * Sends an FCM message to a topic.
    *
-   * See
-   * [Send to a topic](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic)
-   * for code samples and detailed documentation.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic |
+   * Send to a topic} for code samples and detailed documentation.
    *
    * @param topic The topic to which to send the message.
    * @param payload The message payload.
    * @param options Optional options to
    *   alter the message.
    *
-   * @return A promise fulfilled with the server's response after the message
+   * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
    */
   public sendToTopic(
@@ -576,8 +569,8 @@ export class Messaging implements MessagingInterface {
   /**
    * Sends an FCM message to a condition.
    *
-   * See
-   * [Send to a condition](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_condition)
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_condition |
+   * Send to a condition}
    * for code samples and detailed documentation.
    *
    * @param condition The condition determining to which topics to send
@@ -586,7 +579,7 @@ export class Messaging implements MessagingInterface {
    * @param options Optional options to
    *   alter the message.
    *
-   * @return A promise fulfilled with the server's response after the message
+   * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
    */
   public sendToCondition(
@@ -634,8 +627,8 @@ export class Messaging implements MessagingInterface {
   /**
    * Subscribes a device to an FCM topic.
    *
-   * See [Subscribe to a
-   * topic](/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the)
+   * See {@link https://firebase.google.com/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the |
+   * Subscribe to a topic}
    * for code samples and detailed documentation. Optionally, you can provide an
    * array of tokens to subscribe multiple devices.
    *
@@ -643,7 +636,7 @@ export class Messaging implements MessagingInterface {
    *   for the devices to subscribe to the topic.
    * @param topic The topic to which to subscribe.
    *
-   * @return A promise fulfilled with the server's response after the device has been
+   * @returns A promise fulfilled with the server's response after the device has been
    *   subscribed to the topic.
    */
   public subscribeToTopic(
@@ -661,8 +654,8 @@ export class Messaging implements MessagingInterface {
   /**
    * Unsubscribes a device from an FCM topic.
    *
-   * See [Unsubscribe from a
-   * topic](/docs/cloud-messaging/admin/manage-topic-subscriptions#unsubscribe_from_a_topic)
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/manage-topic-subscriptions#unsubscribe_from_a_topic |
+   * Unsubscribe from a topic}
    * for code samples and detailed documentation.  Optionally, you can provide an
    * array of tokens to unsubscribe multiple devices.
    *
@@ -670,7 +663,7 @@ export class Messaging implements MessagingInterface {
    *   device registration tokens to unsubscribe from the topic.
    * @param topic The topic from which to unsubscribe.
    *
-   * @return A promise fulfilled with the server's response after the device has been
+   * @returns A promise fulfilled with the server's response after the device has been
    *   unsubscribed from the topic.
    */
   public unsubscribeFromTopic(
@@ -710,13 +703,13 @@ export class Messaging implements MessagingInterface {
   /**
    * Helper method which sends and handles topic subscription management requests.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens The registration token or an array of
    *     registration tokens to unsubscribe from the topic.
-   * @param {string} topic The topic to which to subscribe.
-   * @param {string} methodName The name of the original method called.
-   * @param {string} path The endpoint path to use for the request.
+   * @param topic The topic to which to subscribe.
+   * @param methodName The name of the original method called.
+   * @param path The endpoint path to use for the request.
    *
-   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed server
+   * @returns A Promise fulfilled with the parsed server
    *   response.
    */
   private sendTopicManagementRequest(
@@ -761,8 +754,8 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the types of the messaging payload and options. If invalid, an error will be thrown.
    *
-   * @param {MessagingPayload} payload The messaging payload to validate.
-   * @param {MessagingOptions} options The messaging options to validate.
+   * @param payload The messaging payload to validate.
+   * @param options The messaging options to validate.
    */
   private validateMessagingPayloadAndOptionsTypes(
     payload: MessagingPayload,
@@ -788,9 +781,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the messaging payload. If invalid, an error will be thrown.
    *
-   * @param {MessagingPayload} payload The messaging payload to validate.
+   * @param payload The messaging payload to validate.
    *
-   * @return {MessagingPayload} A copy of the provided payload with whitelisted properties switched
+   * @returns A copy of the provided payload with whitelisted properties switched
    *     from camelCase to underscore_case.
    */
   private validateMessagingPayload(payload: MessagingPayload): MessagingPayload {
@@ -879,9 +872,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the messaging options. If invalid, an error will be thrown.
    *
-   * @param {MessagingOptions} options The messaging options to validate.
+   * @param options The messaging options to validate.
    *
-   * @return {MessagingOptions} A copy of the provided options with whitelisted properties switched
+   * @returns A copy of the provided options with whitelisted properties switched
    *   from camelCase to underscore_case.
    */
   private validateMessagingOptions(options: MessagingOptions): MessagingOptions {
@@ -958,9 +951,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the type of the provided registration token(s). If invalid, an error will be thrown.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token(s) to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the registration tokens are invalid.
+   * @param registrationTokenOrTokens The registration token(s) to validate.
+   * @param method The method name to use in error messages.
+   * @param errorInfo The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string | string[],
@@ -980,10 +973,10 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the provided registration tokens. If invalid, an error will be thrown.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens The registration token or an array of
    *     registration tokens to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {errorInfo?} [ErrorInfo] The error info to use if the registration tokens are invalid.
+   * @param method The method name to use in error messages.
+   * @param errorInfo The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokens(
     registrationTokenOrTokens: string | string[],
@@ -1016,9 +1009,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the type of the provided topic. If invalid, an error will be thrown.
    *
-   * @param {string} topic The topic to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   * @param topic The topic to validate.
+   * @param method The method name to use in error messages.
+   * @param errorInfo The error info to use if the topic is invalid.
    */
   private validateTopicType(
     topic: string | string[],
@@ -1037,9 +1030,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Validates the provided topic. If invalid, an error will be thrown.
    *
-   * @param {string} topic The topic to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   * @param topic The topic to validate.
+   * @param method The method name to use in error messages.
+   * @param errorInfo The error info to use if the topic is invalid.
    */
   private validateTopic(
     topic: string,
@@ -1058,9 +1051,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Normalizes the provided topic name by prepending it with '/topics/', if necessary.
    *
-   * @param {string} topic The topic name to normalize.
+   * @param topic The topic name to normalize.
    *
-   * @return {string} The normalized topic name.
+   * @returns The normalized topic name.
    */
   private normalizeTopic(topic: string): string {
     if (!/^\/topics\//.test(topic)) {

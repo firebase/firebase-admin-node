@@ -1,0 +1,19 @@
+{
+  "name": "firebase-admin-postcheck",
+  "version": "1.0.0",
+  "description": "Firebase Admin SDK post package test cases",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/firebase/firebase-admin-node"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.0",
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^10.10.0",
+    "chai": "^4.2.0",
+    "mocha": "^8.0.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^3.7.3"
+  }
+}

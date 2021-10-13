@@ -14,19 +14,64 @@
  * limitations under the License.
  */
 
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, ExponentialBackoffPoller
 } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseApp } from '../firebase-app';
-import { machineLearning } from './index';
+import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 
-import GcsTfliteModelOptions = machineLearning.GcsTfliteModelOptions;
-import ListModelsOptions = machineLearning.ListModelsOptions;
-import ModelOptions = machineLearning.ModelOptions;
+/**
+ * Firebase ML Model input objects
+ */
+export interface ModelOptionsBase {
+  displayName?: string;
+  tags?: string[];
+}
+
+export interface GcsTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    gcsTfliteUri: string;
+  };
+}
+
+export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    automlModel: string;
+  };
+}
+
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+
+/**
+ * Interface representing options for listing Models.
+ */
+export interface ListModelsOptions {
+  /**
+   * An expression that specifies how to filter the results.
+   *
+   * Examples:
+   *
+   * ```
+   * display_name = your_model
+   * display_name : experimental_*
+   * tags: face_detector AND tags: experimental
+   * state.published = true
+   * ```
+   *
+   * See https://firebase.google.com/docs/ml/manage-hosted-models#list_your_projects_models
+   */
+  filter?: string;
+
+  /** The number of results to return in each page. */
+  pageSize?: number;
+
+  /** A token that specifies the result page to return. */
+  pageToken?: string;
+}
 
 const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
@@ -92,13 +137,14 @@ export interface OperationResponse {
 /**
  * Class that facilitates sending requests to the Firebase ML backend API.
  *
- * @private
+ * @internal
  */
 export class MachineLearningApiClient {
+
   private readonly httpClient: HttpClient;
   private projectIdPrefix?: string;
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMachineLearningError(
         'invalid-argument',
@@ -106,7 +152,7 @@ export class MachineLearningApiClient {
           + 'Firebase app instance.');
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   public createModel(model: ModelOptions): Promise<OperationResponse> {

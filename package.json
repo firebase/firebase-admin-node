@@ -6,12 +6,12 @@
   "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "engines": {
-    "node": ">=10.13.0"
+    "node": ">=12.7.0"
   },
   "scripts": {
     "build": "gulp build",
     "build:tests": "gulp compile_test",
-    "prepare": "npm run build",
+    "prepare": "npm run build && npm run esm-wrap",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
@@ -20,9 +20,14 @@
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
-    "apidocs": "node docgen/generate-docs.js --api node",
-    "api-extractor": "api-extractor run",
-    "api-extractor:local": "api-extractor run --local"
+    "apidocs": "run-s api-extractor:local api-documenter",
+    "api-extractor": "node generate-reports.js",
+    "api-extractor:local": "npm run build && node generate-reports.js --local",
+    "esm-wrap": "node generate-esm-wrapper.js",
+    "api-documenter": "run-s api-documenter:markdown api-documenter:toc api-documenter:post",
+    "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s",
+    "api-documenter:toc": "api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s",
+    "api-documenter:post": "node docgen/post-process.js"
   },
   "nyc": {
     "extension": [
@@ -55,6 +60,104 @@
     "package.json"
   ],
   "types": "./lib/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "app": [
+        "lib/app"
+      ],
+      "app-check": [
+        "lib/app-check"
+      ],
+      "auth": [
+        "lib/auth"
+      ],
+      "database": [
+        "lib/database"
+      ],
+      "firestore": [
+        "lib/firestore"
+      ],
+      "installations": [
+        "lib/installations"
+      ],
+      "instance-id": [
+        "lib/instance-id"
+      ],
+      "machine-learning": [
+        "lib/machine-learning"
+      ],
+      "messaging": [
+        "lib/messaging"
+      ],
+      "project-management": [
+        "lib/project-management"
+      ],
+      "remote-config": [
+        "lib/remote-config"
+      ],
+      "security-rules": [
+        "lib/security-rules"
+      ],
+      "storage": [
+        "lib/storage"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./app": {
+      "require": "./lib/app/index.js",
+      "import": "./lib/esm/app/index.js"
+    },
+    "./app-check": {
+      "require": "./lib/app-check/index.js",
+      "import": "./lib/esm/app-check/index.js"
+    },
+    "./auth": {
+      "require": "./lib/auth/index.js",
+      "import": "./lib/esm/auth/index.js"
+    },
+    "./database": {
+      "require": "./lib/database/index.js",
+      "import": "./lib/esm/database/index.js"
+    },
+    "./firestore": {
+      "require": "./lib/firestore/index.js",
+      "import": "./lib/esm/firestore/index.js"
+    },
+    "./installations": {
+      "require": "./lib/installations/index.js",
+      "import": "./lib/esm/installations/index.js"
+    },
+    "./instance-id": {
+      "require": "./lib/instance-id/index.js",
+      "import": "./lib/esm/instance-id/index.js"
+    },
+    "./machine-learning": {
+      "require": "./lib/machine-learning/index.js",
+      "import": "./lib/esm/machine-learning/index.js"
+    },
+    "./messaging": {
+      "require": "./lib/messaging/index.js",
+      "import": "./lib/esm/messaging/index.js"
+    },
+    "./project-management": {
+      "require": "./lib/project-management/index.js",
+      "import": "./lib/esm/project-management/index.js"
+    },
+    "./remote-config": {
+      "require": "./lib/remote-config/index.js",
+      "import": "./lib/esm/remote-config/index.js"
+    },
+    "./security-rules": {
+      "require": "./lib/security-rules/index.js",
+      "import": "./lib/esm/security-rules/index.js"
+    },
+    "./storage": {
+      "require": "./lib/storage/index.js",
+      "import": "./lib/esm/storage/index.js"
+    }
+  },
   "dependencies": {
     "@firebase/database-compat": "^0.1.1",
     "@firebase/database-types": "^0.7.2",
@@ -69,6 +172,7 @@
     "@google-cloud/storage": "^5.3.0"
   },
   "devDependencies": {
+    "@firebase/api-documenter": "^0.1.2",
     "@firebase/app-compat": "^0.1.2",
     "@firebase/auth-compat": "^0.1.3",
     "@firebase/auth-types": "^0.10.3",
@@ -101,7 +205,6 @@
     "gulp-header": "^2.0.9",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
-    "jsdom": "^15.0.0",
     "lodash": "^4.17.15",
     "minimist": "^1.2.0",
     "mocha": "^8.0.0",
@@ -115,7 +218,6 @@
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typedoc": "^0.19.2",
     "typescript": "^3.7.3",
     "yargs": "^17.0.1"
   }

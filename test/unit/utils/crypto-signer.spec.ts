@@ -25,9 +25,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { ServiceAccountSigner, IAMSigner, CryptoSignerError } from '../../../src/utils/crypto-signer';
 
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as utils from '../utils';
 
 chai.should();

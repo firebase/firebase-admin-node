@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import { Installations } from '../../../src/installations/installations';
 import { FirebaseInstallationsRequestHandler } from '../../../src/installations/installations-request-handler';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../../../src/utils/error';
 
 chai.should();

@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-import { app as _app } from '../firebase-namespace-api';
+import { App } from '../app/index';
 import {
   ServiceAccountCredential, ComputeEngineCredential
-} from '../credential/credential-internal';
+} from '../app/credential-internal';
 import * as validator from './validator';
 
 let sdkVersion: string;
 
+// TODO: Move to firebase-admin/app as an internal member.
 export function getSdkVersion(): string {
   if (!sdkVersion) {
     const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -36,8 +37,8 @@ export function getSdkVersion(): string {
  *
  * For example, this can be used to map underscore_cased properties to camelCase.
  *
- * @param {object} obj The object whose properties to rename.
- * @param {object} keyMap The mapping from old to new property names.
+ * @param obj The object whose properties to rename.
+ * @param keyMap The mapping from old to new property names.
  */
 export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
@@ -53,9 +54,9 @@ export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: stri
 /**
  * Defines a new read-only property directly on an object and returns the object.
  *
- * @param {object} obj The object on which to define the property.
- * @param {string} prop The name of the property to be defined or modified.
- * @param {any} value The value associated with the property.
+ * @param obj The object on which to define the property.
+ * @param prop The name of the property to be defined or modified.
+ * @param value The value associated with the property.
  */
 export function addReadonlyGetter(obj: object, prop: string, value: any): void {
   Object.defineProperty(obj, prop, {
@@ -74,9 +75,9 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  *
  * @param app A Firebase app to get the project ID from.
  *
- * @return A project ID string or null.
+ * @returns A project ID string or null.
  */
-export function getExplicitProjectId(app: _app.App): string | null {
+export function getExplicitProjectId(app: App): string | null {
   const options = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
@@ -103,9 +104,9 @@ export function getExplicitProjectId(app: _app.App): string | null {
  *
  * @param app A Firebase app to get the project ID from.
  *
- * @return A project ID string or null.
+ * @returns A project ID string or null.
  */
-export function findProjectId(app: _app.App): Promise<string | null> {
+export function findProjectId(app: App): Promise<string | null> {
   const projectId = getExplicitProjectId(app);
   if (projectId) {
     return Promise.resolve(projectId);
@@ -122,8 +123,8 @@ export function findProjectId(app: _app.App): Promise<string | null> {
 /**
  * Encodes data using web-safe-base64.
  *
- * @param {Buffer} data The raw data byte input.
- * @return {string} The base64-encoded result.
+ * @param data The raw data byte input.
+ * @returns The base64-encoded result.
  */
 export function toWebSafeBase64(data: Buffer): string {
   return data.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
@@ -134,11 +135,11 @@ export function toWebSafeBase64(data: Buffer): string {
  * with corresponding arguments {projectId: '1234', api: 'resource'}
  * and returns output: 'project/1234/resource'.
  *
- * @param {string} str The original string where the param need to be
+ * @param str The original string where the param need to be
  *     replaced.
- * @param {object=} params The optional parameters to replace in the
+ * @param params The optional parameters to replace in the
  *     string.
- * @return {string} The resulting formatted string.
+ * @returns The resulting formatted string.
  */
 export function formatString(str: string, params?: object): string {
   let formatted = str;
@@ -159,7 +160,7 @@ export function formatString(str: string, params?: object): string {
  *      Nested objects beyond that path will be ignored. This is useful for
  *      keys with variable object values.
  * @param root The path so far.
- * @return The computed update mask list.
+ * @returns The computed update mask list.
  */
 export function generateUpdateMask(
   obj: any, terminalPaths: string[] = [], root = ''

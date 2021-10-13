@@ -30,10 +30,9 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator } from '../../../src/auth/token-generator';
 import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import * as verifier from '../../../src/auth/token-verifier';
-
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthClientErrorCode } from '../../../src/utils/error';
-import { FirebaseApp } from '../../../src/firebase-app';
 import { JwtError, JwtErrorCode, PublicKeySignatureVerifier } from '../../../src/utils/jwt';
 
 chai.should();
@@ -449,7 +448,6 @@ describe('FirebaseTokenVerifier', () => {
       createTokenVerifier(mockAppWithAgent);
 
       expect(verifierSpy.args[0][1]).to.equal(agentForApp);
-      
       verifierSpy.restore();
     });
 

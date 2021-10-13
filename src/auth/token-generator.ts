@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 
-import { 
-  AuthClientErrorCode, ErrorInfo, FirebaseAuthError 
-} from '../utils/error';
+import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
+import { HttpError } from '../utils/api-request';
 import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
 import { Algorithm } from 'jsonwebtoken';
-import { HttpError } from '../utils/api-request';
 
 const ALGORITHM_NONE: Algorithm = 'none' as const;
 
@@ -86,6 +84,8 @@ export class EmulatedSigner implements CryptoSigner {
 
 /**
  * Class for generating different types of Firebase Auth tokens (JWTs).
+ *
+ * @internal
  */
 export class FirebaseTokenGenerator {
 
@@ -117,7 +117,7 @@ export class FirebaseTokenGenerator {
    * @param uid The user ID to use for the generated Firebase Auth Custom token.
    * @param developerClaims Optional developer claims to include in the generated Firebase
    *     Auth Custom token.
-   * @return A Promise fulfilled with a Firebase Auth Custom token signed with a
+   * @returns A Promise fulfilled with a Firebase Auth Custom token signed with a
    *     service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
@@ -189,8 +189,8 @@ export class FirebaseTokenGenerator {
   /**
    * Returns whether or not the provided developer claims are valid.
    *
-   * @param {object} [developerClaims] Optional developer claims to validate.
-   * @return {boolean} True if the provided claims are valid; otherwise, false.
+   * @param developerClaims Optional developer claims to validate.
+   * @returns True if the provided claims are valid; otherwise, false.
    */
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
     if (typeof developerClaims === 'undefined') {
@@ -204,8 +204,8 @@ export class FirebaseTokenGenerator {
  * Creates a new FirebaseAuthError by extracting the error code, message and other relevant
  * details from a CryptoSignerError.
  *
- * @param {Error} err The Error to convert into a FirebaseAuthError error
- * @return {FirebaseAuthError} A Firebase Auth error that can be returned to the user.
+ * @param err The Error to convert into a FirebaseAuthError error
+ * @returns A Firebase Auth error that can be returned to the user.
  */
 export function handleCryptoSignerError(err: Error): Error {
   if (!(err instanceof CryptoSignerError)) {

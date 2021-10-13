@@ -17,8 +17,10 @@
 
 // General
 import './firebase.spec';
-import './firebase-app.spec';
-import './firebase-namespace.spec';
+import './app/credential-internal.spec';
+import './app/index.spec';
+import './app/firebase-app.spec';
+import './app/firebase-namespace.spec';
 
 // Utilities
 import './utils/index.spec';
@@ -30,6 +32,7 @@ import './utils/crypto-signer.spec';
 
 // Auth
 import './auth/auth.spec';
+import './auth/index.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/token-verifier.spec';
@@ -40,44 +43,58 @@ import './auth/auth-config.spec';
 import './auth/tenant.spec';
 import './auth/tenant-manager.spec';
 
-// Credential
-import './credential/credential.spec';
-
 // Database
 import './database/database.spec';
+import './database/index.spec';
 
 // Messaging
+import './messaging/index.spec';
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 
 // Machine Learning
+import './machine-learning/index.spec';
 import './machine-learning/machine-learning.spec';
 import './machine-learning/machine-learning-api-client.spec';
 
 // Storage
 import './storage/storage.spec';
+import './storage/index.spec';
 
 // Firestore
 import './firestore/firestore.spec';
+import './firestore/index.spec';
+
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
+
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
 
 // Installations
 import './installations/installations.spec';
 import './installations/installations-request-handler.spec';
 
 // InstanceId
+import './instance-id/index.spec';
 import './instance-id/instance-id.spec';
 
 // ProjectManagement
+import './project-management/index.spec';
 import './project-management/project-management.spec';
 import './project-management/project-management-api-request.spec';
 import './project-management/android-app.spec';
 import './project-management/ios-app.spec';
 
 // SecurityRules
+import './security-rules/index.spec';
 import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
 
 // RemoteConfig
+import './remote-config/index.spec';
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';
 

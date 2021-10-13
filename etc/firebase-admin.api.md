@@ -8,6 +8,7 @@
 
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
+import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
 
@@ -16,7 +17,8 @@ export function app(name?: string): app.App;
 
 // @public (undocumented)
 export namespace app {
-    export interface App {
+    // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point default-namespace.d.ts
+    export interface App extends App {
         // (undocumented)
         appCheck(): appCheck.AppCheck;
         // (undocumented)
@@ -34,8 +36,6 @@ export namespace app {
         machineLearning(): machineLearning.MachineLearning;
         // (undocumented)
         messaging(): messaging.Messaging;
-        name: string;
-        options: AppOptions;
         // (undocumented)
         projectManagement(): projectManagement.ProjectManagement;
         // (undocumented)
@@ -48,42 +48,28 @@ export namespace app {
 }
 
 // @public
-export function appCheck(app?: app.App): appCheck.AppCheck;
+export function appCheck(app?: App): appCheck.AppCheck;
 
 // @public (undocumented)
 export namespace appCheck {
-    export interface AppCheck {
-        // (undocumented)
-        app: app.App;
-        createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken>;
-        verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
-    }
-    export interface AppCheckToken {
-        token: string;
-        ttlMillis: number;
-    }
-    export interface AppCheckTokenOptions {
-        ttlMillis?: number;
-    }
-    export interface DecodedAppCheckToken {
-        // (undocumented)
-        [key: string]: any;
-        app_id: string;
-        aud: string[];
-        exp: number;
-        iat: number;
-        iss: string;
-        sub: string;
-    }
-    export interface VerifyAppCheckTokenResponse {
-        appId: string;
-        token: appCheck.DecodedAppCheckToken;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AppCheck" needs to be exported by the entry point default-namespace.d.ts
+    export type AppCheck = AppCheck;
+    // Warning: (ae-forgotten-export) The symbol "AppCheckToken" needs to be exported by the entry point default-namespace.d.ts
+    export type AppCheckToken = AppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "AppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AppCheckTokenOptions = AppCheckTokenOptions;
+    // Warning: (ae-forgotten-export) The symbol "DecodedAppCheckToken" needs to be exported by the entry point default-namespace.d.ts
+    export type DecodedAppCheckToken = DecodedAppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type VerifyAppCheckTokenResponse = VerifyAppCheckTokenResponse;
 }
 
 // @public
 export interface AppOptions {
-    credential?: credential.Credential;
+    // Warning: (ae-forgotten-export) The symbol "Credential" needs to be exported by the entry point default-namespace.d.ts
+    credential?: Credential;
     databaseAuthVariableOverride?: object | null;
     databaseURL?: string;
     httpAgent?: Agent;
@@ -96,394 +82,139 @@ export interface AppOptions {
 export const apps: (app.App | null)[];
 
 // @public
-export function auth(app?: app.App): auth.Auth;
+export function auth(app?: App): auth.Auth;
 
 // @public (undocumented)
 export namespace auth {
-    export interface ActionCodeSettings {
-        android?: {
-            packageName: string;
-            installApp?: boolean;
-            minimumVersion?: string;
-        };
-        dynamicLinkDomain?: string;
-        handleCodeInApp?: boolean;
-        iOS?: {
-            bundleId: string;
-        };
-        url: string;
-    }
-    // (undocumented)
-    export interface Auth extends BaseAuth {
-        // (undocumented)
-        app: app.App;
-        tenantManager(): TenantManager;
-    }
-    export type AuthFactorType = 'phone';
-    export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
-    export interface AuthProviderConfigFilter {
-        maxResults?: number;
-        pageToken?: string;
-        type: 'saml' | 'oidc';
-    }
-    // (undocumented)
-    export interface BaseAuth {
-        createCustomToken(uid: string, developerClaims?: object): Promise<string>;
-        createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
-        createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-        createUser(properties: CreateRequest): Promise<UserRecord>;
-        deleteProviderConfig(providerId: string): Promise<void>;
-        deleteUser(uid: string): Promise<void>;
-        deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
-        generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-        generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-        generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
-        getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
-        getUser(uid: string): Promise<UserRecord>;
-        getUserByEmail(email: string): Promise<UserRecord>;
-        getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
-        getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord>;
-        getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
-        importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
-        listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
-        listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult>;
-        revokeRefreshTokens(uid: string): Promise<void>;
-        setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
-        updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
-        updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
-        verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-        verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-    }
-    export interface BaseAuthProviderConfig {
-        displayName?: string;
-        enabled: boolean;
-        providerId: string;
-    }
-    export interface BaseCreateMultiFactorInfoRequest {
-        displayName?: string;
-        factorId: string;
-    }
-    export interface BaseUpdateMultiFactorInfoRequest {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        uid?: string;
-    }
-    export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
-    export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
-        phoneNumber: string;
-    }
-    export interface CreateRequest extends UpdateRequest {
-        multiFactor?: MultiFactorCreateSettings;
-        uid?: string;
-    }
-    export type CreateTenantRequest = UpdateTenantRequest;
-    export interface DecodedIdToken {
-        // (undocumented)
-        [key: string]: any;
-        aud: string;
-        auth_time: number;
-        email?: string;
-        email_verified?: boolean;
-        exp: number;
-        firebase: {
-            identities: {
-                [key: string]: any;
-            };
-            sign_in_provider: string;
-            sign_in_second_factor?: string;
-            second_factor_identifier?: string;
-            tenant?: string;
-            [key: string]: any;
-        };
-        iat: number;
-        iss: string;
-        phone_number?: string;
-        picture?: string;
-        sub: string;
-        uid: string;
-    }
-    export interface DeleteUsersResult {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface EmailIdentifier {
-        // (undocumented)
-        email: string;
-    }
-    export interface EmailSignInProviderConfig {
-        enabled: boolean;
-        passwordRequired?: boolean;
-    }
-    export interface GetUsersResult {
-        notFound: UserIdentifier[];
-        users: UserRecord[];
-    }
-    // (undocumented)
-    export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' | 'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' | 'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
-    export interface ListProviderConfigResults {
-        pageToken?: string;
-        providerConfigs: AuthProviderConfig[];
-    }
-    export interface ListTenantsResult {
-        pageToken?: string;
-        tenants: Tenant[];
-    }
-    export interface ListUsersResult {
-        pageToken?: string;
-        users: UserRecord[];
-    }
-    export interface MultiFactorConfig {
-        factorIds?: AuthFactorType[];
-        state: MultiFactorConfigState;
-    }
-    export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
-    export interface MultiFactorCreateSettings {
-        enrolledFactors: CreateMultiFactorInfoRequest[];
-    }
-    export interface MultiFactorInfo {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        toJSON(): object;
-        uid: string;
-    }
-    export interface MultiFactorSettings {
-        enrolledFactors: MultiFactorInfo[];
-        toJSON(): object;
-    }
-    export interface MultiFactorUpdateSettings {
-        enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-    }
-    export interface OAuthResponseType {
-        code?: boolean;
-        idToken?: boolean;
-    }
-    export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
-        clientId: string;
-        clientSecret?: string;
-        issuer: string;
-        responseType?: OAuthResponseType;
-    }
-    export interface OIDCUpdateAuthProviderRequest {
-        clientId?: string;
-        clientSecret?: string;
-        displayName?: string;
-        enabled?: boolean;
-        issuer?: string;
-        responseType?: OAuthResponseType;
-    }
-    export interface PhoneIdentifier {
-        // (undocumented)
-        phoneNumber: string;
-    }
-    export interface PhoneMultiFactorInfo extends MultiFactorInfo {
-        phoneNumber: string;
-    }
-    export interface ProviderIdentifier {
-        // (undocumented)
-        providerId: string;
-        // (undocumented)
-        providerUid: string;
-    }
-    export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
-        callbackURL?: string;
-        idpEntityId: string;
-        rpEntityId: string;
-        ssoURL: string;
-        x509Certificates: string[];
-    }
-    export interface SAMLUpdateAuthProviderRequest {
-        callbackURL?: string;
-        displayName?: string;
-        enabled?: boolean;
-        idpEntityId?: string;
-        rpEntityId?: string;
-        ssoURL?: string;
-        x509Certificates?: string[];
-    }
-    export interface SessionCookieOptions {
-        expiresIn: number;
-    }
-    export interface Tenant {
-        anonymousSignInEnabled: boolean;
-        displayName?: string;
-        emailSignInConfig?: {
-            enabled: boolean;
-            passwordRequired?: boolean;
-        };
-        multiFactorConfig?: MultiFactorConfig;
-        tenantId: string;
-        testPhoneNumbers?: {
-            [phoneNumber: string]: string;
-        };
-        toJSON(): object;
-    }
-    export interface TenantAwareAuth extends BaseAuth {
-        tenantId: string;
-    }
-    export interface TenantManager {
-        // (undocumented)
-        authForTenant(tenantId: string): TenantAwareAuth;
-        createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
-        deleteTenant(tenantId: string): Promise<void>;
-        getTenant(tenantId: string): Promise<Tenant>;
-        listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
-        updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
-    }
-    export interface UidIdentifier {
-        // (undocumented)
-        uid: string;
-    }
-    // (undocumented)
-    export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-    export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
-    export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
-        phoneNumber: string;
-    }
-    export interface UpdateRequest {
-        disabled?: boolean;
-        displayName?: string | null;
-        email?: string;
-        emailVerified?: boolean;
-        multiFactor?: MultiFactorUpdateSettings;
-        password?: string;
-        phoneNumber?: string | null;
-        photoURL?: string | null;
-        providersToUnlink?: string[];
-        providerToLink?: UserProvider;
-    }
-    export interface UpdateTenantRequest {
-        anonymousSignInEnabled?: boolean;
-        displayName?: string;
-        emailSignInConfig?: EmailSignInProviderConfig;
-        multiFactorConfig?: MultiFactorConfig;
-        testPhoneNumbers?: {
-            [phoneNumber: string]: string;
-        } | null;
-    }
-    export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
-    export interface UserImportOptions {
-        hash: {
-            algorithm: HashAlgorithmType;
-            key?: Buffer;
-            saltSeparator?: Buffer;
-            rounds?: number;
-            memoryCost?: number;
-            parallelization?: number;
-            blockSize?: number;
-            derivedKeyLength?: number;
-        };
-    }
-    export interface UserImportRecord {
-        customClaims?: {
-            [key: string]: any;
-        };
-        disabled?: boolean;
-        displayName?: string;
-        email?: string;
-        emailVerified?: boolean;
-        metadata?: UserMetadataRequest;
-        multiFactor?: MultiFactorUpdateSettings;
-        passwordHash?: Buffer;
-        passwordSalt?: Buffer;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerData?: UserProviderRequest[];
-        tenantId?: string;
-        uid: string;
-    }
-    export interface UserImportResult {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface UserInfo {
-        displayName: string;
-        email: string;
-        phoneNumber: string;
-        photoURL: string;
-        providerId: string;
-        toJSON(): object;
-        uid: string;
-    }
-    export interface UserMetadata {
-        creationTime: string;
-        lastRefreshTime?: string | null;
-        lastSignInTime: string;
-        toJSON(): object;
-    }
-    export interface UserMetadataRequest {
-        creationTime?: string;
-        lastSignInTime?: string;
-    }
-    export interface UserProvider {
-        displayName?: string;
-        email?: string;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerId?: string;
-        uid?: string;
-    }
-    export interface UserProviderRequest {
-        displayName?: string;
-        email?: string;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerId: string;
-        uid: string;
-    }
-    export interface UserRecord {
-        customClaims?: {
-            [key: string]: any;
-        };
-        disabled: boolean;
-        displayName?: string;
-        email?: string;
-        emailVerified: boolean;
-        metadata: UserMetadata;
-        multiFactor?: MultiFactorSettings;
-        passwordHash?: string;
-        passwordSalt?: string;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerData: UserInfo[];
-        tenantId?: string | null;
-        toJSON(): object;
-        tokensValidAfterTime?: string;
-        uid: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "ActionCodeSettings" needs to be exported by the entry point default-namespace.d.ts
+    export type ActionCodeSettings = ActionCodeSettings;
+    // Warning: (ae-forgotten-export) The symbol "Auth" needs to be exported by the entry point default-namespace.d.ts
+    export type Auth = Auth;
+    // Warning: (ae-forgotten-export) The symbol "AuthFactorType" needs to be exported by the entry point default-namespace.d.ts
+    export type AuthFactorType = AuthFactorType;
+    // Warning: (ae-forgotten-export) The symbol "AuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type AuthProviderConfig = AuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "AuthProviderConfigFilter" needs to be exported by the entry point default-namespace.d.ts
+    export type AuthProviderConfigFilter = AuthProviderConfigFilter;
+    // Warning: (ae-forgotten-export) The symbol "BaseAuth" needs to be exported by the entry point default-namespace.d.ts
+    export type BaseAuth = BaseAuth;
+    // Warning: (ae-forgotten-export) The symbol "CreateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type CreateMultiFactorInfoRequest = CreateMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type CreatePhoneMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreateRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type CreateRequest = CreateRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type CreateTenantRequest = CreateTenantRequest;
+    // Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point default-namespace.d.ts
+    export type DecodedIdToken = DecodedIdToken;
+    // Warning: (ae-forgotten-export) The symbol "DeleteUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    export type DeleteUsersResult = DeleteUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "EmailIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    export type EmailIdentifier = EmailIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "EmailSignInProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type EmailSignInProviderConfig = EmailSignInProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "GetUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    export type GetUsersResult = GetUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "HashAlgorithmType" needs to be exported by the entry point default-namespace.d.ts
+    export type HashAlgorithmType = HashAlgorithmType;
+    // Warning: (ae-forgotten-export) The symbol "ListProviderConfigResults" needs to be exported by the entry point default-namespace.d.ts
+    export type ListProviderConfigResults = ListProviderConfigResults;
+    // Warning: (ae-forgotten-export) The symbol "ListTenantsResult" needs to be exported by the entry point default-namespace.d.ts
+    export type ListTenantsResult = ListTenantsResult;
+    // Warning: (ae-forgotten-export) The symbol "ListUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    export type ListUsersResult = ListUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorConfig = MultiFactorConfig;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorConfigState" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorConfigState = MultiFactorConfigState;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorCreateSettings" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorCreateSettings = MultiFactorCreateSettings;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorInfo = MultiFactorInfo;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorSettings" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorSettings = MultiFactorSettings;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorUpdateSettings" needs to be exported by the entry point default-namespace.d.ts
+    export type MultiFactorUpdateSettings = MultiFactorUpdateSettings;
+    // Warning: (ae-forgotten-export) The symbol "OIDCAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type OIDCAuthProviderConfig = OIDCAuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "OIDCUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type OIDCUpdateAuthProviderRequest = OIDCUpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "PhoneIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    export type PhoneIdentifier = PhoneIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "PhoneMultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
+    export type PhoneMultiFactorInfo = PhoneMultiFactorInfo;
+    // Warning: (ae-forgotten-export) The symbol "ProviderIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    export type ProviderIdentifier = ProviderIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "SAMLAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type SAMLAuthProviderConfig = SAMLAuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "SAMLUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type SAMLUpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "SessionCookieOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type SessionCookieOptions = SessionCookieOptions;
+    // Warning: (ae-forgotten-export) The symbol "Tenant" needs to be exported by the entry point default-namespace.d.ts
+    export type Tenant = Tenant;
+    // Warning: (ae-forgotten-export) The symbol "TenantAwareAuth" needs to be exported by the entry point default-namespace.d.ts
+    export type TenantAwareAuth = TenantAwareAuth;
+    // Warning: (ae-forgotten-export) The symbol "TenantManager" needs to be exported by the entry point default-namespace.d.ts
+    export type TenantManager = TenantManager;
+    // Warning: (ae-forgotten-export) The symbol "UidIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    export type UidIdentifier = UidIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "UpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UpdateAuthProviderRequest = UpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UpdateMultiFactorInfoRequest = UpdateMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UpdatePhoneMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UpdateRequest = UpdateRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UpdateTenantRequest = UpdateTenantRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    export type UserIdentifier = UserIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "UserImportOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type UserImportOptions = UserImportOptions;
+    // Warning: (ae-forgotten-export) The symbol "UserImportRecord" needs to be exported by the entry point default-namespace.d.ts
+    export type UserImportRecord = UserImportRecord;
+    // Warning: (ae-forgotten-export) The symbol "UserImportResult" needs to be exported by the entry point default-namespace.d.ts
+    export type UserImportResult = UserImportResult;
+    // Warning: (ae-forgotten-export) The symbol "UserInfo" needs to be exported by the entry point default-namespace.d.ts
+    export type UserInfo = UserInfo;
+    // Warning: (ae-forgotten-export) The symbol "UserMetadata" needs to be exported by the entry point default-namespace.d.ts
+    export type UserMetadata = UserMetadata;
+    // Warning: (ae-forgotten-export) The symbol "UserMetadataRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UserMetadataRequest = UserMetadataRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    export type UserProviderRequest = UserProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserRecord" needs to be exported by the entry point default-namespace.d.ts
+    export type UserRecord = UserRecord;
 }
 
 // @public (undocumented)
 export namespace credential {
-    export function applicationDefault(httpAgent?: Agent): Credential;
-    export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
-    export interface Credential {
-        getAccessToken(): Promise<GoogleOAuthAccessToken>;
-    }
-    export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
+    export type Credential = Credential;
+    const // Warning: (ae-forgotten-export) The symbol "applicationDefault" needs to be exported by the entry point default-namespace.d.ts
+    applicationDefault: typeof applicationDefault;
+    const // Warning: (ae-forgotten-export) The symbol "cert" needs to be exported by the entry point default-namespace.d.ts
+    cert: typeof cert;
+    const // Warning: (ae-forgotten-export) The symbol "refreshToken" needs to be exported by the entry point default-namespace.d.ts
+    refreshToken: typeof refreshToken;
 }
 
 // @public
-export function database(app?: app.App): database.Database;
+export function database(app?: App): database.Database;
 
 // @public (undocumented)
 export namespace database {
-    // (undocumented)
-    export interface Database extends rtdb.FirebaseDatabase {
-        getRules(): Promise<string>;
-        getRulesJSON(): Promise<object>;
-        setRules(source: string | Buffer | object): Promise<void>;
-    }
-    import DataSnapshot = rtdb.DataSnapshot;
-    import EventType = rtdb.EventType;
-    import OnDisconnect = rtdb.OnDisconnect;
-    import Query = rtdb.Query;
-    import Reference = rtdb.Reference;
-    import ThenableReference = rtdb.ThenableReference;
-    import enableLogging = rtdb.enableLogging;
+    // Warning: (ae-forgotten-export) The symbol "Database" needs to be exported by the entry point default-namespace.d.ts
+    export type Database = Database;
+    export type DataSnapshot = rtdb.DataSnapshot;
+    export type EventType = rtdb.EventType;
+    export type OnDisconnect = rtdb.OnDisconnect;
+    export type Query = rtdb.Query;
+    export type Reference = rtdb.Reference;
+    export type ThenableReference = rtdb.ThenableReference;
+    const enableLogging: typeof rtdb.enableLogging;
     const ServerValue: rtdb.ServerValue;
 }
 
@@ -502,7 +233,7 @@ export interface FirebaseError {
 }
 
 // @public (undocumented)
-export function firestore(app?: app.App): _firestore.Firestore;
+export function firestore(app?: App): _firestore.Firestore;
 
 // @public (undocumented)
 export namespace firestore {
@@ -549,575 +280,197 @@ export interface GoogleOAuthAccessToken {
 export function initializeApp(options?: AppOptions, name?: string): app.App;
 
 // @public
-export function installations(app?: app.App): installations.Installations;
+export function installations(app?: App): installations.Installations;
 
 // @public (undocumented)
 export namespace installations {
-    export interface Installations {
-        // (undocumented)
-        app: app.App;
-        deleteInstallation(fid: string): Promise<void>;
-    }
+    // Warning: (ae-forgotten-export) The symbol "Installations" needs to be exported by the entry point default-namespace.d.ts
+    export type Installations = Installations;
 }
 
-// @public @deprecated
-export function instanceId(app?: app.App): instanceId.InstanceId;
+// @public
+export function instanceId(app?: App): instanceId.InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {
-    // @deprecated
-    export interface InstanceId {
-        // (undocumented)
-        app: app.App;
-        // @deprecated
-        deleteInstanceId(instanceId: string): Promise<void>;
-    }
+    // Warning: (ae-forgotten-export) The symbol "InstanceId" needs to be exported by the entry point default-namespace.d.ts
+    export type InstanceId = InstanceId;
 }
 
 // @public
-export function machineLearning(app?: app.App): machineLearning.MachineLearning;
+export function machineLearning(app?: App): machineLearning.MachineLearning;
 
 // @public (undocumented)
 export namespace machineLearning {
-    // (undocumented)
-    export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
-        // (undocumented)
-        tfliteModel: {
-            automlModel: string;
-        };
-    }
-    // (undocumented)
-    export interface GcsTfliteModelOptions extends ModelOptionsBase {
-        // (undocumented)
-        tfliteModel: {
-            gcsTfliteUri: string;
-        };
-    }
-    export interface ListModelsOptions {
-        filter?: string;
-        pageSize?: number;
-        pageToken?: string;
-    }
-    export interface ListModelsResult {
-        readonly models: Model[];
-        readonly pageToken?: string;
-    }
-    export interface MachineLearning {
-        app: app.App;
-        createModel(model: ModelOptions): Promise<Model>;
-        deleteModel(modelId: string): Promise<void>;
-        getModel(modelId: string): Promise<Model>;
-        listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
-        publishModel(modelId: string): Promise<Model>;
-        unpublishModel(modelId: string): Promise<Model>;
-        updateModel(modelId: string, model: ModelOptions): Promise<Model>;
-    }
-    export interface Model {
-        readonly createTime: string;
-        readonly displayName: string;
-        readonly etag: string;
-        readonly locked: boolean;
-        readonly modelHash?: string;
-        readonly modelId: string;
-        readonly published: boolean;
-        readonly tags?: string[];
-        readonly tfliteModel?: TFLiteModel;
-        toJSON(): {
-            [key: string]: any;
-        };
-        readonly updateTime: string;
-        readonly validationError?: string;
-        waitForUnlocked(maxTimeMillis?: number): Promise<void>;
-    }
-    // (undocumented)
-    export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
-    export interface ModelOptionsBase {
-        // (undocumented)
-        displayName?: string;
-        // (undocumented)
-        tags?: string[];
-    }
-    export interface TFLiteModel {
-        readonly automlModel?: string;
-        readonly gcsTfliteUri?: string;
-        readonly sizeBytes: number;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AutoMLTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "GcsTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type GcsTfliteModelOptions = GcsTfliteModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListModelsOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type ListModelsOptions = ListModelsOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListModelsResult" needs to be exported by the entry point default-namespace.d.ts
+    export type ListModelsResult = ListModelsResult;
+    // Warning: (ae-forgotten-export) The symbol "MachineLearning" needs to be exported by the entry point default-namespace.d.ts
+    export type MachineLearning = MachineLearning;
+    // Warning: (ae-forgotten-export) The symbol "Model" needs to be exported by the entry point default-namespace.d.ts
+    export type Model = Model;
+    // Warning: (ae-forgotten-export) The symbol "ModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type ModelOptions = ModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "ModelOptionsBase" needs to be exported by the entry point default-namespace.d.ts
+    export type ModelOptionsBase = ModelOptionsBase;
+    // Warning: (ae-forgotten-export) The symbol "TFLiteModel" needs to be exported by the entry point default-namespace.d.ts
+    export type TFLiteModel = TFLiteModel;
 }
 
 // @public
-export function messaging(app?: app.App): messaging.Messaging;
+export function messaging(app?: App): messaging.Messaging;
 
 // @public (undocumented)
 export namespace messaging {
-    export interface AndroidConfig {
-        collapseKey?: string;
-        data?: {
-            [key: string]: string;
-        };
-        fcmOptions?: AndroidFcmOptions;
-        notification?: AndroidNotification;
-        priority?: ('high' | 'normal');
-        restrictedPackageName?: string;
-        ttl?: number;
-    }
-    export interface AndroidFcmOptions {
-        analyticsLabel?: string;
-    }
-    export interface AndroidNotification {
-        body?: string;
-        bodyLocArgs?: string[];
-        bodyLocKey?: string;
-        channelId?: string;
-        clickAction?: string;
-        color?: string;
-        defaultLightSettings?: boolean;
-        defaultSound?: boolean;
-        defaultVibrateTimings?: boolean;
-        eventTimestamp?: Date;
-        icon?: string;
-        imageUrl?: string;
-        lightSettings?: LightSettings;
-        localOnly?: boolean;
-        notificationCount?: number;
-        priority?: ('min' | 'low' | 'default' | 'high' | 'max');
-        sound?: string;
-        sticky?: boolean;
-        tag?: string;
-        ticker?: string;
-        title?: string;
-        titleLocArgs?: string[];
-        titleLocKey?: string;
-        vibrateTimingsMillis?: number[];
-        visibility?: ('private' | 'public' | 'secret');
-    }
-    export interface ApnsConfig {
-        fcmOptions?: ApnsFcmOptions;
-        headers?: {
-            [key: string]: string;
-        };
-        payload?: ApnsPayload;
-    }
-    export interface ApnsFcmOptions {
-        analyticsLabel?: string;
-        imageUrl?: string;
-    }
-    export interface ApnsPayload {
-        // (undocumented)
-        [customData: string]: any;
-        aps: Aps;
-    }
-    export interface Aps {
-        // (undocumented)
-        [customData: string]: any;
-        alert?: string | ApsAlert;
-        badge?: number;
-        category?: string;
-        contentAvailable?: boolean;
-        mutableContent?: boolean;
-        sound?: string | CriticalSound;
-        threadId?: string;
-    }
-    // (undocumented)
-    export interface ApsAlert {
-        // (undocumented)
-        actionLocKey?: string;
-        // (undocumented)
-        body?: string;
-        // (undocumented)
-        launchImage?: string;
-        // (undocumented)
-        locArgs?: string[];
-        // (undocumented)
-        locKey?: string;
-        // (undocumented)
-        subtitle?: string;
-        // (undocumented)
-        subtitleLocArgs?: string[];
-        // (undocumented)
-        subtitleLocKey?: string;
-        // (undocumented)
-        title?: string;
-        // (undocumented)
-        titleLocArgs?: string[];
-        // (undocumented)
-        titleLocKey?: string;
-    }
-    // (undocumented)
-    export interface BaseMessage {
-        // (undocumented)
-        android?: AndroidConfig;
-        // (undocumented)
-        apns?: ApnsConfig;
-        // (undocumented)
-        data?: {
-            [key: string]: string;
-        };
-        // (undocumented)
-        fcmOptions?: FcmOptions;
-        // (undocumented)
-        notification?: Notification;
-        // (undocumented)
-        webpush?: WebpushConfig;
-    }
-    export interface BatchResponse {
-        failureCount: number;
-        responses: SendResponse[];
-        successCount: number;
-    }
-    // (undocumented)
-    export interface ConditionMessage extends BaseMessage {
-        // (undocumented)
-        condition: string;
-    }
-    export interface CriticalSound {
-        critical?: boolean;
-        name: string;
-        volume?: number;
-    }
-    export interface DataMessagePayload {
-        // (undocumented)
-        [key: string]: string;
-    }
-    export interface FcmOptions {
-        analyticsLabel?: string;
-    }
-    export interface LightSettings {
-        color: string;
-        lightOffDurationMillis: number;
-        lightOnDurationMillis: number;
-    }
-    export type Message = TokenMessage | TopicMessage | ConditionMessage;
-    // (undocumented)
-    export interface Messaging {
-        app: app.App;
-        send(message: Message, dryRun?: boolean): Promise<string>;
-        sendAll(messages: Array<Message>, dryRun?: boolean): Promise<BatchResponse>;
-        sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
-        sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
-        sendToDevice(registrationToken: string | string[], payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDevicesResponse>;
-        sendToDeviceGroup(notificationKey: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDeviceGroupResponse>;
-        sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
-        subscribeToTopic(registrationTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
-        unsubscribeFromTopic(registrationTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
-    }
-    export interface MessagingConditionResponse {
-        messageId: number;
-    }
-    export interface MessagingDeviceGroupResponse {
-        failedRegistrationTokens: string[];
-        failureCount: number;
-        successCount: number;
-    }
-    // (undocumented)
-    export interface MessagingDeviceResult {
-        canonicalRegistrationToken?: string;
-        error?: FirebaseError;
-        messageId?: string;
-    }
-    export interface MessagingDevicesResponse {
-        // (undocumented)
-        canonicalRegistrationTokenCount: number;
-        // (undocumented)
-        failureCount: number;
-        // (undocumented)
-        multicastId: number;
-        // (undocumented)
-        results: MessagingDeviceResult[];
-        // (undocumented)
-        successCount: number;
-    }
-    export interface MessagingOptions {
-        // (undocumented)
-        [key: string]: any | undefined;
-        collapseKey?: string;
-        contentAvailable?: boolean;
-        dryRun?: boolean;
-        mutableContent?: boolean;
-        priority?: string;
-        restrictedPackageName?: string;
-        timeToLive?: number;
-    }
-    export interface MessagingPayload {
-        data?: DataMessagePayload;
-        notification?: NotificationMessagePayload;
-    }
-    export interface MessagingTopicManagementResponse {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface MessagingTopicResponse {
-        messageId: number;
-    }
-    export interface MulticastMessage extends BaseMessage {
-        // (undocumented)
-        tokens: string[];
-    }
-    export interface Notification {
-        body?: string;
-        imageUrl?: string;
-        title?: string;
-    }
-    export interface NotificationMessagePayload {
-        // (undocumented)
-        [key: string]: string | undefined;
-        badge?: string;
-        body?: string;
-        bodyLocArgs?: string;
-        bodyLocKey?: string;
-        clickAction?: string;
-        color?: string;
-        icon?: string;
-        sound?: string;
-        tag?: string;
-        title?: string;
-        titleLocArgs?: string;
-        titleLocKey?: string;
-    }
-    export interface SendResponse {
-        error?: FirebaseError;
-        messageId?: string;
-        success: boolean;
-    }
-    // (undocumented)
-    export interface TokenMessage extends BaseMessage {
-        // (undocumented)
-        token: string;
-    }
-    // (undocumented)
-    export interface TopicMessage extends BaseMessage {
-        // (undocumented)
-        topic: string;
-    }
-    export interface WebpushConfig {
-        data?: {
-            [key: string]: string;
-        };
-        fcmOptions?: WebpushFcmOptions;
-        headers?: {
-            [key: string]: string;
-        };
-        notification?: WebpushNotification;
-    }
-    export interface WebpushFcmOptions {
-        link?: string;
-    }
-    export interface WebpushNotification {
-        // (undocumented)
-        [key: string]: any;
-        actions?: Array<{
-            action: string;
-            icon?: string;
-            title: string;
-        }>;
-        badge?: string;
-        body?: string;
-        data?: any;
-        dir?: 'auto' | 'ltr' | 'rtl';
-        icon?: string;
-        image?: string;
-        lang?: string;
-        renotify?: boolean;
-        requireInteraction?: boolean;
-        silent?: boolean;
-        tag?: string;
-        timestamp?: number;
-        title?: string;
-        vibrate?: number | number[];
-    }
-        {};
+    // Warning: (ae-forgotten-export) The symbol "AndroidConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type AndroidConfig = AndroidConfig;
+    // Warning: (ae-forgotten-export) The symbol "AndroidFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type AndroidFcmOptions = AndroidFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "AndroidNotification" needs to be exported by the entry point default-namespace.d.ts
+    export type AndroidNotification = AndroidNotification;
+    // Warning: (ae-forgotten-export) The symbol "ApnsConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type ApnsConfig = ApnsConfig;
+    // Warning: (ae-forgotten-export) The symbol "ApnsFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type ApnsFcmOptions = ApnsFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "ApnsPayload" needs to be exported by the entry point default-namespace.d.ts
+    export type ApnsPayload = ApnsPayload;
+    // Warning: (ae-forgotten-export) The symbol "Aps" needs to be exported by the entry point default-namespace.d.ts
+    export type Aps = Aps;
+    // Warning: (ae-forgotten-export) The symbol "ApsAlert" needs to be exported by the entry point default-namespace.d.ts
+    export type ApsAlert = ApsAlert;
+    // Warning: (ae-forgotten-export) The symbol "BatchResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type BatchResponse = BatchResponse;
+    // Warning: (ae-forgotten-export) The symbol "ConditionMessage" needs to be exported by the entry point default-namespace.d.ts
+    export type ConditionMessage = ConditionMessage;
+    // Warning: (ae-forgotten-export) The symbol "CriticalSound" needs to be exported by the entry point default-namespace.d.ts
+    export type CriticalSound = CriticalSound;
+    // Warning: (ae-forgotten-export) The symbol "DataMessagePayload" needs to be exported by the entry point default-namespace.d.ts
+    export type DataMessagePayload = DataMessagePayload;
+    // Warning: (ae-forgotten-export) The symbol "FcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type FcmOptions = FcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "LightSettings" needs to be exported by the entry point default-namespace.d.ts
+    export type LightSettings = LightSettings;
+    // Warning: (ae-forgotten-export) The symbol "Message" needs to be exported by the entry point default-namespace.d.ts
+    export type Message = Message;
+    // Warning: (ae-forgotten-export) The symbol "Messaging" needs to be exported by the entry point default-namespace.d.ts
+    export type Messaging = Messaging;
+    // Warning: (ae-forgotten-export) The symbol "MessagingConditionResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingConditionResponse = MessagingConditionResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDeviceGroupResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingDeviceGroupResponse = MessagingDeviceGroupResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDeviceResult" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingDeviceResult = MessagingDeviceResult;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDevicesResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingDevicesResponse = MessagingDevicesResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingOptions = MessagingOptions;
+    // Warning: (ae-forgotten-export) The symbol "MessagingPayload" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingPayload = MessagingPayload;
+    // Warning: (ae-forgotten-export) The symbol "MessagingTopicManagementResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingTopicManagementResponse = MessagingTopicManagementResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingTopicResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type MessagingTopicResponse = MessagingTopicResponse;
+    // Warning: (ae-forgotten-export) The symbol "MulticastMessage" needs to be exported by the entry point default-namespace.d.ts
+    export type MulticastMessage = MulticastMessage;
+    // Warning: (ae-forgotten-export) The symbol "Notification" needs to be exported by the entry point default-namespace.d.ts
+    export type Notification = Notification;
+    // Warning: (ae-forgotten-export) The symbol "NotificationMessagePayload" needs to be exported by the entry point default-namespace.d.ts
+    export type NotificationMessagePayload = NotificationMessagePayload;
+    // Warning: (ae-forgotten-export) The symbol "SendResponse" needs to be exported by the entry point default-namespace.d.ts
+    export type SendResponse = SendResponse;
+    // Warning: (ae-forgotten-export) The symbol "TokenMessage" needs to be exported by the entry point default-namespace.d.ts
+    export type TokenMessage = TokenMessage;
+    // Warning: (ae-forgotten-export) The symbol "TopicMessage" needs to be exported by the entry point default-namespace.d.ts
+    export type TopicMessage = TopicMessage;
+    // Warning: (ae-forgotten-export) The symbol "WebpushConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type WebpushConfig = WebpushConfig;
+    // Warning: (ae-forgotten-export) The symbol "WebpushFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type WebpushFcmOptions = WebpushFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "WebpushNotification" needs to be exported by the entry point default-namespace.d.ts
+    export type WebpushNotification = WebpushNotification;
 }
 
 // @public
-export function projectManagement(app?: app.App): projectManagement.ProjectManagement;
+export function projectManagement(app?: App): projectManagement.ProjectManagement;
 
 // @public (undocumented)
 export namespace projectManagement {
-    export interface AndroidApp {
-        addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
-        // (undocumented)
-        appId: string;
-        deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
-        getConfig(): Promise<string>;
-        getMetadata(): Promise<AndroidAppMetadata>;
-        getShaCertificates(): Promise<ShaCertificate[]>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-    }
-    export interface AndroidAppMetadata extends AppMetadata {
-        packageName: string;
-        // (undocumented)
-        platform: AppPlatform.ANDROID;
-    }
-    export interface AppMetadata {
-        appId: string;
-        displayName?: string;
-        platform: AppPlatform;
-        projectId: string;
-        resourceName: string;
-    }
-    export enum AppPlatform {
-        ANDROID = "ANDROID",
-        IOS = "IOS",
-        PLATFORM_UNKNOWN = "PLATFORM_UNKNOWN"
-    }
-    export interface IosApp {
-        // (undocumented)
-        appId: string;
-        getConfig(): Promise<string>;
-        getMetadata(): Promise<IosAppMetadata>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-    }
-    export interface IosAppMetadata extends AppMetadata {
-        bundleId: string;
-        // (undocumented)
-        platform: AppPlatform.IOS;
-    }
-    export interface ProjectManagement {
-        androidApp(appId: string): AndroidApp;
-        // (undocumented)
-        app: app.App;
-        createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp>;
-        createIosApp(bundleId: string, displayName?: string): Promise<IosApp>;
-        iosApp(appId: string): IosApp;
-        listAndroidApps(): Promise<AndroidApp[]>;
-        listAppMetadata(): Promise<AppMetadata[]>;
-        listIosApps(): Promise<IosApp[]>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-        shaCertificate(shaHash: string): ShaCertificate;
-    }
-    export interface ShaCertificate {
-        certType: ('sha1' | 'sha256');
-        resourceName?: string;
-        shaHash: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AndroidApp" needs to be exported by the entry point default-namespace.d.ts
+    export type AndroidApp = AndroidApp;
+    // Warning: (ae-forgotten-export) The symbol "AndroidAppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    export type AndroidAppMetadata = AndroidAppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "AppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    export type AppMetadata = AppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "AppPlatform" needs to be exported by the entry point default-namespace.d.ts
+    export type AppPlatform = AppPlatform;
+    // Warning: (ae-forgotten-export) The symbol "IosApp" needs to be exported by the entry point default-namespace.d.ts
+    export type IosApp = IosApp;
+    // Warning: (ae-forgotten-export) The symbol "IosAppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    export type IosAppMetadata = IosAppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "ProjectManagement" needs to be exported by the entry point default-namespace.d.ts
+    export type ProjectManagement = ProjectManagement;
+    // Warning: (ae-forgotten-export) The symbol "ShaCertificate" needs to be exported by the entry point default-namespace.d.ts
+    export type ShaCertificate = ShaCertificate;
 }
 
 // @public
-export function remoteConfig(app?: app.App): remoteConfig.RemoteConfig;
+export function remoteConfig(app?: App): remoteConfig.RemoteConfig;
 
 // @public (undocumented)
 export namespace remoteConfig {
-    export interface ExplicitParameterValue {
-        value: string;
-    }
-    export interface InAppDefaultValue {
-        useInAppDefault: boolean;
-    }
-    export interface ListVersionsOptions {
-        endTime?: Date | string;
-        endVersionNumber?: string | number;
-        pageSize?: number;
-        pageToken?: string;
-        startTime?: Date | string;
-    }
-    export interface ListVersionsResult {
-        nextPageToken?: string;
-        versions: Version[];
-    }
-    export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
-    export interface RemoteConfig {
-        // (undocumented)
-        app: app.App;
-        createTemplateFromJSON(json: string): RemoteConfigTemplate;
-        getTemplate(): Promise<RemoteConfigTemplate>;
-        getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
-        listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
-        publishTemplate(template: RemoteConfigTemplate, options?: {
-            force: boolean;
-        }): Promise<RemoteConfigTemplate>;
-        rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
-        validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
-    }
-    export interface RemoteConfigCondition {
-        expression: string;
-        name: string;
-        tagColor?: TagColor;
-    }
-    export interface RemoteConfigParameter {
-        conditionalValues?: {
-            [key: string]: RemoteConfigParameterValue;
-        };
-        defaultValue?: RemoteConfigParameterValue;
-        description?: string;
-        valueType?: ParameterValueType;
-    }
-    export interface RemoteConfigParameterGroup {
-        description?: string;
-        parameters: {
-            [key: string]: RemoteConfigParameter;
-        };
-    }
-    export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
-    export interface RemoteConfigTemplate {
-        conditions: RemoteConfigCondition[];
-        readonly etag: string;
-        parameterGroups: {
-            [key: string]: RemoteConfigParameterGroup;
-        };
-        parameters: {
-            [key: string]: RemoteConfigParameter;
-        };
-        version?: Version;
-    }
-    export interface RemoteConfigUser {
-        email: string;
-        imageUrl?: string;
-        name?: string;
-    }
-    export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
-    export interface Version {
-        description?: string;
-        isLegacy?: boolean;
-        rollbackSource?: string;
-        updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' | 'REST_API' | 'ADMIN_SDK_NODE');
-        updateTime?: string;
-        updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' | 'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
-        updateUser?: RemoteConfigUser;
-        versionNumber?: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "ExplicitParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    export type ExplicitParameterValue = ExplicitParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "InAppDefaultValue" needs to be exported by the entry point default-namespace.d.ts
+    export type InAppDefaultValue = InAppDefaultValue;
+    // Warning: (ae-forgotten-export) The symbol "ListVersionsOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type ListVersionsOptions = ListVersionsOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListVersionsResult" needs to be exported by the entry point default-namespace.d.ts
+    export type ListVersionsResult = ListVersionsResult;
+    // Warning: (ae-forgotten-export) The symbol "ParameterValueType" needs to be exported by the entry point default-namespace.d.ts
+    export type ParameterValueType = ParameterValueType;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfig" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfig = RemoteConfig;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigCondition" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigCondition = RemoteConfigCondition;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameter" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigParameter = RemoteConfigParameter;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameterGroup" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigParameterGroup = RemoteConfigParameterGroup;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigParameterValue = RemoteConfigParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigTemplate" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigTemplate = RemoteConfigTemplate;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigUser" needs to be exported by the entry point default-namespace.d.ts
+    export type RemoteConfigUser = RemoteConfigUser;
+    // Warning: (ae-forgotten-export) The symbol "TagColor" needs to be exported by the entry point default-namespace.d.ts
+    export type TagColor = TagColor;
+    // Warning: (ae-forgotten-export) The symbol "Version" needs to be exported by the entry point default-namespace.d.ts
+    export type Version = Version;
 }
 
 // @public (undocumented)
 export const SDK_VERSION: string;
 
 // @public
-export function securityRules(app?: app.App): securityRules.SecurityRules;
+export function securityRules(app?: App): securityRules.SecurityRules;
 
 // @public (undocumented)
 export namespace securityRules {
-    export interface Ruleset extends RulesetMetadata {
-        // (undocumented)
-        readonly source: RulesFile[];
-    }
-    export interface RulesetMetadata {
-        readonly createTime: string;
-        readonly name: string;
-    }
-    export interface RulesetMetadataList {
-        readonly nextPageToken?: string;
-        readonly rulesets: RulesetMetadata[];
-    }
-    export interface RulesFile {
-        // (undocumented)
-        readonly content: string;
-        // (undocumented)
-        readonly name: string;
-    }
-    export interface SecurityRules {
-        // (undocumented)
-        app: app.App;
-        createRuleset(file: RulesFile): Promise<Ruleset>;
-        createRulesFileFromSource(name: string, source: string | Buffer): RulesFile;
-        deleteRuleset(name: string): Promise<void>;
-        getFirestoreRuleset(): Promise<Ruleset>;
-        getRuleset(name: string): Promise<Ruleset>;
-        getStorageRuleset(bucket?: string): Promise<Ruleset>;
-        listRulesetMetadata(pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
-        releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void>;
-        releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
-        releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
-        releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
-    }
+    // Warning: (ae-forgotten-export) The symbol "Ruleset" needs to be exported by the entry point default-namespace.d.ts
+    export type Ruleset = Ruleset;
+    // Warning: (ae-forgotten-export) The symbol "RulesetMetadata" needs to be exported by the entry point default-namespace.d.ts
+    export type RulesetMetadata = RulesetMetadata;
+    // Warning: (ae-forgotten-export) The symbol "RulesetMetadataList" needs to be exported by the entry point default-namespace.d.ts
+    export type RulesetMetadataList = RulesetMetadataList;
+    // Warning: (ae-forgotten-export) The symbol "RulesFile" needs to be exported by the entry point default-namespace.d.ts
+    export type RulesFile = RulesFile;
+    // Warning: (ae-forgotten-export) The symbol "SecurityRules" needs to be exported by the entry point default-namespace.d.ts
+    export type SecurityRules = SecurityRules;
 }
 
 // @public (undocumented)
@@ -1131,17 +484,12 @@ export interface ServiceAccount {
 }
 
 // @public
-export function storage(app?: app.App): storage.Storage;
+export function storage(app?: App): storage.Storage;
 
 // @public (undocumented)
 export namespace storage {
-    export interface Storage {
-        app: app.App;
-        // (undocumented)
-        bucket(name?: string): Bucket;
-    }
+    // Warning: (ae-forgotten-export) The symbol "Storage" needs to be exported by the entry point default-namespace.d.ts
+    export type Storage = Storage;
 }
-
-// (No @packageDocumentation comment for this package)
 
 ```

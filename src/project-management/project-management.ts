@@ -14,35 +14,29 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { projectManagement } from './index';
-
-import AppMetadata = projectManagement.AppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
-import ProjectManagementInterface = projectManagement.ProjectManagement;
+import { AppMetadata, AppPlatform } from './app-metadata';
 
 /**
  * The Firebase ProjectManagement service interface.
- *
- * Do not call this constructor directly. Instead, use
- * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
-export class ProjectManagement implements ProjectManagementInterface {
+export class ProjectManagement {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
   private projectId: string;
 
   /**
-   * @param {object} app The app for this ProjectManagement service.
+   * @param app The app for this ProjectManagement service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
         'invalid-argument',
@@ -56,7 +50,7 @@ export class ProjectManagement implements ProjectManagementInterface {
   /**
    * Lists up to 100 Firebase Android apps associated with this Firebase project.
    *
-   * @return The list of Android apps.
+   * @returns The list of Android apps.
    */
   public listAndroidApps(): Promise<AndroidApp[]> {
     return this.listPlatformApps<AndroidApp>('android', 'listAndroidApps()');
@@ -65,7 +59,7 @@ export class ProjectManagement implements ProjectManagementInterface {
   /**
    * Lists up to 100 Firebase iOS apps associated with this Firebase project.
    *
-   * @return The list of iOS apps.
+   * @returns The list of iOS apps.
    */
   public listIosApps(): Promise<IosApp[]> {
     return this.listPlatformApps<IosApp>('ios', 'listIosApps()');
@@ -79,7 +73,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    *
    * @param appId The `appId` of the Android app to reference.
    *
-   * @return An `AndroidApp` object that references the specified Firebase Android app.
+   * @returns An `AndroidApp` object that references the specified Firebase Android app.
    */
   public androidApp(appId: string): AndroidApp {
     return new AndroidApp(appId, this.requestHandler);
@@ -93,7 +87,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    *
    * @param appId The `appId` of the iOS app to reference.
    *
-   * @return An `iOSApp` object that references the specified Firebase iOS app.
+   * @returns An `iOSApp` object that references the specified Firebase iOS app.
    */
   public iosApp(appId: string): IosApp {
     return new IosApp(appId, this.requestHandler);
@@ -106,7 +100,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    *
    * @param shaHash The SHA-1 or SHA-256 hash for this certificate.
    *
-   * @return A `ShaCertificate` object contains the specified SHA hash.
+   * @returns A `ShaCertificate` object contains the specified SHA hash.
    */
   public shaCertificate(shaHash: string): ShaCertificate {
     return new ShaCertificate(shaHash);
@@ -120,7 +114,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    * @param displayName An optional user-assigned display name for this
    *     new app.
    *
-   * @return A promise that resolves to the newly created Android app.
+   * @returns A promise that resolves to the newly created Android app.
    */
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
     return this.getResourceName()
@@ -148,7 +142,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    * @param displayName An optional user-assigned display name for this
    *     new app.
    *
-   * @return A promise that resolves to the newly created iOS app.
+   * @returns A promise that resolves to the newly created iOS app.
    */
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
     return this.getResourceName()
@@ -172,7 +166,7 @@ export class ProjectManagement implements ProjectManagementInterface {
   /**
    * Lists up to 100 Firebase apps associated with this Firebase project.
    *
-   * @return A promise that resolves to the metadata list of the apps.
+   * @returns A promise that resolves to the metadata list of the apps.
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
     return this.getResourceName()
@@ -192,7 +186,7 @@ export class ProjectManagement implements ProjectManagementInterface {
    *
    * @param newDisplayName The new display name to be updated.
    *
-   * @return A promise that resolves when the project display name has been updated.
+   * @returns A promise that resolves when the project display name has been updated.
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.getResourceName()

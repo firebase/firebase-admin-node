@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-import { remoteConfig } from './index';
+import { App } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-
-import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
-import ListVersionsOptions = remoteConfig.ListVersionsOptions;
-import ListVersionsResult = remoteConfig.ListVersionsResult;
+import { ListVersionsOptions, ListVersionsResult, RemoteConfigTemplate } from './remote-config-api';
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
@@ -41,20 +38,20 @@ const FIREBASE_REMOTE_CONFIG_HEADERS = {
 /**
  * Class that facilitates sending requests to the Firebase Remote Config backend API.
  *
- * @private
+ * @internal
  */
 export class RemoteConfigApiClient {
   private readonly httpClient: HttpClient;
   private projectIdPrefix?: string;
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'First argument passed to admin.remoteConfig() must be a valid Firebase app instance.');
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   public getTemplate(): Promise<RemoteConfigTemplate> {
@@ -339,7 +336,7 @@ export class RemoteConfigApiClient {
    *
    * @param {ListVersionsOptions} options An options object to be validated.
    *
-   * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
+   * @returns {ListVersionsOptions} A copy of the provided options object with timestamps converted
    * to UTC Zulu format.
    */
   private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {

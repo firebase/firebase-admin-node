@@ -14,50 +14,42 @@
  * limitations under the License.
  */
 
-import { Bucket } from '@google-cloud/storage';
-import { app } from '../firebase-namespace-api';
+/**
+ * Cloud Storage for Firebase.
+ *
+ * @packageDocumentation
+ */
+
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { Storage } from './storage';
+
+export { Storage } from './storage';
 
 /**
- * Gets the {@link storage.Storage `Storage`} service for the
- * default app or a given app.
+ * Gets the {@link Storage} service for the default app or a given app.
  *
- * `admin.storage()` can be called with no arguments to access the default
- * app's {@link storage.Storage `Storage`} service or as
- * `admin.storage(app)` to access the
- * {@link storage.Storage `Storage`} service associated with a
- * specific app.
+ * `getStorage()` can be called with no arguments to access the default
+ * app's `Storage` service or as `getStorage(app)` to access the
+ * `Storage` service associated with a specific app.
  *
  * @example
  * ```javascript
  * // Get the Storage service for the default app
- * var defaultStorage = admin.storage();
+ * const defaultStorage = getStorage();
  * ```
  *
  * @example
  * ```javascript
  * // Get the Storage service for a given app
- * var otherStorage = admin.storage(otherApp);
+ * const otherStorage = getStorage(otherApp);
  * ```
  */
-export declare function storage(app?: app.App): storage.Storage;
-
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace storage {
-  /**
-   * The default `Storage` service if no
-   * app is provided or the `Storage` service associated with the provided
-   * app.
-   */
-  export interface Storage {
-    /**
-     * Optional app whose `Storage` service to
-     * return. If not provided, the default `Storage` service will be returned.
-     */
-    app: app.App;
-    /**
-     * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
-     * instance as defined in the `@google-cloud/storage` package.
-     */
-    bucket(name?: string): Bucket;
+export function getStorage(app?: App): Storage {
+  if (typeof app === 'undefined') {
+    app = getApp();
   }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
 }

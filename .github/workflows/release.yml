@@ -47,7 +47,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 10.x
+        node-version: 12.x
 
     - name: Install and build
       run: |
@@ -116,7 +116,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 10.x
+        node-version: 12.x
 
     - name: Publish preflight check
       id: preflight

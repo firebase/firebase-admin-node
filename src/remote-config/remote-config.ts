@@ -14,41 +14,40 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { App } from '../app';
 import * as validator from '../utils/validator';
-import { remoteConfig } from './index';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
-
-import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
-import RemoteConfigParameter = remoteConfig.RemoteConfigParameter;
-import RemoteConfigCondition = remoteConfig.RemoteConfigCondition;
-import RemoteConfigParameterGroup = remoteConfig.RemoteConfigParameterGroup;
-import ListVersionsOptions = remoteConfig.ListVersionsOptions;
-import ListVersionsResult = remoteConfig.ListVersionsResult;
-import RemoteConfigUser = remoteConfig.RemoteConfigUser;
-import Version = remoteConfig.Version;
-import RemoteConfigInterface = remoteConfig.RemoteConfig;
+import {
+  ListVersionsOptions,
+  ListVersionsResult,
+  RemoteConfigCondition,
+  RemoteConfigParameter,
+  RemoteConfigParameterGroup,
+  RemoteConfigTemplate,
+  RemoteConfigUser,
+  Version,
+} from './remote-config-api';
 
 /**
- * Remote Config service bound to the provided app.
+ * The Firebase `RemoteConfig` service interface.
  */
-export class RemoteConfig implements RemoteConfigInterface {
+export class RemoteConfig {
 
   private readonly client: RemoteConfigApiClient;
 
   /**
    * @param app The app for this RemoteConfig service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     this.client = new RemoteConfigApiClient(app);
   }
 
   /**
-   * Gets the current active version of the {@link remoteConfig.RemoteConfigTemplate
-   * `RemoteConfigTemplate`} of the project.
+   * Gets the current active version of the {@link RemoteConfigTemplate} of the project.
    *
-   * @return A promise that fulfills with a `RemoteConfigTemplate`.
+   * @returns A promise that fulfills with a `RemoteConfigTemplate`.
    */
   public getTemplate(): Promise<RemoteConfigTemplate> {
     return this.client.getTemplate()
@@ -58,12 +57,11 @@ export class RemoteConfig implements RemoteConfigInterface {
   }
 
   /**
-   * Gets the requested version of the {@link remoteConfig.RemoteConfigTemplate
-    * `RemoteConfigTemplate`} of the project.
+   * Gets the requested version of the {@link RemoteConfigTemplate} of the project.
    *
    * @param versionNumber Version number of the Remote Config template to look up.
    *
-   * @return A promise that fulfills with a `RemoteConfigTemplate`.
+   * @returns A promise that fulfills with a `RemoteConfigTemplate`.
    */
   public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
     return this.client.getTemplateAtVersion(versionNumber)
@@ -73,7 +71,7 @@ export class RemoteConfig implements RemoteConfigInterface {
   }
 
   /**
-   * Validates a {@link remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
+   * Validates a {@link RemoteConfigTemplate}.
    *
    * @param template The Remote Config template to be validated.
    * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
@@ -90,14 +88,14 @@ export class RemoteConfig implements RemoteConfigInterface {
    *
    * @param template The Remote Config template to be published.
    * @param options Optional options object when publishing a Remote Config template:
-   *    - {boolean} `force` Setting this to `true` forces the Remote Config template to
+   *    - `force`: Setting this to `true` forces the Remote Config template to
    *      be updated and circumvent the ETag. This approach is not recommended
    *      because it risks causing the loss of updates to your Remote Config
    *      template if multiple clients are updating the Remote Config template.
-   *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
+   *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates |
    *      ETag usage and forced updates}.
    *
-   * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
+   * @returns A Promise that fulfills with the published `RemoteConfigTemplate`.
    */
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     return this.client.publishTemplate(template, options)
@@ -116,7 +114,7 @@ export class RemoteConfig implements RemoteConfigInterface {
    *    been deleted due to staleness. Only the last 300 versions are stored.
    *    All versions that correspond to non-active Remote Config templates (that is, all except the
    *    template that is being fetched by clients) are also deleted if they are more than 90 days old.
-   * @return A promise that fulfills with the published `RemoteConfigTemplate`.
+   * @returns A promise that fulfills with the published `RemoteConfigTemplate`.
    */
   public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
     return this.client.rollback(versionNumber)
@@ -132,7 +130,7 @@ export class RemoteConfig implements RemoteConfigInterface {
    * template that is being fetched by clients) are also deleted if they are older than 90 days.
    *
    * @param options Optional options object for getting a list of versions.
-   * @return A promise that fulfills with a `ListVersionsResult`.
+   * @returns A promise that fulfills with a `ListVersionsResult`.
    */
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
     return this.client.listVersions(options)
@@ -149,7 +147,7 @@ export class RemoteConfig implements RemoteConfigInterface {
    *
    * @param json The JSON string to populate a Remote Config template.
    *
-   * @return A new template instance.
+   * @returns A new template instance.
    */
   public createTemplateFromJSON(json: string): RemoteConfigTemplate {
     if (!validator.isNonEmptyString(json)) {
@@ -234,16 +232,18 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
   /**
    * Gets the ETag of the template.
    *
-   * @return {string} The ETag of the Remote Config template.
+   * @returns The ETag of the Remote Config template.
    */
   get etag(): string {
     return this.etagInternal;
   }
 
   /**
-   * @return {RemoteConfigTemplate} A JSON-serializable representation of this object.
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
    */
-  public toJSON(): RemoteConfigTemplate {
+  public toJSON(): object {
     return {
       conditions: this.conditions,
       parameters: this.parameters,
@@ -359,9 +359,9 @@ class VersionImpl implements Version {
   }
 
   /**
-   * @return {Version} A JSON-serializable representation of this object.
+   * @returns A JSON-serializable representation of this object.
    */
-  public toJSON(): Version {
+  public toJSON(): object {
     return {
       versionNumber: this.versionNumber,
       updateOrigin: this.updateOrigin,

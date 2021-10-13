@@ -22,14 +22,11 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseApp } from '../../../src/firebase-app';
-import { DatabaseService } from '../../../src/database/database-internal';
-import { database } from '../../../src/database/index';
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import { Database, DatabaseService } from '../../../src/database/database';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
-
-import Database = database.Database;
 
 describe('Database', () => {
   let mockApp: FirebaseApp;
