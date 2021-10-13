@@ -19,6 +19,7 @@ Firebase Instance ID service.
 
 > Warning: This API is now obsolete.
 > 
+> Use [getInstallations()](./firebase-admin.installations.md#getinstallations) instead.
 > 
 
 Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.

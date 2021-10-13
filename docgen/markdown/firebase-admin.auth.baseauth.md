@@ -505,7 +505,7 @@ getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  identifiers | [UserIdentifier](./firebase-admin.auth.md#useridentifier)<!-- -->\[\] | The identifiers used to indicate which user records should be returned. Must have &lt;<!-- -->= 100 entries. |
+|  identifiers | [UserIdentifier](./firebase-admin.auth.md#useridentifier)<!-- -->\[\] | The identifiers used to indicate which user records should be returned. Must not have more than 100 entries. |
 
 <b>Returns:</b>
 

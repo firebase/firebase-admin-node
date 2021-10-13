@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}UserImportResult interface{% endblock title %}
 {% block body %}
-Interface representing the response from the  method for batch importing users to Firebase Auth.
+Interface representing the response from the [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method for batch importing users to Firebase Auth.
 
 <b>Signature:</b>
 

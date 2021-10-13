@@ -13,7 +13,7 @@ export interface AppOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [credential](./firebase-admin.app.appoptions.md#appoptionscredential) | [Credential](./firebase-admin.app.credential.md#credential_interface) | A  object used to authenticate the Admin SDK.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for detailed documentation and code samples. |
+|  [credential](./firebase-admin.app.appoptions.md#appoptionscredential) | [Credential](./firebase-admin.app.credential.md#credential_interface) | A [Credential](./firebase-admin.app.credential.md#credential_interface) object used to authenticate the Admin SDK.<!-- -->See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for detailed documentation and code samples. |
 |  [databaseAuthVariableOverride](./firebase-admin.app.appoptions.md#appoptionsdatabaseauthvariableoverride) | object \| null | The object to use as the [auth](https://firebase.google.com/docs/reference/security/database/#auth) variable in your Realtime Database Rules when the Admin SDK reads from or writes to the Realtime Database. This allows you to downscope the Admin SDK from its default full read and write privileges.<!-- -->You can pass <code>null</code> to act as an unauthenticated client.<!-- -->See [Authenticate with limited privileges](https://firebase.google.com/docs/database/admin/start#authenticate-with-limited-privileges) for detailed documentation and code samples. |
 |  [databaseURL](./firebase-admin.app.appoptions.md#appoptionsdatabaseurl) | string | The URL of the Realtime Database from which to read and write data. |
 |  [httpAgent](./firebase-admin.app.appoptions.md#appoptionshttpagent) | Agent | An [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent) to be used when making outgoing HTTP calls. This Agent instance is used by all services that make REST calls (e.g. <code>auth</code>, <code>messaging</code>, <code>projectManagement</code>).<!-- -->Realtime Database and Firestore use other means of communicating with the backend servers, so they do not use this HTTP Agent. <code>Credential</code> instances also do not use this HTTP Agent, but instead support specifying an HTTP Agent in the corresponding factory methods. |
@@ -23,7 +23,7 @@ export interface AppOptions
 
 ## AppOptions.credential
 
-A  object used to authenticate the Admin SDK.
+A [Credential](./firebase-admin.app.credential.md#credential_interface) object used to authenticate the Admin SDK.
 
 See [Initialize the SDK](https://firebase.google.com/docs/admin/setup#initialize_the_sdk) for detailed documentation and code samples.
 

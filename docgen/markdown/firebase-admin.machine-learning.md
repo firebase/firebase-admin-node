@@ -14,7 +14,7 @@ Firebase Machine Learning.
 
 |  Function | Description |
 |  --- | --- |
-|  [getMachineLearning(app)](./firebase-admin.machine-learning.md#getmachinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>getMachineLearning()</code> can be called with no arguments to access the default app's {<code>MachineLearning</code> service or as <code>getMachineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
+|  [getMachineLearning(app)](./firebase-admin.machine-learning.md#getmachinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>getMachineLearning()</code> can be called with no arguments to access the default app's <code>MachineLearning</code> service or as <code>getMachineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
 
 ## Interfaces
 
@@ -37,7 +37,7 @@ Firebase Machine Learning.
 
 Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.
 
-`getMachineLearning()` can be called with no arguments to access the default app's {`MachineLearning` service or as `getMachineLearning(app)` to access the `MachineLearning` service associated with a specific app.
+`getMachineLearning()` can be called with no arguments to access the default app's `MachineLearning` service or as `getMachineLearning(app)` to access the `MachineLearning` service associated with a specific app.
 
 <b>Signature:</b>
 

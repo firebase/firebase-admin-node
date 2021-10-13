@@ -59,6 +59,11 @@ const defaultSecurityRules = getSecurityRules();
 
 ### Example 2
 
-\`\`\`<!-- -->javascript // Get the SecurityRules service for a given app const otherSecurityRules = getSecurityRules(otherApp); \`\`\`
+
+```javascript
+// Get the SecurityRules service for a given app
+const otherSecurityRules = getSecurityRules(otherApp);
+
+```
 
 {% endblock body %}

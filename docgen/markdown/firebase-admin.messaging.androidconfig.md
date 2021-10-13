@@ -14,7 +14,7 @@ export interface AndroidConfig
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [collapseKey](./firebase-admin.messaging.androidconfig.md#androidconfigcollapsekey) | string | Collapse key for the message. Collapse key serves as an identifier for a group of messages that can be collapsed, so that only the last message gets sent when delivery can be resumed. A maximum of four different collapse keys may be active at any given time. |
-|  [data](./firebase-admin.messaging.androidconfig.md#androidconfigdata) | { \[key: string\]: string; } | A collection of data fields to be included in the message. All values must be strings. When provided, overrides any data fields set on the top-level <code>admin.messaging.Message</code>.<!-- -->} |
+|  [data](./firebase-admin.messaging.androidconfig.md#androidconfigdata) | { \[key: string\]: string; } | A collection of data fields to be included in the message. All values must be strings. When provided, overrides any data fields set on the top-level [Message](./firebase-admin.messaging.md#message)<!-- -->. |
 |  [fcmOptions](./firebase-admin.messaging.androidconfig.md#androidconfigfcmoptions) | [AndroidFcmOptions](./firebase-admin.messaging.androidfcmoptions.md#androidfcmoptions_interface) | Options for features provided by the FCM SDK for Android. |
 |  [notification](./firebase-admin.messaging.androidconfig.md#androidconfignotification) | [AndroidNotification](./firebase-admin.messaging.androidnotification.md#androidnotification_interface) | Android notification to be included in the message. |
 |  [priority](./firebase-admin.messaging.androidconfig.md#androidconfigpriority) | ('high' \| 'normal') | Priority of the message. Must be either <code>normal</code> or <code>high</code>. |
@@ -33,7 +33,7 @@ collapseKey?: string;
 
 ## AndroidConfig.data
 
-A collection of data fields to be included in the message. All values must be strings. When provided, overrides any data fields set on the top-level `admin.messaging.Message`<!-- -->.<!-- -->}
+A collection of data fields to be included in the message. All values must be strings. When provided, overrides any data fields set on the top-level [Message](./firebase-admin.messaging.md#message)<!-- -->.
 
 <b>Signature:</b>
 

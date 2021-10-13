@@ -19,7 +19,7 @@ export declare namespace credential
 
 |  Type Alias | Description |
 |  --- | --- |
-|  [Credential](./firebase-admin.credential_n.md#credentialcredential) | Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.<!-- -->In most cases, you will not need to implement this yourself and can instead use the default implementations provided by . |
+|  [Credential](./firebase-admin.credential_n.md#credentialcredential) | Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.<!-- -->In most cases, you will not need to implement this yourself and can instead use the default implementations provided by the <code>admin.credential</code> namespace. |
 
 ## credential.applicationDefault
 
@@ -116,7 +116,7 @@ admin.initializeApp({
 
 Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.
 
-In most cases, you will not need to implement this yourself and can instead use the default implementations provided by .
+In most cases, you will not need to implement this yourself and can instead use the default implementations provided by the `admin.credential` namespace.
 
 <b>Signature:</b>
 

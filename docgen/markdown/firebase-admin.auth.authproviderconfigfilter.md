@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}AuthProviderConfigFilter interface{% endblock title %}
 {% block body %}
-The filter interface used for listing provider configurations. This is used when specifying how to list configured identity providers via .
+The filter interface used for listing provider configurations. This is used when specifying how to list configured identity providers via [BaseAuth.listProviderConfigs()](./firebase-admin.auth.baseauth.md#baseauthlistproviderconfigs)<!-- -->.
 
 <b>Signature:</b>
 

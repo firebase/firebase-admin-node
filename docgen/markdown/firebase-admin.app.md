@@ -21,7 +21,7 @@ Firebase App and SDK initialization.
 |  --- | --- |
 |  [App](./firebase-admin.app.app.md#app_interface) | A Firebase app holds the initialization information for a collection of services. |
 |  [AppOptions](./firebase-admin.app.appoptions.md#appoptions_interface) | Available options to pass to [initializeApp()](./firebase-admin.app.md#initializeapp)<!-- -->. |
-|  [Credential](./firebase-admin.app.credential.md#credential_interface) | Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.<!-- -->In most cases, you will not need to implement this yourself and can instead use the default implementations provided by . |
+|  [Credential](./firebase-admin.app.credential.md#credential_interface) | Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.<!-- -->In most cases, you will not need to implement this yourself and can instead use the default implementations provided by the <code>firebase-admin/app</code> module. |
 |  [FirebaseArrayIndexError](./firebase-admin.app.firebasearrayindexerror.md#firebasearrayindexerror_interface) | Composite type which includes both a <code>FirebaseError</code> object and an index which can be used to get the errored item. |
 |  [FirebaseError](./firebase-admin.app.firebaseerror.md#firebaseerror_interface) | <code>FirebaseError</code> is a subclass of the standard JavaScript <code>Error</code> object. In addition to a message string and stack trace, it contains a string code. |
 |  [GoogleOAuthAccessToken](./firebase-admin.app.googleoauthaccesstoken.md#googleoauthaccesstoken_interface) | Interface for Google OAuth 2.0 access tokens. |

@@ -9,17 +9,17 @@ Firebase namespaced API (legacy).
 |  --- | --- |
 |  [app(name)](./firebase-admin.md#app) |  |
 |  [appCheck(app)](./firebase-admin.md#appcheck) | Gets the [AppCheck](./firebase-admin.app-check.appcheck.md#appcheck_class) service for the default app or a given app.<code>admin.appCheck()</code> can be called with no arguments to access the default app's <code>AppCheck</code> service or as <code>admin.appCheck(app)</code> to access the <code>AppCheck</code> service associated with a specific app. |
-|  [auth(app)](./firebase-admin.md#auth) | Gets the  service for the default app or a given app.<code>admin.auth()</code> can be called with no arguments to access the default app's  service or as <code>admin.auth(app)</code> to access the  service associated with a specific app. |
+|  [auth(app)](./firebase-admin.md#auth) | Gets the [Auth](./firebase-admin.auth.auth.md#auth_class) service for the default app or a given app.<code>admin.auth()</code> can be called with no arguments to access the default app's [Auth](./firebase-admin.auth.auth.md#auth_class) service or as <code>admin.auth(app)</code> to access the [Auth](./firebase-admin.auth.auth.md#auth_class) service associated with a specific app. |
 |  [database(app)](./firebase-admin.md#database) | Gets the [Database](./firebase-admin.database.database.md#database_interface) service for the default app or a given app.<code>admin.database()</code> can be called with no arguments to access the default app's <code>Database</code> service or as <code>admin.database(app)</code> to access the <code>Database</code> service associated with a specific app.<code>admin.database</code> is also a namespace that can be used to access global constants and methods associated with the <code>Database</code> service. |
 |  [firestore(app)](./firebase-admin.md#firestore) |  |
 |  [initializeApp(options, name)](./firebase-admin.md#initializeapp) |  |
-|  [installations(app)](./firebase-admin.md#installations) | Gets the  service for the default app or a given app.<code>admin.installations()</code> can be called with no arguments to access the default app's  service or as <code>admin.installations(app)</code> to access the  service associated with a specific app. |
+|  [installations(app)](./firebase-admin.md#installations) | Gets the [Installations](./firebase-admin.installations.installations.md#installations_class) service for the default app or a given app.<code>admin.installations()</code> can be called with no arguments to access the default app's [Installations](./firebase-admin.installations.installations.md#installations_class) service or as <code>admin.installations(app)</code> to access the [Installations](./firebase-admin.installations.installations.md#installations_class) service associated with a specific app. |
 |  [instanceId(app)](./firebase-admin.md#instanceid) | Gets the [InstanceId](./firebase-admin.instance-id.instanceid.md#instanceid_class) service for the default app or a given app.<code>admin.instanceId()</code> can be called with no arguments to access the default app's <code>InstanceId</code> service or as <code>admin.instanceId(app)</code> to access the <code>InstanceId</code> service associated with a specific app. |
 |  [machineLearning(app)](./firebase-admin.md#machinelearning) | Gets the [MachineLearning](./firebase-admin.machine-learning.machinelearning.md#machinelearning_class) service for the default app or a given app.<code>admin.machineLearning()</code> can be called with no arguments to access the default app's <code>MachineLearning</code> service or as <code>admin.machineLearning(app)</code> to access the <code>MachineLearning</code> service associated with a specific app. |
 |  [messaging(app)](./firebase-admin.md#messaging) | Gets the [Messaging](./firebase-admin.messaging.messaging.md#messaging_class) service for the default app or a given app.<code>admin.messaging()</code> can be called with no arguments to access the default app's <code>Messaging</code> service or as <code>admin.messaging(app)</code> to access the <code>Messaging</code> service associated with a specific app. |
 |  [projectManagement(app)](./firebase-admin.md#projectmanagement) | Gets the [ProjectManagement](./firebase-admin.project-management.projectmanagement.md#projectmanagement_class) service for the default app or a given app.<code>admin.projectManagement()</code> can be called with no arguments to access the default app's <code>ProjectManagement</code> service, or as <code>admin.projectManagement(app)</code> to access the <code>ProjectManagement</code> service associated with a specific app. |
 |  [remoteConfig(app)](./firebase-admin.md#remoteconfig) | Gets the [RemoteConfig](./firebase-admin.remote-config.remoteconfig.md#remoteconfig_class) service for the default app or a given app.<code>admin.remoteConfig()</code> can be called with no arguments to access the default app's <code>RemoteConfig</code> service or as <code>admin.remoteConfig(app)</code> to access the <code>RemoteConfig</code> service associated with a specific app. |
-|  [securityRules(app)](./firebase-admin.md#securityrules) | Gets the  service for the default app or a given app.<code>admin.securityRules()</code> can be called with no arguments to access the default app's  service, or as <code>admin.securityRules(app)</code> to access the  service associated with a specific app. |
+|  [securityRules(app)](./firebase-admin.md#securityrules) | Gets the [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service for the default app or a given app.<code>admin.securityRules()</code> can be called with no arguments to access the default app's [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service, or as <code>admin.securityRules(app)</code> to access the [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service associated with a specific app. |
 |  [storage(app)](./firebase-admin.md#storage) | Gets the [Storage](./firebase-admin.storage.storage.md#storage_class) service for the default app or a given app.<code>admin.storage()</code> can be called with no arguments to access the default app's <code>Storage</code> service or as <code>admin.storage(app)</code> to access the <code>Storage</code> service associated with a specific app. |
 
 ## Interfaces
@@ -120,9 +120,9 @@ var otherAppCheck = admin.appCheck(otherApp);
 
 ## auth()
 
-Gets the  service for the default app or a given app.
+Gets the [Auth](./firebase-admin.auth.auth.md#auth_class) service for the default app or a given app.
 
-`admin.auth()` can be called with no arguments to access the default app's  service or as `admin.auth(app)` to access the  service associated with a specific app.
+`admin.auth()` can be called with no arguments to access the default app's [Auth](./firebase-admin.auth.auth.md#auth_class) service or as `admin.auth(app)` to access the [Auth](./firebase-admin.auth.auth.md#auth_class) service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -241,9 +241,9 @@ export declare function initializeApp(options?: AppOptions, name?: string): app.
 
 ## installations()
 
-Gets the  service for the default app or a given app.
+Gets the [Installations](./firebase-admin.installations.installations.md#installations_class) service for the default app or a given app.
 
-`admin.installations()` can be called with no arguments to access the default app's  service or as `admin.installations(app)` to access the  service associated with a specific app.
+`admin.installations()` can be called with no arguments to access the default app's [Installations](./firebase-admin.installations.installations.md#installations_class) service or as `admin.installations(app)` to access the [Installations](./firebase-admin.installations.installations.md#installations_class) service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -493,9 +493,9 @@ var otherRemoteConfig = admin.remoteConfig(otherApp);
 
 ## securityRules()
 
-Gets the  service for the default app or a given app.
+Gets the [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service for the default app or a given app.
 
-`admin.securityRules()` can be called with no arguments to access the default app's  service, or as `admin.securityRules(app)` to access the  service associated with a specific app.
+`admin.securityRules()` can be called with no arguments to access the default app's [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service, or as `admin.securityRules(app)` to access the [SecurityRules](./firebase-admin.security-rules.securityrules.md#securityrules_class) service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -526,7 +526,12 @@ var defaultSecurityRules = admin.securityRules();
 
 ### Example 2
 
-\`\`\`<!-- -->javascript // Get the SecurityRules service for a given app var otherSecurityRules = admin.securityRules(otherApp); \`\`\`
+
+```javascript
+// Get the SecurityRules service for a given app
+var otherSecurityRules = admin.securityRules(otherApp);
+
+```
 
 ## storage()
 

@@ -3,6 +3,7 @@
 {% block body %}
 > Warning: This API is now obsolete.
 > 
+> Use [Installations](./firebase-admin.installations.installations.md#installations_class) instead.
 > 
 
 The `InstanceId` service enables deleting the Firebase instance IDs associated with Firebase client app instances.

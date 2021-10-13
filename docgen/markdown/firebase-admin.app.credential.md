@@ -3,7 +3,7 @@
 {% block body %}
 Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.
 
-In most cases, you will not need to implement this yourself and can instead use the default implementations provided by .
+In most cases, you will not need to implement this yourself and can instead use the default implementations provided by the `firebase-admin/app` module.
 
 <b>Signature:</b>
 

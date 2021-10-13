@@ -19,7 +19,7 @@ export declare class AppCheck
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [createToken(appId, options)](./firebase-admin.app-check.appcheck.md#appcheckcreatetoken) |  | Creates a new  that can be sent back to a client. |
+|  [createToken(appId, options)](./firebase-admin.app-check.appcheck.md#appcheckcreatetoken) |  | Creates a new [AppCheckToken](./firebase-admin.app-check.appchecktoken.md#appchecktoken_interface) that can be sent back to a client. |
 |  [verifyToken(appCheckToken)](./firebase-admin.app-check.appcheck.md#appcheckverifytoken) |  | Verifies a Firebase App Check token (JWT). If the token is valid, the promise is fulfilled with the token's decoded claims; otherwise, the promise is rejected. |
 
 ## AppCheck.app
@@ -32,7 +32,7 @@ readonly app: App;
 
 ## AppCheck.createToken()
 
-Creates a new  that can be sent back to a client.
+Creates a new [AppCheckToken](./firebase-admin.app-check.appchecktoken.md#appchecktoken_interface) that can be sent back to a client.
 
 <b>Signature:</b>
 

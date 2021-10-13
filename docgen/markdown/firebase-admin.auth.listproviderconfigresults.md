@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}ListProviderConfigResults interface{% endblock title %}
 {% block body %}
-The response interface for listing provider configs. This is only available when listing all identity providers' configurations via .
+The response interface for listing provider configs. This is only available when listing all identity providers' configurations via [BaseAuth.listProviderConfigs()](./firebase-admin.auth.baseauth.md#baseauthlistproviderconfigs)<!-- -->.
 
 <b>Signature:</b>
 

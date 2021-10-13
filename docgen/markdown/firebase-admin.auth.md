@@ -23,45 +23,45 @@ Firebase Authentication.
 
 |  Function | Description |
 |  --- | --- |
-|  [getAuth(app)](./firebase-admin.auth.md#getauth) | Gets the  service for the default app or a given app.<code>getAuth()</code> can be called with no arguments to access the default app's  service or as <code>getAuth(app)</code> to access the  service associated with a specific app. |
+|  [getAuth(app)](./firebase-admin.auth.md#getauth) | Gets the [Auth](./firebase-admin.auth.auth.md#auth_class) service for the default app or a given app.<code>getAuth()</code> can be called with no arguments to access the default app's [Auth](./firebase-admin.auth.auth.md#auth_class) service or as <code>getAuth(app)</code> to access the [Auth](./firebase-admin.auth.auth.md#auth_class) service associated with a specific app. |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
 |  [ActionCodeSettings](./firebase-admin.auth.actioncodesettings.md#actioncodesettings_interface) | This is the interface that defines the required continue/state URL with optional Android and iOS bundle identifiers. |
-|  [AuthProviderConfigFilter](./firebase-admin.auth.authproviderconfigfilter.md#authproviderconfigfilter_interface) | The filter interface used for listing provider configurations. This is used when specifying how to list configured identity providers via . |
+|  [AuthProviderConfigFilter](./firebase-admin.auth.authproviderconfigfilter.md#authproviderconfigfilter_interface) | The filter interface used for listing provider configurations. This is used when specifying how to list configured identity providers via [BaseAuth.listProviderConfigs()](./firebase-admin.auth.baseauth.md#baseauthlistproviderconfigs)<!-- -->. |
 |  [BaseAuthProviderConfig](./firebase-admin.auth.baseauthproviderconfig.md#baseauthproviderconfig_interface) | The base Auth provider configuration interface. |
 |  [BaseCreateMultiFactorInfoRequest](./firebase-admin.auth.basecreatemultifactorinforequest.md#basecreatemultifactorinforequest_interface) | Interface representing base properties of a user-enrolled second factor for a <code>CreateRequest</code>. |
 |  [BaseUpdateMultiFactorInfoRequest](./firebase-admin.auth.baseupdatemultifactorinforequest.md#baseupdatemultifactorinforequest_interface) | Interface representing common properties of a user-enrolled second factor for an <code>UpdateRequest</code>. |
 |  [CreatePhoneMultiFactorInfoRequest](./firebase-admin.auth.createphonemultifactorinforequest.md#createphonemultifactorinforequest_interface) | Interface representing a phone specific user-enrolled second factor for a <code>CreateRequest</code>. |
 |  [CreateRequest](./firebase-admin.auth.createrequest.md#createrequest_interface) | Interface representing the properties to set on a new user record to be created. |
-|  [DecodedIdToken](./firebase-admin.auth.decodedidtoken.md#decodedidtoken_interface) | Interface representing a decoded Firebase ID token, returned from the  method.<!-- -->Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs). See the \[ID Token section of the OpenID Connect spec\](http://openid.net/specs/openid-connect-core-1\_0.html\#IDToken) for more information about the specific properties below. |
+|  [DecodedIdToken](./firebase-admin.auth.decodedidtoken.md#decodedidtoken_interface) | Interface representing a decoded Firebase ID token, returned from the [BaseAuth.verifyIdToken()](./firebase-admin.auth.baseauth.md#baseauthverifyidtoken) method.<!-- -->Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs). See the \[ID Token section of the OpenID Connect spec\](http://openid.net/specs/openid-connect-core-1\_0.html\#IDToken) for more information about the specific properties below. |
 |  [DeleteUsersResult](./firebase-admin.auth.deleteusersresult.md#deleteusersresult_interface) | Represents the result of the [BaseAuth.deleteUsers()](./firebase-admin.auth.baseauth.md#baseauthdeleteusers)<!-- -->. API. |
 |  [EmailIdentifier](./firebase-admin.auth.emailidentifier.md#emailidentifier_interface) | Used for looking up an account by email.<!-- -->See [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers)<!-- -->. |
 |  [EmailSignInProviderConfig](./firebase-admin.auth.emailsigninproviderconfig.md#emailsigninproviderconfig_interface) | The email sign in provider configuration. |
 |  [GetUsersResult](./firebase-admin.auth.getusersresult.md#getusersresult_interface) | Represents the result of the [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers) API. |
-|  [ListProviderConfigResults](./firebase-admin.auth.listproviderconfigresults.md#listproviderconfigresults_interface) | The response interface for listing provider configs. This is only available when listing all identity providers' configurations via . |
+|  [ListProviderConfigResults](./firebase-admin.auth.listproviderconfigresults.md#listproviderconfigresults_interface) | The response interface for listing provider configs. This is only available when listing all identity providers' configurations via [BaseAuth.listProviderConfigs()](./firebase-admin.auth.baseauth.md#baseauthlistproviderconfigs)<!-- -->. |
 |  [ListTenantsResult](./firebase-admin.auth.listtenantsresult.md#listtenantsresult_interface) | Interface representing the object returned from a [TenantManager.listTenants()](./firebase-admin.auth.tenantmanager.md#tenantmanagerlisttenants) operation. Contains the list of tenants for the current batch and the next page token if available. |
-|  [ListUsersResult](./firebase-admin.auth.listusersresult.md#listusersresult_interface) | Interface representing the object returned from a  operation. Contains the list of users for the current batch and the next page token if available. |
+|  [ListUsersResult](./firebase-admin.auth.listusersresult.md#listusersresult_interface) | Interface representing the object returned from a [BaseAuth.listUsers()](./firebase-admin.auth.baseauth.md#baseauthlistusers) operation. Contains the list of users for the current batch and the next page token if available. |
 |  [MultiFactorConfig](./firebase-admin.auth.multifactorconfig.md#multifactorconfig_interface) | Interface representing a multi-factor configuration. This can be used to define whether multi-factor authentication is enabled or disabled and the list of second factor challenges that are supported. |
 |  [MultiFactorCreateSettings](./firebase-admin.auth.multifactorcreatesettings.md#multifactorcreatesettings_interface) | The multi-factor related user settings for create operations. |
 |  [MultiFactorUpdateSettings](./firebase-admin.auth.multifactorupdatesettings.md#multifactorupdatesettings_interface) | The multi-factor related user settings for update operations. |
 |  [OAuthResponseType](./firebase-admin.auth.oauthresponsetype.md#oauthresponsetype_interface) | The interface representing OIDC provider's response object for OAuth authorization flow. One of the following settings is required: <ul> <li>Set <code>code</code> to <code>true</code> for the code flow.</li> <li>Set <code>idToken</code> to <code>true</code> for the ID token flow.</li> </ul> |
-|  [OIDCAuthProviderConfig](./firebase-admin.auth.oidcauthproviderconfig.md#oidcauthproviderconfig_interface) | The \[OIDC\](https://openid.net/specs/openid-connect-core-1\_0-final.html) Auth provider configuration interface. An OIDC provider can be created via . |
-|  [OIDCUpdateAuthProviderRequest](./firebase-admin.auth.oidcupdateauthproviderrequest.md#oidcupdateauthproviderrequest_interface) | The request interface for updating an OIDC Auth provider. This is used when updating an OIDC provider's configuration via . |
+|  [OIDCAuthProviderConfig](./firebase-admin.auth.oidcauthproviderconfig.md#oidcauthproviderconfig_interface) | The \[OIDC\](https://openid.net/specs/openid-connect-core-1\_0-final.html) Auth provider configuration interface. An OIDC provider can be created via [BaseAuth.createProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthcreateproviderconfig)<!-- -->. |
+|  [OIDCUpdateAuthProviderRequest](./firebase-admin.auth.oidcupdateauthproviderrequest.md#oidcupdateauthproviderrequest_interface) | The request interface for updating an OIDC Auth provider. This is used when updating an OIDC provider's configuration via [BaseAuth.updateProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthupdateproviderconfig)<!-- -->. |
 |  [PhoneIdentifier](./firebase-admin.auth.phoneidentifier.md#phoneidentifier_interface) | Used for looking up an account by phone number.<!-- -->See [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers)<!-- -->. |
 |  [ProviderIdentifier](./firebase-admin.auth.provideridentifier.md#provideridentifier_interface) | Used for looking up an account by federated provider.<!-- -->See [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers)<!-- -->. |
-|  [SAMLAuthProviderConfig](./firebase-admin.auth.samlauthproviderconfig.md#samlauthproviderconfig_interface) | The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html) Auth provider configuration interface. A SAML provider can be created via . |
-|  [SAMLUpdateAuthProviderRequest](./firebase-admin.auth.samlupdateauthproviderrequest.md#samlupdateauthproviderrequest_interface) | The request interface for updating a SAML Auth provider. This is used when updating a SAML provider's configuration via . |
+|  [SAMLAuthProviderConfig](./firebase-admin.auth.samlauthproviderconfig.md#samlauthproviderconfig_interface) | The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html) Auth provider configuration interface. A SAML provider can be created via [BaseAuth.createProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthcreateproviderconfig)<!-- -->. |
+|  [SAMLUpdateAuthProviderRequest](./firebase-admin.auth.samlupdateauthproviderrequest.md#samlupdateauthproviderrequest_interface) | The request interface for updating a SAML Auth provider. This is used when updating a SAML provider's configuration via [BaseAuth.updateProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthupdateproviderconfig)<!-- -->. |
 |  [SessionCookieOptions](./firebase-admin.auth.sessioncookieoptions.md#sessioncookieoptions_interface) | Interface representing the session cookie options needed for the [BaseAuth.createSessionCookie()](./firebase-admin.auth.baseauth.md#baseauthcreatesessioncookie) method. |
 |  [UidIdentifier](./firebase-admin.auth.uididentifier.md#uididentifier_interface) | Used for looking up an account by uid.<!-- -->See [BaseAuth.getUsers()](./firebase-admin.auth.baseauth.md#baseauthgetusers)<!-- -->. |
 |  [UpdatePhoneMultiFactorInfoRequest](./firebase-admin.auth.updatephonemultifactorinforequest.md#updatephonemultifactorinforequest_interface) | Interface representing a phone specific user-enrolled second factor for an <code>UpdateRequest</code>. |
 |  [UpdateRequest](./firebase-admin.auth.updaterequest.md#updaterequest_interface) | Interface representing the properties to update on the provided user. |
 |  [UpdateTenantRequest](./firebase-admin.auth.updatetenantrequest.md#updatetenantrequest_interface) | Interface representing the properties to update on the provided tenant. |
-|  [UserImportOptions](./firebase-admin.auth.userimportoptions.md#userimportoptions_interface) | Interface representing the user import options needed for  method. This is used to provide the password hashing algorithm information. |
-|  [UserImportRecord](./firebase-admin.auth.userimportrecord.md#userimportrecord_interface) | Interface representing a user to import to Firebase Auth via the  method. |
-|  [UserImportResult](./firebase-admin.auth.userimportresult.md#userimportresult_interface) | Interface representing the response from the  method for batch importing users to Firebase Auth. |
+|  [UserImportOptions](./firebase-admin.auth.userimportoptions.md#userimportoptions_interface) | Interface representing the user import options needed for [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method. This is used to provide the password hashing algorithm information. |
+|  [UserImportRecord](./firebase-admin.auth.userimportrecord.md#userimportrecord_interface) | Interface representing a user to import to Firebase Auth via the [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method. |
+|  [UserImportResult](./firebase-admin.auth.userimportresult.md#userimportresult_interface) | Interface representing the response from the [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method for batch importing users to Firebase Auth. |
 |  [UserMetadataRequest](./firebase-admin.auth.usermetadatarequest.md#usermetadatarequest_interface) | User metadata to include when importing a user. |
 |  [UserProvider](./firebase-admin.auth.userprovider.md#userprovider_interface) | Represents a user identity provider that can be associated with a Firebase user. |
 |  [UserProviderRequest](./firebase-admin.auth.userproviderrequest.md#userproviderrequest_interface) | User provider data to include when importing a user. |
@@ -71,7 +71,7 @@ Firebase Authentication.
 |  Type Alias | Description |
 |  --- | --- |
 |  [AuthFactorType](./firebase-admin.auth.md#authfactortype) | Identifies a second factor type. |
-|  [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig) | The Auth provider configuration type. . |
+|  [AuthProviderConfig](./firebase-admin.auth.md#authproviderconfig) | The Auth provider configuration type. [BaseAuth.createProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthcreateproviderconfig)<!-- -->. |
 |  [CreateMultiFactorInfoRequest](./firebase-admin.auth.md#createmultifactorinforequest) | Type representing the properties of a user-enrolled second factor for a <code>CreateRequest</code>. |
 |  [CreateTenantRequest](./firebase-admin.auth.md#createtenantrequest) | Interface representing the properties to set on a new tenant. |
 |  [HashAlgorithmType](./firebase-admin.auth.md#hashalgorithmtype) |  |
@@ -82,9 +82,9 @@ Firebase Authentication.
 
 ## getAuth()
 
-Gets the  service for the default app or a given app.
+Gets the [Auth](./firebase-admin.auth.auth.md#auth_class) service for the default app or a given app.
 
-`getAuth()` can be called with no arguments to access the default app's  service or as `getAuth(app)` to access the  service associated with a specific app.
+`getAuth()` can be called with no arguments to access the default app's [Auth](./firebase-admin.auth.auth.md#auth_class) service or as `getAuth(app)` to access the [Auth](./firebase-admin.auth.auth.md#auth_class) service associated with a specific app.
 
 <b>Signature:</b>
 
@@ -132,7 +132,7 @@ export declare type AuthFactorType = 'phone';
 
 ## AuthProviderConfig
 
-The Auth provider configuration type. .
+The Auth provider configuration type. [BaseAuth.createProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthcreateproviderconfig)<!-- -->.
 
 <b>Signature:</b>
 

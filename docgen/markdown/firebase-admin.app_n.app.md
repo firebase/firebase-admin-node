@@ -3,7 +3,7 @@
 {% block body %}
 A Firebase app holds the initialization information for a collection of services.
 
-Do not call this constructor directly. Instead, use  to create an app.
+Do not call this constructor directly. Instead, use [initializeApp()](./firebase-admin.app.md#initializeapp) to create an app.
 
 <b>Signature:</b>
 
@@ -123,6 +123,7 @@ installations(): installations.Installations;
 
 > Warning: This API is now obsolete.
 > 
+> Use [Installations](./firebase-admin.installations.installations.md#installations_class) instead.
 > 
 
 <b>Signature:</b>

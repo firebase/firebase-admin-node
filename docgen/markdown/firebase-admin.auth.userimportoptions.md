@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}UserImportOptions interface{% endblock title %}
 {% block body %}
-Interface representing the user import options needed for  method. This is used to provide the password hashing algorithm information.
+Interface representing the user import options needed for [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method. This is used to provide the password hashing algorithm information.
 
 <b>Signature:</b>
 

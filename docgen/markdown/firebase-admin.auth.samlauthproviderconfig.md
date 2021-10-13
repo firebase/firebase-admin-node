@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}SAMLAuthProviderConfig interface{% endblock title %}
 {% block body %}
-The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html) Auth provider configuration interface. A SAML provider can be created via .
+The \[SAML\](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html) Auth provider configuration interface. A SAML provider can be created via [BaseAuth.createProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthcreateproviderconfig)<!-- -->.
 
 <b>Signature:</b>
 

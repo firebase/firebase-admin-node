@@ -16,7 +16,7 @@ export declare class Model
 |  [createTime](./firebase-admin.machine-learning.model.md#modelcreatetime) |  | string | The timestamp of the model's creation. |
 |  [displayName](./firebase-admin.machine-learning.model.md#modeldisplayname) |  | string | The model's name. This is the name you use from your app to load the model. |
 |  [etag](./firebase-admin.machine-learning.model.md#modeletag) |  | string | The ETag identifier of the current version of the model. This value changes whenever you update any of the model's properties. |
-|  [locked](./firebase-admin.machine-learning.model.md#modellocked) |  | boolean | True if the model is locked by a server-side operation. You can't make changes to a locked model. See . |
+|  [locked](./firebase-admin.machine-learning.model.md#modellocked) |  | boolean | True if the model is locked by a server-side operation. You can't make changes to a locked model. See [Model.waitForUnlocked()](./firebase-admin.machine-learning.model.md#modelwaitforunlocked)<!-- -->. |
 |  [modelHash](./firebase-admin.machine-learning.model.md#modelmodelhash) |  | string \| undefined | The hash of the model's <code>tflite</code> file. This value changes only when you upload a new TensorFlow Lite model. |
 |  [modelId](./firebase-admin.machine-learning.model.md#modelmodelid) |  | string | The ID of the model. |
 |  [published](./firebase-admin.machine-learning.model.md#modelpublished) |  | boolean | True if the model is published. |
@@ -64,7 +64,7 @@ get etag(): string;
 
 ## Model.locked
 
-True if the model is locked by a server-side operation. You can't make changes to a locked model. See .
+True if the model is locked by a server-side operation. You can't make changes to a locked model. See [Model.waitForUnlocked()](./firebase-admin.machine-learning.model.md#modelwaitforunlocked)<!-- -->.
 
 <b>Signature:</b>
 

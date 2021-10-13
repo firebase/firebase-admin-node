@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}OIDCUpdateAuthProviderRequest interface{% endblock title %}
 {% block body %}
-The request interface for updating an OIDC Auth provider. This is used when updating an OIDC provider's configuration via .
+The request interface for updating an OIDC Auth provider. This is used when updating an OIDC provider's configuration via [BaseAuth.updateProviderConfig()](./firebase-admin.auth.baseauth.md#baseauthupdateproviderconfig)<!-- -->.
 
 <b>Signature:</b>
 

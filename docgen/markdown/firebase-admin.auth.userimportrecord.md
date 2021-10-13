@@ -1,7 +1,7 @@
 {% extends "_internal/templates/reference.html" %}
 {% block title %}UserImportRecord interface{% endblock title %}
 {% block body %}
-Interface representing a user to import to Firebase Auth via the  method.
+Interface representing a user to import to Firebase Auth via the [BaseAuth.importUsers()](./firebase-admin.auth.baseauth.md#baseauthimportusers) method.
 
 <b>Signature:</b>
 
@@ -20,7 +20,7 @@ export interface UserImportRecord
 |  [emailVerified](./firebase-admin.auth.userimportrecord.md#userimportrecordemailverified) | boolean | Whether or not the user's primary email is verified. |
 |  [metadata](./firebase-admin.auth.userimportrecord.md#userimportrecordmetadata) | [UserMetadataRequest](./firebase-admin.auth.usermetadatarequest.md#usermetadatarequest_interface) | Additional metadata about the user. |
 |  [multiFactor](./firebase-admin.auth.userimportrecord.md#userimportrecordmultifactor) | [MultiFactorUpdateSettings](./firebase-admin.auth.multifactorupdatesettings.md#multifactorupdatesettings_interface) | The user's multi-factor related properties. |
-|  [passwordHash](./firebase-admin.auth.userimportrecord.md#userimportrecordpasswordhash) | Buffer | The buffer of bytes representing the user's hashed password. When a user is to be imported with a password hash,  are required to be specified to identify the hashing algorithm used to generate this hash. |
+|  [passwordHash](./firebase-admin.auth.userimportrecord.md#userimportrecordpasswordhash) | Buffer | The buffer of bytes representing the user's hashed password. When a user is to be imported with a password hash, [UserImportOptions](./firebase-admin.auth.userimportoptions.md#userimportoptions_interface) are required to be specified to identify the hashing algorithm used to generate this hash. |
 |  [passwordSalt](./firebase-admin.auth.userimportrecord.md#userimportrecordpasswordsalt) | Buffer | The buffer of bytes representing the user's password salt. |
 |  [phoneNumber](./firebase-admin.auth.userimportrecord.md#userimportrecordphonenumber) | string | The user's primary phone number, if set. |
 |  [photoURL](./firebase-admin.auth.userimportrecord.md#userimportrecordphotourl) | string | The user's photo URL. |
@@ -102,7 +102,7 @@ multiFactor?: MultiFactorUpdateSettings;
 
 ## UserImportRecord.passwordHash
 
-The buffer of bytes representing the user's hashed password. When a user is to be imported with a password hash,  are required to be specified to identify the hashing algorithm used to generate this hash.
+The buffer of bytes representing the user's hashed password. When a user is to be imported with a password hash, [UserImportOptions](./firebase-admin.auth.userimportoptions.md#userimportoptions_interface) are required to be specified to identify the hashing algorithm used to generate this hash.
 
 <b>Signature:</b>
 
