@@ -156,8 +156,7 @@ export interface FirebaseError {
    * occurred.
    *
    * This information can be useful for troubleshooting the cause of the error with
-   * {@link https://firebase.google.com/support | Firebase Support} to help
-   * explain the cause of an error.
+   * {@link https://firebase.google.com/support | Firebase Support}.
    */
   stack?: string;
 
