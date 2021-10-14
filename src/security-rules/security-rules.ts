@@ -131,7 +131,7 @@ export class SecurityRules {
   private readonly client: SecurityRulesApiClient;
 
   /**
-   * @param app The app for this SecurityRules service.
+   * @param app - The app for this SecurityRules service.
    * @constructor
    * @internal
    */
@@ -146,7 +146,7 @@ export class SecurityRules {
    * pass the short name "my-ruleset". Rejects with a `not-found` error if the
    * specified `Ruleset` cannot be found.
    *
-   * @param name Name of the `Ruleset` to retrieve.
+   * @param name - Name of the `Ruleset` to retrieve.
    * @returns A promise that fulfills with the specified `Ruleset`.
    */
   public getRuleset(name: string): Promise<Ruleset> {
@@ -171,7 +171,7 @@ export class SecurityRules {
    * Creates a new {@link Ruleset} from the given
    * source, and applies it to Cloud Firestore.
    *
-   * @param source Rules source to apply.
+   * @param source - Rules source to apply.
    * @returns A promise that fulfills when the ruleset is created and released.
    */
   public releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset> {
@@ -192,7 +192,7 @@ export class SecurityRules {
    * Applies the specified {@link Ruleset} ruleset
    * to Cloud Firestore.
    *
-   * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+   * @param ruleset - Name of the ruleset to apply or a `RulesetMetadata` object
    *   containing the name.
    * @returns A promise that fulfills when the ruleset is released.
    */
@@ -205,7 +205,7 @@ export class SecurityRules {
    * Cloud Storage bucket. Rejects with a `not-found` error if no ruleset is applied
    * on the bucket.
    *
-   * @param bucket Optional name of the Cloud Storage bucket to be retrieved. If not
+   * @param bucket - Optional name of the Cloud Storage bucket to be retrieved. If not
    *   specified, retrieves the ruleset applied on the default bucket configured via
    *   `AppOptions`.
    * @returns A promise that fulfills with the Cloud Storage ruleset.
@@ -224,8 +224,8 @@ export class SecurityRules {
    * Creates a new {@link Ruleset} from the given
    * source, and applies it to a Cloud Storage bucket.
    *
-   * @param source Rules source to apply.
-   * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+   * @param source - Rules source to apply.
+   * @param bucket - Optional name of the Cloud Storage bucket to apply the rules on. If
    *   not specified, applies the ruleset on the default bucket configured via
    *   {@link firebase-admin.app#AppOptions}.
    * @returns A promise that fulfills when the ruleset is created and released.
@@ -251,9 +251,9 @@ export class SecurityRules {
    * Applies the specified {@link Ruleset} ruleset
    * to a Cloud Storage bucket.
    *
-   * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+   * @param ruleset - Name of the ruleset to apply or a `RulesetMetadata` object
    *   containing the name.
-   * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+   * @param bucket - Optional name of the Cloud Storage bucket to apply the rules on. If
    *   not specified, applies the ruleset on the default bucket configured via
    *   {@link firebase-admin.app#AppOptions}.
    * @returns A promise that fulfills when the ruleset is released.
@@ -280,9 +280,9 @@ export class SecurityRules {
    *   'firestore.rules', source);
    * ```
    *
-   * @param name Name to assign to the rules file. This is usually a short file name that
+   * @param name - Name to assign to the rules file. This is usually a short file name that
    *   helps identify the file in a ruleset.
-   * @param source Contents of the rules file.
+   * @param source - Contents of the rules file.
    * @returns A new rules file instance.
    */
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
@@ -310,7 +310,7 @@ export class SecurityRules {
   /**
    * Creates a new {@link Ruleset} from the given {@link RulesFile}.
    *
-   * @param file Rules file to include in the new `Ruleset`.
+   * @param file - Rules file to include in the new `Ruleset`.
    * @returns A promise that fulfills with the newly created `Ruleset`.
    */
   public createRuleset(file: RulesFile): Promise<Ruleset> {
@@ -333,7 +333,7 @@ export class SecurityRules {
    * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
    * specified `Ruleset` cannot be found.
    *
-   * @param name Name of the `Ruleset` to delete.
+   * @param name - Name of the `Ruleset` to delete.
    * @returns A promise that fulfills when the `Ruleset` is deleted.
    */
   public deleteRuleset(name: string): Promise<void> {
@@ -343,9 +343,9 @@ export class SecurityRules {
   /**
    * Retrieves a page of ruleset metadata.
    *
-   * @param pageSize The page size, 100 if undefined. This is also the maximum allowed
+   * @param pageSize - The page size, 100 if undefined. This is also the maximum allowed
    *   limit.
-   * @param nextPageToken The next page token. If not specified, returns rulesets
+   * @param nextPageToken - The next page token. If not specified, returns rulesets
    *   starting without any offset.
    * @returns A promise that fulfills with a page of rulesets.
    */

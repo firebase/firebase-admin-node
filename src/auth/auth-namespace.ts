@@ -94,12 +94,12 @@ import {
 } from './user-record';
 
 /**
- * Gets the {@link auth.Auth `Auth`} service for the default app or a
+ * Gets the {@link firebase-admin.auth#Auth} service for the default app or a
  * given app.
  *
  * `admin.auth()` can be called with no arguments to access the default app's
- * {@link auth.Auth `Auth`} service or as `admin.auth(app)` to access the
- * {@link auth.Auth `Auth`} service associated with a specific app.
+ * {@link firebase-admin.auth#Auth} service or as `admin.auth(app)` to access the
+ * {@link firebase-admin.auth#Auth} service associated with a specific app.
  *
  * @example
  * ```javascript

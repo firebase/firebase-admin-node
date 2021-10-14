@@ -48,7 +48,7 @@ export { IosApp, IosAppMetadata } from './ios-app';
  * const otherProjectManagement = getProjectManagement(otherApp);
  * ```
  *
- * @param app Optional app whose `ProjectManagement` service
+ * @param app - Optional app whose `ProjectManagement` service
  *     to return. If not provided, the default `ProjectManagement` service will
  *     be returned. *
  * @returns The default `ProjectManagement` service if no app is provided or the

@@ -48,7 +48,7 @@ const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
  * });
  * ```
  *
- * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+ * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
  *   to be used when retrieving access tokens from Google token servers.
  *
  * @returns A credential authenticated via Google
@@ -93,9 +93,9 @@ export function applicationDefault(httpAgent?: Agent): Credential {
  * });
  * ```
  *
- * @param serviceAccountPathOrObject The path to a service
+ * @param serviceAccountPathOrObject - The path to a service
  *   account key JSON file or an object representing a service account key.
- * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+ * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
  *   to be used when retrieving access tokens from Google token servers.
  *
  * @returns A credential authenticated via the
@@ -129,10 +129,10 @@ export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAg
  * });
  * ```
  *
- * @param refreshTokenPathOrObject The path to a Google
+ * @param refreshTokenPathOrObject - The path to a Google
  *   OAuth2 refresh token JSON file or an object representing a Google OAuth2
  *   refresh token.
- * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+ * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
  *   to be used when retrieving access tokens from Google token servers.
  *
  * @returns A credential authenticated via the

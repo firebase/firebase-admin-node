@@ -42,7 +42,7 @@ import { AppCheck as TAppCheck } from './app-check';
  * var otherAppCheck = admin.appCheck(otherApp);
  * ```
  *
- * @param app Optional app for which to return the `AppCheck` service.
+ * @param app - Optional app for which to return the `AppCheck` service.
  *   If not provided, the default `AppCheck` service is returned.
  *
  * @returns The default `AppCheck` service if no

@@ -53,7 +53,7 @@ export interface Database extends FirebaseDatabase {
    * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
    * specified as a string or a Buffer, it may include comments.
    *
-   * @param source Source of the rules to apply. Must not be `null` or empty.
+   * @param source - Source of the rules to apply. Must not be `null` or empty.
    * @returns Resolves when the rules are set on the Realtime Database.
    */
   setRules(source: string | Buffer | object): Promise<void>;

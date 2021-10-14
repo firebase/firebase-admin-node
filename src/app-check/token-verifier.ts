@@ -43,7 +43,7 @@ export class AppCheckTokenVerifier {
   /**
    * Verifies the format and signature of a Firebase App Check token.
    *
-   * @param token The Firebase Auth JWT token to verify.
+   * @param token - The Firebase Auth JWT token to verify.
    * @returns A promise fulfilled with the decoded claims of the Firebase App Check token.
    */
   public verifyToken(token: string): Promise<DecodedAppCheckToken> {
@@ -101,8 +101,8 @@ export class AppCheckTokenVerifier {
   /**
    * Verifies the content of a Firebase App Check JWT.
    *
-   * @param fullDecodedToken The decoded JWT.
-   * @param projectId The Firebase Project Id.
+   * @param fullDecodedToken - The decoded JWT.
+   * @param projectId - The Firebase Project Id.
    */
   private verifyContent(fullDecodedToken: DecodedToken, projectId: string | null): void {
     const header = fullDecodedToken.header;
@@ -142,7 +142,7 @@ export class AppCheckTokenVerifier {
   /**
    * Maps JwtError to FirebaseAppCheckError
    *
-   * @param error JwtError to be mapped.
+   * @param error - JwtError to be mapped.
    * @returns FirebaseAppCheckError instance.
    */
   private mapJwtErrorToAppCheckError(error: JwtError): FirebaseAppCheckError {

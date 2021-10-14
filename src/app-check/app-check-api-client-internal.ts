@@ -53,8 +53,8 @@ export class AppCheckApiClient {
   /**
    * Exchange a signed custom token to App Check token
    *
-   * @param customToken The custom token to be exchanged.
-   * @param appId The mobile App ID.
+   * @param customToken - The custom token to be exchanged.
+   * @param appId - The mobile App ID.
    * @returns A promise that fulfills with a `AppCheckToken`.
    */
   public exchangeToken(customToken: string, appId: string): Promise<AppCheckToken> {
@@ -140,7 +140,7 @@ export class AppCheckApiClient {
   /**
    * Creates an AppCheckToken from the API response.
    *
-   * @param resp API response object.
+   * @param resp - API response object.
    * @returns An AppCheckToken instance.
    */
   private toAppCheckToken(resp: HttpResponse): AppCheckToken {
@@ -157,7 +157,7 @@ export class AppCheckApiClient {
   /**
    * Converts a duration string with the suffix `s` to milliseconds.
    *
-   * @param duration The duration as a string with the suffix "s" preceded by the
+   * @param duration - The duration as a string with the suffix "s" preceded by the
    * number of seconds, with fractional seconds. For example, 3 seconds with 0 nanoseconds
    * is expressed as "3s", while 3 seconds and 1 nanosecond is expressed as "3.000000001s",
    * and 3 seconds and 1 microsecond is expressed as "3.000001s".
@@ -209,8 +209,8 @@ export type AppCheckErrorCode =
 /**
  * Firebase App Check error code structure. This extends PrefixedFirebaseError.
  *
- * @param code The error code.
- * @param message The error message.
+ * @param code - The error code.
+ * @param message - The error message.
  * @constructor
  */
 export class FirebaseAppCheckError extends PrefixedFirebaseError {

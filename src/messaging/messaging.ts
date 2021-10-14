@@ -107,7 +107,7 @@ const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.
  *
- * @param response The raw FCM server response to map.
+ * @param response - The raw FCM server response to map.
  *
  * @returns The mapped MessagingDevicesResponse object.
  */
@@ -134,7 +134,7 @@ function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResp
 /**
  * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
  *
- * @param response The raw FCM server response to map.
+ * @param response - The raw FCM server response to map.
  *
  * @returns The mapped MessagingDeviceGroupResponse object.
  */
@@ -226,8 +226,8 @@ export class Messaging {
   /**
    * Sends the given message via FCM.
    *
-   * @param message The message payload.
-   * @param dryRun Whether to send the message in the dry-run
+   * @param message - The message payload.
+   * @param dryRun - Whether to send the message in the dry-run
    *   (validation only) mode.
    * @returns A promise fulfilled with a unique message ID
    *   string after the message has been successfully handed off to the FCM
@@ -265,9 +265,9 @@ export class Messaging {
    * the list could be sent. Partial failures are indicated by a `BatchResponse`
    * return value.
    *
-   * @param messages A non-empty array
+   * @param messages - A non-empty array
    *   containing up to 500 messages.
-   * @param dryRun Whether to send the messages in the dry-run
+   * @param dryRun - Whether to send the messages in the dry-run
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
@@ -323,9 +323,9 @@ export class Messaging {
    * not sent to any of the tokens in the list. Partial failures are indicated by
    * a `BatchResponse` return value.
    *
-   * @param message A multicast message
+   * @param message - A multicast message
    *   containing up to 500 tokens.
-   * @param dryRun Whether to send the message in the dry-run
+   * @param dryRun - Whether to send the message in the dry-run
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
@@ -371,10 +371,10 @@ export class Messaging {
    * `registrationTokens` parameter containing an array of tokens to send
    * to multiple devices.
    *
-   * @param registrationToken A device registration token or an array of
+   * @param registrationToken - A device registration token or an array of
    *   device registration tokens to which the message should be sent.
-   * @param payload The message payload.
-   * @param options Optional options to
+   * @param payload - The message payload.
+   * @param options - Optional options to
    *   alter the message.
    *
    * @returns A promise fulfilled with the server's response after the message
@@ -440,10 +440,10 @@ export class Messaging {
    * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group |
    * Send to a device group} for code samples and detailed documentation.
    *
-   * @param notificationKey The notification key for the device group to
+   * @param notificationKey - The notification key for the device group to
    *   which to send the message.
-   * @param payload The message payload.
-   * @param options Optional options to
+   * @param payload - The message payload.
+   * @param options - Optional options to
    *   alter the message.
    *
    * @returns A promise fulfilled with the server's response after the message
@@ -523,9 +523,9 @@ export class Messaging {
    * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic |
    * Send to a topic} for code samples and detailed documentation.
    *
-   * @param topic The topic to which to send the message.
-   * @param payload The message payload.
-   * @param options Optional options to
+   * @param topic - The topic to which to send the message.
+   * @param payload - The message payload.
+   * @param options - Optional options to
    *   alter the message.
    *
    * @returns A promise fulfilled with the server's response after the message
@@ -573,10 +573,10 @@ export class Messaging {
    * Send to a condition}
    * for code samples and detailed documentation.
    *
-   * @param condition The condition determining to which topics to send
+   * @param condition - The condition determining to which topics to send
    *   the message.
-   * @param payload The message payload.
-   * @param options Optional options to
+   * @param payload - The message payload.
+   * @param options - Optional options to
    *   alter the message.
    *
    * @returns A promise fulfilled with the server's response after the message
@@ -632,9 +632,9 @@ export class Messaging {
    * for code samples and detailed documentation. Optionally, you can provide an
    * array of tokens to subscribe multiple devices.
    *
-   * @param registrationTokens A token or array of registration tokens
+   * @param registrationTokens - A token or array of registration tokens
    *   for the devices to subscribe to the topic.
-   * @param topic The topic to which to subscribe.
+   * @param topic - The topic to which to subscribe.
    *
    * @returns A promise fulfilled with the server's response after the device has been
    *   subscribed to the topic.
@@ -659,9 +659,9 @@ export class Messaging {
    * for code samples and detailed documentation.  Optionally, you can provide an
    * array of tokens to unsubscribe multiple devices.
    *
-   * @param registrationTokens A device registration token or an array of
+   * @param registrationTokens - A device registration token or an array of
    *   device registration tokens to unsubscribe from the topic.
-   * @param topic The topic from which to unsubscribe.
+   * @param topic - The topic from which to unsubscribe.
    *
    * @returns A promise fulfilled with the server's response after the device has been
    *   unsubscribed from the topic.
@@ -703,11 +703,11 @@ export class Messaging {
   /**
    * Helper method which sends and handles topic subscription management requests.
    *
-   * @param registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens - The registration token or an array of
    *     registration tokens to unsubscribe from the topic.
-   * @param topic The topic to which to subscribe.
-   * @param methodName The name of the original method called.
-   * @param path The endpoint path to use for the request.
+   * @param topic - The topic to which to subscribe.
+   * @param methodName - The name of the original method called.
+   * @param path - The endpoint path to use for the request.
    *
    * @returns A Promise fulfilled with the parsed server
    *   response.
@@ -754,8 +754,8 @@ export class Messaging {
   /**
    * Validates the types of the messaging payload and options. If invalid, an error will be thrown.
    *
-   * @param payload The messaging payload to validate.
-   * @param options The messaging options to validate.
+   * @param payload - The messaging payload to validate.
+   * @param options - The messaging options to validate.
    */
   private validateMessagingPayloadAndOptionsTypes(
     payload: MessagingPayload,
@@ -781,7 +781,7 @@ export class Messaging {
   /**
    * Validates the messaging payload. If invalid, an error will be thrown.
    *
-   * @param payload The messaging payload to validate.
+   * @param payload - The messaging payload to validate.
    *
    * @returns A copy of the provided payload with whitelisted properties switched
    *     from camelCase to underscore_case.
@@ -872,7 +872,7 @@ export class Messaging {
   /**
    * Validates the messaging options. If invalid, an error will be thrown.
    *
-   * @param options The messaging options to validate.
+   * @param options - The messaging options to validate.
    *
    * @returns A copy of the provided options with whitelisted properties switched
    *   from camelCase to underscore_case.
@@ -951,9 +951,9 @@ export class Messaging {
   /**
    * Validates the type of the provided registration token(s). If invalid, an error will be thrown.
    *
-   * @param registrationTokenOrTokens The registration token(s) to validate.
-   * @param method The method name to use in error messages.
-   * @param errorInfo The error info to use if the registration tokens are invalid.
+   * @param registrationTokenOrTokens - The registration token(s) to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string | string[],
@@ -973,10 +973,10 @@ export class Messaging {
   /**
    * Validates the provided registration tokens. If invalid, an error will be thrown.
    *
-   * @param registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens - The registration token or an array of
    *     registration tokens to validate.
-   * @param method The method name to use in error messages.
-   * @param errorInfo The error info to use if the registration tokens are invalid.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokens(
     registrationTokenOrTokens: string | string[],
@@ -1009,9 +1009,9 @@ export class Messaging {
   /**
    * Validates the type of the provided topic. If invalid, an error will be thrown.
    *
-   * @param topic The topic to validate.
-   * @param method The method name to use in error messages.
-   * @param errorInfo The error info to use if the topic is invalid.
+   * @param topic - The topic to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the topic is invalid.
    */
   private validateTopicType(
     topic: string | string[],
@@ -1030,9 +1030,9 @@ export class Messaging {
   /**
    * Validates the provided topic. If invalid, an error will be thrown.
    *
-   * @param topic The topic to validate.
-   * @param method The method name to use in error messages.
-   * @param errorInfo The error info to use if the topic is invalid.
+   * @param topic - The topic to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the topic is invalid.
    */
   private validateTopic(
     topic: string,
@@ -1051,7 +1051,7 @@ export class Messaging {
   /**
    * Normalizes the provided topic name by prepending it with '/topics/', if necessary.
    *
-   * @param topic The topic name to normalize.
+   * @param topic - The topic name to normalize.
    *
    * @returns The normalized topic name.
    */

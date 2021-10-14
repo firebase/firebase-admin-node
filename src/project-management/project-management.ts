@@ -32,7 +32,7 @@ export class ProjectManagement {
   private projectId: string;
 
   /**
-   * @param app The app for this ProjectManagement service.
+   * @param app - The app for this ProjectManagement service.
    * @constructor
    * @internal
    */
@@ -71,7 +71,7 @@ export class ProjectManagement {
    *
    * This method does not perform an RPC.
    *
-   * @param appId The `appId` of the Android app to reference.
+   * @param appId - The `appId` of the Android app to reference.
    *
    * @returns An `AndroidApp` object that references the specified Firebase Android app.
    */
@@ -85,7 +85,7 @@ export class ProjectManagement {
    *
    * This method does not perform an RPC.
    *
-   * @param appId The `appId` of the iOS app to reference.
+   * @param appId - The `appId` of the iOS app to reference.
    *
    * @returns An `iOSApp` object that references the specified Firebase iOS app.
    */
@@ -98,7 +98,7 @@ export class ProjectManagement {
    *
    * This method does not perform an RPC.
    *
-   * @param shaHash The SHA-1 or SHA-256 hash for this certificate.
+   * @param shaHash - The SHA-1 or SHA-256 hash for this certificate.
    *
    * @returns A `ShaCertificate` object contains the specified SHA hash.
    */
@@ -109,9 +109,9 @@ export class ProjectManagement {
   /**
    * Creates a new Firebase Android app associated with this Firebase project.
    *
-   * @param packageName The canonical package name of the Android App,
+   * @param packageName - The canonical package name of the Android App,
    *     as would appear in the Google Play Developer Console.
-   * @param displayName An optional user-assigned display name for this
+   * @param displayName - An optional user-assigned display name for this
    *     new app.
    *
    * @returns A promise that resolves to the newly created Android app.
@@ -138,8 +138,8 @@ export class ProjectManagement {
   /**
    * Creates a new Firebase iOS app associated with this Firebase project.
    *
-   * @param bundleId The iOS app bundle ID to use for this new app.
-   * @param displayName An optional user-assigned display name for this
+   * @param bundleId - The iOS app bundle ID to use for this new app.
+   * @param displayName - An optional user-assigned display name for this
    *     new app.
    *
    * @returns A promise that resolves to the newly created iOS app.
@@ -184,7 +184,7 @@ export class ProjectManagement {
   /**
    * Update the display name of this Firebase project.
    *
-   * @param newDisplayName The new display name to be updated.
+   * @param newDisplayName - The new display name to be updated.
    *
    * @returns A promise that resolves when the project display name has been updated.
    */

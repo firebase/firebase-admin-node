@@ -405,7 +405,7 @@ export interface AndroidConfig {
   /**
    * A collection of data fields to be included in the message. All values must
    * be strings. When provided, overrides any data fields set on the top-level
-   * `admin.messaging.Message`.}
+   * {@link Message}.
    */
   data?: { [key: string]: string };
 

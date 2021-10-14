@@ -25,7 +25,7 @@ import { Credential } from './credential';
 export interface AppOptions {
 
   /**
-   * A {@link Credential `Credential`} object used to
+   * A {@link firebase-admin.app#Credential} object used to
    * authenticate the Admin SDK.
    *
    * See {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
@@ -155,9 +155,8 @@ export interface FirebaseError {
    * A string value containing the execution backtrace when the error originally
    * occurred.
    *
-   * This information can be useful to you and can be sent to
-   * {@link https://firebase.google.com/support/ Firebase Support} to help
-   * explain the cause of an error.
+   * This information can be useful for troubleshooting the cause of the error with
+   * {@link https://firebase.google.com/support | Firebase Support}.
    */
   stack?: string;
 

@@ -53,11 +53,11 @@ export class FirebaseNamespaceInternals {
   /**
    * Initializes the App instance.
    *
-   * @param options Optional options for the App instance. If none present will try to initialize
+   * @param options - Optional options for the App instance. If none present will try to initialize
    *   from the FIREBASE_CONFIG environment variable. If the environment variable contains a string
    *   that starts with '{' it will be parsed as JSON, otherwise it will be assumed to be pointing
    *   to a file.
-   * @param appName Optional name of the FirebaseApp instance.
+   * @param appName - Optional name of the FirebaseApp instance.
    *
    * @returns A new App instance.
    */
@@ -70,7 +70,7 @@ export class FirebaseNamespaceInternals {
    * Returns the App instance with the provided name (or the default App instance
    * if no name is provided).
    *
-   * @param appName Optional name of the FirebaseApp instance to return.
+   * @param appName - Optional name of the FirebaseApp instance to return.
    * @returns The App instance which has the provided name.
    */
   public app(appName?: string): App {
@@ -284,11 +284,11 @@ export class FirebaseNamespace {
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param options Optional options for the FirebaseApp instance.
+   * @param options - Optional options for the FirebaseApp instance.
    *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
    *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    *   otherwise it will be assumed to be pointing to a file.
-   * @param appName Optional name of the FirebaseApp instance.
+   * @param appName - Optional name of the FirebaseApp instance.
    *
    * @returns A new FirebaseApp instance.
    */
@@ -300,7 +300,7 @@ export class FirebaseNamespace {
    * Returns the FirebaseApp instance with the provided name (or the default FirebaseApp instance
    * if no name is provided).
    *
-   * @param appName Optional name of the FirebaseApp instance to return.
+   * @param appName - Optional name of the FirebaseApp instance to return.
    * @returns The FirebaseApp instance which has the provided name.
    */
   public app(appName?: string): App {

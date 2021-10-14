@@ -247,7 +247,7 @@ export interface CreateRequest extends UpdateRequest {
 /**
  * The response interface for listing provider configs. This is only available
  * when listing all identity providers' configurations via
- * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ * {@link BaseAuth.listProviderConfigs}.
  */
 export interface ListProviderConfigResults {
 
@@ -265,7 +265,7 @@ export interface ListProviderConfigResults {
 /**
  * The filter interface used for listing provider configurations. This is used
  * when specifying how to list configured identity providers via
- * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ * {@link BaseAuth.listProviderConfigs}.
  */
 export interface AuthProviderConfigFilter {
 
@@ -292,7 +292,7 @@ export interface AuthProviderConfigFilter {
 /**
  * The request interface for updating a SAML Auth provider. This is used
  * when updating a SAML provider's configuration via
- * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ * {@link BaseAuth.updateProviderConfig}.
  */
 export interface SAMLUpdateAuthProviderRequest {
 
@@ -342,7 +342,7 @@ export interface SAMLUpdateAuthProviderRequest {
 /**
  * The request interface for updating an OIDC Auth provider. This is used
  * when updating an OIDC provider's configuration via
- * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ * {@link BaseAuth.updateProviderConfig}.
  */
 export interface OIDCUpdateAuthProviderRequest {
 
@@ -521,7 +521,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    * Static method to convert a client side request to a MultiFactorAuthServerConfig.
    * Throws an error if validation fails.
    *
-   * @param options The options object to convert to a server request.
+   * @param options - The options object to convert to a server request.
    * @returns The resulting server request.
    * @internal
    */
@@ -549,7 +549,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
   /**
    * Validates the MultiFactorConfig options object. Throws an error on failure.
    *
-   * @param options The options object to validate.
+   * @param options - The options object to validate.
    */
   private static validate(options: MultiFactorConfig): void {
     const validKeys = {
@@ -604,7 +604,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
   /**
    * The MultiFactorAuthConfig constructor.
    *
-   * @param response The server side response used to initialize the
+   * @param response - The server side response used to initialize the
    *     MultiFactorAuthConfig object.
    * @constructor
    * @internal
@@ -638,7 +638,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
 
 /**
  * Validates the provided map of test phone number / code pairs.
- * @param testPhoneNumbers The phone number / code pairs to validate.
+ * @param testPhoneNumbers - The phone number / code pairs to validate.
  */
 export function validateTestPhoneNumbers(
   testPhoneNumbers: {[phoneNumber: string]: string},
@@ -703,7 +703,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    * Static method to convert a client side request to a EmailSignInConfigServerRequest.
    * Throws an error if validation fails.
    *
-   * @param options The options object to convert to a server request.
+   * @param options - The options object to convert to a server request.
    * @returns The resulting server request.
    * @internal
    */
@@ -722,7 +722,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * Validates the EmailSignInConfig options object. Throws an error on failure.
    *
-   * @param options The options object to validate.
+   * @param options - The options object to validate.
    */
   private static validate(options: EmailSignInProviderConfig): void {
     // TODO: Validate the request.
@@ -765,7 +765,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   /**
    * The EmailSignInConfig constructor.
    *
-   * @param response The server side response used to initialize the
+   * @param response - The server side response used to initialize the
    *     EmailSignInConfig object.
    * @constructor
    */
@@ -817,7 +817,7 @@ export interface BaseAuthProviderConfig {
  * The
  * [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)
  * Auth provider configuration interface. A SAML provider can be created via
- * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ * {@link BaseAuth.createProviderConfig}.
  */
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
 
@@ -883,7 +883,7 @@ export interface OAuthResponseType {
 /**
  * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
  * provider configuration interface. An OIDC provider can be created via
- * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ * {@link BaseAuth.createProviderConfig}.
  */
 export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
 
@@ -926,7 +926,7 @@ export interface OIDCAuthProviderConfig extends BaseAuthProviderConfig {
 
 /**
  * The Auth provider configuration type.
- * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ * {@link BaseAuth.createProviderConfig}.
  */
 export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
 
@@ -953,8 +953,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a SAMLConfig request,
    * returns null.
    *
-   * @param options The options object to convert to a server request.
-   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @param options - The options object to convert to a server request.
+   * @param ignoreMissingFields - Whether to ignore missing fields.
    * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
@@ -997,7 +997,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param resourceName The server side resource name.
+   * @param resourceName - The server side resource name.
    * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
@@ -1010,7 +1010,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   }
 
   /**
-   * @param providerId The provider ID to check.
+   * @param providerId - The provider ID to check.
    * @returns Whether the provider ID corresponds to a SAML provider.
    */
   public static isProviderId(providerId: any): providerId is string {
@@ -1020,8 +1020,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Validates the SAMLConfig options object. Throws an error on failure.
    *
-   * @param options The options object to validate.
-   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @param options - The options object to validate.
+   * @param ignoreMissingFields - Whether to ignore missing fields.
    */
   public static validate(options: Partial<SAMLAuthProviderConfig>, ignoreMissingFields = false): void {
     const validKeys = {
@@ -1135,7 +1135,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * The SAMLConfig constructor.
    *
-   * @param response The server side response used to initialize the SAMLConfig object.
+   * @param response - The server side response used to initialize the SAMLConfig object.
    * @constructor
    */
   constructor(response: SAMLConfigServerResponse) {
@@ -1217,8 +1217,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a OIDCConfig request,
    * returns null.
    *
-   * @param options The options object to convert to a server request.
-   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @param options - The options object to convert to a server request.
+   * @param ignoreMissingFields - Whether to ignore missing fields.
    * @returns The resulting server request or null if not valid.
    */
   public static buildServerRequest(
@@ -1248,7 +1248,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * Returns the provider ID corresponding to the resource name if available.
    *
-   * @param resourceName The server side resource name
+   * @param resourceName - The server side resource name
    * @returns The provider ID corresponding to the resource, null otherwise.
    */
   public static getProviderIdFromResourceName(resourceName: string): string | null {
@@ -1261,7 +1261,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   }
 
   /**
-   * @param providerId The provider ID to check.
+   * @param providerId - The provider ID to check.
    * @returns Whether the provider ID corresponds to an OIDC provider.
    */
   public static isProviderId(providerId: any): providerId is string {
@@ -1271,8 +1271,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * Validates the OIDCConfig options object. Throws an error on failure.
    *
-   * @param options The options object to validate.
-   * @param ignoreMissingFields Whether to ignore missing fields.
+   * @param options - The options object to validate.
+   * @param ignoreMissingFields - Whether to ignore missing fields.
    */
   public static validate(options: Partial<OIDCAuthProviderConfig>, ignoreMissingFields = false): void {
     const validKeys = {
@@ -1401,7 +1401,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * The OIDCConfig constructor.
    *
-   * @param response The server side response used to initialize the OIDCConfig object.
+   * @param response - The server side response used to initialize the OIDCConfig object.
    * @constructor
    */
   constructor(response: OIDCConfigServerResponse) {

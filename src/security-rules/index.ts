@@ -46,12 +46,12 @@ export {
  * ```
  *
  * @example
- *   ```javascript
+ * ```javascript
  * // Get the SecurityRules service for a given app
  * const otherSecurityRules = getSecurityRules(otherApp);
  * ```
  *
- * @param app Optional app to return the `SecurityRules` service
+ * @param app - Optional app to return the `SecurityRules` service
  *     for. If not provided, the default `SecurityRules` service
  *     is returned.
  * @returns The default `SecurityRules` service if no app is provided, or the

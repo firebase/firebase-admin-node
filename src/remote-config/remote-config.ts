@@ -36,7 +36,7 @@ export class RemoteConfig {
   private readonly client: RemoteConfigApiClient;
 
   /**
-   * @param app The app for this RemoteConfig service.
+   * @param app - The app for this RemoteConfig service.
    * @constructor
    * @internal
    */
@@ -59,7 +59,7 @@ export class RemoteConfig {
   /**
    * Gets the requested version of the {@link RemoteConfigTemplate} of the project.
    *
-   * @param versionNumber Version number of the Remote Config template to look up.
+   * @param versionNumber - Version number of the Remote Config template to look up.
    *
    * @returns A promise that fulfills with a `RemoteConfigTemplate`.
    */
@@ -73,7 +73,7 @@ export class RemoteConfig {
   /**
    * Validates a {@link RemoteConfigTemplate}.
    *
-   * @param template The Remote Config template to be validated.
+   * @param template - The Remote Config template to be validated.
    * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
    */
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
@@ -86,8 +86,8 @@ export class RemoteConfig {
   /**
    * Publishes a Remote Config template.
    *
-   * @param template The Remote Config template to be published.
-   * @param options Optional options object when publishing a Remote Config template:
+   * @param template - The Remote Config template to be published.
+   * @param options - Optional options object when publishing a Remote Config template:
    *    - `force`: Setting this to `true` forces the Remote Config template to
    *      be updated and circumvent the ETag. This approach is not recommended
    *      because it risks causing the loss of updates to your Remote Config
@@ -109,7 +109,7 @@ export class RemoteConfig {
    * A rollback is equivalent to getting a previously published Remote Config
    * template and re-publishing it using a force update.
    *
-   * @param versionNumber The version number of the Remote Config template to roll back to.
+   * @param versionNumber - The version number of the Remote Config template to roll back to.
    *    The specified version number must be lower than the current version number, and not have
    *    been deleted due to staleness. Only the last 300 versions are stored.
    *    All versions that correspond to non-active Remote Config templates (that is, all except the
@@ -129,7 +129,7 @@ export class RemoteConfig {
    * All versions that correspond to non-active Remote Config templates (i.e., all except the
    * template that is being fetched by clients) are also deleted if they are older than 90 days.
    *
-   * @param options Optional options object for getting a list of versions.
+   * @param options - Optional options object for getting a list of versions.
    * @returns A promise that fulfills with a `ListVersionsResult`.
    */
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
@@ -145,7 +145,7 @@ export class RemoteConfig {
   /**
    * Creates and returns a new Remote Config template from a JSON string.
    *
-   * @param json The JSON string to populate a Remote Config template.
+   * @param json - The JSON string to populate a Remote Config template.
    *
    * @returns A new template instance.
    */

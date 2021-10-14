@@ -21,7 +21,7 @@ import { InstanceId as TInstanceId } from './instance-id';
  * var otherInstanceId = admin.instanceId(otherApp);
  *```
  *
- * @param app Optional app whose `InstanceId` service to
+ * @param app - Optional app whose `InstanceId` service to
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
  *

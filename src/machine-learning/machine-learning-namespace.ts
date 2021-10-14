@@ -49,7 +49,7 @@ import {
  * var otherMachineLearning = admin.machineLearning(otherApp);
  * ```
  *
- * @param app Optional app whose `MachineLearning` service to
+ * @param app - Optional app whose `MachineLearning` service to
  *   return. If not provided, the default `MachineLearning` service
  *   will be returned.
  *

@@ -39,7 +39,7 @@ export interface CryptoSigner {
   /**
    * Cryptographically signs a buffer of data.
    *
-   * @param buffer The data to be signed.
+   * @param buffer - The data to be signed.
    * @returns A promise that resolves with the raw bytes of a signature.
    */
   sign(buffer: Buffer): Promise<Buffer>;
@@ -63,7 +63,7 @@ export class ServiceAccountSigner implements CryptoSigner {
   /**
    * Creates a new CryptoSigner instance from the given service account credential.
    *
-   * @param credential A service account credential.
+   * @param credential - A service account credential.
    */
   constructor(private readonly credential: ServiceAccountCredential) {
     if (!credential) {
@@ -188,7 +188,7 @@ export class IAMSigner implements CryptoSigner {
  * Creates a new CryptoSigner instance for the given app. If the app has been initialized with a
  * service account credential, creates a ServiceAccountSigner.
  *
- * @param app A FirebaseApp instance.
+ * @param app - A FirebaseApp instance.
  * @returns A CryptoSigner instance.
  */
 export function cryptoSignerFromApp(app: App): CryptoSigner {
@@ -210,7 +210,7 @@ export interface ExtendedErrorInfo extends ErrorInfo {
 /**
  * CryptoSigner error code structure.
  *
- * @param errorInfo The error information (code and message).
+ * @param errorInfo - The error information (code and message).
  * @constructor
  */
 export class CryptoSignerError extends Error {

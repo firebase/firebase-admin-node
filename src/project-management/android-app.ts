@@ -98,7 +98,7 @@ export class AndroidApp {
   /**
    * Sets the optional user-assigned display name of the app.
    *
-   * @param newDisplayName The new display name to set.
+   * @param newDisplayName - The new display name to set.
    *
    * @returns A promise that resolves when the display name has been set.
    */
@@ -148,7 +148,7 @@ export class AndroidApp {
   /**
    * Adds the given SHA certificate to this Android app.
    *
-   * @param certificateToAdd The SHA certificate to add.
+   * @param certificateToAdd - The SHA certificate to add.
    *
    * @returns A promise that resolves when the given certificate
    *     has been added to the Android app.
@@ -160,7 +160,7 @@ export class AndroidApp {
   /**
    * Deletes the specified SHA certificate from this Android app.
    *
-   * @param  certificateToDelete The SHA certificate to delete.
+   * @param certificateToDelete - The SHA certificate to delete.
    *
    * @returns A promise that resolves when the specified
    *     certificate has been removed from the Android app.
@@ -223,12 +223,12 @@ export class ShaCertificate {
    * Creates a ShaCertificate using the given hash. The ShaCertificate's type (eg. 'sha256') is
    * automatically determined from the hash itself.
    *
-   * @param shaHash The sha256 or sha1 hash for this certificate.
+   * @param shaHash - The sha256 or sha1 hash for this certificate.
    * @example
    * ```javascript
    * var shaHash = shaCertificate.shaHash;
    * ```
-   * @param resourceName The Firebase resource name for this certificate. This does not need to be
+   * @param resourceName - The Firebase resource name for this certificate. This does not need to be
    *     set when creating a new certificate.
    * @example
    * ```javascript

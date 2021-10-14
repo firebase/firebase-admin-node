@@ -39,7 +39,7 @@ export class AppCheck {
   private readonly appCheckTokenVerifier: AppCheckTokenVerifier;
 
   /**
-   * @param app The app for this AppCheck service.
+   * @param app - The app for this AppCheck service.
    * @constructor
    * @internal
    */
@@ -54,11 +54,11 @@ export class AppCheck {
   }
 
   /**
-   * Creates a new {@link appCheck.AppCheckToken `AppCheckToken`} that can be sent
+   * Creates a new {@link AppCheckToken} that can be sent
    * back to a client.
    *
-   * @param appId The app ID to use as the JWT app_id.
-   * @param options Optional options object when creating a new App Check Token.
+   * @param appId - The app ID to use as the JWT app_id.
+   * @param options - Optional options object when creating a new App Check Token.
    *
    * @returns A promise that fulfills with a `AppCheckToken`.
    */
@@ -74,7 +74,7 @@ export class AppCheck {
    * fulfilled with the token's decoded claims; otherwise, the promise is
    * rejected.
    *
-   * @param appCheckToken The App Check token to verify.
+   * @param appCheckToken - The App Check token to verify.
    *
    * @returns A promise fulfilled with the token's decoded claims
    *   if the App Check token is valid; otherwise, a rejected promise.

@@ -34,12 +34,12 @@
       },
 
       "ae-unresolved-link": {
-        "logLevel": "none"
+        "logLevel": "error"
       }
     },
     "tsdocMessageReporting": {
       "default": {
-        "logLevel": "none"
+        "logLevel": "error"
       }
     }
   }

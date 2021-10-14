@@ -96,7 +96,7 @@ export class IosApp {
   /**
    * Sets the optional user-assigned display name of the app.
    *
-   * @param newDisplayName The new display name to set.
+   * @param newDisplayName - The new display name to set.
    *
    * @returns A promise that resolves when the display name has
    *     been set.

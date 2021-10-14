@@ -126,8 +126,8 @@ export class Tenant {
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
-   * @param tenantOptions The properties to convert to a server request.
-   * @param createRequest Whether this is a create request.
+   * @param tenantOptions - The properties to convert to a server request.
+   * @param createRequest - Whether this is a create request.
    * @returns The equivalent server request.
    *
    * @internal
@@ -158,7 +158,7 @@ export class Tenant {
   /**
    * Returns the tenant ID corresponding to the resource name if available.
    *
-   * @param resourceName The server side resource name
+   * @param resourceName - The server side resource name
    * @returns The tenant ID corresponding to the resource, null otherwise.
    *
    * @internal
@@ -175,8 +175,8 @@ export class Tenant {
   /**
    * Validates a tenant options object. Throws an error on failure.
    *
-   * @param {any} request The tenant options object to validate.
-   * @param {boolean} createRequest Whether this is a create request.
+   * @param request - The tenant options object to validate.
+   * @param createRequest - Whether this is a create request.
    */
   private static validate(request: any, createRequest: boolean): void {
     const validKeys = {
@@ -236,7 +236,7 @@ export class Tenant {
   /**
    * The Tenant object constructor.
    *
-   * @param response The server side response used to initialize the Tenant object.
+   * @param response - The server side response used to initialize the Tenant object.
    * @constructor
    * @internal
    */

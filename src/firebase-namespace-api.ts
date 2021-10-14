@@ -38,10 +38,7 @@ export namespace app {
    * services.
    *
    * Do not call this constructor directly. Instead, use
-   * {@link
-   *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
-   *   `admin.initializeApp()`}
-   * to create an app.
+   * {@link firebase-admin.app#initializeApp} to create an app.
    */
   export interface App extends AppCore {
     appCheck(): appCheck.AppCheck;
@@ -49,7 +46,9 @@ export namespace app {
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;
     installations(): installations.Installations;
-    /** @deprecated */
+    /**
+     * @deprecated Use {@link firebase-admin.installations#Installations} instead.
+     */
     instanceId(): instanceId.InstanceId;
     machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;

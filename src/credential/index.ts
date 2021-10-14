@@ -30,8 +30,7 @@ export namespace credential {
    * with Firebase services.
    *
    * In most cases, you will not need to implement this yourself and can instead
-   * use the default implementations provided by
-   * {@link credential `admin.credential`}.
+   * use the default implementations provided by the `admin.credential` namespace.
    */
   export type Credential = TCredential;
 
@@ -57,7 +56,7 @@ export namespace credential {
    * });
    * ```
    *
-   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+   * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
    * @returns A credential authenticated via Google
@@ -97,9 +96,9 @@ export namespace credential {
    * });
    * ```
    *
-   * @param serviceAccountPathOrObject The path to a service
+   * @param serviceAccountPathOrObject - The path to a service
    *   account key JSON file or an object representing a service account key.
-   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+   * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
    * @returns A credential authenticated via the
@@ -126,10 +125,10 @@ export namespace credential {
    * });
    * ```
    *
-   * @param refreshTokenPathOrObject The path to a Google
+   * @param refreshTokenPathOrObject - The path to a Google
    *   OAuth2 refresh token JSON file or an object representing a Google OAuth2
    *   refresh token.
-   * @param httpAgent Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+   * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
    *   to be used when retrieving access tokens from Google token servers.
    *
    * @returns A credential authenticated via the

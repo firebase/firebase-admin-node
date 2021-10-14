@@ -47,7 +47,7 @@ export class FirebaseMessagingRequestHandler {
   private readonly batchClient: BatchRequestClient;
 
   /**
-   * @param app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    * @constructor
    */
   constructor(app: App) {
@@ -59,9 +59,9 @@ export class FirebaseMessagingRequestHandler {
   /**
    * Invokes the request handler with the provided request data.
    *
-   * @param host The host to which to send the request.
-   * @param path The path to which to send the request.
-   * @param requestData The request data.
+   * @param host - The host to which to send the request.
+   * @param path - The path to which to send the request.
+   * @param requestData - The request data.
    * @returns A promise that resolves with the response.
    */
   public invokeRequestHandler(host: string, path: string, requestData: object): Promise<object> {
@@ -100,7 +100,7 @@ export class FirebaseMessagingRequestHandler {
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
    * a BatchResponse object.
    *
-   * @param requests An array of sub requests to send.
+   * @param requests - An array of sub requests to send.
    * @returns A promise that resolves when the send operation is complete.
    */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {

@@ -52,7 +52,7 @@ import { RemoteConfig as TRemoteConfig } from './remote-config';
  * var otherRemoteConfig = admin.remoteConfig(otherApp);
  * ```
  *
- * @param app Optional app for which to return the `RemoteConfig` service.
+ * @param app - Optional app for which to return the `RemoteConfig` service.
  *   If not provided, the default `RemoteConfig` service is returned.
  *
  * @returns The default `RemoteConfig` service if no

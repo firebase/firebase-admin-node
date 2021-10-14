@@ -55,7 +55,7 @@ export class FirebaseInstallationsRequestHandler {
   private path: string;
 
   /**
-   * @param app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    *
    * @constructor
    */
@@ -76,7 +76,7 @@ export class FirebaseInstallationsRequestHandler {
   /**
    * Invokes the request handler based on the API settings object passed.
    *
-   * @param apiSettings The API endpoint settings to apply to request and response.
+   * @param apiSettings - The API endpoint settings to apply to request and response.
    * @returns A promise that resolves when the request is complete.
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {

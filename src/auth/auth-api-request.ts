@@ -126,8 +126,8 @@ class AuthResourceUrlBuilder {
   /**
    * The resource URL builder constructor.
    *
-   * @param projectId The resource project ID.
-   * @param version The endpoint API version.
+   * @param projectId - The resource project ID.
+   * @param version - The endpoint API version.
    * @constructor
    */
   constructor(protected app: App, protected version: string = 'v1') {
@@ -143,8 +143,8 @@ class AuthResourceUrlBuilder {
   /**
    * Returns the resource URL corresponding to the provided parameters.
    *
-   * @param api The backend API name.
-   * @param params The optional additional parameters to substitute in the
+   * @param api - The backend API name.
+   * @param params - The optional additional parameters to substitute in the
    *     URL path.
    * @returns The corresponding resource URL.
    */
@@ -190,9 +190,9 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   /**
    * The tenant aware resource URL builder constructor.
    *
-   * @param projectId The resource project ID.
-   * @param version The endpoint API version.
-   * @param tenantId The tenant ID.
+   * @param projectId - The resource project ID.
+   * @param version - The endpoint API version.
+   * @param tenantId - The tenant ID.
    * @constructor
    */
   constructor(protected app: App, protected version: string, protected tenantId: string) {
@@ -209,8 +209,8 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   /**
    * Returns the resource URL corresponding to the provided parameters.
    *
-   * @param api The backend API name.
-   * @param params The optional additional parameters to substitute in the
+   * @param api - The backend API name.
+   * @param params - The optional additional parameters to substitute in the
    *     URL path.
    * @returns The corresponding resource URL.
    */
@@ -243,7 +243,7 @@ class AuthHttpClient extends AuthorizedHttpClient {
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param request The AuthFactorInfo request object.
+ * @param request - The AuthFactorInfo request object.
  */
 function validateAuthFactorInfo(request: AuthFactorInfo): void {
   const validKeys = {
@@ -308,7 +308,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param request The providerUserInfo request object.
+ * @param request - The providerUserInfo request object.
  */
 function validateProviderUserInfo(request: any): void {
   const validKeys = {
@@ -367,8 +367,8 @@ function validateProviderUserInfo(request: any): void {
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param request The create/edit request object.
- * @param writeOperationType The write operation type.
+ * @param request - The create/edit request object.
+ * @param writeOperationType - The write operation type.
  */
 function validateCreateEditRequest(request: any, writeOperationType: WriteOperationType): void {
   const uploadAccountRequest = writeOperationType === WriteOperationType.Upload;
@@ -1012,7 +1012,7 @@ export abstract class AbstractAuthRequestHandler {
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
-   * @param response The response to check for errors.
+   * @param response - The response to check for errors.
    * @returns The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
@@ -1061,7 +1061,7 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   /**
-   * @param app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    * @constructor
    */
   constructor(protected readonly app: App) {
@@ -1080,8 +1080,8 @@ export abstract class AbstractAuthRequestHandler {
    * session management (set as a server side session cookie with custom cookie policy).
    * The session cookie JWT will have the same payload claims as the provided ID token.
    *
-   * @param idToken The Firebase ID token to exchange for a session cookie.
-   * @param expiresIn The session cookie duration in milliseconds.
+   * @param idToken - The Firebase ID token to exchange for a session cookie.
+   * @param expiresIn - The session cookie duration in milliseconds.
    *
    * @returns A promise that resolves on success with the created session cookie.
    */
@@ -1098,7 +1098,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by uid.
    *
-   * @param uid The uid of the user to lookup.
+   * @param uid - The uid of the user to lookup.
    * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByUid(uid: string): Promise<object> {
@@ -1115,7 +1115,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by email.
    *
-   * @param email The email of the user to lookup.
+   * @param email - The email of the user to lookup.
    * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByEmail(email: string): Promise<object> {
@@ -1132,7 +1132,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by phone number.
    *
-   * @param phoneNumber The phone number of the user to lookup.
+   * @param phoneNumber - The phone number of the user to lookup.
    * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<object> {
@@ -1164,9 +1164,9 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up multiple users by their identifiers (uid, email, etc).
    *
-   * @param identifiers The identifiers indicating the users
+   * @param identifiers - The identifiers indicating the users
    *     to be looked up. Must have <= 100 entries.
-   * @param A promise that resolves with the set of successfully
+   * @param A - promise that resolves with the set of successfully
    *     looked up users. Possibly empty if no users were looked up.
    */
   public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
@@ -1203,9 +1203,9 @@ export abstract class AbstractAuthRequestHandler {
    * Exports the users (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also the maximum
+   * @param maxResults - The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns users starting
+   * @param pageToken - The next page token. If not specified, returns users starting
    *     without any offset. Users are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
    * @returns A promise that resolves with the current batch of downloaded
@@ -1240,8 +1240,8 @@ export abstract class AbstractAuthRequestHandler {
    * At most, 1000 users are allowed to be imported one at a time.
    * When importing a list of password users, UserImportOptions are required to be specified.
    *
-   * @param users The list of user records to import to Firebase Auth.
-   * @param options The user import options, required when the users provided
+   * @param users - The list of user records to import to Firebase Auth.
+   * @param options - The user import options, required when the users provided
    *     include password credentials.
    * @returns A promise that resolves when the operation completes
    *     with the result of the import. This includes the number of successful imports, the number
@@ -1282,7 +1282,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes an account identified by a uid.
    *
-   * @param uid The uid of the user to delete.
+   * @param uid - The uid of the user to delete.
    * @returns A promise that resolves when the user is deleted.
    */
   public deleteAccount(uid: string): Promise<object> {
@@ -1323,8 +1323,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Sets additional developer claims on an existing user identified by provided UID.
    *
-   * @param uid The user to edit.
-   * @param customUserClaims The developer claims to set.
+   * @param uid - The user to edit.
+   * @param customUserClaims - The developer claims to set.
    * @returns A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
@@ -1358,8 +1358,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Edits an existing user.
    *
-   * @param uid The user to edit.
-   * @param properties The properties to set on the user.
+   * @param uid - The user to edit.
+   * @param properties - The properties to set on the user.
    * @returns A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
@@ -1502,7 +1502,7 @@ export abstract class AbstractAuthRequestHandler {
    * the same second as the revocation will still be valid. If there is a chance that a token
    * was minted in the last second, delay for 1 second before revoking.
    *
-   * @param uid The user whose tokens are to be revoked.
+   * @param uid - The user whose tokens are to be revoked.
    * @returns A promise that resolves when the operation completes
    *     successfully with the user id of the corresponding user.
    */
@@ -1525,7 +1525,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Create a new user with the properties supplied.
    *
-   * @param properties The properties to set on the user.
+   * @param properties - The properties to set on the user.
    * @returns A promise that resolves when the operation completes
    *     with the user id that was created.
    */
@@ -1593,10 +1593,10 @@ export abstract class AbstractAuthRequestHandler {
    * Generates the out of band email action link for the email specified using the action code settings provided.
    * Returns a promise that resolves with the generated link.
    *
-   * @param requestType The request type. This could be either used for password reset,
+   * @param requestType - The request type. This could be either used for password reset,
    *     email verification, email link sign-in.
-   * @param email The email of the user the link is being sent to.
-   * @param actionCodeSettings The optional action code setings which defines whether
+   * @param email - The email of the user the link is being sent to.
+   * @param actionCodeSettings - The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
    *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
    * @returns A promise that resolves with the email action link.
@@ -1633,7 +1633,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up an OIDC provider configuration by provider ID.
    *
-   * @param providerId The provider identifier of the configuration to lookup.
+   * @param providerId - The provider identifier of the configuration to lookup.
    * @returns A promise that resolves with the provider configuration information.
    */
   public getOAuthIdpConfig(providerId: string): Promise<OIDCConfigServerResponse> {
@@ -1647,9 +1647,9 @@ export abstract class AbstractAuthRequestHandler {
    * Lists the OIDC configurations (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param maxResults The page size, 100 if undefined. This is also the maximum
+   * @param maxResults - The page size, 100 if undefined. This is also the maximum
    *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns OIDC configurations
+   * @param pageToken - The next page token. If not specified, returns OIDC configurations
    *     without any offset. Configurations are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
    * @returns A promise that resolves with the current batch of downloaded
@@ -1679,7 +1679,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes an OIDC configuration identified by a providerId.
    *
-   * @param providerId The identifier of the OIDC configuration to delete.
+   * @param providerId - The identifier of the OIDC configuration to delete.
    * @returns A promise that resolves when the OIDC provider is deleted.
    */
   public deleteOAuthIdpConfig(providerId: string): Promise<void> {
@@ -1695,7 +1695,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Creates a new OIDC provider configuration with the properties provided.
    *
-   * @param options The properties to set on the new OIDC provider configuration to be created.
+   * @param options - The properties to set on the new OIDC provider configuration to be created.
    * @returns A promise that resolves with the newly created OIDC
    *     configuration.
    */
@@ -1723,8 +1723,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Updates an existing OIDC provider configuration with the properties provided.
    *
-   * @param providerId The provider identifier of the OIDC configuration to update.
-   * @param options The properties to update on the existing configuration.
+   * @param providerId - The provider identifier of the OIDC configuration to update.
+   * @param options - The properties to update on the existing configuration.
    * @returns A promise that resolves with the modified provider
    *     configuration.
    */
@@ -1756,7 +1756,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up an SAML provider configuration by provider ID.
    *
-   * @param providerId The provider identifier of the configuration to lookup.
+   * @param providerId - The provider identifier of the configuration to lookup.
    * @returns A promise that resolves with the provider configuration information.
    */
   public getInboundSamlConfig(providerId: string): Promise<SAMLConfigServerResponse> {
@@ -1770,9 +1770,9 @@ export abstract class AbstractAuthRequestHandler {
    * Lists the SAML configurations (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param maxResults The page size, 100 if undefined. This is also the maximum
+   * @param maxResults - The page size, 100 if undefined. This is also the maximum
    *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns SAML configurations starting
+   * @param pageToken - The next page token. If not specified, returns SAML configurations starting
    *     without any offset. Configurations are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
    * @returns A promise that resolves with the current batch of downloaded
@@ -1802,7 +1802,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes a SAML configuration identified by a providerId.
    *
-   * @param providerId The identifier of the SAML configuration to delete.
+   * @param providerId - The identifier of the SAML configuration to delete.
    * @returns A promise that resolves when the SAML provider is deleted.
    */
   public deleteInboundSamlConfig(providerId: string): Promise<void> {
@@ -1818,7 +1818,7 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Creates a new SAML provider configuration with the properties provided.
    *
-   * @param options The properties to set on the new SAML provider configuration to be created.
+   * @param options - The properties to set on the new SAML provider configuration to be created.
    * @returns A promise that resolves with the newly created SAML
    *     configuration.
    */
@@ -1846,8 +1846,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Updates an existing SAML provider configuration with the properties provided.
    *
-   * @param providerId The provider identifier of the SAML configuration to update.
-   * @param options The properties to update on the existing configuration.
+   * @param providerId - The provider identifier of the SAML configuration to update.
+   * @param options - The properties to update on the existing configuration.
    * @returns A promise that resolves with the modified provider
    *     configuration.
    */
@@ -1879,10 +1879,10 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Invokes the request handler based on the API settings object passed.
    *
-   * @param urlBuilder The URL builder for Auth endpoints.
-   * @param apiSettings The API endpoint settings to apply to request and response.
-   * @param requestData The request data.
-   * @param additionalResourceParams Additional resource related params if needed.
+   * @param urlBuilder - The URL builder for Auth endpoints.
+   * @param apiSettings - The API endpoint settings to apply to request and response.
+   * @param requestData - The request data.
+   * @param additionalResourceParams - Additional resource related params if needed.
    * @returns A promise that resolves with the response.
    */
   protected invokeRequestHandler(
@@ -2038,7 +2038,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
    *
-   * @param app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    * @constructor.
    */
   constructor(app: App) {
@@ -2063,7 +2063,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Looks up a tenant by tenant ID.
    *
-   * @param tenantId The tenant identifier of the tenant to lookup.
+   * @param tenantId - The tenant identifier of the tenant to lookup.
    * @returns A promise that resolves with the tenant information.
    */
   public getTenant(tenantId: string): Promise<TenantServerResponse> {
@@ -2080,9 +2080,9 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * Exports the tenants (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also the maximum
+   * @param maxResults - The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns tenants starting
+   * @param pageToken - The next page token. If not specified, returns tenants starting
    *     without any offset. Tenants are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
    * @returns A promise that resolves with the current batch of downloaded
@@ -2113,7 +2113,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Deletes a tenant identified by a tenantId.
    *
-   * @param tenantId The identifier of the tenant to delete.
+   * @param tenantId - The identifier of the tenant to delete.
    * @returns A promise that resolves when the tenant is deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
@@ -2129,7 +2129,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Creates a new tenant with the properties provided.
    *
-   * @param tenantOptions The properties to set on the new tenant to be created.
+   * @param tenantOptions - The properties to set on the new tenant to be created.
    * @returns A promise that resolves with the newly created tenant object.
    */
   public createTenant(tenantOptions: CreateTenantRequest): Promise<TenantServerResponse> {
@@ -2148,8 +2148,8 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Updates an existing tenant with the properties provided.
    *
-   * @param tenantId The tenant identifier of the tenant to update.
-   * @param tenantOptions The properties to update on the existing tenant.
+   * @param tenantId - The tenant identifier of the tenant to update.
+   * @param tenantOptions - The properties to update on the existing tenant.
    * @returns A promise that resolves with the modified tenant object.
    */
   public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<TenantServerResponse> {
@@ -2183,8 +2183,8 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * The FirebaseTenantRequestHandler constructor used to initialize an instance using a
    * FirebaseApp and a tenant ID.
    *
-   * @param app The app used to fetch access tokens to sign API requests.
-   * @param tenantId The request handler's tenant ID.
+   * @param app - The app used to fetch access tokens to sign API requests.
+   * @param tenantId - The request handler's tenant ID.
    * @constructor
    */
   constructor(app: App, private readonly tenantId: string) {
@@ -2214,8 +2214,8 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * Overrides the superclass methods by adding an additional check to match tenant IDs of
    * imported user records if present.
    *
-   * @param users The list of user records to import to Firebase Auth.
-   * @param options The user import options, required when the users provided
+   * @param users - The list of user records to import to Firebase Auth.
+   * @param options - The user import options, required when the users provided
    *     include password credentials.
    * @returns A promise that resolves when the operation completes
    *     with the result of the import. This includes the number of successful imports, the number
