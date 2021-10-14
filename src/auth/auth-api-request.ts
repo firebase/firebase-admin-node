@@ -1891,7 +1891,7 @@ export abstract class AbstractAuthRequestHandler {
     return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
       .then((url) => {
         // Validate request.
-        if (requestData != null) {
+        if (requestData) {
           const requestValidator = apiSettings.getRequestValidator();
           requestValidator(requestData);
         }
