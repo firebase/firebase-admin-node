@@ -1183,9 +1183,14 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
-      // Test phone numbers are ignored in auth emulator. For more information,
-      // please refer to this section of the auth emulator DD:
-      // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
+      // These test phone numbers will not be checked when running integration
+      // tests against the emulator suite and are ignored in auth emulator
+      // altogether. For more information, please refer to this section of the
+      // auth emulator DD: go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -1198,10 +1203,12 @@ describe('admin.auth', () => {
         state: 'DISABLED',
         factorIds: [],
       },
-      // Though test phone numbers are ignored in the auth emulator,
-      // non-standard update behavior will still initialize this to an empty
-      // object.
-      testPhoneNumbers: {},
+      // Test phone numbers will not be checked when running integration tests
+      // against emulator suite. For more information, please refer to:
+      // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1214,10 +1221,6 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
-      // Though test phone numbers are ignored in the auth emulator,
-      // non-standard update behavior will still initialize this to an empty
-      // object.
-      testPhoneNumbers: {},
     };
 
     // https://mochajs.org/
@@ -1252,7 +1255,19 @@ describe('admin.auth', () => {
           createdTenantId = actualTenant.tenantId;
           createdTenants.push(createdTenantId);
           expectedCreatedTenant.tenantId = createdTenantId;
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            expect(actualTenantObj).to.have.property('displayName')
+              .eql(expectedCreatedTenant.displayName);
+            expect(actualTenantObj).to.have.property('emailSignInConfig')
+              .eql(expectedCreatedTenant.emailSignInConfig);
+            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
+              .eql(expectedCreatedTenant.anonymousSignInEnabled);
+            expect(actualTenantObj).to.have.property('multiFactorConfig')
+              .eql(expectedCreatedTenant.multiFactorConfig);
+          } else {
+            expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
+          }
         });
     });
 
@@ -1494,8 +1509,11 @@ describe('admin.auth', () => {
         }
       });
 
-      // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
-      it.skip('should support CRUD operations', () => {
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1571,9 +1589,12 @@ describe('admin.auth', () => {
             });
         }
       });
-
-      // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
-      it.skip('should support CRUD operations', () => {
+      
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1598,7 +1619,19 @@ describe('admin.auth', () => {
     it('getTenant() should resolve with expected tenant', () => {
       return getAuth().tenantManager().getTenant(createdTenantId)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            expect(actualTenantObj).to.have.property('displayName')
+              .eql(expectedCreatedTenant.displayName);
+            expect(actualTenantObj).to.have.property('emailSignInConfig')
+              .eql(expectedCreatedTenant.emailSignInConfig);
+            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
+              .eql(expectedCreatedTenant.anonymousSignInEnabled);
+            expect(actualTenantObj).to.have.property('multiFactorConfig')
+              .eql(expectedCreatedTenant.multiFactorConfig);
+          } else {
+            expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
+          }
         });
     });
 
@@ -1622,6 +1655,32 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
       };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            expect(actualTenantObj).to.have.property('displayName')
+              .eql(expectedUpdatedTenant.displayName);
+            expect(actualTenantObj).to.have.property('emailSignInConfig')
+              .eql(expectedUpdatedTenant.emailSignInConfig);
+            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
+              .eql(expectedUpdatedTenant.anonymousSignInEnabled);
+            expect(actualTenantObj).to.have.property('multiFactorConfig')
+              .eql(expectedUpdatedTenant.multiFactorConfig);
+            return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
+          })
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            expect(actualTenantObj).to.have.property('displayName')
+              .eql(expectedUpdatedTenant2.displayName);
+            expect(actualTenantObj).to.have.property('emailSignInConfig')
+              .eql(expectedUpdatedTenant2.emailSignInConfig);
+            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
+              .eql(expectedUpdatedTenant2.anonymousSignInEnabled);
+            expect(actualTenantObj).to.have.property('multiFactorConfig')
+              .eql(expectedUpdatedTenant2.multiFactorConfig);
+          });
+      }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
