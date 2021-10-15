@@ -1257,17 +1257,11 @@ describe('admin.auth', () => {
           expectedCreatedTenant.tenantId = createdTenantId;
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
-            expect(actualTenantObj).to.have.property('displayName')
-              .eql(expectedCreatedTenant.displayName);
-            expect(actualTenantObj).to.have.property('emailSignInConfig')
-              .eql(expectedCreatedTenant.emailSignInConfig);
-            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
-              .eql(expectedCreatedTenant.anonymousSignInEnabled);
-            expect(actualTenantObj).to.have.property('multiFactorConfig')
-              .eql(expectedCreatedTenant.multiFactorConfig);
-          } else {
-            expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
           }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
     });
 
@@ -1621,17 +1615,11 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
-            expect(actualTenantObj).to.have.property('displayName')
-              .eql(expectedCreatedTenant.displayName);
-            expect(actualTenantObj).to.have.property('emailSignInConfig')
-              .eql(expectedCreatedTenant.emailSignInConfig);
-            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
-              .eql(expectedCreatedTenant.anonymousSignInEnabled);
-            expect(actualTenantObj).to.have.property('multiFactorConfig')
-              .eql(expectedCreatedTenant.multiFactorConfig);
-          } else {
-            expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
           }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
     });
 
@@ -1659,26 +1647,18 @@ describe('admin.auth', () => {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
-            expect(actualTenantObj).to.have.property('displayName')
-              .eql(expectedUpdatedTenant.displayName);
-            expect(actualTenantObj).to.have.property('emailSignInConfig')
-              .eql(expectedUpdatedTenant.emailSignInConfig);
-            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
-              .eql(expectedUpdatedTenant.anonymousSignInEnabled);
-            expect(actualTenantObj).to.have.property('multiFactorConfig')
-              .eql(expectedUpdatedTenant.multiFactorConfig);
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
             return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
           })
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
-            expect(actualTenantObj).to.have.property('displayName')
-              .eql(expectedUpdatedTenant2.displayName);
-            expect(actualTenantObj).to.have.property('emailSignInConfig')
-              .eql(expectedUpdatedTenant2.emailSignInConfig);
-            expect(actualTenantObj).to.have.property('anonymousSignInEnabled')
-              .eql(expectedUpdatedTenant2.anonymousSignInEnabled);
-            expect(actualTenantObj).to.have.property('multiFactorConfig')
-              .eql(expectedUpdatedTenant2.multiFactorConfig);
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
