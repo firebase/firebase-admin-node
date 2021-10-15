@@ -1183,6 +1183,10 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
+      // These test phone numbers will not be checked when running integration
+      // tests against the emulator suite and are ignored in auth emulator
+      // altogether. For more information, please refer to this section of the
+      // auth emulator DD: go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
       testPhoneNumbers: {
         '+16505551234': '019287',
         '+16505550676': '985235',
@@ -1199,6 +1203,9 @@ describe('admin.auth', () => {
         state: 'DISABLED',
         factorIds: [],
       },
+      // Test phone numbers will not be checked when running integration tests
+      // against emulator suite. For more information, please refer to:
+      // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
@@ -1248,7 +1255,13 @@ describe('admin.auth', () => {
           createdTenantId = actualTenant.tenantId;
           createdTenants.push(createdTenantId);
           expectedCreatedTenant.tenantId = createdTenantId;
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
+          }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
     });
 
@@ -1490,7 +1503,11 @@ describe('admin.auth', () => {
         }
       });
 
-      it('should support CRUD operations', () => {
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1566,8 +1583,12 @@ describe('admin.auth', () => {
             });
         }
       });
-
-      it('should support CRUD operations', () => {
+      
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1592,7 +1613,13 @@ describe('admin.auth', () => {
     it('getTenant() should resolve with expected tenant', () => {
       return getAuth().tenantManager().getTenant(createdTenantId)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
+          }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
     });
 
@@ -1616,6 +1643,24 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
       };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
+            return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
+          })
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
@@ -1675,15 +1720,28 @@ describe('admin.auth', () => {
     });
 
     it('deleteTenant() should successfully delete the provided tenant', () => {
+      const allTenantIds: string[] = [];
+      const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+        return getAuth().tenantManager().listTenants(100, nextPageToken)
+          .then((result) => {
+            result.tenants.forEach((tenant) => {
+              tenantIds.push(tenant.tenantId);
+            });
+            if (result.pageToken) {
+              return listAllTenantIds(tenantIds, result.pageToken);
+            }
+          });
+      };
+
       return getAuth().tenantManager().deleteTenant(createdTenantId)
         .then(() => {
-          return getAuth().tenantManager().getTenant(createdTenantId);
+          // Use listTenants() instead of getTenant() to check that the tenant
+          // is no longer present, because Auth Emulator implicitly creates the
+          // tenant in getTenant() when it is not found
+          return listAllTenantIds(allTenantIds);
         })
         .then(() => {
-          throw new Error('unexpected success');
-        })
-        .catch((error) => {
-          expect(error.code).to.equal('auth/tenant-not-found');
+          expect(allTenantIds).to.not.contain(createdTenantId);
         });
     });
   });
