@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "firebase-admin": "^10.0.0",
+    "mocha": "^9.1.3"
+  },
+  "name": "nodetest",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "test": "mocha main.spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "chai": "^4.3.4"
+  }
+}
