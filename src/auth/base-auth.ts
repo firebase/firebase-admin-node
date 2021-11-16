@@ -514,7 +514,7 @@ export abstract class BaseAuth {
   /**
    * Updates an existing user.
    *
-   * See {@link https://firebsae.google.com/docs/auth/admin/manage-users#update_a_user | Update a user}
+   * See {@link https://firebase.google.com/docs/auth/admin/manage-users#update_a_user | Update a user}
    * for code samples and detailed documentation.
    *
    * @param uid - The `uid` corresponding to the user to update.
