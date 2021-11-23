@@ -50,6 +50,7 @@ const sessionCookieUids = [
   generateRandomString(20),
   generateRandomString(20),
   generateRandomString(20),
+  generateRandomString(20),
 ];
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
@@ -2118,6 +2119,7 @@ describe('admin.auth', () => {
     const uid = sessionCookieUids[0];
     const uid2 = sessionCookieUids[1];
     const uid3 = sessionCookieUids[2];
+    const uid4 = sessionCookieUids[3];
 
     it('creates a valid Firebase session cookie', () => {
       return getAuth().createCustomToken(uid, { admin: true, groupId: '1234' })
@@ -2207,6 +2209,28 @@ describe('admin.auth', () => {
         });
     });
 
+    it('fails when called with user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await getAuth().createCustomToken(uid4, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await getAuth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid4);
+
+      const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+      const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid4);
+
+      const userRecord = await getAuth().updateUser(uid4, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid4);
+      expect(userRecord.disabled).to.equal(true);
+
+      return getAuth().createSessionCookie(idToken, { expiresIn })
+        .should.eventually.be.rejected.and.have.property('code', 'auth/user-disabled');
+    });
   });
 
   describe('verifySessionCookie()', () => {

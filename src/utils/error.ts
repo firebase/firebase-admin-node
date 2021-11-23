@@ -982,6 +982,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
+  // User record is disabled.
+  USER_DISABLED: 'USER_DISABLED',
   // Password provided is too weak.
   WEAK_PASSWORD: 'INVALID_PASSWORD',
 };
