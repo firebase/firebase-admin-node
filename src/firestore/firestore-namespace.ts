@@ -28,8 +28,10 @@ export namespace firestore {
 
   export import BulkWriter = _firestore.BulkWriter;
   export import BulkWriterOptions = _firestore.BulkWriterOptions;
+  export import BundleBuilder = _firestore.BundleBuilder;
   export import CollectionGroup = _firestore.CollectionGroup;
   export import CollectionReference = _firestore.CollectionReference;
+  export import DocumentChange = _firestore.DocumentChange;
   export import DocumentChangeType = _firestore.DocumentChangeType;
   export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
@@ -40,6 +42,7 @@ export namespace firestore {
   export import FirestoreDataConverter = _firestore.FirestoreDataConverter;
   export import GeoPoint = _firestore.GeoPoint;
   export import GrpcStatus = _firestore.GrpcStatus;
+  export import OrderByDirection = _firestore.OrderByDirection;
   export import Precondition = _firestore.Precondition;
   export import Query = _firestore.Query;
   export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
@@ -47,9 +50,11 @@ export namespace firestore {
   export import QuerySnapshot = _firestore.QuerySnapshot;
   export import ReadOptions = _firestore.ReadOptions;
   export import Settings = _firestore.Settings;
+  export import SetOptions = _firestore.SetOptions;
   export import Timestamp = _firestore.Timestamp;
   export import Transaction = _firestore.Transaction;
   export import UpdateData = _firestore.UpdateData;
+  export import WhereFilterOp = _firestore.WhereFilterOp;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
 
