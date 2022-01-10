@@ -160,7 +160,7 @@
   },
   "dependencies": {
     "@firebase/database-compat": "^0.1.1",
-    "@firebase/database-types": "^0.7.2",
+    "@firebase/database-types": "^0.9.3",
     "@types/node": ">=12.12.47",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
