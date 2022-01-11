@@ -270,6 +270,14 @@ export namespace firestore {
     import WhereFilterOp = _firestore.WhereFilterOp;
     import WriteBatch = _firestore.WriteBatch;
     import WriteResult = _firestore.WriteResult;
+    import PartialWithFieldValue = _firestore.PartialWithFieldValue;
+    import WithFieldValue = _firestore.WithFieldValue;
+    import Primitive = _firestore.Primitive;
+    import NestedUpdateFields = _firestore.NestedUpdateFields;
+    import ChildUpdateFields = _firestore.ChildUpdateFields;
+    import AddPrefixToKeys = _firestore.AddPrefixToKeys;
+    import UnionToIntersection = _firestore.UnionToIntersection;
+    import ReadOnlyTransactionOptions = _firestore.ReadOnlyTransactionOptions;
     import setLogFunction = _firestore.setLogFunction;
 }
 
