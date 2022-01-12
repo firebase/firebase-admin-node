@@ -181,7 +181,6 @@ describe('AppCheckTokenGenerator', () => {
         .then((token) => {
           const decoded = jwt.decode(token);
           const expected: { [key: string]: any } = {
-            // eslint-disable-next-line @typescript-eslint/camelcase
             app_id: APP_ID,
             iat: 1,
             exp: FIVE_MIN_IN_SECONDS + 1,
@@ -202,7 +201,6 @@ describe('AppCheckTokenGenerator', () => {
           .then((token) => {
             const decoded = jwt.decode(token);
             const expected: { [key: string]: any } = {
-              // eslint-disable-next-line @typescript-eslint/camelcase
               app_id: APP_ID,
               iat: 1,
               exp: FIVE_MIN_IN_SECONDS + 1,
@@ -230,7 +228,6 @@ describe('AppCheckTokenGenerator', () => {
           .then((token) => {
             const decoded = jwt.decode(token);
             const expected: { [key: string]: any } = {
-              // eslint-disable-next-line @typescript-eslint/camelcase
               app_id: APP_ID,
               iat: 1,
               exp: FIVE_MIN_IN_SECONDS + 1,

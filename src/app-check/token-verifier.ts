@@ -60,7 +60,6 @@ export class AppCheckTokenVerifier {
       })
       .then((decoded) => {
         const decodedAppCheckToken = decoded.payload as DecodedAppCheckToken;
-        // eslint-disable-next-line @typescript-eslint/camelcase
         decodedAppCheckToken.app_id = decodedAppCheckToken.sub;
         return decodedAppCheckToken;
       });

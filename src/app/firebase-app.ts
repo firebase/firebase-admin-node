@@ -41,6 +41,7 @@ export class FirebaseAppInternals {
   private cachedToken_: FirebaseAccessToken;
   private tokenListeners_: Array<(token: string) => void>;
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   constructor(private credential_: Credential) {
     this.tokenListeners_ = [];
   }
@@ -232,6 +233,7 @@ export class FirebaseApp implements App {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private ensureService_<T>(serviceName: string, initializer: () => T): T {
     this.checkDestroyed_();
     if (!(serviceName in this.services_)) {
@@ -244,6 +246,7 @@ export class FirebaseApp implements App {
   /**
    * Throws an Error if the FirebaseApp instance has already been deleted.
    */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private checkDestroyed_(): void {
     if (this.isDeleted_) {
       throw new FirebaseAppError(

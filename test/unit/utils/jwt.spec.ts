@@ -66,7 +66,7 @@ function mockFetchPublicKeysWithErrorResponse(): nock.Scope {
     .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
     .reply(200, {
       error: 'message',
-      error_description: 'description', // eslint-disable-line @typescript-eslint/camelcase
+      error_description: 'description',
     });
 }
 
@@ -105,7 +105,7 @@ function mockFetchJsonWebKeysWithErrorResponse(): nock.Scope {
     .get(jwksPath)
     .reply(200, {
       error: 'message',
-      error_description: 'description', // eslint-disable-line @typescript-eslint/camelcase
+      error_description: 'description',
     });
 }
 

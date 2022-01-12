@@ -164,7 +164,6 @@ export class FirebaseTokenGenerator {
         uid,
       };
       if (this.tenantId) {
-        // eslint-disable-next-line @typescript-eslint/camelcase
         body.tenant_id = this.tenantId;
       }
       if (Object.keys(claims).length > 0) {
@@ -192,6 +191,7 @@ export class FirebaseTokenGenerator {
    * @param developerClaims - Optional developer claims to validate.
    * @returns True if the provided claims are valid; otherwise, false.
    */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
     if (typeof developerClaims === 'undefined') {
       return true;

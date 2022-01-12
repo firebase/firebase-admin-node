@@ -80,8 +80,8 @@ describe('FirebaseApp', () => {
 
   beforeEach(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
-      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
+      access_token: 'mock-access-token',
+      expires_in: 3600,
     });
 
     clock = sinon.useFakeTimers(1000);
@@ -733,8 +733,8 @@ describe('FirebaseApp', () => {
 
     it('returns a valid token given a well-formed custom credential implementation', () => {
       const oracle: GoogleOAuthAccessToken = {
-        access_token: 'This is a custom token', // eslint-disable-line @typescript-eslint/camelcase
-        expires_in: ONE_HOUR_IN_SECONDS, // eslint-disable-line @typescript-eslint/camelcase
+        access_token: 'This is a custom token',
+        expires_in: ONE_HOUR_IN_SECONDS,
       };
       const credential = {
         getAccessToken: () => Promise.resolve(oracle),

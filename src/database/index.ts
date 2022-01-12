@@ -52,6 +52,7 @@ export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc as any
  * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
  * constant from the `@firebase/database` package.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ServerValue: rtdb.ServerValue = serverValueConst;
 
 /**

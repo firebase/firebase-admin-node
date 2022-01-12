@@ -644,7 +644,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         expect(() => {
           const claims = {
             sub: 'sub',
-            auth_time: 'time', // eslint-disable-line @typescript-eslint/camelcase
+            auth_time: 'time',
           };
           return requestValidator({ localId: '1234', customAttributes: JSON.stringify(claims) });
         }).to.throw('Developer claims "auth_time", "sub" are reserved and cannot be specified.');
