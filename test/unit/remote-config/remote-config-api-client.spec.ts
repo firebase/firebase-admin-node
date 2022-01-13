@@ -661,8 +661,7 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  function runTemplateVersionNumberTests(rcOperation: Function): void {
+  function runTemplateVersionNumberTests(rcOperation: (v: string | number) => any): void {
     ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         expect(() => rcOperation(invalidVersion as any))
@@ -734,8 +733,7 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  function testInvalidInputTemplates(rcOperation: Function): void {
+  function testInvalidInputTemplates(rcOperation: (t: RemoteConfigTemplate) => any): void {
     const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
     const INVALID_PARAMETER_GROUPS: any[] = [null, '', 'abc', 1, true, []];
     const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
