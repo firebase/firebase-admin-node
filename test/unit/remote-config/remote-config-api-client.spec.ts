@@ -125,7 +125,6 @@ describe('RemoteConfigApiClient', () => {
       },
     ],
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
@@ -134,11 +133,9 @@ describe('RemoteConfigApiClient', () => {
       },
     },
     parameterGroups: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       new_menu: {
         description: 'Description of the group.',
         parameters: {
-          // eslint-disable-next-line @typescript-eslint/camelcase
           pumpkin_spice_season: {
             defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
             conditionalValues: {
@@ -664,7 +661,7 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
-  function runTemplateVersionNumberTests(rcOperation: Function): void {
+  function runTemplateVersionNumberTests(rcOperation: (v: string | number) => any): void {
     ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         expect(() => rcOperation(invalidVersion as any))
@@ -736,7 +733,7 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  function testInvalidInputTemplates(rcOperation: Function): void {
+  function testInvalidInputTemplates(rcOperation: (t: RemoteConfigTemplate) => any): void {
     const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
     const INVALID_PARAMETER_GROUPS: any[] = [null, '', 'abc', 1, true, []];
     const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];

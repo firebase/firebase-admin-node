@@ -83,8 +83,8 @@ export const appOptionsAuthDB: AppOptions = {
 export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
-      access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
-      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
+      access_token: 'mock-token',
+      expires_in: 3600,
     });
   }
 }

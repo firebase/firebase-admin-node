@@ -153,13 +153,13 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
   return {
     iss: 'https://securetoken.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
+    auth_time: Math.floor(authTime.getTime() / 1000),
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
+      sign_in_provider: 'custom',
       tenant: tenantId,
     },
     uid,
@@ -179,13 +179,13 @@ function getDecodedSessionCookie(uid: string, authTime: Date, tenantId?: string)
   return {
     iss: 'https://session.firebase.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
+    auth_time: Math.floor(authTime.getTime() / 1000),
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
+      sign_in_provider: 'custom',
       tenant: tenantId,
     },
     uid,
@@ -3733,7 +3733,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           subject: uid,
         }, {
           iat: oneSecBeforeValidSince,
-          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+          auth_time: oneSecBeforeValidSince,
         });
 
         // verifyIdToken should force checking revocation in emulator mode,
@@ -3763,7 +3763,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           issuer: 'https://session.firebase.google.com/' + mocks.projectId,
         }, {
           iat: oneSecBeforeValidSince,
-          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+          auth_time: oneSecBeforeValidSince,
         });
 
         // verifySessionCookie should force checking revocation in emulator

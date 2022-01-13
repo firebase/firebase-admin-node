@@ -62,8 +62,8 @@ export function getFirestoreOptions(app: App): Settings {
   if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
-        private_key: credential.privateKey, // eslint-disable-line @typescript-eslint/camelcase
-        client_email: credential.clientEmail, // eslint-disable-line @typescript-eslint/camelcase
+        private_key: credential.privateKey,
+        client_email: credential.clientEmail,
       },
       // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
       // guaranteed to be available.

@@ -41,9 +41,6 @@ import {
   NotificationMessagePayload,
 } from './messaging-api';
 
-
-/* eslint-disable @typescript-eslint/camelcase */
-
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
 const FCM_SEND_PATH = '/fcm/send';

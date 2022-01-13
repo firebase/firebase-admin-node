@@ -105,6 +105,7 @@ export class ServiceAccountCredential implements Credential {
     return requestAccessToken(this.httpClient, request);
   }
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private createAuthJwt_(): string {
     const claims = {
       scope: [

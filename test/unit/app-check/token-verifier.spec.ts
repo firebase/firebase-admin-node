@@ -213,7 +213,6 @@ describe('AppCheckTokenVerifier', () => {
           aud: ['projects/' + mocks.projectNumber, 'projects/' + mocks.projectId],
           iss: 'https://firebaseappcheck.googleapis.com/' + mocks.projectNumber,
           sub: mocks.appId,
-          // eslint-disable-next-line @typescript-eslint/camelcase
           app_id: mocks.appId,
         });
     });
@@ -236,7 +235,6 @@ describe('AppCheckTokenVerifier', () => {
           aud: ['projects/' + mocks.projectNumber, 'projects/' + mocks.projectId],
           iss: 'https://firebaseappcheck.googleapis.com/' + mocks.projectNumber,
           sub: mocks.appId,
-          // eslint-disable-next-line @typescript-eslint/camelcase
           app_id: mocks.appId,
         });
     });

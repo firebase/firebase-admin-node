@@ -102,5 +102,6 @@ export namespace database {
    * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
    * constant from the `@firebase/database` package.
    */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   export declare const ServerValue: rtdb.ServerValue;
 }

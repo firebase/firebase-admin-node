@@ -30,13 +30,11 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const VALID_PARAMETERS = {
-  // eslint-disable-next-line @typescript-eslint/camelcase
   holiday_promo_enabled: {
     defaultValue: { useInAppDefault: true },
     description: 'promo indicator',
     valueType: 'STRING' as ParameterValueType,
   },
-  // eslint-disable-next-line @typescript-eslint/camelcase
   welcome_message: {
     defaultValue: { value: `welcome text ${Date.now()}` },
     valueType: 'STRING' as ParameterValueType,
@@ -48,11 +46,9 @@ const VALID_PARAMETERS = {
 };
 
 const VALID_PARAMETER_GROUPS = {
-  // eslint-disable-next-line @typescript-eslint/camelcase
   new_menu: {
     description: 'Description of the group.',
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       pumpkin_spice_season: {
         defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
         conditionalValues: {

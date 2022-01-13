@@ -41,11 +41,9 @@ describe('RemoteConfig', () => {
 
   const INTERNAL_ERROR = new FirebaseRemoteConfigError('internal-error', 'message');
   const PARAMETER_GROUPS = {
-    // eslint-disable-next-line @typescript-eslint/camelcase
     new_menu: {
       description: 'Description of the group.',
       parameters: {
-        // eslint-disable-next-line @typescript-eslint/camelcase
         pumpkin_spice_season: {
           defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
           conditionalValues: {
@@ -88,7 +86,6 @@ describe('RemoteConfig', () => {
       },
     ],
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
@@ -108,7 +105,6 @@ describe('RemoteConfig', () => {
       tagColor: 'PINK',
     }],
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },

@@ -158,8 +158,6 @@ function mockErrorResponse(
     });
 }
 
-/* eslint-disable @typescript-eslint/camelcase */
-
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
