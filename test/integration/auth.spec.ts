@@ -1285,7 +1285,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1643,7 +1643,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1675,7 +1675,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
             return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
@@ -1683,7 +1683,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant2.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
@@ -2176,8 +2176,8 @@ describe('admin.auth', () => {
           // Not supported in ID token,
           delete decodedIdToken.nonce;
           // exp and iat may vary depending on network connection latency.
-          delete decodedIdToken.exp;
-          delete decodedIdToken.iat;
+          delete (decodedIdToken as any).exp;
+          delete (decodedIdToken as any).iat;
           expect(decodedIdToken).to.deep.equal(payloadClaims);
         });
     });
