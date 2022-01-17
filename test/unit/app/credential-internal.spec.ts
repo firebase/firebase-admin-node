@@ -46,8 +46,6 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-/* eslint-disable @typescript-eslint/camelcase */
-
 const expect = chai.expect;
 
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';

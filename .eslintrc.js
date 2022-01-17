@@ -22,7 +22,6 @@ module.exports = {
   ],
   extends: [
     'eslint:recommended',
-    'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
   rules: {
@@ -33,6 +32,7 @@ module.exports = {
     // Disabled checks
     '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/no-use-before-define': 0,
+    '@typescript-eslint/no-var-requires': 0,
 
     // Required checks
     'indent': ['error', 2],
@@ -55,6 +55,63 @@ module.exports = {
     ],
     'no-unused-vars': 'off', // Must be disabled to enable the next rule
     '@typescript-eslint/no-unused-vars': ['error'],
-    'quotes': ['error', 'single', {'avoidEscape': true}]
+    'quotes': ['error', 'single', {'avoidEscape': true}],
+    '@typescript-eslint/naming-convention': [
+      'error',
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+  
+      {
+        "selector": "memberLike",
+        "format": ["camelCase"]
+      },
+  
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      },
+
+      // Ignore properties that require quotes (HTTP headers, names that include spaces or dashes etc.).
+      {
+        "selector": [
+          "classProperty",
+          "objectLiteralProperty",
+          "typeProperty",
+          "classMethod",
+          "objectLiteralMethod",
+          "typeMethod",
+          "accessor",
+          "enumMember"
+        ],
+        "format": null,
+        "modifiers": ["requiresQuotes"]
+      },
+
+      // Ignore destructured property names.
+      {
+        "selector": "variable",
+        "modifiers": ["destructured"],
+        "format": null
+      },
+
+      // Following types are temporarily disabled. We shall incrementally enable them in the
+      // future, fixing any violations as we go.
+      {
+        "selector": [
+          "classProperty",
+          "objectLiteralProperty",
+          "typeProperty",
+          "enumMember"
+        ],
+        "format": null
+      }
+    ],
   }
 };

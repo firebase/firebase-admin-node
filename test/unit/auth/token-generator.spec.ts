@@ -235,7 +235,6 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
-              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 
@@ -264,7 +263,6 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
-              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 

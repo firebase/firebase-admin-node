@@ -84,7 +84,6 @@ export class AppCheckTokenGenerator {
       const body = {
         iss: account,
         sub: account,
-        // eslint-disable-next-line @typescript-eslint/camelcase
         app_id: appId,
         aud: FIREBASE_APP_CHECK_AUDIENCE,
         exp: iat + (ONE_MINUTE_IN_SECONDS * 5),

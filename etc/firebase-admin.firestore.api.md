@@ -9,8 +9,10 @@
 import { Agent } from 'http';
 import { BulkWriter } from '@google-cloud/firestore';
 import { BulkWriterOptions } from '@google-cloud/firestore';
+import { BundleBuilder } from '@google-cloud/firestore';
 import { CollectionGroup } from '@google-cloud/firestore';
 import { CollectionReference } from '@google-cloud/firestore';
+import { DocumentChange } from '@google-cloud/firestore';
 import { DocumentChangeType } from '@google-cloud/firestore';
 import { DocumentData } from '@google-cloud/firestore';
 import { DocumentReference } from '@google-cloud/firestore';
@@ -21,6 +23,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { FirestoreDataConverter } from '@google-cloud/firestore';
 import { GeoPoint } from '@google-cloud/firestore';
 import { GrpcStatus } from '@google-cloud/firestore';
+import { OrderByDirection } from '@google-cloud/firestore';
 import { Precondition } from '@google-cloud/firestore';
 import { Query } from '@google-cloud/firestore';
 import { QueryDocumentSnapshot } from '@google-cloud/firestore';
@@ -28,11 +31,13 @@ import { QueryPartition } from '@google-cloud/firestore';
 import { QuerySnapshot } from '@google-cloud/firestore';
 import { ReadOptions } from '@google-cloud/firestore';
 import { setLogFunction } from '@google-cloud/firestore';
+import { SetOptions } from '@google-cloud/firestore';
 import { Settings } from '@google-cloud/firestore';
 import { Timestamp } from '@google-cloud/firestore';
 import { Transaction } from '@google-cloud/firestore';
 import { UpdateData } from '@google-cloud/firestore';
 import { v1 } from '@google-cloud/firestore';
+import { WhereFilterOp } from '@google-cloud/firestore';
 import { WriteBatch } from '@google-cloud/firestore';
 import { WriteResult } from '@google-cloud/firestore';
 
@@ -40,9 +45,13 @@ export { BulkWriter }
 
 export { BulkWriterOptions }
 
+export { BundleBuilder }
+
 export { CollectionGroup }
 
 export { CollectionReference }
+
+export { DocumentChange }
 
 export { DocumentChangeType }
 
@@ -69,6 +78,8 @@ export function getFirestore(app?: App): Firestore;
 
 export { GrpcStatus }
 
+export { OrderByDirection }
+
 export { Precondition }
 
 export { Query }
@@ -83,6 +94,8 @@ export { ReadOptions }
 
 export { setLogFunction }
 
+export { SetOptions }
+
 export { Settings }
 
 export { Timestamp }
@@ -92,6 +105,8 @@ export { Transaction }
 export { UpdateData }
 
 export { v1 }
+
+export { WhereFilterOp }
 
 export { WriteBatch }
 

@@ -50,6 +50,7 @@ const sessionCookieUids = [
   generateRandomString(20),
   generateRandomString(20),
   generateRandomString(20),
+  generateRandomString(20),
 ];
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
@@ -1258,7 +1259,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1616,7 +1617,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1648,7 +1649,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
             return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
@@ -1656,7 +1657,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant2.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
@@ -2118,6 +2119,7 @@ describe('admin.auth', () => {
     const uid = sessionCookieUids[0];
     const uid2 = sessionCookieUids[1];
     const uid3 = sessionCookieUids[2];
+    const uid4 = sessionCookieUids[3];
 
     it('creates a valid Firebase session cookie', () => {
       return getAuth().createCustomToken(uid, { admin: true, groupId: '1234' })
@@ -2148,8 +2150,8 @@ describe('admin.auth', () => {
           // Not supported in ID token,
           delete decodedIdToken.nonce;
           // exp and iat may vary depending on network connection latency.
-          delete decodedIdToken.exp;
-          delete decodedIdToken.iat;
+          delete (decodedIdToken as any).exp;
+          delete (decodedIdToken as any).iat;
           expect(decodedIdToken).to.deep.equal(payloadClaims);
         });
     });
@@ -2207,6 +2209,28 @@ describe('admin.auth', () => {
         });
     });
 
+    it('fails when called with user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await getAuth().createCustomToken(uid4, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await getAuth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid4);
+
+      const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+      const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid4);
+
+      const userRecord = await getAuth().updateUser(uid4, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid4);
+      expect(userRecord.disabled).to.equal(true);
+
+      return getAuth().createSessionCookie(idToken, { expiresIn })
+        .should.eventually.be.rejected.and.have.property('code', 'auth/user-disabled');
+    });
   });
 
   describe('verifySessionCookie()', () => {

@@ -184,7 +184,6 @@ describe('AppCheck', () => {
       const response = {
         sub: 'app-id',
         iss: 'https://firebaseappcheck.googleapis.com/123456',
-        // eslint-disable-next-line @typescript-eslint/camelcase
         app_id: 'app-id',
         aud: ['123456', 'project-id'],
         exp: 1617741496,

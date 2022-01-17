@@ -144,8 +144,8 @@ describe('Database', () => {
 
       return sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
         .resolves({
-          access_token: options?.accessToken || 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
-          expires_in: options?.expiresIn || 3600, // eslint-disable-line @typescript-eslint/camelcase
+          access_token: options?.accessToken || 'mock-access-token',
+          expires_in: options?.expiresIn || 3600,
         });
     }
 
