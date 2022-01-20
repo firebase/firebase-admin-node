@@ -175,7 +175,7 @@
     "@firebase/api-documenter": "^0.1.2",
     "@firebase/app-compat": "^0.1.2",
     "@firebase/auth-compat": "^0.2.5",
-    "@firebase/auth-types": "^0.10.3",
+    "@firebase/auth-types": "^0.11.0",
     "@microsoft/api-extractor": "^7.11.2",
     "@types/bcrypt": "^5.0.0",
     "@types/chai": "^4.0.0",
