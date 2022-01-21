@@ -825,7 +825,7 @@ describe('SecurityRules', () => {
 
     it('should resolve with RulesetMetadataList when the response contains no page token', () => {
       const response = deepCopy(LIST_RULESETS_RESPONSE);
-      delete (response as any).nextPageToken;
+      delete response.nextPageToken;
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'listRulesets')
         .resolves(response);

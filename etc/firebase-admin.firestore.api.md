@@ -6,12 +6,10 @@
 
 /// <reference types="node" />
 
-import { AddPrefixToKeys } from '@google-cloud/firestore';
 import { Agent } from 'http';
 import { BulkWriter } from '@google-cloud/firestore';
 import { BulkWriterOptions } from '@google-cloud/firestore';
 import { BundleBuilder } from '@google-cloud/firestore';
-import { ChildUpdateFields } from '@google-cloud/firestore';
 import { CollectionGroup } from '@google-cloud/firestore';
 import { CollectionReference } from '@google-cloud/firestore';
 import { DocumentChange } from '@google-cloud/firestore';
@@ -25,39 +23,29 @@ import { Firestore } from '@google-cloud/firestore';
 import { FirestoreDataConverter } from '@google-cloud/firestore';
 import { GeoPoint } from '@google-cloud/firestore';
 import { GrpcStatus } from '@google-cloud/firestore';
-import { NestedUpdateFields } from '@google-cloud/firestore';
 import { OrderByDirection } from '@google-cloud/firestore';
-import { PartialWithFieldValue } from '@google-cloud/firestore';
 import { Precondition } from '@google-cloud/firestore';
-import { Primitive } from '@google-cloud/firestore';
 import { Query } from '@google-cloud/firestore';
 import { QueryDocumentSnapshot } from '@google-cloud/firestore';
 import { QueryPartition } from '@google-cloud/firestore';
 import { QuerySnapshot } from '@google-cloud/firestore';
-import { ReadOnlyTransactionOptions } from '@google-cloud/firestore';
 import { ReadOptions } from '@google-cloud/firestore';
 import { setLogFunction } from '@google-cloud/firestore';
 import { SetOptions } from '@google-cloud/firestore';
 import { Settings } from '@google-cloud/firestore';
 import { Timestamp } from '@google-cloud/firestore';
 import { Transaction } from '@google-cloud/firestore';
-import { UnionToIntersection } from '@google-cloud/firestore';
 import { UpdateData } from '@google-cloud/firestore';
 import { v1 } from '@google-cloud/firestore';
 import { WhereFilterOp } from '@google-cloud/firestore';
-import { WithFieldValue } from '@google-cloud/firestore';
 import { WriteBatch } from '@google-cloud/firestore';
 import { WriteResult } from '@google-cloud/firestore';
-
-export { AddPrefixToKeys }
 
 export { BulkWriter }
 
 export { BulkWriterOptions }
 
 export { BundleBuilder }
-
-export { ChildUpdateFields }
 
 export { CollectionGroup }
 
@@ -90,15 +78,9 @@ export function getFirestore(app?: App): Firestore;
 
 export { GrpcStatus }
 
-export { NestedUpdateFields }
-
 export { OrderByDirection }
 
-export { PartialWithFieldValue }
-
 export { Precondition }
-
-export { Primitive }
 
 export { Query }
 
@@ -107,8 +89,6 @@ export { QueryDocumentSnapshot }
 export { QueryPartition }
 
 export { QuerySnapshot }
-
-export { ReadOnlyTransactionOptions }
 
 export { ReadOptions }
 
@@ -122,15 +102,11 @@ export { Timestamp }
 
 export { Transaction }
 
-export { UnionToIntersection }
-
 export { UpdateData }
 
 export { v1 }
 
 export { WhereFilterOp }
-
-export { WithFieldValue }
 
 export { WriteBatch }
 
