@@ -57,14 +57,6 @@ export namespace firestore {
   export import WhereFilterOp = _firestore.WhereFilterOp;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
-  export import PartialWithFieldValue = _firestore.PartialWithFieldValue;
-  export import WithFieldValue = _firestore.WithFieldValue;
-  export import Primitive = _firestore.Primitive;
-  export import NestedUpdateFields = _firestore.NestedUpdateFields;
-  export import ChildUpdateFields = _firestore.ChildUpdateFields;
-  export import AddPrefixToKeys = _firestore.AddPrefixToKeys;
-  export import UnionToIntersection = _firestore.UnionToIntersection;
-  export import ReadOnlyTransactionOptions = _firestore.ReadOnlyTransactionOptions;
 
   export import setLogFunction = _firestore.setLogFunction;
 }
