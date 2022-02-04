@@ -45,6 +45,9 @@ export class Storage {
       });
     }
 
+    // make sure to pass along `projectId` from when the user calls `initializeApp`
+    if (app.options.projectId) process.env.GCLOUD_PROJECT = app.options.projectId;
+
     if (!process.env.STORAGE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
       const firebaseStorageEmulatorHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
 
