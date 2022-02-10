@@ -21,9 +21,7 @@ import { FirebaseEventarcError } from './eventarc-utils';
 /**
  * A CloudEvent version.
  */
-export const enum CloudEventVersion {
-  V1 = '1.0',
-}
+ export type CloudEventVersion = '1.0';
 
 /**
  * A CloudEvent describes event data.
@@ -42,7 +40,31 @@ export interface CloudEvent {
   data?: any;
 
   // CloudEvent may have custom extensions.
-  [propName: string]: any;
+  [key: string]: any;
+}
+
+/**
+ * Channel options interface.
+ */
+export interface ChannelOptions {
+  /**
+   * Location of the channel (ex. `us-central1`). Location is optional, and if
+   * not specified, the channel will attempt to get the location from
+   * `LOCATION` environment variable and if that fails an error will be thrown.
+   */
+  location?: string;
+
+  /** 
+   * ID of the channel. 
+   */
+  channelId: string;
+
+  /**
+   * An array of allowed event types. If specified, publishing events of
+   * unknown types will be a no op. When not provided, no even filtering is
+   * performed.
+   */
+  allowedEventsTypes?: [string]
 }
 
 /**
@@ -63,6 +85,8 @@ export class Eventarc {
       );
     }
 
+    if (!validator.isNonEmptyString)
+
     this.appInternal = app;
   }
 
@@ -82,12 +106,10 @@ export class Eventarc {
   /**
    * Creates a reference to Eventarc channel which can then be used to publish events.
    * 
-   * @param channelId - ID of the channel.
-   * @param allowedEventsTypes  - an array of allowed event types, unknown event types will be ignored.
    * @returns Eventarc channel reference for publishing events.
    */
-  public channel(channelId: string, allowedEventsTypes?: [string]): Channel {
-    return new Channel(this, channelId, allowedEventsTypes);
+  public channel(options: ChannelOptions): Channel {
+    return new Channel(this, options.location ?? process.env.LOCATION, options.channelId, options.allowedEventsTypes);
   }
 }
 
@@ -96,13 +118,14 @@ export class Eventarc {
  */
 export class Channel {
   private readonly eventarcInternal: Eventarc;
+  public readonly location: string;
   public readonly channelId: string;
   public readonly allowedEventsTypes?: [string]
 
   /**
    * @internal
    */
-  constructor(eventarc: Eventarc, channelId: string, allowedEventsTypes?: [string]) {
+  constructor(eventarc: Eventarc, location: string, channelId: string, allowedEventsTypes?: [string]) {
     if (!validator.isNonNullObject(eventarc)) {
       throw new FirebaseEventarcError(
         'invalid-argument',
@@ -110,6 +133,7 @@ export class Channel {
       );
     }
 
+    this.location = location;
     this.channelId = channelId;
     this.eventarcInternal = eventarc;
     this.allowedEventsTypes = allowedEventsTypes;
@@ -132,9 +156,15 @@ export class Channel {
    * Publishes provided event to this channel. If channel was created with `allowedEventsTypes` and
    * event type is not on that list, the event will be ignored.
    * 
+   * The following CloudEvent fields will be auto-populated if not set:
+   *  * specversion - `1.0`
+   *  * id - uuidv4()
+   *  * source - will be populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
+   *             if not set an error will be thrown.
+   *  
    * @param event - CloudEvent to publish to the channel.
    */
-  public async publish(event: CloudEvent): Promise<void> {
+  public publish(event: CloudEvent): Promise<void> {
     if (this.allowedEventsTypes && !this.allowedEventsTypes.includes(event.type)) {
       return;
     }

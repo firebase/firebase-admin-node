@@ -22,6 +22,32 @@ import { Eventarc } from './eventarc';
 export { Eventarc, Channel, CloudEvent, CloudEventVersion } from './eventarc';
 export { FirebaseEventarcError } from './eventarc-utils';
 
+/**
+ * Gets the {@link Eventarc} service for the default app or a given app.
+ *
+ * `getEventarc()` can be called with no arguments to access the default
+ * app's `Eventarc` service or as `getEventarc(app)` to access the
+ * `Eventarc` service associated with specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Eventarc service for the default app
+ * const defaultEventarc = getEventarc();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Eventarc service for a given app
+ * const otherEventarc = getEventarc(otherApp);
+ * ```
+ *
+ * @param app - Optional app whose `Eventarc` service to
+ *   return. If not provided, the default `Eventarc` service will be returned.
+ *
+ * @returns The default `Eventarc` service if no
+ *   app is provided or the `Eventarc` service associated with the provided
+ *   app.
+ */
 export function getEventarc(app?: App): Eventarc {
   if (typeof app === 'undefined') {
     app = getApp();
