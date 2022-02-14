@@ -1481,7 +1481,7 @@ export interface RecaptchaManagedRule {
 }
 
 /**
- * The key's platform type: only web supported now..
+ * The key's platform type: only web supported now.
  */
 export type RecaptchaKeyClientType = 'WEB';
 
