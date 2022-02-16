@@ -54,11 +54,6 @@ export interface ChannelOptions {
    */
   location?: string;
 
-  /** 
-   * ID of the channel. 
-   */
-  channelId: string;
-
   /**
    * An array of allowed event types. If specified, publishing events of
    * unknown types will be a no op. When not provided, no even filtering is
@@ -106,10 +101,15 @@ export class Eventarc {
   /**
    * Creates a reference to Eventarc channel which can then be used to publish events.
    * 
+   * @param channelId - ID of the channel. Can be either just the channel id or the fully
+   *     qualified channel resource name:
+   *     `projects/{project}/locations/{location}/channels/{channel-id}`. If the latter
+   *     then location specified in the options will be ignored.
+   * @param options - (optional) additional channel options
    * @returns Eventarc channel reference for publishing events.
    */
-  public channel(options: ChannelOptions): Channel {
-    return new Channel(this, options.location ?? process.env.LOCATION, options.channelId, options.allowedEventsTypes);
+  public channel(channelId: string, options?: ChannelOptions): Channel {
+    return new Channel(this, options.location ?? process.env.LOCATION, channelId, options.allowedEventsTypes);
   }
 }
 
@@ -153,8 +153,9 @@ export class Channel {
   }
 
   /**
-   * Publishes provided event to this channel. If channel was created with `allowedEventsTypes` and
-   * event type is not on that list, the event will be ignored.
+   * Publishes provided events to this channel. If channel was created with
+   * `allowedEventsTypes` and event type is not on that list, the event will
+   * be ignored.
    * 
    * The following CloudEvent fields will be auto-populated if not set:
    *  * specversion - `1.0`
@@ -162,12 +163,13 @@ export class Channel {
    *  * source - will be populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
    *             if not set an error will be thrown.
    *  
-   * @param event - CloudEvent to publish to the channel.
+   * @param events - CloudEvent to publish to the channel.
    */
-  public publish(event: CloudEvent): Promise<void> {
-    if (this.allowedEventsTypes && !this.allowedEventsTypes.includes(event.type)) {
-      return;
-    }
-    // call eventarc publishing API.
+  public publish(events: CloudEvent[]): Promise<void> {
+    return this.publishToEventarcApi(events.filter(e => !this.allowedEventsTypes || this.allowedEventsTypes.includes(e.type)))
+  }
+
+  private async publishToEventarcApi(events: CloudEvent | CloudEvent[]): Promise<void> {
+
   }
 }
