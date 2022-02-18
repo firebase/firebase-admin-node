@@ -195,7 +195,7 @@
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
-    "chalk": "^4.1.1",
+    "chalk": "^5.0.0",
     "child-process-promise": "^2.2.1",
     "del": "^6.0.0",
     "eslint": "^7.1.0",
