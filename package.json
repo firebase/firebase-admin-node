@@ -198,7 +198,7 @@
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
     "del": "^6.0.0",
-    "eslint": "^7.1.0",
+    "eslint": "^8.9.0",
     "firebase-token-generator": "^2.0.0",
     "gulp": "^4.0.2",
     "gulp-filter": "^7.0.0",
