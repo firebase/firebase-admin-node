@@ -264,6 +264,61 @@ export interface ProviderIdentifier {
     providerUid: string;
 }
 
+// @public (undocumented)
+export interface ProviderRecaptchaConfig {
+    // (undocumented)
+    enforcementState: RecaptchaProviderEnforcementState;
+}
+
+// @public
+export type RecaptchaAction = 'BLOCK';
+
+// @public (undocumented)
+export interface RecaptchaConfig {
+    emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
+    recaptchaKeyConfig?: RecaptchaKeyConfig[];
+    recaptchaManagedRules?: RecaptchaManagedRules;
+}
+
+// @public (undocumented)
+export class RecaptchaConfigAuth implements RecaptchaConfig {
+    constructor(emailPasswordRecaptchaConfig: ProviderRecaptchaConfig | undefined, recaptchaManagedRules: RecaptchaManagedRules | undefined, recaptchaKeyConfig: RecaptchaKeyConfig[] | undefined);
+    // (undocumented)
+    readonly emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
+    // (undocumented)
+    readonly recaptchaKeyConfig?: RecaptchaKeyConfig[];
+    // (undocumented)
+    readonly recaptchaManagedRules?: RecaptchaManagedRules;
+    // (undocumented)
+    toJSON(): object;
+    // (undocumented)
+    static validate(options: RecaptchaConfig): void;
+}
+
+// @public
+export type RecaptchaKeyClientType = 'WEB';
+
+// @public
+export interface RecaptchaKeyConfig {
+    clientType?: RecaptchaKeyClientType;
+    recaptchaKey: string;
+}
+
+// @public (undocumented)
+export interface RecaptchaManagedRules {
+    // (undocumented)
+    ruleConfigs: RuleConfig[];
+}
+
+// @public
+export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
+
+// @public
+export interface RuleConfig {
+    action?: RecaptchaAction;
+    endScore: number;
+}
+
 // @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
     callbackURL?: string;
@@ -296,6 +351,7 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    get recaptchaConfig(): RecaptchaConfigAuth | undefined;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
         [phoneNumber: string]: string;
@@ -358,6 +414,8 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    // (undocumented)
+    recaptchaConfig?: RecaptchaConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
     } | null;
