@@ -21,7 +21,8 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig,
+  MultiFactorAuthConfig, ProviderRecaptchaConfig, RecaptchaManagedRules,
+  RecaptchaKeyConfig, RecaptchaConfigAuth, RecaptchaConfig
 } from './auth-config';
 
 /**
@@ -54,6 +55,8 @@ export interface UpdateTenantRequest {
    * Passing null clears the previously save phone number / code pairs.
    */
   testPhoneNumbers?: { [phoneNumber: string]: string } | null;
+
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
@@ -68,6 +71,8 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
+  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
+  recaptchaManagedRules?: RecaptchaManagedRules;
 }
 
 /** The tenant server response interface. */
@@ -79,6 +84,9 @@ export interface TenantServerResponse {
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
+  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
+  recaptchaManagedRules?: RecaptchaManagedRules;
+  recaptchaKeyConfig?: RecaptchaKeyConfig[];
 }
 
 /**
@@ -123,6 +131,10 @@ export class Tenant {
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
 
+  /*
+  * The map conatining the reCAPTCHA config.
+  */
+  private readonly recaptchaConfig_?: RecaptchaConfigAuth;
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
@@ -151,6 +163,13 @@ export class Tenant {
     if (typeof tenantOptions.testPhoneNumbers !== 'undefined') {
       // null will clear existing test phone numbers. Translate to empty object.
       request.testPhoneNumbers = tenantOptions.testPhoneNumbers ?? {};
+    }
+    // reCAPTCHA Key Config cannot be updated.
+    if (typeof tenantOptions.recaptchaConfig?.emailPasswordRecaptchaConfig !== 'undefined') {
+      request.emailPasswordRecaptchaConfig = tenantOptions.recaptchaConfig.emailPasswordRecaptchaConfig;
+    }
+    if (typeof tenantOptions.recaptchaConfig?.recaptchaManagedRules !== 'undefined') {
+      request.recaptchaManagedRules = tenantOptions.recaptchaConfig.recaptchaManagedRules;
     }
     return request;
   }
@@ -185,6 +204,7 @@ export class Tenant {
       anonymousSignInEnabled: true,
       multiFactorConfig: true,
       testPhoneNumbers: true,
+      recaptchaConfig: true
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -231,6 +251,10 @@ export class Tenant {
       // This will throw an error if invalid.
       MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
     }
+    // Validate reCAPTCHAConfig type if provided.
+    if (typeof request.recaptchaConfig !== 'undefined') {
+      RecaptchaConfigAuth.validate(request.recaptchaConfig);
+    }
   }
 
   /**
@@ -265,6 +289,13 @@ export class Tenant {
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
+    if (typeof response.emailPasswordRecaptchaConfig !== 'undefined'
+    || typeof response.recaptchaManagedRules !== 'undefined'
+    || typeof response.recaptchaKeyConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaConfigAuth(
+        response.emailPasswordRecaptchaConfig, response.recaptchaManagedRules,
+        response.recaptchaKeyConfig);
+    }
   }
 
   /**
@@ -282,6 +313,13 @@ export class Tenant {
   }
 
   /**
+   * The recaptcha config auth configuration of the current tenant.
+   */
+  get recaptchaConfig(): RecaptchaConfigAuth | undefined {
+    return this.recaptchaConfig_;
+  }
+
+  /**
    * Returns a JSON-serializable representation of this object.
    *
    * @returns A JSON-serializable representation of this object.
@@ -294,12 +332,16 @@ export class Tenant {
       multiFactorConfig: this.multiFactorConfig_?.toJSON(),
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
+      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
     }
     if (typeof json.testPhoneNumbers === 'undefined') {
       delete json.testPhoneNumbers;
+    }
+    if (typeof json.recaptchaConfig === 'undefined') {
+      delete json.recaptchaConfig;
     }
     return json;
   }

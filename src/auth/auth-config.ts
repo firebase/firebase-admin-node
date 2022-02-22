@@ -1460,6 +1460,54 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
 */
 export type RecaptchaProviderEnforcementState =  'OFF' | 'AUDIT' | 'ENFORCE';
 
+export interface ProviderRecaptchaConfig {
+  enforcementState: RecaptchaProviderEnforcementState;
+}
+
+export class ProviderRecaptchaAuthConfig implements ProviderRecaptchaConfig {
+  public readonly enforcementState: RecaptchaProviderEnforcementState;
+
+  public static validate(options: ProviderRecaptchaConfig): void {
+    const validKeys = {
+      enforcementState: true,
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"ProviderRecaptchaConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid ProviderRecaptchaConfig parameter.`,
+        );
+      }
+    }
+
+    // Validate content.
+    if (typeof options.enforcementState !== 'undefined' &&
+        options.enforcementState !== 'OFF' &&
+        options.enforcementState !== 'AUDIT' &&
+        options.enforcementState !== 'ENFORCE') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"ProviderRecaptchaAuthConfig.enforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
+      );
+    }
+  }
+  constructor(response: ProviderRecaptchaConfig) {
+    if (typeof response.enforcementState === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid provider-reCAPTCHA configuration response');
+    }
+    this.enforcementState = response.enforcementState;
+  }
+}
+
 /**
 * The actions for reCAPTCHA-protected requests.
 *   - 'BLOCK': The reCAPTCHA-protected request will be blocked.
@@ -1469,7 +1517,7 @@ export type RecaptchaAction = 'BLOCK';
 /**
 * The config for a reCAPTCHA action rule.
 */
-export interface RecaptchaManagedRule {
+export interface RuleConfig {
  /**
   * The action will be enforced if the reCAPTCHA score of a request is larger than endScore.
   */
@@ -1480,6 +1528,100 @@ export interface RecaptchaManagedRule {
  action?: RecaptchaAction;
 }
 
+export class AuthRuleConfig implements RuleConfig{
+  public readonly endScore: number;
+  public readonly action: RecaptchaAction;
+
+  public static validate(options: RuleConfig): void {
+    const validKeys = {
+      endScore: true,
+      action: true,
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RuleConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RuleConfig parameter.`,
+        );
+      }
+    }
+
+    // Validate content.
+    if (typeof options.action !== 'undefined' &&
+        options.action !== 'BLOCK') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RuleConfig.action" must be "BLOCK".',
+      );
+    }
+  }
+
+  constructor(response: RuleConfig) {
+    if (typeof response.action === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid provider-reCAPTCHA configuration response');
+    }
+    this.action = response.action;
+    if (response.endScore !== undefined) {
+      this.endScore = response.endScore;
+    }
+  }
+}
+
+export interface RecaptchaManagedRules {
+  ruleConfigs: RuleConfig[];
+}
+
+export class RecaptchaAuthManagedRules implements RecaptchaManagedRules{
+  public readonly ruleConfigs: RuleConfig[];
+
+  public static validate(options: RecaptchaManagedRules): void {
+    const validKeys = {
+      ruleConfigs: true,
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RuleConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RecaptchaManagedRules parameter.`,
+        );
+      }
+    }
+
+    if (typeof options.ruleConfigs !== 'undefined') {
+      // Validate array
+      if (!validator.isArray(options.ruleConfigs)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaManagedRules.ruleConfigs" must be an array of valid "RuleConfig".',
+        );
+      }
+
+      // Validate each rule of the array
+      options.ruleConfigs.forEach((ruleConfig) => {
+        AuthRuleConfig.validate(ruleConfig);
+      });
+    }
+    
+  }
+}
+
+
 /**
  * The key's platform type: only web supported now.
  */
@@ -1488,31 +1630,103 @@ export type RecaptchaKeyClientType = 'WEB';
 /**
  * The reCAPTCHA key config.
  */
-export interface RecaptchaKey {
+export interface RecaptchaKeyConfig {
   /**
    * The key's client platform type.
    */
-  type?: RecaptchaKeyClientType;
+  clientType?: RecaptchaKeyClientType;
 
   /**
    * The reCAPTCHA site key.
    */
-   key: string;
+  recaptchaKey: string;
 }
 
 export interface RecaptchaConfig {
  /**
   * The enforcement state of email password provider.
   */
- emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
 
  /**
   *  The reCAPTCHA managed rules.
   */
- managedRules: RecaptchaManagedRule[];
+  recaptchaManagedRules?: RecaptchaManagedRules;
 
  /**
   * The reCAPTCHA keys.
   */
- recaptchaKeys?: RecaptchaKey[];
+  recaptchaKeyConfig?: RecaptchaKeyConfig[];
+}
+
+export class RecaptchaConfigAuth implements RecaptchaConfig {
+  public readonly emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
+  public readonly recaptchaManagedRules?: RecaptchaManagedRules;
+  public readonly recaptchaKeyConfig?: RecaptchaKeyConfig[];
+
+  constructor(emailPasswordRecaptchaConfig: ProviderRecaptchaConfig | undefined, 
+    recaptchaManagedRules: RecaptchaManagedRules | undefined,
+    recaptchaKeyConfig: RecaptchaKeyConfig[] | undefined) {
+    if (emailPasswordRecaptchaConfig !== undefined) {
+      this.emailPasswordRecaptchaConfig = emailPasswordRecaptchaConfig;
+    }
+    if (recaptchaManagedRules !== undefined) {
+      this.recaptchaManagedRules = recaptchaManagedRules;
+    }
+    if (recaptchaKeyConfig !== undefined) {
+      this.recaptchaKeyConfig = recaptchaKeyConfig;
+    }
+  }
+
+  public static validate(options: RecaptchaConfig): void {
+    const validKeys = {
+      emailPasswordRecaptchaConfig: true,
+      recaptchaManagedRules: true,
+      recaptchaKeyConfig: true,
+    };
+
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaConfig" must be a non-null object.',
+      );
+    }
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RecaptchaConfig parameter.`,
+        );
+      }
+    }
+
+    if (options.emailPasswordRecaptchaConfig !== undefined) {
+      ProviderRecaptchaAuthConfig.validate(options.emailPasswordRecaptchaConfig);
+    }
+
+    if (options.recaptchaManagedRules !== undefined) {
+      RecaptchaAuthManagedRules.validate(options.recaptchaManagedRules);
+    }
+  }
+
+  public toJSON(): object {
+    const json: any = {
+      emailPasswordRecaptchaConfig: deepCopy(this.emailPasswordRecaptchaConfig),
+      recaptchaManagedRules: deepCopy(this.recaptchaManagedRules),
+      recaptchaKeyConfig: deepCopy(this.recaptchaKeyConfig)
+    }
+
+    if (typeof json.recaptchaManagedRules === 'undefined') {
+      delete json.recaptchaManagedRules;
+    }
+    if (typeof json.emailPasswordRecaptchaConfig === 'undefined') {
+      delete json.emailPasswordRecaptchaConfig;
+    }
+    if (typeof json.recaptchaKeyConfig === 'undefined') {
+      delete json.recaptchaKeyConfig;
+    }
+
+    return json;
+  }
 }
