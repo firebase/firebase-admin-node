@@ -82,7 +82,6 @@ export {
   ProviderRecaptchaConfig,
   RecaptchaAction,
   RecaptchaConfig,
-  RecaptchaConfigAuth,
   RecaptchaKeyConfig,
   RecaptchaKeyClientType,
   RecaptchaManagedRules,

@@ -315,7 +315,7 @@ export class Tenant {
   /**
    * The recaptcha config auth configuration of the current tenant.
    */
-  get recaptchaConfig(): RecaptchaConfigAuth | undefined {
+  get recaptchaConfig(): RecaptchaConfig | undefined {
     return this.recaptchaConfig_;
   }
 

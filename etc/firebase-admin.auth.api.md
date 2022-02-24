@@ -280,21 +280,6 @@ export interface RecaptchaConfig {
     recaptchaManagedRules?: RecaptchaManagedRules;
 }
 
-// @public (undocumented)
-export class RecaptchaConfigAuth implements RecaptchaConfig {
-    constructor(emailPasswordRecaptchaConfig: ProviderRecaptchaConfig | undefined, recaptchaManagedRules: RecaptchaManagedRules | undefined, recaptchaKeyConfig: RecaptchaKeyConfig[] | undefined);
-    // (undocumented)
-    readonly emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-    // (undocumented)
-    readonly recaptchaKeyConfig?: RecaptchaKeyConfig[];
-    // (undocumented)
-    readonly recaptchaManagedRules?: RecaptchaManagedRules;
-    // (undocumented)
-    toJSON(): object;
-    // (undocumented)
-    static validate(options: RecaptchaConfig): void;
-}
-
 // @public
 export type RecaptchaKeyClientType = 'WEB';
 
@@ -351,7 +336,7 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    get recaptchaConfig(): RecaptchaConfigAuth | undefined;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
         [phoneNumber: string]: string;
