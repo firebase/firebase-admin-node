@@ -729,6 +729,14 @@ export class AuthClientErrorCode {
     code: 'user-not-disabled',
     message: 'The user must be disabled in order to bulk delete it (or you must pass force=true).',
   };
+  public static INVALID_RECAPTCHA_ACTION = {
+    code: 'invalid-recaptcha-action',
+    message: 'ReCAPTCHA must be "BLOCK".'
+  }
+  public static INVALID_RECAPTCHA_ENFORCEMENT_STATE = {
+    code: 'invalid-recaptcha-enforcement-state',
+    message: 'ReCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".'
+  }
 }
 
 /**
@@ -986,6 +994,10 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   USER_DISABLED: 'USER_DISABLED',
   // Password provided is too weak.
   WEAK_PASSWORD: 'INVALID_PASSWORD',
+  // Unrecognized reCAPTCHA action.
+  INVALID_RECAPTCHA_ACTION: 'INVALID_RECAPTCHA_ACTION',
+  // Unrecognized reCAPTCHA enforcement state.
+  INVALID_RECAPTCHA_ENFORCEMENT_STATE: 'INVALID_RECAPTCHA_ENFORCEMENT_STATE',
 };
 
 /** @const {ServerToClientCode} Messaging server to client enum error codes. */
