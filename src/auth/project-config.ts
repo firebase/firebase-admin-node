@@ -16,11 +16,8 @@
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ProviderRecaptchaConfig,
   RecaptchaConfig,
   RecaptchaConfigAuth,
-  RecaptchaKeyConfig,
-  RecaptchaManagedRules
 } from './auth-config';
 
 /**
@@ -34,18 +31,19 @@ export interface UpdateProjectConfigRequest {
 }
 
 /**
+ * Response received from get/update project config.
  * We are only exposing the recaptcha config for now.
  */
 export interface ProjectConfigServerResponse {
-  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-  recaptchaManagedRules?: RecaptchaManagedRules;
-  recaptchaKeyConfig?: RecaptchaKeyConfig[];
+  recaptchaConfig?: RecaptchaConfig;
 }
 
+/**
+ * Request sent to update project config.
+ * We are only updating the recaptcha config for now.
+ */
 export interface ProjectConfigClientRequest {
-  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-  recaptchaManagedRules?: RecaptchaManagedRules;
-  recaptchaKeyConfig?: RecaptchaKeyConfig[];
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
@@ -55,14 +53,14 @@ export class ProjectConfig {
   private readonly recaptchaConfig_?: RecaptchaConfigAuth;
 
   private static validate(request: any): void {
-    const validKeys = {
-      recaptchaConfig: true,
-    };
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         '"UpdateProjectConfigRequest" must be a valid non-null object.',
       );
+    }
+    const validKeys = {
+      recaptchaConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -73,6 +71,7 @@ export class ProjectConfig {
         );
       }
     }
+
     RecaptchaConfigAuth.validate(request.recaptchaConfig);
   }
 
@@ -84,16 +83,8 @@ export class ProjectConfig {
    * @internal
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
-    ProjectConfig.validate(configOptions);
-    const request: ProjectConfigClientRequest = {};
-    // reCAPTCHA Key Config cannot be updated.
-    if (typeof configOptions.recaptchaConfig?.emailPasswordRecaptchaConfig !== 'undefined') {
-      request.emailPasswordRecaptchaConfig = configOptions.recaptchaConfig.emailPasswordRecaptchaConfig;
-    }
-    if (typeof configOptions.recaptchaConfig?.recaptchaManagedRules !== 'undefined') {
-      request.recaptchaManagedRules = configOptions.recaptchaConfig.recaptchaManagedRules;
-    }
-    return request;
+    ProjectConfig.validate(configOptions);    
+    return configOptions as ProjectConfigClientRequest;
   }
  
   /**
@@ -110,12 +101,8 @@ export class ProjectConfig {
    * @internal
    */
   constructor(response: ProjectConfigServerResponse) {
-    if (typeof response.emailPasswordRecaptchaConfig !== 'undefined'
-    || typeof response.recaptchaManagedRules !== 'undefined'
-    || typeof response.recaptchaKeyConfig !== 'undefined') {
-      this.recaptchaConfig_ = new RecaptchaConfigAuth(
-        response.emailPasswordRecaptchaConfig, response.recaptchaManagedRules,
-        response.recaptchaKeyConfig);
+    if (response.recaptchaConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaConfigAuth(response.recaptchaConfig);
     }
   }
   /**
