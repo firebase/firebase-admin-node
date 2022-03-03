@@ -122,6 +122,15 @@ export {
   TenantManager,
 } from './tenant-manager';
 
+export {
+  UpdateProjectConfigRequest,
+  ProjectConfig,
+} from './project-config';
+
+export {
+  ProjectConfigManager,
+} from './project-config-manager';
+
 export { DecodedIdToken } from './token-verifier';
 
 export {

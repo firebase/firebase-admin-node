@@ -42,6 +42,7 @@ import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
+import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -101,6 +102,8 @@ const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
 /** Firebase Auth base URL format when using the auth emultor with multi-tenancy. */
 const FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT = FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT.replace(
   'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
+//https://identitytoolkit.googleapis.com/v2/projects/cicpclientproj/config
 
 
 /** Maximum allowed number of tenants to download at one time. */
@@ -1961,6 +1964,29 @@ export abstract class AbstractAuthRequestHandler {
   }
 }
 
+/** Instantiates the getConfig endpoint settings. */
+const GET_CONFIG = new ApiSettings('/config', 'GET')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get project config',
+      );
+    }
+  });
+
+/** Instantiates the updateConfig endpoint settings. */
+const UPDATE_CONFIG = new ApiSettings('/config?updateMask={updateMask}', 'PATCH')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update project config',
+      );
+    }
+  });
 
 /** Instantiates the getTenant endpoint settings. */
 const GET_TENANT = new ApiSettings('/tenants/{tenantId}', 'GET')
@@ -2035,7 +2061,7 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
  */
 export class AuthRequestHandler extends AbstractAuthRequestHandler {
 
-  protected readonly tenantMgmtResourceBuilder: AuthResourceUrlBuilder;
+  protected readonly v2ResourceBuilder: AuthResourceUrlBuilder;
 
   /**
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
@@ -2045,7 +2071,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: App) {
     super(app);
-    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
+    this.v2ResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
@@ -2063,6 +2089,35 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
+   * Get the current project's config
+   * @returns A promise that resolves with the project config information.
+   */
+  public getConfig(): Promise<ProjectConfigServerResponse> {
+    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_CONFIG, {}, {})
+      .then((response: any) => {
+        return response as ProjectConfigServerResponse;
+      });
+  }
+
+  /**
+   * Update the current project's config.
+   * @returns A promise that resolves with the project config information.
+   */
+  public updateConfig(recaptchaOptions: UpdateProjectConfigRequest): Promise<ProjectConfigServerResponse> {
+    try {
+      const request = ProjectConfig.buildServerRequest(recaptchaOptions);
+      const updateMask = utils.generateUpdateMask(request);
+      return this.invokeRequestHandler(
+        this.v2ResourceBuilder, UPDATE_CONFIG, request, { updateMask: updateMask.join(',') })
+        .then((response: any) => {
+          return response as ProjectConfigServerResponse;
+        });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  /**
    * Looks up a tenant by tenant ID.
    *
    * @param tenantId - The tenant identifier of the tenant to lookup.
@@ -2072,7 +2127,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, { tenantId })
+    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_TENANT, {}, { tenantId })
       .then((response: any) => {
         return response as TenantServerResponse;
       });
@@ -2102,7 +2157,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (typeof request.pageToken === 'undefined') {
       delete request.pageToken;
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, LIST_TENANTS, request)
+    return this.invokeRequestHandler(this.v2ResourceBuilder, LIST_TENANTS, request)
       .then((response: any) => {
         if (!response.tenants) {
           response.tenants = [];
@@ -2122,7 +2177,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, undefined, { tenantId })
+    return this.invokeRequestHandler(this.v2ResourceBuilder, DELETE_TENANT, undefined, { tenantId })
       .then(() => {
         // Return nothing.
       });
@@ -2138,7 +2193,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, true);
-      return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
+      return this.invokeRequestHandler(this.v2ResourceBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
         });
@@ -2164,7 +2219,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
       // and not just specific phone numbers.
       const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
-      return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
+      return this.invokeRequestHandler(this.v2ResourceBuilder, UPDATE_TENANT, request,
         { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as TenantServerResponse;
