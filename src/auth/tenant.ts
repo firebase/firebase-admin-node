@@ -21,8 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, ProviderRecaptchaConfig, RecaptchaManagedRules,
-  RecaptchaKeyConfig, RecaptchaConfigAuth, RecaptchaConfig
+  MultiFactorAuthConfig, RecaptchaConfigAuth, RecaptchaConfig
 } from './auth-config';
 
 /**
@@ -71,8 +70,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
-  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-  recaptchaManagedRules?: RecaptchaManagedRules;
+  recaptchaConfig? : RecaptchaConfig;
 }
 
 /** The tenant server response interface. */
@@ -84,9 +82,7 @@ export interface TenantServerResponse {
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
-  emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-  recaptchaManagedRules?: RecaptchaManagedRules;
-  recaptchaKeyConfig?: RecaptchaKeyConfig[];
+  recaptchaConfig? : RecaptchaConfig;
 }
 
 /**
@@ -164,12 +160,8 @@ export class Tenant {
       // null will clear existing test phone numbers. Translate to empty object.
       request.testPhoneNumbers = tenantOptions.testPhoneNumbers ?? {};
     }
-    // reCAPTCHA Key Config cannot be updated.
-    if (typeof tenantOptions.recaptchaConfig?.emailPasswordRecaptchaConfig !== 'undefined') {
-      request.emailPasswordRecaptchaConfig = tenantOptions.recaptchaConfig.emailPasswordRecaptchaConfig;
-    }
-    if (typeof tenantOptions.recaptchaConfig?.recaptchaManagedRules !== 'undefined') {
-      request.recaptchaManagedRules = tenantOptions.recaptchaConfig.recaptchaManagedRules;
+    if (typeof tenantOptions.recaptchaConfig !== 'undefined') {
+      request.recaptchaConfig = tenantOptions.recaptchaConfig;
     }
     return request;
   }
@@ -289,12 +281,8 @@ export class Tenant {
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
-    if (typeof response.emailPasswordRecaptchaConfig !== 'undefined'
-    || typeof response.recaptchaManagedRules !== 'undefined'
-    || typeof response.recaptchaKeyConfig !== 'undefined') {
-      this.recaptchaConfig_ = new RecaptchaConfigAuth(
-        response.emailPasswordRecaptchaConfig, response.recaptchaManagedRules,
-        response.recaptchaKeyConfig);
+    if (typeof response.recaptchaConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaConfigAuth(response.recaptchaConfig);
     }
   }
 

@@ -264,45 +264,33 @@ export interface ProviderIdentifier {
     providerUid: string;
 }
 
-// @public (undocumented)
-export interface ProviderRecaptchaConfig {
-    // (undocumented)
-    enforcementState: RecaptchaProviderEnforcementState;
-}
-
 // @public
 export type RecaptchaAction = 'BLOCK';
 
 // @public (undocumented)
 export interface RecaptchaConfig {
-    emailPasswordRecaptchaConfig?: ProviderRecaptchaConfig;
-    recaptchaKeyConfig?: RecaptchaKeyConfig[];
-    recaptchaManagedRules?: RecaptchaManagedRules;
+    emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+    managedRules?: RecaptchaManagedRule[];
+    recaptchaKeys?: RecaptchaKey[];
+}
+
+// @public
+export interface RecaptchaKey {
+    key: string;
+    type?: RecaptchaKeyClientType;
 }
 
 // @public
 export type RecaptchaKeyClientType = 'WEB';
 
 // @public
-export interface RecaptchaKeyConfig {
-    clientType?: RecaptchaKeyClientType;
-    recaptchaKey: string;
-}
-
-// @public (undocumented)
-export interface RecaptchaManagedRules {
-    // (undocumented)
-    ruleConfigs: RuleConfig[];
+export interface RecaptchaManagedRule {
+    action?: RecaptchaAction;
+    endScore: number;
 }
 
 // @public
 export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
-
-// @public
-export interface RuleConfig {
-    action?: RecaptchaAction;
-    endScore: number;
-}
 
 // @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
