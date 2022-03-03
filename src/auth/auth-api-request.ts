@@ -1896,8 +1896,6 @@ export abstract class AbstractAuthRequestHandler {
           requestValidator(requestData);
         }
         // Process request.
-        console.log(requestData);
-        console.log(url);
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
           url,
