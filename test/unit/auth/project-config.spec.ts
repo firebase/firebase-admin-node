@@ -35,30 +35,26 @@ const expect = chai.expect;
 
 describe('ProjectConfig', () => {
   const serverResponse: ProjectConfigServerResponse = {
-    emailPasswordRecaptchaConfig: {
-      enforcementState: 'OFF'
-    },
-    recaptchaManagedRules: {
-      ruleConfigs: [{
+    recaptchaConfig: {
+      emailPasswordEnforcementState: 'AUDIT',
+      managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
-      }] },
-    recaptchaKeyConfig: [ {
-      clientType: 'WEB',
-      recaptchaKey: 'test-key-1' }
-    ],
+      } ],
+      recaptchaKeys: [ {
+        type: 'WEB',
+        key: 'test-key-1' }
+      ],
+    }
   };
 
   const updateProjectConfigRequest: UpdateProjectConfigRequest = {
     recaptchaConfig: {
-      recaptchaManagedRules: {
-        ruleConfigs: [{
-          endScore: 0.2,
-          action: 'BLOCK'
-        }] },
-      emailPasswordRecaptchaConfig: {
-        enforcementState: 'OFF'
-      },
+      emailPasswordEnforcementState: 'AUDIT',
+      managedRules: [ {
+        endScore: 0.2,
+        action: 'BLOCK'
+      } ]
     }
   };
 
@@ -81,72 +77,47 @@ describe('ProjectConfig', () => {
         }).to.throw('"invalidParameter" is not a valid RecaptchaConfig parameter.');
       });
 
-      it('should throw on null ProviderRecaptchaConfig attribute', () => {
+      it('should throw on null emailPasswordEnforcementState attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.emailPasswordRecaptchaConfig = null;
+        configOptionsClientRequest.recaptchaConfig.emailPasswordEnforcementState = null;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"ProviderRecaptchaConfig" must be a non-null object.');
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be a valid non-empty string.');
       });
 
-      it('should throw on invalid ProviderRecaptchaConfig attribute', () => {
+      it('should throw on invalid emailPasswordEnforcementState attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
         configOptionsClientRequest.recaptchaConfig
-          .emailPasswordRecaptchaConfig.invalidParameter = 'invalid';
+          .emailPasswordEnforcementState = 'INVALID';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"invalidParameter" is not a valid ProviderRecaptchaConfig parameter.');
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
       });
 
-      it('should throw on invalid ProviderRecaptchaConfig.enforcementState attribute', () => {
+      it('should throw on non-array managedRules attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig
-          .emailPasswordRecaptchaConfig.enforcementState = 'INVALID';
+        configOptionsClientRequest.recaptchaConfig.managedRules = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"ProviderRecaptchaAuthConfig.enforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
+        }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
       });
 
-      it('should throw on null RuleConfig attribute', () => {
+      it('should throw on invalid managedRules attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.recaptchaManagedRules = null;
-        expect(() => {
-          ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RuleConfig" must be a non-null object.');
-      });
-
-      it('should throw on invalid RecaptchaManagedRules attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.recaptchaManagedRules.invalidParameter = 'invalid';
-        expect(() => {
-          ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"invalidParameter" is not a valid RecaptchaManagedRules parameter.');
-      });
-
-      it('should throw on non-array RuleConfig attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.recaptchaManagedRules.ruleConfigs = 'non-array';
-        expect(() => {
-          ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RecaptchaManagedRules.ruleConfigs" must be an array of valid "RuleConfig".');
-      });
-
-      it('should throw on invalid RuleConfig attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.recaptchaManagedRules.ruleConfigs =
+        configOptionsClientRequest.recaptchaConfig.managedRules =
         [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"score" is not a valid RuleConfig parameter.');
+        }).to.throw('"score" is not a valid RecaptchaManagedRule parameter.');
       });
 
-      it('should throw on invalid RuleConfig.action attribute', () => {
+      it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.recaptchaManagedRules.ruleConfigs =
+        configOptionsClientRequest.recaptchaConfig.managedRules =
         [{ 'endScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RuleConfig.action" must be "BLOCK".');
+        }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
 
       it('should not throw on valid client request object', () => {
@@ -185,16 +156,17 @@ describe('ProjectConfig', () => {
 
     it('should set readonly property recaptchaConfig', () => {
       const expectedRecaptchaConfig = new RecaptchaConfigAuth(
-        { enforcementState: 'OFF' },
         {
-          ruleConfigs: [{
+          emailPasswordEnforcementState: 'AUDIT',
+          managedRules: [ {
             endScore: 0.2,
             action: 'BLOCK'
-          }] },
-        [{
-          clientType: 'WEB',
-          recaptchaKey: 'test-key-1' }
-        ],
+          } ],
+          recaptchaKeys: [ {
+            type: 'WEB',
+            key: 'test-key-1' }
+          ],
+        }
       );
       expect(projectConfig.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
     });
@@ -204,22 +176,18 @@ describe('ProjectConfig', () => {
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
-        recaptchaConfig: {
-          emailPasswordRecaptchaConfig: deepCopy(serverResponse.emailPasswordRecaptchaConfig),
-          recaptchaKeyConfig: deepCopy(serverResponse.recaptchaKeyConfig),
-          recaptchaManagedRules: deepCopy(serverResponse.recaptchaManagedRules),
-        }
+        recaptchaConfig: deepCopy(serverResponse.recaptchaConfig)
       });
     });
 
     it('should not populate optional fields if not available', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
-      delete serverResponseOptionalCopy.emailPasswordRecaptchaConfig;
-      delete serverResponseOptionalCopy.recaptchaManagedRules;
+      delete serverResponseOptionalCopy.recaptchaConfig?.emailPasswordEnforcementState;
+      delete serverResponseOptionalCopy.recaptchaConfig?.managedRules;
 
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({
         recaptchaConfig: {
-          recaptchaKeyConfig: deepCopy(serverResponse.recaptchaKeyConfig),
+          recaptchaKeys: deepCopy(serverResponse.recaptchaConfig?.recaptchaKeys),
         }
       });
     });

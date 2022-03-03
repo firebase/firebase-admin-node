@@ -46,18 +46,17 @@ describe('ProjectConfigManager', () => {
   let malformedAccessTokenProjectConfigManager: ProjectConfigManager;
   let rejectedPromiseAccessTokenProjectConfigManager: ProjectConfigManager;
   const GET_CONFIG_RESPONSE: ProjectConfigServerResponse = {
-    emailPasswordRecaptchaConfig: {
-      enforcementState: 'AUDIT'
-    },
-    recaptchaManagedRules: {
-      ruleConfigs: [{
+    recaptchaConfig: {
+      emailPasswordEnforcementState: 'AUDIT',
+      managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
-      }] },
-    recaptchaKeyConfig: [ {
-      clientType: 'WEB',
-      recaptchaKey: 'test-key-1' }
-    ],
+      } ],
+      recaptchaKeys: [ {
+        type: 'WEB',
+        key: 'test-key-1' }
+      ],
+    }
   };
 
   before(() => {
@@ -136,14 +135,11 @@ describe('ProjectConfigManager', () => {
   describe('updateProjectConfig()', () => {
     const projectConfigOptions: UpdateProjectConfigRequest = {
       recaptchaConfig: {
-        recaptchaManagedRules: {
-          ruleConfigs: [{
-            endScore: 0.2,
-            action: 'BLOCK'
-          }] },
-        emailPasswordRecaptchaConfig: {
-          enforcementState: 'OFF'
-        },
+        emailPasswordEnforcementState: 'AUDIT',
+        managedRules: [ {
+          endScore: 0.2,
+          action: 'BLOCK'
+        } ],
       }
     };
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
