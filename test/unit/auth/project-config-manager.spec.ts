@@ -77,7 +77,6 @@ describe('ProjectConfigManager', () => {
 
   describe('getProjectConfig()', () => {
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
-    //TODO
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
