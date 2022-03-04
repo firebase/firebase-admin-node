@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { RecaptchaConfigAuth } from '../../../src/auth/auth-config';
+import { RecaptchaAuthConfig } from '../../../src/auth/auth-config';
 import {
   ProjectConfig,
   ProjectConfigServerResponse,
@@ -155,7 +155,7 @@ describe('ProjectConfig', () => {
     });
 
     it('should set readonly property recaptchaConfig', () => {
-      const expectedRecaptchaConfig = new RecaptchaConfigAuth(
+      const expectedRecaptchaConfig = new RecaptchaAuthConfig(
         {
           emailPasswordEnforcementState: 'AUDIT',
           managedRules: [ {

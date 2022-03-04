@@ -50,7 +50,7 @@ export class ProjectConfigManager {
    * @returns A promise fulfilled with the project configuration.
    */
   public getProjectConfig(): Promise<ProjectConfig> {
-    return this.authRequestHandler.getConfig()
+    return this.authRequestHandler.getProjectConfig()
       .then((response: ProjectConfigServerResponse) => {
         return new ProjectConfig(response);
       })
@@ -63,7 +63,7 @@ export class ProjectConfigManager {
    * @returns A promise fulfilled with the update project config.
    */
   public updateProjectConfig(projectConfigOptions: UpdateProjectConfigRequest): Promise<ProjectConfig> {
-    return this.authRequestHandler.updateConfig(projectConfigOptions)
+    return this.authRequestHandler.updateProjectConfig(projectConfigOptions)
       .then((response: ProjectConfigServerResponse) => {
         return new ProjectConfig(response);
       })

@@ -102,7 +102,7 @@ describe('ProjectConfigManager', () => {
 
     it('should resolve with a Project Config on success', () => {
       // Stub getProjectConfig to return expected result.
-      const stub = sinon.stub(AuthRequestHandler.prototype, 'getConfig')
+      const stub = sinon.stub(AuthRequestHandler.prototype, 'getProjectConfig')
         .returns(Promise.resolve(GET_CONFIG_RESPONSE));
       stubs.push(stub);
       return projectConfigManager.getProjectConfig()
@@ -116,7 +116,7 @@ describe('ProjectConfigManager', () => {
 
     it('should throw an error when the backend returns an error', () => {
       // Stub getConfig to throw a backend error.
-      const stub = sinon.stub(AuthRequestHandler.prototype, 'getConfig')
+      const stub = sinon.stub(AuthRequestHandler.prototype, 'getProjectConfig')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return projectConfigManager.getProjectConfig()
@@ -174,7 +174,7 @@ describe('ProjectConfigManager', () => {
 
     it('should resolve with a ProjectConfig on updateProjectConfig request success', () => {
       // Stub updateProjectConfig to return expected result.
-      const updateConfigStub = sinon.stub(AuthRequestHandler.prototype, 'updateConfig')
+      const updateConfigStub = sinon.stub(AuthRequestHandler.prototype, 'updateProjectConfig')
         .returns(Promise.resolve(GET_CONFIG_RESPONSE));
       stubs.push(updateConfigStub);
       return projectConfigManager.updateProjectConfig(projectConfigOptions)
@@ -188,7 +188,7 @@ describe('ProjectConfigManager', () => {
 
     it('should throw an error when updateProjectConfig returns an error', () => {
       // Stub updateProjectConfig to throw a backend error.
-      const updateConfigStub = sinon.stub(AuthRequestHandler.prototype, 'updateConfig')
+      const updateConfigStub = sinon.stub(AuthRequestHandler.prototype, 'updateProjectConfig')
         .returns(Promise.reject(expectedError));
       stubs.push(updateConfigStub);
       return projectConfigManager.updateProjectConfig(projectConfigOptions)
