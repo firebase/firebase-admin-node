@@ -731,11 +731,11 @@ export class AuthClientErrorCode {
   };
   public static INVALID_RECAPTCHA_ACTION = {
     code: 'invalid-recaptcha-action',
-    message: 'ReCAPTCHA must be "BLOCK".'
+    message: 'reCAPTCHA action must be "BLOCK".'
   }
   public static INVALID_RECAPTCHA_ENFORCEMENT_STATE = {
     code: 'invalid-recaptcha-enforcement-state',
-    message: 'ReCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".'
+    message: 'reCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".'
   }
 }
 

@@ -17,11 +17,11 @@ import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   RecaptchaConfig,
-  RecaptchaConfigAuth,
+  RecaptchaAuthConfig,
 } from './auth-config';
 
 /**
- * Interface representing the properties to update on the provided tenant.
+ * Interface representing the properties to update on the provided project config.
  */
 export interface UpdateProjectConfigRequest {
   /**
@@ -50,7 +50,7 @@ export interface ProjectConfigClientRequest {
 * Represents a project configuration.
 */
 export class ProjectConfig {
-  private readonly recaptchaConfig_?: RecaptchaConfigAuth;
+  private readonly recaptchaConfig_?: RecaptchaAuthConfig;
 
   private static validate(request: any): void {
     if (!validator.isNonNullObject(request)) {
@@ -72,7 +72,7 @@ export class ProjectConfig {
       }
     }
 
-    RecaptchaConfigAuth.validate(request.recaptchaConfig);
+    RecaptchaAuthConfig.validate(request.recaptchaConfig);
   }
 
   /**
@@ -102,7 +102,7 @@ export class ProjectConfig {
    */
   constructor(response: ProjectConfigServerResponse) {
     if (response.recaptchaConfig !== 'undefined') {
-      this.recaptchaConfig_ = new RecaptchaConfigAuth(response.recaptchaConfig);
+      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
     }
   }
   /**

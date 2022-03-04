@@ -1962,7 +1962,7 @@ export abstract class AbstractAuthRequestHandler {
 }
 
 /** Instantiates the getConfig endpoint settings. */
-const GET_CONFIG = new ApiSettings('/config', 'GET')
+const GET_PROJECT_CONFIG = new ApiSettings('/config', 'GET')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the config name.
     if (!validator.isNonEmptyString(response.name)) {
@@ -1974,7 +1974,7 @@ const GET_CONFIG = new ApiSettings('/config', 'GET')
   });
 
 /** Instantiates the updateConfig endpoint settings. */
-const UPDATE_CONFIG = new ApiSettings('/config?updateMask={updateMask}', 'PATCH')
+const UPDATE_PROJECT_CONFIG = new ApiSettings('/config?updateMask={updateMask}', 'PATCH')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the config name.
     if (!validator.isNonEmptyString(response.name)) {
@@ -2089,8 +2089,8 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * Get the current project's config
    * @returns A promise that resolves with the project config information.
    */
-  public getConfig(): Promise<ProjectConfigServerResponse> {
-    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_CONFIG, {}, {})
+  public getProjectConfig(): Promise<ProjectConfigServerResponse> {
+    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_PROJECT_CONFIG, {}, {})
       .then((response: any) => {
         return response as ProjectConfigServerResponse;
       });
@@ -2100,12 +2100,12 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * Update the current project's config.
    * @returns A promise that resolves with the project config information.
    */
-  public updateConfig(recaptchaOptions: UpdateProjectConfigRequest): Promise<ProjectConfigServerResponse> {
+  public updateProjectConfig(recaptchaOptions: UpdateProjectConfigRequest): Promise<ProjectConfigServerResponse> {
     try {
       const request = ProjectConfig.buildServerRequest(recaptchaOptions);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(
-        this.v2ResourceBuilder, UPDATE_CONFIG, request, { updateMask: updateMask.join(',') })
+        this.v2ResourceBuilder, UPDATE_PROJECT_CONFIG, request, { updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as ProjectConfigServerResponse;
         });
