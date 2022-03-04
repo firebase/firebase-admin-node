@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, RecaptchaConfigAuth, RecaptchaConfig
+  MultiFactorAuthConfig, RecaptchaAuthConfig, RecaptchaConfig
 } from './auth-config';
 
 /**
@@ -130,7 +130,7 @@ export class Tenant {
   /*
   * The map conatining the reCAPTCHA config.
   */
-  private readonly recaptchaConfig_?: RecaptchaConfigAuth;
+  private readonly recaptchaConfig_?: RecaptchaAuthConfig;
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
@@ -245,7 +245,7 @@ export class Tenant {
     }
     // Validate reCAPTCHAConfig type if provided.
     if (typeof request.recaptchaConfig !== 'undefined') {
-      RecaptchaConfigAuth.validate(request.recaptchaConfig);
+      RecaptchaAuthConfig.validate(request.recaptchaConfig);
     }
   }
 
@@ -282,7 +282,7 @@ export class Tenant {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
     if (typeof response.recaptchaConfig !== 'undefined') {
-      this.recaptchaConfig_ = new RecaptchaConfigAuth(response.recaptchaConfig);
+      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
     }
   }
 
