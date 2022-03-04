@@ -2052,13 +2052,13 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
 
 
 /**
- * Utility for sending requests to Auth server that are Auth instance related. This includes user and
- * tenant management related APIs. This extends the BaseFirebaseAuthRequestHandler class and defines
+ * Utility for sending requests to Auth server that are Auth instance related. This includes user, tenant,
+ * and project config management related APIs. This extends the BaseFirebaseAuthRequestHandler class and defines
  * additional tenant management related APIs.
  */
 export class AuthRequestHandler extends AbstractAuthRequestHandler {
 
-  protected readonly v2ResourceBuilder: AuthResourceUrlBuilder;
+  protected readonly authResourceUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
@@ -2068,7 +2068,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: App) {
     super(app);
-    this.v2ResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
+    this.authResourceUrlBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
@@ -2090,7 +2090,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @returns A promise that resolves with the project config information.
    */
   public getProjectConfig(): Promise<ProjectConfigServerResponse> {
-    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_PROJECT_CONFIG, {}, {})
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_PROJECT_CONFIG, {}, {})
       .then((response: any) => {
         return response as ProjectConfigServerResponse;
       });
@@ -2105,7 +2105,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       const request = ProjectConfig.buildServerRequest(recaptchaOptions);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(
-        this.v2ResourceBuilder, UPDATE_PROJECT_CONFIG, request, { updateMask: updateMask.join(',') })
+        this.authResourceUrlBuilder, UPDATE_PROJECT_CONFIG, request, { updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as ProjectConfigServerResponse;
         });
@@ -2124,7 +2124,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.v2ResourceBuilder, GET_TENANT, {}, { tenantId })
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT, {}, { tenantId })
       .then((response: any) => {
         return response as TenantServerResponse;
       });
@@ -2154,7 +2154,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (typeof request.pageToken === 'undefined') {
       delete request.pageToken;
     }
-    return this.invokeRequestHandler(this.v2ResourceBuilder, LIST_TENANTS, request)
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, LIST_TENANTS, request)
       .then((response: any) => {
         if (!response.tenants) {
           response.tenants = [];
@@ -2174,7 +2174,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.v2ResourceBuilder, DELETE_TENANT, undefined, { tenantId })
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, DELETE_TENANT, undefined, { tenantId })
       .then(() => {
         // Return nothing.
       });
@@ -2190,7 +2190,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, true);
-      return this.invokeRequestHandler(this.v2ResourceBuilder, CREATE_TENANT, request)
+      return this.invokeRequestHandler(this.authResourceUrlBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
         });
@@ -2216,7 +2216,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
       // and not just specific phone numbers.
       const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
-      return this.invokeRequestHandler(this.v2ResourceBuilder, UPDATE_TENANT, request,
+      return this.invokeRequestHandler(this.authResourceUrlBuilder, UPDATE_TENANT, request,
         { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as TenantServerResponse;
