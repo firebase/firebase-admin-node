@@ -1565,7 +1565,7 @@ export interface RecaptchaConfig {
   recaptchaKeys?: RecaptchaKey[];
 }
 
-export class RecaptchaConfigAuth implements RecaptchaConfig {
+export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
   public readonly managedRules?: RecaptchaManagedRule[];
   public readonly recaptchaKeys?: RecaptchaKey[];

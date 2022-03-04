@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { EmailSignInConfig, MultiFactorAuthConfig, RecaptchaConfigAuth } from '../../../src/auth/auth-config';
+import { EmailSignInConfig, MultiFactorAuthConfig, RecaptchaAuthConfig } from '../../../src/auth/auth-config';
 import { TenantServerResponse } from '../../../src/auth/tenant';
 import {
   CreateTenantRequest, UpdateTenantRequest, EmailSignInProviderConfig, Tenant,
@@ -79,7 +79,7 @@ describe('Tenant', () => {
     },
   };
 
-  const serverRequestWithRecaptcha: TenantServerResponse = {
+  const serverResponseWithRecaptcha: TenantServerResponse = {
     name: 'projects/project1/tenants/TENANT-ID',
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
@@ -478,9 +478,9 @@ describe('Tenant', () => {
 
     it('should set readonly property recaptchaConfig', () => {
       const serverRequestWithRecaptchaCopy: TenantServerResponse =
-       deepCopy(serverRequestWithRecaptcha);
+       deepCopy(serverResponseWithRecaptcha);
       const tenantWithRecaptcha = new Tenant(serverRequestWithRecaptchaCopy);
-      const expectedRecaptchaConfig = new RecaptchaConfigAuth({
+      const expectedRecaptchaConfig = new RecaptchaAuthConfig({
         emailPasswordEnforcementState: 'AUDIT',
         managedRules: [{
           endScore: 0.2,
@@ -525,7 +525,7 @@ describe('Tenant', () => {
   });
 
   describe('toJSON()', () => {
-    const serverRequestCopy: TenantServerResponse = deepCopy(serverRequestWithRecaptcha);
+    const serverRequestCopy: TenantServerResponse = deepCopy(serverResponseWithRecaptcha);
     it('should return the expected object representation of a tenant', () => {
       expect(new Tenant(serverRequestCopy).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
@@ -537,12 +537,12 @@ describe('Tenant', () => {
         anonymousSignInEnabled: false,
         multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
-        recaptchaConfig: deepCopy(serverRequestWithRecaptcha.recaptchaConfig),
+        recaptchaConfig: deepCopy(serverResponseWithRecaptcha.recaptchaConfig),
       });
     });
 
     it('should not populate optional fields if not available', () => {
-      const serverRequestCopyWithoutMfa: TenantServerResponse = deepCopy(serverRequestWithRecaptcha);
+      const serverRequestCopyWithoutMfa: TenantServerResponse = deepCopy(serverResponseWithRecaptcha);
       delete serverRequestCopyWithoutMfa.mfaConfig;
       delete serverRequestCopyWithoutMfa.testPhoneNumbers;
       delete serverRequestCopyWithoutMfa.recaptchaConfig;
