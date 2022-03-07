@@ -1558,7 +1558,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     }
 
     // Validation
-    if (options.emailPasswordEnforcementState !== undefined){
+    if (typeof options.emailPasswordEnforcementState !== undefined) {
       if (!validator.isNonEmptyString(options.emailPasswordEnforcementState)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
