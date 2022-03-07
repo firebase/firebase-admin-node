@@ -73,7 +73,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
-  recaptchaConfig? : RecaptchaConfig;
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /** The tenant server response interface. */
