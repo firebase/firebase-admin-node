@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig
 } from './auth-config';
 
 /**
@@ -59,6 +59,11 @@ export interface UpdateTenantRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  
+  /**
+   * The recaptcha configuration to update on the tenant.
+   */
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
@@ -74,6 +79,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /** The tenant server response interface. */
@@ -86,6 +92,7 @@ export interface TenantServerResponse {
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
+  recaptchaConfig? : RecaptchaConfig;
 }
 
 /**
@@ -130,6 +137,10 @@ export class Tenant {
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
 
+  /*
+  * The map conatining the reCAPTCHA config.
+  */
+  private readonly recaptchaConfig_?: RecaptchaAuthConfig;
   /**
    * The SMS Regions Config to update a tenant.
    * Configures the regions where users are allowed to send verification SMS.
@@ -169,6 +180,9 @@ export class Tenant {
     if (typeof tenantOptions.smsRegionConfig !== 'undefined') {
       request.smsRegionConfig = tenantOptions.smsRegionConfig;
     }
+    if (typeof tenantOptions.recaptchaConfig !== 'undefined') {
+      request.recaptchaConfig = tenantOptions.recaptchaConfig;
+    }
     return request;
   }
 
@@ -203,6 +217,7 @@ export class Tenant {
       multiFactorConfig: true,
       testPhoneNumbers: true,
       smsRegionConfig: true,
+      recaptchaConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -253,6 +268,10 @@ export class Tenant {
     if (typeof request.smsRegionConfig != 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
+    // Validate reCAPTCHAConfig type if provided.
+    if (typeof request.recaptchaConfig !== 'undefined') {
+      RecaptchaAuthConfig.validate(request.recaptchaConfig);
+    }
   }
 
   /**
@@ -290,6 +309,9 @@ export class Tenant {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = deepCopy(response.smsRegionConfig);
     }
+    if (typeof response.recaptchaConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
+    }
   }
 
   /**
@@ -307,6 +329,13 @@ export class Tenant {
   }
 
   /**
+   * The recaptcha config auth configuration of the current tenant.
+   */
+  get recaptchaConfig(): RecaptchaConfig | undefined {
+    return this.recaptchaConfig_;
+  }
+
+  /**
    * Returns a JSON-serializable representation of this object.
    *
    * @returns A JSON-serializable representation of this object.
@@ -320,6 +349,7 @@ export class Tenant {
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -329,6 +359,9 @@ export class Tenant {
     }
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.recaptchaConfig === 'undefined') {
+      delete json.recaptchaConfig;
     }
     return json;
   }
