@@ -55,6 +55,9 @@ export interface UpdateTenantRequest {
    */
   testPhoneNumbers?: { [phoneNumber: string]: string } | null;
 
+  /**
+   * The recaptcha configuration to update on the tenant.
+   */
   recaptchaConfig?: RecaptchaConfig;
 }
 

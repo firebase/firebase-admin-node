@@ -267,7 +267,7 @@ export interface ProviderIdentifier {
 // @public
 export type RecaptchaAction = 'BLOCK';
 
-// @public (undocumented)
+// @public
 export interface RecaptchaConfig {
     emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
     managedRules?: RecaptchaManagedRule[];
@@ -387,7 +387,6 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
-    // (undocumented)
     recaptchaConfig?: RecaptchaConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;

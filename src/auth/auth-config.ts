@@ -1480,54 +1480,6 @@ export interface RecaptchaManagedRule {
  action?: RecaptchaAction;
 }
 
-export class ManagedRuleAuth implements RecaptchaManagedRule{
-  public readonly endScore: number;
-  public readonly action: RecaptchaAction;
-
-  public static validate(options: RecaptchaManagedRule): void {
-    const validKeys = {
-      endScore: true,
-      action: true,
-    }
-    if (!validator.isNonNullObject(options)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
-        '"RecaptchaManagedRule" must be a non-null object.',
-      );
-    }
-    // Check for unsupported top level attributes.
-    for (const key in options) {
-      if (!(key in validKeys)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
-          `"${key}" is not a valid RecaptchaManagedRule parameter.`,
-        );
-      }
-    }
-
-    // Validate content.
-    if (typeof options.action !== 'undefined' &&
-        options.action !== 'BLOCK') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
-        '"RecaptchaManagedRule.action" must be "BLOCK".',
-      );
-    }
-  }
-
-  constructor(response: RecaptchaManagedRule) {
-    if (typeof response.action === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid provider-reCAPTCHA configuration response');
-    }
-    this.action = response.action;
-    if (response.endScore !== undefined) {
-      this.endScore = response.endScore;
-    }
-  }
-}
-
 /**
  * The key's platform type: only web supported now.
  */
@@ -1548,20 +1500,22 @@ export interface RecaptchaKey {
   key: string;
 }
 
+/**
+ * The request interface for updating a reCAPTCHA Config.
+ */
 export interface RecaptchaConfig {
- /**
+  /**
   * The enforcement state of email password provider.
   */
   emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
-
- /**
-  *  The reCAPTCHA managed rules.
-  */
+  /**
+   *  The reCAPTCHA managed rules.
+   */
   managedRules?: RecaptchaManagedRule[];
 
- /**
-  * The reCAPTCHA keys.
-  */
+  /**
+   * The reCAPTCHA keys.
+   */
   recaptchaKeys?: RecaptchaKey[];
 }
 
@@ -1570,18 +1524,16 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly managedRules?: RecaptchaManagedRule[];
   public readonly recaptchaKeys?: RecaptchaKey[];
 
-  constructor(recaptchaConfig: RecaptchaConfig | undefined) {
-    if (recaptchaConfig?.emailPasswordEnforcementState !== undefined) {
-      this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
-    }
-    if (recaptchaConfig?.managedRules !== undefined) {
-      this.managedRules = recaptchaConfig.managedRules;
-    }
-    if (recaptchaConfig?.recaptchaKeys !== undefined) {
-      this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
-    }
+  constructor(recaptchaConfig: RecaptchaConfig) {
+    this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
+    this.managedRules = recaptchaConfig.managedRules;
+    this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
   }
 
+  /**
+   * Validates the RecaptchaConfig options object. Throws an error on failure.
+   * @param options - The options object to validate.
+   */
   public static validate(options: RecaptchaConfig): void {
     const validKeys = {
       emailPasswordEnforcementState: true,
@@ -1633,11 +1585,50 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       }
       // Validate each rule of the array
       options.managedRules.forEach((managedRule) => {
-        ManagedRuleAuth.validate(managedRule);
+        RecaptchaAuthConfig.validateManagedRule(managedRule);
       });
     }
   }
 
+  /**
+   * Validate each element in ManagedRule array
+   * @param options - The options object to validate.
+   */
+  private static validateManagedRule(options: RecaptchaManagedRule): void {
+    const validKeys = {
+      endScore: true,
+      action: true,
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaManagedRule" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RecaptchaManagedRule parameter.`,
+        );
+      }
+    }
+
+    // Validate content.
+    if (typeof options.action !== 'undefined' &&
+        options.action !== 'BLOCK') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaManagedRule.action" must be "BLOCK".',
+      );
+    }
+  }
+
+  /**
+   * Returns a JSON-serializable representation of this object.
+   * @returns The JSON-serializable object representation of the ReCaptcha config instance
+   */
   public toJSON(): object {
     const json: any = {
       emailPasswordEnforcementState: this.emailPasswordEnforcementState,
