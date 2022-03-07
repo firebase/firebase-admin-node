@@ -26,6 +26,7 @@ import {
 export interface UpdateProjectConfigRequest {
   /**
    * The recaptcha configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
@@ -50,8 +51,17 @@ export interface ProjectConfigClientRequest {
 * Represents a project configuration.
 */
 export class ProjectConfig {
+  /**
+   * The recaptcha configuration to update on the project config.
+   * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
+   */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
 
+  /**
+   * Validates a project config options object. Throws an error on failure.
+   *
+   * @param request - The project config options object to validate.
+   */
   private static validate(request: any): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
@@ -72,6 +82,7 @@ export class ProjectConfig {
       }
     }
 
+    // Validate reCAPTCHA config attribute.
     RecaptchaAuthConfig.validate(request.recaptchaConfig);
   }
 

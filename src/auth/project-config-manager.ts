@@ -24,10 +24,6 @@ import {
  * This includes:
  * <ul>
  * <li>The ability to update and get project config.</li>
- * <li>Getting a `TenantAwareAuth` instance for running Auth related operations
- *     (user management, provider configuration management, token verification,
- *     email link generation, etc) in the context of a specified tenant.</li>
- * </ul>
  */
 export class ProjectConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;

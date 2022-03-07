@@ -57,6 +57,7 @@ export interface UpdateTenantRequest {
 
   /**
    * The recaptcha configuration to update on the tenant.
+   * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
@@ -132,6 +133,7 @@ export class Tenant {
 
   /*
   * The map conatining the reCAPTCHA config.
+  * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
   */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
   /**
