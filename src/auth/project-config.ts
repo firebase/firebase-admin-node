@@ -101,7 +101,7 @@ export class ProjectConfig {
    * @internal
    */
   constructor(response: ProjectConfigServerResponse) {
-    if (response.recaptchaConfig !== 'undefined') {
+    if (typeof response.recaptchaConfig !== 'undefined') {
       this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
     }
   }
