@@ -199,7 +199,7 @@ export class Tenant {
       anonymousSignInEnabled: true,
       multiFactorConfig: true,
       testPhoneNumbers: true,
-      recaptchaConfig: true
+      recaptchaConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
