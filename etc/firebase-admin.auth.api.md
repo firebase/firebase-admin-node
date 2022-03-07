@@ -355,6 +355,34 @@ export interface ProviderIdentifier {
 }
 
 // @public
+export type RecaptchaAction = 'BLOCK';
+
+// @public
+export interface RecaptchaConfig {
+    emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+    managedRules?: RecaptchaManagedRule[];
+    recaptchaKeys?: RecaptchaKey[];
+}
+
+// @public
+export interface RecaptchaKey {
+    key: string;
+    type?: RecaptchaKeyClientType;
+}
+
+// @public
+export type RecaptchaKeyClientType = 'WEB';
+
+// @public
+export interface RecaptchaManagedRule {
+    action?: RecaptchaAction;
+    endScore: number;
+}
+
+// @public
+export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
+
+// @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
     callbackURL?: string;
     idpEntityId: string;
@@ -390,6 +418,7 @@ export class Tenant {
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
         [phoneNumber: string]: string;
@@ -458,6 +487,7 @@ export interface UpdateTenantRequest {
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
+    recaptchaConfig?: RecaptchaConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
     } | null;
