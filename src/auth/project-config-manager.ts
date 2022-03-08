@@ -27,7 +27,6 @@ import {
  */
 export class ProjectConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;
-
   /**
    * Initializes a ProjectConfigManager instance for a specified FirebaseApp.
    *

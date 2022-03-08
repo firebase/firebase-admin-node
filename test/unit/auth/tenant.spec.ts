@@ -116,7 +116,8 @@ describe('Tenant', () => {
         type: 'WEB',
         key: 'test-key-1' }
       ],
-    }
+    },
+    smsRegionConfig: smsAllowByDefault,
   };
 
   const clientRequestWithRecaptcha: UpdateTenantRequest = {
