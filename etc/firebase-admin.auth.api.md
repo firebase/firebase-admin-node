@@ -345,6 +345,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 export class ProjectConfig {
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     toJSON(): object;
 }
 
@@ -478,6 +479,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 export interface UpdateProjectConfigRequest {
     multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
+    recaptchaConfig?: RecaptchaConfig;
 }
 
 // @public
