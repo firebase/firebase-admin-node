@@ -26,7 +26,9 @@ import {
 export interface UpdateProjectConfigRequest {
   /**
    * The recaptcha configuration to update on the project.
-   * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
+   * By enabling reCAPTCHA Enterprise Integration you are
+   * agreeing to reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
@@ -53,7 +55,9 @@ export interface ProjectConfigClientRequest {
 export class ProjectConfig {
   /**
    * The recaptcha configuration to update on the project config.
-   * By enabling reCAPTCHA Enterprise Integration you are agreeing to reCAPTCHA Enterprise Term of Service.
+   * By enabling reCAPTCHA Enterprise Integration you are
+   * agreeing to reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
 

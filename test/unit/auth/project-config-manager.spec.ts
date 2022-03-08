@@ -68,7 +68,6 @@ describe('ProjectConfigManager', () => {
       mocks.appReturningMalformedAccessToken());
     rejectedPromiseAccessTokenProjectConfigManager = new ProjectConfigManager(
       mocks.appRejectedWhileFetchingAccessToken());
-
   });
 
   after(() => {
