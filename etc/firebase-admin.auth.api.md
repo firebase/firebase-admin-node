@@ -27,6 +27,7 @@ export interface ActionCodeSettings {
 export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
+    projectConfigManager(): ProjectConfigManager;
     tenantManager(): TenantManager;
 }
 
@@ -257,6 +258,18 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 }
 
 // @public
+export class ProjectConfig {
+    get recaptchaConfig(): RecaptchaConfig | undefined;
+    toJSON(): object;
+}
+
+// @public
+export class ProjectConfigManager {
+    getProjectConfig(): Promise<ProjectConfig>;
+    updateProjectConfig(projectConfigOptions: UpdateProjectConfigRequest): Promise<ProjectConfig>;
+}
+
+// @public
 export interface ProviderIdentifier {
     // (undocumented)
     providerId: string;
@@ -365,6 +378,11 @@ export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
 // @public
 export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
     phoneNumber: string;
+}
+
+// @public
+export interface UpdateProjectConfigRequest {
+    recaptchaConfig?: RecaptchaConfig;
 }
 
 // @public

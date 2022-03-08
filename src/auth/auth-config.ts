@@ -1502,6 +1502,9 @@ export interface RecaptchaKey {
 
 /**
  * The request interface for updating a reCAPTCHA Config.
+ * By enabling reCAPTCHA Enterprise Integration you are
+ * agreeing to reCAPTCHA Enterprise
+ * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
  */
 export interface RecaptchaConfig {
   /**

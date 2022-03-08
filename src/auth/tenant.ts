@@ -57,6 +57,9 @@ export interface UpdateTenantRequest {
 
   /**
    * The recaptcha configuration to update on the tenant.
+   * By enabling reCAPTCHA Enterprise Integration you are
+   * agreeing to reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
@@ -130,9 +133,12 @@ export class Tenant {
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
 
-  /*
-  * The map conatining the reCAPTCHA config.
-  */
+  /**
+   * The map conatining the reCAPTCHA config.
+   * By enabling reCAPTCHA Enterprise Integration you are
+   * agreeing to reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
   /**
    * Builds the corresponding server request for a TenantOptions object.
