@@ -1160,39 +1160,41 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
-    const projectOption1: UpdateProjectConfigRequest = {
+    const projectConfigOption1: UpdateProjectConfigRequest = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
         managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-      }
-    }
-    const projectOption2: UpdateProjectConfigRequest = {
+      },
+    };
+    const projectConfigOption2: UpdateProjectConfigRequest = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-      }
-    }
+      },
+    };
     const expectedProjectConfig1: any = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
         managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-      }
-    }
+      },
+    };
     const expectedProjectConfig2: any = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
         managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-      }
-    }
+      },
+    };
+
     it('updateProjectConfig() should resolve with the updated project config', () => {
-      return getAuth().projectConfigManager().updateProjectConfig(projectOption1)
+      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
-          return getAuth().projectConfigManager().updateProjectConfig(projectOption2);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
         });
     });
+
     it('getProjectConfig() should resolve with expected project config', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
@@ -1200,7 +1202,6 @@ describe('admin.auth', () => {
           expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
         });
     });
-
   });
 
   describe('Tenant management operations', () => {
@@ -1261,11 +1262,13 @@ describe('admin.auth', () => {
       },
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{
-          endScore: 0.3,
-          action: 'BLOCK'
-        }]
-      }
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1280,11 +1283,13 @@ describe('admin.auth', () => {
       },
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-        managedRules: [{
-          endScore: 0.3,
-          action: 'BLOCK'
-        }]
-      }
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
 
     // https://mochajs.org/
@@ -1732,6 +1737,34 @@ describe('admin.auth', () => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        emailSignInConfig: {
+          enabled: true,
+          passwordRequired: false,
+        },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
+        recaptchaConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
