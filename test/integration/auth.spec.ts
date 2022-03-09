@@ -1163,7 +1163,7 @@ describe('admin.auth', () => {
     const projectOption1: UpdateProjectConfigRequest = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{endScore: 0.1, action: 'BLOCK'}],
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
       }
     }
     const projectOption2: UpdateProjectConfigRequest = {
@@ -1174,13 +1174,13 @@ describe('admin.auth', () => {
     const expectedProjectConfig1: any = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{endScore: 0.1, action: 'BLOCK'}],
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
       }
     }
     const expectedProjectConfig2: any = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-        managedRules: [{endScore: 0.1, action: 'BLOCK'}],
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
       }
     }
     it('updateProjectConfig() should resolve with the updated project config', () => {
