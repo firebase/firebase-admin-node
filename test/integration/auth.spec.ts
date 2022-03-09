@@ -1745,13 +1745,7 @@ describe('admin.auth', () => {
     it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       const updatedOptions2: UpdateTenantRequest = {
-        emailSignInConfig: {
-          enabled: true,
-          passwordRequired: false,
-        },
-        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
-        // Test clearing of phone numbers.
-        testPhoneNumbers: null,
+        displayName: expectedUpdatedTenant2.displayName,
         recaptchaConfig: undefined,
       };
       if (authEmulatorHost) {
