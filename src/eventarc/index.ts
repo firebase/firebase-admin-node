@@ -19,7 +19,8 @@ import { FirebaseApp } from '../app/firebase-app';
 
 import { Eventarc } from './eventarc';
 
-export { Eventarc, Channel, CloudEvent, CloudEventVersion } from './eventarc';
+export { CloudEvent, CloudEventVersion } from './cloudevent';
+export { Eventarc, Channel } from './eventarc';
 export { FirebaseEventarcError } from './eventarc-utils';
 
 /**
