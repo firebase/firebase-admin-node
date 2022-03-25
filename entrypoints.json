@@ -55,5 +55,9 @@
   "firebase-admin/remote-config": {
     "typings": "./lib/remote-config/index.d.ts",
     "dist": "./lib/remote-config/index.js"
+  },
+  "firebase-admin/eventarc": {
+    "typings": "./lib/eventarc/index.d.ts",
+    "dist": "./lib/eventarc/index.js"
   }
 }

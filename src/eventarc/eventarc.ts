@@ -16,14 +16,13 @@
 
 import { App } from '../app';
 import * as validator from '../utils/validator';
-import { FirebaseEventarcError } from './eventarc-utils';
+import { FirebaseEventarcError, toCloudEventProtoFormat } from './eventarc-utils';
 import {
   HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient
 } from '../utils/api-request';
 import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils';
 import { PrefixedFirebaseError } from '../utils/error';
-import { toCloudEventProtoFormat } from './eventarc-utils';
 import { CloudEvent } from './cloudevent';
 
 const EVENTARC_API = 'https://eventarcpublishing.googleapis.com/v1';

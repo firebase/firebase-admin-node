@@ -20,8 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import { Eventarc } from './eventarc';
 
 export { CloudEvent, CloudEventVersion } from './cloudevent';
-export { Eventarc, Channel } from './eventarc';
-export { FirebaseEventarcError } from './eventarc-utils';
+export { Eventarc, Channel, ChannelOptions } from './eventarc';
 
 /**
  * Gets the {@link Eventarc} service for the default app or a given app.

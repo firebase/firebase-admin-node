@@ -15,10 +15,11 @@
  */
 
 import { App } from '../app';
-import { Eventarc as TEventarc } from './eventarc';
+import { CloudEvent as TCloudEvent } from './cloudevent';
+import { Eventarc as TEventarc, Channel as TChannel, ChannelOptions as TChannelOptions } from './eventarc';
 
 /**
- * Gets the {@link Eventarc} service for the default app or a given app.
+ * Gets the {@link firebase-admin.eventarc#Eventarc} service for the default app or a given app.
  *
  * `getEventarc()` can be called with no arguments to access the default
  * app's `Eventarc` service or as `getEventarc(app)` to access the
@@ -50,5 +51,20 @@ export namespace eventarc {
   /**
    * Type alias to {@link firebase-admin.eventarc#Eventarc}.
    */
-  export type Eventarc = TEventarc;
+   export type Eventarc = TEventarc;
+
+  /**
+   * Type alias to {@link firebase-admin.eventarc#Channel}.
+   */
+   export type Channel = TChannel;
+
+  /**
+   * Type alias to {@link firebase-admin.eventarc#ChannelOptions}.
+   */
+   export type ChannelOptions = TChannelOptions;
+
+  /**
+   * Type alias to {@link firebase-admin.eventarc#CloudEvent}.
+   */
+   export type CloudEvent = TCloudEvent;
 }

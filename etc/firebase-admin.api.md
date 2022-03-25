@@ -27,6 +27,8 @@ export namespace app {
         database(url?: string): database.Database;
         delete(): Promise<void>;
         // (undocumented)
+        eventarc(): eventarc.Eventarc;
+        // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
         installations(): installations.Installations;
@@ -216,6 +218,21 @@ export namespace database {
     export type ThenableReference = rtdb.ThenableReference;
     const enableLogging: typeof rtdb.enableLogging;
     const ServerValue: rtdb.ServerValue;
+}
+
+// @public
+export function eventarc(app?: App): eventarc.Eventarc;
+
+// @public (undocumented)
+export namespace eventarc {
+    // Warning: (ae-forgotten-export) The symbol "Channel" needs to be exported by the entry point default-namespace.d.ts
+    export type Channel = Channel;
+    // Warning: (ae-forgotten-export) The symbol "ChannelOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type ChannelOptions = ChannelOptions;
+    // Warning: (ae-forgotten-export) The symbol "CloudEvent" needs to be exported by the entry point default-namespace.d.ts
+    export type CloudEvent = CloudEvent;
+    // Warning: (ae-forgotten-export) The symbol "Eventarc" needs to be exported by the entry point default-namespace.d.ts
+    export type Eventarc = Eventarc;
 }
 
 // @public
