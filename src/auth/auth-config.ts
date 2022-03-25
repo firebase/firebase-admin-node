@@ -1523,6 +1523,7 @@ export interface RecaptchaConfig {
 
   /**
    * Whether to use the account defender for reCAPTCHA assessment.
+   * Initial default value of this is false.
    */
   useAccountDefender?: boolean;
 }
