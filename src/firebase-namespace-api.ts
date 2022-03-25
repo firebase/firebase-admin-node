@@ -26,6 +26,7 @@ import { projectManagement } from './project-management/project-management-names
 import { remoteConfig } from './remote-config/remote-config-namespace';
 import { securityRules } from './security-rules/security-rules-namespace';
 import { storage } from './storage/storage-namespace';
+import { eventarc } from './eventarc/eventarc-namespace';
 
 import { App as AppCore, AppOptions } from './app/index';
 
@@ -56,6 +57,7 @@ export namespace app {
     remoteConfig(): remoteConfig.RemoteConfig;
     securityRules(): securityRules.SecurityRules;
     storage(): storage.Storage;
+    eventarc(): eventarc.Eventarc;
 
     /**
      * Renders this local `FirebaseApp` unusable and frees the resources of
@@ -82,6 +84,7 @@ export * from './credential/index';
 export { appCheck } from './app-check/app-check-namespace';
 export { auth } from './auth/auth-namespace';
 export { database } from './database/database-namespace';
+export { eventarc } from './eventarc/eventarc-namespace';
 export { firestore } from './firestore/firestore-namespace';
 export { instanceId } from './instance-id/instance-id-namespace';
 export { installations } from './installations/installations-namespace';

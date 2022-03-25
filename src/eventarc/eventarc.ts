@@ -42,7 +42,7 @@ export interface ChannelOptions {
    * unknown types will be a no op. When not provided, no even filtering is
    * performed.
    */
-  allowedEventsTypes?: string[] | undefined
+  allowedEventTypes?: string[] | string | undefined
 }
 
 /**
@@ -118,13 +118,26 @@ export class Eventarc {
   public channel(options?: ChannelOptions): Channel;
  
   public channel(nameOrOptions?: string | ChannelOptions, options?: ChannelOptions): Channel {
+    let channel: string;
+    let opts: ChannelOptions;
     if (typeof nameOrOptions === 'string') {
-      return new Channel(this, nameOrOptions as string, options?.allowedEventsTypes);
+      channel = nameOrOptions;
+    } else {
+      channel = 'locations/us-central1/channels/firebase';
     }
-    return new Channel(
-      this,
-      'locations/us-central1/channels/firebase',
-      nameOrOptions?.allowedEventsTypes);
+
+    if (typeof nameOrOptions === 'object') {
+      opts = nameOrOptions as ChannelOptions;
+    } else {
+      opts = options as ChannelOptions;
+    }
+    let allowedEventTypes;
+    if (typeof opts?.allowedEventTypes === 'string') {
+      allowedEventTypes = opts.allowedEventTypes.split(',');
+    } else {
+      allowedEventTypes = opts?.allowedEventTypes as string[];
+    }
+    return new Channel(this, channel, allowedEventTypes);
   }
 }
 
@@ -134,14 +147,14 @@ export class Eventarc {
 export class Channel {
   private readonly eventarcInternal: Eventarc;
   public nameInternal: string;
-  public readonly allowedEventsTypes?: string[]
+  public readonly allowedEventTypes?: string[]
   private readonly httpClient: HttpClient;
   private readonly resolvedChannelName: Promise<string>;
 
   /**
    * @internal
    */
-  constructor(eventarc: Eventarc, name: string, allowedEventsTypes?: string[]) {
+  constructor(eventarc: Eventarc, name: string, allowedEventTypes?: string[]) {
     if (!validator.isNonNullObject(eventarc)) {
       throw new FirebaseEventarcError(
         'invalid-argument',
@@ -156,7 +169,7 @@ export class Channel {
 
     this.nameInternal = name;
     this.eventarcInternal = eventarc;
-    this.allowedEventsTypes = allowedEventsTypes;
+    this.allowedEventTypes = allowedEventTypes;
     this.httpClient = new AuthorizedHttpClient(eventarc.app as FirebaseApp);
     
     this.resolvedChannelName = this.resolveChannelName(name);
@@ -198,7 +211,7 @@ export class Channel {
     return this.publishToEventarcApi(
       await this.resolvedChannelName,
       events
-        .filter(e => typeof this.allowedEventsTypes === 'undefined' || this.allowedEventsTypes.includes(e.type))
+        .filter(e => typeof this.allowedEventTypes === 'undefined' || this.allowedEventTypes.includes(e.type))
         .map(toCloudEventProtoFormat));
   }
 

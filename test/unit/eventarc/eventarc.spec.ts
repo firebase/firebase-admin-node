@@ -18,7 +18,7 @@
 'use strict';
 
 import * as sinon from 'sinon';
-import { Eventarc, Channel } from '../../../src/eventarc/eventarc';
+import { Channel, Eventarc } from '../../../src/eventarc';
 import { toCloudEventProtoFormat } from '../../../src/eventarc/eventarc-utils';
 import { CloudEvent } from '../../../src/eventarc/cloudevent';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -55,9 +55,11 @@ const TEST_EVENT2_SERIALIZED = JSON.stringify(toCloudEventProtoFormat(TEST_EVENT
 
 describe('eventarc', () => {
   let mockApp: FirebaseApp;
+  let eventarc: Eventarc;
 
   before(() => {
     mockApp = mocks.app();
+    eventarc = new Eventarc(mockApp);
   });
 
   after(() => {
@@ -70,41 +72,38 @@ describe('eventarc', () => {
 
   describe('Eventarc', () => {
     it('inintializes Eventarc object', () => {
-      const eventarc = new Eventarc(mockApp);
       expect(eventarc.app).eq(mockApp);
     });
   });
 
   it('throws invalid argument with creating channel with invalid name', () => {
-    expect(() => new Eventarc(mockApp).channel('foo/bar'))
+    expect(() => eventarc.channel('foo/bar'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('foo/bar/baz'))
+    expect(() => eventarc.channel('foo/bar/baz'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('channels/foo'))
+    expect(() => eventarc.channel('channels/foo'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('us-central1/channels/foo'))
+    expect(() => eventarc.channel('us-central1/channels/foo'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('projectid/locations/us-central1/channels/foo'))
+    expect(() => eventarc.channel('projectid/locations/us-central1/channels/foo'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('v1/projects/projectid/locations/us-central1/channels/foo'))
+    expect(() => eventarc.channel('v1/projects/projectid/locations/us-central1/channels/foo'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('projects/projectid/channels/foo'))
+    expect(() => eventarc.channel('projects/projectid/channels/foo'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('projects/projectid/locations/us-central1'))
+    expect(() => eventarc.channel('projects/projectid/locations/us-central1'))
       .throws('Invalid channel name format.');
-    expect(() => new Eventarc(mockApp).channel('projects/projectid/locations_us-central1/channels/foo'))
+    expect(() => eventarc.channel('projects/projectid/locations_us-central1/channels/foo'))
       .throws('Invalid channel name format.');
   });
 
   describe('default Channel', () => {
-    let eventarc : Eventarc;
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub; 
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
       channel = eventarc.channel();
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
@@ -121,7 +120,7 @@ describe('eventarc', () => {
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
       expect(channel.name).eq('locations/us-central1/channels/firebase');
-      expect(channel.allowedEventsTypes).is.undefined;
+      expect(channel.allowedEventTypes).is.undefined;
     });
 
     it('publishes single event to the API', async () => {
@@ -162,14 +161,12 @@ describe('eventarc', () => {
   });
 
   describe('full resource name Channel', () => {
-    let eventarc : Eventarc;
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub; 
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
       channel = eventarc.channel('projects/other-project-id/locations/us-west1/channels/my-channel2');
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
@@ -186,7 +183,7 @@ describe('eventarc', () => {
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
       expect(channel.name).eq('projects/other-project-id/locations/us-west1/channels/my-channel2');
-      expect(channel.allowedEventsTypes).is.undefined;
+      expect(channel.allowedEventTypes).is.undefined;
     });
 
     it('publishes single event to the API', async () => {
@@ -227,14 +224,12 @@ describe('eventarc', () => {
   });
 
   describe('partial (no project) Channel', () => {
-    let eventarc : Eventarc;
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub;
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
       channel = eventarc.channel('locations/us-west1/channels/my-channel');
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
@@ -251,7 +246,7 @@ describe('eventarc', () => {
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
       expect(channel.name).eq('locations/us-west1/channels/my-channel');
-      expect(channel.allowedEventsTypes).is.undefined;
+      expect(channel.allowedEventTypes).is.undefined;
     });
 
     it('publishes single event to the API', async () => {
@@ -292,14 +287,12 @@ describe('eventarc', () => {
   });
 
   describe('partial (channel id only) Channel', () => {
-    let eventarc : Eventarc;
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub;
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
       channel = eventarc.channel('my-channel');
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
@@ -316,7 +309,7 @@ describe('eventarc', () => {
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
       expect(channel.name).eq('my-channel');
-      expect(channel.allowedEventsTypes).is.undefined;
+      expect(channel.allowedEventTypes).is.undefined;
     });
 
     it('publishes single event to the API', async () => {
@@ -357,15 +350,13 @@ describe('eventarc', () => {
   });
 
   describe('Channel with empty allowed events', () => {
-    let eventarc : Eventarc;
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub;
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
-      channel = eventarc.channel({ allowedEventsTypes: [] });
+      channel = eventarc.channel({ allowedEventTypes: [] });
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
     });
@@ -380,7 +371,7 @@ describe('eventarc', () => {
 
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
-      expect(channel.allowedEventsTypes).is.empty;
+      expect(channel.allowedEventTypes).is.empty;
     });
 
     it('filters out event and publishes none', async () => {
@@ -398,22 +389,22 @@ describe('eventarc', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}));
 
-      await channel.publish([TEST_EVENT1, TEST_EVENT2]);
+      await channel.publish([TEST_EVENT1, { type: 'foo' }]);
 
       expect(httpStub).to.not.have.been.called;
     });
   });
 
-  describe('Channel with allowed events', () => {
-    let eventarc : Eventarc;
+  describe('Channel with channel and empty allowed events', () => {
     let channel : Channel;
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub;
     let accessTokenStub: sinon.SinonStub; 
 
     before(() => {
-      eventarc = new Eventarc(mockApp);
-      channel = eventarc.channel({ allowedEventsTypes: ['some.custom.event1'] });
+      channel = eventarc.channel(
+        'adasdas',
+        { allowedEventTypes: [] });
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
     });
@@ -428,7 +419,53 @@ describe('eventarc', () => {
 
     it('inintializes Channel object', () => {
       expect(channel.eventarc).eq(eventarc);
-      expect(channel.allowedEventsTypes).deep.eq(['some.custom.event1']);
+      expect(channel.allowedEventTypes).is.empty;
+    });
+
+    it('filters out event and publishes none', async () => {
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await channel.publish(TEST_EVENT1);
+
+      expect(httpStub).to.not.have.been.called;
+    });
+
+    it('filters out all event and publishes none', async () => {
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await channel.publish([TEST_EVENT1, { type: 'foo' }]);
+
+      expect(httpStub).to.not.have.been.called;
+    });
+  });
+
+  describe('Channel with allowed events', () => {
+    let channel : Channel;
+    let mockAccessToken: string;
+    let httpStub: sinon.SinonStub;
+    let accessTokenStub: sinon.SinonStub; 
+
+    before(() => {
+      channel = eventarc.channel({ allowedEventTypes: ['some.custom.event1'] });
+      mockAccessToken = utils.generateRandomAccessToken();
+      accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
+    });
+
+    after(() => {
+      accessTokenStub?.restore();
+    });
+
+    afterEach(() => {
+      httpStub?.restore();
+    });
+
+    it('inintializes Channel object', () => {
+      expect(channel.eventarc).eq(eventarc);
+      expect(channel.allowedEventTypes).deep.eq(['some.custom.event1']);
     });
 
     it('publishes events with allowed type', async () => {
@@ -454,7 +491,73 @@ describe('eventarc', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}));
 
-      await channel.publish([TEST_EVENT1, TEST_EVENT2]);
+      await channel.publish([TEST_EVENT1, {
+        type: 'some.custom.event2'
+      }]);
+
+      expect(httpStub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
+        data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
+        headers: {
+          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
+          Authorization: 'Bearer ' + mockAccessToken
+        }
+      });
+    });
+  });
+
+  describe('Channel with allowed events as string', () => {
+    let channel : Channel;
+    let mockAccessToken: string;
+    let httpStub: sinon.SinonStub;
+    let accessTokenStub: sinon.SinonStub; 
+
+    before(() => {
+      channel = eventarc.channel({ allowedEventTypes: 'some.custom.event1,some.other.event.type' });
+      mockAccessToken = utils.generateRandomAccessToken();
+      accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
+    });
+
+    after(() => {
+      accessTokenStub?.restore();
+    });
+
+    afterEach(() => {
+      httpStub?.restore();
+    });
+
+    it('inintializes Channel object', () => {
+      expect(channel.eventarc).eq(eventarc);
+      expect(channel.allowedEventTypes).deep.eq(['some.custom.event1', 'some.other.event.type']);
+    });
+
+    it('publishes events with allowed type', async () => {
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await channel.publish(TEST_EVENT1);
+
+      expect(httpStub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
+        data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
+        headers: {
+          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
+          Authorization: 'Bearer ' + mockAccessToken
+        }
+      });
+    });
+
+    it('publishes events with allowed type and filters out others', async () => {
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await channel.publish([TEST_EVENT1, {
+        type: 'some.custom.event2'
+      }]);
 
       expect(httpStub).to.have.been.calledOnce.and.calledWith({
         method: 'POST',
