@@ -45,6 +45,7 @@ describe('ProjectConfig', () => {
         type: 'WEB',
         key: 'test-key-1' }
       ],
+      useAccountDefender: true,
     }
   };
 
@@ -54,7 +55,8 @@ describe('ProjectConfig', () => {
       managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
-      } ]
+      } ],
+      useAccountDefender: true,
     }
   };
 
@@ -92,6 +94,14 @@ describe('ProjectConfig', () => {
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
+      });
+
+      it('should throw on non-boolean useAccountDefender attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        configOptionsClientRequest.recaptchaConfig.useAccountDefender = 'no';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
       });
 
       it('should throw on non-array managedRules attribute', () => {
@@ -166,6 +176,7 @@ describe('ProjectConfig', () => {
             type: 'WEB',
             key: 'test-key-1' }
           ],
+          useAccountDefender: true,
         }
       );
       expect(projectConfig.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
@@ -184,6 +195,7 @@ describe('ProjectConfig', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
       delete serverResponseOptionalCopy.recaptchaConfig?.emailPasswordEnforcementState;
       delete serverResponseOptionalCopy.recaptchaConfig?.managedRules;
+      delete serverResponseOptionalCopy.recaptchaConfig?.useAccountDefender;
 
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({
         recaptchaConfig: {

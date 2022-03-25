@@ -737,6 +737,10 @@ export class AuthClientErrorCode {
     code: 'invalid-recaptcha-enforcement-state',
     message: 'reCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".'
   }
+  public static RECAPTCHA_NOT_ENABLED = {
+    code: 'racaptcha-not-enabled',
+    message: 'reCAPTCHA enforcement state must be either "AUDIT" or "ENFORCE" to enable account defender.'
+  }
 }
 
 /**
@@ -998,6 +1002,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_RECAPTCHA_ACTION: 'INVALID_RECAPTCHA_ACTION',
   // Unrecognized reCAPTCHA enforcement state.
   INVALID_RECAPTCHA_ENFORCEMENT_STATE: 'INVALID_RECAPTCHA_ENFORCEMENT_STATE',
+  // reCAPTCHA is not enabled for account defender.
+  RECAPTCHA_NOT_ENABLED: 'RECAPTCHA_NOT_ENABLED'
 };
 
 /** @const {ServerToClientCode} Messaging server to client enum error codes. */
