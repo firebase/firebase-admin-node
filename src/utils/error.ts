@@ -739,7 +739,7 @@ export class AuthClientErrorCode {
   }
   public static RECAPTCHA_NOT_ENABLED = {
     code: 'racaptcha-not-enabled',
-    message: 'reCAPTCHA enforcement state must be either "AUDIT" or "ENFORCE" to enable account defender.'
+    message: 'reCAPTCHA enterprise is not enabled.'
   }
 }
 
