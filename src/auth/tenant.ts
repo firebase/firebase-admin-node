@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig,
+  MultiFactorAuthConfig, SmsRegionConfig
 } from './auth-config';
 
 /**
@@ -54,6 +54,11 @@ export interface UpdateTenantRequest {
    * Passing null clears the previously save phone number / code pairs.
    */
   testPhoneNumbers?: { [phoneNumber: string]: string } | null;
+
+  /**
+   * The SMS configuration to update on the project.
+   */
+  smsRegionConfig?: SmsRegionConfig;
 }
 
 /**
@@ -122,6 +127,8 @@ export class Tenant {
 
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
+
+  private readonly smsRegionConfig_?: SmsRegionConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -281,6 +288,12 @@ export class Tenant {
     return this.multiFactorConfig_;
   }
 
+  /**
+   * The SMS Region configuration.
+   */
+  get smsRegionConfig(): SmsRegionConfig | undefined {
+    return this.smsRegionConfig_;
+  }
   /**
    * Returns a JSON-serializable representation of this object.
    *

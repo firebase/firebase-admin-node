@@ -1451,3 +1451,134 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     };
   }
 }
+
+/**
+* Enforcement state of reCAPTCHA protection.
+*   - 'OFF': Unenforced.
+*   - 'AUDIT': Assessment is created but result is not used to enforce.
+*   - 'ENFORCE': Assessment is created and result is used to enforce.
+*/
+export type RecaptchaProviderEnforcementState =  'OFF' | 'AUDIT' | 'ENFORCE';
+
+/**
+* The actions for reCAPTCHA-protected requests.
+*   - 'BLOCK': The reCAPTCHA-protected request will be blocked.
+*/
+export type RecaptchaAction = 'BLOCK';
+
+/**
+* The config for a reCAPTCHA action rule.
+*/
+export interface RecaptchaManagedRule {
+ /**
+  * The action will be enforced if the reCAPTCHA score of a request is larger than endScore.
+  */
+ endScore: number;
+  /**
+  * The action for reCAPTCHA-protected requests.
+  */
+ action?: RecaptchaAction;
+}
+
+/**
+ * The key's platform type: only web supported now.
+ */
+export type RecaptchaKeyClientType = 'WEB';
+
+/**
+ * The reCAPTCHA key config.
+ */
+export interface RecaptchaKey {
+  /**
+   * The key's client platform type.
+   */
+  type?: RecaptchaKeyClientType;
+
+  /**
+   * The reCAPTCHA site key.
+   */
+  key: string;
+}
+
+/**
+ * The request interface for updating a reCAPTCHA Config.
+ * By enabling reCAPTCHA Enterprise Integration you are
+ * agreeing to reCAPTCHA Enterprise
+ * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+ */
+export interface RecaptchaConfig {
+  /**
+  * The enforcement state of email password provider.
+  */
+  emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  /**
+   *  The reCAPTCHA managed rules.
+   */
+  managedRules?: RecaptchaManagedRule[];
+
+  /**
+   * The reCAPTCHA keys.
+   */
+  recaptchaKeys?: RecaptchaKey[];
+}
+
+/**
+ * The request interface for updating a SMS Region Config.
+ * Configures the regions where users are allowed to send verification SMS.
+ * This is based on the calling code of the destination phone number.
+ */
+export interface SmsRegionConfig {
+  /**
+   * A policy of allowing SMS to every region by default and adding disallowed
+   * regions to a disallow list.
+   */
+  allowByDefault?: AllowByDefault;
+
+  /**
+   * A policy of only allowing regions by explicitly adding them to an
+   * allowlist.
+   */
+  allowlistOnly?: AllowlistOnly;
+}
+
+export type SmsRegionsConfig = AllowByDefaultNew | AllowlistOnlyNew;
+
+export interface AllowByDefaultNew {
+  allowByDefault: AllowByDefault;
+  /** @alpha */
+  allowlistOnly: never;
+}
+
+export interface AllowlistOnlyNew {
+  allowlistOnly: AllowlistOnly;
+  /** @alpha */
+  allowByDefault: never;
+}
+
+/**
+ * Defines a policy of allowing every region by default and adding disallowed
+ * regions to a disallow list.
+ */
+export interface AllowByDefault {
+  /**
+   * Two letter unicode region codes to disallow as defined by
+   * https://cldr.unicode.org/
+   * The full list of these region codes is here:
+   * https://github.com/unicode-cldr/cldr-localenames-full/blob/master/main/en/territories.json
+   */
+  disallowedRegions: string[];
+}
+
+/**
+ * Defines a policy of only allowing regions by explicitly adding them to an
+ * allowlist.
+ */
+export interface AllowlistOnly {
+    /**
+   * Two letter unicode region codes to allow as defined by
+   * https://cldr.unicode.org/
+   * The full list of these region codes is here:
+   * https://github.com/unicode-cldr/cldr-localenames-full/blob/master/main/en/territories.json
+   */
+  allowedRegions: string[];
+}
