@@ -105,15 +105,13 @@ export class EventarcApiClient {
       url: `${EVENTARC_API}/${channel}:publishEvents`,
       data: JSON.stringify({ events }),
     };
-    return this.sendRequest<void>(request);
+    return this.sendRequest(request);
   }
 
-  private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
+  private sendRequest(request: HttpRequestConfig): Promise<void> {
     request.headers = FIREBASE_VERSION_HEADER;
     return this.httpClient.send(request)
-      .then((resp) => {
-        return resp.data as T;
-      })
+      .then(() => undefined)
       .catch((err) => {
         throw this.toFirebaseError(err);
       });
@@ -125,15 +123,7 @@ export class EventarcApiClient {
     }
 
     const response = err.response;
-    if (!response.isJson()) {
-      return new PrefixedFirebaseError(
-        'eventarc',
-        '' + response.status,
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
-    }
-
-    return new PrefixedFirebaseError(
-      'eventarc', 
+    return new FirebaseEventarcError(
       'unknown-error',
       `Unexpected response with status: ${response.status} and body: ${response.text}`);
   }
@@ -145,14 +135,14 @@ export class EventarcApiClient {
       return this.resolveChannelNameProjectId(location, channelId);
     } else {
       const match = CHANNEL_NAME_REGEX.exec(name);
-      if (match === null) {
+      if (match === null || match.length < 4) {
         throw new FirebaseEventarcError('invalid-argument', 'Invalid channel name format.');
       }
       const projectId = match[2];
       const location = match[3];
       const channelId = match[4];
-      if (projectId) {
-        return Promise.resolve('projects/' + projectId + '/locations/' + location + '/channels/' + channelId);
+      if (validator.isNonEmptyString(projectId)) {
+        return Promise.resolve(`projects/${projectId}/locations/${location}/channels/${channelId}`);
       } else {
         return this.resolveChannelNameProjectId(location, channelId);
       }
@@ -160,6 +150,7 @@ export class EventarcApiClient {
   }
   
   private async resolveChannelNameProjectId(location: string, channelId: string): Promise<string> {
-    return 'projects/' + await this.getProjectId() + '/locations/' + location + '/channels/' + channelId;
+    const projectId = await this.getProjectId();
+    return `projects/${projectId}/locations/${location}/channels/${channelId}`;
   }
 }

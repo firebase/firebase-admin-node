@@ -178,7 +178,7 @@ export class Channel {
    *  
    * @param events - CloudEvent to publish to the channel.
    */
-  public async publish(events: CloudEvent | CloudEvent[]): Promise<void> {
+  public publish(events: CloudEvent | CloudEvent[]): Promise<void> {
     return this.client.publish(events);
   }
 }
