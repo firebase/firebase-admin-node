@@ -97,13 +97,13 @@ export class Eventarc {
   public channel(nameOrOptions?: string | ChannelOptions, options?: ChannelOptions): Channel {
     let channel: string;
     let opts: ChannelOptions;
-    if (typeof nameOrOptions === 'string') {
+    if (validator.isNonEmptyString(nameOrOptions)) {
       channel = nameOrOptions;
     } else {
       channel = 'locations/us-central1/channels/firebase';
     }
 
-    if (typeof nameOrOptions === 'object') {
+    if (validator.isNonNullObject(nameOrOptions)) {
       opts = nameOrOptions as ChannelOptions;
     } else {
       opts = options as ChannelOptions;
@@ -137,7 +137,7 @@ export class Channel {
         'First argument passed to Channel() must be a valid Eventarc service instance.',
       );
     }
-    if (!name) {
+    if (!validator.isNonEmptyString(name)) {
       throw new FirebaseEventarcError(
         'invalid-argument', 'name is required.',
       );
