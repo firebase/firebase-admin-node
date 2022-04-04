@@ -28,7 +28,7 @@ export interface ChannelOptions {
 // @public
 export interface CloudEvent {
     // (undocumented)
-    [key: string]: unknown;
+    [key: string]: any;
     // (undocumented)
     data?: object | string;
     // (undocumented)
@@ -54,14 +54,11 @@ export type CloudEventVersion = '1.0';
 export class Eventarc {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
-    channel(options?: ChannelOptions): Channel;
     channel(name: string, options?: ChannelOptions): Channel;
     channel(options?: ChannelOptions): Channel;
 }
 
 // @public
 export function getEventarc(app?: App): Eventarc;
-
-// (No @packageDocumentation comment for this package)
 
 ```
