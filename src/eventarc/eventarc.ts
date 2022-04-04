@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2022 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ const DEFAULT_CHANNEL_REGION = 'us-central1';
 export interface ChannelOptions {
   /**
    * An array of allowed event types. If specified, publishing events of
-   * unknown types will be a no op. When not provided, no even filtering is
+   * unknown types will be a no op. When not provided, no event filtering is
    * performed.
    */
   allowedEventTypes?: string[] | string | undefined
@@ -79,7 +79,7 @@ export class Eventarc {
   }
   
   /**
-   * Creates a reference to Eventarc default Firebase channel which can then
+   * Creates a reference to the Eventarc default Firebase channel which can then
    * be used to publish events:
    * `projects/{project}/locations/us-central1/channels/firebase`
    * 
@@ -90,11 +90,11 @@ export class Eventarc {
   
 
   /**
-   * Creates a reference to Eventarc channel using provided channel resource name.
+   * Creates a reference to the Eventarc channel using the provided channel resource name.
    * The channel resource name Can be either:
    *   * fully qualified channel resource name:
    *     `projects/{project}/locations/{location}/channels/{channel-id}`
-   *   * partial resource name with location and channel id, in which case
+   *   * partial resource name with location and channel ID, in which case
    *     the runtime project ID of the function will be used:
    *     `locations/{location}/channels/{channel-id}`
    *   * partial channel-id, in which case the runtime project ID of the
@@ -108,7 +108,7 @@ export class Eventarc {
   public channel(name: string, options?: ChannelOptions): Channel;
 
   /**
-   * Create a reference to a default Firebase channel:
+   * Create a reference to the default Firebase channel:
    * `locations/us-central1/channels/firebase`
    *
    * @param options - (optional) additional channel options
@@ -279,8 +279,12 @@ export class Channel {
   
   private async resolveChannelNameProjectId(location: string, channelId: string): Promise<string> {
     const projectId = await utils.findProjectId(this.eventarc.app);
-    if (!projectId) {
-      throw new FirebaseEventarcError('invalid-argument', 'Unable to resolve project id.');
+    if (!validator.isNonEmptyString(projectId)) {
+      throw new FirebaseEventarcError(
+        'invalid-argument',
+        'Failed to determine project ID. Initialize the '
+        + 'SDK with service account credentials or set project ID as an app option. '
+        + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
     }
     return 'projects/' + projectId + '/locations/' + location + '/channels/' + channelId;
   }

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2021 Google Inc.
+ * Copyright 2022 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ import { Eventarc as TEventarc, Channel as TChannel, ChannelOptions as TChannelO
  * const otherEventarc = admin.eventarc(otherApp);
  * ```
  *
- * @param app - Optional app whose `Eventarc` service to
- *   return. If not provided, the default `Eventarc` service will be returned.
+ * @param app - Optional app whose `Eventarc` service will be returned. 
+ *   If not provided, the default `Eventarc` service will be returned.
  *
  * @returns The default `Eventarc` service if no
  *   app is provided or the `Eventarc` service associated with the provided
