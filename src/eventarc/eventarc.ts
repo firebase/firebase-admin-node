@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2022 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,21 +17,9 @@
 
 import { App } from '../app';
 import * as validator from '../utils/validator';
-import { FirebaseEventarcError, toCloudEventProtoFormat } from './eventarc-utils';
-import {
-  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient
-} from '../utils/api-request';
-import { FirebaseApp } from '../app/firebase-app';
-import * as utils from '../utils';
-import { PrefixedFirebaseError } from '../utils/error';
+import { FirebaseEventarcError } from './eventarc-utils';
 import { CloudEvent } from './cloudevent';
-
-const EVENTARC_API = 'https://eventarcpublishing.googleapis.com/v1';
-const FIREBASE_VERSION_HEADER = {
-  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
-};
-const CHANNEL_NAME_REGEX = /^(projects\/([^/]+)\/)?locations\/([^/]+)\/channels\/([^/]+)$/;
-const DEFAULT_CHANNEL_REGION = 'us-central1';
+import { EventarcApiClient } from './eventarc-client-internal';
 
 /**
  * Channel options interface.
@@ -77,17 +66,6 @@ export class Eventarc {
   get app(): App {
     return this.appInternal;
   }
-  
-  /**
-   * Creates a reference to the Eventarc default Firebase channel which can then
-   * be used to publish events:
-   * `projects/{project}/locations/us-central1/channels/firebase`
-   * 
-   * @param options - (optional) additional channel options
-   * @returns Eventarc channel reference for publishing events.
-   */
-  public channel(options?: ChannelOptions): Channel;
-  
 
   /**
    * Creates a reference to the Eventarc channel using the provided channel resource name.
@@ -147,8 +125,7 @@ export class Channel {
   private readonly eventarcInternal: Eventarc;
   public nameInternal: string;
   public readonly allowedEventTypes?: string[]
-  private readonly httpClient: HttpClient;
-  private readonly resolvedChannelName: Promise<string>;
+  private readonly client: EventarcApiClient;
 
   /**
    * @internal
@@ -169,9 +146,7 @@ export class Channel {
     this.nameInternal = name;
     this.eventarcInternal = eventarc;
     this.allowedEventTypes = allowedEventTypes;
-    this.httpClient = new AuthorizedHttpClient(eventarc.app as FirebaseApp);
-    
-    this.resolvedChannelName = this.resolveChannelName(name);
+    this.client = new EventarcApiClient(eventarc, this);
   }
 
   /**
@@ -204,88 +179,6 @@ export class Channel {
    * @param events - CloudEvent to publish to the channel.
    */
   public async publish(events: CloudEvent | CloudEvent[]): Promise<void> {
-    if (!Array.isArray(events)) {
-      events = [events as CloudEvent];
-    }
-    return this.publishToEventarcApi(
-      await this.resolvedChannelName,
-      events
-        .filter(e => typeof this.allowedEventTypes === 'undefined' || this.allowedEventTypes.includes(e.type))
-        .map(toCloudEventProtoFormat));
-  }
-
-  private async publishToEventarcApi(channel:string, events: CloudEvent[]): Promise<void> {
-    if (events.length === 0) {
-      return;
-    }
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url: `${EVENTARC_API}/${channel}:publishEvents`,
-      data: JSON.stringify({ events }),
-    };
-    return this.sendRequest<void>(request);
-  }
-
-  private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
-    request.headers = FIREBASE_VERSION_HEADER;
-    return this.httpClient.send(request)
-      .then((resp) => {
-        return resp.data as T;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
-      return err;
-    }
-
-    const response = err.response;
-    if (!response.isJson()) {
-      return new PrefixedFirebaseError(
-        'eventarc',
-        '' + response.status,
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
-    }
-
-    return new PrefixedFirebaseError(
-      'eventarc', 
-      'unknown-error',
-      `Unexpected response with status: ${response.status} and body: ${response.text}`);
-  }
-
-  private resolveChannelName(name: string): Promise<string> {
-    if (!name.includes('/')) {
-      const location = DEFAULT_CHANNEL_REGION;
-      const channelId = name;
-      return this.resolveChannelNameProjectId(location, channelId);
-    } else {
-      const match = CHANNEL_NAME_REGEX.exec(name);
-      if (match === null) {
-        throw new FirebaseEventarcError('invalid-argument', 'Invalid channel name format.');
-      }
-      const projectId = match[2];
-      const location = match[3];
-      const channelId = match[4];
-      if (projectId) {
-        return Promise.resolve('projects/' + projectId + '/locations/' + location + '/channels/' + channelId);
-      } else {
-        return this.resolveChannelNameProjectId(location, channelId);
-      }
-    }
-  }
-  
-  private async resolveChannelNameProjectId(location: string, channelId: string): Promise<string> {
-    const projectId = await utils.findProjectId(this.eventarc.app);
-    if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseEventarcError(
-        'invalid-argument',
-        'Failed to determine project ID. Initialize the '
-        + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
-    }
-    return 'projects/' + projectId + '/locations/' + location + '/channels/' + channelId;
+    return this.client.publish(events);
   }
 }

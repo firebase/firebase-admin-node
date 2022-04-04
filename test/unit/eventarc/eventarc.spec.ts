@@ -32,7 +32,6 @@ import { getSdkVersion } from '../../../src/utils/index';
 const expect = chai.expect;
 chai.use(chaiExclude);
 
-
 const TEST_EVENT1 : CloudEvent = {
   type: 'some.custom.event1',
   specversion: '1.0',

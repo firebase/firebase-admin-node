@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2022 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +18,22 @@
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 import { v4 as uuid } from 'uuid';
+import * as validator from '../utils/validator';
 
+// List of CloudEvent properties that are handled "by hand" and shous be skipped by
+// automatic attribute copy.
 const TOP_LEVEL_CE_ATTRS: string[] = 
     ['id', 'type', 'specversion', 'source', 'data', 'time', 'datacontenttype', 'subject'];
 
-export type EventarcErrorCode = 'invalid-argument'
+export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
 
+/**
+ * Firebase Eventarc error code structure. This extends PrefixedFirebaseError.
+ *
+ * @param code - The error code.
+ * @param message - The error message.
+ * @constructor
+ */
 export class FirebaseEventarcError extends PrefixedFirebaseError {
   constructor(code: EventarcErrorCode, message: string) {
     super('eventarc', code, message);
@@ -31,10 +42,10 @@ export class FirebaseEventarcError extends PrefixedFirebaseError {
 
 export function toCloudEventProtoFormat(ce: CloudEvent): any {
   const source = ce.source ?? process.env.EVENTARC_CLOUD_EVENT_SOURCE;
-  if (!source) {
+  if (typeof source === 'undefined' || !validator.isNonEmptyString(source)) {
     throw new FirebaseEventarcError('invalid-argument', "CloudEvent 'source' is required.");
   }
-  if (!ce.type) {
+  if (!validator.isNonEmptyString(ce.type)) {
     throw new FirebaseEventarcError('invalid-argument', "CloudEvent 'type' is required.");
   }
   const out: Record<string, any> = {
@@ -45,7 +56,11 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
     'source': source
   }
 
-  if (ce.time) {
+  if (typeof ce.time !== 'undefined')  {
+    if (!validator.isISODateString(ce.time)) {
+      throw new FirebaseEventarcError(
+        'invalid-argument', "CloudEvent 'tyme' must be in ISO date format.");
+    }
     setAttribute(out, 'time', {
       'ceTimestamp': ce.time
     });
@@ -54,28 +69,38 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
       'ceTimestamp': new Date().toISOString()
     });
   }
-  if (ce.datacontenttype) {
+  if (typeof ce.datacontenttype !== 'undefined') {
+    if (!validator.isNonEmptyString(ce.datacontenttype)) {
+      throw new FirebaseEventarcError(
+        'invalid-argument', 
+        "CloudEvent 'datacontenttype' if specified must be non-empty string.");
+    }
     setAttribute(out, 'datacontenttype', {
       'ceString': ce.datacontenttype
     });
   }
-  if (!ce.data) {
-    throw new FirebaseEventarcError('invalid-argument', "CloudEvent 'data' is required.");
-  }
   if (ce.subject) {
+    if (!validator.isNonEmptyString(ce.datacontenttype)) {
+      throw new FirebaseEventarcError(
+        'invalid-argument', 
+        "CloudEvent 'subject' if specified must be non-empty string.");
+    }
     setAttribute(out, 'subject', {
       'ceString': ce.subject
     });
   }
 
-  if (typeof ce.data === 'object') {
+  if (typeof ce.data === 'undefined') {
+    throw new FirebaseEventarcError('invalid-argument', "CloudEvent 'data' is required.");
+  }
+  if (validator.isObject(ce.data)) {
     out['textData'] = JSON.stringify(ce.data);
     if (!ce.datacontenttype) {
       setAttribute(out, 'datacontenttype', {
         'ceString': 'application/json'
       });
     }
-  } else if (typeof ce.data === 'string') {
+  } else if (validator.isNonEmptyString(ce.data)) {
     out['textData'] = ce.data;
     if (!ce.datacontenttype) {
       setAttribute(out, 'datacontenttype', {
@@ -92,7 +117,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
     if (TOP_LEVEL_CE_ATTRS.includes(attr)) {
       continue;
     }
-    if (typeof ce[attr] !== 'string') {
+    if (!validator.isNonEmptyString(ce[attr])) {
       throw new FirebaseEventarcError(
         'invalid-argument',
         `CloudEvent extension attributes ('${attr}') must be string.`);
@@ -106,8 +131,8 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
 }
 
 function setAttribute(event: any, attr: string, value: any): void {
-  if (!event['attributes']) {
-    event['attributes'] = {}
+  if (!Object.prototype.hasOwnProperty.call(event, 'attributes')) {
+    event.attributes = {};
   }
   event['attributes'][attr] = value;
 }

@@ -278,21 +278,6 @@ describe('Firebase', () => {
     });
   });
 
-  describe('#eventarc', () => {
-    it('should throw if the app has not be initialized', () => {
-      expect(() => {
-        return firebaseAdmin.eventarc();
-      }).to.throw('The default Firebase app does not exist.');
-    });
-
-    it('should return the eventarc service', () => {
-      firebaseAdmin.initializeApp(mocks.appOptions);
-      expect(() => {
-        return firebaseAdmin.eventarc();
-      }).not.to.throw();
-    });
-  });
-
   function getAppInternals(): FirebaseAppInternals {
     return (firebaseAdmin.app() as unknown as FirebaseApp).INTERNAL;
   }

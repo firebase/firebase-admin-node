@@ -18,7 +18,7 @@
 import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
-  app, appCheck, auth, eventarc, messaging, machineLearning, storage, firestore, database,
+  app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
   instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
@@ -28,7 +28,6 @@ import App = app.App;
 import AppCheck = appCheck.AppCheck;
 import Auth = auth.Auth;
 import Database = database.Database;
-import Eventarc = eventarc.Eventarc;
 import Firestore = firestore.Firestore;
 import Installations = installations.Installations;
 import InstanceId = instanceId.InstanceId;
@@ -137,18 +136,6 @@ export class FirebaseNamespace {
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     return Object.assign(fn, require('@firebase/database-compat/standalone'));
-  }
-
-  /**
-   * Gets the `Eventarc` service namespace. The returned namespace can be used to get the
-   * `Eventarc` service for the default app or an explicitly specified app.
-   */
-  get eventarc(): FirebaseServiceNamespace<Eventarc> {
-    const fn: FirebaseServiceNamespace<Eventarc> = (app?: App) => {
-      return this.ensureApp(app).eventarc();
-    };
-    const eventarc = require('../eventarc/eventarc').Eventarc;
-    return Object.assign(fn, { Eventarc: eventarc });
   }
 
   /**
@@ -407,11 +394,6 @@ function extendApp(app: AppCore): App {
 
   result.remoteConfig = () => {
     const fn = require('../remote-config/index').getRemoteConfig;
-    return fn(app);
-  };
-
-  result.eventarc = () => {
-    const fn = require('../eventarc/index').getEventarc;
     return fn(app);
   };
 
