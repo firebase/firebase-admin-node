@@ -20,7 +20,7 @@ import { CloudEvent } from './cloudevent';
 import { v4 as uuid } from 'uuid';
 import * as validator from '../utils/validator';
 
-// List of CloudEvent properties that are handled "by hand" and shous be skipped by
+// List of CloudEvent properties that are handled "by hand" and should be skipped by
 // automatic attribute copy.
 const TOP_LEVEL_CE_ATTRS: string[] = 
     ['id', 'type', 'specversion', 'source', 'data', 'time', 'datacontenttype', 'subject'];
