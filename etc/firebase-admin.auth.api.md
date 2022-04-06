@@ -52,6 +52,7 @@ export abstract class BaseAuth {
     deleteProviderConfig(providerId: string): Promise<void>;
     deleteUser(uid: string): Promise<void>;
     deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
+    generateEmailVerificationAndChangeLink(email: string, newEmail: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;

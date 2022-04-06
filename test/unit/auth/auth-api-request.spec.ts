@@ -3065,6 +3065,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const path = handler.path('v1', '/accounts:sendOobCode', 'project_id');
       const method = 'POST';
       const email = 'user@example.com';
+      const newEmail = 'usernew@example.com';
       const actionCodeSettings = {
         url: 'https://www.example.com/path/file?a=1&b=2',
         handleCodeInApp: true,
@@ -3106,6 +3107,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
         it('should be fulfilled given a valid requestType:' + requestType + ' and ActionCodeSettings', () => {
+          if (requestType === 'VERIFY_AND_CHANGE_EMAIL') {
+            return;
+          }
           const requestData = deepExtend({
             requestType,
             email,
@@ -3123,8 +3127,27 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
       });
 
+      it('should be fulfilled given a valid requestType: VERIFY_AND_CHANGE_EMAIL and ActionCodeSettings', () => {
+        const VERIFY_AND_CHANGE_EMAIL = 'VERIFY_AND_CHANGE_EMAIL';
+        const requestData = deepExtend({
+          requestType: VERIFY_AND_CHANGE_EMAIL,
+          email,
+          returnOobLink: true,
+          newEmail
+        }, expectedActionCodeSettingsRequest);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.getEmailActionLink(VERIFY_AND_CHANGE_EMAIL, email, actionCodeSettings, newEmail)
+          .then((oobLink: string) => {
+            expect(oobLink).to.be.equal(expectedLink);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+          });
+      });
+
       EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
-        if (requestType === 'EMAIL_SIGNIN') {
+        if (requestType === 'EMAIL_SIGNIN' || requestType === 'VERIFY_AND_CHANGE_EMAIL') {
           return;
         }
         it('should be fulfilled given requestType:' + requestType + ' and no ActionCodeSettings', () => {
@@ -3145,12 +3168,47 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
       });
 
+      it('should be fulfilled given a valid requestType: VERIFY_AND_CHANGE_EMAIL and no ActionCodeSettings', () => {
+        const VERIFY_AND_CHANGE_EMAIL = 'VERIFY_AND_CHANGE_EMAIL';
+        const requestData = {
+          requestType: VERIFY_AND_CHANGE_EMAIL,
+          email,
+          returnOobLink: true,
+          newEmail
+        };
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.getEmailActionLink(VERIFY_AND_CHANGE_EMAIL, email, undefined, newEmail)
+          .then((oobLink: string) => {
+            expect(oobLink).to.be.equal(expectedLink);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+          });
+      });
+
       it('should be rejected given requestType:EMAIL_SIGNIN and no ActionCodeSettings', () => {
         const invalidRequestType = 'EMAIL_SIGNIN';
         const requestHandler = handler.init(mockApp);
 
         return requestHandler.getEmailActionLink(invalidRequestType, email)
           .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+      });
+
+      it('should be rejected given requestType: VERIFY_AND_CHANGE and no new Email address', () => {
+        const requestHandler = handler.init(mockApp);
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '`newEmail` is required when `requestType` === \'VERIFY_AND_CHANGE_EMAIL\'',
+        )
+
+        return requestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Invalid argument error should be thrown.
+            expect(error).to.deep.include(expectedError);
+          });
       });
 
       it('should be rejected given an invalid email', () => {
@@ -3163,6 +3221,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid email error should be thrown.
+            expect(error).to.deep.include(expectedError);
+          });
+      });
+
+      it('should be rejected given an invalid new email', () => {
+        const invalidNewEmail = 'invalid';
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_NEW_EMAIL);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email, actionCodeSettings, invalidNewEmail)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Invalid new email error should be thrown.
             expect(error).to.deep.include(expectedError);
           });
       });
