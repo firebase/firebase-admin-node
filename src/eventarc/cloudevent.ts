@@ -27,16 +27,69 @@ export type CloudEventVersion = '1.0';
   * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md
   */
 export interface CloudEvent {
+
+   /** 
+    * Event identified. If not provided will be auto-generated with a UUID.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#id 
+    */
    id?: string;
+
+   /**
+    * Identifies the context in which an event happened. If not provided the value of `EVENTARC_CLOUD_EVENT_SOURCE`
+    * environment variable will be used and if that is not set a validation error will be thrown.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#source-1
+    */
    source?: string;
+
+   /**
+    * The version of the CloudEvents specification which the event uses. If not provided will be set to `1.0` -- 
+    * the only supported value.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#specversion
+    */
    specversion?: CloudEventVersion;
+
+   /**
+    * Type of the event. Should be prefixed with a reverse-DNS name (`com.my-org.v1.something.happended`).
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#type
+    */
    type: string;
  
+   /**
+    * Subject (context) of the event in the context of the event producer.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#subject
+    */
    subject?: string;
+
+   /**
+    * MIME type of the data being sent with the event in the `data` field. Only `application/json` and `text/plain`
+    * are currently supported. If not specified wil be automatically inferred from the type of provided data.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#datacontenttype
+    */
    datacontenttype?: string;
+
+   /**
+    * Timestamp of when the occurrence happened. Must in ISO time format. If not specified current time (at the
+    * moment of publishing) will be used.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#time
+    */
    time?: string;
+
+   /**
+    * Data payload of the event. Objects will be strigified with JSON and strings will be passed along as-is.
+    */
    data?: object | string;
  
-   // Custom attributes/extensions.
+   /**
+    * Custom attributes/extensions. Must be strings. Will be added to the event as is.
+    * 
+    * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#extension-context-attributes
+    */
    [key: string]: any;
  }
