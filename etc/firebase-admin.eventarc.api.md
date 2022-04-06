@@ -27,23 +27,14 @@ export interface ChannelOptions {
 
 // @public
 export interface CloudEvent {
-    // (undocumented)
     [key: string]: any;
-    // (undocumented)
     data?: object | string;
-    // (undocumented)
     datacontenttype?: string;
-    // (undocumented)
     id?: string;
-    // (undocumented)
     source?: string;
-    // (undocumented)
     specversion?: CloudEventVersion;
-    // (undocumented)
     subject?: string;
-    // (undocumented)
     time?: string;
-    // (undocumented)
     type: string;
 }
 
