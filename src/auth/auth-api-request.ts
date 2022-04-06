@@ -1615,7 +1615,6 @@ export abstract class AbstractAuthRequestHandler {
     if (typeof newEmail !== 'undefined') {
       request.newEmail = newEmail;
     }
-
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {

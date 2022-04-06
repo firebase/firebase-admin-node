@@ -3174,7 +3174,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           requestType: VERIFY_AND_CHANGE_EMAIL,
           email,
           returnOobLink: true,
-          newEmail
+          newEmail,
         };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
