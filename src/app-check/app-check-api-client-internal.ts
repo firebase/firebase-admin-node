@@ -26,7 +26,7 @@ import * as validator from '../utils/validator';
 import { AppCheckToken } from './app-check-api'
 
 // App Check backend constants
-const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}/apps/{appId}:exchangeCustomToken';
+const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
 
 const FIREBASE_APP_CHECK_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -144,7 +144,7 @@ export class AppCheckApiClient {
    * @returns An AppCheckToken instance.
    */
   private toAppCheckToken(resp: HttpResponse): AppCheckToken {
-    const token = resp.data.attestationToken;
+    const token = resp.data.token;
     // `ttl` is a string with the suffix "s" preceded by the number of seconds,
     // with nanoseconds expressed as fractional seconds.
     const ttlMillis = this.stringToMilliseconds(resp.data.ttl);
