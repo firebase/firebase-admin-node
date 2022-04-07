@@ -24,6 +24,7 @@ import { FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError } from 
 import {
   FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
   DecodedIdToken,
+  DecodedAuthBlockingToken,
 } from './token-verifier';
 import {
   AuthProviderConfig, SAMLAuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults,
@@ -1054,6 +1055,20 @@ export abstract class BaseAuth {
     }
     return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
   }
+
+  /* eslint-disable */
+  /** @alpha */
+  public _verifyAuthBlockingToken(
+    token: string,  
+    audience?: string
+  ): Promise<DecodedAuthBlockingToken> {
+    const isEmulator = useEmulator();
+    return this.idTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
+      .then((decodedIdToken: DecodedAuthBlockingToken) => {
+        return decodedIdToken;
+      });
+  }
+  /* eslint-enable */
 
   /**
    * Verifies the decoded Firebase issued JWT is not revoked or disabled. Returns a promise that
