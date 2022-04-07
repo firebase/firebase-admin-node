@@ -146,7 +146,7 @@ export class Channel {
     this.nameInternal = name;
     this.eventarcInternal = eventarc;
     this.allowedEventTypes = allowedEventTypes;
-    this.client = new EventarcApiClient(eventarc, this);
+    this.client = new EventarcApiClient(eventarc.app, this);
   }
 
   /**

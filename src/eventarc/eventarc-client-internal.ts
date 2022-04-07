@@ -17,7 +17,8 @@
 
 import * as validator from '../utils/validator';
 import { FirebaseEventarcError, toCloudEventProtoFormat } from './eventarc-utils';
-import { Eventarc, Channel } from './eventarc';
+import { App } from '../app';
+import { Channel } from './eventarc';
 import {
   HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient
 } from '../utils/api-request';
@@ -43,13 +44,13 @@ export class EventarcApiClient {
   private projectId?: string;
   private readonly resolvedChannelName: Promise<string>;
 
-  constructor(private readonly eventarc: Eventarc, private readonly channel: Channel) {
-    if (!validator.isNonNullObject(eventarc.app) || !('options' in eventarc.app)) {
+  constructor(private readonly app: App, private readonly channel: Channel) {
+    if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseEventarcError(
         'invalid-argument',
-        'First argument passed to admin.appCheck() must be a valid Firebase app instance.');
+        'First argument passed to Channel() must be a valid Eventarc service instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(eventarc.app as FirebaseApp);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
     this.resolvedChannelName = this.resolveChannelName(channel.name);
   }
 
@@ -57,7 +58,7 @@ export class EventarcApiClient {
     if (this.projectId) {
       return Promise.resolve(this.projectId);
     }
-    return utils.findProjectId(this.eventarc.app)
+    return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
           throw new FirebaseEventarcError(
