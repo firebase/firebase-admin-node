@@ -1050,7 +1050,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
       // Set expected decoded ID token with expected UID and auth time.
-      const decodedIdToken = getDecodedAuthBlockingToken(uid, validSince, tenantId);
+      const decodedIdToken = getDecodedAuthBlockingToken(uid, validSince);
       let clock: sinon.SinonFakeTimers;
 
       // Stubs used to simulate underlying api calls.
