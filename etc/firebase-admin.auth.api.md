@@ -68,6 +68,8 @@ export abstract class BaseAuth {
     setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
     updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
+    // @alpha (undocumented)
+    _verifyAuthBlockingToken(token: string, audience?: string): Promise<DecodedAuthBlockingToken>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 }
@@ -109,6 +111,56 @@ export interface CreateRequest extends UpdateRequest {
 
 // @public
 export type CreateTenantRequest = UpdateTenantRequest;
+
+// @alpha (undocumented)
+export interface DecodedAuthBlockingToken {
+    // (undocumented)
+    [key: string]: any;
+    // (undocumented)
+    aud: string;
+    // (undocumented)
+    event_id: string;
+    // (undocumented)
+    event_type: string;
+    // (undocumented)
+    exp: number;
+    // (undocumented)
+    iat: number;
+    // (undocumented)
+    ip_address: string;
+    // (undocumented)
+    iss: string;
+    // (undocumented)
+    locale?: string;
+    // (undocumented)
+    oauth_access_token?: string;
+    // (undocumented)
+    oauth_expires_in?: number;
+    // (undocumented)
+    oauth_id_token?: string;
+    // (undocumented)
+    oauth_refresh_token?: string;
+    // (undocumented)
+    oauth_token_secret?: string;
+    // (undocumented)
+    raw_user_info?: string;
+    // (undocumented)
+    sign_in_attributes?: {
+        [key: string]: any;
+    };
+    // (undocumented)
+    sign_in_method?: string;
+    // (undocumented)
+    sub: string;
+    // (undocumented)
+    tenant_id?: string;
+    // (undocumented)
+    user_agent?: string;
+    // Warning: (ae-forgotten-export) The symbol "DecodedAuthBlockingUserRecord" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    user_record?: DecodedAuthBlockingUserRecord;
+}
 
 // @public
 export interface DecodedIdToken {

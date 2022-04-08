@@ -278,6 +278,19 @@ export const ID_TOKEN_INFO: FirebaseTokenInfo = {
 };
 
 /**
+ * User facing token information related to the Firebase Auth Blocking token.
+ *
+ * @internal
+ */
+export const AUTH_BLOCKING_TOKEN_INFO: FirebaseTokenInfo = {
+  url: 'https://cloud.google.com/identity-platform/docs/blocking-functions',
+  verifyApiName: '_verifyAuthBlockingToken()',
+  jwtName: 'Firebase Auth Blocking token',
+  shortName: 'Auth Blocking token',
+  expiredErrorCode: AuthClientErrorCode.AUTH_BLOCKING_TOKEN_EXPIRED,
+};
+
+/**
  * User facing token information related to the Firebase session cookie.
  *
  * @internal
@@ -396,12 +409,12 @@ export class FirebaseTokenVerifier {
       });
   }
 
-  /* eslint-disable */
   /** @alpha */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
     jwtToken: string,
     isEmulator: boolean,
-    audience?: string): Promise<DecodedAuthBlockingToken> {
+    audience: string | undefined): Promise<DecodedAuthBlockingToken> {
     if (!validator.isString(jwtToken)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -411,18 +424,17 @@ export class FirebaseTokenVerifier {
 
     return this.ensureProjectId()
       .then((projectId) => {
-        if (!audience) {
+        if (typeof audience === 'undefined') {
           audience = `${projectId}.cloudfunctions.net/`;
         }
         return this.decodeAndVerify(jwtToken, projectId, isEmulator, audience);
       })
       .then((decoded) => {
-        const decodedIdToken = decoded.payload as DecodedAuthBlockingToken;
-        decodedIdToken.uid = decodedIdToken.sub;
-        return decodedIdToken;
+        const decodedAuthBlockingToken = decoded.payload as DecodedAuthBlockingToken;
+        decodedAuthBlockingToken.uid = decodedAuthBlockingToken.sub;
+        return decodedAuthBlockingToken;
       });
   }
-  /* eslint-enable */
 
   private ensureProjectId(): Promise<string> {
     return util.findProjectId(this.app)
@@ -499,17 +511,17 @@ export class FirebaseTokenVerifier {
         errorMessage = `${this.tokenInfo.verifyApiName} expects ${this.shortNameArticle} ` +
           `${this.tokenInfo.shortName}, but was given a legacy custom token.`;
       } else {
-        errorMessage = 'Firebase ID token has no "kid" claim.';
+        errorMessage = `${this.tokenInfo.jwtName} has no "kid" claim.`;
       }
 
       errorMessage += verifyJwtTokenDocsMessage;
     } else if (!isEmulator && header.alg !== ALGORITHM_RS256) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect algorithm. Expected "` + ALGORITHM_RS256 + '" but got ' +
         '"' + header.alg + '".' + verifyJwtTokenDocsMessage;
-    } else if (audience && !(payload.aud as string).includes(audience)) {
+    } else if (typeof audience !== 'undefined' && !(payload.aud as string).includes(audience)) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected "` +
       audience + '" but got "' + payload.aud + '".' + verifyJwtTokenDocsMessage;
-    } else if (!audience && payload.aud !== projectId) {
+    } else if (typeof audience === 'undefined' && payload.aud !== projectId) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected "` +
       projectId + '" but got "' + payload.aud + '".' + projectIdMatchMessage +
         verifyJwtTokenDocsMessage;
@@ -578,6 +590,22 @@ export function createIdTokenVerifier(app: App): FirebaseTokenVerifier {
     CLIENT_CERT_URL,
     'https://securetoken.google.com/',
     ID_TOKEN_INFO,
+    app
+  );
+}
+
+/**
+ * Creates a new FirebaseTokenVerifier to verify Firebase Auth Blocking tokens.
+ *
+ * @internal
+ * @param app - Firebase app instance.
+ * @returns FirebaseTokenVerifier
+ */
+export function createAuthBlockingTokenVerifier(app: App): FirebaseTokenVerifier {
+  return new FirebaseTokenVerifier(
+    CLIENT_CERT_URL,
+    'https://securetoken.google.com/',
+    AUTH_BLOCKING_TOKEN_INFO,
     app
   );
 }

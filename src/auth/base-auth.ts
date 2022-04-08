@@ -22,7 +22,10 @@ import * as validator from '../utils/validator';
 import { AbstractAuthRequestHandler, useEmulator } from './auth-api-request';
 import { FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError } from './token-generator';
 import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
+  FirebaseTokenVerifier,
+  createSessionCookieVerifier,
+  createIdTokenVerifier,
+  createAuthBlockingTokenVerifier,
   DecodedIdToken,
   DecodedAuthBlockingToken,
 } from './token-verifier';
@@ -132,6 +135,8 @@ export abstract class BaseAuth {
   /** @internal */
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   /** @internal */
+  protected readonly authBlockingTokenVerifier: FirebaseTokenVerifier;
+  /** @internal */
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
   /**
@@ -157,6 +162,7 @@ export abstract class BaseAuth {
 
     this.sessionCookieVerifier = createSessionCookieVerifier(app);
     this.idTokenVerifier = createIdTokenVerifier(app);
+    this.authBlockingTokenVerifier = createAuthBlockingTokenVerifier(app);
   }
 
   /**
@@ -1056,19 +1062,18 @@ export abstract class BaseAuth {
     return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
   }
 
-  /* eslint-disable */
   /** @alpha */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
     token: string,  
     audience?: string
   ): Promise<DecodedAuthBlockingToken> {
     const isEmulator = useEmulator();
-    return this.idTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
-      .then((decodedIdToken: DecodedAuthBlockingToken) => {
-        return decodedIdToken;
+    return this.authBlockingTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
+      .then((decodedAuthBlockingToken: DecodedAuthBlockingToken) => {
+        return decodedAuthBlockingToken;
       });
   }
-  /* eslint-enable */
 
   /**
    * Verifies the decoded Firebase issued JWT is not revoked or disabled. Returns a promise that

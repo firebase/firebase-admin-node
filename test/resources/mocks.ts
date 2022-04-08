@@ -214,6 +214,33 @@ export function generateIdToken(overrides?: object, claims?: object): string {
 }
 
 /**
+ * Generates a mocked Auth Blocking token.
+ *
+ * @param {object} overrides Overrides for the generated token's attributes.
+ * @param {object} claims Extra claims to add to the token.
+ * @return {string} A mocked Auth Blocking token with any provided overrides included.
+ */
+export function generateAuthBlockingToken(overrides?: object, claims?: object): string {
+  const options = _.assign({
+    audience: `https://us-central1-${projectId}.cloudfunctions.net/functionName`,
+    expiresIn: ONE_HOUR_IN_SECONDS,
+    issuer: 'https://securetoken.google.com/' + projectId,
+    subject: uid,
+    algorithm: ALGORITHM,
+    header: {
+      kid: certificateObject.private_key_id,
+    },
+  }, overrides);
+
+  const payload = {
+    ...developerClaims,
+    ...claims,
+  };
+
+  return jwt.sign(payload, certificateObject.private_key, options);
+}
+
+/**
  * Generates a mocked Firebase session cookie.
  *
  * @param {object=} overrides Overrides for the generated token's attributes.
