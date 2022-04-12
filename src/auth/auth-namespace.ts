@@ -176,9 +176,7 @@ export namespace auth {
    */
   export type DecodedIdToken = TDecodedIdToken;
 
-  /**
-   * Type alias to {@link firebase-admin.auth#DecodedAuthBlockingToken}.
-   */
+  /** @alpha */
   export type DecodedAuthBlockingToken = TDecodedAuthBlockingToken;
 
   /**

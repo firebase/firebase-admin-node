@@ -107,6 +107,8 @@ export namespace auth {
     // Warning: (ae-forgotten-export) The symbol "CreateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
     export type CreateTenantRequest = CreateTenantRequest;
     // Warning: (ae-forgotten-export) The symbol "DecodedAuthBlockingToken" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // @alpha (undocumented)
     export type DecodedAuthBlockingToken = DecodedAuthBlockingToken;
     // Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point default-namespace.d.ts
     export type DecodedIdToken = DecodedIdToken;

@@ -177,7 +177,7 @@ export interface DecodedIdToken {
 }
 
 /** @alpha */
-interface DecodedAuthBlockingSharedUserInfo {
+export interface DecodedAuthBlockingSharedUserInfo {
   uid: string;
   display_name?: string;
   email?: string;
@@ -186,18 +186,18 @@ interface DecodedAuthBlockingSharedUserInfo {
 }
 
 /** @alpha */
-interface DecodedAuthBlockingMetadata {
+export interface DecodedAuthBlockingMetadata {
   creation_time?: number;
   last_sign_in_time?: number;
 }
 
 /** @alpha */
-interface DecodedAuthBlockingUserInfo extends DecodedAuthBlockingSharedUserInfo {
+export interface DecodedAuthBlockingUserInfo extends DecodedAuthBlockingSharedUserInfo {
   provider_id: string;
 }
 
 /** @alpha */
-interface DecodedAuthBlockingMfaInfo {
+export interface DecodedAuthBlockingMfaInfo {
   uid: string;
   display_name?: string;
   phone_number?: string;
@@ -206,12 +206,12 @@ interface DecodedAuthBlockingMfaInfo {
 }
 
 /** @alpha */
-interface DecodedAuthBlockingEnrolledFactors {
+export interface DecodedAuthBlockingEnrolledFactors {
   enrolled_factors?: DecodedAuthBlockingMfaInfo[];
 }
 
 /** @alpha */
-interface DecodedAuthBlockingUserRecord extends DecodedAuthBlockingSharedUserInfo {
+export interface DecodedAuthBlockingUserRecord extends DecodedAuthBlockingSharedUserInfo {
   email_verified?: boolean;
   disabled?: boolean;
   metadata?: DecodedAuthBlockingMetadata;
