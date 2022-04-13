@@ -15,8 +15,6 @@ export class Channel {
     get eventarc(): Eventarc;
     // (undocumented)
     get name(): string;
-    // (undocumented)
-    nameInternal: string;
     publish(events: CloudEvent | CloudEvent[]): Promise<void>;
 }
 

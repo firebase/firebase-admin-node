@@ -123,7 +123,7 @@ export class Eventarc {
  */
 export class Channel {
   private readonly eventarcInternal: Eventarc;
-  public nameInternal: string;
+  private nameInternal: string;
   public readonly allowedEventTypes?: string[]
   private readonly client: EventarcApiClient;
 
