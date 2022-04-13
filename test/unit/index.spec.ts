@@ -103,3 +103,7 @@ import './app-check/app-check.spec';
 import './app-check/app-check-api-client-internal.spec';
 import './app-check/token-generator.spec';
 import './app-check/token-verifier.spec.ts';
+
+// Eventarc
+import './eventarc/eventarc.spec';
+import './eventarc/eventarc-utils.spec';
