@@ -42,6 +42,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const TEN_MINUTES_IN_SECONDS = 10 * 60;
 
 function createTokenVerifier(
   app: FirebaseApp
@@ -707,21 +708,6 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
-    it('should be rejected given a custom token with error using article "a" before JWT short name', () => {
-      const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
-        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-        'https://session.firebase.google.com/',
-        verifier.SESSION_COOKIE_INFO,
-        app,
-      );
-      return tokenGenerator.createCustomToken(mocks.uid)
-        .then((customToken) => {
-          return tokenVerifierSessionCookie._verifyAuthBlockingToken(customToken, false, undefined)
-            .should.eventually.be.rejectedWith(
-              'verifySessionCookie() expects a session cookie, but was given a custom token');
-        });
-    });
-
     it('should be rejected given a legacy custom token with error using article "an" before JWT short name', () => {
       const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
       const legacyCustomToken = legacyTokenGenerator.createToken({
@@ -731,38 +717,6 @@ describe('FirebaseTokenVerifier', () => {
       return authBlockingTokenVerifier._verifyAuthBlockingToken(legacyCustomToken, false, undefined)
         .should.eventually.be.rejectedWith(
           '_verifyAuthBlockingToken() expects an Auth Blocking token, but was given a legacy custom token');
-    });
-
-    it('should be rejected given a legacy custom token with error using article "a" before JWT short name', () => {
-      const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
-        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-        'https://session.firebase.google.com/',
-        verifier.SESSION_COOKIE_INFO,
-        app,
-      );
-      const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
-      const legacyCustomToken = legacyTokenGenerator.createToken({
-        uid: mocks.uid,
-      });
-
-      return tokenVerifierSessionCookie._verifyAuthBlockingToken(legacyCustomToken, false, undefined)
-        .should.eventually.be.rejectedWith(
-          'verifySessionCookie() expects a session cookie, but was given a legacy custom token');
-    });
-
-    it('AppOptions.httpAgent should be passed to the verifier', () => {
-      const mockAppWithAgent = mocks.appWithOptions({
-        httpAgent: new Agent()
-      });
-      const agentForApp = mockAppWithAgent.options.httpAgent;
-      const verifierSpy = sinon.spy(PublicKeySignatureVerifier, 'withCertificateUrl');
-
-      expect(verifierSpy.args).to.be.empty;
-
-      createTokenVerifier(mockAppWithAgent);
-
-      expect(verifierSpy.args[0][1]).to.equal(agentForApp);
-      verifierSpy.restore();
     });
 
     it('should be fulfilled with decoded claims given a valid Auth Blocking JWT token', () => {
@@ -779,7 +733,7 @@ describe('FirebaseTokenVerifier', () => {
           one: 'uno',
           two: 'dos',
           iat: 1,
-          exp: ONE_HOUR_IN_SECONDS + 1,
+          exp: TEN_MINUTES_IN_SECONDS + 1,
           aud: `https://us-central1-${mocks.projectId}.cloudfunctions.net/functionName`,
           iss: 'https://securetoken.google.com/' + mocks.projectId,
           sub: mocks.uid,
@@ -802,7 +756,7 @@ describe('FirebaseTokenVerifier', () => {
         one: 'uno',
         two: 'dos',
         iat: 1,
-        exp: ONE_HOUR_IN_SECONDS + 1,
+        exp: TEN_MINUTES_IN_SECONDS + 1,
         aud: `https://us-central1-${mocks.projectId}.cloudfunctions.net/functionName`,
         iss: 'https://securetoken.google.com/' + mocks.projectId,
         sub: mocks.uid,

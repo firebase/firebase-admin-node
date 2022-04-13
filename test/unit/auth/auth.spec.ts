@@ -167,12 +167,11 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
 }
 
 /**
- * Generates a mock decoded ID token with the provided parameters.
+ * Generates a mock decoded Auth Blocking token with the provided parameters.
  *
- * @param {string} uid The uid corresponding to the ID token.
- * @param {Date} authTime The authentication time of the ID token.
- * @param {string=} tenantId The optional tenant ID.
- * @return {DecodedIdToken} The generated decoded ID token.
+ * @param uid The uid corresponding to the Auth Blocking token.
+ * @param authTime The authentication time of the Auth Blocking token.
+ * @return The generated decoded Auth Blocking token.
  */
 function getDecodedAuthBlockingToken(uid: string, authTime: Date): DecodedAuthBlockingToken {
   return {
@@ -1049,15 +1048,15 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime!);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
-      // Set expected decoded ID token with expected UID and auth time.
-      const decodedIdToken = getDecodedAuthBlockingToken(uid, validSince);
+      // Set expected decoded Auth Blocking token with expected UID and auth time.
+      const decodedAuthBlockingToken = getDecodedAuthBlockingToken(uid, validSince);
       let clock: sinon.SinonFakeTimers;
 
       // Stubs used to simulate underlying api calls.
       const stubs: sinon.SinonStub[] = [];
       beforeEach(() => {
         stub = sinon.stub(FirebaseTokenVerifier.prototype, '_verifyAuthBlockingToken')
-          .resolves(decodedIdToken);
+          .resolves(decodedAuthBlockingToken);
         stubs.push(stub);
         mockAuthBlockingToken = mocks.generateAuthBlockingToken();
         clock = sinon.useFakeTimers(validSince.getTime());
@@ -1067,14 +1066,14 @@ AUTH_CONFIGS.forEach((testConfig) => {
         clock.restore();
       });
 
-      it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
+      it('should forward on the call to the token generator\'s _verifyAuthBlockingToken() method', () => {
         // Stub getUser call.
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser');
         stubs.push(getUserStub);
         return auth._verifyAuthBlockingToken(mockAuthBlockingToken).then((result) => {
           // Confirm getUser never called.
           expect(getUserStub).not.to.have.been.called;
-          expect(result).to.deep.equal(decodedIdToken);
+          expect(result).to.deep.equal(decodedAuthBlockingToken);
           expect(stub).to.have.been.calledOnce.and.calledWith(mockAuthBlockingToken);
         });
       });
@@ -1082,9 +1081,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       it('should reject when underlying idTokenVerifier._verifyAuthBlockingToken() rejects', () =>  {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase Auth Blocking token failed');
-        // Restore verifyIdToken stub.
+        // Restore _verifyAuthBlockingToken stub.
         stub.restore();
-        // Simulate ID token is invalid.
+        // Simulate Auth Blocking token is invalid.
         stub = sinon.stub(FirebaseTokenVerifier.prototype, '_verifyAuthBlockingToken')
           .rejects(expectedError);
         stubs.push(stub);
@@ -1113,19 +1112,19 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be fulfilled given an app which returns null access tokens', () => {
-        // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
         return nullAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which returns invalid access tokens', () => {
-        // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
         return malformedAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which fails to generate access tokens', () => {
-        // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
         return rejectedPromiseAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
           .should.eventually.be.fulfilled;
       });
