@@ -108,11 +108,16 @@ export class Eventarc {
     } else {
       opts = options as ChannelOptions;
     }
-    let allowedEventTypes;
+    let allowedEventTypes : string[] | undefined = undefined;
     if (typeof opts?.allowedEventTypes === 'string') {
       allowedEventTypes = opts.allowedEventTypes.split(',');
-    } else {
+    } else if (validator.isArray(opts?.allowedEventTypes)) {
       allowedEventTypes = opts?.allowedEventTypes as string[];
+    } else if (typeof opts?.allowedEventTypes !== 'undefined') {
+      throw new FirebaseEventarcError(
+        'invalid-argument',
+        'AllowedEventTypes must be either an array of strings or a comma separated string.',
+      );
     }
     return new Channel(this, channel, allowedEventTypes);
   }
@@ -124,7 +129,12 @@ export class Eventarc {
 export class Channel {
   private readonly eventarcInternal: Eventarc;
   private nameInternal: string;
+
+  /**
+   * List if event types allowed by this channel for publishing. Other event types will be ignored.
+   */
   public readonly allowedEventTypes?: string[]
+
   private readonly client: EventarcApiClient;
 
   /**
@@ -161,13 +171,17 @@ export class Channel {
     return this.eventarcInternal;
   }
 
+  /**
+   * The channel name as provided during channel creation except if it was not specifed then the default
+   * channel name will be returned ('locations/us-central1/channels/firebase').
+   */
   get name(): string {
     return this.nameInternal;
   }
 
   /**
    * Publishes provided events to this channel. If channel was created with
-   * `allowedEventsTypes` and event type is not on that list, the event will
+   * `allowedEventTypes` and event type is not on that list, the event will
    * be ignored.
    * 
    * The following CloudEvent fields will be auto-populated if not set:

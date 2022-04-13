@@ -10,10 +10,8 @@ import { Agent } from 'http';
 
 // @public
 export class Channel {
-    // (undocumented)
     readonly allowedEventTypes?: string[];
     get eventarc(): Eventarc;
-    // (undocumented)
     get name(): string;
     publish(events: CloudEvent | CloudEvent[]): Promise<void>;
 }
