@@ -71,6 +71,9 @@
       "auth": [
         "lib/auth"
       ],
+      "eventarc": [
+        "lib/eventarc"
+      ],
       "database": [
         "lib/database"
       ],
@@ -121,6 +124,10 @@
       "require": "./lib/database/index.js",
       "import": "./lib/esm/database/index.js"
     },
+    "./eventarc": {
+      "require": "./lib/eventarc/index.js",
+      "import": "./lib/esm/eventarc/index.js"
+    },
     "./firestore": {
       "require": "./lib/firestore/index.js",
       "import": "./lib/esm/firestore/index.js"
@@ -165,7 +172,8 @@
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.2",
-    "node-forge": "^1.0.0"
+    "node-forge": "^1.0.0",
+    "uuid": "^8.3.2"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^4.5.0",
@@ -190,11 +198,13 @@
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.0.0",
+    "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
+    "chai-exclude": "^2.1.0",
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
     "del": "^6.0.0",
