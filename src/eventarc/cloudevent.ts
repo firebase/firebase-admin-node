@@ -29,7 +29,7 @@ export type CloudEventVersion = '1.0';
 export interface CloudEvent {
 
    /** 
-    * Identifier for the event. If not provided will be auto-generated with a UUID.
+    * Identifier for the event. If not provided, it is auto-populated with a UUID.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#id 
     */
@@ -44,7 +44,7 @@ export interface CloudEvent {
    source?: string;
 
    /**
-    * The version of the CloudEvents specification which the event uses. If not provided will be set to `1.0` -- 
+    * The version of the CloudEvents specification which the event uses. If not provided, is set to `1.0` -- 
     * the only supported value.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#specversion
@@ -67,27 +67,27 @@ export interface CloudEvent {
 
    /**
     * MIME type of the data being sent with the event in the `data` field. Only `application/json` and `text/plain`
-    * are currently supported. If not specified will be automatically inferred from the type of provided data.
+    * are currently supported. If not specified, it is automatically inferred from the type of provided data.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#datacontenttype
     */
    datacontenttype?: string;
 
    /**
-    * Timestamp of the event. Must be in ISO time format. If not specified current time (at the
-    * moment of publishing) will be used.
+    * Timestamp of the event. Must be in ISO time format. If not specified, current time (at the moment of publishing)
+    * is used.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#time
     */
    time?: string;
 
    /**
-    * Data payload of the event. Objects will be strigified with JSON and strings will be passed along as-is.
+    * Data payload of the event. Objects are strigified with JSON and strings are be passed along as-is.
     */
    data?: object | string;
  
    /**
-    * Custom attributes/extensions. Must be strings. Will be added to the event as is.
+    * Custom attributes/extensions. Must be strings. Added to the event as is.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#extension-context-attributes
     */

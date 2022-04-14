@@ -27,7 +27,7 @@ import { EventarcApiClient } from './eventarc-client-internal';
 export interface ChannelOptions {
   /**
    * An array of allowed event types. If specified, publishing events of
-   * unknown types will be a no op. When not provided, no event filtering is
+   * unknown types is a no op. When not provided, no event filtering is
    * performed.
    */
   allowedEventTypes?: string[] | string | undefined
@@ -73,10 +73,10 @@ export class Eventarc {
    *   * fully qualified channel resource name:
    *     `projects/{project}/locations/{location}/channels/{channel-id}`
    *   * partial resource name with location and channel ID, in which case
-   *     the runtime project ID of the function will be used:
+   *     the runtime project ID of the function is used:
    *     `locations/{location}/channels/{channel-id}`
    *   * partial channel ID, in which case the runtime project ID of the
-   *     function and `us-central1` as location will be used:
+   *     function and `us-central1` as location is used:
    *     `{channel-id}`
    * 
    * @param name - Channel resource name. 
@@ -131,7 +131,7 @@ export class Channel {
   private nameInternal: string;
 
   /**
-   * List if event types allowed by this channel for publishing. Other event types will be ignored.
+   * List if event types allowed by this channel for publishing. Other event types are ignored.
    */
   public readonly allowedEventTypes?: string[]
 
@@ -172,23 +172,16 @@ export class Channel {
   }
 
   /**
-   * The channel name as provided during channel creation. If it was not specifed then the default
-   * channel name is returned ('locations/us-central1/channels/firebase').
+   * The channel name as provided during channel creation. If it was not specifed, the default channel name is returned
+   * ('locations/us-central1/channels/firebase').
    */
   get name(): string {
     return this.nameInternal;
   }
 
   /**
-   * Publishes provided events to this channel. If channel was created with
-   * `allowedEventTypes` and event type is not on that list, the event will
-   * be ignored.
-   * 
-   * The following CloudEvent fields will be auto-populated if not set:
-   *  * specversion - `1.0`
-   *  * id - uuidv4()
-   *  * source - will be populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
-   *             if not set an error will be thrown.
+   * Publishes provided events to this channel. If channel was created with `allowedEventTypes` and event type is not
+   * on that list, the event is ignored.
    *  
    * @param events - CloudEvent to publish to the channel.
    */
