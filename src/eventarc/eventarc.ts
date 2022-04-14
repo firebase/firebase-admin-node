@@ -131,7 +131,7 @@ export class Channel {
   private nameInternal: string;
 
   /**
-   * List if event types allowed by this channel for publishing. Other event types are ignored.
+   * List of event types allowed by this channel for publishing. Other event types are ignored.
    */
   public readonly allowedEventTypes?: string[]
 
