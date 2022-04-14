@@ -29,15 +29,15 @@ export type CloudEventVersion = '1.0';
 export interface CloudEvent {
 
    /** 
-    * Event identified. If not provided will be auto-generated with a UUID.
+    * Identifier for the event. If not provided will be auto-generated with a UUID.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#id 
     */
    id?: string;
 
    /**
-    * Identifies the context in which an event happened. If not provided the value of `EVENTARC_CLOUD_EVENT_SOURCE`
-    * environment variable will be used and if that is not set a validation error will be thrown.
+    * Identifies the context in which an event happened. If not provided, the value of `EVENTARC_CLOUD_EVENT_SOURCE`
+    * environment variable is used and if that is not set, a validation error is thrown.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#source-1
     */
@@ -67,14 +67,14 @@ export interface CloudEvent {
 
    /**
     * MIME type of the data being sent with the event in the `data` field. Only `application/json` and `text/plain`
-    * are currently supported. If not specified wil be automatically inferred from the type of provided data.
+    * are currently supported. If not specified will be automatically inferred from the type of provided data.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#datacontenttype
     */
    datacontenttype?: string;
 
    /**
-    * Timestamp of when the occurrence happened. Must in ISO time format. If not specified current time (at the
+    * Timestamp of the event. Must be in ISO time format. If not specified current time (at the
     * moment of publishing) will be used.
     * 
     * @see https://github.com/cloudevents/spec/blob/v1.0/spec.md#time
