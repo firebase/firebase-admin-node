@@ -55,7 +55,7 @@ export class Eventarc {
   }
 
   /**
-   * The {@link firebase-admin.app#App} associated with the current `Eventarc` service
+   * The {@link firebase-admin.app#App} associated with the current Eventarc service
    * instance.
    *
    * @example
@@ -69,13 +69,13 @@ export class Eventarc {
 
   /**
    * Creates a reference to the Eventarc channel using the provided channel resource name.
-   * The channel resource name Can be either:
+   * The channel resource name. Can be either:
    *   * fully qualified channel resource name:
    *     `projects/{project}/locations/{location}/channels/{channel-id}`
    *   * partial resource name with location and channel ID, in which case
    *     the runtime project ID of the function will be used:
    *     `locations/{location}/channels/{channel-id}`
-   *   * partial channel-id, in which case the runtime project ID of the
+   *   * partial channel ID, in which case the runtime project ID of the
    *     function and `us-central1` as location will be used:
    *     `{channel-id}`
    * 
@@ -172,8 +172,8 @@ export class Channel {
   }
 
   /**
-   * The channel name as provided during channel creation except if it was not specifed then the default
-   * channel name will be returned ('locations/us-central1/channels/firebase').
+   * The channel name as provided during channel creation. If it was not specifed then the default
+   * channel name is returned ('locations/us-central1/channels/firebase').
    */
   get name(): string {
     return this.nameInternal;
