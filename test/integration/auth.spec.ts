@@ -1197,7 +1197,7 @@ describe('admin.auth', () => {
     it('updateProjectConfig() should resolve with the updated project config', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
         .then((actualProjectConfig) => {
-          // keys are generated randomly.
+          // ReCAPTCHA keys are generated differently each time.
           delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
@@ -1786,6 +1786,7 @@ describe('admin.auth', () => {
     it('updateTenant() enable Account Defender should be rejected when tenant reCAPTCHA is disabled',
       function () {
         // Skipping for now as Emulator resolves this operation, which is not expected.
+        // TODO: investigate with Rest API and Access team for this behavior.
         if (authEmulatorHost) {
           return this.skip();
         }
