@@ -73,7 +73,10 @@ import {
   TenantManager as TTenantManager,
 } from './tenant-manager';
 
-import { DecodedIdToken as TDecodedIdToken } from './token-verifier';
+import { 
+  DecodedIdToken as TDecodedIdToken,
+  DecodedAuthBlockingToken as TDecodedAuthBlockingToken,
+} from './token-verifier';
 
 import {
   HashAlgorithmType as THashAlgorithmType,
@@ -172,6 +175,9 @@ export namespace auth {
    * Type alias to {@link firebase-admin.auth#DecodedIdToken}.
    */
   export type DecodedIdToken = TDecodedIdToken;
+
+  /** @alpha */
+  export type DecodedAuthBlockingToken = TDecodedAuthBlockingToken;
 
   /**
    * Type alias to {@link firebase-admin.auth#DeleteUsersResult}.

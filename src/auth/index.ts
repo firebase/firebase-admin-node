@@ -116,7 +116,10 @@ export {
   TenantManager,
 } from './tenant-manager';
 
-export { DecodedIdToken } from './token-verifier';
+export {
+  DecodedIdToken,
+  DecodedAuthBlockingToken
+} from './token-verifier';
 
 export {
   HashAlgorithmType,
