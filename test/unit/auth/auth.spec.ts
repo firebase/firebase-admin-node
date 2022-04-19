@@ -2826,7 +2826,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected given an app which returns invalid access tokens', () => {
-          let args: any = [email, actionCodeSettings];
+          let args: any = [ email, actionCodeSettings ];
           if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
             args = [ email, newEmail, actionCodeSettings ];
           }
@@ -2835,7 +2835,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected given an app which fails to generate access tokens', () => {
-          let args: any = [email, actionCodeSettings];
+          let args: any = [ email, actionCodeSettings ];
           if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
             args = [ email, newEmail, actionCodeSettings ];
           }
