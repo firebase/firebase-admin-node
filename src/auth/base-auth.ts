@@ -851,7 +851,7 @@ export abstract class BaseAuth {
    *     are configured in the same Firebase Auth project.
    * @returns A promise that resolves with the generated link.
    */
-  public generateEmailVerificationAndChangeLink(email: string, newEmail: string,
+  public generateVerifyAndChangeEmailLink(email: string, newEmail: string,
     actionCodeSettings?: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email, actionCodeSettings, newEmail);
   }
