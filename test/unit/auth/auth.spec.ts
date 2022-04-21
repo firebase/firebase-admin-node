@@ -1941,6 +1941,37 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
+      it('should allow to pass #UserInfo instance as provider', async () => {
+        const invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+          .resolves({
+            localId: uid,
+          });
+
+        // Stub getAccountInfoByUid to return a valid result (unchecked; we
+        // just need it to be valid so as to not crash.)
+        const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+          .resolves(expectedGetAccountInfoResult);
+
+        stubs.push(invokeRequestHandlerStub);
+        stubs.push(getUserStub);
+
+        await auth.updateUser(uid, {
+          providerToLink: {
+            providerId: 'google.com',
+            uid: 'google_uid',
+          },
+        });
+        const user = await auth.getUser(uid);
+        const provider = user.providerData.find(v => v.providerId === 'google.com');
+        // previously this will throw an error: Cannot delete property 'uid' of #<UserInfo>
+        const updated = await auth.updateUser(uid, {
+          providerToLink: provider,
+        });
+        expect(
+          updated.providerData.find(v => v.providerId === 'google.com'),
+        ).to.deep.equal(provider);
+      });
+
       INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
         it('should be rejected given a deleteProvider list with an invalid provider ID '
             + JSON.stringify(invalidProviderId), () => {
