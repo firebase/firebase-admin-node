@@ -80,7 +80,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
     });
   }
   if (ce.subject) {
-    if (!validator.isNonEmptyString(ce.datacontenttype)) {
+    if (!validator.isNonEmptyString(ce.subject)) {
       throw new FirebaseEventarcError(
         'invalid-argument', 
         "CloudEvent 'subject' if specified must be non-empty string.");

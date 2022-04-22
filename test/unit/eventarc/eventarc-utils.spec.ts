@@ -45,6 +45,7 @@ describe('eventarc-utils', () => {
       expect(utils.toCloudEventProtoFormat({
         type: 'some.custom.event',
         specversion: '1.0',
+        subject: 'context',
         datacontenttype: 'application/json',
         id: 'user-provided-id',
         data: {
@@ -64,6 +65,9 @@ describe('eventarc-utils', () => {
           },
           'time': {
             'ceTimestamp': '2022-03-16T20:20:42.212Z'
+          },
+          'subject': {
+            'ceString': 'context'
           }
         },
         'id': 'user-provided-id',
