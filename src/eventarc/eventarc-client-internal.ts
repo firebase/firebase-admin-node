@@ -101,11 +101,9 @@ export class EventarcApiClient {
     if (events.length === 0) {
       return;
     }
-    const url = `${this.getEventarcHost()}/${channel}:publishEvents`;
-    console.log(`Publishing to Eventarc host at ${url}.`);
     const request: HttpRequestConfig = {
       method: 'POST',
-      url,
+      url: `${this.getEventarcHost()}/${channel}:publishEvents`,
       data: JSON.stringify({ events }),
     };
     return this.sendRequest(request);
