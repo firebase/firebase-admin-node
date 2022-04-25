@@ -110,7 +110,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   } else {
     throw new FirebaseEventarcError(
       'invalid-argument', 
-      `CloudEvent 'data' must be string or an object (which will be converted to JSON), got '${typeof ce.data}'.`);
+      `CloudEvent 'data' must be string or an object (which are converted to JSON), got '${typeof ce.data}'.`);
   }
 
   for (const attr in ce) {

@@ -82,7 +82,7 @@ export interface CloudEvent {
    time?: string;
 
    /**
-    * Data payload of the event. Objects are strigified with JSON and strings are be passed along as-is.
+    * Data payload of the event. Objects are stringified with JSON and strings are be passed along as-is.
     */
    data?: object | string;
  

@@ -73,15 +73,14 @@ export class EventarcApiClient {
   }
 
   /**
-   * Publishes provided events to this channel. If channel was created with
-   * `allowedEventsTypes` and event type is not on that list, the event will
-   * be ignored.
+   * Publishes provided events to this channel. If channel was created with `allowedEventsTypes` and event type
+   * is not on that list, the event is ignored.
    * 
-   * The following CloudEvent fields will be auto-populated if not set:
+   * The following CloudEvent fields are auto-populated if not set:
    *  * specversion - `1.0`
    *  * id - uuidv4()
-   *  * source - will be populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
-   *             if not set an error will be thrown.
+   *  * source - populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
+   *             if not set an error is thrown.
    *  
    * @param events - CloudEvent to publish to the channel.
    */
