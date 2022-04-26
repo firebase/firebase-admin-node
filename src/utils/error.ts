@@ -359,6 +359,10 @@ export class AppErrorCodes {
  * Auth client error codes and their default messages.
  */
 export class AuthClientErrorCode {
+  public static AUTH_BLOCKING_TOKEN_EXPIRED = {
+    code: 'auth-blocking-token-expired',
+    message: 'The provided Firebase Auth Blocking token is expired.',
+  };
   public static BILLING_NOT_ENABLED = {
     code: 'billing-not-enabled',
     message: 'Feature requires billing to be enabled.',

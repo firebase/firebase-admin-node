@@ -34,7 +34,7 @@ import {
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
-import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
+import { DecodedAuthBlockingToken, FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 import {
   OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
@@ -163,6 +163,28 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
       tenant: tenantId,
     },
     uid,
+  };
+}
+
+/**
+ * Generates a mock decoded Auth Blocking token with the provided parameters.
+ *
+ * @param uid The uid corresponding to the Auth Blocking token.
+ * @param authTime The authentication time of the Auth Blocking token.
+ * @return The generated decoded Auth Blocking token.
+ */
+function getDecodedAuthBlockingToken(uid: string, authTime: Date): DecodedAuthBlockingToken {
+  return {
+    iss: 'https://securetoken.google.com/project123456789',
+    aud: 'https://us-central1-project123456789.cloudfunctions.net/functionName',
+    auth_time: Math.floor(authTime.getTime() / 1000),
+    sub: uid,
+    iat: Math.floor(authTime.getTime() / 1000),
+    exp: Math.floor(authTime.getTime() / 1000 + 3600),
+    uid,
+    event_id: 'abcdefgh',
+    event_type: 'beforeCreate',
+    ip_address: '1234556',
   };
 }
 
@@ -419,6 +441,14 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
         'as the GOOGLE_CLOUD_PROJECT environment variable to call verifySessionCookie().';
       return mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie())
+        .should.eventually.be.rejectedWith(expected);
+    });
+
+    it('_verifyAuthBlockingToken() should reject when project ID is not specified', () => {
+      const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
+      const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
+        'as the GOOGLE_CLOUD_PROJECT environment variable to call _verifyAuthBlockingToken().';
+      return mockCredentialAuth._verifyAuthBlockingToken(mocks.generateAuthBlockingToken())
         .should.eventually.be.rejectedWith(expected);
     });
 
@@ -1003,6 +1033,101 @@ AUTH_CONFIGS.forEach((testConfig) => {
             });
         });
       }
+    });
+
+    describe('_verifyAuthBlockingToken()', () => {
+      let stub: sinon.SinonStub;
+      let mockAuthBlockingToken: string;
+      const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
+      const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
+      // Set auth_time of token to expected user's tokensValidAfterTime.
+      expect(
+        expectedUserRecord.tokensValidAfterTime,
+        "getValidUserRecord didn't properly set tokensValueAfterTime",
+      ).to.exist;
+      const validSince = new Date(expectedUserRecord.tokensValidAfterTime!);
+      // Set expected uid to expected user's.
+      const uid = expectedUserRecord.uid;
+      // Set expected decoded Auth Blocking token with expected UID and auth time.
+      const decodedAuthBlockingToken = getDecodedAuthBlockingToken(uid, validSince);
+      let clock: sinon.SinonFakeTimers;
+
+      // Stubs used to simulate underlying api calls.
+      const stubs: sinon.SinonStub[] = [];
+      beforeEach(() => {
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, '_verifyAuthBlockingToken')
+          .resolves(decodedAuthBlockingToken);
+        stubs.push(stub);
+        mockAuthBlockingToken = mocks.generateAuthBlockingToken();
+        clock = sinon.useFakeTimers(validSince.getTime());
+      });
+      afterEach(() => {
+        _.forEach(stubs, (s) => s.restore());
+        clock.restore();
+      });
+
+      it('should forward on the call to the token generator\'s _verifyAuthBlockingToken() method', () => {
+        // Stub getUser call.
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser');
+        stubs.push(getUserStub);
+        return auth._verifyAuthBlockingToken(mockAuthBlockingToken).then((result) => {
+          // Confirm getUser never called.
+          expect(getUserStub).not.to.have.been.called;
+          expect(result).to.deep.equal(decodedAuthBlockingToken);
+          expect(stub).to.have.been.calledOnce.and.calledWith(mockAuthBlockingToken);
+        });
+      });
+
+      it('should reject when underlying idTokenVerifier._verifyAuthBlockingToken() rejects', () =>  {
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase Auth Blocking token failed');
+        // Restore _verifyAuthBlockingToken stub.
+        stub.restore();
+        // Simulate Auth Blocking token is invalid.
+        stub = sinon.stub(FirebaseTokenVerifier.prototype, '_verifyAuthBlockingToken')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return auth._verifyAuthBlockingToken(mockAuthBlockingToken)
+          .should.eventually.be.rejectedWith('Decoding Firebase Auth Blocking token failed');
+      });
+
+      it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
+        process.env.GOOGLE_CLOUD_PROJECT = mocks.projectId;
+
+        const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
+
+        return mockCredentialAuth._verifyAuthBlockingToken(mockAuthBlockingToken).then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith(mockAuthBlockingToken);
+        });
+      });
+
+      it('should work with a non-cert credential when the GCLOUD_PROJECT environment variable is present', () => {
+        process.env.GCLOUD_PROJECT = mocks.projectId;
+
+        const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
+
+        return mockCredentialAuth._verifyAuthBlockingToken(mockAuthBlockingToken).then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith(mockAuthBlockingToken);
+        });
+      });
+
+      it('should be fulfilled given an app which returns null access tokens', () => {
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
+        return nullAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
+          .should.eventually.be.fulfilled;
+      });
+
+      it('should be fulfilled given an app which returns invalid access tokens', () => {
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
+        return malformedAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
+          .should.eventually.be.fulfilled;
+      });
+
+      it('should be fulfilled given an app which fails to generate access tokens', () => {
+        // _verifyAuthBlockingToken() does not rely on an access token and therefore works in this scenario.
+        return rejectedPromiseAccessTokenAuth._verifyAuthBlockingToken(mockAuthBlockingToken)
+          .should.eventually.be.fulfilled;
+      });
     });
 
     describe('getUser()', () => {
