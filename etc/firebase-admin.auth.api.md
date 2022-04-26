@@ -23,23 +23,27 @@ export interface ActionCodeSettings {
     url: string;
 }
 
-// @public (undocumented)
-export interface AllowByDefaultWrap {
-    // Warning: (ae-forgotten-export) The symbol "AllowByDefault" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    allowByDefault: AllowByDefault;
-    // @alpha (undocumented)
-    allowlistOnly: never;
+// @public
+export interface AllowByDefault {
+    disallowedRegions: string[];
 }
 
-// @public (undocumented)
+// @public
+export interface AllowByDefaultWrap {
+    allowByDefault: AllowByDefault;
+    // @alpha (undocumented)
+    allowlistOnly?: never;
+}
+
+// @public
+export interface AllowlistOnly {
+    allowedRegions: string[];
+}
+
+// @public
 export interface AllowlistOnlyWrap {
     // @alpha (undocumented)
-    allowByDefault: never;
-    // Warning: (ae-forgotten-export) The symbol "AllowlistOnly" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
+    allowByDefault?: never;
     allowlistOnly: AllowlistOnly;
 }
 

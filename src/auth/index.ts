@@ -61,7 +61,9 @@ export {
 } from './auth';
 
 export {
+  AllowByDefault,
   AllowByDefaultWrap,
+  AllowlistOnly,
   AllowlistOnlyWrap,
   AuthFactorType,
   AuthProviderConfig,

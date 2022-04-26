@@ -1459,13 +1459,26 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
  */
 export type SmsRegionConfig = AllowByDefaultWrap | AllowlistOnlyWrap;
 
+/**
+ * Mutual exclusive SMS Region Config of AllowByDefault interface
+ */
 export interface AllowByDefaultWrap {
+  /**
+   * Allowing every region by default.
+   */
   allowByDefault: AllowByDefault;
   /** @alpha */
   allowlistOnly?: never;
 }
 
+/**
+ * Mutual exclusive SMS Region Config of AllowlistOnly interface
+ */
 export interface AllowlistOnlyWrap {
+  /**
+   * Only allowing regions by explicitly adding them to an
+   * allowlist.
+   */
   allowlistOnly: AllowlistOnly;
   /** @alpha */
   allowByDefault?: never;
@@ -1500,7 +1513,7 @@ export interface AllowlistOnly {
 }
 
 export class SmsRegionsAuthConfig {
-  public static validate(options: SmsRegionConfig) {
+  public static validate(options: SmsRegionConfig): void {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,

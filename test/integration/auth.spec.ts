@@ -1209,7 +1209,7 @@ describe('admin.auth', () => {
     });
   });
 
-  describe.only('Tenant management operations', () => {
+  describe('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
     const tenantOptions: CreateTenantRequest = {
@@ -1294,7 +1294,7 @@ describe('admin.auth', () => {
         // By default we skip multi-tenancy as it is a Google Cloud Identity Platform
         // feature only and requires to be enabled via the Cloud Console.
         console.log(chalk.yellow('    Skipping multi-tenancy tests.'));
-        //this.skip();
+        this.skip();
       }
       /* tslint:enable:no-console */
     });

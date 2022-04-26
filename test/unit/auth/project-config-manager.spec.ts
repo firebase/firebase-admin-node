@@ -47,9 +47,9 @@ describe('ProjectConfigManager', () => {
   let rejectedPromiseAccessTokenProjectConfigManager: ProjectConfigManager;
   const GET_CONFIG_RESPONSE: ProjectConfigServerResponse = {
     smsRegionConfig: {
-        allowlistOnly: {
-            allowedRegions: [ 'AC', 'AD' ],
-        },
+      allowlistOnly: {
+        allowedRegions: [ 'AC', 'AD' ],
+      },
     },
   };
 
@@ -126,11 +126,11 @@ describe('ProjectConfigManager', () => {
 
   describe('updateProjectConfig()', () => {
     const projectConfigOptions: UpdateProjectConfigRequest = {
-        smsRegionConfig: {
-            allowByDefault: {
-                disallowedRegions: [ 'AC', 'AD' ],
-            },
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: [ 'AC', 'AD' ],
         },
+      },
     };
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
     const expectedError = new FirebaseAuthError(

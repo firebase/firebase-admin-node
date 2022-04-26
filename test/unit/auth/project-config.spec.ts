@@ -35,36 +35,36 @@ const expect = chai.expect;
 describe('ProjectConfig', () => {
   const serverResponse: ProjectConfigServerResponse = {
     smsRegionConfig: {
-        allowByDefault: {
-            disallowedRegions: [ 'AC', 'AD' ],
-        },
+      allowByDefault: {
+        disallowedRegions: [ 'AC', 'AD' ],
+      },
     },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
     smsRegionConfig: {
-        allowByDefault: {
-            disallowedRegions: [ 'AC', 'AD' ],
-        },
+      allowByDefault: {
+        disallowedRegions: [ 'AC', 'AD' ],
+      },
     },
   };
 
   const updateProjectConfigRequest2: UpdateProjectConfigRequest = {
     smsRegionConfig: {
-        allowlistOnly: {
-            allowedRegions: [ 'AC', 'AD' ],
-        },
+      allowlistOnly: {
+        allowedRegions: [ 'AC', 'AD' ],
+      },
     },
   };
 
   const updateProjectConfigRequest3: any = {
     smsRegionConfig: {
-        allowlistOnly: {
-            allowedRegions: [ 'AC', 'AD' ],
-        },
-        allowByDefault: {
-            disallowedRegions: ['AC', 'AD'],
-        },
+      allowlistOnly: {
+        allowedRegions: [ 'AC', 'AD' ],
+      },
+      allowByDefault: {
+        disallowedRegions: ['AC', 'AD'],
+      },
     },
   };
 
@@ -167,7 +167,7 @@ describe('ProjectConfig', () => {
     it('should set readonly property smsRegionConfig', () => {
       const expectedSmsRegionConfig = {
         allowByDefault: {
-            disallowedRegions: [ 'AC', 'AD' ],
+          disallowedRegions: [ 'AC', 'AD' ],
         },
       };
       expect(projectConfig.smsRegionConfig).to.deep.equal(expectedSmsRegionConfig);

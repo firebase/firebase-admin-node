@@ -92,11 +92,11 @@ export class ProjectConfig {
    * Build the corresponding server request for a UpdateProjectConfigRequest object.
    * @param configOptions - The properties to convert to a server request.
    * @returns  The equivalent server request.
-   * 
+   *
    * @internal
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
-    ProjectConfig.validate(configOptions);    
+    ProjectConfig.validate(configOptions);
     return configOptions as ProjectConfigClientRequest;
   }
 
