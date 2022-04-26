@@ -80,6 +80,9 @@
       "firestore": [
         "lib/firestore"
       ],
+      "functions": [
+        "lib/functions"
+      ],
       "installations": [
         "lib/installations"
       ],
@@ -131,6 +134,10 @@
     "./firestore": {
       "require": "./lib/firestore/index.js",
       "import": "./lib/esm/firestore/index.js"
+    },
+    "./functions": {
+      "require": "./lib/functions/index.js",
+      "import": "./lib/esm/functions/index.js"
     },
     "./installations": {
       "require": "./lib/installations/index.js",

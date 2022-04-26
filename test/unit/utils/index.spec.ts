@@ -22,7 +22,7 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
-  toWebSafeBase64, formatString, generateUpdateMask, transformMillisecondsToSecondsString,
+  toWebSafeBase64, formatString, generateUpdateMask, transformMillisecondsToSecondsString, parseResourceName,
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
 import { FirebaseApp } from '../../../src/app/firebase-app';
@@ -394,5 +394,29 @@ describe('transformMillisecondsToSecondsString()', () => {
       () => {
         expect(transformMillisecondsToSecondsString(duration[0] as number)).to.equal(duration[1]);
       });
+  });
+});
+
+describe('parseResourceName()', () => {
+
+  const FULL_RESOURCE_NAME = 'projects/abc/locations/us/functions/f1';
+  const PARTIAL_RESOURCE_NAME = 'locations/us/functions/f1';
+  const projectId = 'abc';
+  const locationId = 'us';
+  const resourceId = 'f1';
+
+  it('should return projectId, location, and resource when given a full resource name', () => {
+    expect(parseResourceName(FULL_RESOURCE_NAME, 'functions'))
+      .to.deep.equal({ projectId, locationId, resourceId });
+  });
+
+  it('should return location and resource when given a partial resource name', () => {
+    expect(parseResourceName(PARTIAL_RESOURCE_NAME, 'functions'))
+      .to.deep.equal({ projectId: undefined, locationId, resourceId });
+  });
+
+  it('should return the resource when given only the resource name', () => {
+    expect(parseResourceName('f1', 'functions'))
+      .to.deep.equal({ resourceId });
   });
 });

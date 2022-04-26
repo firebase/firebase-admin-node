@@ -24,6 +24,10 @@
     "typings": "./lib/firestore/index.d.ts",
     "dist": "./lib/firestore/index.js"
   },
+  "firebase-admin/functions": {
+    "typings": "./lib/functions/index.d.ts",
+    "dist": "./lib/functions/index.js"
+  },
   "firebase-admin/installations": {
     "typings": "./lib/installations/index.d.ts",
     "dist": "./lib/installations/index.js"

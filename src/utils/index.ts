@@ -121,6 +121,53 @@ export function findProjectId(app: App): Promise<string | null> {
 }
 
 /**
+ * Returns the service account email associated with a Firebase app, if it's explicitly
+ * specified in either the Firebase app options, credentials or the local environment.
+ * Otherwise returns null.
+ *
+ * @param app - A Firebase app to get the service account email from.
+ *
+ * @returns A service account email string or null.
+ */
+export function getExplicitServiceAccountEmail(app: App): string | null {
+  const options = app.options;
+  if (validator.isNonEmptyString(options.serviceAccountId)) {
+    return options.serviceAccountId;
+  }
+
+  const credential = app.options.credential;
+  if (credential instanceof ServiceAccountCredential) {
+    return credential.clientEmail;
+  }
+  return null;
+}
+
+/**
+ * Determines the service account email associated with a Firebase app. This method first
+ * checks if a service account email is explicitly specified in either the Firebase app options,
+ * credentials or the local environment in that order. If no explicit service account email is
+ * configured, but the SDK has been initialized with ComputeEngineCredentials, this
+ * method attempts to discover the service account email from the local metadata service.
+ *
+ * @param app - A Firebase app to get the service account email from.
+ *
+ * @returns A service account email ID string or null.
+ */
+export function findServiceAccountEmail(app: App): Promise<string | null> {
+  const accountId = getExplicitServiceAccountEmail(app);
+  if (accountId) {
+    return Promise.resolve(accountId);
+  }
+
+  const credential = app.options.credential;
+  if (credential instanceof ComputeEngineCredential) {
+    return credential.getServiceAccountEmail();
+  }
+
+  return Promise.resolve(null);
+}
+
+/**
  * Encodes data using web-safe-base64.
  *
  * @param data - The raw data byte input.
@@ -216,4 +263,41 @@ export function transformMillisecondsToSecondsString(milliseconds: number): stri
     duration = `${seconds}s`;
   }
   return duration;
+}
+
+/**
+ * Internal type to represent a resource name
+ */
+export type ParsedResource = {
+  projectId?: string;
+  locationId?: string;
+  resourceId: string;
+}
+
+/**
+ * Parses the top level resources of a given resource name.
+ * Supports both full and partial resources names, example:
+ * `locations/{location}/functions/{functionName}`,
+ * `projects/{project}/locations/{location}/functions/{functionName}`, or {functionName}
+ * Does not support deeply nested resource names.
+ *
+ * @param resourceName - The resource name string.
+ * @param resourceIdKey - The key of the resource name to be parsed.
+ * @returns A parsed resource name object.
+ */
+export function parseResourceName(resourceName: string, resourceIdKey: string): ParsedResource {
+  if (!resourceName.includes('/')) {
+    return { resourceId: resourceName };
+  }
+  const CHANNEL_NAME_REGEX =
+    new RegExp(`^(projects/([^/]+)/)?locations/([^/]+)/${resourceIdKey}/([^/]+)$`);
+  const match = CHANNEL_NAME_REGEX.exec(resourceName);
+  if (match === null) {
+    throw new Error('Invalid resource name format.');
+  }
+  const projectId = match[2];
+  const locationId = match[3];
+  const resourceId = match[4];
+
+  return { projectId, locationId, resourceId };
 }
