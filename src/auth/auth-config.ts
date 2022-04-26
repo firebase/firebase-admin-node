@@ -1453,106 +1453,22 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
 }
 
 /**
-* Enforcement state of reCAPTCHA protection.
-*   - 'OFF': Unenforced.
-*   - 'AUDIT': Assessment is created but result is not used to enforce.
-*   - 'ENFORCE': Assessment is created and result is used to enforce.
-*/
-export type RecaptchaProviderEnforcementState =  'OFF' | 'AUDIT' | 'ENFORCE';
-
-/**
-* The actions for reCAPTCHA-protected requests.
-*   - 'BLOCK': The reCAPTCHA-protected request will be blocked.
-*/
-export type RecaptchaAction = 'BLOCK';
-
-/**
-* The config for a reCAPTCHA action rule.
-*/
-export interface RecaptchaManagedRule {
- /**
-  * The action will be enforced if the reCAPTCHA score of a request is larger than endScore.
-  */
- endScore: number;
-  /**
-  * The action for reCAPTCHA-protected requests.
-  */
- action?: RecaptchaAction;
-}
-
-/**
- * The key's platform type: only web supported now.
- */
-export type RecaptchaKeyClientType = 'WEB';
-
-/**
- * The reCAPTCHA key config.
- */
-export interface RecaptchaKey {
-  /**
-   * The key's client platform type.
-   */
-  type?: RecaptchaKeyClientType;
-
-  /**
-   * The reCAPTCHA site key.
-   */
-  key: string;
-}
-
-/**
- * The request interface for updating a reCAPTCHA Config.
- * By enabling reCAPTCHA Enterprise Integration you are
- * agreeing to reCAPTCHA Enterprise
- * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
- */
-export interface RecaptchaConfig {
-  /**
-  * The enforcement state of email password provider.
-  */
-  emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
-  /**
-   *  The reCAPTCHA managed rules.
-   */
-  managedRules?: RecaptchaManagedRule[];
-
-  /**
-   * The reCAPTCHA keys.
-   */
-  recaptchaKeys?: RecaptchaKey[];
-}
-
-/**
  * The request interface for updating a SMS Region Config.
  * Configures the regions where users are allowed to send verification SMS.
  * This is based on the calling code of the destination phone number.
  */
-export interface SmsRegionConfig {
-  /**
-   * A policy of allowing SMS to every region by default and adding disallowed
-   * regions to a disallow list.
-   */
-  allowByDefault?: AllowByDefault;
+export type SmsRegionConfig = AllowByDefaultWrap | AllowlistOnlyWrap;
 
-  /**
-   * A policy of only allowing regions by explicitly adding them to an
-   * allowlist.
-   */
-  allowlistOnly?: AllowlistOnly;
-}
-
-export type SmsRegionsConfig = AllowByDefaultNew | AllowlistOnlyNew;
-
-export interface AllowByDefaultNew {
+export interface AllowByDefaultWrap {
   allowByDefault: AllowByDefault;
   /** @alpha */
-  allowlistOnly: never;
+  allowlistOnly?: never;
 }
 
-export interface AllowlistOnlyNew {
+export interface AllowlistOnlyWrap {
   allowlistOnly: AllowlistOnly;
   /** @alpha */
-  allowByDefault: never;
+  allowByDefault?: never;
 }
 
 /**
@@ -1581,4 +1497,82 @@ export interface AllowlistOnly {
    * https://github.com/unicode-cldr/cldr-localenames-full/blob/master/main/en/territories.json
    */
   allowedRegions: string[];
+}
+
+export class SmsRegionsAuthConfig {
+  public static validate(options: SmsRegionConfig) {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"SmsRegionConfig" must be a non-null object.',
+      );
+    }
+
+    const validKeys = {
+      allowlistOnly: true,
+      allowByDefault: true,
+    };
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid SmsRegionConfig parameter.`,
+        );
+      }
+    }
+
+    // validate mutual exclusiveness of allowByDefault and allowlistOnly
+    if (typeof options.allowByDefault !== 'undefined' && typeof options.allowlistOnly !== 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        'SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameter.',
+      );
+    }
+    // validation for allowByDefault type
+    if (typeof options.allowByDefault !== 'undefined') {
+      const allowByDefaultValidKeys = {
+        disallowedRegions: true,
+      }
+      for (const key in options.allowByDefault) {
+        if (!(key in allowByDefaultValidKeys)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid SmsRegionConfig.allowByDefault parameter.`,
+          );
+        }
+      }
+      // disallowedRegion can be empty.
+      if (typeof options.allowByDefault?.disallowedRegions !== 'undefined'
+        && !validator.isArray(options.allowByDefault.disallowedRegions)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"SmsRegionConfig.allowByDefault.disallowedRegions" must be an array of valid string.',
+        );
+      }
+    }
+
+    if (typeof options.allowlistOnly !== 'undefined') {
+      const allowListOnlyValidKeys = {
+        allowedRegions: true,
+      }
+      for (const key in options.allowlistOnly) {
+        if (!(key in allowListOnlyValidKeys)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid SmsRegionConfig.allowlistOnly parameter.`,
+          );
+        }
+      }
+
+      // allowedRegions can be empty
+      if (typeof options.allowlistOnly?.allowedRegions !== 'undefined'
+        && !validator.isArray(options.allowlistOnly.allowedRegions)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"SmsRegionConfig.allowlistOnly.allowedRegions" must be an array of valid string.',
+        );
+      }
+    }
+  }
 }

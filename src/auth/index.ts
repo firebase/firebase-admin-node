@@ -61,6 +61,8 @@ export {
 } from './auth';
 
 export {
+  AllowByDefaultWrap,
+  AllowlistOnlyWrap,
   AuthFactorType,
   AuthProviderConfig,
   AuthProviderConfigFilter,
@@ -81,6 +83,7 @@ export {
   OIDCUpdateAuthProviderRequest,
   SAMLAuthProviderConfig,
   SAMLUpdateAuthProviderRequest,
+  SmsRegionConfig,
   UserProvider,
   UpdateAuthProviderRequest,
   UpdateMultiFactorInfoRequest,
@@ -115,6 +118,15 @@ export {
   TenantAwareAuth,
   TenantManager,
 } from './tenant-manager';
+
+export {
+  UpdateProjectConfigRequest,
+  ProjectConfig,
+} from './project-config';
+
+export {
+  ProjectConfigManager,
+} from './project-config-manager';
 
 export { DecodedIdToken } from './token-verifier';
 

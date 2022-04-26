@@ -16,21 +16,15 @@
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
+  SmsRegionsAuthConfig,
   SmsRegionConfig,
 } from './auth-config';
+import { deepCopy } from '../utils/deep-copy';
 
 /**
  * Interface representing the properties to update on the provided project config.
  */
 export interface UpdateProjectConfigRequest {
-  /**
-   * The recaptcha configuration to update on the project.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
-   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
-   */
-  recaptchaConfig?: RecaptchaConfig;
-  
   /**
    * The SMS configuration to update on the project.
    */
@@ -47,7 +41,7 @@ export interface ProjectConfigServerResponse {
 
 /**
  * Request sent to update project config.
- * We are only updating the recaptcha config for now.
+ * We are only updating the SMS Regions config for now.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
@@ -58,12 +52,11 @@ export interface ProjectConfigClientRequest {
 */
 export class ProjectConfig {
   /**
-   * The recaptcha configuration to update on the project config.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
-   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   * The SMS Regions Config to update on the project config.
+   * Configures the regions where users are allowed to send verification SMS.
+   * This is based on the calling code of the destination phone number.
    */
-  private readonly smsRegionConfig_?: SmsRegionConfig;
+  public readonly smsRegionConfig?: SmsRegionConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
@@ -89,6 +82,10 @@ export class ProjectConfig {
         );
       }
     }
+    // Validate SMS Regions Config if provided.
+    if (typeof request.smsRegionConfig !== 'undefined') {
+      SmsRegionsAuthConfig.validate(request.smsRegionConfig);
+    }
   }
 
   /**
@@ -102,20 +99,7 @@ export class ProjectConfig {
     ProjectConfig.validate(configOptions);    
     return configOptions as ProjectConfigClientRequest;
   }
- 
-  /**
-   * The recaptcha configuration.
-   */
-  get recaptchaConfig(): RecaptchaConfig | undefined {
-    return this.recaptchaConfig_;
-  }
 
-  /**
-   * The SMS Region configuration.
-   */
-  get smsRegionConfig(): SmsRegionConfig | undefined {
-    return this.smsRegionConfig_;
-  }
   /**
    * The Project Config object constructor.
    *
@@ -124,8 +108,8 @@ export class ProjectConfig {
    * @internal
    */
   constructor(response: ProjectConfigServerResponse) {
-    if (typeof response.recaptchaConfig !== 'undefined') {
-      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
+    if (typeof response.smsRegionConfig !== 'undefined') {
+      this.smsRegionConfig = response.smsRegionConfig;
     }
   }
   /**
@@ -136,10 +120,10 @@ export class ProjectConfig {
   public toJSON(): object {
     // JSON serialization
     const json = {
-      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      smsRegionConfig: deepCopy(this.smsRegionConfig),
     };
-    if (typeof json.recaptchaConfig === 'undefined') {
-      delete json.recaptchaConfig;
+    if (typeof json.smsRegionConfig === 'undefined') {
+      delete json.smsRegionConfig;
     }
     return json;
   }

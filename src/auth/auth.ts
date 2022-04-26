@@ -19,6 +19,7 @@ import { App } from '../app/index';
 import { AuthRequestHandler } from './auth-api-request';
 import { TenantManager } from './tenant-manager';
 import { BaseAuth } from './base-auth';
+import { ProjectConfigManager } from './project-config-manager';
 
 /**
  * Auth service bound to the provided app.
@@ -27,6 +28,7 @@ import { BaseAuth } from './base-auth';
 export class Auth extends BaseAuth {
 
   private readonly tenantManager_: TenantManager;
+  private readonly projectConfigManager_: ProjectConfigManager;
   private readonly app_: App;
 
   /**
@@ -38,6 +40,7 @@ export class Auth extends BaseAuth {
     super(app, new AuthRequestHandler(app));
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
+    this.projectConfigManager_ = new ProjectConfigManager(app);
   }
 
   /**
@@ -56,5 +59,14 @@ export class Auth extends BaseAuth {
    */
   public tenantManager(): TenantManager {
     return this.tenantManager_;
+  }
+
+  /**
+   * Returns the project config manager instance associated with the current project.
+   *
+   * @returns The project config manager instance associated with the current project.
+   */
+  public projectConfigManager(): ProjectConfigManager {
+    return this.projectConfigManager_;
   }
 }
