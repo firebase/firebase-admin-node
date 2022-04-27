@@ -193,7 +193,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
       });
 
       it('should throw on non-array allowedRegions attribute', () => {
@@ -202,7 +202,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.allowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be a valid string array.');
       });
 
       it('should throw when both allowlistOnly and allowByDefault attributes are presented', () => {
@@ -210,7 +210,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig = { ...smsAllowByDefault, ...smsAllowlistOnly };
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameter.');
+        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
       });
 
       it('should not throw on valid client request object', () => {
@@ -342,7 +342,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
       });
 
       it('should throw on non-array allowedRegions attribute', () => {
@@ -351,7 +351,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.allowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be a valid string array.');
       });
 
       it('should throw when both allowlistOnly and allowByDefault attributes are presented', () => {
@@ -359,7 +359,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.smsRegionConfig = { ...smsAllowByDefault, ...smsAllowlistOnly };
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameter.');
+        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];

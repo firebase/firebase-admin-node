@@ -52,7 +52,7 @@ export interface ProjectConfigClientRequest {
 */
 export class ProjectConfig {
   /**
-   * The SMS Regions Config to update on the project config.
+   * The SMS Regions Config for the project.
    * Configures the regions where users are allowed to send verification SMS.
    * This is based on the calling code of the destination phone number.
    */

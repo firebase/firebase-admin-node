@@ -108,7 +108,7 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
       });
 
       it('should throw on non-array allowedRegions attribute', () => {
@@ -116,14 +116,14 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.smsRegionConfig.allowlistOnly.allowedRegions = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be an array of valid string.');
+        }).to.throw('"SmsRegionConfig.allowlistOnly.allowedRegions" must be a valid string array.');
       });
 
       it('should throw when both allowlistOnly and allowByDefault attributes are presented', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest3) as any;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameter.');
+        }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
       });
 
       it('should not throw on valid client request object', () => {

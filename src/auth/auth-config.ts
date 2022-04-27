@@ -1512,6 +1512,11 @@ export interface AllowlistOnly {
   allowedRegions: string[];
 }
 
+/**
+ * Defines the SMSRegionConfig class used for validation.
+ *
+ * @internal
+ */
 export class SmsRegionsAuthConfig {
   public static validate(options: SmsRegionConfig): void {
     if (!validator.isNonNullObject(options)) {
@@ -1539,7 +1544,7 @@ export class SmsRegionsAuthConfig {
     if (typeof options.allowByDefault !== 'undefined' && typeof options.allowlistOnly !== 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,
-        'SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameter.',
+        'SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.',
       );
     }
     // validation for allowByDefault type
@@ -1560,7 +1565,7 @@ export class SmsRegionsAuthConfig {
         && !validator.isArray(options.allowByDefault.disallowedRegions)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"SmsRegionConfig.allowByDefault.disallowedRegions" must be an array of valid string.',
+          '"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.',
         );
       }
     }
@@ -1583,7 +1588,7 @@ export class SmsRegionsAuthConfig {
         && !validator.isArray(options.allowlistOnly.allowedRegions)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"SmsRegionConfig.allowlistOnly.allowedRegions" must be an array of valid string.',
+          '"SmsRegionConfig.allowlistOnly.allowedRegions" must be a valid string array.',
         );
       }
     }
