@@ -1611,10 +1611,12 @@ export abstract class AbstractAuthRequestHandler {
   public getEmailActionLink(
     requestType: string, email: string,
     actionCodeSettings?: ActionCodeSettings, newEmail?: string): Promise<string> {
-    let request: any = { requestType, email, returnOobLink: true };
-    if (typeof newEmail !== 'undefined') {
-      request.newEmail = newEmail;
-    }
+    let request = { 
+      requestType, 
+      email, 
+      returnOobLink: true,
+      ...(typeof newEmail !== 'undefined') && { newEmail },
+    };
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {

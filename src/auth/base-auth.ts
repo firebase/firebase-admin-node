@@ -828,7 +828,7 @@ export abstract class BaseAuth {
   }
 
   /**
-   * Generates the out of band email action link to verify the user's ownership
+   * Generates an out-of-band email action link to verify the user's ownership
    * of the specified email. The {@link ActionCodeSettings} object provided
    * as an argument to this method defines whether the link is to be handled by a
    * mobile app or browser along with additional state information to be passed in
@@ -843,8 +843,8 @@ export abstract class BaseAuth {
    *     the app if it is installed.
    *     If the actionCodeSettings is not specified, no URL is appended to the
    *     action URL.
-   *     The state URL provided must belong to a domain that is whitelisted by the
-   *     developer in the console. Otherwise an error is thrown.
+   *     The state URL provided must belong to a domain that is authorized
+   *     in the console, or an error will be thrown.
    *     Mobile app redirects are only applicable if the developer configures
    *     and accepts the Firebase Dynamic Links terms of service.
    *     The Android package name and iOS bundle ID are respected only if they

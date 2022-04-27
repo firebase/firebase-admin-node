@@ -3107,43 +3107,23 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
         it('should be fulfilled given a valid requestType:' + requestType + ' and ActionCodeSettings', () => {
-          if (requestType === 'VERIFY_AND_CHANGE_EMAIL') {
-            return;
-          }
           const requestData = deepExtend({
             requestType,
             email,
             returnOobLink: true,
+            ...(requestType === 'VERIFY_AND_CHANGE_EMAIL') && { newEmail },
           }, expectedActionCodeSettingsRequest);
           const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
           stubs.push(stub);
 
           const requestHandler = handler.init(mockApp);
-          return requestHandler.getEmailActionLink(requestType, email, actionCodeSettings)
+          return requestHandler.getEmailActionLink(requestType, email, actionCodeSettings, 
+            (requestType === 'VERIFY_AND_CHANGE_EMAIL') ? newEmail: undefined)
             .then((oobLink: string) => {
               expect(oobLink).to.be.equal(expectedLink);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
             });
         });
-      });
-
-      it('should be fulfilled given a valid requestType: VERIFY_AND_CHANGE_EMAIL and ActionCodeSettings', () => {
-        const VERIFY_AND_CHANGE_EMAIL = 'VERIFY_AND_CHANGE_EMAIL';
-        const requestData = deepExtend({
-          requestType: VERIFY_AND_CHANGE_EMAIL,
-          email,
-          returnOobLink: true,
-          newEmail
-        }, expectedActionCodeSettingsRequest);
-        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
-        stubs.push(stub);
-
-        const requestHandler = handler.init(mockApp);
-        return requestHandler.getEmailActionLink(VERIFY_AND_CHANGE_EMAIL, email, actionCodeSettings, newEmail)
-          .then((oobLink: string) => {
-            expect(oobLink).to.be.equal(expectedLink);
-            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
-          });
       });
 
       EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
