@@ -1561,7 +1561,7 @@ export class SmsRegionsAuthConfig {
         }
       }
       // disallowedRegion can be empty.
-      if (typeof options.allowByDefault?.disallowedRegions !== 'undefined'
+      if (typeof options.allowByDefault.disallowedRegions !== 'undefined'
         && !validator.isArray(options.allowByDefault.disallowedRegions)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
@@ -1584,7 +1584,7 @@ export class SmsRegionsAuthConfig {
       }
 
       // allowedRegions can be empty
-      if (typeof options.allowlistOnly?.allowedRegions !== 'undefined'
+      if (typeof options.allowlistOnly.allowedRegions !== 'undefined'
         && !validator.isArray(options.allowlistOnly.allowedRegions)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
