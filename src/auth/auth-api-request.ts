@@ -2100,9 +2100,9 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * Update the current project's config.
    * @returns A promise that resolves with the project config information.
    */
-  public updateProjectConfig(recaptchaOptions: UpdateProjectConfigRequest): Promise<ProjectConfigServerResponse> {
+  public updateProjectConfig(options: UpdateProjectConfigRequest): Promise<ProjectConfigServerResponse> {
     try {
-      const request = ProjectConfig.buildServerRequest(recaptchaOptions);
+      const request = ProjectConfig.buildServerRequest(options);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(
         this.authResourceUrlBuilder, UPDATE_PROJECT_CONFIG, request, { updateMask: updateMask.join(',') })

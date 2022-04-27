@@ -33,7 +33,7 @@ export interface UpdateProjectConfigRequest {
 
 /**
  * Response received from get/update project config.
- * We are only exposing the recaptcha config for now.
+ * We are only exposing the SMS Region config for now.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
