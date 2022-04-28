@@ -55,6 +55,7 @@ export abstract class BaseAuth {
     generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
+    generateVerifyAndChangeEmailLink(email: string, newEmail: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
     getUser(uid: string): Promise<UserRecord>;
     getUserByEmail(email: string): Promise<UserRecord>;

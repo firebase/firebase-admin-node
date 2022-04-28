@@ -835,6 +835,35 @@ export abstract class BaseAuth {
   }
 
   /**
+   * Generates an out-of-band email action link to verify the user's ownership
+   * of the specified email. The {@link ActionCodeSettings} object provided
+   * as an argument to this method defines whether the link is to be handled by a
+   * mobile app or browser along with additional state information to be passed in
+   * the deep link, etc.
+   *
+   * @param email - The current email account.
+   * @param newEmail - The email address the account is being updated to.
+   * @param actionCodeSettings - The action
+   *     code settings. If specified, the state/continue URL is set as the
+   *     "continueUrl" parameter in the email verification link. The default email
+   *     verification landing page will use this to display a link to go back to
+   *     the app if it is installed.
+   *     If the actionCodeSettings is not specified, no URL is appended to the
+   *     action URL.
+   *     The state URL provided must belong to a domain that is authorized
+   *     in the console, or an error will be thrown.
+   *     Mobile app redirects are only applicable if the developer configures
+   *     and accepts the Firebase Dynamic Links terms of service.
+   *     The Android package name and iOS bundle ID are respected only if they
+   *     are configured in the same Firebase Auth project.
+   * @returns A promise that resolves with the generated link.
+   */
+  public generateVerifyAndChangeEmailLink(email: string, newEmail: string,
+    actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    return this.authRequestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email, actionCodeSettings, newEmail);
+  }
+
+  /**
    * Generates the out of band email action link to verify the user's ownership
    * of the specified email. The {@link ActionCodeSettings} object provided
    * as an argument to this method defines whether the link is to be handled by a
