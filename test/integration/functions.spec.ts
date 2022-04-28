@@ -32,12 +32,4 @@ describe('getFunctions()', () => {
       expect(typeof factorizeQueue.enqueue).to.equal('function');
     });
   });
-
-  describe('enqueue()', () => {
-    it('should propagate API errors', () => {
-      // rejects with failed-precondition when the queue does not exist
-      return getFunctions().taskQueue('non-existing-queue').enqueue({})
-        .should.eventually.be.rejected.and.have.property('code', 'functions/failed-precondition');
-    });
-  });
 });
