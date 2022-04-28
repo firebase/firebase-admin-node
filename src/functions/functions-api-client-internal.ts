@@ -105,7 +105,7 @@ export class FunctionsApiClient {
       });
   }
 
-  private getUrl(resourceName: utils.ParsedResource, UrlFormat: string): Promise<string> {
+  private getUrl(resourceName: utils.ParsedResource, urlFormat: string): Promise<string> {
     let { locationId } = resourceName;
     const { projectId, resourceId } = resourceName;
     if (typeof locationId === 'undefined' || !validator.isNonEmptyString(locationId)) {
@@ -127,7 +127,7 @@ export class FunctionsApiClient {
         // Formats a string of form 'project/{projectId}/{api}' and replaces
         // with corresponding arguments {projectId: '1234', api: 'resource'}
         // and returns output: 'project/1234/resource'.
-        return utils.formatString(UrlFormat, urlParams);
+        return utils.formatString(urlFormat, urlParams);
       });
   }
 
