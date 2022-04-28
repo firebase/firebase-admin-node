@@ -32,8 +32,8 @@ export interface UpdateProjectConfigRequest {
 }
 
 /**
- * Response received from get/update project config.
- * We are only exposing the SMS Region config for now.
+ * Response received from getting or updating a project config.
+ * This object currently exposes only the SMS Region config.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
@@ -41,7 +41,7 @@ export interface ProjectConfigServerResponse {
 
 /**
  * Request sent to update project config.
- * We are only updating the SMS Regions config for now.
+ * This object currently exposes only the SMS Region config.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;

@@ -56,7 +56,7 @@ export class ProjectConfigManager {
    *
    * @param projectConfigOptions - The properties to update on the project.
    *
-   * @returns A promise fulfilled with the update project config.
+   * @returns A promise fulfilled with the updated project config.
    */
   public updateProjectConfig(projectConfigOptions: UpdateProjectConfigRequest): Promise<ProjectConfig> {
     return this.authRequestHandler.updateProjectConfig(projectConfigOptions)

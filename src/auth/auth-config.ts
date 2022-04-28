@@ -1464,7 +1464,7 @@ export type SmsRegionConfig = AllowByDefaultWrap | AllowlistOnlyWrap;
  */
 export interface AllowByDefaultWrap {
   /**
-   * Allowing every region by default.
+   * Allow every region by default.
    */
   allowByDefault: AllowByDefault;
   /** @alpha */
@@ -1472,7 +1472,7 @@ export interface AllowByDefaultWrap {
 }
 
 /**
- * Mutual exclusive SMS Region Config of AllowlistOnly interface
+ * Mutually exclusive SMS Region Config of AllowlistOnly interface
  */
 export interface AllowlistOnlyWrap {
   /**
