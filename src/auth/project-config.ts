@@ -63,7 +63,7 @@ export class ProjectConfig {
    *
    * @param request - The project config options object to validate.
    */
-  private static validate(request: any): void {
+  private static validate(request: ProjectConfigClientRequest): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
