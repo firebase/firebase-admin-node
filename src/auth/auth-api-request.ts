@@ -59,7 +59,7 @@ export const RESERVED_CLAIMS = [
 
 /** List of supported email action request types. */
 export const EMAIL_ACTION_REQUEST_TYPES = [
-  'PASSWORD_RESET', 'VERIFY_EMAIL', 'EMAIL_SIGNIN',
+  'PASSWORD_RESET', 'VERIFY_EMAIL', 'EMAIL_SIGNIN', 'VERIFY_AND_CHANGE_EMAIL',
 ];
 
 /** Maximum allowed number of characters in the custom claims payload. */
@@ -815,6 +815,11 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
     if (!validator.isEmail(request.email)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_EMAIL,
+      );
+    }
+    if (typeof request.newEmail !== 'undefined' && !validator.isEmail(request.newEmail)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_NEW_EMAIL,
       );
     }
     if (EMAIL_ACTION_REQUEST_TYPES.indexOf(request.requestType) === -1) {
@@ -1599,12 +1604,19 @@ export abstract class AbstractAuthRequestHandler {
    * @param actionCodeSettings - The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
    *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
+   * @param newEmail - The email address the account is being updated to.
+   *     Required only for VERIFY_AND_CHANGE_EMAIL requests.
    * @returns A promise that resolves with the email action link.
    */
   public getEmailActionLink(
     requestType: string, email: string,
-    actionCodeSettings?: ActionCodeSettings): Promise<string> {
-    let request = { requestType, email, returnOobLink: true };
+    actionCodeSettings?: ActionCodeSettings, newEmail?: string): Promise<string> {
+    let request = { 
+      requestType, 
+      email, 
+      returnOobLink: true,
+      ...(typeof newEmail !== 'undefined') && { newEmail },
+    };
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
@@ -1622,6 +1634,14 @@ export abstract class AbstractAuthRequestHandler {
       } catch (e) {
         return Promise.reject(e);
       }
+    }
+    if (requestType === 'VERIFY_AND_CHANGE_EMAIL' && typeof newEmail === 'undefined') {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          "`newEmail` is required when `requestType` === 'VERIFY_AND_CHANGE_EMAIL'",
+        ),
+      );
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_OOB_CODE, request)
       .then((response: any) => {
