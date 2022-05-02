@@ -31,7 +31,7 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest,
+  UserImportRecord, UserRecord, getAuth,
 } from '../../lib/auth/index';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -1180,61 +1180,6 @@ describe('admin.auth', () => {
     });
   });
 
-  describe('Project config management operations', () => {
-    before(function() {
-      if (authEmulatorHost) {
-        this.skip(); // getConfig is not supported in Auth Emulator
-      }
-    });
-    const projectConfigOption1: UpdateProjectConfigRequest = {
-      smsRegionConfig: {
-        allowByDefault:  {
-          disallowedRegions: [ 'AC', 'AD' ],
-        }
-      },
-    };
-    const projectConfigOption2: UpdateProjectConfigRequest = {
-      smsRegionConfig: {
-        allowlistOnly:  {
-          allowedRegions: [ 'AC', 'AD' ],
-        }
-      },
-    };
-    const expectedProjectConfig1: any = {
-      smsRegionConfig: {
-        allowByDefault:  {
-          disallowedRegions: [ 'AC', 'AD' ],
-        }
-      },
-    };
-    const expectedProjectConfig2: any = {
-      smsRegionConfig: {
-        allowlistOnly:  {
-          allowedRegions: [ 'AC', 'AD' ],
-        }
-      },
-    };
-
-    it('updateProjectConfig() should resolve with the updated project config', () => {
-      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
-        .then((actualProjectConfig) => {
-          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
-          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
-        })
-        .then((actualProjectConfig) => {
-          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
-        });
-    });
-
-    it('getProjectConfig() should resolve with expected project config', () => {
-      return getAuth().projectConfigManager().getProjectConfig()
-        .then((actualConfig) => {
-          const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
-        });
-    });
-  });
-
   describe('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
@@ -1302,11 +1247,6 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-      },
-      smsRegionConfig: {
-        allowByDefault:  {
-          disallowedRegions: [ 'AC', 'AD' ],
-        }
       },
     };
 
@@ -1729,7 +1669,6 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
-        smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
@@ -1754,28 +1693,6 @@ describe('admin.auth', () => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
-        .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
-        });
-    });
-
-    it('updateTenant() should not update tenant when SMS region config is undefined', () => {
-      expectedUpdatedTenant.tenantId = createdTenantId;
-      const updatedOptions2: UpdateTenantRequest = {
-        displayName: expectedUpdatedTenant2.displayName,
-        smsRegionConfig: undefined,
-      };
-      if (authEmulatorHost) {
-        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
-          .then((actualTenant) => {
-            const actualTenantObj = actualTenant.toJSON();
-            // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
-            delete expectedUpdatedTenant2.testPhoneNumbers;
-            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
-          });
-      }
-      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
