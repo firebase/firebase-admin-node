@@ -1219,6 +1219,18 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption3)
         .should.eventually.be.rejected.and.have.property('code', 'auth/racaptcha-not-enabled');
     });
+
+    it('updateProjectConfig() should reject when trying to disable Account Defender while reCAPTCHA is enabled', () => {
+      // enable account defender first.
+      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
+        .then((actualProjectConfig) => {
+          // verify account defender is enabled.
+          expect(actualProjectConfig.recaptchaConfig.useAccountDefender).to.be.true;
+          // attempt to disable reCAPTCHA.
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption3)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
+        });
+    });
   });
 
   describe('Tenant management operations', () => {
@@ -1784,6 +1796,33 @@ describe('admin.auth', () => {
     });
 
     it('updateTenant() enable Account Defender should be rejected when tenant reCAPTCHA is disabled',
+      function () {
+        // Skipping for now as Emulator resolves this operation, which is not expected.
+        // TODO: investigate with Rest API and Access team for this behavior.
+        if (authEmulatorHost) {
+          return this.skip();
+        }
+        expectedUpdatedTenant.tenantId = createdTenantId;
+        const updatedOptions: UpdateTenantRequest = {
+          displayName: expectedUpdatedTenant2.displayName,
+          recaptchaConfig: {
+            emailPasswordEnforcementState: 'AUDIT',
+            useAccountDefender: true,
+          },
+        };
+        const updatedOptions2: UpdateTenantRequest = deepCopy(updatedOptions);
+        updatedOptions2.recaptchaConfig.emailPasswordEnforcementState = 'OFF';
+        // enable account defender first.
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
+        .then((actualTenant) => {
+          expect(actualTenant.recaptchaConfig.useAccountDefender).to.be.true;
+          // attempt to disable reCAPTCHA.
+          return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
+        });
+      });
+
+      it('updateTenant() disable reCAPTCHA should be rejected when Account Defender is enabled',
       function () {
         // Skipping for now as Emulator resolves this operation, which is not expected.
         // TODO: investigate with Rest API and Access team for this behavior.
