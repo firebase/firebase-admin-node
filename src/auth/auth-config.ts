@@ -1520,17 +1520,25 @@ export interface RecaptchaConfig {
    * The reCAPTCHA keys.
    */
   recaptchaKeys?: RecaptchaKey[];
+
+  /**
+   * Whether to use account defender for reCAPTCHA assessment.
+   * The default value is false.
+   */
+  useAccountDefender?: boolean;
 }
 
 export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
   public readonly managedRules?: RecaptchaManagedRule[];
   public readonly recaptchaKeys?: RecaptchaKey[];
+  public readonly useAccountDefender?: boolean;
 
   constructor(recaptchaConfig: RecaptchaConfig) {
     this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
     this.managedRules = recaptchaConfig.managedRules;
     this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
+    this.useAccountDefender = recaptchaConfig.useAccountDefender;
   }
 
   /**
@@ -1542,6 +1550,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       emailPasswordEnforcementState: true,
       managedRules: true,
       recaptchaKeys: true,
+      useAccountDefender: true,
     };
 
     if (!validator.isNonNullObject(options)) {
@@ -1592,6 +1601,15 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
         RecaptchaAuthConfig.validateManagedRule(managedRule);
       });
     }
+
+    if (typeof options.useAccountDefender != 'undefined') {
+      if (!validator.isBoolean(options.useAccountDefender)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaConfig.useAccountDefender" must be a boolean value".',
+        );
+      }
+    }
   }
 
   /**
@@ -1637,7 +1655,8 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     const json: any = {
       emailPasswordEnforcementState: this.emailPasswordEnforcementState,
       managedRules: deepCopy(this.managedRules),
-      recaptchaKeys: deepCopy(this.recaptchaKeys)
+      recaptchaKeys: deepCopy(this.recaptchaKeys),
+      useAccountDefender: this.useAccountDefender,
     }
 
     if (typeof json.emailPasswordEnforcementState === 'undefined') {
@@ -1648,6 +1667,10 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     }
     if (typeof json.recaptchaKeys === 'undefined') {
       delete json.recaptchaKeys;
+    }
+
+    if (typeof json.useAccountDefender === 'undefined') {
+      delete json.useAccountDefender;
     }
 
     return json;
