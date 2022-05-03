@@ -1819,15 +1819,15 @@ describe('admin.auth', () => {
         };
         // enable account defender first.
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
-        .then((actualTenant) => {
-          expect(actualTenant.recaptchaConfig?.useAccountDefender).to.be.true;
-          // attempt to disable reCAPTCHA.
-          return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
-            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
-        });
+          .then((actualTenant) => {
+            expect(actualTenant.recaptchaConfig?.useAccountDefender).to.be.true;
+            // attempt to disable reCAPTCHA.
+            return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
+          });
       });
 
-      it('updateTenant() disable reCAPTCHA should be rejected when Account Defender is enabled',
+    it('updateTenant() disable reCAPTCHA should be rejected when Account Defender is enabled',
       function () {
         // Skipping for now as Emulator resolves this operation, which is not expected.
         // TODO: investigate with Rest API and Access team for this behavior.
