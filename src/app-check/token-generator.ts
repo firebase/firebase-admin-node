@@ -31,7 +31,7 @@ const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
 const ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 
 // Audience to use for Firebase App Check Custom tokens
-const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1beta.TokenExchangeService';
+const FIREBASE_APP_CHECK_AUDIENCE = 'https://firebaseappcheck.googleapis.com/google.firebase.appcheck.v1.TokenExchangeService';
 
 /**
  * Class for generating Firebase App Check tokens.
