@@ -1522,8 +1522,8 @@ export interface RecaptchaConfig {
   recaptchaKeys?: RecaptchaKey[];
 
   /**
-   * Whether to use the account defender for reCAPTCHA assessment.
-   * Initial default value of this is false.
+   * Whether to use account defender for reCAPTCHA assessment.
+   * The default value is false.
    */
   useAccountDefender?: boolean;
 }

@@ -371,12 +371,15 @@ describe('Tenant', () => {
         }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
       });
 
-      it('should throw on non-boolean useAccountDefender attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = 'yes';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it('should throw on non-boolean useAccountDefender attribute', () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
       });
 
       it('should throw on invalid managedRules attribute', () => {

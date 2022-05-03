@@ -96,12 +96,15 @@ describe('ProjectConfig', () => {
         }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
       });
 
-      it('should throw on non-boolean useAccountDefender attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
-        configOptionsClientRequest.recaptchaConfig.useAccountDefender = 'no';
-        expect(() => {
-          ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it(`should throw given invalid useAccountDefender parameter: ${JSON.stringify(useAccountDefender)}`, () => {
+          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+          configOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
       });
 
       it('should throw on non-array managedRules attribute', () => {
