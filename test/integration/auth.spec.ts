@@ -1225,7 +1225,7 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
         .then((actualProjectConfig) => {
           // verify account defender is enabled.
-          expect(actualProjectConfig.recaptchaConfig.useAccountDefender).to.be.true;
+          expect(actualProjectConfig.recaptchaConfig?.useAccountDefender).to.be.true;
           // attempt to disable reCAPTCHA.
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption3)
             .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
@@ -1810,12 +1810,17 @@ describe('admin.auth', () => {
             useAccountDefender: true,
           },
         };
-        const updatedOptions2: UpdateTenantRequest = deepCopy(updatedOptions);
-        updatedOptions2.recaptchaConfig.emailPasswordEnforcementState = 'OFF';
+        const updatedOptions2: UpdateTenantRequest = {
+          displayName: expectedUpdatedTenant2.displayName,
+          recaptchaConfig: {
+            emailPasswordEnforcementState: 'OFF',
+            useAccountDefender: true,
+          },
+        };
         // enable account defender first.
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
-          expect(actualTenant.recaptchaConfig.useAccountDefender).to.be.true;
+          expect(actualTenant.recaptchaConfig?.useAccountDefender).to.be.true;
           // attempt to disable reCAPTCHA.
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
             .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
