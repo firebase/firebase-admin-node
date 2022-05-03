@@ -1890,7 +1890,6 @@ export abstract class AbstractAuthRequestHandler {
     requestData: object | undefined, additionalResourceParams?: object): Promise<object> {
     return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
       .then((url) => {
-        console.log(url);
         // Validate request.
         if (requestData) {
           const requestValidator = apiSettings.getRequestValidator();
