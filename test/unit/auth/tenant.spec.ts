@@ -132,6 +132,7 @@ describe('Tenant', () => {
         type: 'WEB',
         key: 'test-key-1' }
       ],
+      useAccountDefender: true,
     },
     smsRegionConfig: smsAllowByDefault,
   };
@@ -155,7 +156,8 @@ describe('Tenant', () => {
         endScore: 0.2,
         action: 'BLOCK'
       }],
-      emailPasswordEnforcementState: 'AUDIT'
+      emailPasswordEnforcementState: 'AUDIT',
+      useAccountDefender: true,
     },
   };
 
@@ -241,6 +243,14 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
+      });
+
+      it('should throw on non-boolean useAccountDefender attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = 'yes';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
       });
 
       it('should throw on invalid managedRules attribute', () => {
@@ -450,6 +460,17 @@ describe('Tenant', () => {
         }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
       });
 
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it('should throw on non-boolean useAccountDefender attribute', () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
+      });
+
       it('should throw on invalid managedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
         tenantOptionsClientRequest.recaptchaConfig.managedRules =
@@ -645,6 +666,7 @@ describe('Tenant', () => {
           type: 'WEB',
           key: 'test-key-1' }
         ],
+        useAccountDefender: true,
       });
       expect(tenantWithRecaptcha.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
     });
