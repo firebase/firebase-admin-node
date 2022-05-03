@@ -62,9 +62,9 @@ export function assertServerResponse(
  */
 export class ProjectManagementRequestHandler {
   private readonly baseUrl: string =
-      `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_PATH}`;
+    `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_PATH}`;
   private readonly baseBetaUrl: string =
-      `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
+    `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
   private readonly httpClient: AuthorizedHttpClient;
 
   private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string): void {

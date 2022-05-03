@@ -22,8 +22,12 @@ import * as validator from '../utils/validator';
 import { AbstractAuthRequestHandler, useEmulator } from './auth-api-request';
 import { FirebaseTokenGenerator, EmulatedSigner, handleCryptoSignerError } from './token-generator';
 import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier,
+  FirebaseTokenVerifier,
+  createSessionCookieVerifier,
+  createIdTokenVerifier,
+  createAuthBlockingTokenVerifier,
   DecodedIdToken,
+  DecodedAuthBlockingToken,
 } from './token-verifier';
 import {
   AuthProviderConfig, SAMLAuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults,
@@ -131,6 +135,8 @@ export abstract class BaseAuth {
   /** @internal */
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   /** @internal */
+  protected readonly authBlockingTokenVerifier: FirebaseTokenVerifier;
+  /** @internal */
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
   /**
@@ -156,6 +162,7 @@ export abstract class BaseAuth {
 
     this.sessionCookieVerifier = createSessionCookieVerifier(app);
     this.idTokenVerifier = createIdTokenVerifier(app);
+    this.authBlockingTokenVerifier = createAuthBlockingTokenVerifier(app);
   }
 
   /**
@@ -828,6 +835,35 @@ export abstract class BaseAuth {
   }
 
   /**
+   * Generates an out-of-band email action link to verify the user's ownership
+   * of the specified email. The {@link ActionCodeSettings} object provided
+   * as an argument to this method defines whether the link is to be handled by a
+   * mobile app or browser along with additional state information to be passed in
+   * the deep link, etc.
+   *
+   * @param email - The current email account.
+   * @param newEmail - The email address the account is being updated to.
+   * @param actionCodeSettings - The action
+   *     code settings. If specified, the state/continue URL is set as the
+   *     "continueUrl" parameter in the email verification link. The default email
+   *     verification landing page will use this to display a link to go back to
+   *     the app if it is installed.
+   *     If the actionCodeSettings is not specified, no URL is appended to the
+   *     action URL.
+   *     The state URL provided must belong to a domain that is authorized
+   *     in the console, or an error will be thrown.
+   *     Mobile app redirects are only applicable if the developer configures
+   *     and accepts the Firebase Dynamic Links terms of service.
+   *     The Android package name and iOS bundle ID are respected only if they
+   *     are configured in the same Firebase Auth project.
+   * @returns A promise that resolves with the generated link.
+   */
+  public generateVerifyAndChangeEmailLink(email: string, newEmail: string,
+    actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    return this.authRequestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email, actionCodeSettings, newEmail);
+  }
+
+  /**
    * Generates the out of band email action link to verify the user's ownership
    * of the specified email. The {@link ActionCodeSettings} object provided
    * as an argument to this method defines whether the link is to be handled by a
@@ -1053,6 +1089,19 @@ export abstract class BaseAuth {
         });
     }
     return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+  }
+
+  /** @alpha */
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  public _verifyAuthBlockingToken(
+    token: string,  
+    audience?: string
+  ): Promise<DecodedAuthBlockingToken> {
+    const isEmulator = useEmulator();
+    return this.authBlockingTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
+      .then((decodedAuthBlockingToken: DecodedAuthBlockingToken) => {
+        return decodedAuthBlockingToken;
+      });
   }
 
   /**

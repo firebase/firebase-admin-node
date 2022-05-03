@@ -131,7 +131,10 @@ export {
   ProjectConfigManager,
 } from './project-config-manager';
 
-export { DecodedIdToken } from './token-verifier';
+export {
+  DecodedIdToken,
+  DecodedAuthBlockingToken
+} from './token-verifier';
 
 export {
   HashAlgorithmType,

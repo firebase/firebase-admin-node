@@ -1073,6 +1073,7 @@ describe('admin.auth', () => {
   describe('Link operations', () => {
     const uid = generateRandomString(20).toLowerCase();
     const email = uid + '@example.com';
+    const newEmail = uid + 'new@example.com';
     const newPassword = 'newPassword';
     const userData = {
       uid,
@@ -1149,6 +1150,31 @@ describe('admin.auth', () => {
         .then((result) => {
           expect(result.user).to.exist;
           expect(result.user!.email).to.equal(email);
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateVerifyAndChangeEmailLink() should return a verification link', function() {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      // Ensure the user's email is verified.
+      return getAuth().updateUser(uid, { password: 'password', emailVerified: true })
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.true;
+          return getAuth().generateVerifyAndChangeEmailLink(email, newEmail, actionCodeSettings);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrl(link)).equal(actionCodeSettings.url);
+          return clientAuth().applyActionCode(code);
+        })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(newEmail, 'password');
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(newEmail);
           expect(result.user!.emailVerified).to.be.true;
         });
     });
