@@ -363,6 +363,7 @@ export interface RecaptchaConfig {
     emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
     managedRules?: RecaptchaManagedRule[];
     recaptchaKeys?: RecaptchaKey[];
+    useAccountDefender?: boolean;
 }
 
 // @public
