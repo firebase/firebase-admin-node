@@ -61,9 +61,9 @@ export interface UpdateTenantRequest {
   smsRegionConfig?: SmsRegionConfig;
   
   /**
-   * The recaptcha configuration to update on the tenant.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
+   * The reCAPTCHA configuration to update on the tenant.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;

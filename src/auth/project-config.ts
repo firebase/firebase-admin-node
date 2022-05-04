@@ -32,17 +32,17 @@ export interface UpdateProjectConfigRequest {
    */
   smsRegionConfig?: SmsRegionConfig;
   /**
-   * The recaptcha configuration to update on the project.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
- * Response received from getting or updating a project config.
- * This object currently exposes only the SMS Region config.
+ * Response received when getting or updating the project config.
+ * Currently only includes the reCAPTCHA and SMS Region config.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
@@ -50,8 +50,8 @@ export interface ProjectConfigServerResponse {
 }
 
 /**
- * Request sent to update project config.
- * This object currently exposes only the SMS Region config.
+ * Request to update the project config.
+ * Currently only includes the reCAPTCHA and SMS Region config.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
@@ -68,10 +68,10 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
-  /**
-   * The recaptcha configuration to update on the project config.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
+   /**
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
@@ -125,7 +125,7 @@ export class ProjectConfig {
   }
  
   /**
-   * The recaptcha configuration.
+   * The reCAPTCHA configuration.
    */
   get recaptchaConfig(): RecaptchaConfig | undefined {
     return this.recaptchaConfig_;
