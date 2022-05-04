@@ -1455,13 +1455,13 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
 /**
 * Enforcement state of reCAPTCHA protection.
 *   - 'OFF': Unenforced.
-*   - 'AUDIT': Assessment is created but result is not used to enforce.
-*   - 'ENFORCE': Assessment is created and result is used to enforce.
+*   - 'AUDIT': Create assessment but don't enforce the result.
+*   - 'ENFORCE': Create assessment and enforce the result.
 */
 export type RecaptchaProviderEnforcementState =  'OFF' | 'AUDIT' | 'ENFORCE';
 
 /**
-* The actions for reCAPTCHA-protected requests.
+* The actions to take for reCAPTCHA-protected requests.
 *   - 'BLOCK': The reCAPTCHA-protected request will be blocked.
 */
 export type RecaptchaAction = 'BLOCK';
@@ -1481,7 +1481,7 @@ export interface RecaptchaManagedRule {
 }
 
 /**
- * The key's platform type: only web supported now.
+ * The key's platform type: only web is currently supported.
  */
 export type RecaptchaKeyClientType = 'WEB';
 
@@ -1508,7 +1508,7 @@ export interface RecaptchaKey {
  */
 export interface RecaptchaConfig {
   /**
-  * The enforcement state of email password provider.
+  * The enforcement state of the email password provider.
   */
   emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
   /**

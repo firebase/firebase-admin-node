@@ -25,25 +25,25 @@ import {
  */
 export interface UpdateProjectConfigRequest {
   /**
-   * The recaptcha configuration to update on the project.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
- * Response received from get/update project config.
- * We are only exposing the recaptcha config for now.
+ * Response received when getting or updating the project config.
+ * Currently only includes the reCAPTCHA config.
  */
 export interface ProjectConfigServerResponse {
   recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
- * Request sent to update project config.
- * We are only updating the recaptcha config for now.
+ * Request to update the project config.
+ * Currently only includes the reCAPTCHA config.
  */
 export interface ProjectConfigClientRequest {
   recaptchaConfig?: RecaptchaConfig;
@@ -54,9 +54,9 @@ export interface ProjectConfigClientRequest {
 */
 export class ProjectConfig {
   /**
-   * The recaptcha configuration to update on the project config.
-   * By enabling reCAPTCHA Enterprise Integration you are
-   * agreeing to reCAPTCHA Enterprise
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
@@ -103,7 +103,7 @@ export class ProjectConfig {
   }
  
   /**
-   * The recaptcha configuration.
+   * The reCAPTCHA configuration.
    */
   get recaptchaConfig(): RecaptchaConfig | undefined {
     return this.recaptchaConfig_;
