@@ -107,3 +107,7 @@ import './app-check/token-verifier.spec.ts';
 // Eventarc
 import './eventarc/eventarc.spec';
 import './eventarc/eventarc-utils.spec';
+// Functions
+import './functions/index.spec';
+import './functions/functions.spec';
+import './functions/functions-api-client-internal.spec';

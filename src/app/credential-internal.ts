@@ -33,6 +33,7 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
 const GOOGLE_METADATA_SERVICE_TOKEN_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
 const GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH = '/computeMetadata/v1/project/project-id';
+const GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH = '/computeMetadata/v1/instance/service-accounts/default/email';
 
 const configDir = (() => {
   // Windows has a dedicated low-rights location for apps at ~/Application Data
@@ -197,6 +198,7 @@ export class ComputeEngineCredential implements Credential {
   private readonly httpClient = new HttpClient();
   private readonly httpAgent?: Agent;
   private projectId?: string;
+  private accountId?: string;
 
   constructor(httpAgent?: Agent) {
     this.httpAgent = httpAgent;
@@ -223,6 +225,25 @@ export class ComputeEngineCredential implements Credential {
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine project ID: ${detail}`);
+      });
+  }
+
+  public getServiceAccountEmail(): Promise<string> {
+    if (this.accountId) {
+      return Promise.resolve(this.accountId);
+    }
+
+    const request = this.buildRequest(GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH);
+    return this.httpClient.send(request)
+      .then((resp) => {
+        this.accountId = resp.text!;
+        return this.accountId;
+      })
+      .catch((err) => {
+        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_CREDENTIAL,
+          `Failed to determine service account email: ${detail}`);
       });
   }
 
