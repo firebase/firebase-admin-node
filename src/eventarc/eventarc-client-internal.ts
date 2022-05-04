@@ -102,7 +102,7 @@ export class EventarcApiClient {
     }
     const request: HttpRequestConfig = {
       method: 'POST',
-      url: `${EVENTARC_API}/${channel}:publishEvents`,
+      url: `${this.getEventarcHost()}/${channel}:publishEvents`,
       data: JSON.stringify({ events }),
     };
     return this.sendRequest(request);
@@ -152,5 +152,9 @@ export class EventarcApiClient {
   private async resolveChannelNameProjectId(location: string, channelId: string): Promise<string> {
     const projectId = await this.getProjectId();
     return `projects/${projectId}/locations/${location}/channels/${channelId}`;
+  }
+
+  private getEventarcHost(): string {
+    return process.env.CLOUD_EVENTARC_EMULATOR_HOST ?? EVENTARC_API;
   }
 }
