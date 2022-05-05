@@ -39,12 +39,15 @@ export class Functions {
   /**
    * Creates a reference to a {@link TaskQueue} for a given function name.
    * The function name can be either:
-   *   * A fully qualified function resource name:
+   *
+   * 1) A fully qualified function resource name:
    *     `projects/{project}/locations/{location}/functions/{functionName}`
-   *   * A partial resource name with location and function name, in which case
+   *
+   * 2) A partial resource name with location and function name, in which case
    *     the runtime project ID is used:
    *     `locations/{location}/functions/{functionName}`
-   *   * A partial function name, in which case the runtime project ID and the default location,
+   *
+   * 3) A partial function name, in which case the runtime project ID and the default location,
    *     `us-central1`, is used:
    *     `{functionName}`
    * 

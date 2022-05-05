@@ -42,6 +42,7 @@ export interface AbsoluteDelivery {
 
 /**
  * Type representing delivery schedule options.
+ * `DeliverySchedule` is a union type of {@link DelayDelivery} and {@link AbsoluteDelivery} types.
  */
 export type DeliverySchedule = DelayDelivery | AbsoluteDelivery
 

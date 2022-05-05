@@ -70,12 +70,15 @@ export class Eventarc {
   /**
    * Creates a reference to the Eventarc channel using the provided channel resource name.
    * The channel resource name can be either:
-   *   * A fully qualified channel resource name:
+   * 
+   * - A fully qualified channel resource name:
    *     `projects/{project}/locations/{location}/channels/{channel-id}`
-   *   * A partial resource name with location and channel ID, in which case
+   * 
+   * - A partial resource name with location and channel ID, in which case
    *     the runtime project ID of the function is used:
    *     `locations/{location}/channels/{channel-id}`
-   *   * A partial channel ID, in which case the runtime project ID of the
+   * 
+   * - A partial channel ID, in which case the runtime project ID of the
    *     function and `us-central1` as location is used:
    *     `{channel-id}`
    * 
