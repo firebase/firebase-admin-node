@@ -173,7 +173,7 @@
     }
   },
   "dependencies": {
-    "@firebase/database-compat": "^0.1.8",
+    "@firebase/database-compat": "^0.2.0",
     "@firebase/database-types": "^0.9.7",
     "@types/node": ">=12.12.47",
     "dicer": "^0.3.0",
