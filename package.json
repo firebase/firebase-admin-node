@@ -113,63 +113,78 @@
     ".": "./lib/index.js",
     "./app": {
       "require": "./lib/app/index.js",
-      "import": "./lib/esm/app/index.js"
+      "import": "./lib/esm/app/index.js",
+      "types": "./lib/app/index.d.ts"
     },
     "./app-check": {
       "require": "./lib/app-check/index.js",
-      "import": "./lib/esm/app-check/index.js"
+      "import": "./lib/esm/app-check/index.js",
+      "types": "./lib/app-check/index.d.ts"
     },
     "./auth": {
       "require": "./lib/auth/index.js",
-      "import": "./lib/esm/auth/index.js"
+      "import": "./lib/esm/auth/index.js",
+      "types": "./lib/auth/index.d.ts"
     },
     "./database": {
       "require": "./lib/database/index.js",
-      "import": "./lib/esm/database/index.js"
+      "import": "./lib/esm/database/index.js",
+      "types": "./lib/database/index.d.ts"
     },
     "./eventarc": {
       "require": "./lib/eventarc/index.js",
-      "import": "./lib/esm/eventarc/index.js"
+      "import": "./lib/esm/eventarc/index.js",
+      "types": "./lib/eventarc/index.d.ts"
     },
     "./firestore": {
       "require": "./lib/firestore/index.js",
-      "import": "./lib/esm/firestore/index.js"
+      "import": "./lib/esm/firestore/index.js",
+      "types": "./lib/firestore/index.d.ts"
     },
     "./functions": {
       "require": "./lib/functions/index.js",
-      "import": "./lib/esm/functions/index.js"
+      "import": "./lib/esm/functions/index.js",
+      "types": "./lib/functions/index.d.ts"
     },
     "./installations": {
       "require": "./lib/installations/index.js",
-      "import": "./lib/esm/installations/index.js"
+      "import": "./lib/esm/installations/index.js",
+      "types": "./lib/installations/index.d.ts"
     },
     "./instance-id": {
       "require": "./lib/instance-id/index.js",
-      "import": "./lib/esm/instance-id/index.js"
+      "import": "./lib/esm/instance-id/index.js",
+      "types": "./lib/instance-id/index.d.ts"
     },
     "./machine-learning": {
       "require": "./lib/machine-learning/index.js",
-      "import": "./lib/esm/machine-learning/index.js"
+      "import": "./lib/esm/machine-learning/index.js",
+      "types": "./lib/machine-learning/index.d.ts"
     },
     "./messaging": {
       "require": "./lib/messaging/index.js",
-      "import": "./lib/esm/messaging/index.js"
+      "import": "./lib/esm/messaging/index.js",
+      "types": "./lib/messaging/index.d.ts"
     },
     "./project-management": {
       "require": "./lib/project-management/index.js",
-      "import": "./lib/esm/project-management/index.js"
+      "import": "./lib/esm/project-management/index.js",
+      "types": "./lib/project-management/index.d.ts"
     },
     "./remote-config": {
       "require": "./lib/remote-config/index.js",
-      "import": "./lib/esm/remote-config/index.js"
+      "import": "./lib/esm/remote-config/index.js",
+      "types": "./lib/remote-config/index.d.ts"
     },
     "./security-rules": {
       "require": "./lib/security-rules/index.js",
-      "import": "./lib/esm/security-rules/index.js"
+      "import": "./lib/esm/security-rules/index.js",
+      "types": "./lib/security-rules/index.d.ts"
     },
     "./storage": {
       "require": "./lib/storage/index.js",
-      "import": "./lib/esm/storage/index.js"
+      "import": "./lib/esm/storage/index.js",
+      "types": "./lib/storage/index.d.ts"
     }
   },
   "dependencies": {
