@@ -2,9 +2,9 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "es2020",
     "noImplicitAny": false,
-    "lib": ["es2018"],
+    "lib": ["es2020"],
     "outDir": "lib",
     "typeRoots": [
       "node_modules/@types"
