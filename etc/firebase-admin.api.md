@@ -72,8 +72,10 @@ export interface AppOptions {
     credential?: Credential;
     databaseAuthVariableOverride?: object | null;
     databaseURL?: string;
+    disableRetry?: boolean;
     httpAgent?: Agent;
     projectId?: string;
+    retryConfig?: RetryConfig;
     serviceAccountId?: string;
     storageBucket?: string;
 }
@@ -468,6 +470,15 @@ export namespace remoteConfig {
     export type TagColor = TagColor;
     // Warning: (ae-forgotten-export) The symbol "Version" needs to be exported by the entry point default-namespace.d.ts
     export type Version = Version;
+}
+
+// @public
+export interface RetryConfig {
+    backOffFactor?: number;
+    ioErrorCodes?: string[];
+    maxDelayInMillis: number;
+    maxRetries: number;
+    statusCodes?: number[];
 }
 
 // @public (undocumented)

@@ -91,6 +91,7 @@ export { projectManagement } from './project-management/project-management-names
 export { remoteConfig } from './remote-config/remote-config-namespace';
 export { securityRules } from './security-rules/security-rules-namespace';
 export { storage } from './storage/storage-namespace';
+export { RetryConfig } from './utils/api-request'
 
 // Declare other top-level members of the admin namespace below. Unfortunately, there's no
 // compile-time mechanism to ensure that the FirebaseNamespace class actually provides these

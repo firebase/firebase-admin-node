@@ -54,11 +54,19 @@ export const databaseAuthVariableOverride = { 'some#string': 'some#val' };
 export const storageBucket = 'bucketName.appspot.com';
 
 export const credential = cert(path.resolve(__dirname, './mock.key.json'));
+export const retryConfig = {
+  maxRetries: 15,
+  statusCodes: [507],
+  ioErrorCodes: ['ECONNRESET', 'ETIMEDOUT'],
+  backOffFactor: 0.8,
+  maxDelayInMillis: 190000,
+}
 
 export const appOptions: AppOptions = {
   credential,
   databaseURL,
   storageBucket,
+  retryConfig,
 };
 
 export const appOptionsWithOverride: AppOptions = {
@@ -67,19 +75,23 @@ export const appOptionsWithOverride: AppOptions = {
   databaseURL,
   storageBucket,
   projectId,
+  retryConfig,
 };
 
 export const appOptionsNoAuth: AppOptions = {
   databaseURL,
+  retryConfig,
 };
 
 export const appOptionsNoDatabaseUrl: AppOptions = {
   credential,
+  retryConfig,
 };
 
 export const appOptionsAuthDB: AppOptions = {
   credential,
   databaseURL,
+  retryConfig,
 };
 
 export class MockCredential implements Credential {
