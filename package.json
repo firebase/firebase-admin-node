@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "engines": {
-    "node": ">=12.7.0"
+    "node": ">=14"
   },
   "scripts": {
     "build": "gulp build",
@@ -198,8 +198,8 @@
     "uuid": "^8.3.2"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^4.15.1",
-    "@google-cloud/storage": "^5.18.3"
+    "@google-cloud/firestore": "^5.0.2",
+    "@google-cloud/storage": "^6.1.0"
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.1.2",
@@ -250,7 +250,7 @@
     "sinon": "^14.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typescript": "^3.7.3",
+    "typescript": "^4.6.4",
     "yargs": "^17.0.1"
   }
 }
