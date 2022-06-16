@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [14.x, 16.x]
 
     steps:
     - uses: actions/checkout@v1
@@ -27,7 +27,6 @@ jobs:
     - name: Run api-extractor
       run: npm run api-extractor
     - name: Run emulator-based integration tests
-      if: matrix.node-version == '14.x'
       run: |
         npm install -g firebase-tools
         firebase emulators:exec --project fake-project-id --only auth,database,firestore \
