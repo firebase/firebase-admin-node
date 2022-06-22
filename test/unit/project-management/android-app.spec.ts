@@ -19,13 +19,16 @@
 import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import { FirebaseApp } from '../../../src/firebase-app';
-import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { AndroidAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
+import {
+  AndroidApp, AndroidAppMetadata, AppPlatform, ShaCertificate,
+} from '../../../src/project-management/index';
 
 const expect = chai.expect;
 
@@ -109,7 +112,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getMetadata()
         .should.eventually.be.rejected
@@ -200,7 +203,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getShaCertificates()
         .should.eventually.be.rejected
@@ -336,7 +339,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getConfig()
         .should.eventually.be.rejected
@@ -357,7 +360,7 @@ describe('AndroidApp', () => {
         .should.eventually.be.rejected
         .and.have.property(
           'message',
-          `getConfig()'s responseData.configFileContents must be a base64 string. `
+          'getConfig()\'s responseData.configFileContents must be a base64 string. '
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 

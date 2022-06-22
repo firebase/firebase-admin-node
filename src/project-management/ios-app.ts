@@ -16,12 +16,38 @@
 
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { IosAppMetadata, AppPlatform } from './app-metadata';
+import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
+/**
+ * Metadata about a Firebase iOS App.
+ */
+export interface IosAppMetadata extends AppMetadata {
+  platform: AppPlatform.IOS;
+
+  /**
+   * The canonical bundle ID of the iOS App as it would appear in the iOS App Store.
+   *
+   * @example
+   * ```javascript
+   * var bundleId = iosAppMetadata.bundleId;
+   *```
+    */
+  bundleId: string;
+}
+
+/**
+ * A reference to a Firebase iOS app.
+ *
+ * Do not call this constructor directly. Instead, use {@link ProjectManagement.iosApp}.
+ */
 export class IosApp {
+
   private readonly resourceName: string;
 
+  /**
+   * @internal
+   */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -33,6 +59,12 @@ export class IosApp {
     this.resourceName = `projects/-/iosApps/${appId}`;
   }
 
+  /**
+   * Retrieves metadata about this iOS app.
+   *
+   * @returns A promise that
+   *     resolves to the retrieved metadata about this iOS app.
+   */
   public getMetadata(): Promise<IosAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
       .then((responseData: any) => {
@@ -61,13 +93,24 @@ export class IosApp {
       });
   }
 
+  /**
+   * Sets the optional user-assigned display name of the app.
+   *
+   * @param newDisplayName - The new display name to set.
+   *
+   * @returns A promise that resolves when the display name has
+   *     been set.
+   */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
   /**
-   * @return {Promise<string>} A promise that resolves to a UTF-8 XML string, typically intended to
-   *     be written to a plist file.
+   * Gets the configuration artifact associated with this app.
+   *
+   * @returns A promise that resolves to the iOS app's Firebase
+   *     config file, in UTF-8 string format. This string is typically intended to
+   *     be written to a plist file that gets shipped with your iOS app.
    */
   public getConfig(): Promise<string> {
     return this.requestHandler.getConfig(this.resourceName)
@@ -81,7 +124,7 @@ export class IosApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });

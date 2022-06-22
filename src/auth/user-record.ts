@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +15,10 @@
  * limitations under the License.
  */
 
-import {deepCopy} from '../utils/deep-copy';
-import {isNonNullObject} from '../utils/validator';
+import { deepCopy } from '../utils/deep-copy';
+import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 /**
  * 'REDACTED', encoded as a base64 string.
@@ -27,8 +28,8 @@ const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
 /**
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
- * @param {any} time The unix timestamp string or number in milliseconds.
- * @return {string} The corresponding date as a UTC string, if valid. Otherwise, null.
+ * @param time - The unix timestamp string or number in milliseconds.
+ * @returns The corresponding date as a UTC string, if valid. Otherwise, null.
  */
 function parseDate(time: any): string | null {
   try {
@@ -40,64 +41,6 @@ function parseDate(time: any): string | null {
     // Do nothing. null will be returned.
   }
   return null;
-}
-
-/**
- * Interface representing base properties of a user enrolled second factor for a
- * `CreateRequest`.
- */
-export interface CreateMultiFactorInfoRequest {
-  displayName?: string;
-  factorId: string;
-}
-
-/**
- * Interface representing a phone specific user enrolled second factor for a
- * `CreateRequest`.
- */
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
-  phoneNumber: string;
-}
-
-/**
- * Interface representing common properties of a user enrolled second factor
- * for an `UpdateRequest`.
- */
-export interface UpdateMultiFactorInfoRequest {
-  uid?: string;
-  displayName?: string;
-  enrollmentTime?: string;
-  factorId: string;
-}
-
-/**
- * Interface representing a phone specific user enrolled second factor
- * for an `UpdateRequest`.
- */
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
-  phoneNumber: string;
-}
-
-/** Parameters for update user operation */
-export interface UpdateRequest {
-  disabled?: boolean;
-  displayName?: string | null;
-  email?: string;
-  emailVerified?: boolean;
-  password?: string;
-  phoneNumber?: string | null;
-  photoURL?: string | null;
-  multiFactor?: {
-    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-  };
-}
-
-/** Parameters for create user operation */
-export interface CreateRequest extends UpdateRequest {
-  uid?: string;
-  multiFactor?: {
-    enrolledFactors: CreateMultiFactorInfoRequest[];
-  };
 }
 
 export interface MultiFactorInfoResponse {
@@ -135,29 +78,45 @@ export interface GetAccountInfoUserResponse {
   mfaInfo?: MultiFactorInfoResponse[];
   createdAt?: string;
   lastLoginAt?: string;
+  lastRefreshAt?: string;
   [key: string]: any;
 }
 
-/** Enums for multi-factor identifiers. */
-export enum MultiFactorId {
+enum MultiFactorId {
   Phone = 'phone',
 }
 
 /**
- * Abstract class representing a multi-factor info interface.
+ * Interface representing the common properties of a user-enrolled second factor.
  */
 export abstract class MultiFactorInfo {
+
+  /**
+   * The ID of the enrolled second factor. This ID is unique to the user.
+   */
   public readonly uid: string;
-  public readonly displayName: string | null;
-  public readonly factorId: MultiFactorId;
-  public readonly enrollmentTime: string;
+
+  /**
+   * The optional display name of the enrolled second factor.
+   */
+  public readonly displayName?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
+  public readonly factorId: string;
+
+  /**
+   * The optional date the second factor was enrolled, formatted as a UTC string.
+   */
+  public readonly enrollmentTime?: string;
 
   /**
    * Initializes the MultiFactorInfo associated subclass using the server side.
    * If no MultiFactorInfo is associated with the response, null is returned.
    *
-   * @param response The server side response.
-   * @constructor
+   * @param response - The server side response.
+   * @internal
    */
   public static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
@@ -173,15 +132,20 @@ export abstract class MultiFactorInfo {
   /**
    * Initializes the MultiFactorInfo object using the server side response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     this.initFromServerResponse(response);
   }
 
-  /** @return The plain object representation. */
-  public toJSON(): any {
+  /**
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
+  public toJSON(): object {
     return {
       uid: this.uid,
       displayName: this.displayName,
@@ -193,16 +157,18 @@ export abstract class MultiFactorInfo {
   /**
    * Returns the factor ID based on the response provided.
    *
-   * @param response The server side response.
-   * @return The multi-factor ID associated with the provided response. If the response is
+   * @param response - The server side response.
+   * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   *
+   * @internal
    */
-  protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
+  protected abstract getFactorId(response: MultiFactorInfoResponse): string | null;
 
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    */
   private initFromServerResponse(response: MultiFactorInfoResponse): void {
     const factorId = response && this.getFactorId(response);
@@ -213,7 +179,7 @@ export abstract class MultiFactorInfo {
     }
     utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
     utils.addReadonlyGetter(this, 'factorId', factorId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
     // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
     // For example, "2017-01-15T01:30:15.01Z".
     // This can be parsed directly via Date constructor.
@@ -227,23 +193,32 @@ export abstract class MultiFactorInfo {
   }
 }
 
-/** Class representing a phone MultiFactorInfo object. */
+/**
+ * Interface representing a phone specific user-enrolled second factor.
+ */
 export class PhoneMultiFactorInfo extends MultiFactorInfo {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
   public readonly phoneNumber: string;
 
   /**
    * Initializes the PhoneMultiFactorInfo object using the server side response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     super(response);
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneInfo);
   }
 
-  /** @return The plain object representation. */
-  public toJSON(): any {
+  /**
+   * {@inheritdoc MultiFactorInfo.toJSON}
+   */
+  public toJSON(): object {
     return Object.assign(
       super.toJSON(),
       {
@@ -254,24 +229,34 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   /**
    * Returns the factor ID based on the response provided.
    *
-   * @param response The server side response.
-   * @return The multi-factor ID associated with the provided response. If the response is
+   * @param response - The server side response.
+   * @returns The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   *
+   * @internal
    */
-  protected getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null {
+  protected getFactorId(response: MultiFactorInfoResponse): string | null {
     return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
   }
 }
 
-/** Class representing multi-factor related properties of a user. */
-export class MultiFactor {
-  public readonly enrolledFactors: ReadonlyArray<MultiFactorInfo>;
+/**
+ * The multi-factor related user settings.
+ */
+export class MultiFactorSettings {
+
+  /**
+   * List of second factors enrolled with the current user.
+   * Currently only phone second factors are supported.
+   */
+  public enrolledFactors: MultiFactorInfo[];
 
   /**
    * Initializes the MultiFactor object using the server side or JWT format response.
    *
-   * @param response The server side response.
+   * @param response - The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: GetAccountInfoUserResponse) {
     const parsedEnrolledFactors: MultiFactorInfo[] = [];
@@ -292,8 +277,12 @@ export class MultiFactor {
       this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
   }
 
-  /** @return The plain object representation. */
-  public toJSON(): any {
+  /**
+   * Returns a JSON-serializable representation of this multi-factor object.
+   *
+   * @returns A JSON-serializable representation of this multi-factor object.
+   */
+  public toJSON(): object {
     return {
       enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
     };
@@ -301,24 +290,33 @@ export class MultiFactor {
 }
 
 /**
- * User metadata class that provides metadata information like user account creation
- * and last sign in time.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
+ * Represents a user's metadata.
  */
 export class UserMetadata {
+
+  /**
+   * The date the user was created, formatted as a UTC string.
+   */
   public readonly creationTime: string;
+
+  /**
+   * The date the user last signed in, formatted as a UTC string.
+   */
   public readonly lastSignInTime: string;
 
   /**
-   * The time at which the user was last active (ID token refreshed), or null
-   * if the user was never active. Formatted as a UTC Date string (eg
-   * 'Sat, 03 Feb 2001 04:05:06 GMT')
+   * The time at which the user was last active (ID token refreshed),
+   * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
+   * Returns null if the user was never active.
    */
-  public readonly lastRefreshTime: string | null;
+  public readonly lastRefreshTime?: string | null;
 
+  /**
+   * @param response - The server side response returned from the getAccountInfo
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
@@ -330,7 +328,11 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastRefreshTime', lastRefreshAt);
   }
 
-  /** @return The plain object representation of the user's metadata. */
+  /**
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
@@ -341,21 +343,48 @@ export class UserMetadata {
 }
 
 /**
- * User info class that provides provider user information for different
- * Firebase providers like google.com, facebook.com, password, etc.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
+ * Represents a user's info from a third-party identity provider
+ * such as Google or Facebook.
  */
 export class UserInfo {
+
+  /**
+   * The user identifier for the linked provider.
+   */
   public readonly uid: string;
+
+  /**
+   * The display name for the linked provider.
+   */
   public readonly displayName: string;
+
+  /**
+   * The email for the linked provider.
+   */
   public readonly email: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
   public readonly photoURL: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
   public readonly providerId: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
   public readonly phoneNumber: string;
 
+
+  /**
+   * @param response - The server side response returned from the `getAccountInfo`
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: ProviderUserInfoResponse) {
     // Provider user id and provider id are required.
     if (!response.rawId || !response.providerId) {
@@ -372,7 +401,11 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
-  /** @return The plain object representation of the current provider data. */
+  /**
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     return {
       uid: this.uid,
@@ -386,30 +419,107 @@ export class UserInfo {
 }
 
 /**
- * User record class that defines the Firebase user object populated from
- * the Firebase Auth getAccountInfo response.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
+ * Represents a user.
  */
 export class UserRecord {
-  public readonly uid: string;
-  public readonly email: string;
-  public readonly emailVerified: boolean;
-  public readonly displayName: string;
-  public readonly photoURL: string;
-  public readonly phoneNumber: string;
-  public readonly disabled: boolean;
-  public readonly metadata: UserMetadata;
-  public readonly providerData: UserInfo[];
-  public readonly passwordHash?: string;
-  public readonly passwordSalt?: string;
-  public readonly customClaims: {[key: string]: any};
-  public readonly tenantId?: string | null;
-  public readonly tokensValidAfterTime?: string;
-  public readonly multiFactor?: MultiFactor;
 
+  /**
+   * The user's `uid`.
+   */
+  public readonly uid: string;
+
+  /**
+   * The user's primary email, if set.
+   */
+  public readonly email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  public readonly emailVerified: boolean;
+
+  /**
+   * The user's display name.
+   */
+  public readonly displayName?: string;
+
+  /**
+   * The user's photo URL.
+   */
+  public readonly photoURL?: string;
+
+  /**
+   * The user's primary phone number, if set.
+   */
+  public readonly phoneNumber?: string;
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled; `false` for
+   * enabled.
+   */
+  public readonly disabled: boolean;
+
+  /**
+   * Additional metadata about the user.
+   */
+  public readonly metadata: UserMetadata;
+
+  /**
+   * An array of providers (for example, Google, Facebook) linked to the user.
+   */
+  public readonly providerData: UserInfo[];
+
+  /**
+   * The user's hashed password (base64-encoded), only if Firebase Auth hashing
+   * algorithm (SCRYPT) is used. If a different hashing algorithm had been used
+   * when uploading this user, as is typical when migrating from another Auth
+   * system, this will be an empty string. If no password is set, this is
+   * null. This is only available when the user is obtained from
+   * {@link BaseAuth.listUsers}.
+   */
+  public readonly passwordHash?: string;
+
+  /**
+   * The user's password salt (base64-encoded), only if Firebase Auth hashing
+   * algorithm (SCRYPT) is used. If a different hashing algorithm had been used to
+   * upload this user, typical when migrating from another Auth system, this will
+   * be an empty string. If no password is set, this is null. This is only
+   * available when the user is obtained from {@link BaseAuth.listUsers}.
+   */
+  public readonly passwordSalt?: string;
+
+  /**
+   * The user's custom claims object if available, typically used to define
+   * user roles and propagated to an authenticated user's ID token.
+   * This is set via {@link BaseAuth.setCustomUserClaims}
+   */
+  public readonly customClaims?: {[key: string]: any};
+
+  /**
+   * The ID of the tenant the user belongs to, if available.
+   */
+  public readonly tenantId?: string | null;
+
+  /**
+   * The date the user's tokens are valid after, formatted as a UTC string.
+   * This is updated every time the user's refresh token are revoked either
+   * from the {@link BaseAuth.revokeRefreshTokens}
+   * API or from the Firebase Auth backend on big account changes (password
+   * resets, password or email updates, etc).
+   */
+  public readonly tokensValidAfterTime?: string;
+
+  /**
+   * The multi-factor related properties for the current user, if available.
+   */
+  public readonly multiFactor?: MultiFactorSettings;
+
+  /**
+   * @param response - The server side response returned from the getAccountInfo
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: GetAccountInfoUserResponse) {
     // The Firebase user id is required.
     if (!response.localId) {
@@ -455,13 +565,17 @@ export class UserRecord {
     }
     utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime || undefined);
     utils.addReadonlyGetter(this, 'tenantId', response.tenantId);
-    const multiFactor = new MultiFactor(response);
+    const multiFactor = new MultiFactorSettings(response);
     if (multiFactor.enrolledFactors.length > 0) {
       utils.addReadonlyGetter(this, 'multiFactor', multiFactor);
     }
   }
 
-  /** @return The plain object representation of the user record. */
+  /**
+   * Returns a JSON-serializable representation of this object.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     const json: any = {
       uid: this.uid,

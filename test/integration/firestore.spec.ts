@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {clone} from 'lodash';
+import { clone } from 'lodash';
+import * as admin from '../../lib/index';
+import {
+  DocumentReference, DocumentSnapshot, FieldValue, Firestore, FirestoreDataConverter,
+  QueryDocumentSnapshot, Timestamp, getFirestore, setLogFunction,
+} from '../../lib/firestore/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -31,21 +35,27 @@ const mountainView = {
 
 describe('admin.firestore', () => {
 
-  let reference: admin.firestore.DocumentReference;
+  let reference: DocumentReference;
 
   before(() => {
-    const db = admin.firestore();
+    const db = getFirestore();
     reference = db.collection('cities').doc();
   });
 
+  it('getFirestore() returns a Firestore client', () => {
+    const firestore: Firestore = getFirestore();
+    expect(firestore).to.not.be.undefined;
+  });
+
   it('admin.firestore() returns a Firestore client', () => {
-    const firestore = admin.firestore();
-    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    const firestore: admin.firestore.Firestore = admin.firestore();
+    expect(firestore).to.not.be.undefined;
+    expect(firestore).to.equal(getFirestore());
   });
 
   it('app.firestore() returns a Firestore client', () => {
-    const firestore = admin.app().firestore();
-    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    const firestore: admin.firestore.Firestore = admin.app().firestore();
+    expect(firestore).to.not.be.undefined;
   });
 
   it('supports basic data access', () => {
@@ -66,9 +76,9 @@ describe('admin.firestore', () => {
       });
   });
 
-  it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
+  it('FieldValue.serverTimestamp() provides a server-side timestamp', () => {
     const expected: any = clone(mountainView);
-    expected.timestamp = admin.firestore.FieldValue.serverTimestamp();
+    expected.timestamp = FieldValue.serverTimestamp();
     return reference.set(expected)
       .then(() => {
         return reference.get();
@@ -77,7 +87,7 @@ describe('admin.firestore', () => {
         const data = snapshot.data();
         expect(data).to.exist;
         expect(data!.timestamp).is.not.null;
-        expect(data!.timestamp).to.be.instanceOf(admin.firestore.Timestamp);
+        expect(data!.timestamp).to.be.instanceOf(Timestamp);
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
@@ -113,12 +123,44 @@ describe('admin.firestore', () => {
     expect(typeof admin.firestore.WriteResult).to.be.not.undefined;
   });
 
+  it('admin.firestore.GrpcStatus type is defined', () => {
+    expect(typeof admin.firestore.GrpcStatus).to.be.not.undefined;
+  });
+
+  it('supports operations with custom type converters', () => {
+    const converter: FirestoreDataConverter<City> = {
+      toFirestore: (city: City) => {
+        return {
+          name: city.localId,
+          population: city.people,
+        };
+      },
+      fromFirestore: (snap: QueryDocumentSnapshot) => {
+        return new City(snap.data().name, snap.data().population);
+      }
+    };
+
+    const expected: City = new City('Sunnyvale', 153185);
+    const refWithConverter: DocumentReference<City> = getFirestore()
+      .collection('cities')
+      .doc()
+      .withConverter(converter);
+    return refWithConverter.set(expected)
+      .then(() => {
+        return refWithConverter.get();
+      })
+      .then((snapshot: DocumentSnapshot<City>) => {
+        expect(snapshot.data()).to.be.instanceOf(City);
+        return refWithConverter.delete();
+      });
+  });
+
   it('supports saving references in documents', () => {
-    const source = admin.firestore().collection('cities').doc();
-    const target = admin.firestore().collection('cities').doc();
+    const source = getFirestore().collection('cities').doc();
+    const target = getFirestore().collection('cities').doc();
     return source.set(mountainView)
       .then(() => {
-        return target.set({name: 'Palo Alto', sisterCity: source});
+        return target.set({ name: 'Palo Alto', sisterCity: source });
       })
       .then(() => {
         return target.get();
@@ -135,13 +177,13 @@ describe('admin.firestore', () => {
       .should.eventually.be.fulfilled;
   });
 
-  it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
+  it('setLogFunction() enables logging for the Firestore module', () => {
     const logs: string[] = [];
-    const source = admin.firestore().collection('cities').doc();
-    admin.firestore.setLogFunction((log) => {
+    const source = getFirestore().collection('cities').doc();
+    setLogFunction((log) => {
       logs.push(log);
     });
-    return source.set({name: 'San Francisco'})
+    return source.set({ name: 'San Francisco' })
       .then(() => {
         return source.delete();
       })
@@ -150,3 +192,7 @@ describe('admin.firestore', () => {
       });
   });
 });
+
+class City {
+  constructor(readonly localId: string, readonly people: number) { }
+}

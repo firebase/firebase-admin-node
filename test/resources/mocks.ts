@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,16 +25,18 @@ import stream = require('stream');
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
-import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseServiceInterface} from '../../src/firebase-service';
-import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
-import {Credential, GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
+import { AppOptions } from '../../src/firebase-namespace-api';
+import { FirebaseApp } from '../../src/app/firebase-app';
+import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 
-const ALGORITHM = 'RS256';
+const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const TEN_MINUTES_IN_SECONDS = 10 * 60;
 
 export const uid = 'someUid';
 export const projectId = 'project_id';
+export const projectNumber = '12345678';
+export const appId = '12345678:app:ID';
 export const developerClaims = {
   one: 'uno',
   two: 'dos',
@@ -49,15 +52,15 @@ export const databaseAuthVariableOverride = { 'some#string': 'some#val' };
 
 export const storageBucket = 'bucketName.appspot.com';
 
-export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
+export const credential = cert(path.resolve(__dirname, './mock.key.json'));
 
-export const appOptions: FirebaseAppOptions = {
+export const appOptions: AppOptions = {
   credential,
   databaseURL,
   storageBucket,
 };
 
-export const appOptionsWithOverride: FirebaseAppOptions = {
+export const appOptionsWithOverride: AppOptions = {
   credential,
   databaseAuthVariableOverride,
   databaseURL,
@@ -65,15 +68,15 @@ export const appOptionsWithOverride: FirebaseAppOptions = {
   projectId,
 };
 
-export const appOptionsNoAuth: FirebaseAppOptions = {
+export const appOptionsNoAuth: AppOptions = {
   databaseURL,
 };
 
-export const appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+export const appOptionsNoDatabaseUrl: AppOptions = {
   credential,
 };
 
-export const appOptionsAuthDB: FirebaseAppOptions = {
+export const appOptionsAuthDB: AppOptions = {
   credential,
   databaseURL,
 };
@@ -81,29 +84,25 @@ export const appOptionsAuthDB: FirebaseAppOptions = {
 export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
-      access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
-      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
+      access_token: 'mock-token',
+      expires_in: 3600,
     });
   }
 }
 
 export function app(): FirebaseApp {
-  const namespaceInternals = new FirebaseNamespace().INTERNAL;
-  namespaceInternals.removeApp = _.noop;
-  return new FirebaseApp(appOptions, appName, namespaceInternals);
+  return new FirebaseApp(appOptions, appName);
 }
 
 export function mockCredentialApp(): FirebaseApp {
   return new FirebaseApp({
     credential: new MockCredential(),
     databaseURL,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
-export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
-  const namespaceInternals = new FirebaseNamespace().INTERNAL;
-  namespaceInternals.removeApp = _.noop;
-  return new FirebaseApp(options, appName, namespaceInternals);
+export function appWithOptions(options: AppOptions): FirebaseApp {
+  return new FirebaseApp(options, appName);
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {
@@ -114,7 +113,7 @@ export function appReturningNullAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export function appReturningMalformedAccessToken(): FirebaseApp {
@@ -124,7 +123,7 @@ export function appReturningMalformedAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
@@ -134,7 +133,7 @@ export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
     } as any,
     databaseURL,
     projectId,
-  }, appName, new FirebaseNamespace().INTERNAL);
+  }, appName);
 }
 
 export const refreshToken = {
@@ -144,12 +143,16 @@ export const refreshToken = {
   type: 'refreshToken',
 };
 
+// Randomly generated JSON Web Key Sets that do not correspond to anything related to Firebase.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const jwksResponse = require('./mock.jwks.json');
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
 export const keyPairs = [
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   // The private key for this key pair is identical to the one used in ./mock.key.json
   {
     public: '-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAwJENcRev+eXZKvhhWLiV3Lz2MvO+naQRHo59g3vaNQnbgyduN/L4krlrJ5c6\nFiikXdtJNb/QrsAHSyJWCu8j3T9CruiwbidGAk2W0RuViTVspjHUTsIHExx9euWM0UomGvYk\noqXahdhPL/zViVSJt+Rt8bHLsMvpb8RquTIb9iKY3SMV2tCofNmyCSgVbghq/y7lKORtV/IR\nguWs6R22fbkb0r2MCYoNAbZ9dqnbRIFNZBC7itYtUoTEresRWcyFMh0zfAIJycWOJlVLDLqk\nY2SmIx8u7fuysCg1wcoSZoStuDq02nZEMw1dx8HGzE0hynpHlloRLByuIuOAfMCCYwIDAQAB\n-----END RSA PUBLIC KEY-----\n',
@@ -159,12 +162,12 @@ export const keyPairs = [
     public: '-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAzhI/CMRtNO45R0DD4NBXFRDYAjlB/UVGGdMJKbCIrD3Uq7r/ivedqRYUIccO\nqpeYeu9IH9iotkKq8TM0eCJAUr9WT0o5YzpGvaB8ut87xLh8SqK42VmYAvemUjI257LtDbms\nhoqzqt9Yq0sgC05b7L3r2xDTxnefeMUHYBwaerCr8PTBCu7NjK3eIWHGPouEwT46WoUpnoNm\nxdI16CoSMqtuxteG8c14qJbGR9AZujkRDntWOuL1m5KaUIc7XcAaXBt4FiPwoDoQmmCmydVC\njln3YwSrvL60iAQM6pzCxNRrJRWPYd2u7fgjir/W88w5KHOvdbUyemZWnd6SBExHuQIDAQAB\n-----END RSA PUBLIC KEY-----\n',
     private: '-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAzhI/CMRtNO45R0DD4NBXFRDYAjlB/UVGGdMJKbCIrD3Uq7r/ivedqRYU\nIccOqpeYeu9IH9iotkKq8TM0eCJAUr9WT0o5YzpGvaB8ut87xLh8SqK42VmYAvemUjI257Lt\nDbmshoqzqt9Yq0sgC05b7L3r2xDTxnefeMUHYBwaerCr8PTBCu7NjK3eIWHGPouEwT46WoUp\nnoNmxdI16CoSMqtuxteG8c14qJbGR9AZujkRDntWOuL1m5KaUIc7XcAaXBt4FiPwoDoQmmCm\nydVCjln3YwSrvL60iAQM6pzCxNRrJRWPYd2u7fgjir/W88w5KHOvdbUyemZWnd6SBExHuQID\nAQABAoIBAQDJ9iv9BbYaGBfe82SGIuoV5Uou87ru5EPN73yddTydwoN6Q21L316PZuoYKKUB\nIE36viSrwYWoCzLJ7etQihEMiCWo1A/mZikKlA1qgHptVHnMFCqiKiLHVbuV90zETCH0P7MM\nsUdhAkA+sQQY0JVbMs/DBXzomDic/k06LpDtCBNdjL7UIT5KyFbBqit+cV6H91Ujqg8MmzrU\ntOSw+63oSqZJkT6WPuA/NJNXqtFF+0aOKNX1ttrrTzSDhyp6AxOO7Wm++dpYBtcfnOc3EG65\nul9PfKsJwVZFVO+AAZwdLCeKjtCtWeJc/yXvSj2NTsjs3FKJkRAmmiMp5tH+vbE5AoGBAOhn\nKTXGI+ofA3iggByt2InCU+YIXsw1EbbhH4LGB8yyUA2SIjZybwUMKCkoMxmEumFP/FWgOL2w\nLlClqf9vZg9dBy8bDINJHm+9roYRO0/EhHA6IDSC+0X5BPZOexrBI07HJI7w7Y0WHFU8jK53\n55ps2YGT20n7haRMbbPMrq/3AoGBAOL+pY8bgCnKmeG2inun4FuD+0/aXAySXi70/BAABeHH\npogEfc0jv5SgygTiuC/2T84Jmsg0Y6M2l86srMrMA07xtyMbfRq7zih+K+EDoQ9HAwhDqxX5\nM7E8fPXscDzH2Y361QiGAQpjUcMix3hDV8oK537rYOmCYku18ZsVkjnPAoGAbE1u4fVlVTyA\ntJ0vNq45Q/GAgamS690rVStSMPIyPk02iyx3ryHi5NpGeO+X6KN269SHhiu1ZYiN/N1G/Jeg\nWzaCG4yiZygS/AXMKAQtvL2a7mXYDkCf8nrauiHWsqAg4RxiyA401dPg/kPKV5/fGZLyRbVu\nsup43BkV4n1XRv8CgYAmUIE1dJjfdPkgZiVd1epCyDZFNkBPRu1q06MwODDF+WMcllV9qMkP\nl0xCItqgDd1Ok8RygpVG2VIqam8IFAOC8b3NyTgGqSiVISba5jfrUjsqy/E21kdpZSJaiDwx\npjIMiwgmVigazsTgQSCWJhfNXKXSgHxtLbrVuLI9URjLdQKBgQDProyaG7pspt6uUdqMTa4+\nGVkUg+gIt5aVTf/Lb25K3SHA1baPamtbTDDf6vUjeJtTG+O+RMGqK5mB2MywjVHJdMGcJ44e\nogIh9eWY450oUoVBjEsdUd7Ef5KcpMFDUVFJwzCY371+Loqh2KYAk8WUSRzwGuw2QtLPO/L/\nQkKj4Q==\n-----END RSA PRIVATE KEY-----\n',
   },
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 ];
 
 // Randomly generated an X.509 certs using https://www.samltool.com/self_signed_certs.php
 export const x509CertPairs = [
-  /* tslint:disable:max-line-length */
+  /* eslint-disable max-len */
   {
     public: '-----BEGIN CERTIFICATE-----\nMIICZjCCAc+gAwIBAgIBADANBgkqhkiG9w0BAQ0FADBQMQswCQYDVQQGEwJ1czEL\nMAkGA1UECAwCQ0ExDTALBgNVBAoMBEFjbWUxETAPBgNVBAMMCGFjbWUuY29tMRIw\nEAYDVQQHDAlTdW5ueXZhbGUwHhcNMTgxMjA2MDc1MTUxWhcNMjgxMjAzMDc1MTUx\nWjBQMQswCQYDVQQGEwJ1czELMAkGA1UECAwCQ0ExDTALBgNVBAoMBEFjbWUxETAP\nBgNVBAMMCGFjbWUuY29tMRIwEAYDVQQHDAlTdW5ueXZhbGUwgZ8wDQYJKoZIhvcN\nAQEBBQADgY0AMIGJAoGBAKphmggjiVgqMLXyzvI7cKphscIIQ+wcv7Dld6MD4aKv\n7Jqr8ltujMxBUeY4LFEKw8Terb01snYpDotfilaG6NxpF/GfVVmMalzwWp0mT8+H\nyzyPj89mRcozu17RwuooR6n1ofXjGcBE86lqC21UhA3WVgjPOLqB42rlE9gPnZLB\nAgMBAAGjUDBOMB0GA1UdDgQWBBS0iM7WnbCNOnieOP1HIA+Oz/ML+zAfBgNVHSME\nGDAWgBS0iM7WnbCNOnieOP1HIA+Oz/ML+zAMBgNVHRMEBTADAQH/MA0GCSqGSIb3\nDQEBDQUAA4GBAF3jBgS+wP+K/jTupEQur6iaqS4UvXd//d4vo1MV06oTLQMTz+rP\nOSMDNwxzfaOn6vgYLKP/Dcy9dSTnSzgxLAxfKvDQZA0vE3udsw0Bd245MmX4+GOp\nlbrN99XP1u+lFxCSdMUzvQ/jW4ysw/Nq4JdJ0gPAyPvL6Qi/3mQdIQwx\n-----END CERTIFICATE-----\n',
     private: '-----BEGIN PRIVATE KEY-----\nMIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKphmggjiVgqMLXy\nzvI7cKphscIIQ+wcv7Dld6MD4aKv7Jqr8ltujMxBUeY4LFEKw8Terb01snYpDotf\nilaG6NxpF/GfVVmMalzwWp0mT8+HyzyPj89mRcozu17RwuooR6n1ofXjGcBE86lq\nC21UhA3WVgjPOLqB42rlE9gPnZLBAgMBAAECgYAwZ7g2FbqAZMQf/RKUORTiIw04\nXdbGLsi6/gZGNuUUrjxfGPiqxzaTFP+qk0zr3U4PEWB0v9uqvDFYoVURDhT7isxm\nH5bc6dxwvBRIy8tLtvxo0jMTotJaBhEHP3YMKxbC7lxo3PV5HLIve5nf9ChOypKp\n4zbP4d1IJjpu8ggrbQJBANoPCrJyXjsDgh8WAEpALAsgM4ugyJwdk8AHJUTy3IeJ\niYYB/RLVpYW8LI1dmqN5NPKbyKE+dsdSiiEpclsocl8CQQDIBt5DbO+tEGr5BGsk\nBi+P3E1M3KVV2eJv+inlgYkYeS/cdd5CJczCDwxeDk8DXsKvmOp0LCHeU2sCKjSy\nF07fAkB86KLjB1ptCZxu/CZcYhgYo3CDai2gJ90r4av6q/eheCqb5eW29UUkr18B\n932OaO7ojk5F90cI9IIFbv1/tFKXAkEAnrXUZWtqQMdmGW+IE21VD7CdJP9tsFDR\nekfkNlYxkVmWwDZFw/Z6IQAPsBFqYCIwF2Qdo0/hD6bgoTcb2LLlwQJATqOMr7yr\neYKLJ+edhwMHx4U5ZIT8l/MjDv4/6L6FgGYVo7gNjjIIsDXUOo3PlBOWe6fxb5+f\ntFlwxZNz+g9ONg==\n-----END PRIVATE KEY-----\n',
@@ -173,16 +176,25 @@ export const x509CertPairs = [
     public: '-----BEGIN CERTIFICATE-----\nMIICZjCCAc+gAwIBAgIBADANBgkqhkiG9w0BAQ0FADBQMQswCQYDVQQGEwJ1czEL\nMAkGA1UECAwCQ0ExDTALBgNVBAoMBEFjbWUxETAPBgNVBAMMCGFjbWUuY29tMRIw\nEAYDVQQHDAlTdW5ueXZhbGUwHhcNMTgxMjA2MDc1ODE4WhcNMjgxMjAzMDc1ODE4\nWjBQMQswCQYDVQQGEwJ1czELMAkGA1UECAwCQ0ExDTALBgNVBAoMBEFjbWUxETAP\nBgNVBAMMCGFjbWUuY29tMRIwEAYDVQQHDAlTdW5ueXZhbGUwgZ8wDQYJKoZIhvcN\nAQEBBQADgY0AMIGJAoGBAKuzYKfDZGA6DJgQru3wNUqv+S0hMZfP/jbp8ou/8UKu\nrNeX7cfCgt3yxoGCJYKmF6t5mvo76JY0MWwA53BxeP/oyXmJ93uHG5mFRAsVAUKs\ncVVb0Xi6ujxZGVdDWFV696L0BNOoHTfXmac6IBoZQzNNK4n1AATqwo+z7a0pfRrJ\nAgMBAAGjUDBOMB0GA1UdDgQWBBSKmi/ZKMuLN0ES7/jPa7q7jAjPiDAfBgNVHSME\nGDAWgBSKmi/ZKMuLN0ES7/jPa7q7jAjPiDAMBgNVHRMEBTADAQH/MA0GCSqGSIb3\nDQEBDQUAA4GBAAg2a2kSn05NiUOuWOHwPUjW3wQRsGxPXtbhWMhmNdCfKKteM2+/\nLd/jz5F3qkOgGQ3UDgr3SHEoWhnLaJMF4a2tm6vL2rEIfPEK81KhTTRxSsAgMVbU\nJXBz1md6Ur0HlgQC7d1CHC8/xi2DDwHopLyxhogaZUxy9IaRxUEa2vJW\n-----END CERTIFICATE-----\n',
     private: '-----BEGIN PRIVATE KEY-----\nMIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKuzYKfDZGA6DJgQ\nru3wNUqv+S0hMZfP/jbp8ou/8UKurNeX7cfCgt3yxoGCJYKmF6t5mvo76JY0MWwA\n53BxeP/oyXmJ93uHG5mFRAsVAUKscVVb0Xi6ujxZGVdDWFV696L0BNOoHTfXmac6\nIBoZQzNNK4n1AATqwo+z7a0pfRrJAgMBAAECgYBG15vpnBSuH0VS+I80XQef6TtG\nA4wStx6MSbppLqi8epWV3nmdEgQszx5YEPqpDR53AZWP6WftkVtS1IypOChTwRIh\n73vheFJ4XYqjoU+2OUtj7hhMMHDBFhw7W3Jvz4PkPu9drmzBS8N5Dd38ROwhwoS3\nUD/18pxXXyd61s/+gQJBANSuA7fRna1qXmRmdwpQR1Mebh0dw2ZgOn4ekIgsfmgP\nGPznhsjWQEuT1BxIS8R8x4ZmCJY4W89GfUBLtWprBTsCQQDOrIyHCOzOmNYXcgRT\nhW+ZiSi+46FAYqCKawIwlq2M0GsJaMTdXFQFKTmnxiNvWxxDOeZcIsrc5uwEwr6A\n3I/LAkEAwuFBHurAZOsW20DYy2aMNKmplJx1NBXxAyfWoDDFE2ziJLuyUc2g1J/8\nuH22j7EW0xwjuiKiXeflVUkKTx0JiQJAUQb5OV/YZ88n8J008QHZlRpfLSfVaobA\nZkQ54Y7Rj+mObWvz8s1l63gUMKDP97KCzCCBHhJN8nlegydOxPq0LQJADBjkunGt\nfIGv6A3SG5/5nRYI1gHQsq30BaAPwx6BuDBtnaf5BpzcFvu1JMNHoVFYzmiykpwX\n1zUhaAtcX2BV9g==\n-----END PRIVATE KEY-----\n',
   },
-  /* tslint:enable:max-line-length */
+  /* eslint-enable max-len */
 ];
+
+// Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
+export const jwksKeyPair = {
+  /* eslint-disable max-len */
+  // The private key for this key pair is identical to the one used in ./mock.jwks.json
+  private: '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEArFYQyEdjj43mnpXwj+3WgAE01TSYe1+XFE9mxUDShysFwtVZ\nOHFSMm6kl+B3Y/O8NcPt5osntLlH6KHvygExAE0tDmFYq8aKt7LQQF8rTv0rI6MP\n92ezyCEp4MPmAPFD/tY160XGrkqApuY2/+L8eEXdkRyH2H7lCYypFC0u3DIY25Vl\nq+ZDkxB2kGykGgb1zVazCDDViqV1p9hSltmm4el9AyF08FsMCpk/NvwKOY4pJ/sm\n99CDKxMhQBaT9lrIQt0B1VqTpEwlOoiFiyXASRXp9ZTeL4mrLPqSeozwPvspD81w\nbgecd62F640scKBr3ko73L8M8UWcwgd+moKCJwIDAQABAoIBAEDPJQSMhE6KKL5e\n2NbntJDy4zGC1A0hh6llqtpnZETc0w/QN/tX8ndw0IklKwD1ukPl6OOYVVhLjVVZ\nANpQ1GKuo1ETHsuKoMQwhMyQfbL41m5SdkCuSRfsENmsEiUslkuRtzlBRlRpRDR/\nwxM8A4IflBFsT1IFdpC+yx8BVuwLc35iVnaGQpo/jhSDibt07j+FdOKEWkMGj+rL\nsHC6cpB2NMTBl9CIDLW/eq1amBOAGtsSKqoGJvaQY/mZf7SPkRjYIfIl2PWSaduT\nfmMrsYYFtHUKVOMYAD7P5RWNkS8oERucnXT3ouAECvip3Ew2JqlQc0FP7FS5CxH3\nWdfvLuECgYEA8Q7rJrDOdO867s7P/lXMklbAGnuNnAZJdAEXUMIaPJi7al97F119\n4DKBuF7c/dDf8CdiOvMzP8r/F8+FFx2D61xxkQNeuxo5Xjlt23OzW5EI2S6ABesZ\n/3sQWqvKCGuqN7WENYF3EiKyByQ22MYXk8CE7KZuO57Aj88t6TsaNhkCgYEAtwSs\nhbqKSCneC1bQ3wfSAF2kPYRrQEEa2VCLlX1Mz7zHufxksUWAnAbU8O3hIGnXjz6T\nqzivyJJhFSgNGeYpwV67GfXnibpr3OZ/yx2YXIQfp0daivj++kvEU7aNfM9rHZA9\nS3Gh7hKELdB9b0DkrX5GpLiZWA6NnJdrIRYbAj8CgYBCZSyJvJsxBA+EZTxOvk0Z\nZYGGCc/oUKb8p6xHVx8o35yHYQMjXWHlVaP7J03RLy3vFLnuqLvN71ixszviMQP7\n2LuDCJ2YBVIVzNWgY07cgqcgQrmKZ8YCY2AOyVBdX2JD8+AVaLJmMV49r1DYBj/K\nN3WlRPYJv+Ej+xmXKus+SQKBgHh/Zkthxxu+HQigL0M4teYxwSoTnj2e39uGsXBK\nICGCLIniiDVDCmswAFFkfV3G8frI+5a26t2Gqs6wIPgVVxaOlWeBROGkUNIPHMKR\niLgY8XJEg3OOfuoyql9niP5M3jyHtCOQ/Elv/YDgjUWLl0Q3KLHZLHUSl+AqvYj6\nMewnAoGBANgYzPZgP+wreI55BFR470blKh1mFz+YGa+53DCd7JdMH2pdp4hoh303\nXxpOSVlAuyv9SgTsZ7WjGO5UdhaBzVPKgN0OO6JQmQ5ZrOR8ZJ7VB73FiVHCEerj\n1m2zyFv6OT7vqdg+V1/SzxMEmXXFQv1g69k6nWGazne3IJlzrSpj\n-----END RSA PRIVATE KEY-----\n',
+  public: '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArFYQyEdjj43mnpXwj+3W\ngAE01TSYe1+XFE9mxUDShysFwtVZOHFSMm6kl+B3Y/O8NcPt5osntLlH6KHvygEx\nAE0tDmFYq8aKt7LQQF8rTv0rI6MP92ezyCEp4MPmAPFD/tY160XGrkqApuY2/+L8\neEXdkRyH2H7lCYypFC0u3DIY25Vlq+ZDkxB2kGykGgb1zVazCDDViqV1p9hSltmm\n4el9AyF08FsMCpk/NvwKOY4pJ/sm99CDKxMhQBaT9lrIQt0B1VqTpEwlOoiFiyXA\nSRXp9ZTeL4mrLPqSeozwPvspD81wbgecd62F640scKBr3ko73L8M8UWcwgd+moKC\nJwIDAQAB\n-----END PUBLIC KEY-----\n',
+};
 
 /**
  * Generates a mocked Firebase ID token.
  *
  * @param {object} overrides Overrides for the generated token's attributes.
+ * @param {object} claims Extra claims to add to the token.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: object): string {
+export function generateIdToken(overrides?: object, claims?: object): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -194,7 +206,39 @@ export function generateIdToken(overrides?: object): string {
     },
   }, overrides);
 
-  return jwt.sign(developerClaims, certificateObject.private_key, options);
+  const payload = {
+    ...developerClaims,
+    ...claims,
+  };
+
+  return jwt.sign(payload, certificateObject.private_key, options);
+}
+
+/**
+ * Generates a mocked Auth Blocking token.
+ *
+ * @param overrides Overrides for the generated token's attributes.
+ * @param claims Extra claims to add to the token.
+ * @return A mocked Auth Blocking token with any provided overrides included.
+ */
+export function generateAuthBlockingToken(overrides?: object, claims?: object): string {
+  const options = _.assign({
+    audience: `https://us-central1-${projectId}.cloudfunctions.net/functionName`,
+    expiresIn: TEN_MINUTES_IN_SECONDS,
+    issuer: 'https://securetoken.google.com/' + projectId,
+    subject: uid,
+    algorithm: ALGORITHM,
+    header: {
+      kid: certificateObject.private_key_id,
+    },
+  }, overrides);
+
+  const payload = {
+    ...developerClaims,
+    ...claims,
+  };
+
+  return jwt.sign(payload, certificateObject.private_key, options);
 }
 
 /**
@@ -219,15 +263,25 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
 
-export function firebaseServiceFactory(
-  firebaseApp: FirebaseApp,
-  extendApp?: (props: object) => void, // eslint-disable-line @typescript-eslint/no-unused-vars
-): FirebaseServiceInterface {
-  const result = {
-    app: firebaseApp,
-    INTERNAL: {},
-  };
-  return result as FirebaseServiceInterface;
+/**
+ * Generates a mocked App Check token.
+ *
+ * @param {object} overrides Overrides for the generated token's attributes.
+ * @return {string} A mocked App Check token with any provided overrides included.
+ */
+export function generateAppCheckToken(overrides?: object): string {
+  const options = _.assign({
+    audience: ['projects/' + projectNumber, 'projects/' + projectId],
+    expiresIn: ONE_HOUR_IN_SECONDS,
+    issuer: 'https://firebaseappcheck.googleapis.com/' + projectNumber,
+    subject: appId,
+    algorithm: ALGORITHM,
+    header: {
+      kid: jwksResponse.keys[0].kid,
+    },
+  }, overrides);
+
+  return jwt.sign(developerClaims, jwksKeyPair.private, options);
 }
 
 /** Mock socket emitter class. */

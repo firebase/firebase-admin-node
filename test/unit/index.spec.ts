@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,18 +17,22 @@
 
 // General
 import './firebase.spec';
-import './firebase-app.spec';
-import './firebase-namespace.spec';
+import './app/credential-internal.spec';
+import './app/index.spec';
+import './app/firebase-app.spec';
+import './app/firebase-namespace.spec';
 
 // Utilities
 import './utils/index.spec';
 import './utils/error.spec';
 import './utils/validator.spec';
 import './utils/api-request.spec';
+import './utils/jwt.spec';
+import './utils/crypto-signer.spec';
 
 // Auth
 import './auth/auth.spec';
-import './auth/credential.spec';
+import './auth/index.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/token-verifier.spec';
@@ -40,35 +45,69 @@ import './auth/tenant-manager.spec';
 
 // Database
 import './database/database.spec';
+import './database/index.spec';
 
 // Messaging
+import './messaging/index.spec';
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 
 // Machine Learning
+import './machine-learning/index.spec';
 import './machine-learning/machine-learning.spec';
 import './machine-learning/machine-learning-api-client.spec';
 
 // Storage
 import './storage/storage.spec';
+import './storage/index.spec';
 
 // Firestore
 import './firestore/firestore.spec';
+import './firestore/index.spec';
+
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
+
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
+
+// Installations
+import './installations/installations.spec';
+import './installations/installations-request-handler.spec';
 
 // InstanceId
+import './instance-id/index.spec';
 import './instance-id/instance-id.spec';
-import './instance-id/instance-id-request.spec';
 
 // ProjectManagement
+import './project-management/index.spec';
 import './project-management/project-management.spec';
 import './project-management/project-management-api-request.spec';
 import './project-management/android-app.spec';
 import './project-management/ios-app.spec';
 
 // SecurityRules
+import './security-rules/index.spec';
 import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
 
 // RemoteConfig
+import './remote-config/index.spec';
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';
+
+// AppCheck
+import './app-check/app-check.spec';
+import './app-check/app-check-api-client-internal.spec';
+import './app-check/token-generator.spec';
+import './app-check/token-verifier.spec.ts';
+
+// Eventarc
+import './eventarc/eventarc.spec';
+import './eventarc/eventarc-utils.spec';
+// Functions
+import './functions/index.spec';
+import './functions/functions.spec';
+import './functions/functions-api-client-internal.spec';

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +15,31 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {deepCopy, deepExtend} from '../utils/deep-copy';
-import {SubRequest} from './batch-request';
-import {
-  Message, validateMessage, MessagingDevicesResponse,
-  MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
-  MessagingPayload, MessagingOptions, MessagingTopicResponse,
-  MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
-} from './messaging-types';
-import {FirebaseMessagingRequestHandler} from './messaging-api-request';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {
-  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError,
-} from '../utils/error';
-
+import { App } from '../app';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
+import { SubRequest } from './batch-request-internal';
+import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
+import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 
-/* eslint-disable @typescript-eslint/camelcase */
+import {
+  BatchResponse,
+  Message,
+  MessagingTopicManagementResponse,
+  MulticastMessage,
+
+  // Legacy API types
+  MessagingDevicesResponse,
+  MessagingDeviceGroupResponse,
+  MessagingPayload,
+  MessagingOptions,
+  MessagingTopicResponse,
+  MessagingConditionResponse,
+  DataMessagePayload,
+  NotificationMessagePayload,
+} from './messaging-api';
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -94,20 +101,12 @@ const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
   message_id: 'messageId',
 };
 
-// Keys which are not allowed in the messaging data payload object.
-export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];
-
-// Keys which are not allowed in the messaging options object.
-export const BLACKLISTED_OPTIONS_KEYS = [
-  'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
-];
-
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.
  *
- * @param {object} response The raw FCM server response to map.
+ * @param response - The raw FCM server response to map.
  *
- * @return {MessagingDeviceGroupResponse} The mapped MessagingDevicesResponse object.
+ * @returns The mapped MessagingDevicesResponse object.
  */
 function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResponse {
   // Rename properties on the server response
@@ -132,9 +131,9 @@ function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResp
 /**
  * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
  *
- * @param {object} response The raw FCM server response to map.
+ * @param response - The raw FCM server response to map.
  *
- * @return {MessagingDeviceGroupResponse} The mapped MessagingDeviceGroupResponse object.
+ * @returns The mapped MessagingDeviceGroupResponse object.
  */
 function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceGroupResponse {
   // Rename properties on the server response
@@ -152,7 +151,7 @@ function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceG
  *
  * @param {object} response The raw FCM server response to map.
  *
- * @return {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
+ * @returns {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
  */
 function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
@@ -185,37 +184,18 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 
 
 /**
- * Internals of a Messaging instance.
- */
-class MessagingInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve(undefined);
-  }
-}
-
-
-/**
  * Messaging service bound to the provided app.
  */
-export class Messaging implements FirebaseServiceInterface {
-
-  public INTERNAL: MessagingInternals = new MessagingInternals();
+export class Messaging {
 
   private urlPath: string;
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * @param {FirebaseApp} app The app for this Messaging service.
-   * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
@@ -228,21 +208,27 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns the app associated with this Messaging instance.
+   * The {@link firebase-admin.app#App} associated with the current `Messaging` service
+   * instance.
    *
-   * @return {FirebaseApp} The app associated with this Messaging instance.
+   * @example
+   * ```javascript
+   * var app = messaging.app;
+   * ```
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 
   /**
-   * Sends a message via Firebase Cloud Messaging (FCM).
+   * Sends the given message via FCM.
    *
-   * @param {Message} message The message to be sent.
-   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
-   *
-   * @return {Promise<string>} A Promise fulfilled with a message ID string.
+   * @param message - The message payload.
+   * @param dryRun - Whether to send the message in the dry-run
+   *   (validation only) mode.
+   * @returns A promise fulfilled with a unique message ID
+   *   string after the message has been successfully handed off to the FCM
+   *   service for delivery.
    */
   public send(message: Message, dryRun?: boolean): Promise<string> {
     const copy: Message = deepCopy(message);
@@ -253,7 +239,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: {message: Message; validate_only?: boolean} = {message: copy};
+        const request: { message: Message; validate_only?: boolean } = { message: copy };
         if (dryRun) {
           request.validate_only = true;
         }
@@ -265,19 +251,23 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Sends all the messages in the given array via Firebase Cloud Messaging. Employs batching to
-   * send the entire list as a single RPC call. Compared to the send() method, this method is a
-   * significantly more efficient way to send multiple messages.
+   * Sends all the messages in the given array via Firebase Cloud Messaging.
+   * Employs batching to send the entire list as a single RPC call. Compared
+   * to the `send()` method, this method is a significantly more efficient way
+   * to send multiple messages.
    *
-   * The responses list obtained from the return value corresponds to the order of input messages.
-   * An error from this method indicates a total failure -- i.e. none of the messages in the
-   * list could be sent. Partial failures are indicated by a BatchResponse return value.
+   * The responses list obtained from the return value
+   * corresponds to the order of tokens in the `MulticastMessage`. An error
+   * from this method indicates a total failure -- i.e. none of the messages in
+   * the list could be sent. Partial failures are indicated by a `BatchResponse`
+   * return value.
    *
-   * @param {Message[]} messages A non-empty array containing up to 500 messages.
-   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
-   *
-   * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
-   *     of the send operation.
+   * @param messages - A non-empty array
+   *   containing up to 500 messages.
+   * @param dryRun - Whether to send the messages in the dry-run
+   *   (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the
+   *   send operation.
    */
   public sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
     if (validator.isArray(messages) && messages.constructor !== Array) {
@@ -306,7 +296,7 @@ export class Messaging implements FirebaseServiceInterface {
       .then((urlPath) => {
         const requests: SubRequest[] = copy.map((message) => {
           validateMessage(message);
-          const request: {message: Message; validate_only?: boolean} = {message};
+          const request: { message: Message; validate_only?: boolean } = { message };
           if (dryRun) {
             request.validate_only = true;
           }
@@ -320,19 +310,22 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Sends the given multicast message to all the FCM registration tokens specified in it.
+   * Sends the given multicast message to all the FCM registration tokens
+   * specified in it.
    *
-   * This method uses the sendAll() API under the hood to send the given
-   * message to all the target recipients. The responses list obtained from the return value
-   * corresponds to the order of tokens in the MulticastMessage. An error from this method
-   * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
-   * failures are indicated by a BatchResponse return value.
+   * This method uses the `sendAll()` API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the
+   * return value corresponds to the order of tokens in the `MulticastMessage`.
+   * An error from this method indicates a total failure -- i.e. the message was
+   * not sent to any of the tokens in the list. Partial failures are indicated by
+   * a `BatchResponse` return value.
    *
-   * @param {MulticastMessage} message A multicast message containing up to 500 tokens.
-   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
-   *
-   * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
-   *     of the send operation.
+   * @param message - A multicast message
+   *   containing up to 500 tokens.
+   * @param dryRun - Whether to send the message in the dry-run
+   *   (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the
+   *   send operation.
    */
   public sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
     const copy: MulticastMessage = deepCopy(message);
@@ -365,21 +358,30 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Sends an FCM message to a single device or an array of devices.
+   * Sends an FCM message to a single device corresponding to the provided
+   * registration token.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
-   *     registration tokens for the device(s) to which to send the message.
-   * @param {MessagingPayload} payload The message payload.
-   * @param {MessagingOptions} [options = {}] Optional options to alter the message.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_individual_devices |
+   * Send to individual devices}
+   * for code samples and detailed documentation. Takes either a
+   * `registrationToken` to send to a single device or a
+   * `registrationTokens` parameter containing an array of tokens to send
+   * to multiple devices.
    *
-   * @return {Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse>} A Promise fulfilled
-   *     with the server's response after the message has been sent.
+   * @param registrationToken - A device registration token or an array of
+   *   device registration tokens to which the message should be sent.
+   * @param payload - The message payload.
+   * @param options - Optional options to
+   *   alter the message.
+   *
+   * @returns A promise fulfilled with the server's response after the message
+   *   has been sent.
    */
   public sendToDevice(
     registrationTokenOrTokens: string | string[],
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDevicesResponse | MessagingDeviceGroupResponse> {
+  ): Promise<MessagingDevicesResponse> {
     // Validate the input argument types. Since these are common developer errors when getting
     // started, throw an error instead of returning a rejected promise.
     this.validateRegistrationTokensType(
@@ -417,27 +419,38 @@ export class Messaging implements FirebaseServiceInterface {
         if ('multicast_id' in response) {
           return mapRawResponseToDevicesResponse(response);
         } else {
-          return mapRawResponseToDeviceGroupResponse(response);
+          const groupResponse = mapRawResponseToDeviceGroupResponse(response);
+          return {
+            ...groupResponse,
+            canonicalRegistrationTokenCount: -1,
+            multicastId: -1,
+            results: [],
+          }
         }
       });
   }
 
   /**
-   * Sends an FCM message to a device group.
+   * Sends an FCM message to a device group corresponding to the provided
+   * notification key.
    *
-   * @param {string} notificationKey The notification key representing the device group to which to
-   *     send the message.
-   * @param {MessagingPayload} payload The message payload.
-   * @param {MessagingOptions} [options = {}] Optional options to alter the message.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group |
+   * Send to a device group} for code samples and detailed documentation.
    *
-   * @return {Promise<MessagingDeviceGroupResponse|MessagingDevicesResponse>} A Promise fulfilled
-   *     with the server's response after the message has been sent.
+   * @param notificationKey - The notification key for the device group to
+   *   which to send the message.
+   * @param payload - The message payload.
+   * @param options - Optional options to
+   *   alter the message.
+   *
+   * @returns A promise fulfilled with the server's response after the message
+   *   has been sent.
    */
   public sendToDeviceGroup(
     notificationKey: string,
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDeviceGroupResponse | MessagingDevicesResponse> {
+  ): Promise<MessagingDeviceGroupResponse> {
     if (!validator.isNonEmptyString(notificationKey)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
@@ -489,7 +502,11 @@ export class Messaging implements FirebaseServiceInterface {
               'Notification key provided to sendToDeviceGroup() is invalid.',
             );
           } else {
-            return mapRawResponseToDevicesResponse(response);
+            const devicesResponse = mapRawResponseToDevicesResponse(response);
+            return {
+              ...devicesResponse,
+              failedRegistrationTokens: [],
+            }
           }
         }
 
@@ -500,12 +517,16 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Sends an FCM message to a topic.
    *
-   * @param {string} topic The name of the topic to which to send the message.
-   * @param {MessagingPayload} payload The message payload.
-   * @param {MessagingOptions} [options = {}] Optional options to alter the message.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic |
+   * Send to a topic} for code samples and detailed documentation.
    *
-   * @return {Promise<MessagingTopicResponse>} A Promise fulfilled with the server's response after
-   *     the message has been sent.
+   * @param topic - The topic to which to send the message.
+   * @param payload - The message payload.
+   * @param options - Optional options to
+   *   alter the message.
+   *
+   * @returns A promise fulfilled with the server's response after the message
+   *   has been sent.
    */
   public sendToTopic(
     topic: string,
@@ -545,12 +566,18 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Sends an FCM message to a condition.
    *
-   * @param {string} condition The condition to which to send the message.
-   * @param {MessagingPayload} payload The message payload.
-   * @param {MessagingOptions} [options = {}] Optional options to alter the message.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/legacy-fcm#send_to_a_condition |
+   * Send to a condition}
+   * for code samples and detailed documentation.
    *
-   * @return {Promise<MessagingConditionResponse>} A Promise fulfilled with the server's response
-   *     after the message has been sent.
+   * @param condition - The condition determining to which topics to send
+   *   the message.
+   * @param payload - The message payload.
+   * @param options - Optional options to
+   *   alter the message.
+   *
+   * @returns A promise fulfilled with the server's response after the message
+   *   has been sent.
    */
   public sendToCondition(
     condition: string,
@@ -595,14 +622,19 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Subscribes a single device or an array of devices to a topic.
+   * Subscribes a device to an FCM topic.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
-   *     registration tokens to subscribe to the topic.
-   * @param {string} topic The topic to which to subscribe.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the |
+   * Subscribe to a topic}
+   * for code samples and detailed documentation. Optionally, you can provide an
+   * array of tokens to subscribe multiple devices.
    *
-   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed FCM
-   *   server response.
+   * @param registrationTokens - A token or array of registration tokens
+   *   for the devices to subscribe to the topic.
+   * @param topic - The topic to which to subscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   subscribed to the topic.
    */
   public subscribeToTopic(
     registrationTokenOrTokens: string | string[],
@@ -617,14 +649,19 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   /**
-   * Unsubscribes a single device or an array of devices from a topic.
+   * Unsubscribes a device from an FCM topic.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
-   *     registration tokens to unsubscribe from the topic.
-   * @param {string} topic The topic to which to subscribe.
+   * See {@link https://firebase.google.com/docs/cloud-messaging/admin/manage-topic-subscriptions#unsubscribe_from_a_topic |
+   * Unsubscribe from a topic}
+   * for code samples and detailed documentation.  Optionally, you can provide an
+   * array of tokens to unsubscribe multiple devices.
    *
-   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed FCM
-   *   server response.
+   * @param registrationTokens - A device registration token or an array of
+   *   device registration tokens to unsubscribe from the topic.
+   * @param topic - The topic from which to unsubscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   unsubscribed from the topic.
    */
   public unsubscribeFromTopic(
     registrationTokenOrTokens: string | string[],
@@ -650,8 +687,8 @@ export class Messaging implements FirebaseServiceInterface {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_ARGUMENT,
             'Failed to determine project ID for Messaging. Initialize the '
-              + 'SDK with service account credentials or set project ID as an app option. '
-              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+            + 'SDK with service account credentials or set project ID as an app option. '
+            + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
           );
         }
 
@@ -663,13 +700,13 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Helper method which sends and handles topic subscription management requests.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens - The registration token or an array of
    *     registration tokens to unsubscribe from the topic.
-   * @param {string} topic The topic to which to subscribe.
-   * @param {string} methodName The name of the original method called.
-   * @param {string} path The endpoint path to use for the request.
+   * @param topic - The topic to which to subscribe.
+   * @param methodName - The name of the original method called.
+   * @param path - The endpoint path to use for the request.
    *
-   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed server
+   * @returns A Promise fulfilled with the parsed server
    *   response.
    */
   private sendTopicManagementRequest(
@@ -714,8 +751,8 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the types of the messaging payload and options. If invalid, an error will be thrown.
    *
-   * @param {MessagingPayload} payload The messaging payload to validate.
-   * @param {MessagingOptions} options The messaging options to validate.
+   * @param payload - The messaging payload to validate.
+   * @param options - The messaging options to validate.
    */
   private validateMessagingPayloadAndOptionsTypes(
     payload: MessagingPayload,
@@ -741,9 +778,9 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the messaging payload. If invalid, an error will be thrown.
    *
-   * @param {MessagingPayload} payload The messaging payload to validate.
+   * @param payload - The messaging payload to validate.
    *
-   * @return {MessagingPayload} A copy of the provided payload with whitelisted properties switched
+   * @returns A copy of the provided payload with whitelisted properties switched
    *     from camelCase to underscore_case.
    */
   private validateMessagingPayload(payload: MessagingPayload): MessagingPayload {
@@ -758,8 +795,8 @@ export class Messaging implements FirebaseServiceInterface {
       if (validPayloadKeys.indexOf(payloadKey) === -1) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Messaging payload contains an invalid "${ payloadKey }" property. Valid properties are ` +
-          `"data" and "notification".`,
+          `Messaging payload contains an invalid "${payloadKey}" property. Valid properties are ` +
+          '"data" and "notification".',
         );
       } else {
         containsDataOrNotificationKey = true;
@@ -779,8 +816,8 @@ export class Messaging implements FirebaseServiceInterface {
       if (!validator.isNonNullObject(value)) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Messaging payload contains an invalid value for the "${ payloadKey }" property. ` +
-          `Value must be an object.`,
+          `Messaging payload contains an invalid value for the "${payloadKey}" property. ` +
+          'Value must be an object.',
         );
       }
 
@@ -789,14 +826,14 @@ export class Messaging implements FirebaseServiceInterface {
           // Validate all sub-keys have a string value
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
-            `property. Values must be strings.`,
+            `Messaging payload contains an invalid value for the "${payloadKey}.${subKey}" ` +
+            'property. Values must be strings.',
           );
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ subKey }" property.`,
+            `Messaging payload contains the blacklisted "data.${subKey}" property.`,
           );
         }
       });
@@ -815,7 +852,7 @@ export class Messaging implements FirebaseServiceInterface {
         if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
+            `Messaging payload contains the blacklisted "data.${blacklistedKey}" property.`,
           );
         }
       });
@@ -832,9 +869,9 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the messaging options. If invalid, an error will be thrown.
    *
-   * @param {MessagingOptions} options The messaging options to validate.
+   * @param options - The messaging options to validate.
    *
-   * @return {MessagingOptions} A copy of the provided options with whitelisted properties switched
+   * @returns A copy of the provided options with whitelisted properties switched
    *   from camelCase to underscore_case.
    */
   private validateMessagingOptions(options: MessagingOptions): MessagingOptions {
@@ -845,7 +882,7 @@ export class Messaging implements FirebaseServiceInterface {
       if (blacklistedKey in optionsCopy) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_OPTIONS,
-          `Messaging options contains the blacklisted "${ blacklistedKey }" property.`,
+          `Messaging options contains the blacklisted "${blacklistedKey}" property.`,
         );
       }
     });
@@ -858,14 +895,14 @@ export class Messaging implements FirebaseServiceInterface {
       const keyName = ('collapseKey' in options) ? 'collapseKey' : 'collapse_key';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a non-empty string.',
       );
     } else if ('dry_run' in optionsCopy && !validator.isBoolean((optionsCopy as any).dry_run)) {
       const keyName = ('dryRun' in options) ? 'dryRun' : 'dry_run';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     } else if ('priority' in optionsCopy && !validator.isNonEmptyString(optionsCopy.priority)) {
@@ -875,32 +912,32 @@ export class Messaging implements FirebaseServiceInterface {
         'be a non-empty string.',
       );
     } else if ('restricted_package_name' in optionsCopy &&
-               !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
+      !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
       const keyName = ('restrictedPackageName' in options) ? 'restrictedPackageName' : 'restricted_package_name';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a non-empty string.',
       );
     } else if ('time_to_live' in optionsCopy && !validator.isNumber((optionsCopy as any).time_to_live)) {
       const keyName = ('timeToLive' in options) ? 'timeToLive' : 'time_to_live';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a number.',
       );
     } else if ('content_available' in optionsCopy && !validator.isBoolean((optionsCopy as any).content_available)) {
       const keyName = ('contentAvailable' in options) ? 'contentAvailable' : 'content_available';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     } else if ('mutable_content' in optionsCopy && !validator.isBoolean((optionsCopy as any).mutable_content)) {
       const keyName = ('mutableContent' in options) ? 'mutableContent' : 'mutable_content';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     }
@@ -911,9 +948,9 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the type of the provided registration token(s). If invalid, an error will be thrown.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token(s) to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the registration tokens are invalid.
+   * @param registrationTokenOrTokens - The registration token(s) to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string | string[],
@@ -921,7 +958,7 @@ export class Messaging implements FirebaseServiceInterface {
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
-        !validator.isNonEmptyString(registrationTokenOrTokens)) {
+      !validator.isNonEmptyString(registrationTokenOrTokens)) {
       throw new FirebaseMessagingError(
         errorInfo,
         `Registration token(s) provided to ${methodName}() must be a non-empty string or a ` +
@@ -933,10 +970,10 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the provided registration tokens. If invalid, an error will be thrown.
    *
-   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   * @param registrationTokenOrTokens - The registration token or an array of
    *     registration tokens to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {errorInfo?} [ErrorInfo] The error info to use if the registration tokens are invalid.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokens(
     registrationTokenOrTokens: string | string[],
@@ -969,9 +1006,9 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the type of the provided topic. If invalid, an error will be thrown.
    *
-   * @param {string} topic The topic to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   * @param topic - The topic to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the topic is invalid.
    */
   private validateTopicType(
     topic: string | string[],
@@ -990,9 +1027,9 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Validates the provided topic. If invalid, an error will be thrown.
    *
-   * @param {string} topic The topic to validate.
-   * @param {string} method The method name to use in error messages.
-   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   * @param topic - The topic to validate.
+   * @param method - The method name to use in error messages.
+   * @param errorInfo - The error info to use if the topic is invalid.
    */
   private validateTopic(
     topic: string,
@@ -1011,13 +1048,13 @@ export class Messaging implements FirebaseServiceInterface {
   /**
    * Normalizes the provided topic name by prepending it with '/topics/', if necessary.
    *
-   * @param {string} topic The topic name to normalize.
+   * @param topic - The topic name to normalize.
    *
-   * @return {string} The normalized topic name.
+   * @returns The normalized topic name.
    */
   private normalizeTopic(topic: string): string {
     if (!/^\/topics\//.test(topic)) {
-      topic = `/topics/${ topic }`;
+      topic = `/topics/${topic}`;
     }
     return topic;
   }

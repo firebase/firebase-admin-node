@@ -19,14 +19,15 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { MachineLearningApiClient, ModelContent,
-  ListModelsOptions } from '../../../src/machine-learning/machine-learning-api-client';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import { getSdkVersion } from '../../../src/utils/index';
+import { MachineLearningApiClient } from '../../../src/machine-learning/machine-learning-api-client';
+import { ListModelsOptions, ModelOptions } from '../../../src/machine-learning/index';
 
 const expect = chai.expect;
 
@@ -43,7 +44,7 @@ describe('MachineLearningApiClient', () => {
     modelHash: 'modelHash123',
     displayName: 'model_1',
     tags: ['tag_1', 'tag_2'],
-    state: {published: true},
+    state: { published: true },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
       sizeBytes: 16900988,
@@ -57,16 +58,35 @@ describe('MachineLearningApiClient', () => {
     modelHash: 'modelHash234',
     displayName: 'model_2',
     tags: ['tag_2', 'tag_3'],
-    state: {published: true},
+    state: { published: true },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model2.tflite',
       sizeBytes: 2220022,
     },
   };
+  const MODEL_RESPONSE_AUTOML = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-07-15T18:12:25.123987Z',
+    updateTime: '2020-07-15T19:15:32.965435Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_automl',
+    tags: ['tag_automl'],
+    state: { published: true },
+    tfliteModel: {
+      automlModel: 'projects/65432/models/ICN123',
+      sizeBytes: 3330033,
+    },
+  };
 
+  const PROJECT_ID = 'test-project';
+  const PROJECT_NUMBER = '1234567';
+  const OPERATION_ID = '987654';
+  const OPERATION_NAME = `projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`;
+  const STATUS_ERROR_MESSAGE = 'Invalid Argument message'
   const STATUS_ERROR_RESPONSE = {
     code: 3,
-    message: 'Invalid Argument message',
+    message: STATUS_ERROR_MESSAGE,
   };
   const OPERATION_SUCCESS_RESPONSE = {
     done: true,
@@ -75,6 +95,34 @@ describe('MachineLearningApiClient', () => {
   const OPERATION_ERROR_RESPONSE = {
     done: true,
     error: STATUS_ERROR_RESPONSE,
+  };
+  const OPERATION_NOT_DONE_RESPONSE = {
+    name: OPERATION_NAME,
+    metadata: {
+      '@type': 'type.googleapis.com/google.firebase.ml.v1beta2.ModelOperationMetadata',
+      name: `projects/${PROJECT_ID}/models/${MODEL_ID}`,
+      basicOperationStatus: 'BASIC_OPERATION_STATUS_UPLOADING'
+    },
+    done: false,
+  };
+  const OPERATION_AUTOML_RESPONSE = {
+    done: true,
+    response: MODEL_RESPONSE_AUTOML,
+  };
+  const LOCKED_MODEL_RESPONSE = {
+    name: 'projects/test-project/models/1234567',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag123',
+    modelHash: 'modelHash123',
+    displayName: 'model_1',
+    tags: ['tag_1', 'tag_2'],
+    activeOperations: [OPERATION_NOT_DONE_RESPONSE],
+    state: { published: true },
+    tfliteModel: {
+      gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+      sizeBytes: 16900988,
+    },
   };
 
   const ERROR_RESPONSE = {
@@ -86,7 +134,7 @@ describe('MachineLearningApiClient', () => {
   };
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
@@ -124,10 +172,21 @@ describe('MachineLearningApiClient', () => {
   });
 
   describe('createModel', () => {
-    const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
+    const NAME_ONLY_OPTIONS: ModelOptions = { displayName: 'name1' };
+    const GCS_OPTIONS: ModelOptions = {
+      displayName: 'name2',
+      tfliteModel: {
+        gcsTfliteUri: 'gcsUri1',
+      },
+    };
+    const AUTOML_OPTIONS: ModelOptions = {
+      displayName: 'name3',
+      tfliteModel: {
+        automlModel: 'automlModel',
+      },
+    };
 
-
-    const invalidContent: any[] = [null, undefined, {}, { tags: []}];
+    const invalidContent: any[] = [null, undefined, {}, { tags: [] }];
     invalidContent.forEach((content) => {
       it(`should reject when called with: ${JSON.stringify(content)}`, () => {
         return apiClient.createModel(content)
@@ -137,7 +196,7 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject when project id is not available', () => {
-      return clientWithoutProjectId.createModel(NAME_ONLY_CONTENT)
+      return clientWithoutProjectId.createModel(NAME_ONLY_OPTIONS)
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
@@ -147,8 +206,8 @@ describe('MachineLearningApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
-      return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should resolve with the created resource on success', () => {
@@ -156,11 +215,37 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
       stubs.push(stub);
-      return apiClient.createModel(NAME_ONLY_CONTENT)
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+        });
+    });
+
+    it('should accept TFLite GCS options', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.createModel(GCS_OPTIONS)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+        });
+    });
+
+    it('should accept AutoML options', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_AUTOML_RESPONSE));
+      stubs.push(stub);
+      return apiClient.createModel(AUTOML_OPTIONS)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(MODEL_RESPONSE_AUTOML);
         });
     });
 
@@ -169,10 +254,10 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
       stubs.push(stub);
-      return apiClient.createModel(NAME_ONLY_CONTENT)
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.error).to.deep.equal(STATUS_ERROR_RESPONSE);
         });
     });
@@ -183,8 +268,8 @@ describe('MachineLearningApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
-      return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -194,8 +279,8 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with when failed with a FirebaseAppError', () => {
@@ -204,19 +289,38 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.createModel(NAME_ONLY_OPTIONS)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
   describe('updateModel', () => {
-    const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
-    const NAME_ONLY_MASK = ['displayName'];
+    const NAME_ONLY_OPTIONS: ModelOptions = { displayName: 'name1' };
+    const GCS_OPTIONS: ModelOptions = {
+      displayName: 'name2',
+      tfliteModel: {
+        gcsTfliteUri: 'gcsUri1',
+      },
+    };
+    const AUTOML_OPTIONS: ModelOptions = {
+      displayName: 'name3',
+      tfliteModel: {
+        automlModel: 'automlModel',
+      },
+    };
 
-    const invalidContent: any[] = [null, undefined];
-    invalidContent.forEach((content) => {
-      it(`should reject when called with: ${JSON.stringify(content)}`, () => {
-        return apiClient.updateModel(MODEL_ID, content, NAME_ONLY_MASK)
+    const NAME_ONLY_MASK_LIST = ['displayName'];
+    const GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
+    const AUTOML_MASK_LIST = ['displayName', 'tfliteModel.automlModel'];
+
+    const NAME_ONLY_UPDATE_MASK_STRING = 'updateMask=displayName';
+    const GCS_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.gcsTfliteUri';
+    const AUTOML_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.automlModel';
+
+    const invalidOptions: any[] = [null, undefined];
+    invalidOptions.forEach((option) => {
+      it(`should reject when called with: ${JSON.stringify(option)}`, () => {
+        return apiClient.updateModel(MODEL_ID, option, NAME_ONLY_MASK_LIST)
           .should.eventually.be.rejected.and.have.property(
             'message', 'Invalid model or mask content.');
       });
@@ -229,7 +333,7 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject when project id is not available', () => {
-      return clientWithoutProjectId.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+      return clientWithoutProjectId.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
@@ -239,8 +343,8 @@ describe('MachineLearningApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should resolve with the updated resource on success', () => {
@@ -248,16 +352,54 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
       stubs.push(stub);
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
             headers: EXPECTED_HEADERS,
-            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?updateMask=displayName`,
-            data: NAME_ONLY_CONTENT,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${NAME_ONLY_UPDATE_MASK_STRING}`,
+            data: NAME_ONLY_OPTIONS,
+          });
+        });
+    });
+
+    it('should resolve with the updated GCS resource on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, GCS_OPTIONS, GCS_MASK_LIST)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            headers: EXPECTED_HEADERS,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${GCS_UPDATE_MASK_STRING}`,
+            data: GCS_OPTIONS,
+          });
+        });
+    });
+
+    it('should resolve with the updated AutoML resource on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, AUTOML_OPTIONS, AUTOML_MASK_LIST)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            headers: EXPECTED_HEADERS,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${AUTOML_UPDATE_MASK_STRING}`,
+            data: AUTOML_OPTIONS,
           });
         });
     });
@@ -267,10 +409,10 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
       stubs.push(stub);
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.error).to.deep.equal(STATUS_ERROR_RESPONSE);
         });
     });
@@ -281,8 +423,8 @@ describe('MachineLearningApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -292,8 +434,8 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with when failed with a FirebaseAppError', () => {
@@ -302,8 +444,8 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -317,13 +459,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.getModel('projects/foo/models/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -351,7 +493,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error when error code is not present', () => {
@@ -361,7 +503,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error for non-json response', () => {
@@ -372,7 +514,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when failed with a FirebaseAppError', () => {
@@ -382,8 +524,155 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
+  });
+
+  describe('getOperation', () => {
+    it('should resolve with the requested operation on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.getOperation(OPERATION_NAME)
+        .then((resp) => {
+          expect(resp).to.deep.equal(OPERATION_SUCCESS_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject when failed with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+  });
+
+  describe('handleOperation', () => {
+    it('handles a done operation with result', () => {
+      return apiClient.handleOperation(OPERATION_SUCCESS_RESPONSE)
+        .then((resp) => {
+          expect(resp).deep.equals(MODEL_RESPONSE);
+        });
+    });
+
+    it('handles a done operation with error', () => {
+      const expected = new FirebaseMachineLearningError('invalid-argument', STATUS_ERROR_MESSAGE);
+      return apiClient.handleOperation(OPERATION_ERROR_RESPONSE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('handles a running operation with no wait', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LOCKED_MODEL_RESPONSE));
+      stubs.push(stub);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE)
+        .then((resp) => {
+          expect(resp).to.deep.equal(LOCKED_MODEL_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_ID}/models/${MODEL_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
+        .then((resp) => {
+          expect(resp).to.deep.equal(MODEL_RESPONSE);
+          expect(stub).to.have.been.calledTwice.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait ending in error', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('invalid-argument', STATUS_ERROR_MESSAGE);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
+        .should.eventually.be.rejected.and.deep.include(expected)
+        .then(() => {
+          expect(stub).to.have.been.calledTwice.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait ending in timeout', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(2).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stubs.push(stub);
+      const expected = new Error('ExponentialBackoffPoller dealine exceeded - Master timeout reached');
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 500,
+        maxWaitMillis: 1000 })
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
   });
 
   describe('listModels', () => {
@@ -395,7 +684,7 @@ describe('MachineLearningApiClient', () => {
     const invalidListFilters: any[] = [null, 0, '', true, {}, []];
     invalidListFilters.forEach((invalidFilter) => {
       it(`should reject when called with invalid pageToken: ${JSON.stringify(invalidFilter)}`, () => {
-        return apiClient.listModels({filter: invalidFilter})
+        return apiClient.listModels({ filter: invalidFilter })
           .should.eventually.be.rejected.and.have.property(
             'message', 'Invalid list filter.');
       });
@@ -404,7 +693,7 @@ describe('MachineLearningApiClient', () => {
     const invalidPageSizes: any[] = [null, '', '10', true, {}, []];
     invalidPageSizes.forEach((invalidPageSize) => {
       it(`should reject when called with invalid page size: ${JSON.stringify(invalidPageSize)}`, () => {
-        return apiClient.listModels({pageSize: invalidPageSize})
+        return apiClient.listModels({ pageSize: invalidPageSize })
           .should.eventually.be.rejected.and.have.property(
             'message', 'Invalid page size.');
       });
@@ -413,7 +702,7 @@ describe('MachineLearningApiClient', () => {
     const outOfRangePageSizes: number[] = [-1, 0, 101];
     outOfRangePageSizes.forEach((invalidPageSize) => {
       it(`should reject when called with invalid page size: ${invalidPageSize}`, () => {
-        return apiClient.listModels({pageSize: invalidPageSize})
+        return apiClient.listModels({ pageSize: invalidPageSize })
           .should.eventually.be.rejected.and.have.property(
             'message', 'Page size must be between 1 and 100.');
       });
@@ -422,7 +711,7 @@ describe('MachineLearningApiClient', () => {
     const invalidPageTokens: any[] = [null, 0, '', true, {}, []];
     invalidPageTokens.forEach((invalidToken) => {
       it(`should reject when called with invalid pageToken: ${JSON.stringify(invalidToken)}`, () => {
-        return apiClient.listModels({pageToken: invalidToken})
+        return apiClient.listModels({ pageToken: invalidToken })
           .should.eventually.be.rejected.and.have.property(
             'message', 'Next page token must be a non-empty string.');
       });
@@ -446,9 +735,9 @@ describe('MachineLearningApiClient', () => {
     });
 
     const validOptions: ListModelsOptions[] = [
-      {pageSize: 5},
-      {pageToken: 'next'},
-      {filter: 'displayName=name1'},
+      { pageSize: 5 },
+      { pageToken: 'next' },
+      { filter: 'displayName=name1' },
       {
         filter: 'displayName=name1',
         pageSize: 5,
@@ -484,7 +773,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -494,7 +783,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -505,7 +794,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -515,7 +804,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -529,13 +818,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.deleteModel('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.deleteModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -562,7 +851,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
@@ -572,7 +861,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -583,7 +872,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when failed with a FirebaseAppError', () => {
@@ -593,7 +882,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 });

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -307,7 +308,7 @@ describe('isUid()', () => {
   });
 
   it('should return false with an invalid type', () => {
-    expect(isUid({uid: createRandomString(1)})).to.be.false;
+    expect(isUid({ uid: createRandomString(1) })).to.be.false;
   });
 
   it('should return false with an empty string', () => {
@@ -355,7 +356,7 @@ describe('isEmail()', () => {
   });
 
   it('should return false with a non string', () => {
-    expect(isEmail({email: 'user@example.com'})).to.be.false;
+    expect(isEmail({ email: 'user@example.com' })).to.be.false;
   });
 
   it('show return true with a valid email string', () => {

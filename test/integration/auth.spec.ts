@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import url = require('url');
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import * as scrypt from 'scrypt';
-import firebase from '@firebase/app';
-import '@firebase/auth';
-import {clone} from 'lodash';
+import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
+import firebase from '@firebase/app-compat';
+import '@firebase/auth-compat';
+import { clone } from 'lodash';
+import { User, FirebaseAuth } from '@firebase/auth-types';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
 } from './setup';
-import url = require('url');
 import * as mocks from '../resources/mocks';
-import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
-import { User, FirebaseAuth } from '@firebase/auth-types';
+import {
+  AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
+  TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
+  UserImportRecord, UserRecord, getAuth,
+} from '../../lib/auth/index';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -39,10 +41,13 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
 const newMultiFactorUserUid = generateRandomString(20);
 const sessionCookieUids = [
+  generateRandomString(20),
   generateRandomString(20),
   generateRandomString(20),
   generateRandomString(20),
@@ -74,7 +79,7 @@ let deleteQueue = Promise.resolve();
 
 interface UserImportTest {
   name: string;
-  importOptions: admin.auth.UserImportOptions;
+  importOptions: UserImportOptions;
   rawPassword: string;
   rawSalt?: string;
   computePasswordHash(userImportTest: UserImportTest): Buffer;
@@ -104,6 +109,9 @@ describe('admin.auth', () => {
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
+    if (authEmulatorHost) {
+      (clientAuth() as any).useEmulator('http://' + authEmulatorHost);
+    }
     return cleanup();
   });
 
@@ -115,7 +123,7 @@ describe('admin.auth', () => {
     const newUserData = clone(mockUserData);
     newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
-    return admin.auth().createUser(newUserData)
+    return getAuth().createUser(newUserData)
       .then((userRecord) => {
         uidFromCreateUserWithoutUid = userRecord.uid;
         expect(typeof userRecord.uid).to.equal('string');
@@ -129,7 +137,7 @@ describe('admin.auth', () => {
   it('createUser() creates a new user with the specified UID', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
-    return admin.auth().createUser(newUserData)
+    return getAuth().createUser(newUserData)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
         // Confirm expected email.
@@ -139,7 +147,10 @@ describe('admin.auth', () => {
       });
   });
 
-  it('createUser() creates a new user with enrolled second factors', () => {
+  it('createUser() creates a new user with enrolled second factors', function () {
+    if (authEmulatorHost) {
+      return this.skip(); // Not yet supported in Auth Emulator.
+    }
     const enrolledFactors = [
       {
         phoneNumber: '+16505550001',
@@ -161,7 +172,7 @@ describe('admin.auth', () => {
         enrolledFactors,
       },
     };
-    return admin.auth().createUser(newUserData)
+    return getAuth().createUser(newUserData)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newMultiFactorUserUid);
         // Confirm expected email.
@@ -172,14 +183,16 @@ describe('admin.auth', () => {
         const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
         expect(firstMultiFactor.uid).not.to.be.undefined;
         expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect((firstMultiFactor as PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[0].phoneNumber);
         expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
         expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
         // Confirm second enrolled second factor.
         const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
         expect(secondMultiFactor.uid).not.to.be.undefined;
         expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect((secondMultiFactor as PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[1].phoneNumber);
         expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
         expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
       });
@@ -188,26 +201,226 @@ describe('admin.auth', () => {
   it('createUser() fails when the UID is already in use', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
-    return admin.auth().createUser(newUserData)
+    return getAuth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
   });
 
   it('getUser() returns a user record with the matching UID', () => {
-    return admin.auth().getUser(newUserUid)
+    return getAuth().getUser(newUserUid)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('getUserByEmail() returns a user record with the matching email', () => {
-    return admin.auth().getUserByEmail(mockUserData.email)
+    return getAuth().getUserByEmail(mockUserData.email)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('getUserByPhoneNumber() returns a user record with the matching phone number', () => {
-    return admin.auth().getUserByPhoneNumber(mockUserData.phoneNumber)
+    return getAuth().getUserByPhoneNumber(mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await getAuth().importUsers([importUser]);
+
+    try {
+      await getAuth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return getAuth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return getAuth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await getAuth().importUsers([importUser]);
+
+    try {
+      await getAuth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return getAuth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return getAuth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await getAuth().importUsers([importUser]);
+
+    try {
+      await getAuth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return getAuth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return getAuth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await getAuth().importUsers([importUser]);
+
+    try {
+      await getAuth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return getAuth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return getAuth().getUserByProviderUid('phone', mockUserData.phoneNumber)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
@@ -219,7 +432,9 @@ describe('admin.auth', () => {
      * the uid, email, and phoneNumber fields. Works with at least UserRecord
      * and UserImportRecord instances.
      */
-    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string; email?: string; phoneNumber?: string}>): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+    function mapUserRecordsToUidEmailPhones(
+      values: Array<{ uid: string; email?: string; phoneNumber?: string}>
+    ): Array<{ uid: string; email?: string; phoneNumber?: string}> {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
@@ -230,7 +445,7 @@ describe('admin.auth', () => {
 
     // Also create a user with a provider config. (You can't create a user with
     // a provider config. But you *can* import one.)
-    const importUser1: admin.auth.UserImportRecord = {
+    const importUser1: UserImportRecord = {
       uid: 'uid4',
       email: 'user4@example.com',
       phoneNumber: '+15555550004',
@@ -239,7 +454,6 @@ describe('admin.auth', () => {
       metadata: {
         lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
         creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
-        lastRefreshTime: null,
       },
       providerData: [{
         displayName: 'User Four',
@@ -258,21 +472,21 @@ describe('admin.auth', () => {
       // left over from a prior run).
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await admin.auth().deleteUsers(uidsToDelete);
+      await deleteUsersWithDelay(uidsToDelete);
 
       // Create/import users required by these tests
-      await Promise.all(usersToCreate.map((user) => admin.auth().createUser(user)));
-      await admin.auth().importUsers([importUser1]);
+      await Promise.all(usersToCreate.map((user) => getAuth().createUser(user)));
+      await getAuth().importUsers([importUser1]);
     });
 
     after(async () => {
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await admin.auth().deleteUsers(uidsToDelete);
+      await deleteUsersWithDelay(uidsToDelete);
     });
 
     it('returns users by various identifier types in a single call', async () => {
-      const users = await admin.auth().getUsers([
+      const users = await getAuth().getUsers([
         { uid: 'uid1' },
         { email: 'user2@example.com' },
         { phoneNumber: '+15555550003' },
@@ -285,27 +499,27 @@ describe('admin.auth', () => {
     });
 
     it('returns found users and ignores non-existing users', async () => {
-      const users = await admin.auth().getUsers([
+      const users = await getAuth().getUsers([
         { uid: 'uid1' },
         { uid: 'uid_that_doesnt_exist' },
         { uid: 'uid3' },
       ]);
-      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist'}]);
+      expect(users.notFound).to.have.deep.members([{ uid: 'uid_that_doesnt_exist' }]);
 
       const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
       expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
     });
 
     it('returns nothing when queried for only non-existing users', async () => {
-      const notFoundIds = [{uid: 'non-existing user'}];
-      const users = await admin.auth().getUsers(notFoundIds);
+      const notFoundIds = [{ uid: 'non-existing user' }];
+      const users = await getAuth().getUsers(notFoundIds);
 
       expect(users.users).to.be.empty;
       expect(users.notFound).to.deep.equal(notFoundIds);
     });
 
     it('de-dups duplicate users', async () => {
-      const users = await admin.auth().getUsers([
+      const users = await getAuth().getUsers([
         { uid: 'uid1' },
         { uid: 'uid1' },
       ])
@@ -320,7 +534,7 @@ describe('admin.auth', () => {
         return new Date(s).toUTCString() === s;
       };
 
-      const newUserRecord = await admin.auth().createUser({
+      const newUserRecord = await getAuth().createUser({
         uid: 'lastRefreshTimeUser',
         email: 'lastRefreshTimeUser@example.com',
         password: 'p4ssword',
@@ -332,35 +546,52 @@ describe('admin.auth', () => {
 
         // Login to set the lastRefreshTime.
         await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
-          .then(() => admin.auth().getUser('lastRefreshTimeUser'))
-          .then((userRecord) => {
-            expect(userRecord.metadata.lastRefreshTime).to.exist;
-            expect(isUTCString(userRecord.metadata.lastRefreshTime!));
-            const creationTime = new Date(userRecord.metadata.creationTime).getTime();
-            const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime!).getTime();
+          .then(async () => {
+            // Attempt to retrieve the user 3 times (with a small delay between
+            // each attempt). Occassionally, this call retrieves the user data
+            // without the lastLoginTime/lastRefreshTime set; possibly because
+            // it's hitting a different server than the login request uses.
+            let userRecord = null;
+
+            for (let i = 0; i < 3; i++) {
+              userRecord = await getAuth().getUser('lastRefreshTimeUser');
+              if (userRecord.metadata.lastRefreshTime) {
+                break;
+              }
+
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1000 * Math.pow(2, i));
+              });
+            }
+
+            const metadata = userRecord!.metadata;
+            expect(metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(metadata.lastRefreshTime!)).to.be.true;
+            const creationTime = new Date(metadata.creationTime).getTime();
+            const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
             expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });
       } finally {
-        admin.auth().deleteUser('lastRefreshTimeUser');
+        getAuth().deleteUser('lastRefreshTimeUser');
       }
     });
   });
 
   it('listUsers() returns up to the specified number of users', () => {
-    const promises: Array<Promise<admin.auth.UserRecord>> = [];
+    const promises: Array<Promise<UserRecord>> = [];
     uids.forEach((uid) => {
       const tempUserData = {
         uid,
         password: 'password',
       };
-      promises.push(admin.auth().createUser(tempUserData));
+      promises.push(getAuth().createUser(tempUserData));
     });
     return Promise.all(promises)
       .then(() => {
         // Return 2 users with the provided page token.
         // This test will fail if other users are created in between.
-        return admin.auth().listUsers(2, uids[0]);
+        return getAuth().listUsers(2, uids[0]);
       })
       .then((listUsersResult) => {
         // Confirm expected number of users.
@@ -392,12 +623,12 @@ describe('admin.auth', () => {
       });
   });
 
-  it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
+  it('revokeRefreshTokens() invalidates existing sessions and ID tokens', async () => {
     let currentIdToken: string;
     let currentUser: User;
     // Sign in with an email and password account.
     return clientAuth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         currentUser = user!;
         // Get user's ID token.
@@ -406,22 +637,27 @@ describe('admin.auth', () => {
       .then((idToken) => {
         currentIdToken = idToken;
         // Verify that user's ID token while checking for revocation.
-        return admin.auth().verifyIdToken(currentIdToken, true);
+        return getAuth().verifyIdToken(currentIdToken, true);
       })
       .then((decodedIdToken) => {
         // Verification should succeed. Revoke that user's session.
         return new Promise((resolve) => setTimeout(() => resolve(
-          admin.auth().revokeRefreshTokens(decodedIdToken.sub),
+          getAuth().revokeRefreshTokens(decodedIdToken.sub),
         ), 1000));
       })
       .then(() => {
-        // verifyIdToken without checking revocation should still succeed.
-        return admin.auth().verifyIdToken(currentIdToken)
-          .should.eventually.be.fulfilled;
+        const verifyingIdToken = getAuth().verifyIdToken(currentIdToken)
+        if (authEmulatorHost) {
+          // Check revocation is forced in emulator-mode and this should throw.
+          return verifyingIdToken.should.eventually.be.rejected;
+        } else {
+          // verifyIdToken without checking revocation should still succeed.
+          return verifyingIdToken.should.eventually.be.fulfilled;
+        }
       })
       .then(() => {
         // verifyIdToken while checking for revocation should fail.
-        return admin.auth().verifyIdToken(currentIdToken, true)
+        return getAuth().verifyIdToken(currentIdToken, true)
           .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-revoked');
       })
       .then(() => {
@@ -434,23 +670,23 @@ describe('admin.auth', () => {
         return clientAuth().signInWithEmailAndPassword(
           mockUserData.email, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get new session's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
       })
       .then((idToken) => {
         // ID token for new session should be valid even with revocation check.
-        return admin.auth().verifyIdToken(idToken, true)
+        return getAuth().verifyIdToken(idToken, true)
           .should.eventually.be.fulfilled;
       });
   });
 
   it('setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
     // Set custom claims on the user.
-    return admin.auth().setCustomUserClaims(newUserUid, customClaims)
+    return getAuth().setCustomUserClaims(newUserUid, customClaims)
       .then(() => {
-        return admin.auth().getUser(newUserUid);
+        return getAuth().getUser(newUserUid);
       })
       .then((userRecord) => {
         // Confirm custom claims set on the UserRecord.
@@ -459,14 +695,14 @@ describe('admin.auth', () => {
         return clientAuth().signInWithEmailAndPassword(
           userRecord.email!, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get the user's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
       })
       .then((idToken) => {
         // Verify ID token contents.
-        return admin.auth().verifyIdToken(idToken);
+        return getAuth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
@@ -476,10 +712,10 @@ describe('admin.auth', () => {
           }
         }
         // Test clearing of custom claims.
-        return admin.auth().setCustomUserClaims(newUserUid, null);
+        return getAuth().setCustomUserClaims(newUserUid, null);
       })
       .then(() => {
-        return admin.auth().getUser(newUserUid);
+        return getAuth().getUser(newUserUid);
       })
       .then((userRecord) => {
         // Custom claims should be cleared.
@@ -490,7 +726,7 @@ describe('admin.auth', () => {
       })
       .then((idToken) => {
         // Verify ID token contents.
-        return admin.auth().verifyIdToken(idToken);
+        return getAuth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm all custom claims are cleared.
@@ -502,109 +738,263 @@ describe('admin.auth', () => {
       });
   });
 
-  it('updateUser() updates the user record with the given parameters', () => {
-    const updatedDisplayName = 'Updated User ' + newUserUid;
-    const now = new Date(1476235905000).toUTCString();
-    // Update user with enrolled second factors.
-    const enrolledFactors = [
-      {
-        uid: 'mfaUid1',
-        phoneNumber: '+16505550001',
-        displayName: 'Work phone number',
-        factorId: 'phone',
-        enrollmentTime: now,
-      },
-      {
-        uid: 'mfaUid2',
-        phoneNumber: '+16505550002',
-        displayName: 'Personal phone number',
-        factorId: 'phone',
-        enrollmentTime: now,
-      },
-    ];
-    return admin.auth().updateUser(newUserUid, {
-      email: updatedEmail,
-      phoneNumber: updatedPhone,
-      emailVerified: true,
-      displayName: updatedDisplayName,
-      multiFactor: {
-        enrolledFactors,
-      },
-    })
-      .then((userRecord) => {
-        expect(userRecord.emailVerified).to.be.true;
-        expect(userRecord.displayName).to.equal(updatedDisplayName);
-        // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail);
-        // Confirm expected phone number.
-        expect(userRecord.phoneNumber).to.equal(updatedPhone);
-        // Confirm second factors added to user.
-        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
-        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
-        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
-        // Update list of second factors.
-        return admin.auth().updateUser(newUserUid, {
-          multiFactor: {
-            enrolledFactors: [enrolledFactors[0]],
-          },
-        });
-      })
-      .then((userRecord) => {
-        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
-        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
-        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
-        // Remove all second factors.
-        return admin.auth().updateUser(newUserUid, {
-          multiFactor: {
-            enrolledFactors: null,
-          },
-        });
-      })
-      .then((userRecord) => {
-        // Confirm all second factors removed.
-        expect(userRecord.multiFactor).to.be.undefined;
+  describe('updateUser()', () => {
+    /**
+     * Creates a new user for testing purposes. The user's uid will be
+     * '$name_$tenRandomChars' and email will be
+     * '$name_$tenRandomChars@example.com'.
+     */
+    // TODO(rsgowman): This function could usefully be employed throughout this file.
+    function createTestUser(name: string): Promise<UserRecord> {
+      const tenRandomChars = generateRandomString(10);
+      return getAuth().createUser({
+        uid: name + '_' + tenRandomChars,
+        displayName: name,
+        email: name + '_' + tenRandomChars + '@example.com',
       });
+    }
+
+    let updateUser: UserRecord;
+    before(async () => {
+      updateUser = await createTestUser('UpdateUser');
+    });
+
+    after(() => {
+      return safeDelete(updateUser.uid);
+    });
+
+    it('updates the user record with the given parameters', () => {
+      const updatedDisplayName = 'Updated User ' + updateUser.uid;
+      return getAuth().updateUser(updateUser.uid, {
+        email: updatedEmail,
+        phoneNumber: updatedPhone,
+        emailVerified: true,
+        displayName: updatedDisplayName,
+      })
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.true;
+          expect(userRecord.displayName).to.equal(updatedDisplayName);
+          // Confirm expected email.
+          expect(userRecord.email).to.equal(updatedEmail);
+          // Confirm expected phone number.
+          expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        });
+    });
+
+    it('creates, updates, and removes second factors', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+
+      const now = new Date(1476235905000).toUTCString();
+      // Update user with enrolled second factors.
+      const enrolledFactors = [
+        {
+          uid: 'mfaUid1',
+          phoneNumber: '+16505550001',
+          displayName: 'Work phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+        {
+          uid: 'mfaUid2',
+          phoneNumber: '+16505550002',
+          displayName: 'Personal phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+      ];
+      return getAuth().updateUser(updateUser.uid, {
+        multiFactor: {
+          enrolledFactors,
+        },
+      })
+        .then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+          // Update list of second factors.
+          return getAuth().updateUser(updateUser.uid, {
+            multiFactor: {
+              enrolledFactors: [enrolledFactors[0]],
+            },
+          });
+        })
+        .then((userRecord) => {
+          expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+          // Remove all second factors.
+          return getAuth().updateUser(updateUser.uid, {
+            multiFactor: {
+              enrolledFactors: null,
+            },
+          });
+        })
+        .then((userRecord) => {
+          // Confirm all second factors removed.
+          expect(userRecord.multiFactor).to.be.undefined;
+        });
+    });
+
+    it('can link/unlink with a federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
+      let userRecord = await getAuth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'google.com',
+          uid: googleFederatedUid,
+        },
+      });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include(googleFederatedUid);
+      expect(providerIds).to.deep.include('google.com');
+
+      userRecord = await getAuth().updateUser(updateUser.uid, {
+        providersToUnlink: ['google.com'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include(googleFederatedUid);
+      expect(providerIds).to.not.deep.include('google.com');
+    });
+
+    it('can unlink multiple providers at once, incl a non-federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      await deletePhoneNumberUser('+15555550001');
+
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
+      const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
+
+      let userRecord = await getAuth().updateUser(updateUser.uid, {
+        phoneNumber: '+15555550001',
+        providerToLink: {
+          providerId: 'google.com',
+          uid: googleFederatedUid,
+        },
+      });
+      userRecord = await getAuth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'facebook.com',
+          uid: facebookFederatedUid,
+        },
+      });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.deep.include.members(['google.com', 'facebook.com', 'phone']);
+
+      userRecord = await getAuth().updateUser(updateUser.uid, {
+        providersToUnlink: ['google.com', 'facebook.com', 'phone'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.not.deep.include.members(['google.com', 'facebook.com', 'phone']);
+    });
+
+    it('noops successfully when given an empty providersToUnlink list', async () => {
+      const userRecord = await createTestUser('NoopWithEmptyProvidersToDeleteUser');
+      try {
+        const updatedUserRecord = await getAuth().updateUser(userRecord.uid, {
+          providersToUnlink: [],
+        });
+
+        expect(updatedUserRecord).to.deep.equal(userRecord);
+      } finally {
+        safeDelete(userRecord.uid);
+      }
+    });
+
+    it('A user with user record disabled is unable to sign in', async () => {
+      const password = 'password';
+      const email = 'updatedEmail@example.com';
+      return getAuth().updateUser(updateUser.uid, { disabled : true , password, email })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(email, password);
+        })
+        .then(() => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        });
+    });
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
-    return admin.auth().getUser(nonexistentUid)
+    return getAuth().getUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('getUserByEmail() fails when called with a non-existing email', () => {
-    return admin.auth().getUserByEmail(nonexistentUid + '@example.com')
+    return getAuth().getUserByEmail(nonexistentUid + '@example.com')
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
-    return admin.auth().getUserByPhoneNumber(nonexistentPhoneNumber)
+    return getAuth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return getAuth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('updateUser() fails when called with a non-existing UID', () => {
-    return admin.auth().updateUser(nonexistentUid, {
+    return getAuth().updateUser(nonexistentUid, {
       emailVerified: true,
     }).should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('deleteUser() fails when called with a non-existing UID', () => {
-    return admin.auth().deleteUser(nonexistentUid)
+    return getAuth().deleteUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('createCustomToken() mints a JWT that can be used to sign in', () => {
-    return admin.auth().createCustomToken(newUserUid, {
+    return getAuth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
       .then((customToken) => {
         return clientAuth().signInWithCustomToken(customToken);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         return user!.getIdToken();
       })
       .then((idToken) => {
-        return admin.auth().verifyIdToken(idToken);
+        return getAuth().verifyIdToken(idToken);
       })
       .then((token) => {
         expect(token.uid).to.equal(newUserUid);
@@ -613,18 +1003,18 @@ describe('admin.auth', () => {
   });
 
   it('createCustomToken() can mint JWTs without a service account', () => {
-    return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
+    return getAuth(noServiceAccountApp).createCustomToken(newUserUid, {
       isAdmin: true,
     })
       .then((customToken) => {
         return clientAuth().signInWithCustomToken(customToken);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         return user!.getIdToken();
       })
       .then((idToken) => {
-        return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
+        return getAuth(noServiceAccountApp).verifyIdToken(idToken);
       })
       .then((token) => {
         expect(token.uid).to.equal(newUserUid);
@@ -633,13 +1023,57 @@ describe('admin.auth', () => {
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
-    return admin.auth().verifyIdToken('invalid-token')
+    return getAuth().verifyIdToken('invalid-token')
       .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
   });
+
+  if (authEmulatorHost) {
+    describe('Auth emulator support', () => {
+      const uid = 'authEmulatorUser';
+      before(() => {
+        return getAuth().createUser({
+          uid,
+          email: 'lastRefreshTimeUser@example.com',
+          password: 'p4ssword',
+        });
+      });
+      after(() => {
+        return getAuth().deleteUser(uid);
+      });
+
+      it('verifyIdToken() succeeds when called with an unsigned token', () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          audience: projectId,
+          issuer: 'https://securetoken.google.com/' + projectId,
+          subject: uid,
+        });
+        return getAuth().verifyIdToken(unsignedToken);
+      });
+
+      it('verifyIdToken() fails when called with a token with wrong project', () => {
+        const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
+        return getAuth().verifyIdToken(unsignedToken)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+      });
+
+      it('verifyIdToken() fails when called with a token that does not belong to a user', () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          audience: projectId,
+          issuer: 'https://securetoken.google.com/' + projectId,
+          subject: 'nosuch',
+        });
+        return getAuth().verifyIdToken(unsignedToken)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+      });
+    });
+  }
 
   describe('Link operations', () => {
     const uid = generateRandomString(20).toLowerCase();
     const email = uid + '@example.com';
+    const newEmail = uid + 'new@example.com';
     const newPassword = 'newPassword';
     const userData = {
       uid,
@@ -650,7 +1084,7 @@ describe('admin.auth', () => {
 
     // Create the test user before running this suite of tests.
     before(() => {
-      return admin.auth().createUser(userData);
+      return getAuth().createUser(userData);
     });
 
     // Sign out after each test.
@@ -665,9 +1099,9 @@ describe('admin.auth', () => {
 
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
-      return admin.auth().updateUser(uid, {password: 'password'})
+      return getAuth().updateUser(uid, { password: 'password' })
         .then(() => {
-          return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
+          return getAuth().generatePasswordResetLink(email, actionCodeSettings);
         })
         .then((link) => {
           const code = getActionCode(link);
@@ -687,10 +1121,10 @@ describe('admin.auth', () => {
 
     it('generateEmailVerificationLink() should return a verification link', () => {
       // Ensure the user's email is unverified.
-      return admin.auth().updateUser(uid, {password: 'password', emailVerified: false})
+      return getAuth().updateUser(uid, { password: 'password', emailVerified: false })
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.false;
-          return admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
+          return getAuth().generateEmailVerificationLink(email, actionCodeSettings);
         })
         .then((link) => {
           const code = getActionCode(link);
@@ -708,7 +1142,7 @@ describe('admin.auth', () => {
     });
 
     it('generateSignInWithEmailLink() should return a sign-in link', () => {
-      return admin.auth().generateSignInWithEmailLink(email, actionCodeSettings)
+      return getAuth().generateSignInWithEmailLink(email, actionCodeSettings)
         .then((link) => {
           expect(getContinueUrl(link)).equal(actionCodeSettings.url);
           return clientAuth().signInWithEmailLink(email, link);
@@ -719,16 +1153,50 @@ describe('admin.auth', () => {
           expect(result.user!.emailVerified).to.be.true;
         });
     });
+
+    it('generateVerifyAndChangeEmailLink() should return a verification link', function() {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      // Ensure the user's email is verified.
+      return getAuth().updateUser(uid, { password: 'password', emailVerified: true })
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.true;
+          return getAuth().generateVerifyAndChangeEmailLink(email, newEmail, actionCodeSettings);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrl(link)).equal(actionCodeSettings.url);
+          return clientAuth().applyActionCode(code);
+        })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(newEmail, 'password');
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(newEmail);
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
   });
 
   describe('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
-    const tenantOptions: admin.auth.CreateTenantRequest = {
+    const tenantOptions: CreateTenantRequest = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      // Add random phone number / code pairs.
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
       },
     };
     const expectedCreatedTenant: any = {
@@ -737,6 +1205,19 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      // These test phone numbers will not be checked when running integration
+      // tests against the emulator suite and are ignored in auth emulator
+      // altogether. For more information, please refer to this section of the
+      // auth emulator DD: go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -744,12 +1225,28 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'DISABLED',
+        factorIds: [],
+      },
+      // Test phone numbers will not be checked when running integration tests
+      // against emulator suite. For more information, please refer to:
+      // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: false,
+      },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
       },
     };
 
@@ -773,26 +1270,46 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-          admin.auth().tenantManager().deleteTenant(tenantId)
+          getAuth().tenantManager().deleteTenant(tenantId)
             .catch(() => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
 
     it('createTenant() should resolve with a new tenant', () => {
-      return admin.auth().tenantManager().createTenant(tenantOptions)
+      return getAuth().tenantManager().createTenant(tenantOptions)
         .then((actualTenant) => {
           createdTenantId = actualTenant.tenantId;
           createdTenants.push(createdTenantId);
           expectedCreatedTenant.tenantId = createdTenantId;
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
+          }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
+    });
+
+    it('createTenant() can enable anonymous users', async () => {
+      const tenant = await getAuth().tenantManager().createTenant({
+        displayName: 'testTenantWithAnon',
+        emailSignInConfig: {
+          enabled: false,
+          passwordRequired: true,
+        },
+        anonymousSignInEnabled: true,
+      });
+      createdTenants.push(tenant.tenantId);
+
+      expect(tenant.anonymousSignInEnabled).to.be.true;
     });
 
     // Sanity check user management + email link generation + custom attribute APIs.
     // TODO: Confirm behavior in client SDK when it starts supporting it.
     describe('supports user management, email link generation, custom attribute and token revocation APIs', () => {
-      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      let tenantAwareAuth: TenantAwareAuth;
       let createdUserUid: string;
       let lastValidSinceTime: number;
       const newUserData = clone(mockUserData);
@@ -811,7 +1328,7 @@ describe('admin.auth', () => {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = getAuth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -957,7 +1474,7 @@ describe('admin.auth', () => {
           clientAuth().tenantId = createdTenantId;
 
           const customToken = await tenantAwareAuth.createCustomToken('uid1');
-          const {user} = await clientAuth().signInWithCustomToken(customToken);
+          const { user } = await clientAuth().signInWithCustomToken(customToken);
           expect(user).to.not.be.null;
           const idToken = await user!.getIdToken();
           const token = await tenantAwareAuth.verifyIdToken(idToken);
@@ -972,7 +1489,7 @@ describe('admin.auth', () => {
 
     // Sanity check OIDC/SAML config management API.
     describe('SAML management APIs', () => {
-      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      let tenantAwareAuth: TenantAwareAuth;
       const authProviderConfig = {
         providerId: randomSamlProviderId(),
         displayName: 'SAML_DISPLAY_NAME1',
@@ -999,7 +1516,7 @@ describe('admin.auth', () => {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = getAuth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -1013,7 +1530,11 @@ describe('admin.auth', () => {
         }
       });
 
-      it('should support CRUD operations', () => {
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1026,7 +1547,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -1038,26 +1559,45 @@ describe('admin.auth', () => {
     });
 
     describe('OIDC management APIs', () => {
-      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      let tenantAwareAuth: TenantAwareAuth;
       const authProviderConfig = {
         providerId: randomOidcProviderId(),
         displayName: 'OIDC_DISPLAY_NAME1',
         enabled: true,
         issuer: 'https://oidc.com/issuer1',
         clientId: 'CLIENT_ID1',
+        responseType: {
+          idToken: true,
+        },
       };
-      const modifiedConfigOptions = {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
+      };
+      const modifiedConfigOptions = {
+        providerId: authProviderConfig.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
 
       before(function() {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = getAuth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -1070,8 +1610,12 @@ describe('admin.auth', () => {
             });
         }
       });
-
-      it('should support CRUD operations', () => {
+      
+      it('should support CRUD operations', function () {
+        // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
         return tenantAwareAuth.createProviderConfig(authProviderConfig)
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
@@ -1080,12 +1624,10 @@ describe('admin.auth', () => {
           .then((config) => {
             assertDeepEqualUnordered(authProviderConfig, config);
             return tenantAwareAuth.updateProviderConfig(
-              authProviderConfig.providerId, modifiedConfigOptions);
+              authProviderConfig.providerId, deltaChanges);
           })
           .then((config) => {
-            const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
-            assertDeepEqualUnordered(modifiedConfig, config);
+            assertDeepEqualUnordered(modifiedConfigOptions, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
           .then(() => {
@@ -1096,35 +1638,83 @@ describe('admin.auth', () => {
     });
 
     it('getTenant() should resolve with expected tenant', () => {
-      return admin.auth().tenantManager().getTenant(createdTenantId)
+      return getAuth().tenantManager().getTenant(createdTenantId)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+          const actualTenantObj = actualTenant.toJSON();
+          if (authEmulatorHost) {
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete expectedCreatedTenant.testPhoneNumbers;
+          }
+          expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
         });
     });
 
     it('updateTenant() should resolve with the updated tenant', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       expectedUpdatedTenant2.tenantId = createdTenantId;
-      const updatedOptions: admin.auth.UpdateTenantRequest = {
+      const updatedOptions: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant.displayName,
         emailSignInConfig: {
           enabled: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
       };
-      const updatedOptions2: admin.auth.UpdateTenantRequest = {
+      const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
       };
-      return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
+            return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
+          })
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
-          return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
+          return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
+    });
+
+    it('updateTenant() should be able to enable/disable anon provider', async () => {
+      const tenantManager = getAuth().tenantManager();
+      let tenant = await tenantManager.createTenant({
+        displayName: 'testTenantUpdateAnon',
+      });
+      createdTenants.push(tenant.tenantId);
+      expect(tenant.anonymousSignInEnabled).to.be.false;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: true,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.true;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: false,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.false;
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {
@@ -1132,7 +1722,7 @@ describe('admin.auth', () => {
       const tenantOptions2 = deepCopy(tenantOptions);
       tenantOptions2.displayName = 'testTenant2';
       const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
-        return admin.auth().tenantManager().listTenants(100, nextPageToken)
+        return getAuth().tenantManager().listTenants(100, nextPageToken)
           .then((result) => {
             result.tenants.forEach((tenant) => {
               tenantIds.push(tenant.tenantId);
@@ -1142,7 +1732,7 @@ describe('admin.auth', () => {
             }
           });
       };
-      return admin.auth().tenantManager().createTenant(tenantOptions2)
+      return getAuth().tenantManager().createTenant(tenantOptions2)
         .then((actualTenant) => {
           createdTenants.push(actualTenant.tenantId);
           // Test listTenants returns the expected tenants.
@@ -1157,15 +1747,28 @@ describe('admin.auth', () => {
     });
 
     it('deleteTenant() should successfully delete the provided tenant', () => {
-      return admin.auth().tenantManager().deleteTenant(createdTenantId)
+      const allTenantIds: string[] = [];
+      const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+        return getAuth().tenantManager().listTenants(100, nextPageToken)
+          .then((result) => {
+            result.tenants.forEach((tenant) => {
+              tenantIds.push(tenant.tenantId);
+            });
+            if (result.pageToken) {
+              return listAllTenantIds(tenantIds, result.pageToken);
+            }
+          });
+      };
+
+      return getAuth().tenantManager().deleteTenant(createdTenantId)
         .then(() => {
-          return admin.auth().tenantManager().getTenant(createdTenantId);
+          // Use listTenants() instead of getTenant() to check that the tenant
+          // is no longer present, because Auth Emulator implicitly creates the
+          // tenant in getTenant() when it is not found
+          return listAllTenantIds(allTenantIds);
         })
         .then(() => {
-          throw new Error('unexpected success');
-        })
-        .catch((error) => {
-          expect(error.code).to.equal('auth/tenant-not-found');
+          expect(allTenantIds).to.not.contain(createdTenantId);
         });
     });
   });
@@ -1196,14 +1799,17 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
     // Clean up temp configurations used for test.
-    before(() => {
-      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
+    before(function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not implemented.
+      }
+      return removeTempConfigs().then(() => getAuth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -1211,14 +1817,14 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates a SAML config', () => {
-      return admin.auth().createProviderConfig(authProviderConfig2)
+      return getAuth().createProviderConfig(authProviderConfig2)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
     it('getProviderConfig() successfully returns the expected SAML config', () => {
-      return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+      return getAuth().getProviderConfig(authProviderConfig1.providerId)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig1, config);
         });
@@ -1227,7 +1833,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of SAML providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return getAuth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1266,10 +1872,10 @@ describe('admin.auth', () => {
         callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
         enableRequestSigning: false,
       };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1294,17 +1900,17 @@ describe('admin.auth', () => {
         callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
         enableRequestSigning: false,
       };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
 
     it('deleteProviderConfig() successfully deletes an existing SAML config', () => {
-      return admin.auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
-        return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+      return getAuth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return getAuth().getProviderConfig(authProviderConfig1.providerId)
           .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
       });
     });
@@ -1317,6 +1923,9 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer1',
       clientId: 'CLIENT_ID1',
+      responseType: {
+        idToken: true,
+      },
     };
     const authProviderConfig2 = {
       providerId: randomOidcProviderId(),
@@ -1324,18 +1933,25 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer2',
       clientId: 'CLIENT_ID2',
+      clientSecret: 'CLIENT_SECRET',
+      responseType: {
+        code: true,
+      },
     };
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
     // Clean up temp configurations used for test.
-    before(() => {
-      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
+    before(function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not implemented.
+      }
+      return removeTempConfigs().then(() => getAuth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -1343,14 +1959,14 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates an OIDC config', () => {
-      return admin.auth().createProviderConfig(authProviderConfig2)
+      return getAuth().createProviderConfig(authProviderConfig2)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
     it('getProviderConfig() successfully returns the expected OIDC config', () => {
-      return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+      return getAuth().getProviderConfig(authProviderConfig1.providerId)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig1, config);
         });
@@ -1359,7 +1975,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of OIDC providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return getAuth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1387,44 +2003,70 @@ describe('admin.auth', () => {
         });
     });
 
-    it('updateProviderConfig() successfully overwrites an OIDC config', () => {
-      const modifiedConfigOptions = {
+    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
-      };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
-        .then((config) => {
-          const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
-        });
-    });
-
-    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
-      const deltaChanges = {
-        displayName: 'OIDC_DISPLAY_NAME4',
-        issuer: 'https://oidc.com/issuer4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
       // Only above fields should be modified.
       const modifiedConfigOptions = {
-        displayName: 'OIDC_DISPLAY_NAME4',
+        providerId: authProviderConfig1.providerId,
+        displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
-        issuer: 'https://oidc.com/issuer4',
+        issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
-          const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
+          assertDeepEqualUnordered(modifiedConfigOptions, config);
         });
     });
 
+    it('updateProviderConfig() with invalid oauth response type should be rejected', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME4',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer4',
+        clientId: 'CLIENT_ID4',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: false,
+        },
+      };
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/invalid-oauth-responsetype');
+    });
+
+    it('updateProviderConfig() code flow with no client secret should be rejected', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME5',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer5',
+        clientId: 'CLIENT_ID5',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
+      };
+      return getAuth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges).
+        should.eventually.be.rejected.and.have.property('code', 'auth/missing-oauth-client-secret');
+    });
+
     it('deleteProviderConfig() successfully deletes an existing OIDC config', () => {
-      return admin.auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
-        return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+      return getAuth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return getAuth().getProviderConfig(authProviderConfig1.providerId)
           .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
       });
     });
@@ -1432,26 +2074,25 @@ describe('admin.auth', () => {
 
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
-      admin.auth().deleteUser(newUserUid),
-      admin.auth().deleteUser(newMultiFactorUserUid),
-      admin.auth().deleteUser(uidFromCreateUserWithoutUid),
+      getAuth().deleteUser(newUserUid),
+      getAuth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
 
   describe('deleteUsers()', () => {
     it('deletes users', async () => {
-      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
-      const uid2 = await admin.auth().createUser({}).then((ur) => ur.uid);
-      const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
-      const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
+      const uid1 = await getAuth().createUser({}).then((ur) => ur.uid);
+      const uid2 = await getAuth().createUser({}).then((ur) => ur.uid);
+      const uid3 = await getAuth().createUser({}).then((ur) => ur.uid);
+      const ids = [{ uid: uid1 }, { uid: uid2 }, { uid: uid3 }];
 
-      return admin.auth().deleteUsers([uid1, uid2, uid3])
+      return deleteUsersWithDelay([uid1, uid2, uid3])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(3);
           expect(deleteUsersResult.failureCount).to.equal(0);
           expect(deleteUsersResult.errors).to.have.length(0);
 
-          return admin.auth().getUsers(ids);
+          return getAuth().getUsers(ids);
         })
         .then((getUsersResult) => {
           expect(getUsersResult.users).to.have.length(0);
@@ -1460,17 +2101,17 @@ describe('admin.auth', () => {
     });
 
     it('deletes users that exist even when non-existing users also specified', async () => {
-      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid1 = await getAuth().createUser({}).then((ur) => ur.uid);
       const uid2 = 'uid-that-doesnt-exist';
-      const ids = [{uid: uid1}, {uid: uid2}];
+      const ids = [{ uid: uid1 }, { uid: uid2 }];
 
-      return admin.auth().deleteUsers([uid1, uid2])
+      return deleteUsersWithDelay([uid1, uid2])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(2);
           expect(deleteUsersResult.failureCount).to.equal(0);
           expect(deleteUsersResult.errors).to.have.length(0);
 
-          return admin.auth().getUsers(ids);
+          return getAuth().getUsers(ids);
         })
         .then((getUsersResult) => {
           expect(getUsersResult.users).to.have.length(0);
@@ -1479,15 +2120,15 @@ describe('admin.auth', () => {
     });
 
     it('is idempotent', async () => {
-      const uid = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid = await getAuth().createUser({}).then((ur) => ur.uid);
 
-      return admin.auth().deleteUsers([uid])
+      return deleteUsersWithDelay([uid])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
         })
         // Delete the user again, ensuring that everything still counts as a success.
-        .then(() => admin.auth().deleteUsers([uid]))
+        .then(() => deleteUsersWithDelay([uid]))
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
@@ -1504,17 +2145,18 @@ describe('admin.auth', () => {
     const uid = sessionCookieUids[0];
     const uid2 = sessionCookieUids[1];
     const uid3 = sessionCookieUids[2];
+    const uid4 = sessionCookieUids[3];
 
     it('creates a valid Firebase session cookie', () => {
-      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+      return getAuth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
           currentIdToken = idToken;
-          return admin.auth().verifyIdToken(idToken);
+          return getAuth().verifyIdToken(idToken);
         }).then((decodedIdTokenClaims) => {
           expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
           payloadClaims = decodedIdTokenClaims;
@@ -1524,9 +2166,9 @@ describe('admin.auth', () => {
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
           // One day long session cookie.
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn});
+          return getAuth().createSessionCookie(currentIdToken, { expiresIn });
         })
-        .then((sessionCookie) => admin.auth().verifySessionCookie(sessionCookie))
+        .then((sessionCookie) => getAuth().verifySessionCookie(sessionCookie))
         .then((decodedIdToken) => {
           // Check for expected expiration with +/-5 seconds of variation.
           expect(decodedIdToken.exp).to.be.within(expectedExp - 5, expectedExp + 5);
@@ -1534,85 +2176,151 @@ describe('admin.auth', () => {
           // Not supported in ID token,
           delete decodedIdToken.nonce;
           // exp and iat may vary depending on network connection latency.
-          delete decodedIdToken.exp;
-          delete decodedIdToken.iat;
+          delete (decodedIdToken as any).exp;
+          delete (decodedIdToken as any).iat;
           expect(decodedIdToken).to.deep.equal(payloadClaims);
         });
     });
 
     it('creates a revocable session cookie', () => {
       let currentSessionCookie: string;
-      return admin.auth().createCustomToken(uid2)
+      return getAuth().createCustomToken(uid2)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
           // One day long session cookie.
-          return admin.auth().createSessionCookie(idToken, {expiresIn});
+          return getAuth().createSessionCookie(idToken, { expiresIn });
         })
         .then((sessionCookie) => {
           currentSessionCookie = sessionCookie;
           return new Promise((resolve) => setTimeout(() => resolve(
-            admin.auth().revokeRefreshTokens(uid2),
+            getAuth().revokeRefreshTokens(uid2),
           ), 1000));
         })
         .then(() => {
-          return admin.auth().verifySessionCookie(currentSessionCookie)
-            .should.eventually.be.fulfilled;
+          const verifyingSessionCookie = getAuth().verifySessionCookie(currentSessionCookie);
+          if (authEmulatorHost) {
+            // Check revocation is forced in emulator-mode and this should throw.
+            return verifyingSessionCookie.should.eventually.be.rejected;
+          } else {
+            // verifyIdToken without checking revocation should still succeed.
+            return verifyingSessionCookie.should.eventually.be.fulfilled;
+          }
         })
         .then(() => {
-          return admin.auth().verifySessionCookie(currentSessionCookie, true)
+          return getAuth().verifySessionCookie(currentSessionCookie, true)
             .should.eventually.be.rejected.and.have.property('code', 'auth/session-cookie-revoked');
         });
     });
 
     it('fails when called with a revoked ID token', () => {
-      return admin.auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
+      return getAuth().createCustomToken(uid3, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
           currentIdToken = idToken;
           return new Promise((resolve) => setTimeout(() => resolve(
-            admin.auth().revokeRefreshTokens(uid3),
+            getAuth().revokeRefreshTokens(uid3),
           ), 1000));
         })
         .then(() => {
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn})
+          return getAuth().createSessionCookie(currentIdToken, { expiresIn })
             .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
         });
     });
 
+    it('fails when called with user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await getAuth().createCustomToken(uid4, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await getAuth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid4);
+
+      const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+      const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid4);
+
+      const userRecord = await getAuth().updateUser(uid4, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid4);
+      expect(userRecord.disabled).to.equal(true);
+
+      return getAuth().createSessionCookie(idToken, { expiresIn })
+        .should.eventually.be.rejected.and.have.property('code', 'auth/user-disabled');
+    });
   });
 
   describe('verifySessionCookie()', () => {
     const uid = sessionCookieUids[0];
     it('fails when called with an invalid session cookie', () => {
-      return admin.auth().verifySessionCookie('invalid-token')
+      return getAuth().verifySessionCookie('invalid-token')
         .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
     });
 
     it('fails when called with a Firebase ID token', () => {
-      return admin.auth().createCustomToken(uid)
+      return getAuth().createCustomToken(uid)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
-          return admin.auth().verifySessionCookie(idToken)
+          return getAuth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
+    });
+
+    it('fails with checkRevoked set to true and corresponding user disabled', async () => {
+      const expiresIn = 24 * 60 * 60 * 1000;
+      const customToken = await getAuth().createCustomToken(uid, { admin: true, groupId: '1234' });
+      const { user } = await clientAuth().signInWithCustomToken(customToken);
+      expect(user).to.exist;
+
+      const idToken = await user!.getIdToken();
+      const decodedIdTokenClaims = await getAuth().verifyIdToken(idToken);
+      expect(decodedIdTokenClaims.uid).to.be.equal(uid);
+
+      const sessionCookie = await getAuth().createSessionCookie(idToken, { expiresIn });
+      let decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
+      expect(decodedIdToken.uid).to.equal(uid);
+
+      const userRecord = await getAuth().updateUser(uid, { disabled : true });
+      // Ensure disabled field has been updated.
+      expect(userRecord.uid).to.equal(uid);
+      expect(userRecord.disabled).to.equal(true);
+
+      try {
+        // If it is in emulator mode, a user-disabled error will be thrown.
+        decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, false);
+        expect(decodedIdToken.uid).to.equal(uid);
+      } catch (error) {
+        if (authEmulatorHost) {
+          expect(error).to.have.property('code', 'auth/user-disabled');
+        } else {
+          throw error;
+        }
+      }
+
+      try {
+        await getAuth().verifySessionCookie(sessionCookie, true);
+      } catch (error) {
+        expect(error).to.have.property('code', 'auth/user-disabled');
+      }
     });
   });
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let importUserRecord: admin.auth.UserImportRecord;
+    let importUserRecord: UserImportRecord;
     const rawPassword = 'password';
     const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
@@ -1729,8 +2437,14 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.derivedKeyLength).to.exist;
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
-          return Buffer.from(scrypt.hashSync(
-            currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
+          return Buffer.from(
+            crypto.scryptSync(
+              currentRawPassword,
+              Buffer.from(currentRawSalt),
+              dkLen,
+              {
+                N, r, p,
+              }));
         },
         rawPassword,
         rawSalt,
@@ -1767,7 +2481,10 @@ describe('admin.auth', () => {
     ];
 
     fixtures.forEach((fixture) => {
-      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, () => {
+      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, function () {
+        if (authEmulatorHost) {
+          return this.skip(); // Auth Emulator does not support real hashes.
+        }
         importUserRecord = {
           uid: randomUid,
           email: randomUid + '@example.com',
@@ -1796,7 +2513,7 @@ describe('admin.auth', () => {
         photoURL,
         phoneNumber: '+15554446666',
         disabled: false,
-        customClaims: {admin: true},
+        customClaims: { admin: true },
         metadata: {
           lastSignInTime: now,
           creationTime: now,
@@ -1819,12 +2536,12 @@ describe('admin.auth', () => {
         ],
       };
       uids.push(importUserRecord.uid);
-      return admin.auth().importUsers([importUserRecord])
+      return getAuth().importUsers([importUserRecord])
         .then((result) => {
           expect(result.failureCount).to.equal(0);
           expect(result.successCount).to.equal(1);
           expect(result.errors.length).to.equal(0);
-          return admin.auth().getUser(uid);
+          return getAuth().getUser(uid);
         }).then((userRecord) => {
           // The phone number provider will be appended to the list of accounts.
           importUserRecord.providerData?.push({
@@ -1837,14 +2554,17 @@ describe('admin.auth', () => {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
           }
-        }).should.eventually.be.fulfilled;
+        });
     });
 
-    it('successfully imports users with enrolled second factors', () => {
+    it('successfully imports users with enrolled second factors', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet implemented.
+      }
       const uid = generateRandomString(20).toLowerCase();
       const email = uid + '@example.com';
       const now = new Date(1476235905000).toUTCString();
-      const enrolledFactors: admin.auth.UpdatePhoneMultiFactorInfoRequest[] = [
+      const enrolledFactors: UpdatePhoneMultiFactorInfoRequest[] = [
         {
           uid: 'mfaUid1',
           phoneNumber: '+16505550001',
@@ -1885,12 +2605,12 @@ describe('admin.auth', () => {
       };
       uids.push(importUserRecord.uid);
 
-      return admin.auth().importUsers([importUserRecord])
+      return getAuth().importUsers([importUserRecord])
         .then((result) => {
           expect(result.failureCount).to.equal(0);
           expect(result.successCount).to.equal(1);
           expect(result.errors.length).to.equal(0);
-          return admin.auth().getUser(uid);
+          return getAuth().getUser(uid);
         }).then((userRecord) => {
           // Confirm second factors added to user.
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
@@ -1902,25 +2622,41 @@ describe('admin.auth', () => {
 
     it('fails when invalid users are provided', () => {
       const users = [
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},
-        {uid: generateRandomString(20).toLowerCase(), email: 'invalid'},
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid'},
-        {uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid'} as any,
+        { uid: generateRandomString(20).toLowerCase(), email: 'invalid' },
+        { uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid' } as any,
       ];
-      return admin.auth().importUsers(users)
+      return getAuth().importUsers(users)
         .then((result) => {
           expect(result.successCount).to.equal(0);
-          expect(result.failureCount).to.equal(4);
-          expect(result.errors.length).to.equal(4);
+          expect(result.failureCount).to.equal(2);
+          expect(result.errors.length).to.equal(2);
+          expect(result.errors[0].index).to.equal(0);
+          expect(result.errors[0].error.code).to.equals('auth/invalid-email');
+          expect(result.errors[1].index).to.equal(1);
+          expect(result.errors[1].error.code).to.equals('auth/invalid-email-verified');
+        });
+    });
+
+    it('fails when users with invalid phone numbers are provided', function () {
+      if (authEmulatorHost) {
+        // Auth Emulator's phoneNumber validation is also lax and won't throw.
+        return this.skip();
+      }
+      const users = [
+        // These phoneNumbers passes local (lax) validator but fails remotely.
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error' },
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid' },
+      ];
+      return getAuth().importUsers(users)
+        .then((result) => {
+          expect(result.successCount).to.equal(0);
+          expect(result.failureCount).to.equal(2);
+          expect(result.errors.length).to.equal(2);
           expect(result.errors[0].index).to.equal(0);
           expect(result.errors[0].error.code).to.equals('auth/invalid-user-import');
           expect(result.errors[1].index).to.equal(1);
-          expect(result.errors[1].error.code).to.equals('auth/invalid-email');
-          expect(result.errors[2].index).to.equal(2);
-          expect(result.errors[2].error.code).to.equals('auth/invalid-user-import');
-          expect(result.errors[3].index).to.equal(3);
-          expect(result.errors[3].error.code).to.equals('auth/invalid-email-verified');
-        }).should.eventually.be.fulfilled;
+          expect(result.errors[1].error.code).to.equals('auth/invalid-user-import');
+        });
     });
   });
 });
@@ -1929,18 +2665,18 @@ describe('admin.auth', () => {
  * Imports the provided user record with the specified hashing options and then
  * validates the import was successful by signing in to the imported account using
  * the corresponding plain text password.
- * @param {admin.auth.UserImportRecord} importUserRecord The user record to import.
- * @param {admin.auth.UserImportOptions} importOptions The import hashing options.
- * @param {string} rawPassword The plain unhashed password string.
- * @retunr {Promise<void>} A promise that resolved on success.
+ * @param importUserRecord The user record to import.
+ * @param importOptions The import hashing options.
+ * @param rawPassword The plain unhashed password string.
+ * @retunr A promise that resolved on success.
  */
 function testImportAndSignInUser(
-  importUserRecord: admin.auth.UserImportRecord,
+  importUserRecord: UserImportRecord,
   importOptions: any,
   rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
-  return admin.auth().importUsers(users, importOptions)
+  return getAuth().importUsers(users, importOptions)
     .then((result) => {
       // Verify the import result.
       expect(result.failureCount).to.equal(0);
@@ -1949,7 +2685,7 @@ function testImportAndSignInUser(
       // Sign in with an email and password to the imported account.
       return clientAuth().signInWithEmailAndPassword(users[0].email!, rawPassword);
     })
-    .then(({user}) => {
+    .then(({ user }) => {
       // Confirm successful sign-in.
       expect(user).to.exist;
       expect(user!.email).to.equal(users[0].email);
@@ -1961,12 +2697,12 @@ function testImportAndSignInUser(
 /**
  * Helper function that deletes the user with the specified phone number
  * if it exists.
- * @param {string} phoneNumber The phone number of the user to delete.
- * @return {Promise} A promise that resolves when the user is deleted
+ * @param phoneNumber The phone number of the user to delete.
+ * @return A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
 function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
-  return admin.auth().getUserByPhoneNumber(phoneNumber)
+  return getAuth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
     })
@@ -1982,7 +2718,7 @@ function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
  * Runs cleanup routine that could affect outcome of tests and removes any
  * intermediate users created.
  *
- * @return {Promise} A promise that resolves when test preparations are ready.
+ * @return A promise that resolves when test preparations are ready.
  */
 function cleanup(): Promise<any> {
   // Delete any existing users that could affect the test outcome.
@@ -2005,8 +2741,8 @@ function cleanup(): Promise<any> {
 /**
  * Returns the action code corresponding to the link.
  *
- * @param {string} link The link to parse for the action code.
- * @return {string} The link's corresponding action code.
+ * @param link The link to parse for the action code.
+ * @return The link's corresponding action code.
  */
 function getActionCode(link: string): string {
   const parsedUrl = new url.URL(link);
@@ -2018,8 +2754,8 @@ function getActionCode(link: string): string {
 /**
  * Returns the continue URL corresponding to the link.
  *
- * @param {string} link The link to parse for the continue URL.
- * @return {string} The link's corresponding continue URL.
+ * @param link The link to parse for the continue URL.
+ * @return The link's corresponding continue URL.
  */
 function getContinueUrl(link: string): string {
   const parsedUrl = new url.URL(link);
@@ -2031,8 +2767,8 @@ function getContinueUrl(link: string): string {
 /**
  * Returns the tenant ID corresponding to the link.
  *
- * @param {string} link The link to parse for the tenant ID.
- * @return {string} The link's corresponding tenant ID.
+ * @param link The link to parse for the tenant ID.
+ * @return The link's corresponding tenant ID.
  */
 function getTenantId(link: string): string {
   const parsedUrl = new url.URL(link);
@@ -2046,14 +2782,14 @@ function getTenantId(link: string): string {
  * requests and throttles them as the Auth backend rate limits this endpoint.
  * A bulk delete API is being designed to help solve this issue.
  *
- * @param {string} uid The identifier of the user to delete.
- * @return {Promise} A promise that resolves when delete operation resolves.
+ * @param uid The identifier of the user to delete.
+ * @return A promise that resolves when delete operation resolves.
  */
 function safeDelete(uid: string): Promise<void> {
   // Wait for delete queue to empty.
   const deletePromise = deleteQueue
     .then(() => {
-      return admin.auth().deleteUser(uid);
+      return getAuth().deleteUser(uid);
     })
     .catch((error) => {
       // Suppress user not found error.
@@ -2069,11 +2805,26 @@ function safeDelete(uid: string): Promise<void> {
 }
 
 /**
+ * Deletes the specified list of users by calling the `deleteUsers()` API. This
+ * API is rate limited at 1 QPS, and therefore this helper function staggers
+ * subsequent invocations by adding 1 second delay to each call.
+ *
+ * @param uids The list of user identifiers to delete.
+ * @return A promise that resolves when delete operation resolves.
+ */
+async function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> {
+  if (!authEmulatorHost) {
+    await new Promise((resolve) => { setTimeout(resolve, 1000); });
+  }
+  return getAuth().deleteUsers(uids);
+}
+
+/**
  * Asserts actual object is equal to expected object while ignoring key order.
  * This is useful since to.deep.equal fails when order differs.
  *
- * @param {[key: string]: any} expected object.
- * @param {[key: string]: any} actual object.
+ * @param expected object.
+ * @param actual object.
  */
 function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}): void {
   for (const key in expected) {

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,71 +14,76 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {FirebaseInstanceIdRequestHandler} from './instance-id-request';
-
+import { getInstallations } from '../installations';
+import { App } from '../app/index';
+import {
+  FirebaseInstallationsError, FirebaseInstanceIdError,
+  InstallationsClientErrorCode, InstanceIdClientErrorCode,
+} from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**
- * Internals of an InstanceId service instance.
+ * The `InstanceId` service enables deleting the Firebase instance IDs
+ * associated with Firebase client app instances.
+ *
+ * @deprecated Use {@link firebase-admin.installations#Installations} instead.
  */
-class InstanceIdInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
+export class InstanceId {
 
-export class InstanceId implements FirebaseServiceInterface {
-  public INTERNAL: InstanceIdInternals = new InstanceIdInternals();
-
-  private app_: FirebaseApp;
-  private requestHandler: FirebaseInstanceIdRequestHandler;
+  private app_: App;
 
   /**
-   * @param {FirebaseApp} app The app for this InstanceId service.
+   * @param app - The app for this InstanceId service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
+        'First argument passed to instanceId() must be a valid Firebase app instance.',
       );
     }
 
     this.app_ = app;
-    this.requestHandler = new FirebaseInstanceIdRequestHandler(app);
   }
 
   /**
-   * Deletes the specified instance ID from Firebase. This can be used to delete an instance ID
-   * and associated user data from a Firebase project, pursuant to the General Data Protection
-   * Regulation (GDPR).
+   * Deletes the specified instance ID and the associated data from Firebase.
    *
-   * @param {string} instanceId The instance ID to be deleted
-   * @return {Promise<void>} A promise that resolves when the instance ID is successfully deleted.
+   * Note that Google Analytics for Firebase uses its own form of Instance ID to
+   * keep track of analytics data. Therefore deleting a Firebase Instance ID does
+   * not delete Analytics data. See
+   * {@link https://firebase.google.com/support/privacy/manage-iids#delete_an_instance_id |
+   * Delete an Instance ID}
+   * for more information.
+   *
+   * @param instanceId - The instance ID to be deleted.
+   *
+   * @returns A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
-    return this.requestHandler.deleteInstanceId(instanceId)
-      .then(() => {
-        // Return nothing on success
+    return getInstallations(this.app).deleteInstallation(instanceId)
+      .catch((err) => {
+        if (err instanceof FirebaseInstallationsError) {
+          let code = err.code.replace('installations/', '');
+          if (code === InstallationsClientErrorCode.INVALID_INSTALLATION_ID.code) {
+            code = InstanceIdClientErrorCode.INVALID_INSTANCE_ID.code;
+          }
+
+          throw new FirebaseInstanceIdError({ code, message: err.message });
+        }
+
+        throw err;
       });
   }
 
   /**
    * Returns the app associated with this InstanceId instance.
    *
-   * @return {FirebaseApp} The app associated with this InstanceId instance.
+   * @returns The app associated with this InstanceId instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.app_;
   }
 }

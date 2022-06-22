@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,35 +17,35 @@
 
 import * as validator from '../utils/validator';
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
-import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
-  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
-  ProviderIdentifier,
-} from './identifier';
-import {FirebaseApp} from '../firebase-app';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { App } from '../app/index';
+import { FirebaseApp } from '../app/firebase-app';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
-import {CreateRequest, UpdateRequest} from './user-record';
-import {
-  UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
-} from './user-import-builder';
 import * as utils from '../utils/index';
-import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
+
+import {
+  UserImportOptions, UserImportRecord, UserImportResult,
+  UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+} from './user-import-builder';
+import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
+import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
+import {
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+  UserIdentifier, UidIdentifier, EmailIdentifier,PhoneIdentifier, ProviderIdentifier,
+} from './identifier';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
-  OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
+  OIDCConfigServerRequest, SAMLConfigServerRequest, CreateRequest, UpdateRequest,
+  OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
+  SAMLUpdateAuthProviderRequest
 } from './auth-config';
-import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
-
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;
@@ -58,7 +59,7 @@ export const RESERVED_CLAIMS = [
 
 /** List of supported email action request types. */
 export const EMAIL_ACTION_REQUEST_TYPES = [
-  'PASSWORD_RESET', 'VERIFY_EMAIL', 'EMAIL_SIGNIN',
+  'PASSWORD_RESET', 'VERIFY_EMAIL', 'EMAIL_SIGNIN', 'VERIFY_AND_CHANGE_EMAIL',
 ];
 
 /** Maximum allowed number of characters in the custom claims payload. */
@@ -89,9 +90,18 @@ const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 const FIREBASE_AUTH_BASE_URL_FORMAT =
     'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
 
+/** Firebase Auth base URlLformat when using the auth emultor. */
+const FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT =
+  'http://{host}/identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
+
 /** The Firebase Auth backend multi-tenancy base URL format. */
 const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
   'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
+/** Firebase Auth base URL format when using the auth emultor with multi-tenancy. */
+const FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT = FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT.replace(
+  'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
 
 /** Maximum allowed number of tenants to download at one time. */
 const MAX_LIST_TENANT_PAGE_SIZE = 1000;
@@ -116,21 +126,27 @@ class AuthResourceUrlBuilder {
   /**
    * The resource URL builder constructor.
    *
-   * @param {string} projectId The resource project ID.
-   * @param {string} version The endpoint API version.
+   * @param projectId - The resource project ID.
+   * @param version - The endpoint API version.
    * @constructor
    */
-  constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+  constructor(protected app: App, protected version: string = 'v1') {
+    if (useEmulator()) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
+        host: emulatorHost()
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+    }
   }
 
   /**
    * Returns the resource URL corresponding to the provided parameters.
    *
-   * @param {string=} api The backend API name.
-   * @param {object=} params The optional additional parameters to substitute in the
+   * @param api - The backend API name.
+   * @param params - The optional additional parameters to substitute in the
    *     URL path.
-   * @return {Promise<string>} The corresponding resource URL.
+   * @returns The corresponding resource URL.
    */
   public getUrl(api?: string, params?: object): Promise<string> {
     return this.getProjectId()
@@ -174,42 +190,62 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   /**
    * The tenant aware resource URL builder constructor.
    *
-   * @param {string} projectId The resource project ID.
-   * @param {string} version The endpoint API version.
-   * @param {string} tenantId The tenant ID.
+   * @param projectId - The resource project ID.
+   * @param version - The endpoint API version.
+   * @param tenantId - The tenant ID.
    * @constructor
    */
-  constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
+  constructor(protected app: App, protected version: string, protected tenantId: string) {
     super(app, version);
-    this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    if (useEmulator()) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
+        host: emulatorHost()
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    }
   }
 
   /**
    * Returns the resource URL corresponding to the provided parameters.
    *
-   * @param {string=} api The backend API name.
-   * @param {object=} params The optional additional parameters to substitute in the
+   * @param api - The backend API name.
+   * @param params - The optional additional parameters to substitute in the
    *     URL path.
-   * @return {Promise<string>} The corresponding resource URL.
+   * @returns The corresponding resource URL.
    */
   public getUrl(api?: string, params?: object): Promise<string> {
     return super.getUrl(api, params)
       .then((url) => {
-        return utils.formatString(url, {tenantId: this.tenantId});
+        return utils.formatString(url, { tenantId: this.tenantId });
       });
   }
 }
 
+/**
+ * Auth-specific HTTP client which uses the special "owner" token
+ * when communicating with the Auth Emulator.
+ */
+class AuthHttpClient extends AuthorizedHttpClient {
+
+  protected getToken(): Promise<string> {
+    if (useEmulator()) {
+      return Promise.resolve('owner');
+    }
+
+    return super.getToken();
+  }
+
+}
 
 /**
  * Validates an AuthFactorInfo object. All unsupported parameters
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param request The AuthFactorInfo request object.
- * @param writeOperationType The write operation type.
+ * @param request - The AuthFactorInfo request object.
  */
-function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: WriteOperationType): void {
+function validateAuthFactorInfo(request: AuthFactorInfo): void {
   const validKeys = {
     mfaEnrollmentId: true,
     displayName: true,
@@ -225,12 +261,12 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
   // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
       request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
-  const uidRequired = writeOperationType !== WriteOperationType.Create;
-  if ((typeof request.mfaEnrollmentId !== 'undefined' || uidRequired) &&
+  // Enrollment uid may or may not be specified for update operations.
+  if (typeof request.mfaEnrollmentId !== 'undefined' &&
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_UID,
-      `The second factor "uid" must be a valid non-empty string.`,
+      'The second factor "uid" must be a valid non-empty string.',
     );
   }
   if (typeof request.displayName !== 'undefined' &&
@@ -246,7 +282,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
       `The second factor "enrollmentTime" for "${authFactorInfoIdentifier}" must be a valid ` +
-      `UTC date string.`);
+      'UTC date string.');
   }
   // Validate required fields depending on second factor type.
   if (typeof request.phoneInfo !== 'undefined') {
@@ -255,14 +291,14 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_PHONE_NUMBER,
         `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
-        `E.164 standard compliant identifier string.`);
+        'E.164 standard compliant identifier string.');
     }
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
     // a phone number. A TOTP based second factor may require a secret key, etc.
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
-      `MFAInfo object provided is invalid.`);
+      'MFAInfo object provided is invalid.');
   }
 }
 
@@ -272,7 +308,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param {any} request The providerUserInfo request object.
+ * @param request - The providerUserInfo request object.
  */
 function validateProviderUserInfo(request: any): void {
   const validKeys = {
@@ -331,8 +367,8 @@ function validateProviderUserInfo(request: any): void {
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param request The create/edit request object.
- * @param writeOperationType The write operation type.
+ * @param request - The create/edit request object.
+ * @param writeOperationType - The write operation type.
  */
 function validateCreateEditRequest(request: any, writeOperationType: WriteOperationType): void {
   const uploadAccountRequest = writeOperationType === WriteOperationType.Upload;
@@ -353,6 +389,8 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
     phoneNumber: true,
     customAttributes: true,
     validSince: true,
+    // Pass linkProviderUserInfo only for updates (i.e. not for uploads.)
+    linkProviderUserInfo: !uploadAccountRequest,
     // Pass tenantId only for uploadAccount requests.
     tenantId: uploadAccountRequest,
     passwordHash: uploadAccountRequest,
@@ -501,6 +539,12 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
       validateProviderUserInfo(providerUserInfoEntry);
     });
   }
+
+  // linkProviderUserInfo must be a (single) UserProvider value.
+  if (typeof request.linkProviderUserInfo !== 'undefined') {
+    validateProviderUserInfo(request.linkProviderUserInfo);
+  }
+
   // mfaInfo is used for importUsers.
   // mfa.enrollments is used for setAccountInfo.
   // enrollments has to be an array of valid AuthFactorInfo requests.
@@ -515,13 +559,17 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
     }
     enrollments.forEach((authFactorInfoEntry: AuthFactorInfo) => {
-      validateAuthFactorInfo(authFactorInfoEntry, writeOperationType);
+      validateAuthFactorInfo(authFactorInfoEntry);
     });
   }
 }
 
 
-/** Instantiates the createSessionCookie endpoint settings. */
+/**
+ * Instantiates the createSessionCookie endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
     new ApiSettings(':createSessionCookie', 'POST')
     // Set request validator.
@@ -546,11 +594,19 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
       });
 
 
-/** Instantiates the uploadAccount endpoint settings. */
+/**
+ * Instantiates the uploadAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('/accounts:batchCreate', 'POST');
 
 
-/** Instantiates the downloadAccount endpoint settings. */
+/**
+ * Instantiates the downloadAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGet', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -565,7 +621,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
         request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
@@ -581,7 +637,11 @@ interface GetAccountInfoRequest {
   }>;
 }
 
-/** Instantiates the getAccountInfo endpoint settings. */
+/**
+ * Instantiates the getAccountInfo endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: GetAccountInfoRequest) => {
@@ -593,7 +653,7 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
   })
   // Set response validator.
   .setResponseValidator((response: any) => {
-    if (!response.users) {
+    if (!response.users || !response.users.length) {
       throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     }
   });
@@ -601,6 +661,8 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
 /**
  * Instantiates the getAccountInfo endpoint settings for use when fetching info
  * for multiple accounts.
+ *
+ * @internal
  */
 export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
@@ -613,7 +675,11 @@ export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup
   });
 
 
-/** Instantiates the deleteAccount endpoint settings. */
+/**
+ * Instantiates the deleteAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -639,6 +705,9 @@ export interface BatchDeleteAccountsResponse {
   errors?: BatchDeleteErrorInfo[];
 }
 
+/**
+ * @internal
+ */
 export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:batchDelete', 'POST')
   .setRequestValidator((request: BatchDeleteAccountsRequest) => {
     if (!request.localIds) {
@@ -669,7 +738,11 @@ export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:ba
     });
   });
 
-/** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
+/**
+ * Instantiates the setAccountInfo endpoint settings for updating existing accounts.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -698,6 +771,8 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
 /**
  * Instantiates the signupNewUser endpoint settings for creating a new user with or without
  * uid being specified. The backend will create a new one if not provided and return it.
+ *
+ * @internal
  */
 export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST')
   // Set request validator.
@@ -706,14 +781,14 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
     if (typeof request.customAttributes !== 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"customAttributes" cannot be set when creating a new user.`,
+        '"customAttributes" cannot be set when creating a new user.',
       );
     }
     // signupNewUser does not support validSince.
     if (typeof request.validSince !== 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"validSince" cannot be set when creating a new user.`,
+        '"validSince" cannot be set when creating a new user.',
       );
     }
     // Throw error when tenantId is passed in POST body.
@@ -742,6 +817,11 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
         AuthClientErrorCode.INVALID_EMAIL,
       );
     }
+    if (typeof request.newEmail !== 'undefined' && !validator.isEmail(request.newEmail)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_NEW_EMAIL,
+      );
+    }
     if (EMAIL_ACTION_REQUEST_TYPES.indexOf(request.requestType) === -1) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -759,7 +839,11 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
     }
   });
 
-/** Instantiates the retrieve OIDC configuration endpoint settings. */
+/**
+ * Instantiates the retrieve OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'GET')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -772,10 +856,18 @@ const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'G
     }
   });
 
-/** Instantiates the delete OIDC configuration endpoint settings. */
+/**
+ * Instantiates the delete OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const DELETE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'DELETE');
 
-/** Instantiates the create OIDC configuration endpoint settings. */
+/**
+ * Instantiates the create OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfigId={providerId}', 'POST')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -788,7 +880,11 @@ const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfig
     }
   });
 
-/** Instantiates the update OIDC configuration endpoint settings. */
+/**
+ * Instantiates the update OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -801,7 +897,11 @@ const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?u
     }
   });
 
-/** Instantiates the list OIDC configuration endpoint settings. */
+/**
+ * Instantiates the list OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -816,13 +916,17 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
   });
 
-/** Instantiates the retrieve SAML configuration endpoint settings. */
+/**
+ * Instantiates the retrieve SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'GET')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -835,10 +939,18 @@ const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId
     }
   });
 
-/** Instantiates the delete SAML configuration endpoint settings. */
+/**
+ * Instantiates the delete SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const DELETE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'DELETE');
 
-/** Instantiates the create SAML configuration endpoint settings. */
+/**
+ * Instantiates the create SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundSamlConfigId={providerId}', 'POST')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -851,7 +963,11 @@ const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundS
     }
   });
 
-/** Instantiates the update SAML configuration endpoint settings. */
+/**
+ * Instantiates the update SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -864,7 +980,11 @@ const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{provide
     }
   });
 
-/** Instantiates the list SAML configuration endpoint settings. */
+/**
+ * Instantiates the list SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -879,7 +999,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
@@ -887,6 +1007,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 
 /**
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
+ *
+ * @internal
  */
 export abstract class AbstractAuthRequestHandler {
 
@@ -895,8 +1017,8 @@ export abstract class AbstractAuthRequestHandler {
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
-   * @param {any} response The response to check for errors.
-   * @return {string|null} The error code if present; null otherwise.
+   * @param response - The response to check for errors.
+   * @returns The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
     return (validator.isNonNullObject(response) && response.error && response.error.message) || null;
@@ -944,10 +1066,10 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(protected readonly app: FirebaseApp) {
+  constructor(protected readonly app: App) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -955,7 +1077,7 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthHttpClient(app as FirebaseApp);
   }
 
   /**
@@ -963,10 +1085,10 @@ export abstract class AbstractAuthRequestHandler {
    * session management (set as a server side session cookie with custom cookie policy).
    * The session cookie JWT will have the same payload claims as the provided ID token.
    *
-   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
-   * @param {number} expiresIn The session cookie duration in milliseconds.
+   * @param idToken - The Firebase ID token to exchange for a session cookie.
+   * @param expiresIn - The session cookie duration in milliseconds.
    *
-   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
+   * @returns A promise that resolves on success with the created session cookie.
    */
   public createSessionCookie(idToken: string, expiresIn: number): Promise<string> {
     const request = {
@@ -981,8 +1103,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by uid.
    *
-   * @param {string} uid The uid of the user to lookup.
-   * @return {Promise<object>} A promise that resolves with the user information.
+   * @param uid - The uid of the user to lookup.
+   * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByUid(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
@@ -998,8 +1120,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by email.
    *
-   * @param {string} email The email of the user to lookup.
-   * @return {Promise<object>} A promise that resolves with the user information.
+   * @param email - The email of the user to lookup.
+   * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByEmail(email: string): Promise<object> {
     if (!validator.isEmail(email)) {
@@ -1015,8 +1137,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up a user by phone number.
    *
-   * @param {string} phoneNumber The phone number of the user to lookup.
-   * @return {Promise<object>} A promise that resolves with the user information.
+   * @param phoneNumber - The phone number of the user to lookup.
+   * @returns A promise that resolves with the user information.
    */
   public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<object> {
     if (!validator.isPhoneNumber(phoneNumber)) {
@@ -1029,17 +1151,32 @@ export abstract class AbstractAuthRequestHandler {
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
+  public getAccountInfoByFederatedUid(providerId: string, rawId: string): Promise<object> {
+    if (!validator.isNonEmptyString(providerId) || !validator.isNonEmptyString(rawId)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+
+    const request = {
+      federatedUserId: [{
+        providerId,
+        rawId,
+      }],
+    };
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
   /**
    * Looks up multiple users by their identifiers (uid, email, etc).
    *
-   * @param {UserIdentifier[]} identifiers The identifiers indicating the users
+   * @param identifiers - The identifiers indicating the users
    *     to be looked up. Must have <= 100 entries.
-   * @param {Promise<object>} A promise that resolves with the set of successfully
+   * @param A - promise that resolves with the set of successfully
    *     looked up users. Possibly empty if no users were looked up.
    */
   public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
     if (identifiers.length === 0) {
-      return Promise.resolve({users: []});
+      return Promise.resolve({ users: [] });
     } else if (identifiers.length > MAX_GET_ACCOUNTS_BATCH_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
@@ -1071,12 +1208,12 @@ export abstract class AbstractAuthRequestHandler {
    * Exports the users (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   * @param maxResults - The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns users starting
+   * @param pageToken - The next page token. If not specified, returns users starting
    *     without any offset. Users are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
-   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   * @returns A promise that resolves with the current batch of downloaded
    *     users and the next page token if available. For the last page, an empty list of users
    *     and no page token are returned.
    */
@@ -1108,10 +1245,10 @@ export abstract class AbstractAuthRequestHandler {
    * At most, 1000 users are allowed to be imported one at a time.
    * When importing a list of password users, UserImportOptions are required to be specified.
    *
-   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
-   * @param {UserImportOptions=} options The user import options, required when the users provided
+   * @param users - The list of user records to import to Firebase Auth.
+   * @param options - The user import options, required when the users provided
    *     include password credentials.
-   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
+   * @returns A promise that resolves when the operation completes
    *     with the result of the import. This includes the number of successful imports, the number
    *     of failed uploads and their corresponding errors.
    */
@@ -1150,8 +1287,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes an account identified by a uid.
    *
-   * @param {string} uid The uid of the user to delete.
-   * @return {Promise<object>} A promise that resolves when the user is deleted.
+   * @param uid - The uid of the user to delete.
+   * @returns A promise that resolves when the user is deleted.
    */
   public deleteAccount(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
@@ -1191,9 +1328,9 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Sets additional developer claims on an existing user identified by provided UID.
    *
-   * @param {string} uid The user to edit.
-   * @param {object} customUserClaims The developer claims to set.
-   * @return {Promise<string>} A promise that resolves when the operation completes
+   * @param uid - The user to edit.
+   * @param customUserClaims - The developer claims to set.
+   * @returns A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
   public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<string> {
@@ -1226,9 +1363,9 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Edits an existing user.
    *
-   * @param {string} uid The user to edit.
-   * @param {object} properties The properties to set on the user.
-   * @return {Promise<string>} A promise that resolves when the operation completes
+   * @param uid - The user to edit.
+   * @param properties - The properties to set on the user.
+   * @returns A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
   public updateExistingAccount(uid: string, properties: UpdateRequest): Promise<string> {
@@ -1241,6 +1378,33 @@ export abstract class AbstractAuthRequestHandler {
           'Properties argument must be a non-null object.',
         ),
       );
+    } else if (validator.isNonNullObject(properties.providerToLink)) {
+      // TODO(rsgowman): These checks overlap somewhat with
+      // validateProviderUserInfo. It may be possible to refactor a bit.
+      if (!validator.isNonEmptyString(properties.providerToLink.providerId)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providerToLink.providerId of properties argument must be a non-empty string.');
+      }
+      if (!validator.isNonEmptyString(properties.providerToLink.uid)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providerToLink.uid of properties argument must be a non-empty string.');
+      }
+    } else if (typeof properties.providersToUnlink !== 'undefined') {
+      if (!validator.isArray(properties.providersToUnlink)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providersToUnlink of properties argument must be an array of strings.');
+      }
+
+      properties.providersToUnlink.forEach((providerId) => {
+        if (!validator.isNonEmptyString(providerId)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            'providersToUnlink of properties argument must be an array of strings.');
+        }
+      });
     }
 
     // Build the setAccountInfo request.
@@ -1275,13 +1439,25 @@ export abstract class AbstractAuthRequestHandler {
     // It will be removed from the backend request and an additional parameter
     // deleteProvider: ['phone'] with an array of providerIds (phone in this case),
     // will be passed.
-    // Currently this applies to phone provider only.
     if (request.phoneNumber === null) {
-      request.deleteProvider = ['phone'];
+      request.deleteProvider ? request.deleteProvider.push('phone') : request.deleteProvider = ['phone'];
       delete request.phoneNumber;
-    } else {
-      // Doesn't apply to other providers in admin SDK.
-      delete request.deleteProvider;
+    }
+
+    if (typeof(request.providerToLink) !== 'undefined') {
+      request.linkProviderUserInfo = deepCopy(request.providerToLink);
+      delete request.providerToLink;
+
+      request.linkProviderUserInfo.rawId = request.linkProviderUserInfo.uid;
+      delete request.linkProviderUserInfo.uid;
+    }
+
+    if (typeof(request.providersToUnlink) !== 'undefined') {
+      if (!validator.isArray(request.deleteProvider)) {
+        request.deleteProvider = [];
+      }
+      request.deleteProvider = request.deleteProvider.concat(request.providersToUnlink);
+      delete request.providersToUnlink;
     }
 
     // Rewrite photoURL to photoUrl.
@@ -1331,8 +1507,8 @@ export abstract class AbstractAuthRequestHandler {
    * the same second as the revocation will still be valid. If there is a chance that a token
    * was minted in the last second, delay for 1 second before revoking.
    *
-   * @param {string} uid The user whose tokens are to be revoked.
-   * @return {Promise<string>} A promise that resolves when the operation completes
+   * @param uid - The user whose tokens are to be revoked.
+   * @returns A promise that resolves when the operation completes
    *     successfully with the user id of the corresponding user.
    */
   public revokeRefreshTokens(uid: string): Promise<string> {
@@ -1354,8 +1530,8 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Create a new user with the properties supplied.
    *
-   * @param {object} properties The properties to set on the user.
-   * @return {Promise<string>} A promise that resolves when the operation completes
+   * @param properties - The properties to set on the user.
+   * @returns A promise that resolves when the operation completes
    *     with the user id that was created.
    */
   public createNewAccount(properties: CreateRequest): Promise<string> {
@@ -1369,7 +1545,12 @@ export abstract class AbstractAuthRequestHandler {
     }
 
     // Build the signupNewUser request.
-    const request: any = deepCopy(properties);
+    type SignUpNewUserRequest = CreateRequest & {
+      photoUrl?: string | null;
+      localId?: string;
+      mfaInfo?: AuthFactorInfo[];
+    };
+    const request: SignUpNewUserRequest = deepCopy(properties);
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
@@ -1385,14 +1566,14 @@ export abstract class AbstractAuthRequestHandler {
       if (validator.isNonEmptyArray(request.multiFactor.enrolledFactors)) {
         const mfaInfo: AuthFactorInfo[] = [];
         try {
-          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
             // Enrollment time and uid are not allowed for signupNewUser endpoint.
             // They will automatically be provisioned server side.
-            if (multiFactorInfo.enrollmentTime) {
+            if ('enrollmentTime' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"enrollmentTime" is not supported when adding second factors via "createUser()"');
-            } else if (multiFactorInfo.uid) {
+            } else if ('uid' in multiFactorInfo) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"uid" is not supported when adding second factors via "createUser()"');
@@ -1417,18 +1598,25 @@ export abstract class AbstractAuthRequestHandler {
    * Generates the out of band email action link for the email specified using the action code settings provided.
    * Returns a promise that resolves with the generated link.
    *
-   * @param {string} requestType The request type. This could be either used for password reset,
+   * @param requestType - The request type. This could be either used for password reset,
    *     email verification, email link sign-in.
-   * @param {string} email The email of the user the link is being sent to.
-   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
+   * @param email - The email of the user the link is being sent to.
+   * @param actionCodeSettings - The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
    *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
-   * @return {Promise<string>} A promise that resolves with the email action link.
+   * @param newEmail - The email address the account is being updated to.
+   *     Required only for VERIFY_AND_CHANGE_EMAIL requests.
+   * @returns A promise that resolves with the email action link.
    */
   public getEmailActionLink(
     requestType: string, email: string,
-    actionCodeSettings?: ActionCodeSettings): Promise<string> {
-    let request = {requestType, email, returnOobLink: true};
+    actionCodeSettings?: ActionCodeSettings, newEmail?: string): Promise<string> {
+    let request = { 
+      requestType, 
+      email, 
+      returnOobLink: true,
+      ...(typeof newEmail !== 'undefined') && { newEmail },
+    };
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
@@ -1447,6 +1635,14 @@ export abstract class AbstractAuthRequestHandler {
         return Promise.reject(e);
       }
     }
+    if (requestType === 'VERIFY_AND_CHANGE_EMAIL' && typeof newEmail === 'undefined') {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          "`newEmail` is required when `requestType` === 'VERIFY_AND_CHANGE_EMAIL'",
+        ),
+      );
+    }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_OOB_CODE, request)
       .then((response: any) => {
         // Return the link.
@@ -1457,26 +1653,26 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up an OIDC provider configuration by provider ID.
    *
-   * @param {string} providerId The provider identifier of the configuration to lookup.
-   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the provider configuration information.
+   * @param providerId - The provider identifier of the configuration to lookup.
+   * @returns A promise that resolves with the provider configuration information.
    */
   public getOAuthIdpConfig(providerId: string): Promise<OIDCConfigServerResponse> {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_OAUTH_IDP_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_OAUTH_IDP_CONFIG, {}, { providerId });
   }
 
   /**
    * Lists the OIDC configurations (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param {number=} maxResults The page size, 100 if undefined. This is also the maximum
+   * @param maxResults - The page size, 100 if undefined. This is also the maximum
    *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns OIDC configurations
+   * @param pageToken - The next page token. If not specified, returns OIDC configurations
    *     without any offset. Configurations are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
-   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   * @returns A promise that resolves with the current batch of downloaded
    *     OIDC configurations and the next page token if available. For the last page, an empty list of provider
    *     configuration and no page token are returned.
    */
@@ -1503,14 +1699,14 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes an OIDC configuration identified by a providerId.
    *
-   * @param {string} providerId The identifier of the OIDC configuration to delete.
-   * @return {Promise<void>} A promise that resolves when the OIDC provider is deleted.
+   * @param providerId - The identifier of the OIDC configuration to delete.
+   * @returns A promise that resolves when the OIDC provider is deleted.
    */
   public deleteOAuthIdpConfig(providerId: string): Promise<void> {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, { providerId })
       .then(() => {
         // Return nothing.
       });
@@ -1519,11 +1715,11 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Creates a new OIDC provider configuration with the properties provided.
    *
-   * @param {AuthProviderConfig} options The properties to set on the new OIDC provider configuration to be created.
-   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the newly created OIDC
+   * @param options - The properties to set on the new OIDC provider configuration to be created.
+   * @returns A promise that resolves with the newly created OIDC
    *     configuration.
    */
-  public createOAuthIdpConfig(options: AuthProviderConfig): Promise<OIDCConfigServerResponse> {
+  public createOAuthIdpConfig(options: OIDCAuthProviderConfig): Promise<OIDCConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1532,7 +1728,8 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, {providerId})
+    return this.invokeRequestHandler(
+      this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1546,9 +1743,9 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Updates an existing OIDC provider configuration with the properties provided.
    *
-   * @param {string} providerId The provider identifier of the OIDC configuration to update.
-   * @param {OIDCUpdateAuthProviderRequest} options The properties to update on the existing configuration.
-   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the modified provider
+   * @param providerId - The provider identifier of the OIDC configuration to update.
+   * @param options - The properties to update on the existing configuration.
+   * @returns A promise that resolves with the modified provider
    *     configuration.
    */
   public updateOAuthIdpConfig(
@@ -1565,7 +1762,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const updateMask = utils.generateUpdateMask(request);
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_OAUTH_IDP_CONFIG, request,
-      {providerId, updateMask: updateMask.join(',')})
+      { providerId, updateMask: updateMask.join(',') })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1579,26 +1776,26 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Looks up an SAML provider configuration by provider ID.
    *
-   * @param {string} providerId The provider identifier of the configuration to lookup.
-   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the provider configuration information.
+   * @param providerId - The provider identifier of the configuration to lookup.
+   * @returns A promise that resolves with the provider configuration information.
    */
   public getInboundSamlConfig(providerId: string): Promise<SAMLConfigServerResponse> {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_INBOUND_SAML_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_INBOUND_SAML_CONFIG, {}, { providerId });
   }
 
   /**
    * Lists the SAML configurations (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param {number=} maxResults The page size, 100 if undefined. This is also the maximum
+   * @param maxResults - The page size, 100 if undefined. This is also the maximum
    *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns SAML configurations starting
+   * @param pageToken - The next page token. If not specified, returns SAML configurations starting
    *     without any offset. Configurations are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
-   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   * @returns A promise that resolves with the current batch of downloaded
    *     SAML configurations and the next page token if available. For the last page, an empty list of provider
    *     configuration and no page token are returned.
    */
@@ -1625,14 +1822,14 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Deletes a SAML configuration identified by a providerId.
    *
-   * @param {string} providerId The identifier of the SAML configuration to delete.
-   * @return {Promise<void>} A promise that resolves when the SAML provider is deleted.
+   * @param providerId - The identifier of the SAML configuration to delete.
+   * @returns A promise that resolves when the SAML provider is deleted.
    */
   public deleteInboundSamlConfig(providerId: string): Promise<void> {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, { providerId })
       .then(() => {
         // Return nothing.
       });
@@ -1641,11 +1838,11 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Creates a new SAML provider configuration with the properties provided.
    *
-   * @param {AuthProviderConfig} options The properties to set on the new SAML provider configuration to be created.
-   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the newly created SAML
+   * @param options - The properties to set on the new SAML provider configuration to be created.
+   * @returns A promise that resolves with the newly created SAML
    *     configuration.
    */
-  public createInboundSamlConfig(options: AuthProviderConfig): Promise<SAMLConfigServerResponse> {
+  public createInboundSamlConfig(options: SAMLAuthProviderConfig): Promise<SAMLConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1655,7 +1852,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const providerId = options.providerId;
     return this.invokeRequestHandler(
-      this.getProjectConfigUrlBuilder(), CREATE_INBOUND_SAML_CONFIG, request, {providerId})
+      this.getProjectConfigUrlBuilder(), CREATE_INBOUND_SAML_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1669,9 +1866,9 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Updates an existing SAML provider configuration with the properties provided.
    *
-   * @param {string} providerId The provider identifier of the SAML configuration to update.
-   * @param {SAMLUpdateAuthProviderRequest} options The properties to update on the existing configuration.
-   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the modified provider
+   * @param providerId - The provider identifier of the SAML configuration to update.
+   * @param options - The properties to update on the existing configuration.
+   * @returns A promise that resolves with the modified provider
    *     configuration.
    */
   public updateInboundSamlConfig(
@@ -1688,7 +1885,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const updateMask = utils.generateUpdateMask(request);
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_INBOUND_SAML_CONFIG, request,
-      {providerId, updateMask: updateMask.join(',')})
+      { providerId, updateMask: updateMask.join(',') })
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1702,20 +1899,22 @@ export abstract class AbstractAuthRequestHandler {
   /**
    * Invokes the request handler based on the API settings object passed.
    *
-   * @param {AuthResourceUrlBuilder} urlBuilder The URL builder for Auth endpoints.
-   * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @param {object} requestData The request data.
-   * @param {object=} additionalResourceParams Additional resource related params if needed.
-   * @return {Promise<object>} A promise that resolves with the response.
+   * @param urlBuilder - The URL builder for Auth endpoints.
+   * @param apiSettings - The API endpoint settings to apply to request and response.
+   * @param requestData - The request data.
+   * @param additionalResourceParams - Additional resource related params if needed.
+   * @returns A promise that resolves with the response.
    */
   protected invokeRequestHandler(
     urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
-    requestData: object, additionalResourceParams?: object): Promise<object> {
+    requestData: object | undefined, additionalResourceParams?: object): Promise<object> {
     return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
       .then((url) => {
         // Validate request.
-        const requestValidator = apiSettings.getRequestValidator();
-        requestValidator(requestData);
+        if (requestData) {
+          const requestValidator = apiSettings.getRequestValidator();
+          requestValidator(requestData);
+        }
         // Process request.
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
@@ -1752,17 +1951,17 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
+   * @returns A new Auth user management resource URL builder instance.
    */
   protected abstract newAuthUrlBuilder(): AuthResourceUrlBuilder;
 
   /**
-   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
+   * @returns A new project config resource URL builder instance.
    */
   protected abstract newProjectConfigUrlBuilder(): AuthResourceUrlBuilder;
 
   /**
-   * @return {AuthResourceUrlBuilder} The current Auth user management resource URL builder.
+   * @returns The current Auth user management resource URL builder.
    */
   private getAuthUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.authUrlBuilder) {
@@ -1772,7 +1971,7 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} The current project config resource URL builder.
+   * @returns The current project config resource URL builder.
    */
   private getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.projectConfigUrlBuilder) {
@@ -1801,7 +2000,7 @@ const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
 
 /** Instantiates the updateTenant endpoint settings. */
 const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
-// Set response validator.
+  // Set response validator.
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
@@ -1828,7 +2027,7 @@ const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
         request.pageSize > MAX_LIST_TENANT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        'Required "maxResults" must be a positive non-zero number that does not exceed ' +
         `the allowed ${MAX_LIST_TENANT_PAGE_SIZE}.`,
       );
     }
@@ -1861,23 +2060,23 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
    *
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app - The app used to fetch access tokens to sign API requests.
    * @constructor.
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     super(app);
     this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
+   * @returns A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
     return new AuthResourceUrlBuilder(this.app, 'v1');
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
+   * @returns A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     return new AuthResourceUrlBuilder(this.app, 'v2');
@@ -1886,14 +2085,14 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Looks up a tenant by tenant ID.
    *
-   * @param {string} tenantId The tenant identifier of the tenant to lookup.
-   * @return {Promise<TenantServerResponse>} A promise that resolves with the tenant information.
+   * @param tenantId - The tenant identifier of the tenant to lookup.
+   * @returns A promise that resolves with the tenant information.
    */
   public getTenant(tenantId: string): Promise<TenantServerResponse> {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, {tenantId})
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, { tenantId })
       .then((response: any) => {
         return response as TenantServerResponse;
       });
@@ -1903,12 +2102,12 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * Exports the tenants (single batch only) with a size of maxResults and starting from
    * the offset as specified by pageToken.
    *
-   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   * @param maxResults - The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns tenants starting
+   * @param pageToken - The next page token. If not specified, returns tenants starting
    *     without any offset. Tenants are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
-   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   * @returns A promise that resolves with the current batch of downloaded
    *     tenants and the next page token if available. For the last page, an empty list of tenants
    *     and no page token are returned.
    */
@@ -1936,14 +2135,14 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Deletes a tenant identified by a tenantId.
    *
-   * @param {string} tenantId The identifier of the tenant to delete.
-   * @return {Promise<void>} A promise that resolves when the tenant is deleted.
+   * @param tenantId - The identifier of the tenant to delete.
+   * @returns A promise that resolves when the tenant is deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, {tenantId})
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, undefined, { tenantId })
       .then(() => {
         // Return nothing.
       });
@@ -1952,10 +2151,10 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Creates a new tenant with the properties provided.
    *
-   * @param {TenantOptions} tenantOptions The properties to set on the new tenant to be created.
-   * @return {Promise<TenantServerResponse>} A promise that resolves with the newly created tenant object.
+   * @param tenantOptions - The properties to set on the new tenant to be created.
+   * @returns A promise that resolves with the newly created tenant object.
    */
-  public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
+  public createTenant(tenantOptions: CreateTenantRequest): Promise<TenantServerResponse> {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, true);
@@ -1971,20 +2170,22 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * Updates an existing tenant with the properties provided.
    *
-   * @param {string} tenantId The tenant identifier of the tenant to update.
-   * @param {TenantOptions} tenantOptions The properties to update on the existing tenant.
-   * @return {Promise<TenantServerResponse>} A promise that resolves with the modified tenant object.
+   * @param tenantId - The tenant identifier of the tenant to update.
+   * @param tenantOptions - The properties to update on the existing tenant.
+   * @returns A promise that resolves with the modified tenant object.
    */
-  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<TenantServerResponse> {
+  public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<TenantServerResponse> {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, false);
-      const updateMask = utils.generateUpdateMask(request);
+      // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
+      // and not just specific phone numbers.
+      const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
-        {tenantId, updateMask: updateMask.join(',')})
+        { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as TenantServerResponse;
         });
@@ -2004,23 +2205,23 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * The FirebaseTenantRequestHandler constructor used to initialize an instance using a
    * FirebaseApp and a tenant ID.
    *
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
-   * @param {string} tenantId The request handler's tenant ID.
+   * @param app - The app used to fetch access tokens to sign API requests.
+   * @param tenantId - The request handler's tenant ID.
    * @constructor
    */
-  constructor(app: FirebaseApp, private readonly tenantId: string) {
+  constructor(app: App, private readonly tenantId: string) {
     super(app);
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
+   * @returns A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
     return new TenantAwareAuthResourceUrlBuilder(this.app, 'v1', this.tenantId);
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
+   * @returns A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     return new TenantAwareAuthResourceUrlBuilder(this.app, 'v2', this.tenantId);
@@ -2035,10 +2236,10 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * Overrides the superclass methods by adding an additional check to match tenant IDs of
    * imported user records if present.
    *
-   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
-   * @param {UserImportOptions=} options The user import options, required when the users provided
+   * @param users - The list of user records to import to Firebase Auth.
+   * @param options - The user import options, required when the users provided
    *     include password credentials.
-   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
+   * @returns A promise that resolves when the operation completes
    *     with the result of the import. This includes the number of successful imports, the number
    *     of failed uploads and their corresponding errors.
    */
@@ -2055,4 +2256,16 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
     });
     return super.uploadAccount(users, options);
   }
+}
+
+function emulatorHost(): string | undefined {
+  return process.env.FIREBASE_AUTH_EMULATOR_HOST
+}
+
+/**
+ * When true the SDK should communicate with the Auth Emulator for all API
+ * calls and also produce unsigned tokens.
+ */
+export function useEmulator(): boolean {
+  return !!emulatorHost();
 }

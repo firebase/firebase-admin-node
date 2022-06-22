@@ -14,46 +14,29 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { App } from '../app';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
 import { AppMetadata, AppPlatform } from './app-metadata';
 
 /**
- * Internals of a Project Management instance.
+ * The Firebase ProjectManagement service interface.
  */
-class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
-
-/**
- * ProjectManagement service bound to the provided app.
- */
-export class ProjectManagement implements FirebaseServiceInterface {
-
-  public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
+export class ProjectManagement {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
   private projectId: string;
 
   /**
-   * @param {object} app The app for this ProjectManagement service.
+   * @param app - The app for this ProjectManagement service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
         'invalid-argument',
@@ -66,6 +49,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   /**
    * Lists up to 100 Firebase Android apps associated with this Firebase project.
+   *
+   * @returns The list of Android apps.
    */
   public listAndroidApps(): Promise<AndroidApp[]> {
     return this.listPlatformApps<AndroidApp>('android', 'listAndroidApps()');
@@ -73,34 +58,63 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   /**
    * Lists up to 100 Firebase iOS apps associated with this Firebase project.
+   *
+   * @returns The list of iOS apps.
    */
   public listIosApps(): Promise<IosApp[]> {
     return this.listPlatformApps<IosApp>('ios', 'listIosApps()');
   }
 
   /**
-   * Returns an AndroidApp object for the given appId. No RPC is made.
+   * Creates an `AndroidApp` object, referencing the specified Android app within
+   * this Firebase project.
+   *
+   * This method does not perform an RPC.
+   *
+   * @param appId - The `appId` of the Android app to reference.
+   *
+   * @returns An `AndroidApp` object that references the specified Firebase Android app.
    */
   public androidApp(appId: string): AndroidApp {
     return new AndroidApp(appId, this.requestHandler);
   }
 
   /**
-   * Returns an IosApp object for the given appId. No RPC is made.
+   * Creates an `iOSApp` object, referencing the specified iOS app within
+   * this Firebase project.
+   *
+   * This method does not perform an RPC.
+   *
+   * @param appId - The `appId` of the iOS app to reference.
+   *
+   * @returns An `iOSApp` object that references the specified Firebase iOS app.
    */
   public iosApp(appId: string): IosApp {
     return new IosApp(appId, this.requestHandler);
   }
 
   /**
-   * Returns a ShaCertificate object for the given shaHash. No RPC is made.
+   * Creates a `ShaCertificate` object.
+   *
+   * This method does not perform an RPC.
+   *
+   * @param shaHash - The SHA-1 or SHA-256 hash for this certificate.
+   *
+   * @returns A `ShaCertificate` object contains the specified SHA hash.
    */
   public shaCertificate(shaHash: string): ShaCertificate {
     return new ShaCertificate(shaHash);
   }
 
   /**
-   * Creates a new Firebase Android app, associated with this Firebase project.
+   * Creates a new Firebase Android app associated with this Firebase project.
+   *
+   * @param packageName - The canonical package name of the Android App,
+   *     as would appear in the Google Play Developer Console.
+   * @param displayName - An optional user-assigned display name for this
+   *     new app.
+   *
+   * @returns A promise that resolves to the newly created Android app.
    */
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
     return this.getResourceName()
@@ -116,13 +130,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+          '"responseData.appId" field must be present in createAndroidApp()\'s response data.');
         return new AndroidApp(responseData.appId, this.requestHandler);
       });
   }
 
   /**
-   * Creates a new Firebase iOS app, associated with this Firebase project.
+   * Creates a new Firebase iOS app associated with this Firebase project.
+   *
+   * @param bundleId - The iOS app bundle ID to use for this new app.
+   * @param displayName - An optional user-assigned display name for this
+   *     new app.
+   *
+   * @returns A promise that resolves to the newly created iOS app.
    */
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
     return this.getResourceName()
@@ -138,13 +158,15 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createIosApp()'s response data.`);
+          '"responseData.appId" field must be present in createIosApp()\'s response data.');
         return new IosApp(responseData.appId, this.requestHandler);
       });
   }
 
   /**
    * Lists up to 100 Firebase apps associated with this Firebase project.
+   *
+   * @returns A promise that resolves to the metadata list of the apps.
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
     return this.getResourceName()
@@ -160,7 +182,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
-   * Update display name of the project
+   * Update the display name of this Firebase project.
+   *
+   * @param newDisplayName - The new display name to be updated.
+   *
+   * @returns A promise that resolves when the project display name has been updated.
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.getResourceName()
@@ -180,11 +206,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
       assertServerResponse(
         validator.isNonEmptyString(appJson.appId),
         responseData,
-        `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+        '"apps[].appId" field must be present in the listAppMetadata() response data.');
       assertServerResponse(
         validator.isNonEmptyString(appJson.platform),
         responseData,
-        `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+        '"apps[].platform" field must be present in the listAppMetadata() response data.');
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,

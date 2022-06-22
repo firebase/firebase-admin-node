@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
+import * as admin from '../../lib/index';
+import {
+  Database, DataSnapshot, EventType, Reference, ServerValue, getDatabase, getDatabaseWithUrl,
+} from '../../lib/database/index';
+import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl, isEmulator } from './setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -46,12 +49,18 @@ describe('admin.database', () => {
         '.write': 'auth != null',
       },
     };
-    return admin.database().setRules(defaultRules);
+    return getDatabase().setRules(defaultRules);
+  });
+
+  it('getDatabase() returns a database client', () => {
+    const db: Database = getDatabase();
+    expect(db).to.not.be.undefined;
   });
 
   it('admin.database() returns a database client', () => {
-    const db = admin.database();
-    expect(db).to.be.instanceOf((admin.database as any).Database);
+    const db: admin.database.Database = admin.database();
+    expect(db).to.not.be.undefined;
+    expect(db).to.equal(getDatabase());
   });
 
   it('admin.database.ServerValue type is defined', () => {
@@ -60,37 +69,42 @@ describe('admin.database', () => {
   });
 
   it('default App is not blocked by security rules', () => {
-    return defaultApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
+    return getDatabase(defaultApp).ref('blocked').set(ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
   });
 
-  it('App with null auth overrides is blocked by security rules', () => {
-    return nullApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
+  it('App with null auth overrides is blocked by security rules', function () {
+    if (isEmulator) {
+      // RTDB emulator has open security rules by default and won't block this.
+      // TODO(https://github.com/firebase/firebase-admin-node/issues/1149):
+      //     remove this once updating security rules through admin is in place.
+      return this.skip();
+    }
+    return getDatabase(nullApp).ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
       .should.eventually.be.rejectedWith('PERMISSION_DENIED: Permission denied');
   });
 
   it('App with non-null auth override is not blocked by security rules', () => {
-    return nonNullApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
+    return getDatabase(nonNullApp).ref('blocked').set(ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
   });
 
-  describe('admin.database().ref()', () => {
-    let ref: admin.database.Reference;
+  describe('Reference', () => {
+    let ref: Reference;
 
     before(() => {
-      ref = admin.database().ref(path);
+      ref = getDatabase().ref(path);
     });
 
     it('ref() can be called with ref', () => {
-      const copy = admin.database().ref(ref);
-      expect(copy).to.be.instanceof((admin.database as any).Reference);
+      const copy: Reference = getDatabase().ref(ref);
       expect(copy.key).to.equal(ref.key);
     });
 
     it('set() completes successfully', () => {
       return ref.set({
         success: true,
-        timestamp: admin.database.ServerValue.TIMESTAMP,
+        timestamp: ServerValue.TIMESTAMP,
       }).should.eventually.be.fulfilled;
     });
 
@@ -115,24 +129,29 @@ describe('admin.database', () => {
     });
   });
 
-  describe('app.database(url).ref()', () => {
+  describe('getDatabaseWithUrl()', () => {
 
-    let refWithUrl: admin.database.Reference;
+    let refWithUrl: Reference;
 
     before(() => {
-      const app = admin.app();
-      refWithUrl = app.database(databaseUrl).ref(path);
+      refWithUrl = getDatabaseWithUrl(databaseUrl).ref(path);
+    });
+
+    it('getDatabaseWithUrl(url) returns a Database client for URL', () => {
+      const db: Database = getDatabaseWithUrl(databaseUrl);
+      expect(db).to.not.be.undefined;
     });
 
     it('app.database(url) returns a Database client for URL', () => {
-      const db = admin.app().database(databaseUrl);
-      expect(db).to.be.instanceOf((admin.database as any).Database);
+      const db: Database = admin.app().database(databaseUrl);
+      expect(db).to.not.be.undefined;
+      expect(db).to.equal(getDatabaseWithUrl(databaseUrl));
     });
 
     it('set() completes successfully', () => {
       return refWithUrl.set({
         success: true,
-        timestamp: admin.database.ServerValue.TIMESTAMP,
+        timestamp: ServerValue.TIMESTAMP,
       }).should.eventually.be.fulfilled;
     });
 
@@ -157,14 +176,22 @@ describe('admin.database', () => {
     });
   });
 
-  it('admin.database().getRules() returns currently defined rules as a string', () => {
-    return admin.database().getRules().then((result) => {
+  it('admin.database().getRules() returns currently defined rules as a string', function () {
+    if (isEmulator) {
+      // https://github.com/firebase/firebase-admin-node/issues/1149
+      return this.skip();
+    }
+    return getDatabase().getRules().then((result) => {
       return expect(result).to.be.not.empty;
     });
   });
 
-  it('admin.database().getRulesJSON() returns currently defined rules as an object', () => {
-    return admin.database().getRulesJSON().then((result) => {
+  it('admin.database().getRulesJSON() returns currently defined rules as an object', function () {
+    if (isEmulator) {
+      // https://github.com/firebase/firebase-admin-node/issues/1149
+      return this.skip();
+    }
+    return getDatabase().getRulesJSON().then((result) => {
       return expect(result).to.be.not.undefined;
     });
   });
@@ -173,11 +200,9 @@ describe('admin.database', () => {
 // Check for type compilation. This method is not invoked by any tests. But it
 // will trigger a TS compilation failure if the RTDB typings were not loaded
 // correctly. (Marked as export to avoid compilation warning.)
-//
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function addValueEventListener(
-  db: admin.database.Database,
-  callback: (s: admin.database.DataSnapshot | null) => any): void {
-  const eventType: admin.database.EventType = 'value';
+  db: Database,
+  callback: (s: DataSnapshot | null) => any): void {
+  const eventType: EventType = 'value';
   db.ref().on(eventType, callback);
 }

@@ -17,8 +17,10 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as admin from '../../lib/index';
 import { projectId } from './setup';
+import {
+  AndroidApp, IosApp, ShaCertificate, getProjectManagement,
+} from '../../lib/project-management/index';
 
 const APP_NAMESPACE_PREFIX = 'com.adminsdkintegrationtest.a';
 const APP_NAMESPACE_SUFFIX_LENGTH = 15;
@@ -37,8 +39,8 @@ chai.use(chaiAsPromised);
 
 describe('admin.projectManagement', () => {
 
-  let androidApp: admin.projectManagement.AndroidApp;
-  let iosApp: admin.projectManagement.IosApp;
+  let androidApp: AndroidApp;
+  let iosApp: IosApp;
 
   before(() => {
     const androidPromise = ensureAndroidApp()
@@ -55,7 +57,7 @@ describe('admin.projectManagement', () => {
 
   describe('listAndroidApps()', () => {
     it('successfully lists Android apps', () => {
-      return admin.projectManagement().listAndroidApps()
+      return getProjectManagement().listAndroidApps()
         .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
         .then((metadatas) => {
           expect(metadatas.length).to.be.at.least(1);
@@ -69,7 +71,7 @@ describe('admin.projectManagement', () => {
 
   describe('listIosApps()', () => {
     it('successfully lists iOS apps', () => {
-      return admin.projectManagement().listIosApps()
+      return getProjectManagement().listIosApps()
         .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
         .then((metadatas) => {
           expect(metadatas.length).to.be.at.least(1);
@@ -86,14 +88,14 @@ describe('admin.projectManagement', () => {
       const newDisplayName = generateUniqueProjectDisplayName();
       // TODO(caot): verify that project name has been renamed successfully after adding the ability
       //     to get project metadata.
-      return admin.projectManagement().setDisplayName(newDisplayName)
+      return getProjectManagement().setDisplayName(newDisplayName)
         .should.eventually.be.fulfilled;
     });
   });
 
   describe('listAppMetadata()', () => {
     it('successfully lists metadata of all apps', () => {
-      return admin.projectManagement().listAppMetadata()
+      return getProjectManagement().listAppMetadata()
         .then((metadatas) => {
           expect(metadatas.length).to.be.at.least(2);
           const testAppMetadatas = metadatas.filter((metadata) =>
@@ -158,7 +160,7 @@ describe('admin.projectManagement', () => {
         .then((certs) => {
           expect(certs.length).to.equal(0);
 
-          const shaCertificate = admin.projectManagement().shaCertificate(SHA_256_HASH);
+          const shaCertificate = getProjectManagement().shaCertificate(SHA_256_HASH);
           return androidApp.addShaCertificate(shaCertificate);
         })
         .then(() => androidApp.getShaCertificates())
@@ -179,7 +181,7 @@ describe('admin.projectManagement', () => {
     it('add a cert and then remove it fails due to missing resourceName',
       () => {
         const shaCertificate =
-             admin.projectManagement().shaCertificate(SHA_256_HASH);
+             getProjectManagement().shaCertificate(SHA_256_HASH);
         return androidApp.addShaCertificate(shaCertificate)
           .then(() => androidApp.deleteShaCertificate(shaCertificate))
           .should.eventually.be
@@ -211,20 +213,20 @@ describe('admin.projectManagement', () => {
 /**
  * Ensures that an Android app owned by these integration tests exist. If not one will be created.
  *
- * @return {Promise<AndroidApp>} Android app owned by these integration tests.
+ * @return Android app owned by these integration tests.
  */
-function ensureAndroidApp(): Promise<admin.projectManagement.AndroidApp> {
-  return admin.projectManagement().listAndroidApps()
+function ensureAndroidApp(): Promise<AndroidApp> {
+  return getProjectManagement().listAndroidApps()
     .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
     .then((metadatas) => {
       const metadataOwnedByTest =
             metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
       if (metadataOwnedByTest) {
-        return admin.projectManagement().androidApp(metadataOwnedByTest.appId);
+        return getProjectManagement().androidApp(metadataOwnedByTest.appId);
       }
 
       // If no Android app owned by these integration tests was found, then create one.
-      return admin.projectManagement()
+      return getProjectManagement()
         .createAndroidApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
     });
 }
@@ -232,20 +234,20 @@ function ensureAndroidApp(): Promise<admin.projectManagement.AndroidApp> {
 /**
  * Ensures that an iOS app owned by these integration tests exist. If not one will be created.
  *
- * @return {Promise<IosApp>} iOS app owned by these integration tests.
+ * @return iOS app owned by these integration tests.
  */
-function ensureIosApp(): Promise<admin.projectManagement.IosApp> {
-  return admin.projectManagement().listIosApps()
+function ensureIosApp(): Promise<IosApp> {
+  return getProjectManagement().listIosApps()
     .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
     .then((metadatas) => {
       const metadataOwnedByTest =
             metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
       if (metadataOwnedByTest) {
-        return admin.projectManagement().iosApp(metadataOwnedByTest.appId);
+        return getProjectManagement().iosApp(metadataOwnedByTest.appId);
       }
 
       // If no iOS app owned by these integration tests was found, then create one.
-      return admin.projectManagement()
+      return getProjectManagement()
         .createIosApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
     });
 }
@@ -253,51 +255,51 @@ function ensureIosApp(): Promise<admin.projectManagement.IosApp> {
 /**
  * Deletes all SHA certificates from the specified Android app.
  */
-function deleteAllShaCertificates(androidApp: admin.projectManagement.AndroidApp): Promise<void> {
+function deleteAllShaCertificates(androidApp: AndroidApp): Promise<void> {
   return androidApp.getShaCertificates()
-    .then((shaCertificates: admin.projectManagement.ShaCertificate[]) => {
+    .then((shaCertificates: ShaCertificate[]) => {
       return Promise.all(shaCertificates.map((cert) => androidApp.deleteShaCertificate(cert)));
     })
     .then(() => undefined);
 }
 
 /**
- * @return {string} Dot-separated string that can be used as a unique package name or bundle ID.
+ * @return Dot-separated string that can be used as a unique package name or bundle ID.
  */
 function generateUniqueAppNamespace(): string {
   return APP_NAMESPACE_PREFIX + generateRandomString(APP_NAMESPACE_SUFFIX_LENGTH);
 }
 
 /**
- * @return {string} Dot-separated string that can be used as a unique app display name.
+ * @return Dot-separated string that can be used as a unique app display name.
  */
 function generateUniqueAppDisplayName(): string {
   return APP_DISPLAY_NAME_PREFIX + generateRandomString(APP_DISPLAY_NAME_SUFFIX_LENGTH);
 }
 
 /**
- * @return {string} string that can be used as a unique project display name.
+ * @return string that can be used as a unique project display name.
  */
 function generateUniqueProjectDisplayName(): string {
   return PROJECT_DISPLAY_NAME_PREFIX + generateRandomString(PROJECT_DISPLAY_NAME_SUFFIX_LENGTH);
 }
 
 /**
- * @return {boolean} True if the specified appNamespace belongs to these integration tests.
+ * @return True if the specified appNamespace belongs to these integration tests.
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
   return appNamespace ? appNamespace.startsWith(APP_NAMESPACE_PREFIX) : false;
 }
 
 /**
- * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
+ * @return True if the specified appDisplayName belongs to these integration tests.
  */
 function isIntegrationTestAppDisplayName(appDisplayName: string | undefined): boolean {
   return appDisplayName ? appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX) : false;
 }
 
 /**
- * @return {string} A randomly generated alphanumeric string, of the specified length.
+ * @return A randomly generated alphanumeric string, of the specified length.
  */
 function generateRandomString(stringLength: number): string {
   return _.times(stringLength, () => _.random(35).toString(36)).join('');

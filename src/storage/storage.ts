@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,49 +15,47 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
-import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
-
+import { App } from '../app';
+import { FirebaseError } from '../utils/error';
+import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
+import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 /**
- * Internals of a Storage instance.
+ * The default `Storage` service if no
+ * app is provided or the `Storage` service associated with the provided
+ * app.
  */
-class StorageInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
+export class Storage {
 
-/**
- * Storage service bound to the provided app.
- */
-export class Storage implements FirebaseServiceInterface {
-  public readonly INTERNAL: StorageInternals = new StorageInternals();
-
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly storageClient: StorageClient;
 
   /**
-   * @param {FirebaseApp} app The app for this Storage service.
+   * @param app - The app for this Storage service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
         message: 'First argument passed to admin.storage() must be a valid Firebase app instance.',
       });
+    }
+
+    if (!process.env.STORAGE_EMULATOR_HOST && process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+      const firebaseStorageEmulatorHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+
+      if (firebaseStorageEmulatorHost.match(/https?:\/\//)) {
+        throw new FirebaseError({
+          code: 'storage/invalid-emulator-host',
+          message: 'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol (http or https).',
+        });
+      }
+
+      process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
     }
 
     let storage: typeof StorageClient;
@@ -79,8 +78,8 @@ export class Storage implements FirebaseServiceInterface {
         // guaranteed to be available.
         projectId: projectId!,
         credentials: {
-          private_key: credential.privateKey, // eslint-disable-line @typescript-eslint/camelcase
-          client_email: credential.clientEmail, // eslint-disable-line @typescript-eslint/camelcase
+          private_key: credential.privateKey,
+          client_email: credential.clientEmail,
         },
       });
     } else if (isApplicationDefault(app.options.credential)) {
@@ -98,12 +97,12 @@ export class Storage implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns a reference to a Google Cloud Storage bucket. Returned reference can be used to upload
-   * and download content from Google Cloud Storage.
+   * Gets a reference to a Cloud Storage bucket.
    *
-   * @param {string=} name Optional name of the bucket to be retrieved. If name is not specified,
-   *   retrieves a reference to the default bucket.
-   * @return {Bucket} A Bucket object from the @google-cloud/storage library.
+   * @param name - Optional name of the bucket to be retrieved. If name is not specified,
+   * retrieves a reference to the default bucket.
+   * @returns A {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket | Bucket}
+   * instance as defined in the `@google-cloud/storage` package.
    */
   public bucket(name?: string): Bucket {
     const bucketName = (typeof name !== 'undefined')
@@ -120,11 +119,10 @@ export class Storage implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns the app associated with this Storage instance.
-   *
-   * @return {FirebaseApp} The app associated with this Storage instance.
+   * Optional app whose `Storage` service to
+   * return. If not provided, the default `Storage` service will be returned.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 }

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +19,13 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
+  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse,
 } from '../../../src/auth/user-record';
+import {
+  UserInfo, UserMetadata, UserRecord, MultiFactorSettings, MultiFactorInfo, PhoneMultiFactorInfo,
+} from '../../../src/auth/index';
 
 
 chai.should();
@@ -175,7 +178,7 @@ function getUserJSON(tenantId?: string): object {
         },
         {
           uid: 'enrollmentId2',
-          displayName: null,
+          displayName: undefined,
           enrollmentTime: now.toUTCString(),
           phoneNumber: '+16505556789',
           factorId: 'phone',
@@ -296,7 +299,7 @@ describe('PhoneMultiFactorInfo', () => {
   describe('getters', () => {
     it('should set missing optional fields to null', () => {
       expect(phoneMultiFactorInfoMissingFields.uid).to.equal(serverResponse.mfaEnrollmentId);
-      expect(phoneMultiFactorInfoMissingFields.displayName).to.be.null;
+      expect(phoneMultiFactorInfoMissingFields.displayName).to.be.undefined;
       expect(phoneMultiFactorInfoMissingFields.phoneNumber).to.equal(serverResponse.phoneInfo);
       expect(phoneMultiFactorInfoMissingFields.enrollmentTime).to.be.null;
       expect(phoneMultiFactorInfoMissingFields.factorId).to.equal('phone');
@@ -367,7 +370,7 @@ describe('PhoneMultiFactorInfo', () => {
     it('should return expected JSON object with missing fields set to null', () => {
       expect(phoneMultiFactorInfoMissingFields.toJSON()).to.deep.equal({
         uid: 'enrollmentId1',
-        displayName: null,
+        displayName: undefined,
         enrollmentTime: null,
         phoneNumber: '+16505551234',
         factorId: 'phone',
@@ -396,7 +399,7 @@ describe('MultiFactorInfo', () => {
   });
 });
 
-describe('MultiFactor', () => {
+describe('MultiFactorSettings', () => {
   const serverResponse = {
     localId: 'uid123',
     mfaInfo: [
@@ -441,18 +444,18 @@ describe('MultiFactor', () => {
   describe('constructor', () => {
     it('should throw when a non object is provided', () => {
       expect(() =>  {
-        return new MultiFactor(undefined as any);
+        return new MultiFactorSettings(undefined as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor response');
     });
 
     it('should populate an empty enrolledFactors array when given an empty object', () => {
-      const multiFactor = new MultiFactor({} as any);
+      const multiFactor = new MultiFactorSettings({} as any);
 
       expect(multiFactor.enrolledFactors.length).to.equal(0);
     });
 
     it('should populate expected enrolledFactors', () => {
-      const multiFactor = new MultiFactor(serverResponse);
+      const multiFactor = new MultiFactorSettings(serverResponse);
 
       expect(multiFactor.enrolledFactors.length).to.equal(2);
       expect(multiFactor.enrolledFactors[0]).to.deep.equal(expectedMultiFactorInfo[0]);
@@ -462,7 +465,7 @@ describe('MultiFactor', () => {
 
   describe('getter', () => {
     it('should throw when modifying readonly enrolledFactors property', () => {
-      const multiFactor = new MultiFactor(serverResponse);
+      const multiFactor = new MultiFactorSettings(serverResponse);
 
       expect(() => {
         (multiFactor as any).enrolledFactors = [
@@ -472,7 +475,7 @@ describe('MultiFactor', () => {
     });
 
     it('should throw when modifying readonly enrolledFactors internals', () => {
-      const multiFactor = new MultiFactor(serverResponse);
+      const multiFactor = new MultiFactorSettings(serverResponse);
 
       expect(() => {
         (multiFactor.enrolledFactors as any)[0] = new PhoneMultiFactorInfo({
@@ -487,7 +490,7 @@ describe('MultiFactor', () => {
 
   describe('toJSON', () => {
     it('should return expected JSON object when given an empty response', () => {
-      const multiFactor = new MultiFactor({} as any);
+      const multiFactor = new MultiFactorSettings({} as any);
 
       expect(multiFactor.toJSON()).to.deep.equal({
         enrolledFactors: [],
@@ -495,7 +498,7 @@ describe('MultiFactor', () => {
     });
 
     it('should return expected JSON object when given a populated response', () => {
-      const multiFactor = new MultiFactor(serverResponse);
+      const multiFactor = new MultiFactorSettings(serverResponse);
 
       expect(multiFactor.toJSON()).to.deep.equal({
         enrolledFactors: [
@@ -517,19 +520,19 @@ describe('UserInfo', () => {
 
     it('should succeed when rawId and providerId are both provided', () => {
       expect(() => {
-        return new UserInfo({providerId: 'google.com', rawId: '1234567890'});
+        return new UserInfo({ providerId: 'google.com', rawId: '1234567890' });
       }).not.to.throw(Error);
     });
 
     it('should throw when only rawId is provided', () => {
       expect(() =>  {
-        return new UserInfo({rawId: '1234567890'} as any);
+        return new UserInfo({ rawId: '1234567890' } as any);
       }).to.throw(Error);
     });
 
     it('should throw when only providerId is provided', () => {
       expect(() =>  {
-        return new UserInfo({providerId: 'google.com'} as any);
+        return new UserInfo({ providerId: 'google.com' } as any);
       }).to.throw(Error);
     });
   });
@@ -634,7 +637,7 @@ describe('UserMetadata', () => {
   describe('constructor', () =>  {
     it('should initialize as expected when a valid creationTime is provided', () => {
       expect(() => {
-        return new UserMetadata({createdAt: '1476136676000'} as any);
+        return new UserMetadata({ createdAt: '1476136676000' } as any);
       }).not.to.throw(Error);
     });
 
@@ -685,6 +688,15 @@ describe('UserMetadata', () => {
     it('should return expected lastRefreshTime', () => {
       expect(actualMetadata.lastRefreshTime).to.equal(new Date(expectedLastRefreshAt).toUTCString())
     });
+
+    it('should return null when lastRefreshTime is not available', () => {
+      const metadata: UserMetadata = new UserMetadata({
+        localId: 'uid123',
+        lastLoginAt: expectedLastLoginAt.toString(),
+        createdAt: expectedCreatedAt.toString(),
+      });
+      expect(metadata.lastRefreshTime).to.be.null;
+    });
   });
 
   describe('toJSON', () => {
@@ -704,7 +716,7 @@ describe('UserRecord', () => {
 
     it('should succeed when only localId is provided', () => {
       expect(() =>  {
-        return new UserRecord({localId: '123456789'});
+        return new UserRecord({ localId: '123456789' });
       }).not.to.throw(Error);
     });
   });
@@ -852,7 +864,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly customClaims property', () => {
       expect(() => {
-        (userRecord as any).customClaims = {admin: false};
+        (userRecord as any).customClaims = { admin: false };
       }).to.throw(Error);
     });
 
@@ -974,7 +986,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected multiFactor', () => {
-      const multiFactor = new MultiFactor({
+      const multiFactor = new MultiFactorSettings({
         localId: 'uid123',
         mfaInfo: [
           {
@@ -1004,7 +1016,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly multiFactor property', () => {
       expect(() => {
-        (userRecord as any).multiFactor = new MultiFactor({
+        (userRecord as any).multiFactor = new MultiFactorSettings({
           localId: 'uid123',
           mfaInfo: [{
             mfaEnrollmentId: 'enrollmentId3',

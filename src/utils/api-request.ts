@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +15,15 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {AppErrorCodes, FirebaseAppError} from './error';
+import { FirebaseApp } from '../app/firebase-app';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
 import url = require('url');
-import {EventEmitter} from 'events';
-import {Readable} from 'stream';
+import { EventEmitter } from 'events';
+import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
@@ -211,7 +212,7 @@ export function defaultRetryConfig(): RetryConfig {
 /**
  * Ensures that the given RetryConfig object is valid.
  *
- * @param retry The configuration to be validated.
+ * @param retry - The configuration to be validated.
  */
 function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
@@ -259,8 +260,8 @@ export class HttpClient {
    * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
    * and pass as a string or a Buffer along with the appropriate content-type header.
    *
-   * @param {HttpRequest} config HTTP request to be sent.
-   * @return {Promise<HttpResponse>} A promise that resolves with the response details.
+   * @param config - HTTP request to be sent.
+   * @returns A promise that resolves with the response details.
    */
   public send(config: HttpRequestConfig): Promise<HttpResponse> {
     return this.sendWithRetry(config);
@@ -270,9 +271,9 @@ export class HttpClient {
    * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
    * RetryConfig set on the HttpClient.
    *
-   * @param {HttpRequestConfig} config HTTP request to be sent.
-   * @param {number} retryAttempts Number of retries performed up to now.
-   * @return {Promise<HttpResponse>} A promise that resolves with the response details.
+   * @param config - HTTP request to be sent.
+   * @param retryAttempts - Number of retries performed up to now.
+   * @returns A promise that resolves with the response details.
    */
   private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
     return AsyncHttpCall.invoke(config)
@@ -322,9 +323,9 @@ export class HttpClient {
    * Checks if a failed request is eligible for a retry, and if so returns the duration to wait before initiating
    * the retry.
    *
-   * @param {number} retryAttempts Number of retries completed up to now.
-   * @param {LowLevelError} err The last encountered error.
-   * @returns {[number, boolean]} A 2-tuple where the 1st element is the duration to wait before another retry, and the
+   * @param retryAttempts - Number of retries completed up to now.
+   * @param err - The last encountered error.
+   * @returns A 2-tuple where the 1st element is the duration to wait before another retry, and the
    *     2nd element is a boolean indicating whether the request is eligible for a retry or not.
    */
   private getRetryDelayMillis(retryAttempts: number, err: LowLevelError): [number, boolean] {
@@ -400,9 +401,9 @@ export class HttpClient {
 /**
  * Parses a full HTTP response message containing both a header and a body.
  *
- * @param {string|Buffer} response The HTTP response to be parsed.
- * @param {HttpRequestConfig} config The request configuration that resulted in the HTTP response.
- * @return {HttpResponse} An object containing the parsed HTTP status, headers and the body.
+ * @param response - The HTTP response to be parsed.
+ * @param config - The request configuration that resulted in the HTTP response.
+ * @returns An object containing the parsed HTTP status, headers and the body.
  */
 export function parseHttpResponse(
   response: string | Buffer, config: HttpRequestConfig): HttpResponse {
@@ -496,11 +497,15 @@ class AsyncHttpCall {
     });
 
     const timeout: number | undefined = this.config.timeout;
+    const timeoutCallback: () => void = () => {
+      req.abort();
+      this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+    };
     if (timeout) {
       // Listen to timeouts and throw an error.
-      req.setTimeout(timeout, () => {
-        req.abort();
-        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+      req.setTimeout(timeout, timeoutCallback);
+      req.on('socket', (socket) => {
+        socket.setTimeout(timeout, timeoutCallback);
       });
     }
 
@@ -583,8 +588,8 @@ class AsyncHttpCall {
   private handleMultipartResponse(
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new dicer({boundary});
+    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];
@@ -723,7 +728,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
-    let port: string | undefined = parsed.port;
+    let port: string | null = parsed.port;
     if (!port) {
       const isHttps = protocol === 'https:';
       port = isHttps ? '443' : '80';
@@ -810,11 +815,11 @@ export class AuthorizedHttpClient extends HttpClient {
   }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
-    return this.app.INTERNAL.getToken().then((accessTokenObj) => {
+    return this.getToken().then((token) => {
       const requestCopy = Object.assign({}, request);
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
-      requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+      requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
@@ -822,13 +827,20 @@ export class AuthorizedHttpClient extends HttpClient {
       return super.send(requestCopy);
     });
   }
+
+  protected getToken(): Promise<string> {
+    return this.app.INTERNAL.getToken()
+      .then((accessTokenObj) => {
+        return accessTokenObj.accessToken;
+      });
+  }
 }
 
 /**
  * Class that defines all the settings for the backend API endpoint.
  *
- * @param {string} endpoint The Firebase Auth backend endpoint.
- * @param {HttpMethod} httpMethod The http method for that endpoint.
+ * @param endpoint - The Firebase Auth backend endpoint.
+ * @param httpMethod - The http method for that endpoint.
  * @constructor
  */
 export class ApiSettings {
@@ -840,19 +852,19 @@ export class ApiSettings {
       .setResponseValidator(null);
   }
 
-  /** @return {string} The backend API endpoint. */
+  /** @returns The backend API endpoint. */
   public getEndpoint(): string {
     return this.endpoint;
   }
 
-  /** @return {HttpMethod} The request HTTP method. */
+  /** @returns The request HTTP method. */
   public getHttpMethod(): HttpMethod {
     return this.httpMethod;
   }
 
   /**
-   * @param {ApiCallbackFunction} requestValidator The request validator.
-   * @return {ApiSettings} The current API settings instance.
+   * @param requestValidator - The request validator.
+   * @returns The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: ApiCallbackFunction = () => undefined;
@@ -860,14 +872,14 @@ export class ApiSettings {
     return this;
   }
 
-  /** @return {ApiCallbackFunction} The request validator. */
+  /** @returns The request validator. */
   public getRequestValidator(): ApiCallbackFunction {
     return this.requestValidator;
   }
 
   /**
-   * @param {ApiCallbackFunction} responseValidator The response validator.
-   * @return {ApiSettings} The current API settings instance.
+   * @param responseValidator - The response validator.
+   * @returns The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: ApiCallbackFunction = () => undefined;
@@ -875,7 +887,7 @@ export class ApiSettings {
     return this;
   }
 
-  /** @return {ApiCallbackFunction} The response validator. */
+  /** @returns The response validator. */
   public getResponseValidator(): ApiCallbackFunction {
     return this.responseValidator;
   }
@@ -905,15 +917,15 @@ export class ApiSettings {
  *     });
  * ```
  */
-export class ExponentialBackoffPoller extends EventEmitter {
+export class ExponentialBackoffPoller<T> extends EventEmitter {
   private numTries = 0;
   private completed = false;
 
   private masterTimer: NodeJS.Timer;
   private repollTimer: NodeJS.Timer;
 
-  private pollCallback?: () => Promise<object>;
-  private resolve: (result: object) => void;
+  private pollCallback?: () => Promise<T>;
+  private resolve: (result: T) => void;
   private reject: (err: object) => void;
 
   constructor(
@@ -926,13 +938,13 @@ export class ExponentialBackoffPoller extends EventEmitter {
   /**
    * Poll the provided callback with exponential backoff.
    *
-   * @param {() => Promise<object>} callback The callback to be called for each poll. If the
+   * @param callback - The callback to be called for each poll. If the
    *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
    *     resolution will be used to resolve the promise returned by this method.
-   * @return {Promise<object>} A Promise which resolves to the truthy value returned by the provided
+   * @returns A Promise which resolves to the truthy value returned by the provided
    *     callback when polling is complete.
    */
-  public poll(callback: () => Promise<object>): Promise<object> {
+  public poll(callback: () => Promise<T>): Promise<T> {
     if (this.pollCallback) {
       throw new Error('poll() can only be called once per instance of ExponentialBackoffPoller');
     }
@@ -949,7 +961,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
       this.reject(new Error('ExponentialBackoffPoller deadline exceeded - Master timeout reached'));
     }, this.masterTimeoutMillis);
 
-    return new Promise<object>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
       this.repoll();

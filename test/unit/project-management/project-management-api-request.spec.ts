@@ -21,13 +21,15 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import { FirebaseApp } from '../../../src/firebase-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
-import { ShaCertificate } from '../../../src/project-management/android-app';
-import { AppPlatform } from '../../../src/project-management/app-metadata';
+import { getSdkVersion } from '../../../src/utils/index';
+import { AppPlatform, ShaCertificate } from '../../../src/project-management/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -72,7 +74,7 @@ describe('ProjectManagementRequestHandler', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     expectedHeaders = {
-      'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+      'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
     requestHandler = new ProjectManagementRequestHandler(mockApp);

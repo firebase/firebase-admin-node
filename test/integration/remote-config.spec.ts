@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { deepCopy } from '../../src/utils/deep-copy';
+import {
+  getRemoteConfig,
+  ParameterValueType,
+  RemoteConfigCondition,
+  RemoteConfigTemplate,
+} from '../../lib/remote-config/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -25,14 +30,14 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const VALID_PARAMETERS = {
-  // eslint-disable-next-line @typescript-eslint/camelcase
   holiday_promo_enabled: {
     defaultValue: { useInAppDefault: true },
-    description: 'promo indicator'
+    description: 'promo indicator',
+    valueType: 'STRING' as ParameterValueType,
   },
-  // eslint-disable-next-line @typescript-eslint/camelcase
   welcome_message: {
-    defaultValue: { value: 'welcome text' + Date.now() },
+    defaultValue: { value: `welcome text ${Date.now()}` },
+    valueType: 'STRING' as ParameterValueType,
     conditionalValues: {
       ios: { value: 'welcome ios text' },
       android: { value: 'welcome android text' },
@@ -41,44 +46,49 @@ const VALID_PARAMETERS = {
 };
 
 const VALID_PARAMETER_GROUPS = {
-  // eslint-disable-next-line @typescript-eslint/camelcase
   new_menu: {
     description: 'Description of the group.',
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/camelcase
       pumpkin_spice_season: {
         defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
         conditionalValues: {
           'android': { value: 'A Droid must love a pumpkin spice latte.' },
         },
         description: 'Description of the parameter.',
+        valueType: 'STRING' as ParameterValueType,
       },
     },
   },
 };
 
-const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [{
-  name: 'ios',
-  expression: 'device.os == \'ios\'',
-  tagColor: 'INDIGO',
-},
-{
-  name: 'android',
-  expression: 'device.os == \'android\'',
-  tagColor: 'GREEN',
-}];
+const VALID_CONDITIONS: RemoteConfigCondition[] = [
+  {
+    name: 'ios',
+    expression: 'device.os == \'ios\'',
+    tagColor: 'INDIGO',
+  },
+  {
+    name: 'android',
+    expression: 'device.os == \'android\'',
+    tagColor: 'GREEN',
+  },
+];
 
-let currentTemplate: admin.remoteConfig.RemoteConfigTemplate;
+const VALID_VERSION = {
+  description: `template description ${Date.now()}`,
+}
+
+let currentTemplate: RemoteConfigTemplate;
 
 describe('admin.remoteConfig', () => {
   before(async () => {
     // obtain the most recent template (etag) to perform operations
-    currentTemplate = await admin.remoteConfig().getTemplate();
+    currentTemplate = await getRemoteConfig().getTemplate();
   });
 
   it('verify that the etag is read-only', () => {
     expect(() => {
-      (currentTemplate as any).etag = "new-etag";
+      (currentTemplate as any).etag = 'new-etag';
     }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
   });
 
@@ -88,13 +98,16 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
-      return admin.remoteConfig().validateTemplate(currentTemplate)
+      currentTemplate.version = VALID_VERSION;
+      return getRemoteConfig().validateTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
         });
     });
 
@@ -103,7 +116,8 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
-      return admin.remoteConfig().validateTemplate(currentTemplate)
+      currentTemplate.version = VALID_VERSION;
+      return getRemoteConfig().validateTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
   });
@@ -114,13 +128,16 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
-      return admin.remoteConfig().publishTemplate(currentTemplate)
+      currentTemplate.version = VALID_VERSION;
+      return getRemoteConfig().publishTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
         });
     });
 
@@ -129,20 +146,92 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
-      return admin.remoteConfig().publishTemplate(currentTemplate)
+      currentTemplate.version = VALID_VERSION;
+      return getRemoteConfig().publishTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
   });
 
   describe('getTemplate', () => {
-    it('verfy that getTemplate() returns the most recently published template', () => {
-      return admin.remoteConfig().getTemplate()
+    it('should return the most recently published template', () => {
+      return getRemoteConfig().getTemplate()
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
+        });
+    });
+  });
+
+  let versionOneNumber: string;
+  let versionTwoNumber: string;
+  const versionOneDescription = `getTemplateAtVersion test v1 ${Date.now()}`;
+  const versionTwoDescription = `getTemplateAtVersion test v2 ${Date.now()}`;
+
+  describe('getTemplateAtVersion', () => {
+    before(async () => {
+      // obtain the current active template
+      let activeTemplate = await getRemoteConfig().getTemplate();
+
+      // publish a new template to create a new version number
+      activeTemplate.version = { description: versionOneDescription };
+      activeTemplate = await getRemoteConfig().publishTemplate(activeTemplate)
+      expect(activeTemplate.version).to.be.not.undefined;
+      versionOneNumber = activeTemplate.version!.versionNumber!;
+
+      // publish another template to create a second version number
+      activeTemplate.version = { description: versionTwoDescription };
+      activeTemplate = await getRemoteConfig().publishTemplate(activeTemplate)
+      expect(activeTemplate.version).to.be.not.undefined;
+      versionTwoNumber = activeTemplate.version!.versionNumber!;
+    });
+
+    it('should return the requested template version v1', () => {
+      return getRemoteConfig().getTemplateAtVersion(versionOneNumber)
+        .then((template) => {
+          expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(versionOneNumber);
+          expect(template.version!.description).equals(versionOneDescription);
+        });
+    });
+  });
+
+  describe('listVersions', () => {
+    it('should return the most recently published 2 versions', () => {
+      return getRemoteConfig().listVersions({
+        pageSize: 2,
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(2);
+          // versions should be in reverse chronological order
+          expect(response.versions[0].description).equals(versionTwoDescription);
+          expect(response.versions[0].versionNumber).equals(versionTwoNumber);
+          expect(response.versions[1].description).equals(versionOneDescription);
+          expect(response.versions[1].versionNumber).equals(versionOneNumber);
+        });
+    });
+  });
+
+  describe('rollback', () => {
+    it('verify the most recent template version before rollback to the one prior', () => {
+      return getRemoteConfig().getTemplate()
+        .then((template) => {
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(versionTwoNumber);
+        });
+    });
+
+    it('should rollback to the requested version', () => {
+      return getRemoteConfig().rollback(versionOneNumber)
+        .then((template) => {
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.updateType).equals('ROLLBACK');
+          expect(template.version!.description).equals(`Rollback to version ${versionOneNumber}`);
         });
     });
   });
@@ -153,15 +242,15 @@ describe('admin.remoteConfig', () => {
 
     INVALID_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(invalidJson))
+        expect(() => getRemoteConfig().createTemplateFromJSON(invalidJson))
           .to.throw('JSON string must be a valid non-empty string');
       });
     });
 
     INVALID_JSON_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(invalidJson))
-          .to.throw(/^Failed to parse the JSON string: ([\D\w]*)\. SyntaxError: Unexpected token ([\D\w]*) in JSON at position ([0-9]*)$/);
+        expect(() => getRemoteConfig().createTemplateFromJSON(invalidJson))
+          .to.throw(/Failed to parse the JSON string/);
       });
     });
 
@@ -178,17 +267,17 @@ describe('admin.remoteConfig', () => {
       invalidEtagTemplate.etag = invalidEtag;
       const jsonString = JSON.stringify(invalidEtagTemplate);
       it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(jsonString))
+        expect(() => getRemoteConfig().createTemplateFromJSON(jsonString))
           .to.throw(`Invalid Remote Config template: ${jsonString}`);
       });
     });
 
     it('should succeed when a valid json string is provided', () => {
       const jsonString = JSON.stringify(sourceTemplate);
-      const newTemplate = admin.remoteConfig().createTemplateFromJSON(jsonString);
+      const newTemplate = getRemoteConfig().createTemplateFromJSON(jsonString);
       expect(newTemplate.etag).to.equal(sourceTemplate.etag);
       expect(() => {
-        (currentTemplate as any).etag = "new-etag";
+        (currentTemplate as any).etag = 'new-etag';
       }).to.throw(
         'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter'
       );

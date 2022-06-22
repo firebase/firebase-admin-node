@@ -5,6 +5,7 @@ npm-debug.log
 
 lib/
 .tmp/
+temp/
 typings/
 coverage/
 node_modules/
@@ -13,8 +14,9 @@ node_modules/
 # Real key file should not be checked in
 test/resources/key.json
 test/resources/apikey.txt
+test/resources/appid.txt
 
 # Release tarballs should not be checked in
 firebase-admin-*.tgz
 
-docgen/html/
+docgen/markdown/

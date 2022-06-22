@@ -14,53 +14,63 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions, ListModelsOptions} from './machine-learning-api-client';
-import {FirebaseError} from '../utils/error';
-
+import { App } from '../app';
+import { getStorage } from '../storage/index';
+import { FirebaseError } from '../utils/error';
 import * as validator from '../utils/validator';
-import {FirebaseMachineLearningError} from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
-
-/**
- * Internals of an ML instance.
- */
-class MachineLearningInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the
-   *     service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
+import {
+  MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions,
+  ListModelsOptions, ModelOptions,
+} from './machine-learning-api-client';
+import { FirebaseMachineLearningError } from './machine-learning-utils';
 
 /** Response object for a listModels operation. */
 export interface ListModelsResult {
-  models: Model[];
-  pageToken?: string;
+  /** A list of models in your project. */
+  readonly models: Model[];
+
+  /**
+   * A token you can use to retrieve the next page of results. If null, the
+   * current page is the final page.
+   */
+  readonly pageToken?: string;
 }
 
 /**
- * The Firebase Machine Learning class
+ * A TensorFlow Lite Model output object
+ *
+ * One of either the `gcsTfliteUri` or `automlModel` properties will be
+ * defined.
  */
-export class MachineLearning implements FirebaseServiceInterface {
-  public readonly INTERNAL = new MachineLearningInternals();
+export interface TFLiteModel {
+  /** The size of the model. */
+  readonly sizeBytes: number;
+
+  /** The URI from which the model was originally provided to Firebase. */
+  readonly gcsTfliteUri?: string;
+  /**
+   * The AutoML model reference from which the model was originally provided
+   * to Firebase.
+   */
+  readonly automlModel?: string;
+}
+
+/**
+ * The Firebase `MachineLearning` service interface.
+ */
+export class MachineLearning {
 
   private readonly client: MachineLearningApiClient;
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
 
   /**
-   * @param {FirebaseApp} app The app for this ML service.
+   * @param app - The app for this ML service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'machine-learning/invalid-argument',
@@ -74,85 +84,88 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns the app associated with this ML instance.
-   *
-   * @return {FirebaseApp} The app associated with this ML instance.
+   *  The {@link firebase-admin.app#App} associated with the current `MachineLearning`
+   *  service instance.
    */
-  public get app(): FirebaseApp {
+  public get app(): App {
     return this.appInternal;
   }
 
   /**
-   * Creates a model in Firebase ML.
+   * Creates a model in the current Firebase project.
    *
-   * @param {ModelOptions} model The model to create.
+   * @param model - The model to create.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the created model.
+   * @returns A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
-   * Updates a model in Firebase ML.
+   * Updates a model's metadata or model file.
    *
-   * @param {string} modelId The id of the model to update.
-   * @param {ModelOptions} model The model fields to update.
+   * @param modelId - The ID of the model to update.
+   * @param model - The model fields to update.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the updated model.
+   * @returns A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
     const updateMask = utils.generateUpdateMask(model);
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
-   * Publishes a model in Firebase ML.
+   * Publishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to publish.
+   * A published model can be downloaded to client apps.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the published model.
+   * @param modelId - The ID of the model to publish.
+   *
+   * @returns A Promise fulfilled with the published model.
    */
   public publishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, true);
   }
 
   /**
-   * Unpublishes a model in Firebase ML.
+   * Unpublishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to unpublish.
+   * @param modelId - The ID of the model to unpublish.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+   * @returns A Promise fulfilled with the unpublished model.
    */
   public unpublishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, false);
   }
 
   /**
-   * Gets a model from Firebase ML.
+   * Gets the model specified by the given ID.
    *
-   * @param {string} modelId The id of the model to get.
+   * @param modelId - The ID of the model to get.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+   * @returns A Promise fulfilled with the model object.
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => new Model(modelResponse));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
-   * Lists models from Firebase ML.
+   * Lists the current project's models.
    *
-   * @param {ListModelsOptions} options The listing options.
+   * @param options - The listing options.
    *
-   * @return {Promise<{models: Model[], pageToken?: string}>} A promise that
+   * @returns A promise that
    *     resolves with the current (filtered) list of models and the next page
-   *     token. For the last page, an empty list of models and no page token are
-   *     returned.
+   *     token. For the last page, an empty list of models and no page token
+   *     are returned.
    */
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResult> {
     return this.client.listModels(options)
@@ -164,9 +177,9 @@ export class MachineLearning implements FirebaseServiceInterface {
         }
         let models: Model[] = [];
         if (resp.models) {
-          models = resp.models.map((rs) =>  new Model(rs));
+          models = resp.models.map((rs) =>  new Model(rs, this.client));
         }
-        const result: ListModelsResult = {models};
+        const result: { models: Model[]; pageToken?: string } = { models };
         if (resp.nextPageToken) {
           result.pageToken = resp.nextPageToken;
         }
@@ -175,9 +188,9 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Deletes a model from Firebase ML.
+   * Deletes a model from the current project.
    *
-   * @param {string} modelId The id of the model to delete.
+   * @param modelId - The ID of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
@@ -185,17 +198,18 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private setPublishStatus(modelId: string, publish: boolean): Promise<Model> {
     const updateMask = ['state.published'];
-    const options: ModelUpdateOptions = {state: {published: publish}};
+    const options: ModelUpdateOptions = { state: { published: publish } };
     return this.client.updateModel(modelId, options, updateMask)
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
     const modelOptions = deepCopy(options);
-    if (modelOptions.tfliteModel?.gcsTfliteUri) {
+    if (isGcsTfliteModelOptions(modelOptions)) {
       return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
-        .then ((uri: string) => {
-          modelOptions.tfliteModel!.gcsTfliteUri = uri;
+        .then((uri: string) => {
+          modelOptions.tfliteModel.gcsTfliteUri = uri;
           return modelOptions;
         })
         .catch((err: Error) => {
@@ -220,7 +234,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     }
     const bucketName = matches[1];
     const blobName = matches[2];
-    const bucket = this.appInternal.storage().bucket(bucketName);
+    const bucket = getStorage(this.app).bucket(bucketName);
     const blob = bucket.file(blobName);
     return blob.getSignedUrl({
       action: 'read',
@@ -229,95 +243,178 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 }
 
-
 /**
  * A Firebase ML Model output object.
  */
 export class Model {
-  public readonly modelId: string;
-  public readonly displayName: string;
-  public readonly tags?: string[];
-  public readonly createTime: string;
-  public readonly updateTime: string;
-  public readonly validationError?: string;
-  public readonly published: boolean;
-  public readonly etag: string;
-  public readonly modelHash?: string;
+  private model: ModelResponse;
+  private readonly client?: MachineLearningApiClient;
 
-  public readonly tfliteModel?: TFLiteModel;
+  /**
+   * @internal
+   */
+  constructor(model: ModelResponse, client: MachineLearningApiClient) {
+    this.model = Model.validateAndClone(model);
+    this.client = client;
+  }
 
-  constructor(model: ModelResponse) {
+  /** The ID of the model. */
+  get modelId(): string {
+    return extractModelId(this.model.name);
+  }
+
+  /**
+   * The model's name. This is the name you use from your app to load the
+   * model.
+   */
+  get displayName(): string {
+    return this.model.displayName!;
+  }
+
+  /**
+   * The model's tags, which can be used to group or filter models in list
+   * operations.
+   */
+  get tags(): string[] {
+    return this.model.tags || [];
+  }
+
+  /** The timestamp of the model's creation. */
+  get createTime(): string {
+    return new Date(this.model.createTime).toUTCString();
+  }
+
+  /** The timestamp of the model's most recent update. */
+  get updateTime(): string {
+    return new Date(this.model.updateTime).toUTCString();
+  }
+
+  /** Error message when model validation fails. */
+  get validationError(): string | undefined {
+    return this.model.state?.validationError?.message;
+  }
+
+  /** True if the model is published. */
+  get published(): boolean {
+    return this.model.state?.published || false;
+  }
+
+  /**
+   * The ETag identifier of the current version of the model. This value
+   * changes whenever you update any of the model's properties.
+   */
+  get etag(): string {
+    return this.model.etag;
+  }
+
+  /**
+   * The hash of the model's `tflite` file. This value changes only when
+   * you upload a new TensorFlow Lite model.
+   */
+  get modelHash(): string | undefined {
+    return this.model.modelHash;
+  }
+
+  /** Metadata about the model's TensorFlow Lite model file. */
+  get tfliteModel(): TFLiteModel | undefined {
+    // Make a copy so people can't directly modify the private this.model object.
+    return deepCopy(this.model.tfliteModel);
+  }
+
+  /**
+   * True if the model is locked by a server-side operation. You can't make
+   * changes to a locked model. See {@link Model.waitForUnlocked}.
+   */
+  public get locked(): boolean {
+    return (this.model.activeOperations?.length ?? 0) > 0;
+  }
+
+  /**
+   * Return the model as a JSON object.
+   */
+  public toJSON(): {[key: string]: any} {
+    // We can't just return this.model because it has extra fields and
+    // different formats etc. So we build the expected model object.
+    const jsonModel: {[key: string]: any}  = {
+      modelId: this.modelId,
+      displayName: this.displayName,
+      tags: this.tags,
+      createTime: this.createTime,
+      updateTime: this.updateTime,
+      published: this.published,
+      etag: this.etag,
+      locked: this.locked,
+    };
+
+    // Also add possibly undefined fields if they exist.
+
+    if (this.validationError) {
+      jsonModel['validationError'] = this.validationError;
+    }
+
+    if (this.modelHash) {
+      jsonModel['modelHash'] = this.modelHash;
+    }
+
+    if (this.tfliteModel) {
+      jsonModel['tfliteModel'] = this.tfliteModel;
+    }
+
+    return jsonModel;
+  }
+
+  /**
+   * Wait for the model to be unlocked.
+   *
+   * @param maxTimeMillis - The maximum time in milliseconds to wait.
+   *     If not specified, a default maximum of 2 minutes is used.
+   *
+   * @returns A promise that resolves when the model is unlocked
+   *   or the maximum wait time has passed.
+   */
+  public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
+    if ((this.model.activeOperations?.length ?? 0) > 0) {
+      // The client will always be defined on Models that have activeOperations
+      // because models with active operations came back from the server and
+      // were constructed with a non-empty client.
+      return this.client!.handleOperation(this.model.activeOperations![0], { wait: true, maxTimeMillis })
+        .then((modelResponse) => {
+          this.model = Model.validateAndClone(modelResponse);
+        });
+    }
+    return Promise.resolve();
+  }
+
+  private static validateAndClone(model: ModelResponse): ModelResponse {
     if (!validator.isNonNullObject(model) ||
-      !validator.isNonEmptyString(model.name) ||
-      !validator.isNonEmptyString(model.createTime) ||
-      !validator.isNonEmptyString(model.updateTime) ||
-      !validator.isNonEmptyString(model.displayName) ||
-      !validator.isNonEmptyString(model.etag)) {
+    !validator.isNonEmptyString(model.name) ||
+    !validator.isNonEmptyString(model.createTime) ||
+    !validator.isNonEmptyString(model.updateTime) ||
+    !validator.isNonEmptyString(model.displayName) ||
+    !validator.isNonEmptyString(model.etag)) {
       throw new FirebaseMachineLearningError(
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
+    const tmpModel = deepCopy(model);
 
-    this.modelId = extractModelId(model.name);
-    this.displayName = model.displayName;
-    this.tags = model.tags || [];
-    this.createTime = new Date(model.createTime).toUTCString();
-    this.updateTime = new Date(model.updateTime).toUTCString();
-    if (model.state?.validationError?.message) {
-      this.validationError = model.state?.validationError?.message;
+    // If tflite Model is specified, it must have a source consisting of
+    // oneof {gcsTfliteUri, automlModel}
+    if (model.tfliteModel &&
+        !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
+        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+      // If we have some other source, ignore the whole tfliteModel.
+      delete (tmpModel as any).tfliteModel;
     }
-    this.published = model.state?.published || false;
-    this.etag = model.etag;
-    if (model.modelHash) {
-      this.modelHash = model.modelHash;
+
+    // Remove '@type' field. We don't need it.
+    if ((tmpModel as any)['@type']) {
+      delete (tmpModel as any)['@type'];
     }
-    if (model.tfliteModel) {
-      this.tfliteModel = {
-        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
-        sizeBytes: model.tfliteModel.sizeBytes,
-      };
-    }
+    return tmpModel;
   }
-
-  public get locked(): boolean {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    return false;
-  }
-
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  public waitForUnlocked(maxTimeSeconds?: number): Promise<void> {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    return Promise.resolve();
-  }
-}
-
-/**
- * A TFLite Model output object
- */
-export interface TFLiteModel {
-  readonly sizeBytes: number;
-
-  readonly gcsTfliteUri: string;
 }
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
-}
-
-function handleOperation(op: OperationResponse): Model {
-  // Backend currently does not return operations that are not done.
-  if (op.done) {
-    // Done operations must have either a response or an error.
-    if (op.response) {
-      return new Model(op.response);
-    } else if (op.error) {
-      throw FirebaseMachineLearningError.fromOperationError(
-        op.error.code, op.error.message);
-    }
-  }
-  throw new FirebaseMachineLearningError(
-    'invalid-server-response',
-    `Invalid Operation response: ${JSON.stringify(op)}`);
 }

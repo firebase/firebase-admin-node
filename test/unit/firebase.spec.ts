@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
+import { FirebaseApp, FirebaseAppInternals } from '../../src/app/firebase-app';
+import {
+  RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
+} from '../../src/app/credential-internal';
+import { defaultAppStore, initializeApp } from '../../src/app/lifecycle';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -40,8 +45,8 @@ describe('Firebase', () => {
 
   before(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
-      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
+      access_token: 'mock-access-token',
+      expires_in: 3600,
     });
   });
 
@@ -50,12 +55,7 @@ describe('Firebase', () => {
   });
 
   afterEach(() => {
-    const deletePromises: Array<Promise<void>> = [];
-    firebaseAdmin.apps.forEach((app) => {
-      deletePromises.push(app.delete());
-    });
-
-    return Promise.all(deletePromises);
+    return defaultAppStore.clearAllApps();
   });
 
   describe('#initializeApp()', () => {
@@ -113,7 +113,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -124,7 +124,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -136,7 +136,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
-      return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
+      return getAppInternals().getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {
@@ -150,16 +150,33 @@ describe('Firebase', () => {
       getTokenStub.restore();
       getTokenStub = sinon.stub(RefreshTokenCredential.prototype, 'getAccessToken')
         .resolves({
-          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
-          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
+          access_token: 'mock-access-token',
+          expires_in: 3600,
         });
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
+    });
+
+    it('should initialize App instance with extended service methods', () => {
+      const app = firebaseAdmin.initializeApp(mocks.appOptions);
+      expect((app as any).__extended).to.be.true;
+      expect(app.auth).to.be.not.undefined;
+    });
+
+    it('should add extended service methods when retrieved via namespace', () => {
+      const app = initializeApp(mocks.appOptions);
+      expect((app as any).__extended).to.be.undefined;
+      expect((app as any).auth).to.be.undefined;
+
+      const extendedApp = firebaseAdmin.app();
+      expect(app).to.equal(extendedApp);
+      expect((app as any).__extended).to.be.true;
+      expect((app as any).auth).to.be.not.undefined;
     });
   });
 
@@ -231,6 +248,21 @@ describe('Firebase', () => {
     });
   });
 
+  describe('#appCheck', () => {
+    it('should throw if the app has not been initialized', () => {
+      expect(() => {
+        return firebaseAdmin.appCheck();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the appCheck service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.appCheck();
+      }).not.to.throw();
+    });
+  });
+
   describe('#storage', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {
@@ -245,4 +277,8 @@ describe('Firebase', () => {
       }).not.to.throw();
     });
   });
+
+  function getAppInternals(): FirebaseAppInternals {
+    return (firebaseAdmin.app() as unknown as FirebaseApp).INTERNAL;
+  }
 });

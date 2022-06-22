@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +26,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {InstanceId} from '../../../src/instance-id/instance-id';
-import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../../../src/utils/error';
+import { InstanceId } from '../../../src/instance-id/index';
+import { Installations } from '../../../src/installations/index';
+import { FirebaseApp } from '../../../src/app/firebase-app';
+import {
+  FirebaseInstanceIdError, InstanceIdClientErrorCode,
+  FirebaseInstallationsError, InstallationsClientErrorCode,
+} from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -49,7 +53,7 @@ describe('InstanceId', () => {
   let googleCloudProject: string | undefined;
   let gcloudProject: string | undefined;
 
-  const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
+  const noProjectIdError = 'Failed to determine project ID for Installations. Initialize the SDK '
   + 'with service account credentials or set project ID as an app option. Alternatively set the '
   + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
@@ -82,7 +86,7 @@ describe('InstanceId', () => {
         expect(() => {
           const iidAny: any = InstanceId;
           return new iidAny(invalidApp);
-        }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+        }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
       });
     });
 
@@ -90,7 +94,7 @@ describe('InstanceId', () => {
       expect(() => {
         const iidAny: any = InstanceId;
         return new iidAny();
-      }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+      }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
     });
 
     it('should reject given an invalid credential without project ID', () => {
@@ -126,7 +130,6 @@ describe('InstanceId', () => {
 
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
-    const expectedError = new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR);
     const testInstanceId = 'test-iid';
 
     afterEach(() => {
@@ -160,8 +163,8 @@ describe('InstanceId', () => {
     });
 
     it('should resolve without errors on success', () => {
-      const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-        .returns(Promise.resolve(null));
+      const stub = sinon.stub(Installations.prototype, 'deleteInstallation')
+        .resolves();
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
         .then(() => {
@@ -170,10 +173,11 @@ describe('InstanceId', () => {
         });
     });
 
-    it('should throw an error when the backend returns an error', () => {
+    it('should throw a FirebaseInstanceIdError error when the backend returns an error', () => {
       // Stub deleteInstanceId to throw a backend error.
-      const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-        .returns(Promise.reject(expectedError));
+      const originalError = new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR);
+      const stub = sinon.stub(Installations.prototype, 'deleteInstallation')
+        .rejects(originalError);
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
         .then(() => {
@@ -182,7 +186,9 @@ describe('InstanceId', () => {
           // Confirm underlying API called with expected parameters.
           expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
           // Confirm expected error returned.
-          expect(error).to.equal(expectedError);
+          const expectedError = new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR);
+          expect(error).to.be.instanceOf(FirebaseInstanceIdError)
+          expect(error).to.deep.include(expectedError);
         });
     });
   });

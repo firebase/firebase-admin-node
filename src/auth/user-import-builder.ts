@@ -14,67 +14,245 @@
  * limitations under the License.
  */
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import { FirebaseArrayIndexError } from '../app/index';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import {
+  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings
+} from './auth-config';
 
-/** Firebase Auth supported hashing algorithms for import operations. */
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+  'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
+  'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
-
-/** User import options for bulk account imports. */
+/**
+   * Interface representing the user import options needed for
+   * {@link BaseAuth.importUsers} method. This is used to
+   * provide the password hashing algorithm information.
+   */
 export interface UserImportOptions {
+
+  /**
+   * The password hashing information.
+   */
   hash: {
+
+    /**
+     * The password hashing algorithm identifier. The following algorithm
+     * identifiers are supported:
+     * `SCRYPT`, `STANDARD_SCRYPT`, `HMAC_SHA512`, `HMAC_SHA256`, `HMAC_SHA1`,
+     * `HMAC_MD5`, `MD5`, `PBKDF_SHA1`, `BCRYPT`, `PBKDF2_SHA256`, `SHA512`,
+     * `SHA256` and `SHA1`.
+     */
     algorithm: HashAlgorithmType;
+
+    /**
+     * The signing key used in the hash algorithm in buffer bytes.
+     * Required by hashing algorithms `SCRYPT`, `HMAC_SHA512`, `HMAC_SHA256`,
+     * `HAMC_SHA1` and `HMAC_MD5`.
+     */
     key?: Buffer;
+
+    /**
+     * The salt separator in buffer bytes which is appended to salt when
+     * verifying a password. This is only used by the `SCRYPT` algorithm.
+     */
     saltSeparator?: Buffer;
+
+    /**
+     * The number of rounds for hashing calculation.
+     * Required for `SCRYPT`, `MD5`, `SHA512`, `SHA256`, `SHA1`, `PBKDF_SHA1` and
+     * `PBKDF2_SHA256`.
+     */
     rounds?: number;
+
+    /**
+     * The memory cost required for `SCRYPT` algorithm, or the CPU/memory cost.
+     * Required for `STANDARD_SCRYPT` algorithm.
+     */
     memoryCost?: number;
+
+    /**
+     * The parallelization of the hashing algorithm. Required for the
+     * `STANDARD_SCRYPT` algorithm.
+     */
     parallelization?: number;
+
+    /**
+     * The block size (normally 8) of the hashing algorithm. Required for the
+     * `STANDARD_SCRYPT` algorithm.
+     */
     blockSize?: number;
+    /**
+     * The derived key length of the hashing algorithm. Required for the
+     * `STANDARD_SCRYPT` algorithm.
+     */
     derivedKeyLength?: number;
   };
 }
 
-interface SecondFactor {
+/**
+ * Interface representing a user to import to Firebase Auth via the
+ * {@link BaseAuth.importUsers} method.
+ */
+export interface UserImportRecord {
+
+  /**
+   * The user's `uid`.
+   */
   uid: string;
-  phoneNumber: string;
+
+  /**
+   * The user's primary email, if set.
+   */
+  email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  emailVerified?: boolean;
+
+  /**
+   * The user's display name.
+   */
   displayName?: string;
-  enrollmentTime?: string;
-  factorId: string;
+
+  /**
+   * The user's primary phone number, if set.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The user's photo URL.
+   */
+  photoURL?: string;
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled; `false` for
+   * enabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * Additional metadata about the user.
+   */
+  metadata?: UserMetadataRequest;
+
+  /**
+   * An array of providers (for example, Google, Facebook) linked to the user.
+   */
+  providerData?: UserProviderRequest[];
+
+  /**
+   * The user's custom claims object if available, typically used to define
+   * user roles and propagated to an authenticated user's ID token.
+   */
+  customClaims?: { [key: string]: any };
+
+  /**
+   * The buffer of bytes representing the user's hashed password.
+   * When a user is to be imported with a password hash,
+   * {@link UserImportOptions} are required to be
+   * specified to identify the hashing algorithm used to generate this hash.
+   */
+  passwordHash?: Buffer;
+
+  /**
+   * The buffer of bytes representing the user's password salt.
+   */
+  passwordSalt?: Buffer;
+
+  /**
+   * The identifier of the tenant where user is to be imported to.
+   * When not provided in an `admin.auth.Auth` context, the user is uploaded to
+   * the default parent project.
+   * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
+   * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
+   */
+  tenantId?: string;
+
+  /**
+   * The user's multi-factor related properties.
+   */
+  multiFactor?: MultiFactorUpdateSettings;
 }
 
+/**
+ * User metadata to include when importing a user.
+ */
+export interface UserMetadataRequest {
 
-/** User import record as accepted from developer. */
-export interface UserImportRecord {
+  /**
+   * The date the user last signed in, formatted as a UTC string.
+   */
+  lastSignInTime?: string;
+
+  /**
+   * The date the user was created, formatted as a UTC string.
+   */
+  creationTime?: string;
+}
+
+/**
+ * User provider data to include when importing a user.
+ */
+export interface UserProviderRequest {
+
+  /**
+   * The user identifier for the linked provider.
+   */
   uid: string;
-  email?: string;
-  emailVerified?: boolean;
+
+  /**
+   * The display name for the linked provider.
+   */
   displayName?: string;
+
+  /**
+   * The email for the linked provider.
+   */
+  email?: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
   phoneNumber?: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
   photoURL?: string;
-  disabled?: boolean;
-  metadata?: {
-    lastSignInTime?: string;
-    creationTime?: string;
-  };
-  providerData?: Array<{
-    uid: string;
-    displayName?: string;
-    email?: string;
-    photoURL?: string;
-    providerId: string;
-  }>;
-  multiFactor?: {
-    enrolledFactors: SecondFactor[];
-  };
-  customClaims?: {[key: string]: any};
-  passwordHash?: Buffer;
-  passwordSalt?: Buffer;
-  tenantId?: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
+  providerId: string;
+}
+
+/**
+   * Interface representing the response from the
+   * {@link BaseAuth.importUsers} method for batch
+   * importing users to Firebase Auth.
+   */
+export interface UserImportResult {
+
+  /**
+   * The number of user records that failed to import to Firebase Auth.
+   */
+  failureCount: number;
+
+  /**
+   * The number of user records that successfully imported to Firebase Auth.
+   */
+  successCount: number;
+
+  /**
+   * An array of errors corresponding to the provided users to import. The
+   * length of this array is equal to [`failureCount`](#failureCount).
+   */
+  errors: FirebaseArrayIndexError[];
 }
 
 /** Interface representing an Auth second factor in Auth server format. */
@@ -134,24 +312,16 @@ export interface UploadAccountRequest extends UploadAccountOptions {
 }
 
 
-/** Response object for importUsers operation. */
-export interface UserImportResult {
-  failureCount: number;
-  successCount: number;
-  errors: FirebaseArrayIndexError[];
-}
-
-
 /** Callback function to validate an UploadAccountUser object. */
 export type ValidatorFunction = (data: UploadAccountUser) => void;
 
 
 /**
  * Converts a client format second factor object to server format.
- * @param multiFactorInfo The client format second factor.
- * @return The corresponding AuthFactorInfo server request format.
+ * @param multiFactorInfo - The client format second factor.
+ * @returns The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFactor): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
   let enrolledAt;
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
@@ -161,11 +331,11 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
         `The second factor "enrollmentTime" for "${multiFactorInfo.uid}" must be a valid ` +
-        `UTC date string.`);
+        'UTC date string.');
     }
   }
   // Currently only phone second factors are supported.
-  if (multiFactorInfo.factorId === 'phone') {
+  if (isPhoneFactor(multiFactorInfo)) {
     // If any required field is missing or invalid, validation will still fail later.
     const authFactorInfo: AuthFactorInfo = {
       mfaEnrollmentId: multiFactorInfo.uid,
@@ -188,11 +358,15 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
   }
 }
 
+function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
+  multiFactorInfo is UpdatePhoneMultiFactorInfoRequest {
+  return multiFactorInfo.factorId === 'phone';
+}
 
 /**
  * @param {any} obj The object to check for number field within.
  * @param {string} key The entry key.
- * @return {number} The corresponding number if available. Otherwise, NaN.
+ * @returns {number} The corresponding number if available. Otherwise, NaN.
  */
 function getNumberField(obj: any, key: string): number {
   if (typeof obj[key] !== 'undefined' && obj[key] !== null) {
@@ -207,7 +381,7 @@ function getNumberField(obj: any, key: string): number {
  * fields are provided.
  * @param {UserImportRecord} user The UserImportRecord to conver to UploadAccountUser.
  * @param {ValidatorFunction=} userValidator The user validator function.
- * @return {UploadAccountUser} The corresponding UploadAccountUser to return.
+ * @returns {UploadAccountUser} The corresponding UploadAccountUser to return.
  */
 function populateUploadAccountUser(
   user: UserImportRecord, userValidator?: ValidatorFunction): UploadAccountUser {
@@ -323,19 +497,19 @@ export class UserImportBuilder {
 
   /**
    * Returns the corresponding constructed uploadAccount request.
-   * @return {UploadAccountRequest} The constructed uploadAccount request.
+   * @returns {UploadAccountRequest} The constructed uploadAccount request.
    */
   public buildRequest(): UploadAccountRequest {
     const users = this.validatedUsers.map((user) => {
       return deepCopy(user);
     });
-    return deepExtend({users}, deepCopy(this.validatedOptions)) as UploadAccountRequest;
+    return deepExtend({ users }, deepCopy(this.validatedOptions)) as UploadAccountRequest;
   }
 
   /**
    * Populates the UserImportResult using the client side detected errors and the server
    * side returned errors.
-   * @return {UserImportResult} The user import result based on the returned failed
+   * @returns {UserImportResult} The user import result based on the returned failed
    *     uploadAccount response.
    */
   public buildResponse(
@@ -371,7 +545,7 @@ export class UserImportBuilder {
    * Throws an error whenever an invalid or missing options is detected.
    * @param {UserImportOptions} options The UserImportOptions.
    * @param {boolean} requiresHashOptions Whether to require hash options.
-   * @return {UploadAccountOptions} The populated UploadAccount options.
+   * @returns {UploadAccountOptions} The populated UploadAccount options.
    */
   private populateOptions(
     options: UserImportOptions | undefined, requiresHashOptions: boolean): UploadAccountOptions {
@@ -388,14 +562,14 @@ export class UserImportBuilder {
     if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
-        `"hash.algorithm" is missing from the provided "UserImportOptions".`,
+        '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
     }
     if (typeof options.hash.algorithm === 'undefined' ||
         !validator.isNonEmptyString(options.hash.algorithm)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-        `"hash.algorithm" must be a string matching the list of supported algorithms.`,
+        '"hash.algorithm" must be a string matching the list of supported algorithms.',
       );
     }
 
@@ -408,7 +582,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A non-empty "hash.key" byte buffer must be provided for ` +
+          'A non-empty "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -444,7 +618,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
+          'A valid "hash.rounds" number between 0 and 120000 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -458,7 +632,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A "hash.key" byte buffer must be provided for ` +
+          'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -466,7 +640,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 1 and 8 must be provided for ` +
+          'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -474,7 +648,7 @@ export class UserImportBuilder {
       if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number between 1 and 14 must be provided for ` +
+          'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -482,7 +656,7 @@ export class UserImportBuilder {
             !validator.isBuffer(options.hash.saltSeparator)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
-          `"hash.saltSeparator" must be a byte buffer.`,
+          '"hash.saltSeparator" must be a byte buffer.',
         );
       }
       populatedOptions = {
@@ -505,7 +679,7 @@ export class UserImportBuilder {
       if (isNaN(cpuMemCost)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number must be provided for ` +
+          'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -513,7 +687,7 @@ export class UserImportBuilder {
       if (isNaN(parallelization)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
-          `A valid "hash.parallelization" number must be provided for ` +
+          'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -521,7 +695,7 @@ export class UserImportBuilder {
       if (isNaN(blockSize)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
-          `A valid "hash.blockSize" number must be provided for ` +
+          'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -529,7 +703,7 @@ export class UserImportBuilder {
       if (isNaN(dkLen)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
-          `A valid "hash.derivedKeyLength" number must be provided for ` +
+          'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -559,7 +733,7 @@ export class UserImportBuilder {
    * @param {UserImportRecord[]} users The UserImportRecords to convert to UnploadAccountUser
    *     objects.
    * @param {ValidatorFunction=} userValidator The user validator function.
-   * @return {UploadAccountUser[]} The populated uploadAccount users.
+   * @returns {UploadAccountUser[]} The populated uploadAccount users.
    */
   private populateUsers(
     users: UserImportRecord[], userValidator?: ValidatorFunction): UploadAccountUser[] {

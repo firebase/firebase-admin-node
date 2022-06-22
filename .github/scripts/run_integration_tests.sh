@@ -22,4 +22,6 @@ gpg --quiet --batch --yes --decrypt --passphrase="${FIREBASE_SERVICE_ACCT_KEY}" 
 
 echo "${FIREBASE_API_KEY}" > test/resources/apikey.txt
 
+echo "${FIREBASE_APP_ID}" > test/resources/appid.txt
+
 npm run test:integration -- --updateRules --testMultiTenancy

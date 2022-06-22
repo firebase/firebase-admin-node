@@ -47,7 +47,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 8.x
+        node-version: 14.x
 
     - name: Install and build
       run: |
@@ -58,11 +58,15 @@ jobs:
     - name: Run unit tests
       run: npm test
 
+    - name: Verify public API
+      run: npm run api-extractor
+
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
       env:
         FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
         FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
 
     - name: Package release artifacts
       run: |
@@ -112,7 +116,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 8.x
+        node-version: 14.x
 
     - name: Publish preflight check
       id: preflight

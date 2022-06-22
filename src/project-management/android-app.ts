@@ -16,12 +16,41 @@
 
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { AndroidAppMetadata, AppPlatform } from './app-metadata';
+import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
+
+/**
+ * Metadata about a Firebase Android App.
+ */
+export interface AndroidAppMetadata extends AppMetadata {
+
+  platform: AppPlatform.ANDROID;
+
+  /**
+   * The canonical package name of the Android App, as would appear in the Google Play Developer
+   * Console.
+   *
+   * @example
+   * ```javascript
+   * var packageName = androidAppMetadata.packageName;
+   * ```
+   */
+  packageName: string;
+}
+
+/**
+ * A reference to a Firebase Android app.
+ *
+ * Do not call this constructor directly. Instead, use {@link ProjectManagement.androidApp}.
+ */
 export class AndroidApp {
+
   private readonly resourceName: string;
 
+  /**
+   * @internal
+   */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -33,6 +62,11 @@ export class AndroidApp {
     this.resourceName = `projects/-/androidApps/${appId}`;
   }
 
+  /**
+   * Retrieves metadata about this Android app.
+   *
+   * @returns A promise that resolves to the retrieved metadata about this Android app.
+   */
   public getMetadata(): Promise<AndroidAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
       .then((responseData: any) => {
@@ -61,10 +95,23 @@ export class AndroidApp {
       });
   }
 
+  /**
+   * Sets the optional user-assigned display name of the app.
+   *
+   * @param newDisplayName - The new display name to set.
+   *
+   * @returns A promise that resolves when the display name has been set.
+   */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
+  /**
+   * Gets the list of SHA certificates associated with this Android app in Firebase.
+   *
+   * @returns The list of SHA-1 and SHA-256 certificates associated with this Android app in
+   *     Firebase.
+   */
   public getShaCertificates(): Promise<ShaCertificate[]> {
     return this.requestHandler.getAndroidShaCertificates(this.resourceName)
       .then((responseData: any) => {
@@ -90,7 +137,7 @@ export class AndroidApp {
               validator.isNonEmptyString(certificateJson[requiredField]),
               responseData,
               `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
-                      + `non-empty string.`);
+                      + 'non-empty string.');
           });
 
           return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
@@ -98,10 +145,26 @@ export class AndroidApp {
       });
   }
 
+  /**
+   * Adds the given SHA certificate to this Android app.
+   *
+   * @param certificateToAdd - The SHA certificate to add.
+   *
+   * @returns A promise that resolves when the given certificate
+   *     has been added to the Android app.
+   */
   public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
     return this.requestHandler.addAndroidShaCertificate(this.resourceName, certificateToAdd);
   }
 
+  /**
+   * Deletes the specified SHA certificate from this Android app.
+   *
+   * @param certificateToDelete - The SHA certificate to delete.
+   *
+   * @returns A promise that resolves when the specified
+   *     certificate has been removed from the Android app.
+   */
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
     if (!certificateToDelete.resourceName) {
       throw new FirebaseProjectManagementError(
@@ -113,8 +176,12 @@ export class AndroidApp {
   }
 
   /**
-   * @return {Promise<string>} A promise that resolves to a UTF-8 JSON string, typically intended to
-   *     be written to a JSON file.
+   * Gets the configuration artifact associated with this app.
+   *
+   * @returns A promise that resolves to the Android app's
+   *     Firebase config file, in UTF-8 string format. This string is typically
+   *     intended to be written to a JSON file that gets shipped with your Android
+   *     app.
    */
   public getConfig(): Promise<string> {
     return this.requestHandler.getConfig(this.resourceName)
@@ -128,23 +195,47 @@ export class AndroidApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });
   }
 }
 
+/**
+ * A SHA-1 or SHA-256 certificate.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
+ */
 export class ShaCertificate {
+  /**
+   * The SHA certificate type.
+   *
+   * @example
+   * ```javascript
+   * var certType = shaCertificate.certType;
+   * ```
+   */
   public readonly certType: ('sha1' | 'sha256');
 
   /**
    * Creates a ShaCertificate using the given hash. The ShaCertificate's type (eg. 'sha256') is
    * automatically determined from the hash itself.
    *
-   * @param shaHash The sha256 or sha1 hash for this certificate.
-   * @param resourceName The Firebase resource name for this certificate. This does not need to be
+   * @param shaHash - The sha256 or sha1 hash for this certificate.
+   * @example
+   * ```javascript
+   * var shaHash = shaCertificate.shaHash;
+   * ```
+   * @param resourceName - The Firebase resource name for this certificate. This does not need to be
    *     set when creating a new certificate.
+   * @example
+   * ```javascript
+   * var resourceName = shaCertificate.resourceName;
+   * ```
+   *
+   * @internal
    */
   constructor(public readonly shaHash: string, public readonly resourceName?: string) {
     if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {
