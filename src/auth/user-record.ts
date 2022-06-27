@@ -337,6 +337,7 @@ export class UserMetadata {
     return {
       lastSignInTime: this.lastSignInTime,
       creationTime: this.creationTime,
+      lastRefreshTime: this.lastRefreshTime,
     };
   }
 }

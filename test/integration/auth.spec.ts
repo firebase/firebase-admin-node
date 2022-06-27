@@ -31,7 +31,7 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth,
+  UserImportRecord, UserMetadata, UserRecord, getAuth,
 } from '../../lib/auth/index';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -2517,6 +2517,8 @@ describe('admin.auth', () => {
         metadata: {
           lastSignInTime: now,
           creationTime: now,
+          // TODO(rsgowman): Enable once importing users supports lastRefreshTime
+          //lastRefreshTime: now,
         },
         providerData: [
           {
@@ -2548,6 +2550,11 @@ describe('admin.auth', () => {
             providerId: 'phone',
             phoneNumber: importUserRecord.phoneNumber!,
           });
+          // The lastRefreshTime should be set to null
+          type Writable<UserMetadata> = {
+            -readonly [k in keyof UserMetadata]: UserMetadata[k];
+          };
+          (importUserRecord.metadata as Writable<UserMetadata>).lastRefreshTime = null;
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
