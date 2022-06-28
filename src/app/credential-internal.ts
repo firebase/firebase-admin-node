@@ -32,7 +32,7 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
 const GOOGLE_METADATA_SERVICE_TOKEN_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
-const GOOGLE_METADATA_SERVICE_IDENTITY_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_IDENTITY_PATH = '/computeMetadata/v1/instance/service-accounts/default/identity';
 const GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH = '/computeMetadata/v1/project/project-id';
 const GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH = '/computeMetadata/v1/instance/service-accounts/default/email';
 
@@ -215,7 +215,7 @@ export class ComputeEngineCredential implements Credential {
    * @param audience the URL the returned ID token will be used to call.
   */
   public getIDToken(audience: string): Promise<string> {
-    const request = this.buildRequest(`GOOGLE_METADATA_SERVICE_IDENTITY_PATH`);
+    const request = this.buildRequest(`${GOOGLE_METADATA_SERVICE_IDENTITY_PATH}?audience=${audience}`);
     return requestIDToken(this.httpClient, request);
   }
 
