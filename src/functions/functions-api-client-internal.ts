@@ -81,26 +81,15 @@ export class FunctionsApiClient {
     if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
       resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
     }
-    const audience = validator.isNonEmptyString(task.httpRequest.url)
-      ? task.httpRequest.url
-      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
-    let idToken: string;
-    try {
-      idToken = await this.app.options.credential.getIDToken(audience)
-    } catch (err: any) {
-      // If we can't get an idToken from the metadata server (because we aren't in a compute environment), 
-      // fall back to letting Cloud Tasks try to get one by including OIDC token in the Task object.
-    }
 
     return this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT)
       .then((serviceUrl) => {
-        return this.updateTaskPayload(task, resources, !idToken)
+        return this.updateTaskPayload(task, resources, )
           .then((task) => {
-            const headers = idToken ? { ...FIREBASE_FUNCTIONS_CONFIG_HEADERS, "Authorization": `Bearer ${idToken}` } : FIREBASE_FUNCTIONS_CONFIG_HEADERS;
             const request: HttpRequestConfig = {
               method: 'POST',
               url: serviceUrl,
-              headers,
+              headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
               data: {
                 task,
               }
@@ -235,27 +224,19 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private updateTaskPayload(task: Task, resources: utils.ParsedResource, addOIDC: boolean): Promise<Task> {
-    return Promise.resolve()
-      .then(() => {
-        if (validator.isNonEmptyString(task.httpRequest.url)) {
-          return task.httpRequest.url;
-        }
-        return this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
-      })
-      .then((functionUrl) => {
-        task.httpRequest.url = functionUrl;
-        if (addOIDC) {
-          return this.getServiceAccount()
-          .then((account) => {
-            task.httpRequest.oidcToken.serviceAccountEmail = account;
-            return task;
-          })
-        } else {
-          return task;
-        }
-    
-      });
+  private async updateTaskPayload(task: Task, resources: utils.ParsedResource): Promise<Task> {
+    const functionUrl = validator.isNonEmptyString(task.httpRequest.url)
+      ? task.httpRequest.url 
+      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+    task.httpRequest.url = functionUrl;
+    try {
+      const idToken = await this.app.options.credential.getIDToken(functionUrl)
+      task.httpRequest.headers = {...task.httpRequest.headers, "Authorization": `Bearer ${idToken}`}
+    } catch (err: any) {
+      const serviceAccount = await this.getServiceAccount();
+      task.httpRequest.oidcToken.serviceAccountEmail = serviceAccount;
+    }
+    return task;
   }
 
   private toFirebaseError(err: HttpError): PrefixedFirebaseError {
