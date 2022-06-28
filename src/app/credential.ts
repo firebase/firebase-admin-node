@@ -44,4 +44,13 @@ export interface Credential {
    * @returns A Google OAuth2 access token object.
    */
   getAccessToken(): Promise<GoogleOAuthAccessToken>;
+
+    /**
+   * Returns an encoded OIDC token used to authenticate calls to 
+   * private Cloud Functions or other compute services.
+   *
+   * @param audience The URL this token will be used to call.
+   * @returns A base64 encoded OIDC token.
+   */
+  getIDToken(audience: string): Promise<string>;
 }

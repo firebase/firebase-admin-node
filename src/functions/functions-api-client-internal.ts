@@ -62,7 +62,7 @@ export class FunctionsApiClient {
    * @param extensionId - Optional canonical ID of the extension.
    * @param opts - Optional options when enqueuing a new task.
    */
-  public enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
+  public async enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
       throw new FirebaseFunctionsError(
         'invalid-argument', 'Function name must be a non empty string');
@@ -81,15 +81,26 @@ export class FunctionsApiClient {
     if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
       resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
     }
-    
+    const audience = validator.isNonEmptyString(task.httpRequest.url)
+      ? task.httpRequest.url
+      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+    let idToken: string;
+    try {
+      idToken = await this.app.options.credential.getIDToken(audience)
+    } catch (err: any) {
+      // If we can't get an idToken from the metadata server (because we aren't in a compute environment), 
+      // fall back to letting Cloud Tasks try to get one by including OIDC token in the Task object.
+    }
+
     return this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT)
       .then((serviceUrl) => {
-        return this.updateTaskPayload(task, resources)
+        return this.updateTaskPayload(task, resources, !idToken)
           .then((task) => {
+            const headers = idToken ? { ...FIREBASE_FUNCTIONS_CONFIG_HEADERS, "Authorization": `Bearer ${idToken}` } : FIREBASE_FUNCTIONS_CONFIG_HEADERS;
             const request: HttpRequestConfig = {
               method: 'POST',
               url: serviceUrl,
-              headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
+              headers,
               data: {
                 task,
               }
@@ -224,7 +235,7 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private updateTaskPayload(task: Task, resources: utils.ParsedResource): Promise<Task> {
+  private updateTaskPayload(task: Task, resources: utils.ParsedResource, addOIDC: boolean): Promise<Task> {
     return Promise.resolve()
       .then(() => {
         if (validator.isNonEmptyString(task.httpRequest.url)) {
@@ -233,12 +244,17 @@ export class FunctionsApiClient {
         return this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
       })
       .then((functionUrl) => {
-        return this.getServiceAccount()
+        task.httpRequest.url = functionUrl;
+        if (addOIDC) {
+          return this.getServiceAccount()
           .then((account) => {
             task.httpRequest.oidcToken.serviceAccountEmail = account;
-            task.httpRequest.url = functionUrl;
             return task;
           })
+        } else {
+          return task;
+        }
+    
       });
   }
 
