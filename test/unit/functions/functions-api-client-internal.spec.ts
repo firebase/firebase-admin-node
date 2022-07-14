@@ -92,7 +92,6 @@ describe('FunctionsApiClient', () => {
 
   const clientWithoutProjectId = new FunctionsApiClient(mocks.mockCredentialApp());
 
-
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
   let app: FirebaseApp;

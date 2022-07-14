@@ -230,17 +230,16 @@ export class FunctionsApiClient {
       ? task.httpRequest.url 
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
     task.httpRequest.url = functionUrl;
-    // When run from an extensions context, we should be using ComputeEngineCredentials
+    // When run from a deployed extension, we should be using ComputeEngineCredentials
     if (extensionId && this.app.options.credential instanceof ComputeEngineCredential) {
-      const idToken = await this.app.options.credential.getIDToken(functionUrl)
+      const idToken = await this.app.options.credential.getIDToken(functionUrl);
       task.httpRequest.headers = { ...task.httpRequest.headers, 'Authorization': `Bearer ${idToken}` };
       // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.
-      delete task.httpRequest.oidcToken
+      delete task.httpRequest.oidcToken;
     } else {
       const account =  await this.getServiceAccount();
       task.httpRequest.oidcToken = { serviceAccountEmail: account };
     }
-    task.httpRequest.url = functionUrl;
     return task;
   }
 
@@ -276,6 +275,10 @@ interface Error {
   status?: string;
 }
 
+/**
+ * Task is a limited subset of https://cloud.google.com/tasks/docs/reference/rest/v2/projects.locations.queues.tasks#resource:-task
+ * containing the relevant fields for enqueueing tasks that tirgger Cloud Functions.
+ */
 export interface Task {
   // A timestamp in RFC3339 UTC "Zulu" format, with nanosecond resolution and up to nine fractional
   // digits. Examples: "2014-10-02T15:01:23Z" and "2014-10-02T15:01:23.045123456Z".
