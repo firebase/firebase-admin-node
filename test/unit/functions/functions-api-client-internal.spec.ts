@@ -25,7 +25,7 @@ import * as mocks from '../../resources/mocks';
 import { getSdkVersion } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FirebaseFunctionsError, FunctionsApiClient } from '../../../src/functions/functions-api-client-internal';
+import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
@@ -65,7 +65,13 @@ describe('FunctionsApiClient', () => {
     serviceAccountId: 'service-acct@email.com'
   };
 
-  const TEST_TASK_PAYLOAD = {
+  const mockExtensionOptions = {
+    credential: new mocks.MockComputeEngineCredential(),
+    projectId: 'test-project',
+    serviceAccountId: 'service-acct@email.com'
+  };
+
+  const TEST_TASK_PAYLOAD: Task  = {
     httpRequest: {
       url: `https://${DEFAULT_REGION}-${mockOptions.projectId}.cloudfunctions.net/${FUNCTION_NAME}`,
       oidcToken: {
@@ -291,10 +297,15 @@ describe('FunctionsApiClient', () => {
         });
     });
 
-    it('should update the function name when the extension-id is provided', () => {
+    it('should update the function name and set headers when the extension-id is provided', () => {
+      app = mocks.appWithOptions(mockExtensionOptions);
+      apiClient = new FunctionsApiClient(app);
+
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
       expectedPayload.httpRequest.url =
         `https://${DEFAULT_REGION}-${mockOptions.projectId}.cloudfunctions.net/ext-${EXTENSION_ID}-${FUNCTION_NAME}`;
+      expectedPayload.httpRequest.headers['Authorization'] = 'Bearer mockIdToken';
+      delete expectedPayload.httpRequest.oidcToken;
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));

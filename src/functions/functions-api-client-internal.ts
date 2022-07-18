@@ -24,6 +24,7 @@ import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
+import { ComputeEngineCredential } from '../app/credential-internal';
 
 const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
 const FIREBASE_FUNCTION_URL_FORMAT = 'https://{locationId}-{projectId}.cloudfunctions.net/{resourceId}';
@@ -84,7 +85,7 @@ export class FunctionsApiClient {
     
     return this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT)
       .then((serviceUrl) => {
-        return this.updateTaskPayload(task, resources)
+        return this.updateTaskPayload(task, resources, extensionId)
           .then((task) => {
             const request: HttpRequestConfig = {
               method: 'POST',
@@ -224,22 +225,22 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private updateTaskPayload(task: Task, resources: utils.ParsedResource): Promise<Task> {
-    return Promise.resolve()
-      .then(() => {
-        if (validator.isNonEmptyString(task.httpRequest.url)) {
-          return task.httpRequest.url;
-        }
-        return this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
-      })
-      .then((functionUrl) => {
-        return this.getServiceAccount()
-          .then((account) => {
-            task.httpRequest.oidcToken.serviceAccountEmail = account;
-            task.httpRequest.url = functionUrl;
-            return task;
-          })
-      });
+  private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
+    const functionUrl = validator.isNonEmptyString(task.httpRequest.url)
+      ? task.httpRequest.url 
+      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+    task.httpRequest.url = functionUrl;
+    // When run from a deployed extension, we should be using ComputeEngineCredentials
+    if (extensionId && this.app.options.credential instanceof ComputeEngineCredential) {
+      const idToken = await this.app.options.credential.getIDToken(functionUrl);
+      task.httpRequest.headers = { ...task.httpRequest.headers, 'Authorization': `Bearer ${idToken}` };
+      // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.
+      delete task.httpRequest.oidcToken;
+    } else {
+      const account =  await this.getServiceAccount();
+      task.httpRequest.oidcToken = { serviceAccountEmail: account };
+    }
+    return task;
   }
 
   private toFirebaseError(err: HttpError): PrefixedFirebaseError {
@@ -274,7 +275,11 @@ interface Error {
   status?: string;
 }
 
-interface Task {
+/**
+ * Task is a limited subset of https://cloud.google.com/tasks/docs/reference/rest/v2/projects.locations.queues.tasks#resource:-task
+ * containing the relevant fields for enqueueing tasks that tirgger Cloud Functions.
+ */
+export interface Task {
   // A timestamp in RFC3339 UTC "Zulu" format, with nanosecond resolution and up to nine fractional
   // digits. Examples: "2014-10-02T15:01:23Z" and "2014-10-02T15:01:23.045123456Z".
   scheduleTime?: string;
@@ -282,7 +287,7 @@ interface Task {
   dispatchDeadline?: string;
   httpRequest: {
     url: string;
-    oidcToken: {
+    oidcToken?: {
       serviceAccountEmail: string;
     };
     // A base64-encoded string.

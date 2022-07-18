@@ -333,6 +333,23 @@ describe('Credential', () => {
       });
     });
 
+    it('should create id tokens', () => {
+      const expected = 'an-id-token-encoded';
+      const response = utils.responseFrom(expected);
+      httpStub.resolves(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getIDToken('my-audience.cloudfunctions.net').then((token) => {
+        expect(token).to.equal(expected);
+        expect(httpStub).to.have.been.calledOnce.and.calledWith({
+          method: 'GET',
+          url: 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=my-audience.cloudfunctions.net',
+          headers: { 'Metadata-Flavor': 'Google' },
+          httpAgent: undefined,
+        });
+      });
+    });
+
     it('should discover project id', () => {
       const expectedProjectId = 'test-project-id';
       const response = utils.responseFrom(expectedProjectId);

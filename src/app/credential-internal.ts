@@ -32,6 +32,7 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
 const GOOGLE_METADATA_SERVICE_TOKEN_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_IDENTITY_PATH = '/computeMetadata/v1/instance/service-accounts/default/identity';
 const GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH = '/computeMetadata/v1/project/project-id';
 const GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH = '/computeMetadata/v1/instance/service-accounts/default/email';
 
@@ -207,6 +208,16 @@ export class ComputeEngineCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const request = this.buildRequest(GOOGLE_METADATA_SERVICE_TOKEN_PATH);
     return requestAccessToken(this.httpClient, request);
+  }
+
+  /**
+   * getIDToken returns a OIDC token from the compute metadata service 
+   * that can be used to make authenticated calls to audience
+   * @param audience the URL the returned ID token will be used to call.
+  */
+  public getIDToken(audience: string): Promise<string> {
+    const request = this.buildRequest(`${GOOGLE_METADATA_SERVICE_IDENTITY_PATH}?audience=${audience}`);
+    return requestIDToken(this.httpClient, request);
   }
 
   public getProjectId(): Promise<string> {
@@ -416,6 +427,17 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
       );
     }
     return json;
+  }).catch((err) => {
+    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
+  });
+}
+
+/**
+ * Obtain a new OIDC token by making a remote service call.
+ */
+function requestIDToken(client: HttpClient, request: HttpRequestConfig): Promise<string> {
+  return client.send(request).then((resp) => {
+    return resp.text || '';
   }).catch((err) => {
     throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
   });
