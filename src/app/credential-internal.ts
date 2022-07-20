@@ -17,7 +17,7 @@
 
 import fs = require('fs');
 import os = require('os');
-import path = require('path');
+import path from 'path';
 
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';

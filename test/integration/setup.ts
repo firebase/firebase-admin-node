@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import fs = require('fs');
-import minimist = require('minimist');
-import path = require('path');
+import fs from 'fs';
+import minimist from 'minimist';
+import path from 'path';
 import { random } from 'lodash';
 import {
   App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,

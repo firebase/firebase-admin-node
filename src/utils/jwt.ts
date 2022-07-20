@@ -15,8 +15,8 @@
  */
 
 import * as validator from './validator';
-import * as jwt from 'jsonwebtoken';
-import * as jwks from 'jwks-rsa';
+import jwt from 'jsonwebtoken';
+import jwks from 'jwks-rsa';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { Agent } from 'http';
 

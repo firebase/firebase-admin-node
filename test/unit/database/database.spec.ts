@@ -17,9 +17,9 @@
 
 'use strict';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { expect } from 'chai';
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';

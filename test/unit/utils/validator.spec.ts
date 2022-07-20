@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import * as chai from 'chai';
-import * as _ from 'lodash';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chai from 'chai';
+import _ from 'lodash';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,

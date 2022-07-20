@@ -17,9 +17,9 @@
 
 'use strict';
 
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 import * as utils from '../../../src/eventarc/eventarc-utils';
-import * as chai from 'chai';
+import chai from 'chai';
 import chaiExclude from 'chai-exclude';
 
 const expect = chai.expect;

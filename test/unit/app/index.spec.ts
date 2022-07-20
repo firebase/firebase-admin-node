@@ -17,13 +17,13 @@
 
 'use strict';
 
-import path = require('path');
+import path from 'path';
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import _ from 'lodash';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 
 import {
   initializeApp, getApp, getApps, deleteApp, SDK_VERSION,

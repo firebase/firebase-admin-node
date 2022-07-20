@@ -17,7 +17,7 @@
 
 'use strict';
 
-import * as sinon from 'sinon';
+import sinon from 'sinon';
 import { Channel, Eventarc } from '../../../src/eventarc';
 import { toCloudEventProtoFormat } from '../../../src/eventarc/eventarc-utils';
 import { CloudEvent } from '../../../src/eventarc/cloudevent';
@@ -25,7 +25,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
-import * as chai from 'chai';
+import chai from 'chai';
 import chaiExclude from 'chai-exclude';
 import { getSdkVersion } from '../../../src/utils/index';
 

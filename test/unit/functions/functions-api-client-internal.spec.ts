@@ -17,9 +17,9 @@
 
 'use strict';
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+import _ from 'lodash';
+import chai from 'chai';
+import sinon from 'sinon';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { getSdkVersion } from '../../../src/utils';

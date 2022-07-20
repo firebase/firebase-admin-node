@@ -16,9 +16,9 @@
 
 'use strict';
 
-import * as chai from 'chai';
-import * as _ from 'lodash';
-import * as sinon from 'sinon';
+import chai from 'chai';
+import _ from 'lodash';
+import sinon from 'sinon';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   ProjectManagementRequestHandler

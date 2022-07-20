@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import _ from 'lodash';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import { projectId } from './setup';
 import {
   AndroidApp, IosApp, ShaCertificate, getProjectManagement,

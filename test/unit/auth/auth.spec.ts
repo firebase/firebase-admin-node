@@ -18,11 +18,11 @@
 'use strict';
 
 import * as jwt from 'jsonwebtoken';
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import _ from 'lodash';
+import chai from 'chai';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';

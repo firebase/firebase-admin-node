@@ -18,11 +18,11 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins.
-import path = require('path');
-import events = require('events');
-import stream = require('stream');
+import path from 'path';
+import events from 'events';
+import stream from 'stream';
 
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
 import { AppOptions } from '../../src/firebase-namespace-api';

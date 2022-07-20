@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import * as _ from 'lodash';
-import * as admin from '../../lib/index';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import fs = require('fs');
-import path = require('path');
+import _ from 'lodash';
+import admin from '../../lib/index';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import fs from 'fs';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');

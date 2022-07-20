@@ -16,9 +16,9 @@
 
 'use strict';
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+import _ from 'lodash';
+import chai from 'chai';
+import sinon from 'sinon';
 import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-internal';
 import { HttpClient } from '../../../src/utils/api-request';

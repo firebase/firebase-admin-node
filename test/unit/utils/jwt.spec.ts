@@ -19,10 +19,10 @@
 // Use untyped import syntax for Node built-ins
 import https = require('https');
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as nock from 'nock';
-import * as sinon from 'sinon';
+import _ from 'lodash';
+import chai from 'chai';
+import nock from 'nock';
+import sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import {

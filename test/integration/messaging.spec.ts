@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
 
 chai.should();

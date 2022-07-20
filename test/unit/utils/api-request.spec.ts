@@ -17,11 +17,11 @@
 
 'use strict';
 
-import * as chai from 'chai';
-import * as nock from 'nock';
-import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chai from 'chai';
+import nock from 'nock';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';

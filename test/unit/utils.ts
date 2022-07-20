@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-import * as _ from 'lodash';
-import * as sinon from 'sinon';
+import _ from 'lodash';
+import sinon from 'sinon';
 import * as mocks from '../resources/mocks';
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/app/firebase-app';

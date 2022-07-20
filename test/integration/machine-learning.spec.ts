@@ -15,8 +15,8 @@
  */
 
 
-import path = require('path');
-import * as chai from 'chai';
+import path from 'path';
+import chai from 'chai';
 import { projectId } from './setup';
 import { Bucket } from '@google-cloud/storage';
 import { getStorage } from '../../lib/storage/index';

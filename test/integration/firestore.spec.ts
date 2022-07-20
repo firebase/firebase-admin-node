@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import { clone } from 'lodash';
 import * as admin from '../../lib/index';
 import {
@@ -169,7 +169,7 @@ describe('admin.firestore', () => {
         const data = snapshot.data();
         expect(data).to.exist;
         expect(data!.sisterCity.path).to.deep.equal(source.path);
-        const promises = [];
+        const promises:Promise<admin.firestore.WriteResult>[] = [];
         promises.push(source.delete());
         promises.push(target.delete());
         return Promise.all(promises);

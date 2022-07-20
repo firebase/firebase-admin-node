@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as chai from 'chai';
+import chai from 'chai';
 import { Ruleset, RulesetMetadata, getSecurityRules } from '../../lib/security-rules/index';
 
 const expect = chai.expect;

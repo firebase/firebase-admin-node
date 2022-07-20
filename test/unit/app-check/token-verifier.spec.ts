@@ -17,11 +17,11 @@
 
 'use strict';
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+import _ from 'lodash';
+import chai from 'chai';
+import sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
-import * as nock from 'nock';
+import nock from 'nock';
 
 import { AppCheckTokenVerifier } from '../../../src/app-check/token-verifier';
 import { JwtError, JwtErrorCode, PublicKeySignatureVerifier } from '../../../src/utils/jwt';

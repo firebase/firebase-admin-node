@@ -18,15 +18,15 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins
-import fs = require('fs');
-import path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-import * as _ from 'lodash';
-import * as chai from 'chai';
-import * as nock from 'nock';
-import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import _ from 'lodash';
+import chai from 'chai';
+import nock from 'nock';
+import sinon from 'sinon';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';

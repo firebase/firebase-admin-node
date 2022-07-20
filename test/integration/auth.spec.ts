@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import url = require('url');
-import * as crypto from 'crypto';
-import * as bcrypt from 'bcrypt';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import url from 'url';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import firebase from '@firebase/app-compat';
 import '@firebase/auth-compat';
 import { clone } from 'lodash';
@@ -551,7 +551,7 @@ describe('admin.auth', () => {
             // each attempt). Occassionally, this call retrieves the user data
             // without the lastLoginTime/lastRefreshTime set; possibly because
             // it's hitting a different server than the login request uses.
-            let userRecord = null;
+            let userRecord:UserRecord|null = null;
 
             for (let i = 0; i < 3; i++) {
               userRecord = await getAuth().getUser('lastRefreshTimeUser');
