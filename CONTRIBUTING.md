@@ -164,7 +164,7 @@ following credentials from the project:
 1. *Service account certificate*: This can be downloaded as a JSON file from
    the "Settings > Service Accounts" tab of the Firebase console. Copy the
    file into the repo so it's available at `test/resources/key.json`.
-2. *Web API key*: This is displayed in the "Settings > General" tab of the
+2. *Web API key*: This is displayed in the "Settings > General > Your apps > Config" tab of the
    console. Copy it and save to a new text file at `test/resources/apikey.txt`.
 
 Then set up your Firebase/Google Cloud project as follows:
