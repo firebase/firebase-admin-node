@@ -14,16 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { App } from '../app';
+import { ExtensionsApiClient } from './extensions-api-client-internal';
 
 export class Extensions {
 
+  /* eslint-disable-next-line no-unused-vars */
+  private readonly client: ExtensionsApiClient;
   /**
    * @param app - The app for this `Extensions` service.
    * @constructor
    * @internal
    */
   constructor(readonly app: App) {
-    this.client = new FunctionsApiClient(app);
+    this.client = new ExtensionsApiClient(app);
   }
   // TODO: Implement this.
 }
