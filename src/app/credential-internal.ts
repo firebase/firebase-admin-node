@@ -21,7 +21,7 @@ import path = require('path');
 
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
-import { AppErrorCodes, FirebaseAppError, FirebaseError } from '../utils/error';
+import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
 import * as util from '../utils/validator';
 
@@ -440,7 +440,7 @@ function requestIDToken(client: HttpClient, request: HttpRequestConfig): Promise
     if (!resp.text) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
-        `Unexpected response while fetching id token: response.text is undefined`,
+        'Unexpected response while fetching id token: response.text is undefined',
       );
     }
     return resp.text;
