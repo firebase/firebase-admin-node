@@ -111,3 +111,6 @@ import './eventarc/eventarc-utils.spec';
 import './functions/index.spec';
 import './functions/functions.spec';
 import './functions/functions-api-client-internal.spec';
+// Extensions
+import './extensions/extensions.spec';
+import './extensions/extensions-api-client-internal.spec';
