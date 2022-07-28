@@ -25,7 +25,7 @@
     "api-extractor:local": "npm run build && node generate-reports.js --local",
     "esm-wrap": "node generate-esm-wrapper.js",
     "api-documenter": "run-s api-documenter:markdown api-documenter:toc api-documenter:post",
-    "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s",
+    "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s --project admin",
     "api-documenter:toc": "api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s",
     "api-documenter:post": "node docgen/post-process.js"
   },
@@ -188,7 +188,7 @@
     }
   },
   "dependencies": {
-    "@firebase/database-compat": "^0.2.0",
+    "@firebase/database-compat": "^0.2.3",
     "@firebase/database-types": "^0.9.7",
     "@types/node": ">=12.12.47",
     "@fastify/busboy": "^1.1.0",
@@ -202,7 +202,7 @@
     "@google-cloud/storage": "^6.1.0"
   },
   "devDependencies": {
-    "@firebase/api-documenter": "^0.1.2",
+    "@firebase/api-documenter": "^0.2.0",
     "@firebase/app-compat": "^0.1.2",
     "@firebase/auth-compat": "^0.2.5",
     "@firebase/auth-types": "^0.11.0",
