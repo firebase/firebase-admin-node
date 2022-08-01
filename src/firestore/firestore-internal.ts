@@ -16,12 +16,11 @@
  */
 
 import { FirebaseFirestoreError } from '../utils/error';
-import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Firestore, Settings } from '@google-cloud/firestore';
-
-import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
+import * as validator from '../utils/validator';
 import { App } from '../app';
+import { isApplicationDefault, ServiceAccountCredential } from '../app/credential-internal';
 
 export class FirestoreService {
 
@@ -55,34 +54,48 @@ export function getFirestoreOptions(app: App): Settings {
     });
   }
 
-  const projectId: string | null = utils.getExplicitProjectId(app);
-  const credential = app.options.credential;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version: firebaseVersion } = require('../../package.json');
-  if (credential instanceof ServiceAccountCredential) {
-    return {
-      credentials: {
-        private_key: credential.privateKey,
-        client_email: credential.clientEmail,
-      },
-      // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
-      // guaranteed to be available.
-      projectId: projectId!,
-      firebaseVersion,
-    };
-  } else if (isApplicationDefault(app.options.credential)) {
-    // Try to use the Google application default credentials.
-    // If an explicit project ID is not available, let Firestore client discover one from the
-    // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion } : { firebaseVersion };
-  }
+  try {
+    const credential: any= app.options.credential;
+    const projectId: string | null = utils.getExplicitProjectId(app);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { version: firebaseVersion } = require('../../package.json');
 
-  throw new FirebaseFirestoreError({
-    code: 'invalid-credential',
-    message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
-      'Must initialize the SDK with a certificate credential or application default credentials ' +
-      'to use Cloud Firestore API.',
-  });
+    if (credential instanceof ServiceAccountCredential) {
+      return {
+        credentials: {
+          private_key: credential.privateKey,
+          client_email: credential.clientEmail,
+        },
+        // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+        // guaranteed to be available.
+        projectId: projectId!,
+        firebaseVersion,
+      };
+    } else if (isApplicationDefault(app.options.credential)) {
+      // Try to use the Google application default credentials.
+      // If an explicit project ID is not available, let Firestore client discover one from the
+      // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
+      return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion } : { firebaseVersion };
+    } else {
+      return {
+        credentials: {
+          private_key: credential.privateKey,
+          client_email: credential.clientEmail,
+        },
+        // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+        // guaranteed to be available.
+        projectId: credential.projectId,
+        firebaseVersion,
+      };
+    }
+  } catch (err) {
+    throw new FirebaseFirestoreError({
+      code: 'invalid-credential',
+      message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
+        'Must initialize the SDK with a certificate credential or application default credentials ' +
+        'to use Cloud Firestore API.',
+    });
+  }
 }
 
 function initFirestore(app: App): Firestore {
