@@ -198,7 +198,7 @@
     "uuid": "^8.3.2"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^5.0.2",
+    "@google-cloud/firestore": "^6.0.0",
     "@google-cloud/storage": "^6.1.0"
   },
   "devDependencies": {
