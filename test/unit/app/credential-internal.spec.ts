@@ -36,7 +36,7 @@ import {
 } from '../../../src/app/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential
 } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
@@ -422,6 +422,13 @@ describe('Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = getApplicationDefault();
       expect(c).to.be.an.instanceof(ServiceAccountCredential);
+    });
+
+    it('should return a ImpersonatedCredential with impersonated GOOGLE_APPLICATION_CREDENTIALS set', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS
+        = path.resolve(__dirname, '../../resources/mock.impersonated_key.json');
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ImpersonatedServiceAccountCredential);
     });
 
     it('should throw if explicitly pointing to an invalid path', () => {

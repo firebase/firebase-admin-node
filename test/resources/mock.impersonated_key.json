@@ -1,0 +1,11 @@
+{
+    "delegates": [],
+    "service_account_impersonation_url": "",
+    "source_credentials": {
+      "client_id": "client_id",
+      "client_secret": "client_secret",
+      "refresh_token": "refresh_token",
+      "type": "authorized_user"
+    },
+    "type": "impersonated_service_account"
+  }
