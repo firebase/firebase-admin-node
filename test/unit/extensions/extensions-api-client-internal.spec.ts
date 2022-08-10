@@ -62,7 +62,6 @@ describe('Extension API client', () => {
     });
   });
 
-
   describe('getRuntimeData', () => {
     it('should getRuntimeData', async () => {
       const expected =  sinon.match((req: HttpRequestConfig) => { 

@@ -80,7 +80,7 @@ export class ExtensionsApiClient {
 
 
   private getExtensionsApiUri(): string {
-    return process.env['FIREBASE_EXT_URL'] ?? 'https://firebaseextensions.googleapis.com'
+    return process.env['FIREBASE_EXT_URL'] ?? 'https://firebaseextensions.googleapis.com';
   }
 
   private getRuntimeDataUri(projectId: string, instanceId: string): string {
