@@ -20,7 +20,6 @@ import { ExtensionsApiClient, FirebaseExtensionsError } from './extensions-api-c
 import * as validator from '../utils/validator';
 
 export class Extensions {
-
   private readonly client: ExtensionsApiClient;
   /**
    * @param app - The app for this `Extensions` service.
@@ -40,7 +39,11 @@ class Runtime {
   private projectId: string;
   private extensionInstanceId: string;
   private readonly client: ExtensionsApiClient;
-
+  /**
+   * @param client - The Api client for this `Runtime` service.
+   * @constructor
+   * @internal
+   */
   constructor(client: ExtensionsApiClient) {
     this.projectId = this.getProjectId();
     if (!validator.isNonEmptyString(process.env['EXT_INSTANCE_ID'])) {

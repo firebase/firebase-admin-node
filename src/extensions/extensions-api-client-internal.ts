@@ -25,6 +25,7 @@ const FIREBASE_FUNCTIONS_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
 };
 const EXTENSIONS_API_VERSION = 'v1beta';
+
 /**
  * Class that facilitates sending requests to the Firebase Extensions backend API.
  *
