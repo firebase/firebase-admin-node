@@ -1845,6 +1845,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
         emailVerified: expectedUserRecord.emailVerified,
         password: 'password',
         phoneNumber: expectedUserRecord.phoneNumber,
+        customUserClaims: {
+          claim1: true,
+        },
         providerToLink: {
           providerId: 'google.com',
           uid: 'google_uid',

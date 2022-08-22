@@ -2044,6 +2044,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
+        customUserClaims: {
+          claim1: true,
+        },
         multiFactor: {
           enrolledFactors: [
             {
@@ -2076,6 +2079,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
+        customAttributes: '{"claim1":true}',
         mfa: {
           enrollments: [
             {
@@ -2121,6 +2125,33 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
         deleteProvider: ['phone'],
+      };
+      // Valid request to delete custom claims.
+      const validDeleteCustomClaimsData = deepCopy(validData);
+      validDeleteCustomClaimsData.customUserClaims = null;
+      delete validDeletePhoneNumberData.multiFactor;
+      const expectedValidDeleteCustomClaimsData = {
+        localId: uid,
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        emailVerified: true,
+        disableUser: false,
+        photoUrl: 'http://localhost/1234/photo.png',
+        password: 'password',
+        customAttributes: '{}',
+      };
+      // Valid request to leave custom claims unchanged.
+      const validUnchangedCustomClaimsData = deepCopy(validData);
+      delete validUnchangedCustomClaimsData.customUserClaims;
+      delete validUnchangedCustomClaimsData.multiFactor;
+      const expectedValidUnchangedCustomClaimsData = {
+        localId: uid,
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        emailVerified: true,
+        disableUser: false,
+        photoUrl: 'http://localhost/1234/photo.png',
+        password: 'password',
       };
       // Valid request to delete all second factors.
       const expectedValidDeleteMfaData = {
@@ -2220,6 +2251,52 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             // removed from request and deleteProvider added.
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, expectedValidDeletePhoneNumberData));
+          });
+      });
+      
+      it('should be fulfilled given null custom claims', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          kind: 'identitytoolkit#SetAccountInfoResponse',
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to delete phone number.
+        return requestHandler.updateExistingAccount(uid, validDeleteCustomClaimsData)
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, phoneNumber
+            // removed from request and deleteProvider added.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidDeleteCustomClaimsData));
+          });
+      });
+      
+      it('should be fulfilled given undefined custom claims', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          kind: 'identitytoolkit#SetAccountInfoResponse',
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to delete phone number.
+        return requestHandler.updateExistingAccount(uid, validUnchangedCustomClaimsData)
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, phoneNumber
+            // removed from request and deleteProvider added.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidUnchangedCustomClaimsData));
           });
       });
 
