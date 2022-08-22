@@ -188,6 +188,12 @@ export interface UpdateRequest {
    * Unlinks this user from the specified providers.
    */
   providersToUnlink?: string[];
+
+  /**
+   * If provided, sets additional developer claims on the user's token, overwriting
+   * any existing claims. If not provided or `undefined`, then existing claims will remain unchanged.
+   */
+  customUserClaims?: object | null;
 }
 
 /**
