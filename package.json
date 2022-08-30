@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "11.0.0",
+  "version": "11.0.1",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -25,7 +25,7 @@
     "api-extractor:local": "npm run build && node generate-reports.js --local",
     "esm-wrap": "node generate-esm-wrapper.js",
     "api-documenter": "run-s api-documenter:markdown api-documenter:toc api-documenter:post",
-    "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s",
+    "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s --project admin",
     "api-documenter:toc": "api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s",
     "api-documenter:post": "node docgen/post-process.js"
   },
@@ -196,21 +196,21 @@
     }
   },
   "dependencies": {
-    "@firebase/database-compat": "^0.2.0",
-    "@firebase/database-types": "^0.9.7",
-    "@types/node": ">=12.12.47",
     "@fastify/busboy": "^1.1.0",
+    "@firebase/database-compat": "^0.2.4",
+    "@firebase/database-types": "^0.9.12",
+    "@types/node": ">=12.12.47",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.2",
     "node-forge": "^1.3.1",
     "uuid": "^8.3.2"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^5.0.2",
+    "@google-cloud/firestore": "^6.0.0",
     "@google-cloud/storage": "^6.1.0"
   },
   "devDependencies": {
-    "@firebase/api-documenter": "^0.1.2",
+    "@firebase/api-documenter": "^0.2.0",
     "@firebase/app-compat": "^0.1.2",
     "@firebase/auth-compat": "^0.2.5",
     "@firebase/auth-types": "^0.11.0",
