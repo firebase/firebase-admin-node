@@ -19,6 +19,10 @@ import { SettableProcessingState } from './extensions-api';
 import { ExtensionsApiClient, FirebaseExtensionsError } from './extensions-api-client-internal';
 import * as validator from '../utils/validator';
 
+
+/**
+ * The Firebase `Extensions` service interface.
+ */
 export class Extensions {
   private readonly client: ExtensionsApiClient;
   /**
@@ -35,6 +39,9 @@ export class Extensions {
   }
 }
 
+/**
+ * Runtime provides methods to get and modify an Extension Instances runtime data.
+ */
 class Runtime {
   private projectId: string;
   private extensionInstanceId: string;
@@ -61,7 +68,15 @@ class Runtime {
     this.client = client;
   }
 
-  async setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void> {
+  /**
+   * setProcessingState sets the runtimeData.processingState of an ExtensionInstance.
+   * It should be used to provide information about the results of a lifecycle hook.
+   * If the lifecycle hook failed & the Instance will no longer work correctly,
+   * use setFatalError instead.
+   * @param state The state to set the instance to
+   * @param detailMessage A message explaining the results of the lifecycle hook function.
+   */
+  public async setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void> {
     await this.client.updateRuntimeData(
       this.projectId,
       this.extensionInstanceId,
@@ -74,7 +89,14 @@ class Runtime {
     );
   }
 
-  async setFatalError(errorMessage: string): Promise<void> {
+  /**
+   * setFatalError sets the runtimeData.fatalError of an ExtensionInstance.
+   * It should be used when a lifecycle hook fails in a way that makes the Instance inoperable.
+   * If the lifecycle hook failed but the instance will still work as expected,
+   * use setProcessingState with the "PROCESSING_WARNING" or "PROCESSING_FAILED" state instead.
+   * @param errorMessage A message explaining what went wrong and how to fix it.
+   */
+  public async setFatalError(errorMessage: string): Promise<void> {
     await this.client.updateRuntimeData(
       this.projectId,
       this.extensionInstanceId,

@@ -8,7 +8,7 @@
 
 import { Agent } from 'http';
 
-// @public (undocumented)
+// @public
 export class Extensions {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     //
