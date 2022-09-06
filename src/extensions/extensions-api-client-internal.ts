@@ -104,12 +104,12 @@ export class ExtensionsApiClient {
     const error = response.data?.error;
     const message = error?.message || `Unknown server error: ${response.text}`;
     switch (error.code) {
-      case 403:
-        return  new FirebaseExtensionsError('forbidden', message);
-      case 404:
-        return new FirebaseExtensionsError('not-found', message);
-      case 500:
-        return new FirebaseExtensionsError('internal-error', message);
+    case 403:
+      return  new FirebaseExtensionsError('forbidden', message);
+    case 404:
+      return new FirebaseExtensionsError('not-found', message);
+    case 500:
+      return new FirebaseExtensionsError('internal-error', message);
     }
     return new FirebaseExtensionsError('unknown-error', message);
   }
