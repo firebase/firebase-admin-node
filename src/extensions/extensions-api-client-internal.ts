@@ -101,9 +101,16 @@ export class ExtensionsApiClient {
         'unknown-error',
         `Unexpected response with status: ${response.status} and body: ${response.text}`);
     }
-    const error = response.data;
-    const message = error.message || `Unknown server error: ${response.text}`;
-    // TODO - clean this up.
+    const error = response.data?.error;
+    const message = error?.message || `Unknown server error: ${response.text}`;
+    switch (error.code) {
+      case 403:
+        return  new FirebaseExtensionsError('forbidden', message);
+      case 404:
+        return new FirebaseExtensionsError('not-found', message);
+      case 500:
+        return new FirebaseExtensionsError('internal-error', message);
+    }
     return new FirebaseExtensionsError('unknown-error', message);
   }
 }
@@ -136,7 +143,7 @@ type State = 'STATE_UNSPECIFIED' |
   'PROCESSING_WARNING' |
   'PROCESSING_FAILED';
 
-type ExtensionsErrorCode = 'invalid-argument' | 'unknown-error';
+type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
  *
