@@ -437,7 +437,13 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
  */
 function requestIDToken(client: HttpClient, request: HttpRequestConfig): Promise<string> {
   return client.send(request).then((resp) => {
-    return resp.text || '';
+    if (!resp.text) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Unexpected response while fetching id token: response.text is undefined',
+      );
+    }
+    return resp.text;
   }).catch((err) => {
     throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
   });

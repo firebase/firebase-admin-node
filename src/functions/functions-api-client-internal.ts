@@ -231,7 +231,7 @@ export class FunctionsApiClient {
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
     task.httpRequest.url = functionUrl;
     // When run from a deployed extension, we should be using ComputeEngineCredentials
-    if (extensionId && this.app.options.credential instanceof ComputeEngineCredential) {
+    if (validator.isNonEmptyString(extensionId) && this.app.options.credential instanceof ComputeEngineCredential) {
       const idToken = await this.app.options.credential.getIDToken(functionUrl);
       task.httpRequest.headers = { ...task.httpRequest.headers, 'Authorization': `Bearer ${idToken}` };
       // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.
