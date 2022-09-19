@@ -20,6 +20,10 @@
     "typings": "./lib/database/index.d.ts",
     "dist": "./lib/database/index.js"
   },
+  "firebase-admin/extensions": {
+    "typings": "./lib/extensions/index.d.ts",
+    "dist": "./lib/extensions/index.js"
+  },
   "firebase-admin/firestore": {
     "typings": "./lib/firestore/index.d.ts",
     "dist": "./lib/firestore/index.js"
