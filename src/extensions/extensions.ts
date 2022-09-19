@@ -18,7 +18,6 @@
 import { App } from '../app';
 import { SettableProcessingState } from './extensions-api';
 import { ExtensionsApiClient, FirebaseExtensionsError } from './extensions-api-client-internal';
-
 import * as validator from '../utils/validator';
 
 /**
