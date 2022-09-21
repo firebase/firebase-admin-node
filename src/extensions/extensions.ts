@@ -70,11 +70,11 @@ class Runtime {
 
   /**
    * setProcessingState sets the runtimeData.processingState of an ExtensionInstance.
-   * It should be used to provide information about the results of a lifecycle hook.
-   * If the lifecycle hook failed & the Instance will no longer work correctly,
+   * It should be used to provide information about the results of a lifecycle event.
+   * If the lifecycle event failed & the Instance will no longer work correctly,
    * use setFatalError instead.
    * @param state The state to set the instance to
-   * @param detailMessage A message explaining the results of the lifecycle hook function.
+   * @param detailMessage A message explaining the results of the lifecycle function.
    */
   public async setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void> {
     await this.client.updateRuntimeData(
@@ -91,12 +91,18 @@ class Runtime {
 
   /**
    * setFatalError sets the runtimeData.fatalError of an ExtensionInstance.
-   * It should be used when a lifecycle hook fails in a way that makes the Instance inoperable.
-   * If the lifecycle hook failed but the instance will still work as expected,
+   * It should be used when a lifecycle event fails in a way that makes the Instance inoperable.
+   * If the lifecycle event failed but the instance will still work as expected,
    * use setProcessingState with the "PROCESSING_WARNING" or "PROCESSING_FAILED" state instead.
    * @param errorMessage A message explaining what went wrong and how to fix it.
    */
   public async setFatalError(errorMessage: string): Promise<void> {
+    if (!validator.isNonEmptyString(errorMessage)) {
+      throw new FirebaseExtensionsError(
+        'invalid-argument',
+        'errorMessage must not be empty'
+      );
+    }
     await this.client.updateRuntimeData(
       this.projectId,
       this.extensionInstanceId,

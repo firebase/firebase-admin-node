@@ -61,57 +61,28 @@ describe('Extension API client', () => {
         .to.throw('First argument passed to getExtensions() must be a valid Firebase app instance.');
     });
   });
-
-  describe('getRuntimeData', () => {
-    it('should getRuntimeData', async () => {
+  describe('updateRuntimeData', () => {
+    it('should updateRuntimeData', async () => {
+      const testRuntimeData = {
+        processingState: {
+          state: 'PROCESSING_COMPLETE' as SettableProcessingState,
+          detailMessage: 'done processing',
+        },
+      }
       const expected =  sinon.match((req: HttpRequestConfig) => { 
         const url = 'https://firebaseextensions.googleapis.com/' +
-          'v1beta/projects/test-project/instances/test-instance/runtimeData';
-        return req.method == 'GET' && req.url == url;
+        'v1beta/projects/test-project/instances/test-instance/runtimeData';
+        return req.method == 'PATCH' && req.url == url && req.data == testRuntimeData;
       }, 'Incorrect URL or Method');
-      httpClientStub.withArgs(expected).resolves(utils.responseFrom({
-        processingState: {
-          state: 'PROCESSING',
-          detailMessage: 'started processing',
-        }
-      }, 200));
-      await expect(apiClient.getRuntimeData(testProjectId, testInstanceId)).to.eventually.deep.equal({
-        processingState: {
-          state: 'PROCESSING',
-          detailMessage: 'started processing',
-        }
-      });
+      httpClientStub.withArgs(expected).resolves(utils.responseFrom(testRuntimeData, 200));
+      await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, testRuntimeData))
+        .to.eventually.deep.equal(testRuntimeData);
     });
 
     it('should covert errors in FirebaseErrors', async () => {
       httpClientStub.rejects(utils.errorFrom('Something went wrong', 404));
-      await expect(apiClient.getRuntimeData(testProjectId, testInstanceId))
+      await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, {}))
         .to.eventually.be.rejectedWith(FirebaseExtensionsError);
     });
-
-    describe('updateRuntimeData', () => {
-      it('should updateRuntimeData', async () => {
-        const testRuntimeData = {
-          processingState: {
-            state: 'PROCESSING_COMPLETE' as SettableProcessingState,
-            detailMessage: 'done processing',
-          },
-        }
-        const expected =  sinon.match((req: HttpRequestConfig) => { 
-          const url = 'https://firebaseextensions.googleapis.com/' +
-          'v1beta/projects/test-project/instances/test-instance/runtimeData';
-          return req.method == 'PATCH' && req.url == url && req.data == testRuntimeData;
-        }, 'Incorrect URL or Method');
-        httpClientStub.withArgs(expected).resolves(utils.responseFrom(testRuntimeData, 200));
-        await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, testRuntimeData))
-          .to.eventually.deep.equal(testRuntimeData);
-      });
-
-      it('should covert errors in FirebaseErrors', async () => {
-        httpClientStub.rejects(utils.errorFrom('Something went wrong', 404));
-        await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, {}))
-          .to.eventually.be.rejectedWith(FirebaseExtensionsError);
-      });
-    });
-  })
+  });
 });

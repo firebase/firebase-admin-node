@@ -163,8 +163,13 @@ describe('Extensions', () => {
         await extensions.runtime().setFatalError('A bad error!');
         expect(httpClientStub).to.have.been.calledOnce;
       });
+        
+      it('should error if errorMessage is empty', async () => {
+        await expect(extensions.runtime().setFatalError(''))
+          .to.eventually.be.rejectedWith(FirebaseExtensionsError, 'errorMessage must not be empty');
+      });
   
-      it('should covert errors in FirebaseErrors', async () => {
+      it('should convert errors in FirebaseErrors', async () => {
         httpClientStub.rejects(utils.errorFrom('Something went wrong', 404));
         await expect(extensions.runtime().setFatalError('a message'))
           .to.eventually.be.rejectedWith(FirebaseExtensionsError);
