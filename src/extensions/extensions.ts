@@ -60,7 +60,7 @@ class Runtime {
       );
     }
     this.extensionInstanceId = process.env['EXT_INSTANCE_ID'];
-    if (!validator.isNonNullObject(client) || !('updateRuntimeData' in client) || !('getRuntimeData' in client)) {
+    if (!validator.isNonNullObject(client) || !('updateRuntimeData' in client)) {
       throw new FirebaseExtensionsError(
         'invalid-argument',
         'Must provide a valid ExtensionsApiClient instance to create a new Runtime.');

@@ -44,21 +44,6 @@ export class ExtensionsApiClient {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
-  async getRuntimeData(projectId: string, instanceId: string): Promise<RuntimeDataResponse> {
-    const url = this.getRuntimeDataUri(projectId, instanceId);
-    const request: HttpRequestConfig = {
-      method: 'GET',
-      url,
-      headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
-    };
-    try {
-      const res = await this.httpClient.send(request);
-      return res.data;
-    } catch (err: any) {
-      throw this.toFirebaseError(err);
-    }
-  }
-
   async updateRuntimeData(
     projectId: string,
     instanceId: string,
