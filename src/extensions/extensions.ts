@@ -56,7 +56,7 @@ class Runtime {
     if (!validator.isNonEmptyString(process.env['EXT_INSTANCE_ID'])) {
       throw new FirebaseExtensionsError(
         'invalid-argument',
-        'Runtime can only available from within a running Extension instance.'
+        'Runtime is only available from within a running Extension instance.'
       );
     }
     this.extensionInstanceId = process.env['EXT_INSTANCE_ID'];
