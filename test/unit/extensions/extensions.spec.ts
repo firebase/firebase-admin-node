@@ -80,7 +80,7 @@ describe('Extensions', () => {
       it('should error if called without EXT_INSTANCE_ID', () => {
         process.env['PROJECT_ID'] = 'test-project';
         expect(() => extensions.runtime())
-          .to.throw('Runtime can only available from within a running Extension instance.');
+          .to.throw('Runtime is only available from within a running Extension instance.');
       });
   
       it('should not error if called from an extension', () => {
