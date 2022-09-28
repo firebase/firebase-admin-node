@@ -36,14 +36,14 @@ const EXTENSIONS_URL = 'https://firebaseextensions.googleapis.com';
  */
 export class ExtensionsApiClient {
   private readonly httpClient: HttpClient;
-
+  
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseAppError(
         'invalid-argument',
         'First argument passed to getExtensions() must be a valid Firebase app instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.httpClient = new AuthorizedHttpClient(this.app as FirebaseApp);
   }
 
   async updateRuntimeData(

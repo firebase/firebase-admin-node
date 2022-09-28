@@ -36,6 +36,7 @@ export class Extensions {
 
   /**
    * Runtime returns a new runtime(), which provides methods to modify an extension instances runtime data.
+   * 
    * @returns A new runtime object.
    */
   public runtime(): Runtime {
@@ -44,7 +45,7 @@ export class Extensions {
 }
 
 /**
- * Runtime provides methods to get and modify an extension instance's runtime data.
+ * Runtime provides methods to modify an extension instance's runtime data.
  */
 class Runtime {
   private projectId: string;
@@ -99,6 +100,7 @@ class Runtime {
    * It should be used when a lifecycle event fails in a way that makes the Instance inoperable.
    * If the lifecycle event failed but the instance will still work as expected,
    * use setProcessingState with the "PROCESSING_WARNING" or "PROCESSING_FAILED" state instead.
+   * 
    * @param errorMessage - A message explaining what went wrong and how to fix it.
    */
   public async setFatalError(errorMessage: string): Promise<void> {
