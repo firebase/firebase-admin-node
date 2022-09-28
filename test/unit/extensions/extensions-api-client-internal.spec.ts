@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 
@@ -61,6 +62,7 @@ describe('Extension API client', () => {
         .to.throw('First argument passed to getExtensions() must be a valid Firebase app instance.');
     });
   });
+
   describe('updateRuntimeData', () => {
     it('should updateRuntimeData', async () => {
       const testRuntimeData = {
@@ -79,7 +81,7 @@ describe('Extension API client', () => {
         .to.eventually.deep.equal(testRuntimeData);
     });
 
-    it('should covert errors in FirebaseErrors', async () => {
+    it('should convert errors in FirebaseErrors', async () => {
       httpClientStub.rejects(utils.errorFrom('Something went wrong', 404));
       await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, {}))
         .to.eventually.be.rejectedWith(FirebaseExtensionsError);

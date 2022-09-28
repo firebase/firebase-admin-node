@@ -34,13 +34,17 @@ export class Extensions {
     this.client = new ExtensionsApiClient(app);
   }
 
+  /**
+   * Runtime returns a new runtime(), which provides methods to modify an extension instances runtime data.
+   * @returns A new runtime object.
+   */
   public runtime(): Runtime {
     return new Runtime(this.client);
   }
 }
 
 /**
- * Runtime provides methods to get and modify an Extension Instances runtime data.
+ * Runtime provides methods to get and modify an extension instance's runtime data.
  */
 class Runtime {
   private projectId: string;
@@ -69,10 +73,11 @@ class Runtime {
   }
 
   /**
-   * setProcessingState sets the runtimeData.processingState of an ExtensionInstance.
+   * Sets the `processingState` of an `ExtensionInstance`.
    * It should be used to provide information about the results of a lifecycle event.
    * If the lifecycle event failed & the Instance will no longer work correctly,
    * use setFatalError instead.
+   * 
    * @param state The state to set the instance to
    * @param detailMessage A message explaining the results of the lifecycle function.
    */

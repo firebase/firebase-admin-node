@@ -15,8 +15,6 @@ export class Extensions {
     // (undocumented)
     readonly app: App;
     // Warning: (ae-forgotten-export) The symbol "Runtime" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     runtime(): Runtime;
 }
 
