@@ -26,6 +26,8 @@ const FIREBASE_FUNCTIONS_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
 };
 const EXTENSIONS_API_VERSION = 'v1beta';
+// Note - use getExtensionsApiUri() instead so that changing environments is consistent.
+const EXTENSIONS_URL = 'https://firebaseextensions.googleapis.com';
 
 /**
  * Class that facilitates sending requests to the Firebase Extensions backend API.
@@ -35,7 +37,7 @@ const EXTENSIONS_API_VERSION = 'v1beta';
 export class ExtensionsApiClient {
   private readonly httpClient: HttpClient;
 
-  constructor(app: App) {
+  constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseAppError(
         'invalid-argument',
@@ -65,7 +67,7 @@ export class ExtensionsApiClient {
   }
 
   private getExtensionsApiUri(): string {
-    return process.env['FIREBASE_EXT_URL'] ?? 'https://firebaseextensions.googleapis.com';
+    return process.env['FIREBASE_EXT_URL'] ?? EXTENSIONS_URL;
   }
 
   private getRuntimeDataUri(projectId: string, instanceId: string): string {

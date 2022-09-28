@@ -15,4 +15,13 @@
  * limitations under the License.
  */
 
+/**
+ * SettableProcessingState represents all the Processing states that can be set on an ExtensionInstance's runtimeData.
+ * 
+ * - NONE: No lifecycle hook work has been done.
+ * - PROCESSING_COMPLETE: Lifecycle hook work completed with no errors.
+ * - PROCESSING_WARNING: Lifecycle hook work succeeded partially, or something happened that the user should be warned about.
+ * - PROCESSING_FAILED: Lifecycle hook work failed completely, but the instance will still work correctly going forward.
+ * - If the instance is in a broken state due to the errors, instead set FatalError.
+ */
 export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';

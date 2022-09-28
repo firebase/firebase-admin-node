@@ -24,6 +24,7 @@
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Extensions } from './extensions';
+
 export { Extensions } from './extensions';
  
 /**
