@@ -42,6 +42,7 @@ import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
+import { UserInfo } from './user-record';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -1444,8 +1445,12 @@ export abstract class AbstractAuthRequestHandler {
       delete request.phoneNumber;
     }
 
-    if (typeof(request.providerToLink) !== 'undefined') {
-      request.linkProviderUserInfo = deepCopy(request.providerToLink);
+    if (typeof request.providerToLink !== 'undefined') {
+      request.linkProviderUserInfo = deepCopy(
+        request.providerToLink instanceof UserInfo
+          ? request.providerToLink.toJSON()
+          : request.providerToLink,
+      );
       delete request.providerToLink;
 
       request.linkProviderUserInfo.rawId = request.linkProviderUserInfo.uid;
