@@ -73,7 +73,7 @@ describe('Extensions', () => {
       it('should error if called without PROJECT_ID', () => {
         process.env['EXT_INSTANCE_ID'] = 'test-instance';
         expect(() => extensions.runtime())
-          .to.throw('Expected PROJECT_ID not to be undefined in Extensions runtime enviornment');
+          .to.throw('PROJECT_ID must not be undefined in Extensions runtime environment');
       });
   
   
