@@ -127,7 +127,7 @@ class Runtime {
     if (!validator.isNonEmptyString(projectId)) {
       throw new FirebaseExtensionsError(
         'invalid-argument',
-        'Expected PROJECT_ID not to be undefined in Extensions runtime enviornment'
+        'PROJECT_ID must not be undefined in Extensions runtime environment'
       );
     }
     return projectId;
