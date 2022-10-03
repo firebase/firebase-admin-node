@@ -35,9 +35,9 @@ export class Extensions {
   }
 
   /**
-   * Runtime returns a new runtime(), which provides methods to modify an extension instances runtime data.
+   * The runtime() method returns a new Runtime, which provides methods to modify an extension instance's runtime data.
    * 
-   * @returns A new runtime object.
+   * @returns A new Runtime object.
    */
   public runtime(): Runtime {
     return new Runtime(this.client);
