@@ -97,10 +97,13 @@ class Runtime {
   }
 
   /**
-   * Sets the `fatalError` of an `ExtensionInstance`.
-   * It should be used when a lifecycle event fails in a way that makes the Instance inoperable.
+   * Reports a fatal error while running a lifecycle event handler.
+   *
+   * Call this method when a lifecycle event handler fails in a way that makes 
+   * the Instance inoperable.
    * If the lifecycle event failed but the instance will still work as expected,
-   * use setProcessingState with the "PROCESSING_WARNING" or "PROCESSING_FAILED" state instead.
+   * call `setProcessingState` with the "PROCESSING_WARNING" or 
+   * "PROCESSING_FAILED" state instead.
    * 
    * @param errorMessage - A message explaining what went wrong and how to fix it.
    */
