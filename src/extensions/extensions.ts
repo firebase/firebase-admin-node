@@ -74,12 +74,13 @@ class Runtime {
   }
 
   /**
-   * Sets the `processingState` of an `ExtensionInstance`.
-   * It should be used to provide information about the results of a lifecycle event.
-   * If the lifecycle event failed & the Instance will no longer work correctly,
-   * use setFatalError instead.
+   * Sets the processing state of an extension instance.
+   *
+   * Use this method to report the results of a lifecycle event handler. If the 
+   * lifecycle event failed & the extension instance will no longer work 
+   * correctly, use `setFatalError` instead.
    * 
-   * @param state - The state to set the instance to
+   * @param state - The state to set the instance to.
    * @param detailMessage - A message explaining the results of the lifecycle function.
    */
   public async setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void> {
