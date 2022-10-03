@@ -35,9 +35,9 @@ export class Extensions {
   }
 
   /**
-   * Runtime returns a new runtime(), which provides methods to modify an extension instances runtime data.
+   * The runtime() method returns a new Runtime, which provides methods to modify an extension instance's runtime data.
    * 
-   * @returns A new runtime object.
+   * @returns A new Runtime object.
    */
   public runtime(): Runtime {
     return new Runtime(this.client);
@@ -74,12 +74,13 @@ class Runtime {
   }
 
   /**
-   * Sets the `processingState` of an `ExtensionInstance`.
-   * It should be used to provide information about the results of a lifecycle event.
-   * If the lifecycle event failed & the Instance will no longer work correctly,
-   * use setFatalError instead.
+   * Sets the processing state of an extension instance.
+   *
+   * Use this method to report the results of a lifecycle event handler. If the 
+   * lifecycle event failed & the extension instance will no longer work 
+   * correctly, use `setFatalError` instead.
    * 
-   * @param state - The state to set the instance to
+   * @param state - The state to set the instance to.
    * @param detailMessage - A message explaining the results of the lifecycle function.
    */
   public async setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void> {
@@ -96,10 +97,13 @@ class Runtime {
   }
 
   /**
-   * Sets the `fatalError` of an `ExtensionInstance`.
-   * It should be used when a lifecycle event fails in a way that makes the Instance inoperable.
+   * Reports a fatal error while running a lifecycle event handler.
+   *
+   * Call this method when a lifecycle event handler fails in a way that makes 
+   * the Instance inoperable.
    * If the lifecycle event failed but the instance will still work as expected,
-   * use setProcessingState with the "PROCESSING_WARNING" or "PROCESSING_FAILED" state instead.
+   * call `setProcessingState` with the "PROCESSING_WARNING" or 
+   * "PROCESSING_FAILED" state instead.
    * 
    * @param errorMessage - A message explaining what went wrong and how to fix it.
    */
@@ -126,7 +130,7 @@ class Runtime {
     if (!validator.isNonEmptyString(projectId)) {
       throw new FirebaseExtensionsError(
         'invalid-argument',
-        'Expected PROJECT_ID not to be undefined in Extensions runtime enviornment'
+        'PROJECT_ID must not be undefined in Extensions runtime environment'
       );
     }
     return projectId;
