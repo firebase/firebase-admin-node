@@ -52,7 +52,7 @@ class Runtime {
   private extensionInstanceId: string;
   private readonly client: ExtensionsApiClient;
   /**
-   * @param client - The Api client for this `Runtime` service.
+   * @param client - The API client for this `Runtime` service.
    * @constructor
    * @internal
    */
