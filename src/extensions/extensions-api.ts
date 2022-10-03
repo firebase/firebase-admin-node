@@ -20,8 +20,10 @@
  * 
  * - NONE: No relevant lifecycle event work has been done. Set this to clear out old statuses.
  * - PROCESSING_COMPLETE: Lifecycle event work completed with no errors.
- * - PROCESSING_WARNING: Lifecycle event work succeeded partially, or something happened that the user should be warned about.
- * - PROCESSING_FAILED: Lifecycle event work failed completely, but the instance will still work correctly going forward.
+ * - PROCESSING_WARNING: Lifecycle event work succeeded partially,
+ *                        or something happened that the user should be warned about.
+ * - PROCESSING_FAILED: Lifecycle event work failed completely,
+ *                        but the instance will still work correctly going forward.
  * - If the extension instance is in a broken state due to the errors, instead set FatalError.
  */
 export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';
