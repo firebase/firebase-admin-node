@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2022 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,3 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * SettableProcessingState represents all the Processing states that can be set on an ExtensionInstance's runtimeData.
+ * 
+ * - NONE: No relevant lifecycle event work has been done. Set this to clear out old statuses.
+ * - PROCESSING_COMPLETE: Lifecycle event work completed with no errors.
+ * - PROCESSING_WARNING: Lifecycle event work succeeded partially,
+ *                        or something happened that the user should be warned about.
+ * - PROCESSING_FAILED: Lifecycle event work failed completely,
+ *                        but the instance will still work correctly going forward.
+ * - If the extension instance is in a broken state due to the errors, instead set FatalError.
+ */
+export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';

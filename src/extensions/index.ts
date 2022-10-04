@@ -24,6 +24,8 @@
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Extensions } from './extensions';
+
+export { Extensions } from './extensions';
  
 /**
   * Gets the {@link Extensions} service for the default app
@@ -59,4 +61,3 @@ export function getExtensions(app?: App): Extensions {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('extensions', (app) => new Extensions(app));
 }
- 
