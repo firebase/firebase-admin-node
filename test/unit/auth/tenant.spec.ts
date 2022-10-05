@@ -100,7 +100,7 @@ describe('Tenant', () => {
       it('should return the expected server request without multi-factor and phone config', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest = deepCopy(serverRequestWithoutMfa);
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
@@ -108,7 +108,7 @@ describe('Tenant', () => {
       it('should return the expected server request with multi-factor and phone config', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
@@ -148,7 +148,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         tenantOptionsClientRequest.testPhoneNumbers = null;
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
         tenantOptionsServerRequest.testPhoneNumbers = {};
 
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
@@ -253,7 +253,7 @@ describe('Tenant', () => {
       it('should return the expected server request without multi-factor and phone config', () => {
         const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
 
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
@@ -262,7 +262,7 @@ describe('Tenant', () => {
       it('should return the expected server request with multi-factor and phone config', () => {
         const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
 
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
@@ -296,7 +296,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         tenantOptionsClientRequest.testPhoneNumbers = null;
-        delete tenantOptionsServerRequest.name;
+        delete (tenantOptionsServerRequest as any).name;
         tenantOptionsServerRequest.testPhoneNumbers = {};
 
         expect(() => {

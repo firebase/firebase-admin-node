@@ -378,7 +378,7 @@ export class SecurityRules {
     }
 
     const rulesetName = validator.isString(ruleset) ? ruleset : ruleset.name;
-    return this.client.updateRelease(releaseName, rulesetName)
+    return this.client.updateOrCreateRelease(releaseName, rulesetName)
       .then(() => {
         return;
       });

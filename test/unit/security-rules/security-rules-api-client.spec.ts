@@ -490,6 +490,35 @@ describe('SecurityRulesApiClient', () => {
     });
   });
 
+  describe('updateOrCreateRelease', () => {
+    it('should propagate API errors', () => {
+      const EXPECTED_ERROR = new FirebaseSecurityRulesError('internal-error', 'message');
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return apiClient.updateOrCreateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
+    });
+
+    it('should create a new ruleset when update fails with a not-found error', () => {
+      const NOT_FOUND_ERROR = new FirebaseSecurityRulesError('not-found', 'message');
+      const updateRelease = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .rejects(NOT_FOUND_ERROR);
+      const createRelease = sinon
+        .stub(SecurityRulesApiClient.prototype, 'createRelease')
+        .resolves();
+      stubs.push(updateRelease, createRelease);
+      
+      return apiClient.updateOrCreateRelease(RELEASE_NAME, RULESET_NAME)
+        .then(() => {
+          expect(updateRelease).to.have.been.calledOnce.and.calledWith(RELEASE_NAME, RULESET_NAME);
+          expect(createRelease).to.have.been.called.calledOnce.and.calledWith(RELEASE_NAME, RULESET_NAME);
+        });
+    });
+  });
+
   describe('updateRelease', () => {
     it('should reject when project id is not available', () => {
       return clientWithoutProjectId.updateRelease(RELEASE_NAME, RULESET_NAME)
@@ -556,6 +585,74 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+  });
+
+  describe('createRelease', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should resolve with the created release on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({ name: 'bar' }));
+      stubs.push(stub);
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .then((resp) => {
+          expect(resp.name).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/releases',
+            data: {
+              name: 'projects/test-project/releases/test.service',
+              rulesetName: 'projects/test-project/rulesets/ruleset-id',
+            },
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
   });

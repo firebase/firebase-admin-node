@@ -588,8 +588,8 @@ class AsyncHttpCall {
   private handleMultipartResponse(
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new dicer({ boundary });
+    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];

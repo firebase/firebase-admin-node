@@ -83,6 +83,7 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
     validSince: '1476136676',
     lastLoginAt: '1476235905000',
     createdAt: '1476136676000',
+    lastRefreshAt: '2016-10-12T01:31:45.000Z',
     customAttributes: JSON.stringify({
       admin: true,
     }),
@@ -159,6 +160,7 @@ function getUserJSON(tenantId?: string): object {
     metadata: {
       lastSignInTime: new Date(1476235905000).toUTCString(),
       creationTime: new Date(1476136676000).toUTCString(),
+      lastRefreshTime: new Date(1476235905000).toUTCString(),
     },
     customClaims: {
       admin: true,
@@ -629,6 +631,7 @@ describe('UserMetadata', () => {
   const expectedMetadataJSON = {
     lastSignInTime: new Date(expectedLastLoginAt).toUTCString(),
     creationTime: new Date(expectedCreatedAt).toUTCString(),
+    lastRefreshTime: new Date(expectedLastRefreshAt).toUTCString(),
   };
 
   describe('constructor', () =>  {
@@ -890,6 +893,7 @@ describe('UserRecord', () => {
       const metadata = new UserMetadata({
         createdAt: '1476136676000',
         lastLoginAt: '1476235905000',
+        lastRefreshAt: '2016-10-12T01:31:45.000Z',
       } as any);
       expect(userRecord.metadata).to.deep.equal(metadata);
     });

@@ -31,7 +31,7 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest,
+  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
 } from '../../lib/auth/index';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -1345,7 +1345,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1703,7 +1703,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1736,7 +1736,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
             return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
@@ -1744,7 +1744,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
             delete expectedUpdatedTenant2.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
@@ -2259,8 +2259,8 @@ describe('admin.auth', () => {
           // Not supported in ID token,
           delete decodedIdToken.nonce;
           // exp and iat may vary depending on network connection latency.
-          delete decodedIdToken.exp;
-          delete decodedIdToken.iat;
+          delete (decodedIdToken as any).exp;
+          delete (decodedIdToken as any).iat;
           expect(decodedIdToken).to.deep.equal(payloadClaims);
         });
     });
@@ -2600,6 +2600,8 @@ describe('admin.auth', () => {
         metadata: {
           lastSignInTime: now,
           creationTime: now,
+          // TODO(rsgowman): Enable once importing users supports lastRefreshTime
+          //lastRefreshTime: now,
         },
         providerData: [
           {
@@ -2631,6 +2633,11 @@ describe('admin.auth', () => {
             providerId: 'phone',
             phoneNumber: importUserRecord.phoneNumber!,
           });
+          // The lastRefreshTime should be set to null
+          type Writable<UserMetadata> = {
+            -readonly [k in keyof UserMetadata]: UserMetadata[k];
+          };
+          (importUserRecord.metadata as Writable<UserMetadata>).lastRefreshTime = null;
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
