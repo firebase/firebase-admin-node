@@ -20,7 +20,7 @@ import {
 import { FirebaseAppError, AppErrorCodes } from '../utils/error';
 
 const PART_BOUNDARY = '__END_OF_PART__';
-const TEN_SECONDS_IN_MILLIS = 10000;
+const FIREBASE_MESSAGING_BATCH_TIMEOUT = parseInt(process.env.FIREBASE_MESSAGING_BATCH_TIMEOUT || '10000', 10);
 
 /**
  * Represents a request that can be sent as part of an HTTP batch request.
@@ -72,7 +72,7 @@ export class BatchRequestClient {
       url: this.batchUrl,
       data: this.getMultipartPayload(requests),
       headers: Object.assign({}, this.commonHeaders, requestHeaders),
-      timeout: TEN_SECONDS_IN_MILLIS,
+      timeout: FIREBASE_MESSAGING_BATCH_TIMEOUT,
     };
     return this.httpClient.send(request).then((response) => {
       if (!response.multipart) {

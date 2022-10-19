@@ -27,7 +27,7 @@ import { SendResponse, BatchResponse } from './messaging-api';
 
 
 // FCM backend constants
-const FIREBASE_MESSAGING_TIMEOUT = 10000;
+const FIREBASE_MESSAGING_TIMEOUT = parseInt(process.env.FIREBASE_MESSAGING_TIMEOUT || '10000', 10);
 const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {

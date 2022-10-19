@@ -49,7 +49,7 @@ const FIREBASE_AUTH_HEADER = {
   'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
 };
 /** Firebase Auth request timeout duration in milliseconds. */
-const FIREBASE_AUTH_TIMEOUT = 25000;
+const FIREBASE_AUTH_TIMEOUT = parseInt(process.env.FIREBASE_AUTH_TIMEOUT || '25000', 10);
 
 
 /** List of reserved claims which cannot be provided when creating a custom token. */

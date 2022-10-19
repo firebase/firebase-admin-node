@@ -243,8 +243,13 @@ function validateRetryConfig(retry: RetryConfig): void {
 
 export class HttpClient {
 
-  constructor(private readonly retry: RetryConfig | null = defaultRetryConfig()) {
-    if (this.retry) {
+  constructor(
+    private readonly retry: RetryConfig | null = null, 
+    private readonly disableRetry: boolean = false
+  ) {
+    if (!this.disableRetry && !this.retry) {
+      this.retry = defaultRetryConfig();
+    } else if (!this.disableRetry && this.retry) {
       validateRetryConfig(this.retry);
     }
   }
@@ -345,7 +350,7 @@ export class HttpClient {
   }
 
   private isRetryEligible(retryAttempts: number, err: LowLevelError): boolean {
-    if (!this.retry) {
+    if (this.disableRetry || !this.retry) {
       return false;
     }
 
@@ -811,7 +816,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
 
 export class AuthorizedHttpClient extends HttpClient {
   constructor(private readonly app: FirebaseApp) {
-    super();
+    super(app.options.retryConfig, app.options.disableRetry);
   }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {

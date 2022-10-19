@@ -18,6 +18,7 @@
 import { Agent } from 'http';
 
 import { Credential } from './credential';
+import { RetryConfig } from '.'
 
 /**
  * Available options to pass to {@link firebase-admin.app#initializeApp}.
@@ -83,6 +84,16 @@ export interface AppOptions {
    * specifying an HTTP Agent in the corresponding factory methods.
    */
   httpAgent?: Agent;
+
+  /**
+   * The retry configuration that will be used in HttpClient for API Requests.
+   */
+  retryConfig?: RetryConfig;
+
+  /** 
+   * Completely disable the retry strategy in HttpClient. 
+  */
+  disableRetry?: boolean;
 }
 
 /**

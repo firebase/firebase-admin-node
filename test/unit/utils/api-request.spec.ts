@@ -786,9 +786,35 @@ describe('HttpClient', () => {
     });
   });
 
-  it('should not retry when RetryConfig is explicitly null', () => {
+  it('should succeed, with custom retry config after 1 retry, on a single internal server error response', () => {
+    mockedRequests.push(mockRequestWithHttpError(500));
+    const customRetryConfig = {
+      maxRetries: 4,
+      statusCodes: [500],
+      ioErrorCodes: [],
+      backOffFactor: 0.5,
+      maxDelayInMillis: 60 * 1000,
+    };
+    const respData = { foo: 'bar' };
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient(customRetryConfig);
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should not retry when retry is explicitly disabled', () => {
     mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
-    const client = new HttpClient(null);
+    const client = new HttpClient(null, true);
     const err = 'Error while making request: connection reset 1';
     return client.send({
       method: 'GET',

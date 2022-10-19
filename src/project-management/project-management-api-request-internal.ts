@@ -36,7 +36,7 @@ const PROJECT_MANAGEMENT_HEADERS = {
   'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
 };
 /** Project management request timeout duration in milliseconds. */
-const PROJECT_MANAGEMENT_TIMEOUT_MILLIS = 10000;
+const FIREBASE_PROJECT_MANAGEMENT_TIMEOUT = parseInt(process.env.FIREBASE_PROJECT_MANAGEMENT_TIMEOUT || '10000', 10);
 
 const LIST_APPS_MAX_PAGE_SIZE = 100;
 
@@ -315,7 +315,7 @@ export class ProjectManagementRequestHandler {
       url: `${baseUrlToUse}${path}`,
       headers: PROJECT_MANAGEMENT_HEADERS,
       data: requestData,
-      timeout: PROJECT_MANAGEMENT_TIMEOUT_MILLIS,
+      timeout: FIREBASE_PROJECT_MANAGEMENT_TIMEOUT,
     };
 
     return this.httpClient.send(request)
