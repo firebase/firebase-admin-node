@@ -66,8 +66,23 @@ describe('Firestore', () => {
 
     it('should return the same instance for a given app instance', () => {
       const db1: Firestore = getFirestore(mockApp);
-      const db2: Firestore = getFirestore(mockApp);
+      const db2: Firestore = getFirestore(mockApp, '(default)');
       expect(db1).to.equal(db2);
+    });
+
+    it('should return the same instance for a given app instance and databaseId', () => {
+      const db1: Firestore = getFirestore(mockApp, 'db');
+      const db2: Firestore = getFirestore(mockApp, 'db');
+      expect(db1).to.equal(db2);
+    });
+
+    it('should return the different instance for given same app instance, but different databaseId', () => {
+      const db0: Firestore = getFirestore(mockApp, '(default)');
+      const db1: Firestore = getFirestore(mockApp, 'db1');
+      const db2: Firestore = getFirestore(mockApp, 'db2');
+      expect(db0).to.not.equal(db1);
+      expect(db0).to.not.equal(db2);
+      expect(db1).to.not.equal(db2);
     });
   });
 });
