@@ -24,6 +24,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirestoreService } from './firestore-internal';
+import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 export {
   AddPrefixToKeys,
@@ -111,26 +112,27 @@ export function getFirestore(): Firestore;
  *   provided app.
  */
 export function getFirestore(app: App): Firestore;
+
 /**
  * @param databaseId
  * @internal
  */
 export function getFirestore(databaseId: string): Firestore;
+
 /**
  * @param app
  * @param databaseId
  * @internal
  */
 export function getFirestore(app: App, databaseId: string): Firestore;
+
 export function getFirestore(
   appOrDatabaseId?: App | string,
   optionalDatabaseId?: string
 ): Firestore {
   const app: App = typeof appOrDatabaseId === 'object' ? appOrDatabaseId : getApp();
   const databaseId =
-    typeof appOrDatabaseId === 'string'
-      ? appOrDatabaseId
-      : optionalDatabaseId || '(default)';
+    (typeof appOrDatabaseId === 'string' ? appOrDatabaseId : optionalDatabaseId) || DEFAULT_DATABASE_ID;
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   const firestoreService = firebaseApp.getOrInitService(
     'firestore', (app) => new FirestoreService(app));
