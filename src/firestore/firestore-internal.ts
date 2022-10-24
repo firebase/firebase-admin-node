@@ -26,7 +26,7 @@ import { App } from '../app';
 export class FirestoreService {
 
   private readonly appInternal: App;
-  private databases: Map<string, Firestore> = new Map();
+  private readonly databases: Map<string, Firestore> = new Map();
 
   constructor(app: App) {
     this.appInternal = app;
