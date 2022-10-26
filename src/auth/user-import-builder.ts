@@ -20,8 +20,9 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings
+  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings, UpdateTotpMultiFactorInfoRequest
 } from './auth-config';
+import { MultiFactorInfo } from './user-record';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
   'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
@@ -334,7 +335,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
         'UTC date string.');
     }
   }
-  // Currently only phone second factors are supported.
+  // Supporting phone second factor
   if (isPhoneFactor(multiFactorInfo)) {
     // If any required field is missing or invalid, validation will still fail later.
     const authFactorInfo: AuthFactorInfo = {
@@ -350,7 +351,8 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       }
     }
     return authFactorInfo;
-  } else {
+  }
+  else {
     // Unsupported second factor.
     throw new FirebaseAuthError(
       AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
@@ -361,6 +363,11 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
 function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
   multiFactorInfo is UpdatePhoneMultiFactorInfoRequest {
   return multiFactorInfo.factorId === 'phone';
+}
+
+function isTotpFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
+  multiFactorInfo is UpdateTotpMultiFactorInfoRequest {
+  return multiFactorInfo.factorId == 'totp';
 }
 
 /**
@@ -436,7 +443,7 @@ function populateUploadAccountUser(
 
   // Convert user.multiFactor.enrolledFactors to server format.
   if (validator.isNonNullObject(user.multiFactor) &&
-      validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
+    validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
     user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
       result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
     });
@@ -472,7 +479,7 @@ export class UserImportBuilder {
   private requiresHashOptions: boolean;
   private validatedUsers: UploadAccountUser[];
   private validatedOptions: UploadAccountOptions;
-  private indexMap: {[key: number]: number};
+  private indexMap: { [key: number]: number };
   private userImportResultErrors: FirebaseArrayIndexError[];
 
   /**
@@ -513,7 +520,7 @@ export class UserImportBuilder {
    *     uploadAccount response.
    */
   public buildResponse(
-    failedUploads: Array<{index: number; message: string}>): UserImportResult {
+    failedUploads: Array<{ index: number; message: string }>): UserImportResult {
     // Initialize user import result.
     const importResult: UserImportResult = {
       successCount: this.validatedUsers.length,
@@ -566,7 +573,7 @@ export class UserImportBuilder {
       );
     }
     if (typeof options.hash.algorithm === 'undefined' ||
-        !validator.isNonEmptyString(options.hash.algorithm)) {
+      !validator.isNonEmptyString(options.hash.algorithm)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
         '"hash.algorithm" must be a string matching the list of supported algorithms.',
@@ -575,152 +582,152 @@ export class UserImportBuilder {
 
     let rounds: number;
     switch (options.hash.algorithm) {
-    case 'HMAC_SHA512':
-    case 'HMAC_SHA256':
-    case 'HMAC_SHA1':
-    case 'HMAC_MD5':
-      if (!validator.isBuffer(options.hash.key)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_KEY,
-          'A non-empty "hash.key" byte buffer must be provided for ' +
+      case 'HMAC_SHA512':
+      case 'HMAC_SHA256':
+      case 'HMAC_SHA1':
+      case 'HMAC_MD5':
+        if (!validator.isBuffer(options.hash.key)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_KEY,
+            'A non-empty "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-        signerKey: utils.toWebSafeBase64(options.hash.key),
-      };
-      break;
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          signerKey: utils.toWebSafeBase64(options.hash.key),
+        };
+        break;
 
-    case 'MD5':
-    case 'SHA1':
-    case 'SHA256':
-    case 'SHA512': {
-      // MD5 is [0,8192] but SHA1, SHA256, and SHA512 are [1,8192]
-      rounds = getNumberField(options.hash, 'rounds');
-      const minRounds = options.hash.algorithm === 'MD5' ? 0 : 1;
-      if (isNaN(rounds) || rounds < minRounds || rounds > 8192) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between ${minRounds} and 8192 must be provided for ` +
+      case 'MD5':
+      case 'SHA1':
+      case 'SHA256':
+      case 'SHA512': {
+        // MD5 is [0,8192] but SHA1, SHA256, and SHA512 are [1,8192]
+        rounds = getNumberField(options.hash, 'rounds');
+        const minRounds = options.hash.algorithm === 'MD5' ? 0 : 1;
+        if (isNaN(rounds) || rounds < minRounds || rounds > 8192) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_ROUNDS,
+            `A valid "hash.rounds" number between ${minRounds} and 8192 must be provided for ` +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          rounds,
+        };
+        break;
       }
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-        rounds,
-      };
-      break;
-    }
-    case 'PBKDF_SHA1':
-    case 'PBKDF2_SHA256':
-      rounds = getNumberField(options.hash, 'rounds');
-      if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          'A valid "hash.rounds" number between 0 and 120000 must be provided for ' +
+      case 'PBKDF_SHA1':
+      case 'PBKDF2_SHA256':
+        rounds = getNumberField(options.hash, 'rounds');
+        if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_ROUNDS,
+            'A valid "hash.rounds" number between 0 and 120000 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-        rounds,
-      };
-      break;
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          rounds,
+        };
+        break;
 
-    case 'SCRYPT': {
-      if (!validator.isBuffer(options.hash.key)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_KEY,
-          'A "hash.key" byte buffer must be provided for ' +
+      case 'SCRYPT': {
+        if (!validator.isBuffer(options.hash.key)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_KEY,
+            'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      rounds = getNumberField(options.hash, 'rounds');
-      if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
+          );
+        }
+        rounds = getNumberField(options.hash, 'rounds');
+        if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_ROUNDS,
+            'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      const memoryCost = getNumberField(options.hash, 'memoryCost');
-      if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
+          );
+        }
+        const memoryCost = getNumberField(options.hash, 'memoryCost');
+        if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
+            'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
+          );
+        }
+        if (typeof options.hash.saltSeparator !== 'undefined' &&
+          !validator.isBuffer(options.hash.saltSeparator)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
+            '"hash.saltSeparator" must be a byte buffer.',
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          signerKey: utils.toWebSafeBase64(options.hash.key),
+          rounds,
+          memoryCost,
+          saltSeparator: utils.toWebSafeBase64(options.hash.saltSeparator || Buffer.from('')),
+        };
+        break;
       }
-      if (typeof options.hash.saltSeparator !== 'undefined' &&
-            !validator.isBuffer(options.hash.saltSeparator)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
-          '"hash.saltSeparator" must be a byte buffer.',
-        );
-      }
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-        signerKey: utils.toWebSafeBase64(options.hash.key),
-        rounds,
-        memoryCost,
-        saltSeparator: utils.toWebSafeBase64(options.hash.saltSeparator || Buffer.from('')),
-      };
-      break;
-    }
-    case 'BCRYPT':
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-      };
-      break;
+      case 'BCRYPT':
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+        };
+        break;
 
-    case 'STANDARD_SCRYPT': {
-      const cpuMemCost = getNumberField(options.hash, 'memoryCost');
-      if (isNaN(cpuMemCost)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          'A valid "hash.memoryCost" number must be provided for ' +
+      case 'STANDARD_SCRYPT': {
+        const cpuMemCost = getNumberField(options.hash, 'memoryCost');
+        if (isNaN(cpuMemCost)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
+            'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      const parallelization = getNumberField(options.hash, 'parallelization');
-      if (isNaN(parallelization)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
-          'A valid "hash.parallelization" number must be provided for ' +
+          );
+        }
+        const parallelization = getNumberField(options.hash, 'parallelization');
+        if (isNaN(parallelization)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
+            'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      const blockSize = getNumberField(options.hash, 'blockSize');
-      if (isNaN(blockSize)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
-          'A valid "hash.blockSize" number must be provided for ' +
+          );
+        }
+        const blockSize = getNumberField(options.hash, 'blockSize');
+        if (isNaN(blockSize)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
+            'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
-      }
-      const dkLen = getNumberField(options.hash, 'derivedKeyLength');
-      if (isNaN(dkLen)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
-          'A valid "hash.derivedKeyLength" number must be provided for ' +
+          );
+        }
+        const dkLen = getNumberField(options.hash, 'derivedKeyLength');
+        if (isNaN(dkLen)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
+            'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
-        );
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          cpuMemCost,
+          parallelization,
+          blockSize,
+          dkLen,
+        };
+        break;
       }
-      populatedOptions = {
-        hashAlgorithm: options.hash.algorithm,
-        cpuMemCost,
-        parallelization,
-        blockSize,
-        dkLen,
-      };
-      break;
-    }
-    default:
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-        `Unsupported hash algorithm provider "${options.hash.algorithm}".`,
-      );
+      default:
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_HASH_ALGORITHM,
+          `Unsupported hash algorithm provider "${options.hash.algorithm}".`,
+        );
     }
     return populatedOptions;
   }

@@ -18,6 +18,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
+  MultiFactorConfig
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -29,6 +30,10 @@ export interface UpdateProjectConfigRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The multi-factor auth configuration to update on the project.
+   */
+  multiFactorConfig?: MultiFactorConfig;
 }
 
 /**
@@ -57,6 +62,14 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  private readonly multiFactorConfig_?: MultiFactorConfig;
+
+
+  /**
+   * The multi-factor auth configuration.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
 
   /**
    * Validates a project config options object. Throws an error on failure.
