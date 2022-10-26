@@ -26,6 +26,7 @@ import {
   ComputeEngineCredential, RefreshTokenCredential
 } from '../../../src/app/credential-internal';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
+import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -98,7 +99,8 @@ describe('Firestore', () => {
       it(`should throw given invalid app: ${ JSON.stringify(invalidApp) }`, () => {
         expect(() => {
           const firestoreAny: any = FirestoreService;
-          return new firestoreAny(invalidApp);
+          const firestoreService: FirestoreService = new firestoreAny(invalidApp);
+          return firestoreService.getDatabase(DEFAULT_DATABASE_ID)
         }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
       });
     });
@@ -106,7 +108,8 @@ describe('Firestore', () => {
     it('should throw given no app', () => {
       expect(() => {
         const firestoreAny: any = FirestoreService;
-        return new firestoreAny();
+        const firestoreService: FirestoreService = new firestoreAny();
+        return firestoreService.getDatabase(DEFAULT_DATABASE_ID)
       }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
     });
 
@@ -114,7 +117,7 @@ describe('Firestore', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
       process.env.GOOGLE_CLOUD_PROJECT = 'project_id';
       expect(() => {
-        return new FirestoreService(mockCredentialApp);
+        return new FirestoreService(mockCredentialApp).getDatabase(DEFAULT_DATABASE_ID);
       }).to.throw(invalidCredError);
     });
 
@@ -123,13 +126,13 @@ describe('Firestore', () => {
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       expect(() => {
-        return new FirestoreService(mockCredentialApp);
+        return new FirestoreService(mockCredentialApp).getDatabase(DEFAULT_DATABASE_ID);
       }).to.throw(invalidCredError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return new FirestoreService(mockApp);
+        return new FirestoreService(mockApp).getDatabase(DEFAULT_DATABASE_ID);
       }).not.to.throw();
     });
 
@@ -139,7 +142,7 @@ describe('Firestore', () => {
         delete process.env.GOOGLE_CLOUD_PROJECT;
         delete process.env.GCLOUD_PROJECT;
         expect(() => {
-          return new FirestoreService(config.app);
+          return new FirestoreService(config.app).getDatabase(DEFAULT_DATABASE_ID);
         }).not.to.throw();
       });
     });
@@ -155,19 +158,6 @@ describe('Firestore', () => {
       expect(() => {
         firestore.app = mockApp;
       }).to.throw('Cannot set property app of #<FirestoreService> which has only a getter');
-    });
-  });
-
-  describe('client', () => {
-    it('returns the client from the constructor', () => {
-      // We expect referential equality here
-      expect(firestore.client).to.not.be.null;
-    });
-
-    it('is read-only', () => {
-      expect(() => {
-        firestore.client = mockApp;
-      }).to.throw('Cannot set property client of #<FirestoreService> which has only a getter');
     });
   });
 
