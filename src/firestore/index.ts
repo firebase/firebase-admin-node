@@ -56,6 +56,7 @@ export {
   QuerySnapshot,
   ReadOptions,
   ReadOnlyTransactionOptions,
+  ReadWriteTransactionOptions,
   Settings,
   SetOptions,
   Timestamp,
