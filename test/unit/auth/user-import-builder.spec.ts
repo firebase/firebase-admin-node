@@ -45,6 +45,7 @@ export function expectUserImportResult(result: UserImportResult, expected: UserI
   });
 }
 
+
 describe('UserImportBuilder', () => {
   const now = new Date('2019-10-25T04:30:52.000Z');
   const nowString = now.toUTCString();
@@ -110,6 +111,11 @@ describe('UserImportBuilder', () => {
             phoneNumber: '+16505551000',
             factorId: 'phone',
           },
+          {
+            uid: 'enrolledSecondFactor3',
+            factorId: 'totp',
+            sharedSecretKey: 'SECRET',
+          },
         ],
       },
     },
@@ -163,6 +169,10 @@ describe('UserImportBuilder', () => {
           mfaEnrollmentId: 'enrolledSecondFactor2',
           phoneInfo: '+16505551000',
         },
+        {
+          mfaEnrollmentId: 'enrolledSecondFactor3',
+          sharedSecretKey: 'SECRET',
+        },
       ],
     },
   ];
@@ -171,7 +181,7 @@ describe('UserImportBuilder', () => {
   const md5ShaPbkdfAlgorithms = [
     'MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',
   ];
-  describe('constructor', () =>  {
+  describe('constructor', () => {
     const invalidUserImportOptions = [10, 'invalid', undefined, null, true, ['a']];
     invalidUserImportOptions.forEach((invalidOption) => {
       it(`should throw when non-object ${JSON.stringify(invalidOption)} UserImportOptions is provided`, () => {
@@ -179,7 +189,7 @@ describe('UserImportBuilder', () => {
           AuthClientErrorCode.INVALID_ARGUMENT,
           '"UserImportOptions" are required when importing users with passwords.',
         );
-        expect(() =>  {
+        expect(() => {
           return new UserImportBuilder(users, invalidOption as any, userRequestValidator);
         }).to.throw(expectedError.message);
       });
@@ -190,7 +200,7 @@ describe('UserImportBuilder', () => {
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
         '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
-      expect(() =>  {
+      expect(() => {
         return new UserImportBuilder(users, {} as any, userRequestValidator);
       }).to.throw(expectedError.message);
     });
@@ -205,7 +215,7 @@ describe('UserImportBuilder', () => {
           algorithm: 'invalid',
         },
       };
-      expect(() =>  {
+      expect(() => {
         return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
       }).to.throw(expectedError.message);
     });
@@ -215,7 +225,7 @@ describe('UserImportBuilder', () => {
         { uid: '1234', email: 'user@example.com' },
         { uid: '5678', phoneNumber: '+16505550101' },
       ];
-      expect(() =>  {
+      expect(() => {
         return new UserImportBuilder(noHashUsers, undefined, userRequestValidator);
       }).not.to.throw();
     });
@@ -236,7 +246,7 @@ describe('UserImportBuilder', () => {
                 key,
               },
             };
-            expect(() =>  {
+            expect(() => {
               return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
             }).to.throw(expectedError.message);
           });
@@ -255,7 +265,7 @@ describe('UserImportBuilder', () => {
             users: expectedUsersRequest,
           };
           const userImportBuilder =
-              new UserImportBuilder(users, validOptions as any, userRequestValidator);
+            new UserImportBuilder(users, validOptions as any, userRequestValidator);
           expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
         });
       });
@@ -266,23 +276,23 @@ describe('UserImportBuilder', () => {
         let minRounds: number;
         let maxRounds: number;
         switch (algorithm) {
-        case 'MD5':
-          minRounds = 0;
-          maxRounds = 8192;
-          break;
-        case 'SHA1':
-        case 'SHA256':
-        case 'SHA512':
-          minRounds = 1;
-          maxRounds = 8192;
-          break;
-        case 'PBKDF_SHA1':
-        case 'PBKDF2_SHA256':
-          minRounds = 0;
-          maxRounds = 120000;
-          break;
-        default:
-          throw new Error('Unexpected algorithm: ' + algorithm);
+          case 'MD5':
+            minRounds = 0;
+            maxRounds = 8192;
+            break;
+          case 'SHA1':
+          case 'SHA256':
+          case 'SHA512':
+            minRounds = 1;
+            maxRounds = 8192;
+            break;
+          case 'PBKDF_SHA1':
+          case 'PBKDF2_SHA256':
+            minRounds = 0;
+            maxRounds = 120000;
+            break;
+          default:
+            throw new Error('Unexpected algorithm: ' + algorithm);
         }
         const invalidRounds = [minRounds - 1, maxRounds + 1, 'invalid', undefined, null];
 
@@ -299,7 +309,7 @@ describe('UserImportBuilder', () => {
                 rounds,
               },
             };
-            expect(() =>  {
+            expect(() => {
               return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
             }).to.throw(expectedError.message);
           });
@@ -318,7 +328,7 @@ describe('UserImportBuilder', () => {
             users: expectedUsersRequest,
           };
           const userImportBuilder =
-              new UserImportBuilder(users, validOptions as any, userRequestValidator);
+            new UserImportBuilder(users, validOptions as any, userRequestValidator);
           expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
         });
 
@@ -346,7 +356,7 @@ describe('UserImportBuilder', () => {
               memoryCost: 12,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -367,7 +377,7 @@ describe('UserImportBuilder', () => {
               memoryCost: 12,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -388,7 +398,7 @@ describe('UserImportBuilder', () => {
               memoryCost,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -409,7 +419,7 @@ describe('UserImportBuilder', () => {
               saltSeparator,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -433,7 +443,7 @@ describe('UserImportBuilder', () => {
           saltSeparator: '',
         };
         const userImportBuilder =
-            new UserImportBuilder(users, validOptions as any, userRequestValidator);
+          new UserImportBuilder(users, validOptions as any, userRequestValidator);
         expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
     });
@@ -451,7 +461,7 @@ describe('UserImportBuilder', () => {
           users: expectedUsersRequest,
         };
         const userImportBuilder =
-            new UserImportBuilder(users, validOptions as any, userRequestValidator);
+          new UserImportBuilder(users, validOptions as any, userRequestValidator);
         expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
     });
@@ -478,7 +488,7 @@ describe('UserImportBuilder', () => {
               derivedKeyLength: 64,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -494,13 +504,13 @@ describe('UserImportBuilder', () => {
           const invalidOptions = {
             hash: {
               algorithm,
-              memoryCost : 1024,
+              memoryCost: 1024,
               parallelization,
               blockSize: 8,
               derivedKeyLength: 64,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -516,13 +526,13 @@ describe('UserImportBuilder', () => {
           const invalidOptions = {
             hash: {
               algorithm,
-              memoryCost : 1024,
+              memoryCost: 1024,
               parallelization: 16,
               blockSize,
               derivedKeyLength: 64,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -538,13 +548,13 @@ describe('UserImportBuilder', () => {
           const invalidOptions = {
             hash: {
               algorithm,
-              memoryCost : 1024,
+              memoryCost: 1024,
               parallelization: 16,
               blockSize: 8,
               derivedKeyLength,
             },
           };
-          expect(() =>  {
+          expect(() => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
@@ -554,7 +564,7 @@ describe('UserImportBuilder', () => {
         const validOptions = {
           hash: {
             algorithm,
-            memoryCost : 1024,
+            memoryCost: 1024,
             parallelization: 16,
             blockSize: 8,
             derivedKeyLength: 64,
@@ -569,7 +579,7 @@ describe('UserImportBuilder', () => {
           users: expectedUsersRequest,
         };
         const userImportBuilder =
-            new UserImportBuilder(users, validOptions as any, userRequestValidator);
+          new UserImportBuilder(users, validOptions as any, userRequestValidator);
         expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
 
@@ -590,7 +600,7 @@ describe('UserImportBuilder', () => {
         users: expectedUsersRequest,
       };
       const userImportBuilder =
-          new UserImportBuilder(users, validOptions as any, userRequestValidator);
+        new UserImportBuilder(users, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
@@ -616,7 +626,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
+        new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
@@ -632,7 +642,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(noHashUsers, validOptions as any, userRequestValidator);
+        new UserImportBuilder(noHashUsers, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
@@ -648,7 +658,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(noMultiFactorUsers, validOptions as any, userRequestValidator);
+        new UserImportBuilder(noMultiFactorUsers, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
@@ -664,7 +674,7 @@ describe('UserImportBuilder', () => {
         {
           uid: '1234',
           multiFactor: {
-            enrolledFactors: [ phoneFactor ],
+            enrolledFactors: [phoneFactor],
           },
         },
         { uid: '5678', phoneNumber: '+16505550102' },
@@ -675,7 +685,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(invalidMultiFactorUsers, validOptions as any, userRequestValidator);
+        new UserImportBuilder(invalidMultiFactorUsers, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
@@ -689,7 +699,7 @@ describe('UserImportBuilder', () => {
                 uid: 'enrolledSecondFactor1',
                 secret: 'SECRET',
                 displayName: 'Google Authenticator on personal phone',
-                factorId: 'totp',
+                factorId: 'invalidFactorId',
               },
             ],
           },
@@ -702,7 +712,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(invalidMultiFactorUsers, validOptions as any, userRequestValidator);
+        new UserImportBuilder(invalidMultiFactorUsers, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
   });
@@ -723,7 +733,7 @@ describe('UserImportBuilder', () => {
         errors: [],
       };
       const userImportBuilder =
-          new UserImportBuilder(users, validOptions as any, userRequestValidator);
+        new UserImportBuilder(users, validOptions as any, userRequestValidator);
       expectUserImportResult(
         userImportBuilder.buildResponse(successfulServerResponse),
         successfulUserImportResponse);
@@ -748,7 +758,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder =
-          new UserImportBuilder(users, validOptions as any, userRequestValidator);
+        new UserImportBuilder(users, validOptions as any, userRequestValidator);
       expectUserImportResult(
         userImportBuilder.buildResponse(failingServerResponse),
         serverErrorUserImportResponse);
@@ -765,7 +775,7 @@ describe('UserImportBuilder', () => {
       };
       // userRequestValidatorWithError will throw on the 3rd user (index = 2).
       const userImportBuilder =
-          new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
+        new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
       expectUserImportResult(
         userImportBuilder.buildResponse(successfulServerResponse),
         clientErrorUserImportResponse);
@@ -825,7 +835,7 @@ describe('UserImportBuilder', () => {
                 uid: 'enrollmentId2',
                 secret: 'SECRET',
                 displayName: 'Google Authenticator on personal phone',
-                factorId: 'totp',
+                factorId: 'factor',
               } as any,
             ],
           },

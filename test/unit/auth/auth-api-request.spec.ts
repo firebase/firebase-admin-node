@@ -436,7 +436,8 @@ describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
         federatedUserId: [
           { providerId: 'google.com', rawId: 'google_uid1' },
           { providerId: 'google.com', rawId: 'google_uid2' }
-        ] };
+        ]
+      };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -634,7 +635,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
           expect(() => {
             // Instantiate custom attributes with invalid claims.
-            const claims: {[key: string]: any} = {};
+            const claims: { [key: string]: any } = {};
             claims[invalidClaim] = 'bla';
             return requestValidator({ localId: '1234', customAttributes: JSON.stringify(claims) });
           }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
@@ -861,11 +862,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     let stubs: sinon.SinonStub[] = [];
     let getTokenStub: sinon.SinonStub;
     const mockAccessToken: string = utils.generateRandomAccessToken();
-    const expectedHeaders: {[key: string]: string} = {
+    const expectedHeaders: { [key: string]: string } = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
-    const expectedHeadersEmulator: {[key: string]: string} = {
+    const expectedHeadersEmulator: { [key: string]: string } = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer owner',
     };
@@ -910,7 +911,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const method = 'POST';
       const path = handler.path('v1', '/accounts:lookup', 'project_id');
       const expectedResult = utils.responseFrom({
-        users : [
+        users: [
           { localId: 'uid' },
         ],
       });
@@ -1092,7 +1093,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const method = 'POST';
       it('should be fulfilled given a valid email', () => {
         const expectedResult = utils.responseFrom({
-          users : [
+          users: [
             { email: 'user@example.com' },
           ],
         });
@@ -1138,7 +1139,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const method = 'POST';
       it('should be fulfilled given a valid localId', () => {
         const expectedResult = utils.responseFrom({
-          users : [
+          users: [
             { localId: 'uid' },
           ],
         });
@@ -1199,7 +1200,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const method = 'POST';
       it('should be fulfilled given a valid phoneNumber', () => {
         const expectedResult = utils.responseFrom({
-          users : [
+          users: [
             {
               localId: 'uid',
               phoneNumber: '+11234567890',
@@ -1840,7 +1841,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const nextPageToken = 'PAGE_TOKEN';
       const maxResults = 500;
       const expectedResult = utils.responseFrom({
-        users : [
+        users: [
           { localId: 'uid1' },
           { localId: 'uid2' },
         ],
@@ -2285,7 +2286,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         uid: 'enrolledSecondFactor1',
         secret: 'SECRET',
         displayName: 'Google Authenticator on personal phone',
-        factorId: 'totp',
+        factorId: 'factor',
       };
       const invalidSecondFactorTests: InvalidMultiFactorUpdateTest[] = [
         {
@@ -2652,6 +2653,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 phoneNumber: '+16505551000',
                 factorId: 'phone',
               },
+              {
+                sharedSecretKey: 'SECRET',
+                factorId: 'totp',
+              }
             ],
           },
         };
@@ -2671,6 +2676,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             },
             {
               phoneInfo: '+16505551000',
+            },
+            {
+              sharedSecretKey: 'SECRET',
             },
           ],
         };
@@ -2768,8 +2776,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const unsupportedSecondFactor = {
           secret: 'SECRET',
           displayName: 'Google Authenticator on personal phone',
-          // TOTP is not yet supported.
-          factorId: 'totp',
+          factorId: 'factor',
         };
         const invalidSecondFactorTests: InvalidMultiFactorUpdateTest[] = [
           {
@@ -3081,8 +3088,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       };
       const expectedActionCodeSettingsRequest = new ActionCodeSettingsBuilder(actionCodeSettings).buildRequest();
       const expectedLink = 'https://custom.page.link?link=' +
-          encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +
-          '&apn=com.example.android&ibi=com.example.ios';
+        encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +
+        '&apn=com.example.android&ibi=com.example.ios';
       const expectedResult = utils.responseFrom({
         email,
         oobLink: expectedLink,
@@ -3117,8 +3124,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           stubs.push(stub);
 
           const requestHandler = handler.init(mockApp);
-          return requestHandler.getEmailActionLink(requestType, email, actionCodeSettings, 
-            (requestType === 'VERIFY_AND_CHANGE_EMAIL') ? newEmail: undefined)
+          return requestHandler.getEmailActionLink(requestType, email, actionCodeSettings,
+            (requestType === 'VERIFY_AND_CHANGE_EMAIL') ? newEmail : undefined)
             .then((oobLink: string) => {
               expect(oobLink).to.be.equal(expectedLink);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
@@ -3369,7 +3376,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const nextPageToken = 'PAGE_TOKEN';
       const maxResults = 50;
       const expectedResult = utils.responseFrom({
-        oauthIdpConfigs : [
+        oauthIdpConfigs: [
           { name: 'projects/project1/oauthIdpConfigs/oidc.provider1' },
           { name: 'projects/project1/oauthIdpConfigs/oidc.provider2' },
         ],
@@ -3932,7 +3939,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const nextPageToken = 'PAGE_TOKEN';
       const maxResults = 50;
       const expectedResult = utils.responseFrom({
-        inboundSamlConfigs : [
+        inboundSamlConfigs: [
           { name: 'projects/project1/inboundSamlConfigs/saml.provider1' },
           { name: 'projects/project1/inboundSamlConfigs/saml.provider2' },
         ],
@@ -4259,8 +4266,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         enabled: false,
       }));
       const fullUpadateMask =
-          'enabled,displayName,idpConfig.idpEntityId,idpConfig.ssoUrl,' +
-          'idpConfig.signRequest,idpConfig.idpCertificates,spConfig.spEntityId,spConfig.callbackUri';
+        'enabled,displayName,idpConfig.idpEntityId,idpConfig.ssoUrl,' +
+        'idpConfig.signRequest,idpConfig.idpCertificates,spConfig.spEntityId,spConfig.callbackUri';
 
       it('should be fulfilled given full parameters', () => {
         const expectedPath = path + `?updateMask=${fullUpadateMask}`;
@@ -4475,7 +4482,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const nextPageToken = 'PAGE_TOKEN';
         const maxResults = 500;
         const expectedResult = utils.responseFrom({
-          tenants : [
+          tenants: [
             { name: 'projects/project_id/tenants/tenant-id1' },
             { name: 'projects/project_id/tenants/tenant-id2' },
           ],

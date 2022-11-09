@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 /*!
  * Copyright 2018 Google Inc.
  *
@@ -20,9 +21,11 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings, UpdateTotpMultiFactorInfoRequest
+  UpdateMultiFactorInfoRequest,
+  UpdatePhoneMultiFactorInfoRequest,
+  MultiFactorUpdateSettings,
+  UpdateTotpMultiFactorInfoRequest
 } from './auth-config';
-import { MultiFactorInfo } from './user-record';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
   'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
@@ -263,6 +266,7 @@ export interface AuthFactorInfo {
   displayName?: string;
   phoneInfo?: string;
   enrolledAt?: string;
+  sharedSecretKey?: string;
   [key: string]: any;
 }
 
@@ -343,6 +347,19 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       displayName: multiFactorInfo.displayName,
       // Required for all phone second factors.
       phoneInfo: multiFactorInfo.phoneNumber,
+      enrolledAt,
+    };
+    for (const objKey in authFactorInfo) {
+      if (typeof authFactorInfo[objKey] === 'undefined') {
+        delete authFactorInfo[objKey];
+      }
+    }
+    return authFactorInfo;
+  } else if (isTotpFactor(multiFactorInfo)) {
+    const authFactorInfo: AuthFactorInfo = {
+      mfaEnrollmentId: multiFactorInfo.uid,
+      displayName: multiFactorInfo.displayName,
+      sharedSecretKey: multiFactorInfo.sharedSecretKey,
       enrolledAt,
     };
     for (const objKey in authFactorInfo) {

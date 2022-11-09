@@ -161,7 +161,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -277,7 +277,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -298,7 +298,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -442,7 +442,7 @@ export class AuthClientErrorCode {
   public static INVALID_DYNAMIC_LINK_DOMAIN = {
     code: 'invalid-dynamic-link-domain',
     message: 'The provided dynamic link domain is not configured or authorized ' +
-             'for the current project.',
+      'for the current project.',
   };
   public static INVALID_EMAIL_VERIFIED = {
     code: 'invalid-email-verified',
@@ -467,7 +467,7 @@ export class AuthClientErrorCode {
   public static INVALID_HASH_ALGORITHM = {
     code: 'invalid-hash-algorithm',
     message: 'The hash algorithm must match one of the strings in the list of ' +
-             'supported algorithms.',
+      'supported algorithms.',
   };
   public static INVALID_HASH_BLOCK_SIZE = {
     code: 'invalid-hash-block-size',
@@ -554,6 +554,10 @@ export class AuthClientErrorCode {
     code: 'invalid-oauth-responsetype',
     message: 'Only exactly one OAuth responseType should be set to true.',
   };
+  public static INVALID_SHARED_SECRET_KEY = {
+    code: 'invalid-shared-secret-key',
+    message: 'Shared secret key must be a non-empty string.',
+  };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +
@@ -590,7 +594,7 @@ export class AuthClientErrorCode {
   public static MISSING_ANDROID_PACKAGE_NAME = {
     code: 'missing-android-pkg-name',
     message: 'An Android Package Name must be provided if the Android App is ' +
-             'required to be installed.',
+      'required to be installed.',
   };
   public static MISSING_CONFIG = {
     code: 'missing-config',
@@ -607,7 +611,7 @@ export class AuthClientErrorCode {
   public static MISSING_EMAIL = {
     code: 'missing-email',
     message: 'The email is required for the specified action. For example, a multi-factor user ' +
-             'requires a verified email.',
+      'requires a verified email.',
   };
   public static MISSING_IOS_BUNDLE_ID = {
     code: 'missing-ios-bundle-id',
@@ -620,7 +624,7 @@ export class AuthClientErrorCode {
   public static MISSING_HASH_ALGORITHM = {
     code: 'missing-hash-algorithm',
     message: 'Importing users with password hashes requires that the hashing ' +
-             'algorithm and its parameters be provided.',
+      'algorithm and its parameters be provided.',
   };
   public static MISSING_OAUTH_CLIENT_ID = {
     code: 'missing-oauth-client-id',
@@ -653,8 +657,8 @@ export class AuthClientErrorCode {
   public static OPERATION_NOT_ALLOWED = {
     code: 'operation-not-allowed',
     message: 'The given sign-in provider is disabled for this Firebase project. ' +
-        'Enable it in the Firebase console, under the sign-in method tab of the ' +
-        'Auth section.',
+      'Enable it in the Firebase console, under the sign-in method tab of the ' +
+      'Auth section.',
   };
   public static PHONE_NUMBER_ALREADY_EXISTS = {
     code: 'phone-number-already-exists',
@@ -702,7 +706,7 @@ export class AuthClientErrorCode {
   public static UNAUTHORIZED_DOMAIN = {
     code: 'unauthorized-continue-uri',
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
-             'Firebase console.',
+      'Firebase console.',
   };
   public static UNSUPPORTED_FIRST_FACTOR = {
     code: 'unsupported-first-factor',
@@ -719,7 +723,7 @@ export class AuthClientErrorCode {
   public static UNVERIFIED_EMAIL = {
     code: 'unverified-email',
     message: 'A verified email is required for the specified action. For example, a multi-factor user ' +
-             'requires a verified email.',
+      'requires a verified email.',
   };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
@@ -864,15 +868,15 @@ export class InstanceIdClientErrorCode extends InstallationsClientErrorCode {
 }
 
 export type ProjectManagementErrorCode =
-    'already-exists'
-    | 'authentication-error'
-    | 'internal-error'
-    | 'invalid-argument'
-    | 'invalid-project-id'
-    | 'invalid-server-response'
-    | 'not-found'
-    | 'service-unavailable'
-    | 'unknown-error';
+  'already-exists'
+  | 'authentication-error'
+  | 'internal-error'
+  | 'invalid-argument'
+  | 'invalid-project-id'
+  | 'invalid-server-response'
+  | 'not-found'
+  | 'service-unavailable'
+  | 'unknown-error';
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {

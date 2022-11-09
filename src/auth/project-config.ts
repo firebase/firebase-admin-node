@@ -70,6 +70,7 @@ export class ProjectConfig {
    */
   get multiFactorConfig(): MultiFactorConfig | undefined {
     return this.multiFactorConfig_;
+  }
 
   /**
    * Validates a project config options object. Throws an error on failure.

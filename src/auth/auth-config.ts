@@ -484,11 +484,12 @@ export interface EmailSignInConfigServerRequest {
 }
 
 /** Identifies the server side second factor type. */
-type AuthFactorServerType = 'PHONE_SMS';
+type AuthFactorServerType = 'PHONE_SMS' | 'TOTP';
 
 /** Client Auth factor type to server auth factor type mapping. */
 const AUTH_FACTOR_CLIENT_TO_SERVER_TYPE: { [key: string]: AuthFactorServerType } = {
   phone: 'PHONE_SMS',
+  totp: 'TOTP'
 };
 
 /** Server Auth factor type to client auth factor type mapping. */
@@ -508,7 +509,7 @@ export interface MultiFactorAuthServerConfig {
 /**
  * Identifies a second factor type.
  */
-export type AuthFactorType = 'phone';
+export type AuthFactorType = 'phone' | 'totp';
 
 /**
  * Identifies a multi-factor configuration state.
@@ -542,7 +543,6 @@ export interface MultiFactorConfig {
    * The multi-factor config state.
    */
   state: MultiFactorConfigState;
-
   /**
    * The list of identifiers for enabled second factors.
    * Currently only ‘phone’ is supported.
@@ -562,6 +562,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
 
   public readonly state: MultiFactorConfigState;
   public readonly factorIds: AuthFactorType[];
+  public readonly providerConfigs?: MultiFactorProviderConfig[];
 
   /**
    * Static method to convert a client side request to a MultiFactorAuthServerConfig.
@@ -588,6 +589,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       if (options.factorIds && options.factorIds.length === 0) {
         request.enabledProviders = [];
       }
+      // TODO(pm): check for options.providerConfigs
     }
     return request;
   }
@@ -642,6 +644,25 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
             AuthClientErrorCode.INVALID_CONFIG,
             `"${factorId}" is not a valid "AuthFactorType".`,
           );
+        }
+      });
+    }
+
+    if (typeof options.providerConfigs !== 'undefined') {
+      if (!validator.isArray(options.providerConfigs)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfigs."',
+        );
+      }
+
+      //Validate content of array.
+      options.providerConfigs.forEach((multiFactorProviderConfig) => {
+        if (typeof multiFactorProviderConfig == 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfigType".`
+          )
         }
       });
     }
