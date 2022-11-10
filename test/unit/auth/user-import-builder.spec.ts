@@ -276,23 +276,23 @@ describe('UserImportBuilder', () => {
         let minRounds: number;
         let maxRounds: number;
         switch (algorithm) {
-          case 'MD5':
-            minRounds = 0;
-            maxRounds = 8192;
-            break;
-          case 'SHA1':
-          case 'SHA256':
-          case 'SHA512':
-            minRounds = 1;
-            maxRounds = 8192;
-            break;
-          case 'PBKDF_SHA1':
-          case 'PBKDF2_SHA256':
-            minRounds = 0;
-            maxRounds = 120000;
-            break;
-          default:
-            throw new Error('Unexpected algorithm: ' + algorithm);
+        case 'MD5':
+          minRounds = 0;
+          maxRounds = 8192;
+          break;
+        case 'SHA1':
+        case 'SHA256':
+        case 'SHA512':
+          minRounds = 1;
+          maxRounds = 8192;
+          break;
+        case 'PBKDF_SHA1':
+        case 'PBKDF2_SHA256':
+          minRounds = 0;
+          maxRounds = 120000;
+          break;
+        default:
+          throw new Error('Unexpected algorithm: ' + algorithm);
         }
         const invalidRounds = [minRounds - 1, maxRounds + 1, 'invalid', undefined, null];
 

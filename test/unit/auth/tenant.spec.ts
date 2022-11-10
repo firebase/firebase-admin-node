@@ -158,7 +158,8 @@ describe('Tenant', () => {
 
       it('should throw on invalid MultiFactorConfig.providerConfig.totpProviderConfig attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.multiFactorConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals = 'invalid';
+        tenantOptionsClientRequest.multiFactorConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals
+          = 'invalid';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.');
