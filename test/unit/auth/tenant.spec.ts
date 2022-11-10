@@ -35,13 +35,13 @@ const expect = chai.expect;
 describe('Tenant', () => {
   const smsAllowByDefault = {
     allowByDefault: {
-      disallowedRegions: [ 'AC', 'AD' ],
+      disallowedRegions: ['AC', 'AD'],
     },
   };
 
   const smsAllowlistOnly = {
     allowlistOnly: {
-      allowedRegions: [ 'AC', 'AD' ],
+      allowedRegions: ['AC', 'AD'],
     },
   };
 
@@ -52,7 +52,13 @@ describe('Tenant', () => {
     enableEmailLinkSignin: true,
     mfaConfig: {
       state: 'ENABLED',
-      enabledProviders: ['PHONE_SMS'],
+      enabledProviders: ['PHONE_SMS', 'TOTP'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {}
+        },
+      ],
     },
     testPhoneNumbers: {
       '+16505551234': '019287',
@@ -69,7 +75,13 @@ describe('Tenant', () => {
     },
     multiFactorConfig: {
       state: 'ENABLED',
-      factorIds: ['phone'],
+      factorIds: ['phone', 'totp'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {},
+        },
+      ],
     },
     testPhoneNumbers: {
       '+16505551234': '019287',
@@ -136,6 +148,22 @@ describe('Tenant', () => {
         }).to.throw('"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".');
       });
 
+      it('should throw on invalid MultiFactorConfig.providerConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.multiFactorConfig.providerConfigs[0].state = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".');
+      });
+
+      it('should throw on invalid MultiFactorConfig.providerConfig.totpProviderConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.multiFactorConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.');
+      });
+
       it('should throw on invalid testPhoneNumbers attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.testPhoneNumbers = 'invalid';
@@ -174,7 +202,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -182,7 +210,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -190,7 +218,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -323,7 +351,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -331,7 +359,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -339,7 +367,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -431,10 +459,17 @@ describe('Tenant', () => {
       expect(tenant.emailSignInConfig).to.deep.equal(expectedEmailSignInConfig);
     });
 
+    //TODO
     it('should set readonly property multiFactorConfig', () => {
       const expectedMultiFactorConfig = new MultiFactorAuthConfig({
         state: 'ENABLED',
-        enabledProviders: ['PHONE_SMS'],
+        enabledProviders: ['PHONE_SMS', 'TOTP'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       });
       expect(tenant.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
     });

@@ -504,6 +504,7 @@ const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: { [key: string]: AuthFactorType } =
 export interface MultiFactorAuthServerConfig {
   state?: MultiFactorConfigState;
   enabledProviders?: AuthFactorServerType[];
+  providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
@@ -589,7 +590,17 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       if (options.factorIds && options.factorIds.length === 0) {
         request.enabledProviders = [];
       }
-      // TODO(pm): check for options.providerConfigs
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'providerConfigs')) {
+      (options.providerConfigs || []).forEach((providerConfig) => {
+        if (typeof request.providerConfigs === 'undefined') {
+          request.providerConfigs = []
+        }
+        request.providerConfigs.push(providerConfig);
+      });
+      if (options.providerConfigs && options.providerConfigs.length === 0) {
+        request.providerConfigs = [];
+      }
     }
     return request;
   }
@@ -603,6 +614,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     const validKeys = {
       state: true,
       factorIds: true,
+      providerConfigs: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -664,6 +676,23 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
             `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfigType".`
           )
         }
+        if (typeof multiFactorProviderConfig.state !== 'undefined' &&
+          multiFactorProviderConfig.state !== 'ENABLED' &&
+          multiFactorProviderConfig.state !== 'DISABLED') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
+          )
+        }
+        if (typeof multiFactorProviderConfig.totpProviderConfig !== 'undefined') {
+          if (multiFactorProviderConfig.totpProviderConfig.adjacentIntervals !== undefined &&
+            !validator.isNumber(multiFactorProviderConfig.totpProviderConfig.adjacentIntervals)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ARGUMENT,
+              '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.'
+            )
+          }
+        }
       });
     }
   }
@@ -690,6 +719,18 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       if (typeof AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider] !== 'undefined') {
         this.factorIds.push(AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider]);
       }
+    });
+    this.providerConfigs = [];
+    (response.providerConfigs || []).forEach((providerConfig) => {
+      if (typeof providerConfig !== 'undefined') {
+        if (typeof providerConfig.state === 'undefined' ||
+          typeof providerConfig.totpProviderConfig === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+        }
+        this.providerConfigs?.push(providerConfig);
+      }
     })
   }
 
@@ -698,6 +739,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     return {
       state: this.state,
       factorIds: this.factorIds,
+      providerConfigs: this.providerConfigs,
     };
   }
 }

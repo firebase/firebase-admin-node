@@ -210,6 +210,7 @@ describe('MultiFactorAuthConfig', () => {
       expect(config.toJSON()).to.deep.equal({
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [],
       });
     });
   });
@@ -316,7 +317,7 @@ describe('validateTestPhoneNumbers', () => {
   });
 
   it(`should not throw when ${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
-    const pairs: {[key: string]: string} = {};
+    const pairs: { [key: string]: string } = {};
     for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS; i++) {
       pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
     }
@@ -325,7 +326,7 @@ describe('validateTestPhoneNumbers', () => {
   });
 
   it(`should throw when >${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
-    const pairs: {[key: string]: string} = {};
+    const pairs: { [key: string]: string } = {};
     for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS + 1; i++) {
       pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
     }
