@@ -56,7 +56,7 @@ export class Auth extends BaseAuth {
 }
 
 // @public
-export type AuthFactorType = 'phone';
+export type AuthFactorType = 'phone' | 'totp';
 
 // @public
 export type AuthProviderConfig = SAMLAuthProviderConfig | OIDCAuthProviderConfig;
@@ -121,8 +121,10 @@ export interface BaseUpdateMultiFactorInfoRequest {
     uid?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "CreateTotpMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
+//
 // @public
-export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+export type CreateMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest | CreateTotpMultiFactorInfoRequest;
 
 // @public
 export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactorInfoRequest {
@@ -267,6 +269,8 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorProviderConfig" needs to be exported by the entry point index.d.ts
+    providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }
 
@@ -336,6 +340,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -424,8 +429,10 @@ export interface UidIdentifier {
 // @public (undocumented)
 export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
+// Warning: (ae-forgotten-export) The symbol "UpdateTotpMultiFactorInfoRequest" needs to be exported by the entry point index.d.ts
+//
 // @public
-export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest | UpdateTotpMultiFactorInfoRequest;
 
 // @public
 export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
@@ -434,6 +441,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
