@@ -320,10 +320,6 @@ export function machineLearning(app?: App): machineLearning.MachineLearning;
 
 // @public (undocumented)
 export namespace machineLearning {
-    // Warning: (ae-forgotten-export) The symbol "AutoMLTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // @deprecated
-    export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
     // Warning: (ae-forgotten-export) The symbol "GcsTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
     export type GcsTfliteModelOptions = GcsTfliteModelOptions;
     // Warning: (ae-forgotten-export) The symbol "ListModelsOptions" needs to be exported by the entry point default-namespace.d.ts
