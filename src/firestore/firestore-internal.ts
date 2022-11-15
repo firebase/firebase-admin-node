@@ -25,12 +25,20 @@ import { App } from '../app';
 
 export class FirestoreService {
 
-  private appInternal: App;
-  private firestoreClient: Firestore;
+  private readonly appInternal: App;
+  private readonly databases: Map<string, Firestore> = new Map();
 
   constructor(app: App) {
-    this.firestoreClient = initFirestore(app);
     this.appInternal = app;
+  }
+
+  getDatabase(databaseId: string): Firestore {
+    let database = this.databases.get(databaseId);
+    if (database === undefined) {
+      database = initFirestore(this.app, databaseId);
+      this.databases.set(databaseId, database);
+    }
+    return database;
   }
 
   /**
@@ -40,10 +48,6 @@ export class FirestoreService {
    */
   get app(): App {
     return this.appInternal;
-  }
-
-  get client(): Firestore {
-    return this.firestoreClient;
   }
 }
 
@@ -85,8 +89,9 @@ export function getFirestoreOptions(app: App): Settings {
   });
 }
 
-function initFirestore(app: App): Firestore {
+function initFirestore(app: App, databaseId: string): Firestore {
   const options = getFirestoreOptions(app);
+  options.databaseId = databaseId;
   let firestoreDatabase: typeof Firestore;
   try {
     // Lazy-load the Firestore implementation here, which in turns loads gRPC.

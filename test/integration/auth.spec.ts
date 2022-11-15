@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import url = require('url');
+import * as url from 'url';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
@@ -31,7 +31,7 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserMetadata, UserRecord, getAuth,
+  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
 } from '../../lib/auth/index';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -57,7 +57,7 @@ const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
 const updatedEmail = generateRandomString(20).toLowerCase() + '@example.com';
 const updatedPhone = '+16505550102';
-const customClaims: {[key: string]: any} = {
+const customClaims: { [key: string]: any } = {
   admin: true,
   groupId: '1234',
 };
@@ -433,15 +433,15 @@ describe('admin.auth', () => {
      * and UserImportRecord instances.
      */
     function mapUserRecordsToUidEmailPhones(
-      values: Array<{ uid: string; email?: string; phoneNumber?: string}>
-    ): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+      values: Array<{ uid: string; email?: string; phoneNumber?: string }>
+    ): Array<{ uid: string; email?: string; phoneNumber?: string }> {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
     const testUser1 = { uid: 'uid1', email: 'user1@example.com', phoneNumber: '+15555550001' };
     const testUser2 = { uid: 'uid2', email: 'user2@example.com', phoneNumber: '+15555550002' };
     const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
-    const usersToCreate = [ testUser1, testUser2, testUser3 ];
+    const usersToCreate = [testUser1, testUser2, testUser3];
 
     // Also create a user with a provider config. (You can't create a user with
     // a provider config. But you *can* import one.)
@@ -551,11 +551,11 @@ describe('admin.auth', () => {
             // each attempt). Occassionally, this call retrieves the user data
             // without the lastLoginTime/lastRefreshTime set; possibly because
             // it's hitting a different server than the login request uses.
-            let userRecord = null;
+            let userRecord: UserRecord | null = null;
 
             for (let i = 0; i < 3; i++) {
               userRecord = await getAuth().getUser('lastRefreshTimeUser');
-              if (userRecord.metadata.lastRefreshTime) {
+              if (userRecord!['metadata']['lastRefreshTime']) {
                 break;
               }
 
@@ -564,11 +564,11 @@ describe('admin.auth', () => {
               });
             }
 
-            const metadata = userRecord!.metadata;
-            expect(metadata.lastRefreshTime).to.exist;
-            expect(isUTCString(metadata.lastRefreshTime!)).to.be.true;
-            const creationTime = new Date(metadata.creationTime).getTime();
-            const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
+            const metadata = userRecord!['metadata'];
+            expect(metadata['lastRefreshTime']).to.exist;
+            expect(isUTCString(metadata['lastRefreshTime']!)).to.be.true;
+            const creationTime = new Date(metadata['creationTime']).getTime();
+            const lastRefreshTime = new Date(metadata['lastRefreshTime']!).getTime();
             expect(creationTime).lte(lastRefreshTime);
             expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });
@@ -604,16 +604,16 @@ describe('admin.auth', () => {
         expect(
           listUsersResult.users[0].passwordHash,
           'Missing passwordHash field. A common cause would be forgetting to '
-            + 'add the "Firebase Authentication Admin" permission. See '
-            + 'instructions in CONTRIBUTING.md',
+          + 'add the "Firebase Authentication Admin" permission. See '
+          + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
         expect(listUsersResult.users[0].passwordHash!.length).greaterThan(0);
 
         expect(
           listUsersResult.users[0].passwordSalt,
           'Missing passwordSalt field. A common cause would be forgetting to '
-            + 'add the "Firebase Authentication Admin" permission. See '
-            + 'instructions in CONTRIBUTING.md',
+          + 'add the "Firebase Authentication Admin" permission. See '
+          + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
         expect(listUsersResult.users[0].passwordSalt!.length).greaterThan(0);
 
@@ -704,7 +704,7 @@ describe('admin.auth', () => {
         // Verify ID token contents.
         return getAuth().verifyIdToken(idToken);
       })
-      .then((decodedIdToken: {[key: string]: any}) => {
+      .then((decodedIdToken: { [key: string]: any }) => {
         // Confirm expected claims set on the user's ID token.
         for (const key in customClaims) {
           if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
@@ -728,7 +728,7 @@ describe('admin.auth', () => {
         // Verify ID token contents.
         return getAuth().verifyIdToken(idToken);
       })
-      .then((decodedIdToken: {[key: string]: any}) => {
+      .then((decodedIdToken: { [key: string]: any }) => {
         // Confirm all custom claims are cleared.
         for (const key in customClaims) {
           if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
@@ -811,7 +811,7 @@ describe('admin.auth', () => {
       })
         .then((userRecord) => {
           // Confirm second factors added to user.
-          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          const actualUserRecord: { [key: string]: any } = userRecord.toJSON();
           expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
           expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
           // Update list of second factors.
@@ -823,7 +823,7 @@ describe('admin.auth', () => {
         })
         .then((userRecord) => {
           expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
-          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          const actualUserRecord: { [key: string]: any } = userRecord.toJSON();
           expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
           // Remove all second factors.
           return getAuth().updateUser(updateUser.uid, {
@@ -919,7 +919,7 @@ describe('admin.auth', () => {
     it('A user with user record disabled is unable to sign in', async () => {
       const password = 'password';
       const email = 'updatedEmail@example.com';
-      return getAuth().updateUser(updateUser.uid, { disabled : true , password, email })
+      return getAuth().updateUser(updateUser.uid, { disabled: true, password, email })
         .then(() => {
           return clientAuth().signInWithEmailAndPassword(email, password);
         })
@@ -1154,7 +1154,7 @@ describe('admin.auth', () => {
         });
     });
 
-    it('generateVerifyAndChangeEmailLink() should return a verification link', function() {
+    it('generateVerifyAndChangeEmailLink() should return a verification link', function () {
       if (authEmulatorHost) {
         return this.skip(); // Not yet supported in Auth Emulator.
       }
@@ -1176,6 +1176,61 @@ describe('admin.auth', () => {
           expect(result.user).to.exist;
           expect(result.user!.email).to.equal(newEmail);
           expect(result.user!.emailVerified).to.be.true;
+        });
+    });
+  });
+
+  describe('Project config management operations', () => {
+    before(function () {
+      if (authEmulatorHost) {
+        this.skip(); // getConfig is not supported in Auth Emulator
+      }
+    });
+    const projectConfigOption1: UpdateProjectConfigRequest = {
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
+    };
+    const projectConfigOption2: UpdateProjectConfigRequest = {
+      smsRegionConfig: {
+        allowlistOnly: {
+          allowedRegions: ['AC', 'AD'],
+        }
+      },
+    };
+    const expectedProjectConfig1: any = {
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
+    };
+    const expectedProjectConfig2: any = {
+      smsRegionConfig: {
+        allowlistOnly: {
+          allowedRegions: ['AC', 'AD'],
+        }
+      },
+    };
+
+    it('updateProjectConfig() should resolve with the updated project config', () => {
+      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
+        .then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
+        })
+        .then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
+        });
+    });
+
+    it('getProjectConfig() should resolve with expected project config', () => {
+      return getAuth().projectConfigManager().getProjectConfig()
+        .then((actualConfig) => {
+          const actualConfigObj = actualConfig.toJSON();
+          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
         });
     });
   });
@@ -1248,12 +1303,17 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
     };
 
     // https://mochajs.org/
     // Passing arrow functions (aka "lambdas") to Mocha is discouraged.
     // Lambdas lexically bind this and cannot access the Mocha context.
-    before(function() {
+    before(function () {
       /* tslint:disable:no-console */
       if (!cmdArgs.testMultiTenancy) {
         // To enable, run: npm run test:integration -- --testMultiTenancy
@@ -1271,7 +1331,7 @@ describe('admin.auth', () => {
       createdTenants.forEach((tenantId) => {
         promises.push(
           getAuth().tenantManager().deleteTenant(tenantId)
-            .catch(() => {/** Ignore. */}));
+            .catch(() => {/** Ignore. */ }));
       });
       return Promise.all(promises);
     });
@@ -1285,7 +1345,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1324,7 +1384,7 @@ describe('admin.auth', () => {
       const rawPassword = 'password';
       const rawSalt = 'NaCl';
 
-      before(function() {
+      before(function () {
         if (!createdTenantId) {
           this.skip();
         } else {
@@ -1432,10 +1492,10 @@ describe('admin.auth', () => {
             // Confirm expected user returned in the list and all users returned
             // belong to the expected tenant.
             const allUsersBelongToTenant =
-                listUsersResult.users.every((user) => user.tenantId === createdTenantId);
+              listUsersResult.users.every((user) => user.tenantId === createdTenantId);
             expect(allUsersBelongToTenant).to.be.true;
             const knownUserInTenant =
-                listUsersResult.users.some((user) => user.uid === createdUserUid);
+              listUsersResult.users.some((user) => user.uid === createdUserUid);
             expect(knownUserInTenant).to.be.true;
           });
       });
@@ -1451,7 +1511,7 @@ describe('admin.auth', () => {
       it('importUsers() should upload a user to the specified tenant', () => {
         const currentHashKey = importOptions.hash.key.toString('utf8');
         const passwordHash =
-            crypto.createHmac('sha256', currentHashKey).update(rawPassword + rawSalt).digest();
+          crypto.createHmac('sha256', currentHashKey).update(rawPassword + rawSalt).digest();
         const importUserRecord: any = {
           uid: createdUserUid,
           email: createdUserUid + '@example.com',
@@ -1512,7 +1572,7 @@ describe('admin.auth', () => {
         enableRequestSigning: false,
       };
 
-      before(function() {
+      before(function () {
         if (!createdTenantId) {
           this.skip();
         } else {
@@ -1593,7 +1653,7 @@ describe('admin.auth', () => {
         },
       };
 
-      before(function() {
+      before(function () {
         if (!createdTenantId) {
           this.skip();
         } else {
@@ -1610,7 +1670,7 @@ describe('admin.auth', () => {
             });
         }
       });
-      
+
       it('should support CRUD operations', function () {
         // TODO(lisajian): Unskip once auth emulator supports OIDC/SAML
         if (authEmulatorHost) {
@@ -1643,7 +1703,7 @@ describe('admin.auth', () => {
           const actualTenantObj = actualTenant.toJSON();
           if (authEmulatorHost) {
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
             delete expectedCreatedTenant.testPhoneNumbers;
           }
           expect(actualTenantObj).to.deep.equal(expectedCreatedTenant);
@@ -1669,13 +1729,14 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
+        smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
             delete expectedUpdatedTenant.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant);
             return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
@@ -1683,7 +1744,7 @@ describe('admin.auth', () => {
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Not supported in Auth Emulator
-            delete (actualTenantObj as {testPhoneNumbers?: Record<string, string>}).testPhoneNumbers;
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
             delete expectedUpdatedTenant2.testPhoneNumbers;
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
@@ -1693,6 +1754,28 @@ describe('admin.auth', () => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update tenant when SMS region config is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        smsRegionConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
@@ -1799,8 +1882,8 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */ }),
+        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */ }),
       ]);
     };
 
@@ -1941,8 +2024,8 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        getAuth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */ }),
+        getAuth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */ }),
       ]);
     };
 
@@ -2249,7 +2332,7 @@ describe('admin.auth', () => {
       const decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
       expect(decodedIdToken.uid).to.equal(uid4);
 
-      const userRecord = await getAuth().updateUser(uid4, { disabled : true });
+      const userRecord = await getAuth().updateUser(uid4, { disabled: true });
       // Ensure disabled field has been updated.
       expect(userRecord.uid).to.equal(uid4);
       expect(userRecord.disabled).to.equal(true);
@@ -2293,7 +2376,7 @@ describe('admin.auth', () => {
       let decodedIdToken = await getAuth().verifySessionCookie(sessionCookie, true);
       expect(decodedIdToken.uid).to.equal(uid);
 
-      const userRecord = await getAuth().updateUser(uid, { disabled : true });
+      const userRecord = await getAuth().updateUser(uid, { disabled: true });
       // Ensure disabled field has been updated.
       expect(userRecord.uid).to.equal(uid);
       expect(userRecord.disabled).to.equal(true);
@@ -2326,9 +2409,9 @@ describe('admin.auth', () => {
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
     // Obtained from https://github.com/firebase/scrypt.
     const scryptHashKey = 'jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZ' +
-                          'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
+      'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
     const scryptPasswordHash = 'V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7T/rcaGieN04q/ZPJ0' +
-                               '8WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw==';
+      '8WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw==';
     const scryptHashOptions = {
       hash: {
         algorithm: 'SCRYPT',
@@ -2555,7 +2638,7 @@ describe('admin.auth', () => {
             -readonly [k in keyof UserMetadata]: UserMetadata[k];
           };
           (importUserRecord.metadata as Writable<UserMetadata>).lastRefreshTime = null;
-          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          const actualUserRecord: { [key: string]: any } = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
@@ -2577,7 +2660,7 @@ describe('admin.auth', () => {
           displayName: 'Work phone number',
           factorId: 'phone',
           enrollmentTime: now,
-        } ,
+        },
         {
           uid: 'mfaUid2',
           phoneNumber: '+16505550002',
@@ -2619,7 +2702,7 @@ describe('admin.auth', () => {
           return getAuth().getUser(uid);
         }).then((userRecord) => {
           // Confirm second factors added to user.
-          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          const actualUserRecord: { [key: string]: any } = userRecord.toJSON();
           expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
           expect(actualUserRecord.multiFactor.enrolledFactors)
             .to.deep.equal(importUserRecord.multiFactor?.enrolledFactors);
@@ -2832,7 +2915,7 @@ async function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> 
  * @param expected object.
  * @param actual object.
  */
-function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}): void {
+function assertDeepEqualUnordered(expected: { [key: string]: any }, actual: { [key: string]: any }): void {
   for (const key in expected) {
     if (Object.prototype.hasOwnProperty.call(expected, key)) {
       expect(actual[key])

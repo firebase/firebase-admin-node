@@ -3538,7 +3538,7 @@ describe('Messaging', () => {
             expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith({
               method: 'POST',
               data: { message: expectedReq },
-              timeout: 10000,
+              timeout: 15000,
               url: 'https://fcm.googleapis.com/v1/projects/project_id/messages:send',
               headers: expectedHeaders,
             });

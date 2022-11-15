@@ -36,6 +36,7 @@ import { QueryPartition } from '@google-cloud/firestore';
 import { QuerySnapshot } from '@google-cloud/firestore';
 import { ReadOnlyTransactionOptions } from '@google-cloud/firestore';
 import { ReadOptions } from '@google-cloud/firestore';
+import { ReadWriteTransactionOptions } from '@google-cloud/firestore';
 import { setLogFunction } from '@google-cloud/firestore';
 import { SetOptions } from '@google-cloud/firestore';
 import { Settings } from '@google-cloud/firestore';
@@ -83,10 +84,13 @@ export { FirestoreDataConverter }
 
 export { GeoPoint }
 
+// @public
+export function getFirestore(): Firestore;
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
-export function getFirestore(app?: App): Firestore;
+export function getFirestore(app: App): Firestore;
 
 export { GrpcStatus }
 
@@ -111,6 +115,8 @@ export { QuerySnapshot }
 export { ReadOnlyTransactionOptions }
 
 export { ReadOptions }
+
+export { ReadWriteTransactionOptions }
 
 export { setLogFunction }
 
