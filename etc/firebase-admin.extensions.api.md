@@ -23,8 +23,10 @@ export function getExtensions(app?: App): Extensions;
 // @public
 export class Runtime {
     setFatalError(errorMessage: string): Promise<void>;
-    // Warning: (ae-forgotten-export) The symbol "SettableProcessingState" needs to be exported by the entry point index.d.ts
     setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void>;
 }
+
+// @public
+export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';
 
 ```
