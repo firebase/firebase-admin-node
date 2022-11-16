@@ -49,7 +49,7 @@ export class Extensions {
 /**
  * Runtime provides methods to modify an extension instance's runtime data.
  */
-class Runtime {
+export class Runtime {
   private projectId: string;
   private extensionInstanceId: string;
   private readonly client: ExtensionsApiClient;
