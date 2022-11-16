@@ -36,8 +36,10 @@ export class Extensions {
 
   /**
    * The runtime() method returns a new Runtime, which provides methods to modify an extension instance's runtime data.
+   *
+   * This method will throw an error if called outside an Extensions environment.
    * 
-   * @returns A new Runtime object.
+   * @returns A new {@link Runtime} object.
    */
   public runtime(): Runtime {
     return new Runtime(this.client);
@@ -47,7 +49,7 @@ export class Extensions {
 /**
  * Runtime provides methods to modify an extension instance's runtime data.
  */
-class Runtime {
+export class Runtime {
   private projectId: string;
   private extensionInstanceId: string;
   private readonly client: ExtensionsApiClient;

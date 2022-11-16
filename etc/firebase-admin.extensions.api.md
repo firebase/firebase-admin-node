@@ -14,11 +14,19 @@ export class Extensions {
     //
     // (undocumented)
     readonly app: App;
-    // Warning: (ae-forgotten-export) The symbol "Runtime" needs to be exported by the entry point index.d.ts
     runtime(): Runtime;
 }
 
 // @public
 export function getExtensions(app?: App): Extensions;
+
+// @public
+export class Runtime {
+    setFatalError(errorMessage: string): Promise<void>;
+    setProcessingState(state: SettableProcessingState, detailMessage: string): Promise<void>;
+}
+
+// @public
+export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';
 
 ```

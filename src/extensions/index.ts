@@ -25,8 +25,9 @@ import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Extensions } from './extensions';
 
-export { Extensions } from './extensions';
- 
+export { Extensions, Runtime } from './extensions';
+export { SettableProcessingState } from './extensions-api';
+
 /**
   * Gets the {@link Extensions} service for the default app
   * or a given app.
