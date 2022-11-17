@@ -16,22 +16,27 @@
  */
 
 /**
- * SettableProcessingState represents all the processing states that can be set
- * on an Extension instance's runtimeData.
+ * `SettableProcessingState` represents all the processing states that can be set
+ * on an Extension instance's runtime data.
  * 
  * @remarks
- * - NONE: No relevant lifecycle event work has been done. Set this to clear out old statuses.
+ * You can set the following states:
  * 
- * - PROCESSING_COMPLETE: Lifecycle event work completed with no errors.
+ * - `NONE`: No relevant lifecycle event work has been done.
+ *   Set this to clear out old statuses.
  * 
- * - PROCESSING_WARNING: Lifecycle event work succeeded partially,
- *                        or something happened that the user should be warned about.
+ * - `PROCESSING_COMPLETE`: Lifecycle event work completed with no errors.
  * 
- * - PROCESSING_FAILED: Lifecycle event work failed completely,
- *                        but the instance will still work correctly going forward.
+ * - `PROCESSING_WARNING`: Lifecycle event work succeeded partially, or
+ *   something happened that the user should be warned about.
  * 
- * - If the extension instance is in a broken state due to errors, instead set FatalError.
+ * - `PROCESSING_FAILED`: Lifecycle event work failed completely, but the
+ *   instance will still work correctly going forward.
  * 
- * - To report ongoing (non-final) status, use `console.log` or the Cloud Functions logger SDK.
+ * If the extension instance is in a broken state due to errors, instead call
+ * {@link Runtime.setFatalError}.
+ * 
+ * There is no "processing in progress" state. To report the ongoing status of
+ * an extension's function, use `console.log` or the Cloud Functions logger SDK.
  */
 export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';

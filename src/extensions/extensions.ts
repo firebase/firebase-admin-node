@@ -80,9 +80,13 @@ export class Runtime {
    * Sets the processing state of an extension instance.
    *
    * @remarks
-   * Use this method to report the results of a lifecycle event handler. If the 
-   * lifecycle event failed & the extension instance will no longer work 
-   * correctly, use `setFatalError` instead.
+   * Use this method to report the results of a lifecycle event handler.
+   * 
+   * If the lifecycle event failed & the extension instance will no longer work
+   * correctly, use {@link Runtime.setFatalError} instead.
+   * 
+   * To report the status of function calls other than lifecycle event handlers,
+   * use `console.log` or the Cloud Functions logger SDK.
    * 
    * @param state - The state to set the instance to.
    * @param detailMessage - A message explaining the results of the lifecycle function.
