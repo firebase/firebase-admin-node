@@ -36,7 +36,9 @@
  * If the extension instance is in a broken state due to errors, instead call
  * {@link Runtime.setFatalError}.
  * 
- * There is no "processing in progress" state. To report the ongoing status of
- * an extension's function, use `console.log` or the Cloud Functions logger SDK.
+ * The "processing" state gets set automatically when a lifecycle event handler
+ * runs; you can't set it explicitly.
+ * To report the ongoing status of an extension's function, use `console.log`
+ * or the Cloud Functions logger SDK.
  */
 export type SettableProcessingState = 'NONE' | 'PROCESSING_COMPLETE' | 'PROCESSING_WARNING' | 'PROCESSING_FAILED';
