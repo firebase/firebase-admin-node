@@ -37,7 +37,7 @@
  * {@link Runtime.setFatalError}.
  * 
  * The "processing" state gets set automatically when a lifecycle event handler
- * runs; you can't set it explicitly.
+ * starts; you can't set it explicitly.
  * To report the ongoing status of an extension's function, use `console.log`
  * or the Cloud Functions logger SDK.
  */
