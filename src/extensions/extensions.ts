@@ -37,6 +37,7 @@ export class Extensions {
   /**
    * The runtime() method returns a new Runtime, which provides methods to modify an extension instance's runtime data.
    *
+   * @remarks
    * This method will throw an error if called outside an Extensions environment.
    * 
    * @returns A new {@link Runtime} object.
@@ -78,9 +79,14 @@ export class Runtime {
   /**
    * Sets the processing state of an extension instance.
    *
-   * Use this method to report the results of a lifecycle event handler. If the 
-   * lifecycle event failed & the extension instance will no longer work 
-   * correctly, use `setFatalError` instead.
+   * @remarks
+   * Use this method to report the results of a lifecycle event handler.
+   * 
+   * If the lifecycle event failed & the extension instance will no longer work
+   * correctly, use {@link Runtime.setFatalError} instead.
+   * 
+   * To report the status of function calls other than lifecycle event handlers,
+   * use `console.log` or the Cloud Functions logger SDK.
    * 
    * @param state - The state to set the instance to.
    * @param detailMessage - A message explaining the results of the lifecycle function.
@@ -101,6 +107,7 @@ export class Runtime {
   /**
    * Reports a fatal error while running a lifecycle event handler.
    *
+   * @remarks
    * Call this method when a lifecycle event handler fails in a way that makes 
    * the Instance inoperable.
    * If the lifecycle event failed but the instance will still work as expected,
