@@ -17,7 +17,7 @@
 
 /**
  * SettableProcessingState represents all the Processing states that can be set
- * on an ExtensionInstance's runtimeData.
+ * on an Extension instance's runtimeData.
  * 
  * @remarks
  * - NONE: No relevant lifecycle event work has been done. Set this to clear out old statuses.
