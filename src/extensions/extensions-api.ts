@@ -16,7 +16,7 @@
  */
 
 /**
- * SettableProcessingState represents all the Processing states that can be set
+ * SettableProcessingState represents all the processing states that can be set
  * on an Extension instance's runtimeData.
  * 
  * @remarks
