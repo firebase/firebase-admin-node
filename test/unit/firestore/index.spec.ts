@@ -88,12 +88,6 @@ describe('Firestore', () => {
   });
 
   describe('initializeFirestore()', () => {
-    it('should throw when default app is not available', () => {
-      expect(() => {
-        initializeFirestore(mockApp);
-      }).to.throw('The default Firebase app does not exist.');
-    });
-
     it('should reject given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
