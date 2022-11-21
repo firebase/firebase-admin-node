@@ -23,22 +23,44 @@ import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
 import { App } from '../app';
 
+/**
+ * Settings to pass to the Firestore constructor.
+ * 
+ * @public
+ */
+export interface FirestoreSettings {
+  /**
+   * Use HTTP/1.1 REST transport where possible.
+   * 
+   * @defaultValue `undefined`
+   */
+  preferRest?: boolean;
+}
+
 export class FirestoreService {
 
   private readonly appInternal: App;
   private readonly databases: Map<string, Firestore> = new Map();
+  private readonly firestoreSettings: FirestoreSettings;
 
-  constructor(app: App) {
+  constructor(app: App, firestoreSettings?: FirestoreSettings) {
     this.appInternal = app;
+    this.firestoreSettings = firestoreSettings ?? {};
   }
 
   getDatabase(databaseId: string): Firestore {
     let database = this.databases.get(databaseId);
     if (database === undefined) {
-      database = initFirestore(this.app, databaseId);
+      database = initFirestore(this.app, databaseId, this.firestoreSettings);
       this.databases.set(databaseId, database);
     }
     return database;
+  }
+
+  checkIfSameSettings(firestoreSettings: FirestoreSettings): boolean {
+    // If we start passing more settings to Firestore constructor,
+    // replace this with deep equality check.
+    return (firestoreSettings.preferRest === this.firestoreSettings.preferRest);
   }
 
   /**
@@ -51,7 +73,7 @@ export class FirestoreService {
   }
 }
 
-export function getFirestoreOptions(app: App): Settings {
+export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSettings): Settings {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
       code: 'invalid-argument',
@@ -63,6 +85,7 @@ export function getFirestoreOptions(app: App): Settings {
   const credential = app.options.credential;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: firebaseVersion } = require('../../package.json');
+  const preferRest = firestoreSettings?.preferRest;
   if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
@@ -73,12 +96,15 @@ export function getFirestoreOptions(app: App): Settings {
       // guaranteed to be available.
       projectId: projectId!,
       firebaseVersion,
+      preferRest,
     };
   } else if (isApplicationDefault(app.options.credential)) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion } : { firebaseVersion };
+    return validator.isNonEmptyString(projectId)
+      ? { projectId, firebaseVersion, preferRest }
+      : { firebaseVersion, preferRest };
   }
 
   throw new FirebaseFirestoreError({
@@ -89,8 +115,8 @@ export function getFirestoreOptions(app: App): Settings {
   });
 }
 
-function initFirestore(app: App, databaseId: string): Firestore {
-  const options = getFirestoreOptions(app);
+function initFirestore(app: App, databaseId: string, firestoreSettings?: FirestoreSettings): Firestore {
+  const options = getFirestoreOptions(app, firestoreSettings);
   options.databaseId = databaseId;
   let firestoreDatabase: typeof Firestore;
   try {
