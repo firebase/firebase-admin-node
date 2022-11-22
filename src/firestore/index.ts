@@ -158,7 +158,7 @@ export function getFirestore(
  * 
  * @param settings - Settings object to be passed to the constructor.
  *
- * @returns The `Firestore` service associated with the provided app.
+ * @returns The `Firestore` service associated with the provided app and settings.
  */
 export function initializeFirestore(app: App, settings?: FirestoreSettings): Firestore;
 
