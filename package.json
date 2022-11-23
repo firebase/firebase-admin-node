@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "11.2.0",
+  "version": "11.3.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -74,6 +74,9 @@
       "eventarc": [
         "lib/eventarc"
       ],
+      "extensions": [
+        "lib/extensions"
+      ],
       "database": [
         "lib/database"
       ],
@@ -135,6 +138,11 @@
       "types": "./lib/eventarc/index.d.ts",
       "require": "./lib/eventarc/index.js",
       "import": "./lib/esm/eventarc/index.js"
+    },
+    "./extensions": {
+      "types": "./lib/extensions/index.d.ts",
+      "require": "./lib/extensions/index.js",
+      "import": "./lib/esm/extensions/index.js"
     },
     "./firestore": {
       "types": "./lib/firestore/index.d.ts",
@@ -202,7 +210,7 @@
     "@google-cloud/storage": "^6.5.2"
   },
   "devDependencies": {
-    "@firebase/api-documenter": "^0.2.0",
+    "@firebase/api-documenter": "^0.3.0",
     "@firebase/app-compat": "^0.1.2",
     "@firebase/auth-compat": "^0.2.5",
     "@firebase/auth-types": "^0.11.0",
