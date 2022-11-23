@@ -478,7 +478,8 @@ class ImpersonatedServiceAccount {
 export function isApplicationDefault(credential?: Credential): boolean {
   return credential instanceof ComputeEngineCredential ||
     (credential instanceof ServiceAccountCredential && credential.implicit) ||
-    (credential instanceof RefreshTokenCredential && credential.implicit);
+    (credential instanceof RefreshTokenCredential && credential.implicit) ||
+    (credential instanceof ImpersonatedServiceAccountCredential && credential.implicit);
 }
 
 export function getApplicationDefault(httpAgent?: Agent): Credential {
