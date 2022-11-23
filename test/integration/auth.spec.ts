@@ -1247,6 +1247,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       // Add random phone number / code pairs.
       testPhoneNumbers: {
@@ -1264,6 +1270,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       // These test phone numbers will not be checked when running integration
       // tests against the emulator suite and are ignored in auth emulator
@@ -1284,6 +1296,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'DISABLED',
         factorIds: [],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       // Test phone numbers will not be checked when running integration tests
       // against emulator suite. For more information, please refer to:
@@ -1302,6 +1320,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       smsRegionConfig: {
         allowByDefault: {
