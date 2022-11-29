@@ -32,6 +32,12 @@ export interface FirestoreSettings {
   /**
    * Use HTTP/1.1 REST transport where possible.
    * 
+   * `preferRest` will force the use of HTTP/1.1 REST transport until a method
+   * that requires gRPC is called. When a method requires gRPC, this Firestore
+   * client will load dependent gRPC libraries and then use gRPC transport for
+   * all communication from that point forward. Currently the only operation
+   * that requires gRPC is creating a snapshot listener using `onSnapshot()`.
+   * 
    * @defaultValue `undefined`
    */
   preferRest?: boolean;
@@ -41,26 +47,41 @@ export class FirestoreService {
 
   private readonly appInternal: App;
   private readonly databases: Map<string, Firestore> = new Map();
-  private readonly firestoreSettings: FirestoreSettings;
+  private readonly firestoreSettings: Map<string, FirestoreSettings> = new Map();
 
-  constructor(app: App, firestoreSettings?: FirestoreSettings) {
+  constructor(app: App) {
     this.appInternal = app;
-    this.firestoreSettings = firestoreSettings ?? {};
   }
 
-  getDatabase(databaseId: string): Firestore {
+  getDatabase(databaseId: string, settings?: FirestoreSettings): Firestore {
+    settings ??= {};
     let database = this.databases.get(databaseId);
     if (database === undefined) {
-      database = initFirestore(this.app, databaseId, this.firestoreSettings);
+      database = initFirestore(this.app, databaseId, settings);
       this.databases.set(databaseId, database);
+      this.firestoreSettings.set(databaseId, settings);
+    } else {
+      if (!this.checkIfSameSettings(databaseId, settings)) {
+        throw new FirebaseFirestoreError({
+          code: 'failed-precondition',
+          message: 'initializeFirestore() has already been called with ' +
+            'different options. To avoid this error, call initializeFirestore() with the ' +
+            'same options as when it was originally called, or call getFirestore() to return the' +
+            ' already initialized instance.'
+        });    
+      }
     }
     return database;
   }
 
-  checkIfSameSettings(firestoreSettings: FirestoreSettings): boolean {
+  private checkIfSameSettings(databaseId: string, firestoreSettings: FirestoreSettings): boolean {
     // If we start passing more settings to Firestore constructor,
     // replace this with deep equality check.
-    return (firestoreSettings.preferRest === this.firestoreSettings.preferRest);
+    const existingSettings = this.firestoreSettings.get(databaseId);
+    if (!existingSettings) {
+      return true;
+    }
+    return (existingSettings.preferRest === firestoreSettings.preferRest);
   }
 
   /**

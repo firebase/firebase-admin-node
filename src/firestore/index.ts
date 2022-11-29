@@ -25,7 +25,6 @@ import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirestoreService, FirestoreSettings } from './firestore-internal';
 import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
-import { FirebaseFirestoreError } from '../utils/error';
 
 export {
   AddPrefixToKeys,
@@ -183,17 +182,7 @@ export function initializeFirestore(
   databaseId ??= DEFAULT_DATABASE_ID;
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   const firestoreService = firebaseApp.getOrInitService(
-    'firestore', (app) => new FirestoreService(app, settings));
+    'firestore', (app) => new FirestoreService(app));
 
-  if (!firestoreService.checkIfSameSettings(settings)) {
-    throw new FirebaseFirestoreError({
-      code: 'failed-precondition',
-      message: 'initializeFirestore() has already been called with ' +
-        'different options. To avoid this error, call initializeFirestore() with the ' +
-        'same options as when it was originally called, or call getFirestore() to return the' +
-        ' already initialized instance.'
-    });
-  }
-
-  return firestoreService.getDatabase(databaseId);
+  return firestoreService.getDatabase(databaseId, settings);
 }
