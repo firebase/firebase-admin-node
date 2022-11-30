@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig
 } from './auth-config';
 
 /**
@@ -59,6 +59,8 @@ export interface UpdateTenantRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -72,8 +74,9 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   displayName?: string;
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: {[key: string]: string};
+  testPhoneNumbers?: { [key: string]: string };
   smsRegionConfig?: SmsRegionConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /** The tenant server response interface. */
@@ -84,8 +87,9 @@ export interface TenantServerResponse {
   enableEmailLinkSignin?: boolean;
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: {[key: string]: string};
+  testPhoneNumbers?: { [key: string]: string };
   smsRegionConfig?: SmsRegionConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -125,7 +129,7 @@ export class Tenant {
   /**
    * The map containing the test phone number / code pairs for the tenant.
    */
-  public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
+  public readonly testPhoneNumbers?: { [phoneNumber: string]: string };
 
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
@@ -136,6 +140,8 @@ export class Tenant {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+
+  public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -169,6 +175,10 @@ export class Tenant {
     if (typeof tenantOptions.smsRegionConfig !== 'undefined') {
       request.smsRegionConfig = tenantOptions.smsRegionConfig;
     }
+    if (typeof tenantOptions.emailPrivacyConfig !== 'undefined') {
+      request.emailPrivacyConfig = tenantOptions.emailPrivacyConfig;
+    }
+    //console.log("REQUEST==", JSON.stringify(request));
     return request;
   }
 
@@ -203,6 +213,7 @@ export class Tenant {
       multiFactorConfig: true,
       testPhoneNumbers: true,
       smsRegionConfig: true,
+      emailPrivacyConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -222,7 +233,7 @@ export class Tenant {
     }
     // Validate displayName type if provided.
     if (typeof request.displayName !== 'undefined' &&
-        !validator.isNonEmptyString(request.displayName)) {
+      !validator.isNonEmptyString(request.displayName)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `"${label}.displayName" must be a valid non-empty string.`,
@@ -235,7 +246,7 @@ export class Tenant {
     }
     // Validate test phone numbers if provided.
     if (typeof request.testPhoneNumbers !== 'undefined' &&
-        request.testPhoneNumbers !== null) {
+      request.testPhoneNumbers !== null) {
       validateTestPhoneNumbers(request.testPhoneNumbers);
     } else if (request.testPhoneNumbers === null && createRequest) {
       // null allowed only for update operations.
@@ -250,8 +261,12 @@ export class Tenant {
       MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
     }
     // Validate SMS Regions Config if provided.
-    if (typeof request.smsRegionConfig != 'undefined') {
+    if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
+    }
+
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
+      EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
   }
 
@@ -290,6 +305,9 @@ export class Tenant {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = deepCopy(response.smsRegionConfig);
     }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -320,6 +338,7 @@ export class Tenant {
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -329,6 +348,9 @@ export class Tenant {
     }
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.emailPrivacyConfig === 'undefined') {
+      delete json.emailPrivacyConfig;
     }
     return json;
   }

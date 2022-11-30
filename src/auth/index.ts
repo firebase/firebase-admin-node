@@ -91,6 +91,7 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
+  EmailPrivacyConfig,
 } from './auth-config';
 
 export {

@@ -59,8 +59,10 @@ export class ProjectConfigManager {
    * @returns A promise fulfilled with the updated project config.
    */
   public updateProjectConfig(projectConfigOptions: UpdateProjectConfigRequest): Promise<ProjectConfig> {
+    console.log("UPDATE_PROJECT_CONFIG==", JSON.stringify(projectConfigOptions));
     return this.authRequestHandler.updateProjectConfig(projectConfigOptions)
       .then((response: ProjectConfigServerResponse) => {
+        console.log("RESPONSE_PROJECT_CONFIG==", JSON.stringify(response));
         return new ProjectConfig(response);
       })
   }

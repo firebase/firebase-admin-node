@@ -1187,6 +1187,9 @@ describe('admin.auth', () => {
       }
     });
     const projectConfigOption1: UpdateProjectConfigRequest = {
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: false,
+      },
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
@@ -1194,6 +1197,9 @@ describe('admin.auth', () => {
       },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
+      },
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
@@ -1201,6 +1207,9 @@ describe('admin.auth', () => {
       },
     };
     const expectedProjectConfig1: any = {
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: false,
+      },
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
@@ -1208,6 +1217,9 @@ describe('admin.auth', () => {
       },
     };
     const expectedProjectConfig2: any = {
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
+      },
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
@@ -1307,6 +1319,9 @@ describe('admin.auth', () => {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
       },
     };
 
@@ -1713,6 +1728,7 @@ describe('admin.auth', () => {
     it('updateTenant() should resolve with the updated tenant', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       expectedUpdatedTenant2.tenantId = createdTenantId;
+      //console.log("UPDATE_TENANT=", JSON.stringify(expectedUpdatedTenant2));
       const updatedOptions: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant.displayName,
         emailSignInConfig: {
@@ -1730,6 +1746,7 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        emailPrivacyConfig: deepCopy(expectedUpdatedTenant2.emailPrivacyConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
@@ -1764,6 +1781,28 @@ describe('admin.auth', () => {
       const updatedOptions2: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant2.displayName,
         smsRegionConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update tenant when Email Privacy Config is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        emailPrivacyConfig: undefined,
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)

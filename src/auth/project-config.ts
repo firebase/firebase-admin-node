@@ -18,6 +18,8 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
+  EmailPrivacyConfig,
+  EmailPrivacyAuthConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -29,6 +31,7 @@ export interface UpdateProjectConfigRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -37,6 +40,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -45,6 +49,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -57,6 +62,7 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
@@ -72,6 +78,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
+      emailPrivacyConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -86,6 +93,10 @@ export class ProjectConfig {
     if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
+
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
+      EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -97,6 +108,7 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
+    console.log("BUILD_SERVER_REQUEST(PROJECT)==", JSON.stringify(configOptions));
     return configOptions as ProjectConfigClientRequest;
   }
 
@@ -111,6 +123,9 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = response.emailPrivacyConfig;
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -119,11 +134,16 @@ export class ProjectConfig {
    */
   public toJSON(): object {
     // JSON serialization
+    console.log("PRINT==", this.emailPrivacyConfig);
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.emailPrivacyConfig === 'undefined') {
+      delete json.emailPrivacyConfig;
     }
     return json;
   }

@@ -35,13 +35,13 @@ const expect = chai.expect;
 describe('Tenant', () => {
   const smsAllowByDefault = {
     allowByDefault: {
-      disallowedRegions: [ 'AC', 'AD' ],
+      disallowedRegions: ['AC', 'AD'],
     },
   };
 
   const smsAllowlistOnly = {
     allowlistOnly: {
-      allowedRegions: [ 'AC', 'AD' ],
+      allowedRegions: ['AC', 'AD'],
     },
   };
 
@@ -59,6 +59,9 @@ describe('Tenant', () => {
       '+16505550676': '985235',
     },
     smsRegionConfig: smsAllowByDefault,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    }
   };
 
   const clientRequest: UpdateTenantRequest = {
@@ -76,6 +79,9 @@ describe('Tenant', () => {
       '+16505550676': '985235',
     },
     smsRegionConfig: smsAllowByDefault,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    }
   };
 
   const serverRequestWithoutMfa: TenantServerResponse = {
@@ -174,7 +180,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -182,7 +188,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -190,7 +196,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -211,6 +217,30 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid EmailPrivacyConfig parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
       it('should not throw on valid client request object', () => {
@@ -323,7 +353,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -331,7 +361,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -339,7 +369,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -360,6 +390,30 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid EmailPrivacyConfig parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -449,6 +503,11 @@ describe('Tenant', () => {
         deepCopy(clientRequest.smsRegionConfig));
     });
 
+    it('should set readonly property emailPrivacyConfig', () => {
+      expect(tenant.emailPrivacyConfig).to.deep.equal(
+        deepCopy(clientRequest.emailPrivacyConfig));
+    });
+
     it('should throw when no tenant ID is provided', () => {
       const invalidOptions = deepCopy(serverRequest);
       // Use resource name that does not include a tenant ID.
@@ -488,6 +547,7 @@ describe('Tenant', () => {
         multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
         smsRegionConfig: deepCopy(clientRequest.smsRegionConfig),
+        emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
       });
     });
 
@@ -496,6 +556,7 @@ describe('Tenant', () => {
       delete serverRequestCopyWithoutMfa.mfaConfig;
       delete serverRequestCopyWithoutMfa.testPhoneNumbers;
       delete serverRequestCopyWithoutMfa.smsRegionConfig;
+      delete serverRequestCopyWithoutMfa.emailPrivacyConfig;
 
       expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
