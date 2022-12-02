@@ -2210,7 +2210,6 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, true);
-      //console.log("PRINTING_REQUEST===", JSON.stringify(request));
       return this.invokeRequestHandler(this.authResourceUrlBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
