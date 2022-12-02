@@ -267,6 +267,8 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorProviderConfig" needs to be exported by the entry point index.d.ts
+    providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }
 
@@ -336,6 +338,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    // (undocumented)
+    readonly multiFactorConfig?: MultiFactorConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -434,6 +438,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
