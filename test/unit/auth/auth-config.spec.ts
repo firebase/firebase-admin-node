@@ -312,6 +312,150 @@ describe('MultiFactorAuthConfig', () => {
         }).to.throw(`"${factorId}" is not a valid "AuthFactorType".`);
       });
     });
+
+    it('should return expected server request on valid provider Config with state', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
+      });
+    });
+
+    it('should return expected server request on DISABLED state', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+          },
+        ],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+          },
+        ],
+      });
+    });
+
+    it('should return expected server request on valid provider Config with defined adjacentIntervals', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
+      });
+    });
+
+    it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        factorIds: [],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        enabledProviders: [],
+      });
+    });
+
+    const invalidProviderConfigs = [NaN, 0, 1, '', 'a', {}, { a: 1 }, _.noop, true, false,]
+    invalidProviderConfigs.forEach((config) => {
+      it('should throw an error for invalid providerConfigs type:' + JSON.stringify(config), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: config,
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfigs."')
+      });
+    });
+    const invalidProviderConfigObjects = [undefined, NaN, 0, 1, 'a', [], true, false,]
+    invalidProviderConfigObjects.forEach((object) => {
+      it('should throw an error for invalid providerConfig type:' + JSON.stringify(object), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              object
+            ],
+          } as any);
+        }).to.throw(`"${object}" is not a valid "MultiFactorProviderConfig" type.`)
+      });
+    });
+    invalidState.forEach((state) => {
+      it('should throw an error for invalid providerConfig.state type', () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              {
+                state,
+                totpProviderConfig: {},
+              },
+            ],
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".')
+      });
+    });
+    invalidProviderConfigObjects.forEach((object) => {
+      it('should throw an error for invalid totpProviderConfig', () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              {
+                state: 'ENABLED',
+              },
+            ],
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.')
+      });
+    });
+    const invalidAdjacentIntervals = [null, NaN, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false,]
+    invalidAdjacentIntervals.forEach((interval) => {
+      it('should throw an error for invalid adjacentIntervals type: ' + JSON.stringify(interval), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              {
+                state: 'ENABLED',
+                totpProviderConfig: {
+                  adjacentIntervals: interval,
+                },
+              },
+            ],
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.')
+      });
+    });
   });
 });
 

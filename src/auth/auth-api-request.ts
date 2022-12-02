@@ -2060,7 +2060,6 @@ const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
 const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
   // Set response validator.
   .setResponseValidator((response: any) => {
-    console.log("RESPONSE:===", JSON.stringify(response));
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
       !Tenant.getTenantIdFromResourceName(response.name)) {

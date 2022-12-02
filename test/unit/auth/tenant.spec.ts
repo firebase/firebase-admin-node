@@ -121,7 +121,7 @@ describe('Tenant', () => {
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
-      it('should return the expected server request with multi-factor and phone config', () => {
+      it('should return the expected server request with multi-factor, phone and provider config', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         delete (tenantOptionsServerRequest as any).name;

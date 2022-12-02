@@ -1247,12 +1247,13 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {},
-          },
-        ],
+        // TODO: Once createTenant() is implemented on the backend, populate providerConfigs
+        // providerConfigs: [
+        //   {
+        //     state: 'ENABLED',
+        //     totpProviderConfig: {},
+        //   },
+        // ],
       },
       // Add random phone number / code pairs.
       testPhoneNumbers: {
@@ -1270,12 +1271,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {},
-          },
-        ],
+        providerConfigs: [],
+        // TODO: Once createTenant() is implemented on the backend, populate providerConfigs
+        // providerConfigs: [
+        //   {
+        //     state: 'ENABLED',
+        //     totpProviderConfig: {},
+        //   },
+        // ],
       },
       // These test phone numbers will not be checked when running integration
       // tests against the emulator suite and are ignored in auth emulator
@@ -1299,7 +1302,9 @@ describe('admin.auth', () => {
         providerConfigs: [
           {
             state: 'ENABLED',
-            totpProviderConfig: {},
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
           },
         ],
       },
@@ -1788,6 +1793,28 @@ describe('admin.auth', () => {
       const updatedOptions2: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant2.displayName,
         smsRegionConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update tenant when MultiFactorConfig is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: undefined,
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)

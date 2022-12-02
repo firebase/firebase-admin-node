@@ -508,7 +508,7 @@ export interface MultiFactorConfig {
    */
   factorIds?: AuthFactorType[];
   /**
-   * A list of multi-factor provider specific config.
+   * A list of multi-factor provider specific config. New MFA providers (except phone) will indicate enablement/disablement through this field.
    */
   providerConfigs?: MultiFactorProviderConfig[];
 }
@@ -524,8 +524,8 @@ export interface MultiFactorProviderConfig {
 
 export interface TotpMultiFactorProviderConfig {
   /**
-   *  The allowed number of adjacent intervals that will be used for verification
-  *  to avoid clock skew.
+    *  The allowed number of adjacent intervals that will be used for verification
+    *  to avoid clock skew.
    */
   adjacentIntervals?: number;
 }
@@ -567,12 +567,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       }
     }
     if (Object.prototype.hasOwnProperty.call(options, 'providerConfigs')) {
-      (options.providerConfigs || []).forEach((providerConfig) => {
-        if (typeof request.providerConfigs === 'undefined') {
-          request.providerConfigs = []
-        }
-        request.providerConfigs.push(providerConfig);
-      });
+      request.providerConfigs = options.providerConfigs;
     }
     return request;
   }
@@ -582,7 +577,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    *
    * @param options - The options object to validate.
    */
-  private static validate(options: MultiFactorConfig): void {
+  public static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
@@ -641,22 +636,29 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       }
       //Validate content of array.
       options.providerConfigs.forEach((multiFactorProviderConfig) => {
-        if (typeof multiFactorProviderConfig === 'undefined') {
+        if (typeof multiFactorProviderConfig === 'undefined' || !validator.isObject(multiFactorProviderConfig)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfigType".`
+            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfig" type.`
           )
         }
-        if (typeof multiFactorProviderConfig.state !== 'undefined' &&
-          multiFactorProviderConfig.state !== 'ENABLED' &&
-          multiFactorProviderConfig.state !== 'DISABLED') {
+        if (typeof multiFactorProviderConfig.state === 'undefined' ||
+          (multiFactorProviderConfig.state !== 'ENABLED' &&
+            multiFactorProviderConfig.state !== 'DISABLED')) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
             '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
           )
         }
-        if (typeof multiFactorProviderConfig.totpProviderConfig !== 'undefined') {
-          if (multiFactorProviderConfig.totpProviderConfig.adjacentIntervals !== undefined &&
+        // Since TOTP is the only provider config available right now, not defining it will lead into an error
+        if (multiFactorProviderConfig.state === 'ENABLED') {
+          if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
+            )
+          }
+          if (typeof multiFactorProviderConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
             !validator.isNumber(multiFactorProviderConfig.totpProviderConfig.adjacentIntervals)) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_ARGUMENT,

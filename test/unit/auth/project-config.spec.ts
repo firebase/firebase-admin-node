@@ -36,15 +36,26 @@ describe('ProjectConfig', () => {
   const serverResponse: ProjectConfigServerResponse = {
     smsRegionConfig: {
       allowByDefault: {
-        disallowedRegions: [ 'AC', 'AD' ],
+        disallowedRegions: ['AC', 'AD'],
       },
+    },
+    multiFactorConfig: {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
     },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
     smsRegionConfig: {
       allowByDefault: {
-        disallowedRegions: [ 'AC', 'AD' ],
+        disallowedRegions: ['AC', 'AD'],
       },
     },
   };
@@ -52,7 +63,7 @@ describe('ProjectConfig', () => {
   const updateProjectConfigRequest2: UpdateProjectConfigRequest = {
     smsRegionConfig: {
       allowlistOnly: {
-        allowedRegions: [ 'AC', 'AD' ],
+        allowedRegions: ['AC', 'AD'],
       },
     },
   };
@@ -60,7 +71,7 @@ describe('ProjectConfig', () => {
   const updateProjectConfigRequest3: any = {
     smsRegionConfig: {
       allowlistOnly: {
-        allowedRegions: [ 'AC', 'AD' ],
+        allowedRegions: ['AC', 'AD'],
       },
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
@@ -89,7 +100,7 @@ describe('ProjectConfig', () => {
 
       it('should throw on invalid allowlistOnly attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest2) as any;
-        configOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
+        configOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -97,7 +108,7 @@ describe('ProjectConfig', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
+        configOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -167,10 +178,25 @@ describe('ProjectConfig', () => {
     it('should set readonly property smsRegionConfig', () => {
       const expectedSmsRegionConfig = {
         allowByDefault: {
-          disallowedRegions: [ 'AC', 'AD' ],
+          disallowedRegions: ['AC', 'AD'],
         },
       };
       expect(projectConfig.smsRegionConfig).to.deep.equal(expectedSmsRegionConfig);
+    });
+
+    it('should set readonly property multiFactorConfig', () => {
+      const expectedMultiFactorConfig = {
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
+      };
+      expect(projectConfig.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
     });
   });
 
@@ -178,14 +204,15 @@ describe('ProjectConfig', () => {
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
-        smsRegionConfig: deepCopy(serverResponse.smsRegionConfig)
+        smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
+        multiFactorConfig: deepCopy(serverResponse.multiFactorConfig)
       });
     });
 
     it('should not populate optional fields if not available', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
       delete serverResponseOptionalCopy.smsRegionConfig;
-
+      delete serverResponseOptionalCopy.multiFactorConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({});
     });
   });
