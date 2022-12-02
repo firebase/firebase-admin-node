@@ -508,7 +508,8 @@ export interface MultiFactorConfig {
    */
   factorIds?: AuthFactorType[];
   /**
-   * A list of multi-factor provider specific config. New MFA providers (except phone) will indicate enablement/disablement through this field.
+   * A list of multi-factor provider specific config. 
+   * New MFA providers (except phone) will indicate enablement/disablement through this field.
    */
   providerConfigs?: MultiFactorProviderConfig[];
 }

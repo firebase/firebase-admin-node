@@ -424,19 +424,17 @@ describe('MultiFactorAuthConfig', () => {
         }).to.throw('"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".')
       });
     });
-    invalidProviderConfigObjects.forEach((object) => {
-      it('should throw an error for invalid totpProviderConfig', () => {
-        expect(() => {
-          MultiFactorAuthConfig.buildServerRequest({
-            state: 'DISABLED',
-            providerConfigs: [
-              {
-                state: 'ENABLED',
-              },
-            ],
-          } as any);
-        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.')
-      });
+    it('should throw an error for undefined totpProviderConfig', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              state: 'ENABLED',
+            },
+          ],
+        } as any);
+      }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.')
     });
     const invalidAdjacentIntervals = [null, NaN, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false,]
     invalidAdjacentIntervals.forEach((interval) => {
