@@ -509,7 +509,7 @@ class AsyncHttpCall {
         socket.setTimeout(timeout, timeoutCallback);
         socket.on('end', () => {
           socket.setTimeout(0);
-          socket.setMaxListeners(socket.getMaxListeners() - 1);
+          socket.setMaxListeners(Math.max(socket.getMaxListeners() - 1, 0));
         });
       });
     }
