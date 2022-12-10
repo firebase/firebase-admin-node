@@ -107,7 +107,7 @@ export function getFirestore(): Firestore;
  * const otherFirestore = getFirestore(app);
  * ```
  *
- * @param App - whose `Firestore` service to
+ * @param App - which `Firestore` service to
  *   return. If not provided, the default `Firestore` service will be returned.
  *
  * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
@@ -152,7 +152,7 @@ export function getFirestore(
  * const otherFirestore = initializeFirestore(app, {preferRest: true});
  * ```
  *
- * @param App - whose `Firestore` service to
+ * @param App - which `Firestore` service to
  *   return. If not provided, the default `Firestore` service will be returned.
  * 
  * @param settings - Settings object to be passed to the constructor.
