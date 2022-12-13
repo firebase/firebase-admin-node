@@ -52,7 +52,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
-  multiFactorConfig?: MultiFactorConfig;
+  multiFactorAuthConfig?: MultiFactorConfig;
 }
 
 /**
@@ -65,6 +65,11 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The Multi Factor Config for the project.
+   * Configures the multi factor settings for the project.
+   * TOTP and Phone Multi factor are supported as of now
+   */
   public readonly multiFactorConfig?: MultiFactorConfig;
   // /**
   //  * The multi-factor auth configuration.
@@ -87,7 +92,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
-      multiFactorConfig: true,
+      multiFactorAuthConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -104,8 +109,8 @@ export class ProjectConfig {
     }
 
     // Validate Multi Factor Config if provided
-    if (typeof request.multiFactorConfig !== 'undefined') {
-      MultiFactorAuthConfig.validate(request.multiFactorConfig);
+    if (typeof request.multiFactorAuthConfig !== 'undefined') {
+      MultiFactorAuthConfig.validate(request.multiFactorAuthConfig);
     }
   }
 

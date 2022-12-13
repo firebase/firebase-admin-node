@@ -313,7 +313,7 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
-    it('should return expected server request on valid provider Config with state', () => {
+    it('should build server request with TOTP enabled', () => {
       expect(MultiFactorAuthConfig.buildServerRequest({
         state: 'DISABLED',
         providerConfigs: [
@@ -333,7 +333,7 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
-    it('should return expected server request on DISABLED state', () => {
+    it('should build server request with TOTP disabled', () => {
       expect(MultiFactorAuthConfig.buildServerRequest({
         state: 'DISABLED',
         providerConfigs: [
@@ -351,7 +351,7 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
-    it('should return expected server request on valid provider Config with defined adjacentIntervals', () => {
+    it('should return expected server request on valid TOTP provider config', () => {
       expect(MultiFactorAuthConfig.buildServerRequest({
         state: 'DISABLED',
         providerConfigs: [

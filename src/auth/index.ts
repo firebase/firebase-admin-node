@@ -80,6 +80,7 @@ export {
   MultiFactorConfigState,
   MultiFactorCreateSettings,
   MultiFactorUpdateSettings,
+  MultiFactorProviderConfig,
   OAuthResponseType,
   OIDCAuthProviderConfig,
   OIDCUpdateAuthProviderRequest,

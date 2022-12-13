@@ -267,7 +267,6 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
-    // Warning: (ae-forgotten-export) The symbol "MultiFactorProviderConfig" needs to be exported by the entry point index.d.ts
     providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }

@@ -715,7 +715,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     return {
       state: this.state,
       factorIds: this.factorIds,
-      providerConfigs: this.providerConfigs
+      providerConfigs: this.providerConfigs,
     };
   }
 }
