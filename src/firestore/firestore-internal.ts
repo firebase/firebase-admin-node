@@ -23,22 +23,65 @@ import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
 import { App } from '../app';
 
+/**
+ * Settings to pass to the Firestore constructor.
+ * 
+ * @public
+ */
+export interface FirestoreSettings {
+  /**
+   * Use HTTP/1.1 REST transport where possible.
+   * 
+   * `preferRest` will force the use of HTTP/1.1 REST transport until a method
+   * that requires gRPC is called. When a method requires gRPC, this Firestore
+   * client will load dependent gRPC libraries and then use gRPC transport for
+   * all communication from that point forward. Currently the only operation
+   * that requires gRPC is creating a snapshot listener using `onSnapshot()`.
+   * 
+   * @defaultValue `undefined`
+   */
+  preferRest?: boolean;
+}
+
 export class FirestoreService {
 
   private readonly appInternal: App;
   private readonly databases: Map<string, Firestore> = new Map();
+  private readonly firestoreSettings: Map<string, FirestoreSettings> = new Map();
 
   constructor(app: App) {
     this.appInternal = app;
   }
 
-  getDatabase(databaseId: string): Firestore {
+  getDatabase(databaseId: string, settings?: FirestoreSettings): Firestore {
+    settings ??= {};
     let database = this.databases.get(databaseId);
     if (database === undefined) {
-      database = initFirestore(this.app, databaseId);
+      database = initFirestore(this.app, databaseId, settings);
       this.databases.set(databaseId, database);
+      this.firestoreSettings.set(databaseId, settings);
+    } else {
+      if (!this.checkIfSameSettings(databaseId, settings)) {
+        throw new FirebaseFirestoreError({
+          code: 'failed-precondition',
+          message: 'initializeFirestore() has already been called with ' +
+            'different options. To avoid this error, call initializeFirestore() with the ' +
+            'same options as when it was originally called, or call getFirestore() to return the' +
+            ' already initialized instance.'
+        });    
+      }
     }
     return database;
+  }
+
+  private checkIfSameSettings(databaseId: string, firestoreSettings: FirestoreSettings): boolean {
+    // If we start passing more settings to Firestore constructor,
+    // replace this with deep equality check.
+    const existingSettings = this.firestoreSettings.get(databaseId);
+    if (!existingSettings) {
+      return true;
+    }
+    return (existingSettings.preferRest === firestoreSettings.preferRest);
   }
 
   /**
@@ -51,7 +94,7 @@ export class FirestoreService {
   }
 }
 
-export function getFirestoreOptions(app: App): Settings {
+export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSettings): Settings {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
       code: 'invalid-argument',
@@ -63,6 +106,7 @@ export function getFirestoreOptions(app: App): Settings {
   const credential = app.options.credential;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: firebaseVersion } = require('../../package.json');
+  const preferRest = firestoreSettings?.preferRest;
   if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
@@ -73,12 +117,15 @@ export function getFirestoreOptions(app: App): Settings {
       // guaranteed to be available.
       projectId: projectId!,
       firebaseVersion,
+      preferRest,
     };
   } else if (isApplicationDefault(app.options.credential)) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion } : { firebaseVersion };
+    return validator.isNonEmptyString(projectId)
+      ? { projectId, firebaseVersion, preferRest }
+      : { firebaseVersion, preferRest };
   }
 
   throw new FirebaseFirestoreError({
@@ -89,8 +136,8 @@ export function getFirestoreOptions(app: App): Settings {
   });
 }
 
-function initFirestore(app: App, databaseId: string): Firestore {
-  const options = getFirestoreOptions(app);
+function initFirestore(app: App, databaseId: string, firestoreSettings?: FirestoreSettings): Firestore {
+  const options = getFirestoreOptions(app, firestoreSettings);
   options.databaseId = databaseId;
   let firestoreDatabase: typeof Firestore;
   try {
