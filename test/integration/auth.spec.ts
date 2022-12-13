@@ -33,10 +33,13 @@ import {
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
   UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
 } from '../../lib/auth/index';
+import * as sinon from 'sinon';
+import * as sinonChai from 'sinon-chai';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 chai.should();
+chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
@@ -103,6 +106,7 @@ function clientAuth(): FirebaseAuth {
 describe('admin.auth', () => {
 
   let uidFromCreateUserWithoutUid: string;
+  const processWarningSpy = sinon.spy();
 
   before(() => {
     firebase.initializeApp({
@@ -112,10 +116,24 @@ describe('admin.auth', () => {
     if (authEmulatorHost) {
       (clientAuth() as any).useEmulator('http://' + authEmulatorHost);
     }
+    process.on('warning', processWarningSpy);
     return cleanup();
   });
 
+  afterEach(() => {
+    expect(
+      processWarningSpy.neverCalledWith(
+        sinon.match(
+          (warning: Error) => warning.name === 'MaxListenersExceededWarning'
+        )
+      ),
+      'process.on("warning") was called with an unexpected MaxListenersExceededWarning.'
+    ).to.be.true;
+    processWarningSpy.resetHistory();
+  });
+
   after(() => {
+    process.removeListener('warning', processWarningSpy);
     return cleanup();
   });
 
