@@ -43,7 +43,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
-  multiFactorConfig?: MultiFactorConfig;
+  mfa?: MultiFactorConfig;
 }
 
 /**
@@ -52,7 +52,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
-  multiFactorAuthConfig?: MultiFactorConfig;
+  mfa?: MultiFactorConfig;
 }
 
 /**
@@ -68,7 +68,7 @@ export class ProjectConfig {
   /**
    * The Multi Factor Config for the project.
    * Configures the multi factor settings for the project.
-   * TOTP and Phone Multi factor are supported as of now
+   * Supports only phone and T
    */
   public readonly multiFactorConfig?: MultiFactorConfig;
   // /**
@@ -92,7 +92,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
-      multiFactorAuthConfig: true,
+      mfa: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -109,8 +109,8 @@ export class ProjectConfig {
     }
 
     // Validate Multi Factor Config if provided
-    if (typeof request.multiFactorAuthConfig !== 'undefined') {
-      MultiFactorAuthConfig.validate(request.multiFactorAuthConfig);
+    if (typeof request.mfa !== 'undefined') {
+      MultiFactorAuthConfig.validate(request.mfa);
     }
   }
 
@@ -137,8 +137,8 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
-    if (typeof response.multiFactorConfig !== 'undefined') {
-      this.multiFactorConfig = response.multiFactorConfig;
+    if (typeof response.mfa !== 'undefined') {
+      this.multiFactorConfig = response.mfa;
     }
   }
   /**
