@@ -20,7 +20,7 @@ import { clone } from 'lodash';
 import * as admin from '../../lib/index';
 import {
   DocumentReference, DocumentSnapshot, FieldValue, Firestore, FirestoreDataConverter,
-  QueryDocumentSnapshot, Timestamp, getFirestore, setLogFunction,
+  QueryDocumentSnapshot, Timestamp, getFirestore, initializeFirestore, setLogFunction,
 } from '../../lib/firestore/index';
 
 chai.should();
@@ -44,6 +44,11 @@ describe('admin.firestore', () => {
 
   it('getFirestore() returns a Firestore client', () => {
     const firestore: Firestore = getFirestore();
+    expect(firestore).to.not.be.undefined;
+  });
+
+  it('initializeFirestore returns a Firestore client', () => {
+    const firestore: Firestore = initializeFirestore(admin.app());
     expect(firestore).to.not.be.undefined;
   });
 

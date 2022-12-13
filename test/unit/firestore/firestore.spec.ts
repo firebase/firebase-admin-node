@@ -200,4 +200,16 @@ describe('Firestore', () => {
       });
     });
   });
+
+  describe('options.preferRest', () => {
+    it('should not enable preferRest by default', () => {
+      const options = getFirestoreOptions(mockApp);
+      expect(options.preferRest).to.be.undefined;
+    });
+
+    it('should enable preferRest if provided', () => {
+      const options = getFirestoreOptions(mockApp, { preferRest: true });
+      expect(options.preferRest).to.be.true;
+    });
+  });
 });
