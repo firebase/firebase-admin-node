@@ -337,7 +337,6 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    // (undocumented)
     readonly multiFactorConfig?: MultiFactorConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;

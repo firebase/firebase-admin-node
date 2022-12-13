@@ -632,7 +632,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       if (!validator.isArray(options.providerConfigs)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfigs."',
+          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."',
         );
       }
       //Validate content of array.

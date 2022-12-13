@@ -229,7 +229,6 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
   });
-
   describe('buildServerRequest()', () => {
     it('should return expected server request on valid state and factorIds', () => {
       expect(MultiFactorAuthConfig.buildServerRequest({
@@ -313,66 +312,30 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
+    var totpBaseConfig = {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {},
+        },
+      ],
+    } as any;
+    const expectedTotpConfig = deepCopy(totpBaseConfig);
     it('should build server request with TOTP enabled', () => {
-      expect(MultiFactorAuthConfig.buildServerRequest({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {},
-          },
-        ],
-      })).to.deep.equal({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {},
-          },
-        ],
-      });
+      expect(MultiFactorAuthConfig.buildServerRequest((totpBaseConfig).to.deep.equal(expectedTotpConfig)));
     });
 
     it('should build server request with TOTP disabled', () => {
-      expect(MultiFactorAuthConfig.buildServerRequest({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'DISABLED',
-          },
-        ],
-      })).to.deep.equal({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'DISABLED',
-          },
-        ],
-      });
+      totpBaseConfig.providerConfigs[0].state = 'DISABLED';
+      const expectedTotpConfig = deepCopy(totpBaseConfig);
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
     });
 
     it('should return expected server request on valid TOTP provider config', () => {
-      expect(MultiFactorAuthConfig.buildServerRequest({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {
-              adjacentIntervals: 5,
-            },
-          },
-        ],
-      })).to.deep.equal({
-        state: 'DISABLED',
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {
-              adjacentIntervals: 5,
-            },
-          },
-        ],
-      });
+      totpBaseConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals = 5;
+      const expectedTotpConfig = deepCopy(totpBaseConfig);
+      expect(MultiFactorAuthConfig.buildServerRequest((totpBaseConfig).to.deep.equal(expectedTotpConfig)));
     });
 
     it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {

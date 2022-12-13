@@ -39,7 +39,7 @@ describe('ProjectConfig', () => {
         disallowedRegions: ['AC', 'AD'],
       },
     },
-    multiFactorConfig: {
+    mfa: {
       state: 'DISABLED',
       providerConfigs: [
         {
@@ -205,14 +205,14 @@ describe('ProjectConfig', () => {
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
         smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
-        multiFactorConfig: deepCopy(serverResponse.multiFactorConfig)
+        multiFactorConfig: deepCopy(serverResponse.mfa)
       });
     });
 
     it('should not populate optional fields if not available', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
       delete serverResponseOptionalCopy.smsRegionConfig;
-      delete serverResponseOptionalCopy.multiFactorConfig;
+      delete serverResponseOptionalCopy.mfa;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({});
     });
   });

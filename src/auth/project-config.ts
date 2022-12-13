@@ -71,12 +71,6 @@ export class ProjectConfig {
    * Supports only phone and T
    */
   public readonly multiFactorConfig?: MultiFactorConfig;
-  // /**
-  //  * The multi-factor auth configuration.
-  //  */
-  // get multiFactorConfig(): MultiFactorConfig | undefined {
-  //   return this.multiFactorConfig_;
-  // }
 
   /**
    * Validates a project config options object. Throws an error on failure.
