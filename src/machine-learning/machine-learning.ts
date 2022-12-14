@@ -53,6 +53,8 @@ export interface TFLiteModel {
   /**
    * The AutoML model reference from which the model was originally provided
    * to Firebase.
+   * 
+   * @deprecated AutoML model support will be removed in the next major version.
    */
   readonly automlModel?: string;
 }

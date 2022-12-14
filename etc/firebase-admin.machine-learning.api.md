@@ -8,7 +8,7 @@
 
 import { Agent } from 'http';
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
     // (undocumented)
     tfliteModel: {
@@ -86,6 +86,7 @@ export interface ModelOptionsBase {
 
 // @public
 export interface TFLiteModel {
+    // @deprecated
     readonly automlModel?: string;
     readonly gcsTfliteUri?: string;
     readonly sizeBytes: number;
