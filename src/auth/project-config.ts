@@ -20,6 +20,7 @@ import {
   SmsRegionConfig,
   MultiFactorConfig,
   MultiFactorAuthConfig,
+  MultiFactorAuthServerConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -43,7 +44,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
-  mfa?: MultiFactorConfig;
+  mfa?: MultiFactorAuthServerConfig;
 }
 
 /**
@@ -52,7 +53,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
-  mfa?: MultiFactorConfig;
+  mfa?: MultiFactorAuthServerConfig;
 }
 
 /**
@@ -68,16 +69,16 @@ export class ProjectConfig {
   /**
    * The Multi Factor Config for the project.
    * Configures the multi factor settings for the project.
-   * Supports only phone and T
+   * Supports only phone and TOTP
    */
-  public readonly multiFactorConfig?: MultiFactorConfig;
+  public readonly multiFactorConfig?: MultiFactorAuthConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
    *
    * @param request - The project config options object to validate.
    */
-  private static validate(request: ProjectConfigClientRequest): void {
+  private static validate(request: any): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -117,10 +118,12 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    const configOptionsRequest = deepCopy(configOptions) as any;
-    configOptionsRequest.mfa = configOptionsRequest.multiFactorConfig;
-    delete configOptionsRequest.multiFactorConfig;
-    return configOptionsRequest as ProjectConfigClientRequest;
+    let request = configOptions as any;
+    if (configOptions.multiFactorConfig !== undefined) {
+      request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
+    }
+    delete request.multiFactorConfig;
+    return request as ProjectConfigClientRequest;
   }
 
   /**
@@ -135,7 +138,7 @@ export class ProjectConfig {
       this.smsRegionConfig = response.smsRegionConfig;
     }
     if (typeof response.mfa !== 'undefined') {
-      this.multiFactorConfig = response.mfa;
+      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
     }
   }
   /**

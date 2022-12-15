@@ -1188,7 +1188,8 @@ describe('admin.auth', () => {
       }
     });
     const mfaConfig: MultiFactorConfig = {
-      state: 'DISABLED',
+      state: 'ENABLED',
+      factorIds: ['phone'],
       providerConfigs: [
         {
           state: 'ENABLED',
@@ -1213,6 +1214,17 @@ describe('admin.auth', () => {
         }
       },
     };
+    const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+          },
+        ],
+      },
+    };
     const expectedProjectConfig1: any = {
       smsRegionConfig: {
         allowByDefault: {
@@ -1229,6 +1241,14 @@ describe('admin.auth', () => {
       },
       multiFactorConfig: mfaConfig,
     };
+    const expectedProjectConfigSmsEnabledTotpDisabled: any = {
+      smsRegionConfig: expectedProjectConfig2.smsRegionConfig,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [],
+      },
+    };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
@@ -1238,6 +1258,9 @@ describe('admin.auth', () => {
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
+        }).then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
 
@@ -1245,7 +1268,7 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
           const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
+          expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
   });
@@ -1354,7 +1377,24 @@ describe('admin.auth', () => {
         }
       },
     };
-
+    const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
+      displayName: 'testTenantUpdated',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: false,
+      },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [],
+      },
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
+    };
     // https://mochajs.org/
     // Passing arrow functions (aka "lambdas") to Mocha is discouraged.
     // Lambdas lexically bind this and cannot access the Mocha context.
@@ -1845,6 +1885,36 @@ describe('admin.auth', () => {
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update SMS MFA related settings when TOTP is disabled', () => {
+      expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
+      const updatedOptions3: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: {
+          state: 'ENABLED',
+          factorIds: ['phone'],
+          providerConfigs: [
+            {
+              state: 'DISABLED',
+            },
+          ],
+        },
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions3)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Configuring test phone numbers are not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenantSmsEnabledTotpDisabled.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions3)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
         });
     });
 
