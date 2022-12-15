@@ -31,9 +31,8 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
+  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
 } from '../../lib/auth/index';
-import { MultiFactorConfig } from '../../src/auth/auth-config';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
