@@ -288,6 +288,14 @@ export abstract class MultiFactorInfo {
     readonly uid: string;
 }
 
+// @public (undocumented)
+export interface MultiFactorProviderConfig {
+    // (undocumented)
+    state: MultiFactorConfigState;
+    // Warning: (ae-forgotten-export) The symbol "TotpMultiFactorProviderConfig" needs to be exported by the entry point index.d.ts
+    totpProviderConfig?: TotpMultiFactorProviderConfig;
+}
+
 // @public
 export class MultiFactorSettings {
     enrolledFactors: MultiFactorInfo[];
@@ -337,7 +345,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    readonly multiFactorConfig?: MultiFactorConfig;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorAuthConfig" needs to be exported by the entry point index.d.ts
+    readonly multiFactorConfig?: MultiFactorAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
