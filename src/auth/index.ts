@@ -92,6 +92,7 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
+  TotpMultiFactorProviderConfig,
 } from './auth-config';
 
 export {
