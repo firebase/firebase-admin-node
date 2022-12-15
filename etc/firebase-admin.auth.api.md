@@ -292,7 +292,6 @@ export abstract class MultiFactorInfo {
 export interface MultiFactorProviderConfig {
     // (undocumented)
     state: MultiFactorConfigState;
-    // Warning: (ae-forgotten-export) The symbol "TotpMultiFactorProviderConfig" needs to be exported by the entry point index.d.ts
     totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
@@ -424,6 +423,11 @@ export class TenantManager {
     getTenant(tenantId: string): Promise<Tenant>;
     listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
     updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
+}
+
+// @public (undocumented)
+export interface TotpMultiFactorProviderConfig {
+    adjacentIntervals?: number;
 }
 
 // @public
