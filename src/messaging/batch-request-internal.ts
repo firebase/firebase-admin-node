@@ -20,7 +20,7 @@ import {
 import { FirebaseAppError, AppErrorCodes } from '../utils/error';
 
 const PART_BOUNDARY = '__END_OF_PART__';
-const TEN_SECONDS_IN_MILLIS = 10000;
+const TEN_SECONDS_IN_MILLIS = 15000;
 
 /**
  * Represents a request that can be sent as part of an HTTP batch request.
