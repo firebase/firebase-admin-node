@@ -86,7 +86,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
-      mfa: true,
+      multiFactorConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -117,7 +117,10 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    return configOptions as ProjectConfigClientRequest;
+    const configOptionsRequest = deepCopy(configOptions) as any;
+    configOptionsRequest.mfa = configOptionsRequest.multiFactorConfig;
+    delete configOptionsRequest.multiFactorConfig;
+    return configOptionsRequest as ProjectConfigClientRequest;
   }
 
   /**

@@ -33,6 +33,7 @@ import {
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
   UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
 } from '../../lib/auth/index';
+import { MultiFactorConfig } from '../../src/auth/auth-config';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -1186,12 +1187,24 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
+    const mfaConfig: MultiFactorConfig = {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    };
     const projectConfigOption1: UpdateProjectConfigRequest = {
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
       },
+      multiFactorConfig: mfaConfig,
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: {
@@ -1206,6 +1219,7 @@ describe('admin.auth', () => {
           disallowedRegions: ['AC', 'AD'],
         }
       },
+      multiFactorConfig: mfaConfig,
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: {
@@ -1213,6 +1227,7 @@ describe('admin.auth', () => {
           allowedRegions: ['AC', 'AD'],
         }
       },
+      multiFactorConfig: mfaConfig,
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
