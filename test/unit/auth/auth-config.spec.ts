@@ -323,7 +323,7 @@ describe('MultiFactorAuthConfig', () => {
     } as any;
     const expectedTotpConfig = deepCopy(totpBaseConfig);
     it('should build server request with TOTP enabled', () => {
-      expect(MultiFactorAuthConfig.buildServerRequest((totpBaseConfig).to.deep.equal(expectedTotpConfig)));
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
     });
 
     it('should build server request with TOTP disabled', () => {
@@ -335,7 +335,7 @@ describe('MultiFactorAuthConfig', () => {
     it('should return expected server request on valid TOTP provider config', () => {
       totpBaseConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals = 5;
       const expectedTotpConfig = deepCopy(totpBaseConfig);
-      expect(MultiFactorAuthConfig.buildServerRequest((totpBaseConfig).to.deep.equal(expectedTotpConfig)));
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
     });
 
     it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {
@@ -356,7 +356,7 @@ describe('MultiFactorAuthConfig', () => {
             state: 'DISABLED',
             providerConfigs: config,
           } as any);
-        }).to.throw('"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfigs."')
+        }).to.throw('"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."')
       });
     });
     const invalidProviderConfigObjects = [undefined, NaN, 0, 1, 'a', [], true, false,]
