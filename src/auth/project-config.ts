@@ -118,7 +118,7 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    let request = configOptions as any;
+    const request = configOptions as any;
     if (configOptions.multiFactorConfig !== undefined) {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }

@@ -312,7 +312,7 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
-    var totpBaseConfig = {
+    const totpBaseConfig = {
       state: 'DISABLED',
       providerConfigs: [
         {
