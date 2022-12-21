@@ -38,6 +38,9 @@ export interface GcsTfliteModelOptions extends ModelOptionsBase {
   };
 }
 
+/**
+ * @deprecated AutoMLTfliteModelOptions will be removed in the next major version.
+ */
 export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
   tfliteModel: {
     automlModel: string;

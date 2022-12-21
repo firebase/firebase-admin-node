@@ -505,7 +505,12 @@ class AsyncHttpCall {
       // Listen to timeouts and throw an error.
       req.setTimeout(timeout, timeoutCallback);
       req.on('socket', (socket) => {
+        socket.setMaxListeners(socket.getMaxListeners() + 1);
         socket.setTimeout(timeout, timeoutCallback);
+        socket.on('end', () => {
+          socket.setTimeout(0);
+          socket.setMaxListeners(Math.max(socket.getMaxListeners() - 1, 0));
+        });
       });
     }
 
