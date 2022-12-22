@@ -514,8 +514,15 @@ export interface MultiFactorConfig {
   providerConfigs?: MultiFactorProviderConfig[];
 }
 
+/**
+ * Interface representing Multi Factor Provider configuration. 
+ * This config is used to set second factor auth except for SMS. 
+ * Currently, only TOTP is supported.
+ */
 export interface MultiFactorProviderConfig {
-  /* indicates whether this multi-factor provider is enabled/disabled. */
+  /**
+   * Indicates whether this multi-factor provider is enabled/disabled. 
+   */
   state: MultiFactorConfigState;
   /**
    * TOTP MultiFactor provider config.
@@ -523,6 +530,9 @@ export interface MultiFactorProviderConfig {
   totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
+/**
+ * Interface representing configuration settings for TOTP second factor auth. 
+ */
 export interface TotpMultiFactorProviderConfig {
   /**
     *  The allowed number of adjacent intervals that will be used for verification
