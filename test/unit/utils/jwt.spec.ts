@@ -199,7 +199,7 @@ describe('decodeJwt', () => {
     const mockIdToken = mocks.generateIdToken({
       algorithm: 'none',
       header: {}
-    });
+    }, undefined, 'secret');
 
     return decodeJwt(mockIdToken)
       .should.eventually.be.fulfilled.and.deep.equal(DECODED_UNSIGNED_TOKEN);
@@ -247,9 +247,9 @@ describe('verifyJwtSignature', () => {
     const mockIdToken = mocks.generateIdToken({
       algorithm: 'none',
       header: {}
-    });
+    }, undefined, 'secret');
 
-    return verifyJwtSignature(mockIdToken, '')
+    return verifyJwtSignature(mockIdToken, undefined as any, { algorithms: ['none'] })
       .should.eventually.be.fulfilled;
   });
 
@@ -448,7 +448,7 @@ describe('PublicKeySignatureVerifier', () => {
         .resolves(VALID_PUBLIC_KEYS_RESPONSE);
       stubs.push(keyFetcherStub);
       const mockIdToken = mocks.generateIdToken({
-        algorithm: 'HS256',
+        algorithm: 'RS384',
       });
 
       return verifier.verify(mockIdToken).should.eventually.be
@@ -485,11 +485,11 @@ describe('EmulatorSignatureVerifier', () => {
   const emulatorVerifier = new EmulatorSignatureVerifier();
 
   describe('verify', () => {
-    it('should be fullfilled given a valid unsigned (emulator) token', () => {
+    it('should be fulfilled given a valid unsigned (emulator) token', () => {
       const mockIdToken = mocks.generateIdToken({
         algorithm: 'none',
         header: {}
-      });
+      }, undefined, 'secret');
 
       return emulatorVerifier.verify(mockIdToken).should.eventually.be.fulfilled;
     });
