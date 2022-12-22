@@ -288,9 +288,8 @@ export abstract class MultiFactorInfo {
     readonly uid: string;
 }
 
-// @public (undocumented)
+// @public
 export interface MultiFactorProviderConfig {
-    // (undocumented)
     state: MultiFactorConfigState;
     totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
@@ -425,7 +424,7 @@ export class TenantManager {
     updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
 }
 
-// @public (undocumented)
+// @public
 export interface TotpMultiFactorProviderConfig {
     adjacentIntervals?: number;
 }
