@@ -1065,12 +1065,14 @@ describe('admin.auth', () => {
           audience: projectId,
           issuer: 'https://securetoken.google.com/' + projectId,
           subject: uid,
-        });
+        }, undefined, 'secret');
         return getAuth().verifyIdToken(unsignedToken);
       });
 
       it('verifyIdToken() fails when called with a token with wrong project', () => {
-        const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
+        const unsignedToken = mocks.generateIdToken(
+          { algorithm: 'none', audience: 'nosuch' },
+          undefined, 'secret');
         return getAuth().verifyIdToken(unsignedToken)
           .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
       });
@@ -1081,7 +1083,7 @@ describe('admin.auth', () => {
           audience: projectId,
           issuer: 'https://securetoken.google.com/' + projectId,
           subject: 'nosuch',
-        });
+        }, undefined, 'secret');
         return getAuth().verifyIdToken(unsignedToken)
           .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
       });

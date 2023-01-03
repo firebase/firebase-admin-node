@@ -281,7 +281,7 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should be rejected given a Firebase JWT token with an incorrect algorithm', () => {
       const mockIdToken = mocks.generateIdToken({
-        algorithm: 'HS256',
+        algorithm: 'PS256',
       });
       return tokenVerifier.verifyJWT(mockIdToken)
         .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm');
@@ -494,7 +494,7 @@ describe('FirebaseTokenVerifier', () => {
       const mockIdToken = mocks.generateIdToken({
         algorithm: 'none',
         header: {}
-      });
+      }, undefined, 'secret');
 
       const isEmulator = true;
       const decoded = await emulatorVerifier.verifyJWT(mockIdToken, isEmulator);
@@ -515,14 +515,14 @@ describe('FirebaseTokenVerifier', () => {
 
       const idTokenNoAlg = mocks.generateIdToken({
         algorithm: 'none',
-      });
+      }, undefined, 'secret');
       await tokenVerifier.verifyJWT(idTokenNoAlg)
         .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm.');
 
       const idTokenNoHeader = mocks.generateIdToken({
         algorithm: 'none',
         header: {}
-      });
+      }, undefined, 'secret');
       await tokenVerifier.verifyJWT(idTokenNoHeader)
         .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim.');
     });
@@ -589,7 +589,7 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should be rejected given a Auth Blocking JWT token with an incorrect algorithm', () => {
       const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
-        algorithm: 'HS256',
+        algorithm: 'PS256',
       });
       return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
         .should.eventually.be.rejectedWith('Firebase Auth Blocking token has incorrect algorithm');
@@ -748,7 +748,7 @@ describe('FirebaseTokenVerifier', () => {
       const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
         algorithm: 'none',
         header: {}
-      });
+      }, undefined, 'secret');
 
       const isEmulator = true;
       const decoded = await emulatorVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, isEmulator, undefined);
@@ -769,14 +769,14 @@ describe('FirebaseTokenVerifier', () => {
 
       const idTokenNoAlg = mocks.generateAuthBlockingToken({
         algorithm: 'none',
-      });
+      }, undefined, 'secret');
       await authBlockingTokenVerifier._verifyAuthBlockingToken(idTokenNoAlg, false, undefined)
         .should.eventually.be.rejectedWith('Firebase Auth Blocking token has incorrect algorithm.');
 
       const idTokenNoHeader = mocks.generateAuthBlockingToken({
         algorithm: 'none',
         header: {}
-      });
+      }, undefined, 'secret');
       await authBlockingTokenVerifier._verifyAuthBlockingToken(idTokenNoHeader, false, undefined)
         .should.eventually.be.rejectedWith('Firebase Auth Blocking token has no "kid" claim.');
     });
