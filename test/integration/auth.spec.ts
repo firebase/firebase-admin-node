@@ -1266,7 +1266,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-        providerConfigs: [],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          }
+        ],
       },
     };
 
@@ -1889,12 +1894,12 @@ describe('admin.auth', () => {
 
     it('updateTenant() should not update MFA-related config of tenant when MultiFactorConfig is undefined', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
-      const updatedOptions2: UpdateTenantRequest = {
+      const updateRequestNoMfaConfig: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant2.displayName,
         multiFactorConfig: undefined,
       };
       if (authEmulatorHost) {
-        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Configuring test phone numbers are not supported in Auth Emulator
@@ -1903,7 +1908,7 @@ describe('admin.auth', () => {
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
           });
       }
-      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
@@ -1911,7 +1916,7 @@ describe('admin.auth', () => {
 
     it('updateTenant() should not update SMS MFA related settings when TOTP is disabled', () => {
       expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
-      const updatedOptions3: UpdateTenantRequest = {
+      const updateRequestSMSEnabledTOTPDisabled: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant2.displayName,
         multiFactorConfig: {
           state: 'ENABLED',
@@ -1925,7 +1930,7 @@ describe('admin.auth', () => {
         },
       };
       if (authEmulatorHost) {
-        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions3)
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
           .then((actualTenant) => {
             const actualTenantObj = actualTenant.toJSON();
             // Configuring test phone numbers are not supported in Auth Emulator
@@ -1934,7 +1939,7 @@ describe('admin.auth', () => {
             expect(actualTenantObj).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
           });
       }
-      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions3)
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
         });
