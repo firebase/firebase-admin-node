@@ -145,9 +145,7 @@ class FirebaseStorageFile extends File{
     }
     const [token] = metadata.metadata.firebaseStorageDownloadTokens.split(',');
     const baseUrl = process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com';
-    const a = `${baseUrl}/v0/b/${this.bucket.name}/o/${encodeURIComponent(this.name)}?alt=media&token=${token}`;
-    console.log(a);
-    return a;
+    return `${baseUrl}/v0/b/${this.bucket.name}/o/${encodeURIComponent(this.name)}?alt=media&token=${token}`;
   }
 }
 
