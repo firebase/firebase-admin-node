@@ -104,8 +104,8 @@ export class ProjectConfig {
     }
 
     // Validate Multi Factor Config if provided
-    if (typeof request.mfa !== 'undefined') {
-      MultiFactorAuthConfig.validate(request.mfa);
+    if (typeof request.multiFactorConfig !== 'undefined') {
+      MultiFactorAuthConfig.validate(request.multiFactorConfig);
     }
   }
 
@@ -137,6 +137,7 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. The SDK exposes it as multiFactorConfig always.'
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
     }

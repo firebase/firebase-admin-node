@@ -1240,6 +1240,7 @@ describe('admin.auth', () => {
         providerConfigs: [
           {
             state: 'DISABLED',
+            totpProviderConfig: {},
           },
         ],
       },
@@ -1918,6 +1919,7 @@ describe('admin.auth', () => {
           providerConfigs: [
             {
               state: 'DISABLED',
+              totpProviderConfig: {}
             },
           ],
         },

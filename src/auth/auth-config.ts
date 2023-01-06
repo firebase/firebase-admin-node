@@ -662,20 +662,18 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
           )
         }
         // Since TOTP is the only provider config available right now, not defining it will lead into an error
-        if (multiFactorProviderConfig.state === 'ENABLED') {
-          if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
-            )
-          }
-          if (typeof multiFactorProviderConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
-            !validator.isNumber(multiFactorProviderConfig.totpProviderConfig.adjacentIntervals)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ARGUMENT,
-              '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.'
-            )
-          }
+        if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
+          )
+        }
+        if (typeof multiFactorProviderConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
+          !validator.isNumber(multiFactorProviderConfig.totpProviderConfig.adjacentIntervals)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.'
+          )
         }
       });
     }
