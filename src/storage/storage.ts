@@ -18,7 +18,13 @@
 import { App } from '../app';
 import { FirebaseError } from '../utils/error';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
-import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
+import {
+  Bucket,
+  BucketOptions,
+  File,
+  FileOptions,
+  Storage as StorageClient,
+} from '@google-cloud/storage';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
@@ -30,7 +36,7 @@ import * as validator from '../utils/validator';
 export class Storage {
 
   private readonly appInternal: App;
-  private readonly storageClient: StorageClient;
+  private readonly storageClient: FirebaseStorageClient;
 
   /**
    * @param app - The app for this Storage service.
@@ -58,9 +64,10 @@ export class Storage {
       process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
     }
 
-    let storage: typeof StorageClient;
+    let storage: typeof FirebaseStorageClient;
     try {
-      storage = require('@google-cloud/storage').Storage;
+      require('@google-cloud/storage').Storage;
+      storage = FirebaseStorageClient;
     } catch (err) {
       throw new FirebaseError({
         code: 'storage/missing-dependencies',
@@ -104,7 +111,7 @@ export class Storage {
    * @returns A {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket | Bucket}
    * instance as defined in the `@google-cloud/storage` package.
    */
-  public bucket(name?: string): Bucket {
+  public bucket(name?: string): FirebaseStorageBucket {
     const bucketName = (typeof name !== 'undefined')
       ? name :  this.appInternal.options.storageBucket;
     if (validator.isNonEmptyString(bucketName)) {
@@ -124,5 +131,34 @@ export class Storage {
    */
   get app(): App {
     return this.appInternal;
+  }
+}
+
+class FirebaseStorageFile extends File{
+  async getDownloadUrl(): Promise<string> {
+    const [metadata] = await this.getMetadata();
+    if (!metadata?.metadata?.firebaseStorageDownloadTokens) {
+      throw new FirebaseError({
+        code: 'storage/no-download-token',
+        message: 'No download token available. Please create one in the Firebase Console.',
+      });
+    }
+    const [token] = metadata.metadata.firebaseStorageDownloadTokens.split(',');
+    const baseUrl = process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com';
+    const a = `${baseUrl}/v0/b/${this.bucket.name}/o/${encodeURIComponent(this.name)}?alt=media&token=${token}`;
+    console.log(a);
+    return a;
+  }
+}
+
+class FirebaseStorageBucket extends Bucket {
+  file(name: string, options?: FileOptions): FirebaseStorageFile {
+    return new FirebaseStorageFile(this, name, options);
+  }
+}
+
+class FirebaseStorageClient extends StorageClient {
+  bucket(bucketName: string, options?: BucketOptions): FirebaseStorageBucket {
+    return new FirebaseStorageBucket(this, bucketName, options);
   }
 }
