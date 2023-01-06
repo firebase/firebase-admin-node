@@ -35,13 +35,13 @@ const expect = chai.expect;
 describe('Tenant', () => {
   const smsAllowByDefault = {
     allowByDefault: {
-      disallowedRegions: ['AC', 'AD'],
+      disallowedRegions: [ 'AC', 'AD' ],
     },
   };
 
   const smsAllowlistOnly = {
     allowlistOnly: {
-      allowedRegions: ['AC', 'AD'],
+      allowedRegions: [ 'AC', 'AD' ],
     },
   };
 
@@ -190,7 +190,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -198,7 +198,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -206,7 +206,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -339,7 +339,7 @@ describe('Tenant', () => {
       it('should throw on invalid allowlistOnly attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.smsRegionConfig = deepCopy(smsAllowlistOnly);
-        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
+        tenantOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -347,7 +347,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -355,7 +355,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');

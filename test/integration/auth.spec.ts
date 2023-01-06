@@ -1414,6 +1414,7 @@ describe('admin.auth', () => {
         }
       },
     };
+
     // https://mochajs.org/
     // Passing arrow functions (aka "lambdas") to Mocha is discouraged.
     // Lambdas lexically bind this and cannot access the Mocha context.
