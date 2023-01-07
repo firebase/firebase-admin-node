@@ -137,7 +137,8 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
-    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. The SDK exposes it as multiFactorConfig always.'
+    /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
+    The SDK exposes it as multiFactorConfig always.'*/
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
     }
