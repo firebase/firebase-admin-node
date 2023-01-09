@@ -69,7 +69,7 @@ export class ProjectConfig {
   /**
    * The Multi Factor Config for the project.
    * Configures the multi factor settings for the project.
-   * Supports only phone and TOTP
+   * Supports only phone and TOTP.
    */
   public readonly multiFactorConfig?: MultiFactorAuthConfig;
 

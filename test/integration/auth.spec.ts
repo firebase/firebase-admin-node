@@ -1914,7 +1914,7 @@ describe('admin.auth', () => {
         });
     });
 
-    it('updateTenant() should not update SMS MFA related settings when TOTP is disabled', () => {
+    it('updateTenant() should not disable SMS MFA when TOTP is disabled', () => {
       expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
       const updateRequestSMSEnabledTOTPDisabled: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant2.displayName,

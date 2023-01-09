@@ -265,6 +265,19 @@ export interface ListUsersResult {
 }
 
 // @public
+export class MultiFactorAuthConfig implements MultiFactorConfig {
+    // (undocumented)
+    readonly factorIds: AuthFactorType[];
+    // (undocumented)
+    readonly providerConfigs: MultiFactorProviderConfig[];
+    // (undocumented)
+    readonly state: MultiFactorConfigState;
+    // (undocumented)
+    toJSON(): object;
+    static validate(options: MultiFactorConfig): void;
+}
+
+// @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
     providerConfigs?: MultiFactorProviderConfig[];
@@ -343,7 +356,6 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    // Warning: (ae-forgotten-export) The symbol "MultiFactorAuthConfig" needs to be exported by the entry point index.d.ts
     readonly multiFactorConfig?: MultiFactorAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
