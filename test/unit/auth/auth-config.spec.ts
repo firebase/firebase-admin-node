@@ -360,6 +360,20 @@ describe('MultiFactorAuthConfig', () => {
         }).to.throw('"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."')
       });
     });
+    it('should throw on providerConfig with unsupported attribute', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              unsupported: true,
+              state: 'ENABLED',
+              totpProviderConfig: {},
+            }
+          ],
+        } as any);
+      }).to.throw('"unsupported" is not a valid ProviderConfig parameter.');
+    });
     const invalidProviderConfigObjects = [undefined, NaN, 0, 1, 'a', [], true, false,]
     invalidProviderConfigObjects.forEach((object) => {
       it('should throw an error for invalid providerConfig type:' + JSON.stringify(object), () => {
@@ -388,6 +402,21 @@ describe('MultiFactorAuthConfig', () => {
         }).to.throw('"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".')
       });
     });
+    it('should throw on totpProviderConfig with unsupported attribute', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              state: 'ENABLED',
+              totpProviderConfig: {
+                unsupported: true,
+              },
+            }
+          ],
+        } as any);
+      }).to.throw('"unsupported" is not a valid TotpProviderConfig parameter.');
+    });
     it('should throw an error for undefined totpProviderConfig', () => {
       expect(() => {
         MultiFactorAuthConfig.buildServerRequest({
@@ -400,7 +429,7 @@ describe('MultiFactorAuthConfig', () => {
         } as any);
       }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.')
     });
-    const invalidAdjacentIntervals = [null, NaN, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false,]
+    const invalidAdjacentIntervals = [null, NaN, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false, -1, 11, 1.1]
     invalidAdjacentIntervals.forEach((interval) => {
       it('should throw an error for invalid adjacentIntervals type: ' + JSON.stringify(interval), () => {
         expect(() => {
@@ -415,7 +444,7 @@ describe('MultiFactorAuthConfig', () => {
               },
             ],
           } as any);
-        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number.')
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number between 0 and 10 (both inclusive).')
       });
     });
   });
@@ -438,7 +467,7 @@ describe('validateTestPhoneNumbers', () => {
   });
 
   it(`should not throw when ${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
-    const pairs: {[key: string]: string} = {};
+    const pairs: { [key: string]: string } = {};
     for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS; i++) {
       pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
     }
@@ -447,7 +476,7 @@ describe('validateTestPhoneNumbers', () => {
   });
 
   it(`should throw when >${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
-    const pairs: {[key: string]: string} = {};
+    const pairs: { [key: string]: string } = {};
     for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS + 1; i++) {
       pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
     }
