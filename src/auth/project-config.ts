@@ -78,7 +78,7 @@ export class ProjectConfig {
    *
    * @param request - The project config options object to validate.
    */
-  private static validate(request: any): void {
+  private static validate(request: UpdateProjectConfigRequest): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -122,6 +122,8 @@ export class ProjectConfig {
     if (configOptions.multiFactorConfig !== undefined) {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
+    /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
+    The SDK exposes it as multiFactorConfig always.*/
     delete request.multiFactorConfig;
     return request as ProjectConfigClientRequest;
   }
@@ -138,7 +140,7 @@ export class ProjectConfig {
       this.smsRegionConfig = response.smsRegionConfig;
     }
     /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
-    The SDK exposes it as multiFactorConfig always.'*/
+    The SDK exposes it as multiFactorConfig always.*/
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
     }
