@@ -123,7 +123,10 @@ export class ProjectConfig {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
     /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
-    The SDK exposes it as multiFactorConfig always.*/
+    * The SDK exposes it as multiFactorConfig always. 
+    * See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
+    * and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
+    */
     delete request.multiFactorConfig;
     return request as ProjectConfigClientRequest;
   }

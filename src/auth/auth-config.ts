@@ -547,8 +547,19 @@ export interface TotpMultiFactorProviderConfig {
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
 
+  /**
+   * The multi-factor config state.
+   */
   public readonly state: MultiFactorConfigState;
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
   public readonly factorIds: AuthFactorType[];
+  /**
+   * A list of multi-factor provider specific config. 
+   * New MFA providers (except phone) will indicate enablement/disablement through this field.
+   */
   public readonly providerConfigs: MultiFactorProviderConfig[];
 
   /**
@@ -742,7 +753,8 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     })
   }
 
-  /** @returns The plain object representation of the multi-factor config instance. */
+  /** Converts MultiFactorConfig to JSON object
+   * @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,

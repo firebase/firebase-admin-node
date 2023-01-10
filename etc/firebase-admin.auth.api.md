@@ -266,13 +266,9 @@ export interface ListUsersResult {
 
 // @public
 export class MultiFactorAuthConfig implements MultiFactorConfig {
-    // (undocumented)
     readonly factorIds: AuthFactorType[];
-    // (undocumented)
     readonly providerConfigs: MultiFactorProviderConfig[];
-    // (undocumented)
     readonly state: MultiFactorConfigState;
-    // (undocumented)
     toJSON(): object;
     static validate(options: MultiFactorConfig): void;
 }
