@@ -705,7 +705,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
             );
           }
         }
-        let adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
+        const adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
         if (typeof adjIntervals !== 'undefined' &&
           (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
           throw new FirebaseAuthError(
