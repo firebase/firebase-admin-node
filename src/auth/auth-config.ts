@@ -545,6 +545,8 @@ export interface TotpMultiFactorProviderConfig {
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
+ * 
+ * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
 
@@ -709,7 +711,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
             '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
-            'be a valid number between 0 and 10 (both inclusive).'
+            ' be a valid number between 0 and 10 (both inclusive).'
           )
         }
       });

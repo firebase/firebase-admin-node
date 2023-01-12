@@ -93,7 +93,6 @@ export {
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
   TotpMultiFactorProviderConfig,
-  MultiFactorAuthConfig,
 } from './auth-config';
 
 export {

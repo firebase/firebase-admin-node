@@ -265,15 +265,6 @@ export interface ListUsersResult {
 }
 
 // @public
-export class MultiFactorAuthConfig implements MultiFactorConfig {
-    readonly factorIds: AuthFactorType[];
-    readonly providerConfigs: MultiFactorProviderConfig[];
-    readonly state: MultiFactorConfigState;
-    toJSON(): object;
-    static validate(options: MultiFactorConfig): void;
-}
-
-// @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
     providerConfigs?: MultiFactorProviderConfig[];
@@ -352,7 +343,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    readonly multiFactorConfig?: MultiFactorAuthConfig;
+    get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
