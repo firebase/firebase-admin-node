@@ -444,7 +444,8 @@ describe('MultiFactorAuthConfig', () => {
               },
             ],
           } as any);
-        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number between 0 and 10 (both inclusive).')
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+          ' be a valid number between 0 and 10 (both inclusive).')
       });
     });
   });
