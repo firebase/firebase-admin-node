@@ -122,11 +122,10 @@ export class ProjectConfig {
     if (configOptions.multiFactorConfig !== undefined) {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
-    /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
-    * The SDK exposes it as multiFactorConfig always. 
-    * See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
-    * and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
-    */
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
+    //The SDK exposes it as multiFactorConfig always. 
+    //See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
+    //and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
     delete request.multiFactorConfig;
     return request as ProjectConfigClientRequest;
   }
@@ -142,8 +141,8 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
-    /**Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
-    The SDK exposes it as multiFactorConfig always.*/
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
+    //The SDK exposes it as multiFactorConfig always.
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
     }

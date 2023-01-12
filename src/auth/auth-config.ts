@@ -507,6 +507,7 @@ export interface MultiFactorConfig {
    * Currently only ‘phone’ is supported.
    */
   factorIds?: AuthFactorType[];
+
   /**
    * A list of multi-factor provider specific config. 
    * New MFA providers (except phone) will indicate enablement/disablement through this field.
