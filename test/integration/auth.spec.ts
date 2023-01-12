@@ -1412,7 +1412,12 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-        providerConfigs: [],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       smsRegionConfig: {
         allowByDefault: {

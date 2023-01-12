@@ -71,7 +71,13 @@ export class ProjectConfig {
    * Configures the multi factor settings for the project.
    * Supports only phone and TOTP.
    */
-  public readonly multiFactorConfig?: MultiFactorAuthConfig;
+  private readonly multiFactorConfig_?: MultiFactorConfig;
+  /**
+   * The multi-factor auth configuration.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
+  }
 
   /**
    * Validates a project config options object. Throws an error on failure.
@@ -122,10 +128,10 @@ export class ProjectConfig {
     if (configOptions.multiFactorConfig !== undefined) {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
-    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
-    //The SDK exposes it as multiFactorConfig always. 
-    //See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
-    //and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
+    // Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
+    // The SDK exposes it as multiFactorConfig always. 
+    // See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
+    // and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
     delete request.multiFactorConfig;
     return request as ProjectConfigClientRequest;
   }
@@ -144,7 +150,7 @@ export class ProjectConfig {
     //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
     //The SDK exposes it as multiFactorConfig always.
     if (typeof response.mfa !== 'undefined') {
-      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfa);
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);
     }
   }
   /**
