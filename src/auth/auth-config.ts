@@ -703,12 +703,13 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
             );
           }
         }
-        var adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
+        let adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
         if (typeof adjIntervals !== 'undefined' &&
           (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
-            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must be a valid number between 0 and 10 (both inclusive).'
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+            'be a valid number between 0 and 10 (both inclusive).'
           )
         }
       });
