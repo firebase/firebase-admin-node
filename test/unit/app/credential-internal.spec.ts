@@ -36,7 +36,7 @@ import {
 } from '../../../src/app/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential
 } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
@@ -59,6 +59,17 @@ const MOCK_REFRESH_TOKEN_CONFIG = {
   type: 'authorized_user',
   refresh_token: 'test_token',
 };
+const MOCK_IMPERSONATED_TOKEN_CONFIG = {
+  delegates: [],
+  service_account_impersonation_url: '',
+  source_credentials: {
+    client_id: 'test_client_id',
+    client_secret: 'test_client_secret',
+    refresh_token: 'test_refresh_token',
+    type: 'authorized_user'
+  },
+  type: 'impersonated_service_account'
+}
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const FIVE_MINUTES_IN_SECONDS = 5 * 60;
@@ -424,6 +435,13 @@ describe('Credential', () => {
       expect(c).to.be.an.instanceof(ServiceAccountCredential);
     });
 
+    it('should return a ImpersonatedCredential with impersonated GOOGLE_APPLICATION_CREDENTIALS set', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS
+        = path.resolve(__dirname, '../../resources/mock.impersonated_key.json');
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ImpersonatedServiceAccountCredential);
+    });
+
     it('should throw if explicitly pointing to an invalid path', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = 'invalidpath';
       expect(() => getApplicationDefault()).to.throw(Error);
@@ -538,6 +556,15 @@ describe('Credential', () => {
       expect(isApplicationDefault(c)).to.be.true;
     });
 
+    it('should return true for ImpersonatedServiceAccountCredential loaded from GOOGLE_APPLICATION_CREDENTIALS', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(
+        __dirname, '../../resources/mock.impersonated_key.json'
+      );
+      const c = getApplicationDefault();
+      expect(c).is.instanceOf(ImpersonatedServiceAccountCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
     it('should return true for credential loaded from gcloud SDK', () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
@@ -567,6 +594,11 @@ describe('Credential', () => {
 
     it('should return false for explicitly loaded RefreshTokenCredential', () => {
       const c = new RefreshTokenCredential(mocks.refreshToken);
+      expect(isApplicationDefault(c)).to.be.false;
+    });
+
+    it('should return false for explicitly loaded ImpersonatedServiceAccountCredential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
       expect(isApplicationDefault(c)).to.be.false;
     });
 
@@ -630,6 +662,16 @@ describe('Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const agent = new Agent();
       const c = getApplicationDefault(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
+      });
+    });
+
+    it('ImpersonatedServiceAccountCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG, agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
