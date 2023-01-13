@@ -184,5 +184,5 @@ export function initializeFirestore(
   const firestoreService = firebaseApp.getOrInitService(
     'firestore', (app) => new FirestoreService(app));
 
-  return firestoreService.getDatabase(databaseId, settings);
+  return firestoreService.initializeDatabase(databaseId, settings);
 }
