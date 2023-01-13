@@ -244,7 +244,7 @@ export class PublicKeySignatureVerifier implements SignatureVerifier {
 export class EmulatorSignatureVerifier implements SignatureVerifier {
   public verify(token: string): Promise<void> {
     // Signature checks skipped for emulator; no need to fetch public keys.
-    return verifyJwtSignature(token, '');
+    return verifyJwtSignature(token, undefined as any, { algorithms:['none'] });
   }
 }
 
