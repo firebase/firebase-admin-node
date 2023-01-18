@@ -31,5 +31,5 @@ inputs:
     description: Application access token secret.
     required: true
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
