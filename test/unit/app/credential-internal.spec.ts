@@ -428,7 +428,7 @@ describe('Credential', () => {
         .to.throw('Failed to parse impersonated service account file');
     });
 
-    it('should throw given an object without a "clientId" pcloneroperty', () => {
+    it('should throw given an object without a "clientId" property', () => {
       const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
       invalidCredential.source_credentials.client_id = '';
       expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
