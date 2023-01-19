@@ -41,6 +41,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { deepCopy } from '../../../src/utils/deep-copy';
 
 chai.should();
 chai.use(sinonChai);
@@ -417,6 +418,75 @@ describe('Credential', () => {
       return c.getProjectId().should.eventually
         .rejectedWith('Failed to determine project ID: Unexpected error')
         .and.have.property('code', 'app/invalid-credential');
+    });
+  });
+
+  describe('ImpersonatedServiceAccountCredential', () => {
+    it('should throw if called with the path to an invalid file', () => {
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
+      expect(() => new ImpersonatedServiceAccountCredential(invalidPath))
+        .to.throw('Failed to parse impersonated service account file');
+    });
+
+    it('should throw given an object without a "clientId" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.client_id = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.client_id" property.');
+    });
+
+    it('should throw given an object without a "clientSecret" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.client_secret = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.client_secret" property.');
+    });
+
+    it('should throw given an object without a "refreshToken" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.refresh_token = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.refresh_token" property.');
+    });
+
+    it('should throw given an object without a "type" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.type = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.type" property.');
+    });
+
+    it('should return a Credential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      expect(c).to.deep.include({
+        implicit: false,
+      });
+    });
+
+    it('should return an implicit Credential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG, undefined, true);
+      expect(c).to.deep.include({
+        implicit: true,
+      });
+    });
+
+    it('should create access tokens', () => {
+      const scope = nock('https://www.googleapis.com')
+        .post('/oauth2/v4/token')
+        .reply(200, {
+          access_token: 'token',
+          token_type: 'Bearer',
+          expires_in: 60 * 60,
+        }, {
+          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+        });
+      mockedRequests.push(scope);
+
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.be.a('string').and.to.not.be.empty;
+        expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
+      });
     });
   });
 

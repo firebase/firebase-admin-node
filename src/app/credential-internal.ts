@@ -380,7 +380,7 @@ export class ImpersonatedServiceAccountCredential implements Credential {
    * @param impersonatedServiceAccountPathOrObject - Impersonated Service account json object or
    * path to a service account json file.
    * @param httpAgent - Optional http.Agent to use when calling the remote token server.
-   * @param implicit - An optinal boolean indicating whether this credential was implicitly
+   * @param implicit - An optional boolean indicating whether this credential was implicitly
    *   discovered from the environment, as opposed to being explicitly specified by the developer.
    *
    * @constructor
