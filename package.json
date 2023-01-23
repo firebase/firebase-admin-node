@@ -211,7 +211,7 @@
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.3.0",
-    "@firebase/app-compat": "^0.1.2",
+    "@firebase/app-compat": "^0.2.1",
     "@firebase/auth-compat": "^0.2.5",
     "@firebase/auth-types": "^0.11.0",
     "@microsoft/api-extractor": "^7.11.2",
