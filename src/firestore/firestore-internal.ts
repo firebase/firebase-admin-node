@@ -53,35 +53,43 @@ export class FirestoreService {
     this.appInternal = app;
   }
 
-  getDatabase(databaseId: string, settings?: FirestoreSettings): Firestore {
-    settings ??= {};
+  initializeDatabase(databaseId: string, settings: FirestoreSettings): Firestore {
+    const existingInstance = this.databases.get(databaseId);
+    if (existingInstance) {
+      const initialSettings = this.firestoreSettings.get(databaseId) ?? {};
+      if (this.checkIfSameSettings(settings, initialSettings)) {
+        return existingInstance;
+      }
+      throw new FirebaseFirestoreError({
+        code: 'failed-precondition',
+        message: 'initializeFirestore() has already been called with ' +
+          'different options. To avoid this error, call initializeFirestore() with the ' +
+          'same options as when it was originally called, or call getFirestore() to return the' +
+          ' already initialized instance.'
+      });
+    }
+    const newInstance = initFirestore(this.app, databaseId, settings);
+    this.databases.set(databaseId, newInstance);
+    this.firestoreSettings.set(databaseId, settings);
+    return newInstance;
+  }
+
+  getDatabase(databaseId: string): Firestore {
     let database = this.databases.get(databaseId);
     if (database === undefined) {
-      database = initFirestore(this.app, databaseId, settings);
+      database = initFirestore(this.app, databaseId, {});
       this.databases.set(databaseId, database);
-      this.firestoreSettings.set(databaseId, settings);
-    } else {
-      if (!this.checkIfSameSettings(databaseId, settings)) {
-        throw new FirebaseFirestoreError({
-          code: 'failed-precondition',
-          message: 'initializeFirestore() has already been called with ' +
-            'different options. To avoid this error, call initializeFirestore() with the ' +
-            'same options as when it was originally called, or call getFirestore() to return the' +
-            ' already initialized instance.'
-        });    
-      }
+      this.firestoreSettings.set(databaseId, {});
     }
     return database;
   }
 
-  private checkIfSameSettings(databaseId: string, firestoreSettings: FirestoreSettings): boolean {
+  private checkIfSameSettings(settingsA: FirestoreSettings, settingsB: FirestoreSettings): boolean {
+    const a = settingsA ?? {};
+    const b = settingsB ?? {};
     // If we start passing more settings to Firestore constructor,
     // replace this with deep equality check.
-    const existingSettings = this.firestoreSettings.get(databaseId);
-    if (!existingSettings) {
-      return true;
-    }
-    return (existingSettings.preferRest === firestoreSettings.preferRest);
+    return (a.preferRest === b.preferRest);
   }
 
   /**
