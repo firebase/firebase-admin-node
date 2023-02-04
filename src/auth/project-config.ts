@@ -94,6 +94,7 @@ export class ProjectConfig {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
 
+    // Validate Email Privacy Config if provided.
     if (typeof request.emailPrivacyConfig !== 'undefined') {
       EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
@@ -108,7 +109,6 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    console.log("BUILD_SERVER_REQUEST(PROJECT)==", JSON.stringify(configOptions));
     return configOptions as ProjectConfigClientRequest;
   }
 
@@ -134,7 +134,6 @@ export class ProjectConfig {
    */
   public toJSON(): object {
     // JSON serialization
-    console.log("PRINT==", this.emailPrivacyConfig);
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),

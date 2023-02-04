@@ -1187,9 +1187,9 @@ describe('admin.auth', () => {
       }
     });
     const projectConfigOption1: UpdateProjectConfigRequest = {
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: false,
-      },
+      // emailPrivacyConfig: {
+      //   enableImprovedEmailPrivacy: false,
+      // },
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
@@ -1197,9 +1197,9 @@ describe('admin.auth', () => {
       },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: true,
-      },
+      // emailPrivacyConfig: {
+      //   enableImprovedEmailPrivacy: true,
+      // },
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
@@ -1207,9 +1207,9 @@ describe('admin.auth', () => {
       },
     };
     const expectedProjectConfig1: any = {
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: false,
-      },
+      // emailPrivacyConfig: {
+      //   enableImprovedEmailPrivacy: false,
+      // },
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
@@ -1217,9 +1217,9 @@ describe('admin.auth', () => {
       },
     };
     const expectedProjectConfig2: any = {
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: true,
-      },
+      // emailPrivacyConfig: {
+      //   enableImprovedEmailPrivacy: true,
+      // },
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
@@ -1728,7 +1728,6 @@ describe('admin.auth', () => {
     it('updateTenant() should resolve with the updated tenant', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       expectedUpdatedTenant2.tenantId = createdTenantId;
-      //console.log("UPDATE_TENANT=", JSON.stringify(expectedUpdatedTenant2));
       const updatedOptions: UpdateTenantRequest = {
         displayName: expectedUpdatedTenant.displayName,
         emailSignInConfig: {

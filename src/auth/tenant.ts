@@ -178,7 +178,6 @@ export class Tenant {
     if (typeof tenantOptions.emailPrivacyConfig !== 'undefined') {
       request.emailPrivacyConfig = tenantOptions.emailPrivacyConfig;
     }
-    //console.log("REQUEST==", JSON.stringify(request));
     return request;
   }
 

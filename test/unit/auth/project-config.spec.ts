@@ -55,6 +55,9 @@ describe('ProjectConfig', () => {
         allowedRegions: ['AC', 'AD'],
       },
     },
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: false,
+    },
   };
 
   const updateProjectConfigRequest3: any = {
@@ -66,6 +69,9 @@ describe('ProjectConfig', () => {
         disallowedRegions: ['AC', 'AD'],
       },
     },
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    }
   };
 
   describe('buildServerRequest()', () => {
