@@ -68,7 +68,7 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
-   /**
+  /**
    * The reCAPTCHA configuration to update on the project.
    * By enabling reCAPTCHA Enterprise integration, you are
    * agreeing to the reCAPTCHA Enterprise
