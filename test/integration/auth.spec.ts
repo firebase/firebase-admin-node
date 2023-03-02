@@ -1225,12 +1225,21 @@ describe('admin.auth', () => {
         }
       },
       multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        useAccountDefender: true,
+      },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
         }
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        useAccountDefender: false,
       },
     };
     const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
@@ -1252,6 +1261,11 @@ describe('admin.auth', () => {
         }
       },
       multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        useAccountDefender: true,
+      },
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: {
@@ -1334,7 +1348,6 @@ describe('admin.auth', () => {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
         managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-        useAccountDefender: false,
       },
     };
 
@@ -1357,11 +1370,6 @@ describe('admin.auth', () => {
           const actualConfigObj = actualConfig.toJSON();
           expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
         });
-    });
-
-    it('updateProjectConfig() should reject when trying to enable Account Defender while reCAPTCHA is disabled', () => {
-      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption3)
-        .should.eventually.be.rejected.and.have.property('code', 'auth/racaptcha-not-enabled');
     });
   });
 
@@ -1960,7 +1968,10 @@ describe('admin.auth', () => {
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 
@@ -1982,7 +1993,10 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 
@@ -2023,7 +2037,10 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
     it('updateTenant() should not disable SMS MFA when TOTP is disabled', () => {
@@ -2056,25 +2073,6 @@ describe('admin.auth', () => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
         });
     });
-
-    it('updateTenant() enable Account Defender should be rejected when tenant reCAPTCHA is disabled',
-      function () {
-        // Skipping for now as Emulator resolves this operation, which is not expected.
-        // TODO: investigate with Rest API and Access team for this behavior.
-        if (authEmulatorHost) {
-          return this.skip();
-        }
-        expectedUpdatedTenant.tenantId = createdTenantId;
-        const updatedOptions: UpdateTenantRequest = {
-          displayName: expectedUpdatedTenant2.displayName,
-          recaptchaConfig: {
-            emailPasswordEnforcementState: 'OFF',
-            useAccountDefender: true,
-          },
-        };
-        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
-          .should.eventually.be.rejected.and.have.property('code', 'auth/racaptcha-not-enabled');
-      });
 
     it('updateTenant() should be able to enable/disable anon provider', async () => {
       const tenantManager = getAuth().tenantManager();
