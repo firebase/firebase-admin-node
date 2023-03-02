@@ -250,6 +250,56 @@ export class Messaging {
       });
   }
 
+  // TODO: Update the comment based on the implementation
+  /**
+  * Sends each message in the given array via Firebase Cloud Messaging.
+  *
+  * Unlike {@link Messaging.sendAll}, this method makes a single RPC call for each message in the given array.
+  *
+  * The responses list obtained from the return value
+  * corresponds to the order of `messages`. An error
+  * from this method indicates a total failure -- i.e. none of the messages in
+  * the list could be sent. Partial failures are indicated by a `BatchResponse`
+  * return value.
+  *
+  * @param messages - A non-empty array
+  *   containing up to 500 messages.
+  * @param dryRun - Whether to send the messages in the dry-run
+  *   (validation only) mode.
+  * @returns A Promise fulfilled with an object representing the result of the
+  *   send operation.
+  */
+  public sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
+    //TODO: add implementation
+    console.log(messages, dryRun);
+    return Promise.resolve({ responses: [], successCount: 0, failureCount: 0 });
+  }
+
+  // TODO: Update the comment based on the implementation
+  /**
+   * Sends the given multicast message to all the FCM registration tokens
+   * specified in it.
+   *
+   * This method uses the {@link Messaging.sendEach} API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the
+   * return value corresponds to the order of tokens in the `MulticastMessage`.
+   * An error from this method indicates a total failure -- i.e. the message was
+   * not sent to any of the tokens in the list. Partial failures are indicated by
+   * a `BatchResponse` return value.
+   *
+   * @param message - A multicast message
+   *   containing up to 500 tokens.
+   * @param dryRun - Whether to send the message in the dry-run
+   *   (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the
+   *   send operation.
+   */
+  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
+    //TODO: add implementation
+    console.log(message, dryRun);
+    return Promise.resolve({ responses: [], successCount: 0, failureCount: 0 });
+  }
+
   /**
    * Sends all the messages in the given array via Firebase Cloud Messaging.
    * Employs batching to send the entire list as a single RPC call. Compared
@@ -268,6 +318,8 @@ export class Messaging {
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
+   *
+   * @deprecated Use {@link Messaging.sendEach} instead.
    */
   public sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
     if (validator.isArray(messages) && messages.constructor !== Array) {
@@ -326,6 +378,8 @@ export class Messaging {
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
+   *
+   * @deprecated Use {@link Messaging.sendEachForMulticast} instead.
    */
   public sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
     const copy: MulticastMessage = deepCopy(message);
