@@ -39,6 +39,7 @@ import {
   MessagingConditionResponse,
   DataMessagePayload,
   NotificationMessagePayload,
+  SendResponse,
 } from './messaging-api';
 
 // FCM endpoints
@@ -250,17 +251,16 @@ export class Messaging {
       });
   }
 
-  // TODO: Update the comment based on the implementation
   /**
   * Sends each message in the given array via Firebase Cloud Messaging.
   *
-  * Unlike {@link Messaging.sendAll}, this method makes a single RPC call for each message in the given array.
+  * Unlike {@link Messaging.sendAll}, this method makes a single RPC call for each message
+  * in the given array.
   *
-  * The responses list obtained from the return value
-  * corresponds to the order of `messages`. An error
-  * from this method indicates a total failure -- i.e. none of the messages in
-  * the list could be sent. Partial failures are indicated by a `BatchResponse`
-  * return value.
+  * The responses list obtained from the return value corresponds to the order of `messages`.
+  * An error from this method or a `BatchResponse` with all failures indicates a total failure
+  * -- i.e. none of the messages in the list could be sent. Partial failures or no failures
+  * are only indicated by a `BatchResponse` return value.
   *
   * @param messages - A non-empty array
   *   containing up to 500 messages.
@@ -270,12 +270,57 @@ export class Messaging {
   *   send operation.
   */
   public sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
-    //TODO: add implementation
-    console.log(messages, dryRun);
-    return Promise.resolve({ responses: [], successCount: 0, failureCount: 0 });
+    if (validator.isArray(messages) && messages.constructor !== Array) {
+      // In more recent JS specs, an array-like object might have a constructor that is not of
+      // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
+      // a regular array here before calling deepCopy(). See issue #566 for details.
+      messages = Array.from(messages);
+    }
+
+    const copy: Message[] = deepCopy(messages);
+    if (!validator.isNonEmptyArray(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+    }
+    if (copy.length > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+    }
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
+
+    return this.getUrlPath()
+      .then((urlPath) => {
+        const requests: Promise<SendResponse>[] = copy.map((message) => {
+          validateMessage(message);
+          const request: { message: Message; validate_only?: boolean } = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+        });
+        return Promise.allSettled(requests);
+      }).then((results) => {
+        const responses: SendResponse[] = [];
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            responses.push(result.value);
+          } else { // rejected
+            responses.push({ success: false, error: result.reason })
+          }
+        })
+        const successCount: number = responses.filter((resp) => resp.success).length;
+        return {
+          responses,
+          successCount,
+          failureCount: responses.length - successCount,
+        };
+      });
   }
 
-  // TODO: Update the comment based on the implementation
   /**
    * Sends the given multicast message to all the FCM registration tokens
    * specified in it.
@@ -283,9 +328,9 @@ export class Messaging {
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
    * return value corresponds to the order of tokens in the `MulticastMessage`.
-   * An error from this method indicates a total failure -- i.e. the message was
-   * not sent to any of the tokens in the list. Partial failures are indicated by
-   * a `BatchResponse` return value.
+   * An error from this method or a `BatchResponse` with all failures indicates a total failure
+   * -- i.e. none of the messages in the list could be sent. Partial failures or no failures
+   * are only indicated by a `BatchResponse` return value.
    *
    * @param message - A multicast message
    *   containing up to 500 tokens.
@@ -295,9 +340,33 @@ export class Messaging {
    *   send operation.
    */
   public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
-    //TODO: add implementation
-    console.log(message, dryRun);
-    return Promise.resolve({ responses: [], successCount: 0, failureCount: 0 });
+    const copy: MulticastMessage = deepCopy(message);
+    if (!validator.isNonNullObject(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
+    }
+    if (!validator.isNonEmptyArray(copy.tokens)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
+    }
+    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+    }
+
+    const messages: Message[] = copy.tokens.map((token) => {
+      return {
+        token,
+        android: copy.android,
+        apns: copy.apns,
+        data: copy.data,
+        notification: copy.notification,
+        webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
+      };
+    });
+    return this.sendEach(messages, dryRun);
   }
 
   /**
