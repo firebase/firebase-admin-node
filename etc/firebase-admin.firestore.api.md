@@ -82,6 +82,11 @@ export { Firestore }
 
 export { FirestoreDataConverter }
 
+// @public
+export interface FirestoreSettings {
+    preferRest?: boolean;
+}
+
 export { GeoPoint }
 
 // @public
@@ -93,6 +98,9 @@ export function getFirestore(): Firestore;
 export function getFirestore(app: App): Firestore;
 
 export { GrpcStatus }
+
+// @public
+export function initializeFirestore(app: App, settings?: FirestoreSettings): Firestore;
 
 export { NestedUpdateFields }
 

@@ -130,7 +130,7 @@ describe('FirebaseTokenGenerator', () => {
 
       // Check that verify doesn't throw
       // Note: the types for jsonwebtoken are wrong so we have to disguise the 'null'
-      jwt.verify(token, '', { algorithms: ['none'] });
+      jwt.verify(token, undefined as any, { algorithms: ['none'] });
 
       // Decode and check all three segments
       const { header, payload, signature } = jwt.decode(token, { complete: true }) as { [key: string]: any };

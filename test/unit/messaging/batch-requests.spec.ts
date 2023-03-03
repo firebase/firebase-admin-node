@@ -249,7 +249,7 @@ describe('BatchRequestClient', () => {
     expect(args.url).to.equal(batchUrl);
     expect(args.headers).to.have.property(
       'Content-Type', 'multipart/mixed; boundary=__END_OF_PART__');
-    expect(args.timeout).to.equal(10000);
+    expect(args.timeout).to.equal(15000);
     const parsedRequest = parseHttpRequest(args.data as Buffer);
     expect(parsedRequest.multipart.length).to.equal(requests.length);
 
