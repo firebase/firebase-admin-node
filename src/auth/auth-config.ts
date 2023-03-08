@@ -191,7 +191,8 @@ export interface UpdateRequest {
 
   /**
    * If provided, sets additional developer claims on the user's token, overwriting
-   * any existing claims. If not provided or `undefined`, then existing claims will remain unchanged.
+   * any existing claims. Providing `null` will clear any existing custom claims.
+   * If not provided or `undefined`, then existing claims will remain unchanged.
    */
   customUserClaims?: object | null;
 }

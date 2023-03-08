@@ -1405,7 +1405,8 @@ export abstract class AbstractAuthRequestHandler {
             'providersToUnlink of properties argument must be an array of strings.');
         }
       });
-    } else if ((typeof properties.customUserClaims !== 'undefined') && !validator.isObject(properties.customUserClaims)) {
+    } else if ((typeof properties.customUserClaims !== 'undefined') 
+      && !validator.isObject(properties.customUserClaims)) {
       return Promise.reject(
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
