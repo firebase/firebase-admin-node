@@ -82,6 +82,8 @@ export namespace machineLearning {
 
   /**
    * Type alias to {@link firebase-admin.machine-learning#AutoMLTfliteModelOptions}.
+   * 
+   * @deprecated AutoMLTfliteModelOptions will be removed in the next major version.
    */
   export type AutoMLTfliteModelOptions = TAutoMLTfliteModelOptions;
 

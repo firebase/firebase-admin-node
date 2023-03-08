@@ -3898,7 +3898,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expect(decoded).to.have.property('payload').that.has.property('uid', 'uid1');
 
         // Make sure this doesn't throw
-        jwt.verify(token, '', { algorithms: ['none'] });
+        jwt.verify(token, undefined as any, { algorithms: ['none'] });
       });
 
       it('verifyIdToken() should reject revoked ID tokens', () => {
@@ -3912,10 +3912,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none',
           subject: uid,
+          header: {},
         }, {
           iat: oneSecBeforeValidSince,
           auth_time: oneSecBeforeValidSince,
-        });
+        }, 'secret');
 
         // verifyIdToken should force checking revocation in emulator mode,
         // even if checkRevoked=false.
@@ -3945,7 +3946,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         }, {
           iat: oneSecBeforeValidSince,
           auth_time: oneSecBeforeValidSince,
-        });
+        }, 'secret');
 
         // verifySessionCookie should force checking revocation in emulator
         // mode, even if checkRevoked=false.
@@ -3963,7 +3964,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
-        });
+        }, undefined, 'secret');
 
         const errorMessage = 'Error while making request: connect ECONNREFUSED 127.0.0.1. Error code: ECONNREFUSED';
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser').rejects(new Error(errorMessage));

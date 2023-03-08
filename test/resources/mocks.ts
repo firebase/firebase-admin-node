@@ -206,9 +206,10 @@ export const jwksKeyPair = {
  *
  * @param {object} overrides Overrides for the generated token's attributes.
  * @param {object} claims Extra claims to add to the token.
+ * @param {string} secret Custom key to sign the token with.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: object, claims?: object): string {
+export function generateIdToken(overrides?: object, claims?: object, secret?: string): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -225,7 +226,7 @@ export function generateIdToken(overrides?: object, claims?: object): string {
     ...claims,
   };
 
-  return jwt.sign(payload, certificateObject.private_key, options);
+  return jwt.sign(payload, secret ?? certificateObject.private_key, options);
 }
 
 /**
@@ -233,9 +234,10 @@ export function generateIdToken(overrides?: object, claims?: object): string {
  *
  * @param overrides Overrides for the generated token's attributes.
  * @param claims Extra claims to add to the token.
+ * @param {string} secret Custom key to sign the token with.
  * @return A mocked Auth Blocking token with any provided overrides included.
  */
-export function generateAuthBlockingToken(overrides?: object, claims?: object): string {
+export function generateAuthBlockingToken(overrides?: object, claims?: object, secret?: string): string {
   const options = _.assign({
     audience: `https://us-central1-${projectId}.cloudfunctions.net/functionName`,
     expiresIn: TEN_MINUTES_IN_SECONDS,
@@ -252,7 +254,7 @@ export function generateAuthBlockingToken(overrides?: object, claims?: object): 
     ...claims,
   };
 
-  return jwt.sign(payload, certificateObject.private_key, options);
+  return jwt.sign(payload, secret ?? certificateObject.private_key, options);
 }
 
 /**
