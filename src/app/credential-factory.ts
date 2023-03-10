@@ -19,10 +19,11 @@ import { Agent } from 'http';
 
 import { Credential, ServiceAccount } from './credential';
 import {
-  ServiceAccountCredential, RefreshTokenCredential, getApplicationDefault
+  ServiceAccountCredential, RefreshTokenCredential, //getApplicationDefault
 } from './credential-internal';
+import { GoogleAuth, AuthClient } from 'google-auth-library';
 
-let globalAppDefaultCred: Credential | undefined;
+let globalAppDefaultCred: Credential | AuthClient | undefined;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
@@ -48,15 +49,28 @@ const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
  * });
  * ```
  *
- * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+ * @param _httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
  *   to be used when retrieving access tokens from Google token servers.
  *
  * @returns A credential authenticated via Google
  *   Application Default Credentials that can be used to initialize an app.
  */
-export function applicationDefault(httpAgent?: Agent): Credential {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function applicationDefault(_httpAgent?: Agent): Promise<Credential | AuthClient> {
   if (typeof globalAppDefaultCred === 'undefined') {
-    globalAppDefaultCred = getApplicationDefault(httpAgent);
+    const auth = new GoogleAuth({
+      scopes: [
+        'https://www.googleapis.com/auth/cloud-platform',
+        'https://www.googleapis.com/auth/firebase.database',
+        'https://www.googleapis.com/auth/firebase.messaging',
+        'https://www.googleapis.com/auth/identitytoolkit',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ].join(' ')
+    });
+    const { credential, projectId } = await auth.getApplicationDefault();
+    const token = await credential.getAccessToken()
+    console.log(projectId, token);
+    globalAppDefaultCred = credential;
   }
   return globalAppDefaultCred;
 }
