@@ -1613,6 +1613,9 @@ export interface PasswordPolicyConfig {
   passwordPolicyVersions?: PasswordPolicyVersionConfig[];
 }
 
+/**
+ * Identifies a password policy configuration state.
+ */
 export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
 
 /**
