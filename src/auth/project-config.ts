@@ -18,6 +18,9 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
+  PasswordPolicyAuthConfig,
+  PasswordPolicyAuthServerConfig,
+  PasswordPolicyConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -29,6 +32,10 @@ export interface UpdateProjectConfigRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The password policy configuration to update on the project
+   */
+  passwordPolicyConfig?: PasswordPolicyConfig;
 }
 
 /**
@@ -37,6 +44,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
 /**
@@ -45,6 +53,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
 /**
@@ -57,13 +66,14 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
    *
    * @param request - The project config options object to validate.
    */
-  private static validate(request: ProjectConfigClientRequest): void {
+  private static validate(request: UpdateProjectConfigRequest): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -72,6 +82,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
+      passwordPolicyConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -86,6 +97,11 @@ export class ProjectConfig {
     if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
+
+    // Validate Password policy Config if provided
+    if (typeof request.passwordPolicyConfig !== 'undefined') {
+      PasswordPolicyAuthConfig.validate(request.passwordPolicyConfig);
+    }
   }
 
   /**
@@ -97,7 +113,14 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    return configOptions as ProjectConfigClientRequest;
+    let request: ProjectConfigClientRequest = {};
+    if (typeof configOptions.smsRegionConfig !== 'undefined') {
+      request.smsRegionConfig = configOptions.smsRegionConfig;
+    }
+    if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
+      request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);
+    }
+    return request;
   }
 
   /**
@@ -111,6 +134,9 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
+    if (typeof response.passwordPolicyConfig !== 'undefined') {
+      this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -121,9 +147,13 @@ export class ProjectConfig {
     // JSON serialization
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      passwordPolicyConfig: this.passwordPolicyConfig?.toJSON(),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.passwordPolicyConfig === 'undefined') {
+      delete json.passwordPolicyConfig;
     }
     return json;
   }

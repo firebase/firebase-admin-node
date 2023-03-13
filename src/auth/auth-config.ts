@@ -1594,3 +1594,383 @@ export class SmsRegionsAuthConfig {
     }
   }
 }
+
+/** 
+ * The request configuration for the password policy on the project or tenant 
+*/
+export interface PasswordPolicyConfig {
+  /**
+   * Enforcement state for the password policy
+   */
+  enforcementState?: PasswordPolicyEnforcementState;
+  /**
+   * Users must have a password compliant with the password policy to sign-in
+   */
+  forceUpgradeOnSignin?: boolean;
+  /**
+   * Must be of length 1. Contains the strength attributes for the password policy
+   */
+  passwordPolicyVersions?: PasswordPolicyVersionConfig[];
+}
+
+export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
+
+/**
+ * The strength attributes for the password policy on the project or tenant
+ */
+export interface PasswordPolicyVersionConfig {
+  /**
+   * The constraints enforced by the password policy
+   */
+  constraints?: PasswordPolicyConstraints;
+}
+
+/**
+ * Constraints to enforce on user passwords.
+ */
+export interface PasswordPolicyConstraints {
+  requiredCharacters?: RequireCharactersConfig;
+  /**
+   * Minimum password length. Range from 6 to 30
+   */
+  minLength?: number;
+  /**
+   * Maximum password length. No default max length
+   */
+  maxLength?: number;
+}
+
+/**
+ * Required characters to be enforced on the password policy
+ */
+export interface RequireCharactersConfig {
+  /**
+   * The password must contain an upper case character
+   */
+  uppercase?: boolean;
+  /**
+   *  The password must contain a lower case character
+   */
+  lowercase?: boolean;
+  /**
+   * The password must contain a non alpha numeric character
+   */
+  nonAlphanumeric?: boolean;
+  /**
+   * The password must contain a number
+   */
+  numeric?: boolean;
+}
+
+/**
+ * Defines the password policy config class used to convert client side PasswordPolicyConfig
+ * to a format that is understood by the Auth server.
+ */
+export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
+
+  public readonly enforcementState: PasswordPolicyEnforcementState;
+  public readonly forceUpgradeOnSignin?: boolean;
+  public readonly passwordPolicyVersions: PasswordPolicyVersionConfig[];
+
+  /**
+   * Static method to convert a client side request to a PasswordPolicyAuthServerConfig.
+   * Throws an error if validation fails.
+   *
+   * @param options - The options object to convert to a server request.
+   * @returns The resulting server request.
+   * @internal
+   */
+  public static buildServerRequest(options: PasswordPolicyConfig): PasswordPolicyAuthServerConfig {
+    const request: PasswordPolicyAuthServerConfig = {};
+    PasswordPolicyAuthConfig.validate(options);
+    if (Object.prototype.hasOwnProperty.call(options, 'enforcementState')) {
+      request.passwordPolicyEnforcementState = options.enforcementState;
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'forceUpgradeOnSignin')) {
+      request.forceUpgradeOnSignin = options.forceUpgradeOnSignin;
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'passwordPolicyVersions')) {
+      (options.passwordPolicyVersions || []).forEach(policyVersion => {
+        if (typeof request.passwordPolicyVersions === 'undefined') {
+          request.passwordPolicyVersions = [];
+        }
+        const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+          containsUppercaseCharacter: policyVersion.constraints?.requiredCharacters?.uppercase,
+          containsLowercaseCharacter: policyVersion.constraints?.requiredCharacters?.lowercase,
+          containsNonAlphanumericCharacter: policyVersion.constraints?.requiredCharacters?.nonAlphanumeric,
+          containsNumericCharacter: policyVersion.constraints?.requiredCharacters?.numeric,
+          minPasswordLength: policyVersion.constraints?.minLength,
+          maxPasswordLength: policyVersion.constraints?.maxLength,
+        };
+        request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
+      })
+    }
+    return request;
+  }
+
+  /**
+   * Validates the PasswordPolicyConfig options object. Throws an error on failure.
+   *
+   * @param options - The options object to validate.
+   */
+  public static validate(options: PasswordPolicyConfig): void {
+    const validKeys = {
+      enforcementState: true,
+      forceUpgradeOnSignin: true,
+      passwordPolicyVersions: true,
+    };
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"PasswordPolicyConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid PasswordPolicyConfig parameter.`,
+        );
+      }
+    }
+    // Validate content.
+    if (typeof options.enforcementState !== 'undefined' &&
+      options.enforcementState !== 'ENFORCE' &&
+      options.enforcementState !== 'OFF') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
+      );
+    }
+
+
+    if (typeof options.forceUpgradeOnSignin !== 'undefined') {
+      if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean',
+        );
+      }
+    }
+
+    if (typeof options.passwordPolicyVersions !== 'undefined') {
+      // check for invalid array type
+      if (!validator.isArray(options.passwordPolicyVersions)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array',
+        );
+      }
+
+      if (options.enforcementState === 'ENFORCE' && options.passwordPolicyVersions.length < 1) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array',
+        );
+      }
+
+      options.passwordPolicyVersions.forEach(policyVersion => {
+        const validVersionKeys = {
+          constraints: true,
+        };
+        if (!validator.isNonNullObject(policyVersion)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig" must be a non-null object.',
+          );
+        }
+        // Check for unsupported  attributes.
+        for (const key in policyVersion) {
+          if (!(key in validVersionKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.`,
+            );
+          }
+        }
+
+        const validConstraintKeys = {
+          requiredCharacters: true,
+          minLength: true,
+          maxLength: true,
+        };
+        if (!validator.isNonNullObject(policyVersion.constraints)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints" must be a non-null object.',
+          );
+        }
+        // Check for unsupported  attributes.
+        for (const key in policyVersion.constraints) {
+          if (!(key in validConstraintKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions.Constraints parameter.`,
+            );
+          }
+        }
+        if (!validator.isNumber(policyVersion.constraints.minLength)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be a number.',
+          );
+        }
+        if (!validator.isNumber(policyVersion.constraints.maxLength)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be a number.',
+          );
+        }
+        if (policyVersion.constraints.minLength === undefined) {
+          policyVersion.constraints.minLength = 6;
+        } else {
+          if (!(policyVersion.constraints.minLength >= 6
+            && policyVersion.constraints.minLength <= 30)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer between 6 and 30, inclusive.',
+            );
+          }
+        }
+
+        if (policyVersion.constraints.maxLength === undefined) {
+          policyVersion.constraints.maxLength = 4096;
+        } else {
+          if (!(policyVersion.constraints.maxLength >= policyVersion.constraints.minLength &&
+            policyVersion.constraints.maxLength <= 4096)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.',
+            );
+          }
+        }
+
+
+        const validCharKeys = {
+          uppercase: true,
+          lowercase: true,
+          numeric: true,
+          nonAlphanumeric: true,
+        };
+        if (!validator.isNonNullObject(policyVersion.constraints.requiredCharacters)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.requiredCharacters" must be a non-null object.',
+          );
+        }
+        // Check for unsupported  attributes.
+        for (const key in policyVersion.constraints.requiredCharacters) {
+          if (!(key in validCharKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions.Constraints.RequireCharacters parameter.`,
+            );
+          }
+        }
+        if (typeof policyVersion.constraints.requiredCharacters.uppercase !== undefined &&
+          !validator.isBoolean(policyVersion.constraints.requiredCharacters.uppercase)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.requiredCharacters.uppercase" must be a boolean.',
+          );
+        }
+
+        if (typeof policyVersion.constraints.requiredCharacters.lowercase !== undefined &&
+          !validator.isBoolean(policyVersion.constraints.requiredCharacters.lowercase)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.requiredCharacters.lowercase" must be a boolean.',
+          );
+        }
+
+        if (typeof policyVersion.constraints.requiredCharacters.nonAlphanumeric !== undefined &&
+          !validator.isBoolean(policyVersion.constraints.requiredCharacters.nonAlphanumeric)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.',
+          );
+        }
+
+        if (typeof policyVersion.constraints.requiredCharacters.numeric !== undefined &&
+          !validator.isBoolean(policyVersion.constraints.requiredCharacters.numeric)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.requiredCharacters.numeric" must be a boolean.',
+          );
+        }
+      });
+    }
+
+  }
+
+  /**
+   * The PasswordPolicyAuthConfig constructor.
+   *
+   * @param response - The server side response used to initialize the
+   *     PasswordPolicyAuthConfig object.
+   * @constructor
+   * @internal
+   */
+  constructor(response: PasswordPolicyAuthServerConfig) {
+    if (typeof response.passwordPolicyEnforcementState === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+    }
+    this.enforcementState = response.passwordPolicyEnforcementState;
+    this.passwordPolicyVersions = [];
+    (response.passwordPolicyVersions || []).forEach((policyVersion) => {
+      this.passwordPolicyVersions.push({
+        constraints: {
+          requiredCharacters: {
+            uppercase: policyVersion.customStrengthOptions?.containsUppercaseCharacter,
+            lowercase: policyVersion.customStrengthOptions?.containsLowercaseCharacter,
+            numeric: policyVersion.customStrengthOptions?.containsNumericCharacter,
+            nonAlphanumeric: policyVersion.customStrengthOptions?.containsNonAlphanumericCharacter,
+          },
+          minLength: policyVersion.customStrengthOptions?.minPasswordLength,
+          maxLength: policyVersion.customStrengthOptions?.maxPasswordLength,
+        },
+      })
+    });
+    this.forceUpgradeOnSignin = response.forceUpgradeOnSignin;
+  }
+
+  /** @returns The plain object representation of the password policy config instance. */
+  public toJSON(): object {
+    return {
+      enforcementState: this.enforcementState,
+      passwordPolicyVersions: this.passwordPolicyVersions,
+      forceUpgradeOnSignin: this.forceUpgradeOnSignin,
+    };
+  }
+}
+
+/** 
+ * Server side password policy configuration.
+ */
+export interface PasswordPolicyAuthServerConfig {
+  passwordPolicyEnforcementState?: PasswordPolicyEnforcementState;
+  passwordPolicyVersions?: PasswordPolicyVersionsAuthServerConfig[];
+  forceUpgradeOnSignin?: boolean;
+}
+
+/**
+ * Server side password policy versions configuration. 
+ */
+export interface PasswordPolicyVersionsAuthServerConfig {
+  customStrengthOptions?: CustomStrengthOptionsAuthServerConfig;
+}
+
+/**
+ * Server side password policy constraints configuration. 
+ */
+export interface CustomStrengthOptionsAuthServerConfig {
+  containsLowercaseCharacter?: boolean;
+  containsUppercaseCharacter?: boolean;
+  containsNumericCharacter?: boolean;
+  containsNonAlphanumericCharacter?: boolean;
+  minPasswordLength?: number;
+  maxPasswordLength?: number;
+}

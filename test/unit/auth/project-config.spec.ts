@@ -39,6 +39,22 @@ describe('ProjectConfig', () => {
         disallowedRegions: [ 'AC', 'AD' ],
       },
     },
+    passwordPolicyConfig: {
+      passwordPolicyEnforcementState: 'ENFORCE',
+      forceUpgradeOnSignin: true,
+      passwordPolicyVersions: [
+        {
+          customStrengthOptions: {
+            containsLowercaseCharacter: true,
+            containsNonAlphanumericCharacter: true,
+            containsNumericCharacter: true,
+            containsUppercaseCharacter: true,
+            minPasswordLength: 8,
+            maxPasswordLength: 30,
+          },
+        },
+      ],
+    },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -47,6 +63,24 @@ describe('ProjectConfig', () => {
         disallowedRegions: [ 'AC', 'AD' ],
       },
     },
+    passwordPolicyConfig: {
+      enforcementState: 'ENFORCE',
+      forceUpgradeOnSignin: true,
+      passwordPolicyVersions: [
+        {
+          constraints: {
+            requiredCharacters: {
+              lowercase: true,
+              nonAlphanumeric: true,
+              numeric: true,
+              uppercase: true,
+            },
+            minLength: 8,
+            maxLength: 30,
+          },
+        },
+      ],
+    },
   };
 
   const updateProjectConfigRequest2: UpdateProjectConfigRequest = {
@@ -54,6 +88,24 @@ describe('ProjectConfig', () => {
       allowlistOnly: {
         allowedRegions: [ 'AC', 'AD' ],
       },
+    },
+    passwordPolicyConfig: {
+      enforcementState: 'OFF',
+      forceUpgradeOnSignin: true,
+      passwordPolicyVersions: [
+        {
+          constraints: {
+            requiredCharacters: {
+              lowercase: true,
+              nonAlphanumeric: true,
+              numeric: true,
+              uppercase: true,
+            },
+            minLength: 8,
+            maxLength: 30,
+          },
+        },
+      ],
     },
   };
 
@@ -65,6 +117,24 @@ describe('ProjectConfig', () => {
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
       },
+    },
+    passwordPolicyConfig: {
+      enforcementState: 'OFF',
+      forceUpgradeOnSignin: true,
+      passwordPolicyVersions: [
+        {
+          constraints: {
+            requiredCharacters: {
+              lowercase: true,
+              nonAlphanumeric: true,
+              numeric: true,
+              uppercase: true,
+            },
+            minLength: 8,
+            maxLength: 30,
+          },
+        },
+      ],
     },
   };
 

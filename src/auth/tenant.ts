@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, PasswordPolicyConfig, PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig
 } from './auth-config';
 
 /**
@@ -59,6 +59,10 @@ export interface UpdateTenantRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The password policy configurations for the tenant
+   */
+  passwordPolicyConfig?: PasswordPolicyConfig;
 }
 
 /**
@@ -74,6 +78,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
 /** The tenant server response interface. */
@@ -86,6 +91,7 @@ export interface TenantServerResponse {
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
 /**
@@ -136,6 +142,7 @@ export class Tenant {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -168,6 +175,9 @@ export class Tenant {
     }
     if (typeof tenantOptions.smsRegionConfig !== 'undefined') {
       request.smsRegionConfig = tenantOptions.smsRegionConfig;
+    }
+    if (typeof tenantOptions.passwordPolicyConfig !== 'undefined') {
+      request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(tenantOptions.passwordPolicyConfig);
     }
     return request;
   }
@@ -203,6 +213,7 @@ export class Tenant {
       multiFactorConfig: true,
       testPhoneNumbers: true,
       smsRegionConfig: true,
+      passwordPolicyConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -253,6 +264,11 @@ export class Tenant {
     if (typeof request.smsRegionConfig != 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
+    // Validate passwordPolicyConfig type if provided.
+    if (typeof request.passwordPolicyConfig !== 'undefined') {
+      // This will throw an error if invalid.
+      PasswordPolicyAuthConfig.buildServerRequest(request.passwordPolicyConfig);
+    }
   }
 
   /**
@@ -290,6 +306,9 @@ export class Tenant {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = deepCopy(response.smsRegionConfig);
     }
+    if (typeof response.passwordPolicyConfig !== 'undefined') {
+      this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
+    }
   }
 
   /**
@@ -320,6 +339,7 @@ export class Tenant {
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      passwordPolicyConfig: this.passwordPolicyConfig?.toJSON(),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -329,6 +349,9 @@ export class Tenant {
     }
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.passwordPolicyConfig === 'undefined') {
+      delete json.passwordPolicyConfig;
     }
     return json;
   }

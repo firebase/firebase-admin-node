@@ -1212,12 +1212,48 @@ describe('admin.auth', () => {
           disallowedRegions: ['AC', 'AD'],
         }
       },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
+      },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
         }
+      },
+      passwordPolicyConfig: {
+        enforcementState: 'OFF',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
       },
     };
     const expectedProjectConfig1: any = {
@@ -1226,12 +1262,48 @@ describe('admin.auth', () => {
           disallowedRegions: ['AC', 'AD'],
         }
       },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
+      },
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: {
         allowlistOnly: {
           allowedRegions: ['AC', 'AD'],
         }
+      },
+      passwordPolicyConfig: {
+        enforcementState: 'OFF',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
       },
     };
 
@@ -1273,6 +1345,24 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
@@ -1293,6 +1383,24 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
+      },
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -1311,6 +1419,24 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1327,6 +1453,24 @@ describe('admin.auth', () => {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        passwordPolicyVersions: [
+          {
+            constraints: {
+              requiredCharacters: {
+                uppercase: true,
+                lowercase: true,
+                nonAlphanumeric: true,
+                numeric: true,
+              },
+              minLength: 8,
+              maxLength: 30,
+            },
+          },
+        ],
       },
     };
 
@@ -1740,6 +1884,7 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
+        passwordPolicyConfig: deepCopy(expectedUpdatedTenant.passwordPolicyConfig),
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
