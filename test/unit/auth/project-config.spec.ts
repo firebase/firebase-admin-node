@@ -356,7 +356,6 @@ describe('ProjectConfig', () => {
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.');
       });
 
-
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid UpdateProjectConfigRequest:' + JSON.stringify(request), () => {
