@@ -1632,7 +1632,7 @@ export interface PasswordPolicyVersionConfig {
  * Constraints to enforce on user passwords.
  */
 export interface PasswordPolicyConstraints {
-  requiredCharacters?: RequireCharactersConfig;
+  requiredCharacters?: RequiredCharactersConfig;
   /**
    * Minimum password length. Range from 6 to 30
    */
@@ -1646,7 +1646,7 @@ export interface PasswordPolicyConstraints {
 /**
  * Required characters to be enforced on the password policy
  */
-export interface RequireCharactersConfig {
+export interface RequiredCharactersConfig {
   /**
    * The password must contain an upper case character
    */
@@ -1717,6 +1717,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
    * @param options - The options object to validate.
    */
   public static validate(options: PasswordPolicyConfig): void {
+    console.log("OPTIONS= ", JSON.stringify(options))
     const validKeys = {
       enforcementState: true,
       forceUpgradeOnSignin: true,
@@ -1738,9 +1739,9 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       }
     }
     // Validate content.
-    if (typeof options.enforcementState !== 'undefined' &&
-      options.enforcementState !== 'ENFORCE' &&
-      options.enforcementState !== 'OFF') {
+    if (typeof options.enforcementState === 'undefined' ||
+      !(options.enforcementState === 'ENFORCE' ||
+      options.enforcementState === 'OFF')) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,
         '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
@@ -1752,7 +1753,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean',
+          '"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.',
         );
       }
     }
@@ -1762,14 +1763,14 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       if (!validator.isArray(options.passwordPolicyVersions)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array',
+          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.',
         );
       }
 
       if (options.enforcementState === 'ENFORCE' && options.passwordPolicyVersions.length < 1) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array',
+          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.',
         );
       }
 
@@ -1780,7 +1781,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         if (!validator.isNonNullObject(policyVersion)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig" must be a non-null object.',
+            '"Constraints" must be specified.',
           );
         }
         // Check for unsupported  attributes.
@@ -1798,7 +1799,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           minLength: true,
           maxLength: true,
         };
-        if (!validator.isNonNullObject(policyVersion.constraints)) {
+        if (typeof policyVersion.constraints !== 'object' ||
+        !validator.isNonNullObject(policyVersion.constraints)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
             '"PasswordPolicyConfig.constraints" must be a non-null object.',
@@ -1809,7 +1811,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           if (!(key in validConstraintKeys)) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_CONFIG,
-              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions.Constraints parameter.`,
+              `"${key}" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints parameter.`,
             );
           }
         }
@@ -1856,10 +1858,10 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           numeric: true,
           nonAlphanumeric: true,
         };
-        if (!validator.isNonNullObject(policyVersion.constraints.requiredCharacters)) {
+        if (!(typeof policyVersion.constraints.requiredCharacters === 'object')) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters" must be a non-null object.',
+            '"PasswordPolicyConfig.constraints.requiredCharacters" must be a valid object.',
           );
         }
         // Check for unsupported  attributes.
@@ -1867,7 +1869,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           if (!(key in validCharKeys)) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_CONFIG,
-              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions.Constraints.RequireCharacters parameter.`,
+              `"${key}" is not a valid RequiredCharacters parameter.`,
             );
           }
         }
@@ -1875,7 +1877,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           !validator.isBoolean(policyVersion.constraints.requiredCharacters.uppercase)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters.uppercase" must be a boolean.',
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" must be a boolean.',
           );
         }
 
@@ -1883,7 +1885,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           !validator.isBoolean(policyVersion.constraints.requiredCharacters.lowercase)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters.lowercase" must be a boolean.',
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" must be a boolean.',
           );
         }
 
@@ -1891,7 +1893,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           !validator.isBoolean(policyVersion.constraints.requiredCharacters.nonAlphanumeric)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.',
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.',
           );
         }
 
@@ -1899,7 +1901,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           !validator.isBoolean(policyVersion.constraints.requiredCharacters.numeric)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters.numeric" must be a boolean.',
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" must be a boolean.',
           );
         }
       });

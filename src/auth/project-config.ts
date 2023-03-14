@@ -100,6 +100,7 @@ export class ProjectConfig {
 
     // Validate Password policy Config if provided
     if (typeof request.passwordPolicyConfig !== 'undefined') {
+      console.log("REQ= ", JSON.stringify(request.passwordPolicyConfig));
       PasswordPolicyAuthConfig.validate(request.passwordPolicyConfig);
     }
   }
