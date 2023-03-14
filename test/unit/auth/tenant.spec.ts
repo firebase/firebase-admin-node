@@ -20,7 +20,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { EmailSignInConfig, MultiFactorAuthConfig, PasswordPolicyAuthServerConfig, PasswordPolicyConfig } from '../../../src/auth/auth-config';
+import { EmailSignInConfig, MultiFactorAuthConfig, 
+  PasswordPolicyAuthServerConfig, PasswordPolicyConfig 
+} from '../../../src/auth/auth-config';
 import { TenantServerResponse } from '../../../src/auth/tenant';
 import {
   CreateTenantRequest, UpdateTenantRequest, EmailSignInProviderConfig, Tenant,
@@ -302,58 +304,60 @@ describe('Tenant', () => {
       });
 
       it('should throw on empty passwordPolicyVersions when state is enforced', () => {
-          const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-          }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
       });
 
       it('should throw on null passwordPolicyVersion object', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-          }).to.throw('"Constraints" must be specified.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"Constraints" must be specified.');
       });
       
       it('should throw on invalid passwordPolicyVersion attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-          }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
       });
 
       it('should throw on null constraints object', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.invalidParameter = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0]
+          .constraints.invalidParameter = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints parameter.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints\
+         parameter.');
       });
 
       it('should throw on invalid minLength type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be a number.');
       });
 
@@ -361,7 +365,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be a number.');
       });
 
@@ -369,16 +373,18 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 45;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer between 6 and 30, inclusive.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" \
+        must be an integer between 6 and 30, inclusive.');
       });
 
       it('should throw on invalid maxLength range', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 5000;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" \
+        must be greater than or equal to minLength and at max 4096.');
       });
 
       it('should throw if minLength is greater than maxLength', () => {
@@ -386,56 +392,67 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 20;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 7;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" \
+        must be greater than or equal to minLength and at max 4096.');
       });
 
       it('should throw on invalid requiredCharacters attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.invalidParameter = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .invalidParameter = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"invalidParameter" is not a valid RequiredCharacters parameter.');
       });
 
       it('should throw on invalid requiredCharacters object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints
+          .requiredCharacters = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requiredCharacters" must be a valid object.');
       });
 
       it('should throw on invalid uppercase type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.uppercase = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .uppercase = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase"\
+         must be a boolean.');
       });
 
       it('should throw on invalid lowercase type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.lowercase = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .lowercase = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" \
+        must be a boolean.');
       });
 
       it('should throw on invalid numeric type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.numeric = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .numeric = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" \
+        must be a boolean.');
       });
 
       it('should throw on invalid non-alphanumeric type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.nonAlphanumeric = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .nonAlphanumeric = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" \
+        must be a boolean.');
       });
 
       it('should not throw on valid client request object', () => {
@@ -636,58 +653,60 @@ describe('Tenant', () => {
       });
 
       it('should throw on empty passwordPolicyVersions when state is enforced', () => {
-          const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
       });
 
       it('should throw on null passwordPolicyVersion object', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"Constraints" must be specified.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"Constraints" must be specified.');
       });
       
       it('should throw on invalid passwordPolicyVersion attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
       });
 
       it('should throw on null constraints object', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-          tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
-          expect(() => {
-              Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.invalidParameter = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints
+          .invalidParameter = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints parameter.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints \
+        parameter.');
       });
 
       it('should throw on invalid minLength type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be a number.');
       });
 
@@ -695,7 +714,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be a number.');
       });
 
@@ -703,16 +722,18 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 45;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer between 6 and 30, inclusive.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer \
+        between 6 and 30, inclusive.');
       });
 
       it('should throw on invalid maxLength range', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 5000;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than \
+        or equal to minLength and at max 4096.');
       });
 
       it('should throw if minLength is greater than maxLength', () => {
@@ -720,56 +741,67 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 20;
         tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 7;
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or \
+        equal to minLength and at max 4096.');
       });
 
       it('should throw on invalid requiredCharacters attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.invalidParameter = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .invalidParameter = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"invalidParameter" is not a valid RequiredCharacters parameter.');
       });
 
       it('should throw on invalid requiredCharacters object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints
+          .requiredCharacters = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requiredCharacters" must be a valid object.');
       });
 
       it('should throw on invalid uppercase type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.uppercase = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .uppercase = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" \
+        must be a boolean.');
       });
 
       it('should throw on invalid lowercase type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.lowercase = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .lowercase = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" \
+        must be a boolean.');
       });
 
       it('should throw on invalid numeric type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.numeric = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .numeric = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" \
+        must be a boolean.');
       });
 
       it('should throw on invalid non-alphanumeric type', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.nonAlphanumeric = 'invalid';
+        tenantOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .nonAlphanumeric = 'invalid';
         expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.');
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" \
+        must be a boolean.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];

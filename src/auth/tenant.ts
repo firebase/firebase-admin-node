@@ -21,7 +21,8 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, PasswordPolicyConfig, PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, PasswordPolicyConfig, 
+  PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig
 } from './auth-config';
 
 /**

@@ -220,58 +220,60 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on empty passwordPolicyVersions when state is enforced', () => {
-          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-          configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
-          expect(() => {
-              ProjectConfig.buildServerRequest(configOptionsClientRequest);
-          }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions = [];
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.');
       });
 
       it('should throw on null passwordPolicyVersion object', ()=> {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-          configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
-          expect(() => {
-              ProjectConfig.buildServerRequest(configOptionsClientRequest);
-          }).to.throw('"Constraints" must be specified.');
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0] = null;
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"Constraints" must be specified.');
       });
       
       it('should throw on invalid passwordPolicyVersion attribute', ()=> {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-          configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
-          expect(() => {
-              ProjectConfig.buildServerRequest(configOptionsClientRequest);
-          }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].invalidParameter = 'invalid';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.');
       });
 
       it('should throw on null constraints object', ()=> {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-          configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
-          expect(() => {
-              ProjectConfig.buildServerRequest(configOptionsClientRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = null;
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints object', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-          configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
-          expect(() => {
-              ProjectConfig.buildServerRequest(configOptionsClientRequest);
-          }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints = 'invalid';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-null object.');
       });
 
       it('should throw on invalid constraints attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.invalidParameter = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints
+          .invalidParameter = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints parameter.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints \
+        parameter.');
       });
 
       it('should throw on invalid minLength type', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be a number.');
       });
 
@@ -279,7 +281,7 @@ describe('ProjectConfig', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be a number.');
       });
 
@@ -287,16 +289,18 @@ describe('ProjectConfig', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 45;
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer between 6 and 30, inclusive.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer \
+        between 6 and 30, inclusive.');
       });
 
       it('should throw on invalid maxLength range', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 5000;
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or \
+        equal to minLength and at max 4096.');
       });
 
       it('should throw if minLength is greater than maxLength', () => {
@@ -304,56 +308,67 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 20;
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 7;
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or \
+        equal to minLength and at max 4096.');
       });
 
       it('should throw on invalid requiredCharacters attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.invalidParameter = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .invalidParameter = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"invalidParameter" is not a valid RequiredCharacters parameter.');
       });
 
       it('should throw on invalid requiredCharacters object', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints
+          .requiredCharacters = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requiredCharacters" must be a valid object.');
       });
 
       it('should throw on invalid uppercase type', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.uppercase = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .uppercase = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" must be a boolean.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" \
+        must be a boolean.');
       });
 
       it('should throw on invalid lowercase type', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.lowercase = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .lowercase = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" must be a boolean.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" \
+        must be a boolean.');
       });
 
       it('should throw on invalid numeric type', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.numeric = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .numeric = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" must be a boolean.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" \
+        must be a boolean.');
       });
 
       it('should throw on invalid non-alphanumeric type', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters.nonAlphanumeric = 'invalid';
+        configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.requiredCharacters
+          .nonAlphanumeric = 'invalid';
         expect(() => {
-            ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.');
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" \
+        must be a boolean.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];

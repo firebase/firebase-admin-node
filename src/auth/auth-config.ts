@@ -1717,7 +1717,6 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
    * @param options - The options object to validate.
    */
   public static validate(options: PasswordPolicyConfig): void {
-    console.log("OPTIONS= ", JSON.stringify(options))
     const validKeys = {
       enforcementState: true,
       forceUpgradeOnSignin: true,
@@ -1834,7 +1833,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
             && policyVersion.constraints.minLength <= 30)) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_CONFIG,
-              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer between 6 and 30, inclusive.',
+              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" \
+              must be an integer between 6 and 30, inclusive.',
             );
           }
         }
@@ -1846,7 +1846,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
             policyVersion.constraints.maxLength <= 4096)) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_CONFIG,
-              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or equal to minLength and at max 4096.',
+              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" \
+              must be greater than or equal to minLength and at max 4096.',
             );
           }
         }
@@ -1893,7 +1894,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           !validator.isBoolean(policyVersion.constraints.requiredCharacters.nonAlphanumeric)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" must be a boolean.',
+            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric"\
+             must be a boolean.',
           );
         }
 
