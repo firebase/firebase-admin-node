@@ -350,7 +350,7 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints', 
-        ' parameter.');
+          ' parameter.');
       });
 
       it('should throw on invalid minLength type', () => {
