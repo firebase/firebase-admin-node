@@ -265,8 +265,8 @@ describe('ProjectConfig', () => {
           .invalidParameter = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints \
-        parameter.');
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints' +
+        ' parameter.');
       });
 
       it('should throw on invalid minLength type', () => {
@@ -290,8 +290,8 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.minLength = 45;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer \
-        between 6 and 30, inclusive.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be an integer' +
+        ' between 6 and 30, inclusive.');
       });
 
       it('should throw on invalid maxLength range', () => {
@@ -299,8 +299,8 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 5000;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or \
-        equal to minLength and at max 4096.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or' + 
+        ' equal to minLength and at max 4096.');
       });
 
       it('should throw if minLength is greater than maxLength', () => {
@@ -309,8 +309,8 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.passwordPolicyConfig.passwordPolicyVersions[0].constraints.maxLength = 7;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or \
-        equal to minLength and at max 4096.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be greater than or' +
+        ' equal to minLength and at max 4096.');
       });
 
       it('should throw on invalid requiredCharacters attribute', () => {
@@ -337,8 +337,8 @@ describe('ProjectConfig', () => {
           .uppercase = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" \
-        must be a boolean.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase"' + 
+        ' must be a boolean.');
       });
 
       it('should throw on invalid lowercase type', () => {
@@ -347,8 +347,8 @@ describe('ProjectConfig', () => {
           .lowercase = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" \
-        must be a boolean.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase"' +
+        ' must be a boolean.');
       });
 
       it('should throw on invalid numeric type', () => {
@@ -357,8 +357,8 @@ describe('ProjectConfig', () => {
           .numeric = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" \
-        must be a boolean.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric"' +
+        ' must be a boolean.');
       });
 
       it('should throw on invalid non-alphanumeric type', () => {
@@ -367,8 +367,8 @@ describe('ProjectConfig', () => {
           .nonAlphanumeric = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric" \
-        must be a boolean.');
+        }).to.throw('"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric"' +
+        ' must be a boolean.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
