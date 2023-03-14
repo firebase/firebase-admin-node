@@ -228,6 +228,18 @@ export interface EmailIdentifier {
     email: string;
 }
 
+// @public (undocumented)
+export interface EmailPrivacyConfig {
+    // (undocumented)
+    enableImprovedEmailPrivacy: boolean;
+}
+
+// @public (undocumented)
+export interface EmailPrivacyConfig {
+    // (undocumented)
+    enableImprovedEmailPrivacy: boolean;
+}
+
 // @public
 export interface EmailSignInProviderConfig {
     enabled: boolean;
@@ -336,6 +348,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    // (undocumented)
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -387,6 +401,8 @@ export class Tenant {
     // (undocumented)
     readonly anonymousSignInEnabled: boolean;
     readonly displayName?: string;
+    // (undocumented)
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
@@ -434,6 +450,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    // (undocumented)
+    emailPrivacyConfig?: EmailPrivacyConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
@@ -455,6 +473,8 @@ export interface UpdateRequest {
 export interface UpdateTenantRequest {
     anonymousSignInEnabled?: boolean;
     displayName?: string;
+    // (undocumented)
+    emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
