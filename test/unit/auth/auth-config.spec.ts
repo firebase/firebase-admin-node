@@ -1087,72 +1087,9 @@ describe('OIDCConfig', () => {
       });
     });
   });
-describe('PasswordPolicyAutConfig',() => {
-  describe('constructor',() => {
-    const validConfig = new PasswordPolicyAuthConfig({
-      passwordPolicyEnforcementState: 'ENFORCE',
-      passwordPolicyVersions: [
-        {
-          customStrengthOptions: {
-            containsNumericCharacter: true,
-            containsLowercaseCharacter: true,
-            containsNonAlphanumericCharacter: true,
-            containsUppercaseCharacter: true,
-            minPasswordLength: 8,
-            maxPasswordLength: 30,
-          },
-        },
-      ],
-      forceUpgradeOnSignin: true,
-    });
-
-    it('should throw an error on missing state',() => {
-      expect(() => new PasswordPolicyAuthConfig({
-        passwordPolicyVersions: [
-          {
-            customStrengthOptions: {},
-          }
-        ],
-      } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid password policy configuration response');
-    });
-
-    it('should set readonly property "enforcementState" to ENFORCE on state enforced',() => {
-      expect(validConfig.enforcementState).to.equal('ENFORCE');
-    });
-
-    it('should set readonly property "enforcementState" to OFF on state disabling',() => {
-      const offStateConfig=new PasswordPolicyAuthConfig({
-        passwordPolicyEnforcementState: 'OFF',
-      });
-      expect(offStateConfig.enforcementState).to.equal('OFF');
-    });
-
-    it('should set readonly property "passwordPolicyVersions"',() => {
-      const expectedPasswordPolicyVersions: PasswordPolicyVersionConfig[]=[
-        {
-          constraints: {
-            requiredCharacters: {
-              uppercase: true,
-              lowercase: true,
-              nonAlphanumeric: true,
-              numeric: true,
-            },
-            minLength: 8,
-            maxLength: 30,
-          },
-        },
-      ]
-      expect(validConfig.passwordPolicyVersions).to.deep.equal(expectedPasswordPolicyVersions);
-    });
-
-    it('should set readonly property "forceUpgradeOnSignin"',() => {
-      expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
-    });
-  });
-
-  describe('toJSON()',() => {
-    it('should return expected JSON representation',() => {
-      const config = new PasswordPolicyAuthConfig({
+  describe('PasswordPolicyAutConfig',() => {
+    describe('constructor',() => {
+      const validConfig = new PasswordPolicyAuthConfig({
         passwordPolicyEnforcementState: 'ENFORCE',
         passwordPolicyVersions: [
           {
@@ -1168,27 +1105,90 @@ describe('PasswordPolicyAutConfig',() => {
         ],
         forceUpgradeOnSignin: true,
       });
-      expect(config.toJSON()).to.deep.equal({
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
+
+      it('should throw an error on missing state',() => {
+        expect(() => new PasswordPolicyAuthConfig({
+          passwordPolicyVersions: [
+            {
+              customStrengthOptions: {},
+            }
+          ],
+        } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+      });
+
+      it('should set readonly property "enforcementState" to ENFORCE on state enforced',() => {
+        expect(validConfig.enforcementState).to.equal('ENFORCE');
+      });
+
+      it('should set readonly property "enforcementState" to OFF on state disabling',() => {
+        const offStateConfig=new PasswordPolicyAuthConfig({
+          passwordPolicyEnforcementState: 'OFF',
+        });
+        expect(offStateConfig.enforcementState).to.equal('OFF');
+      });
+
+      it('should set readonly property "passwordPolicyVersions"',() => {
+        const expectedPasswordPolicyVersions: PasswordPolicyVersionConfig[]=[
           {
             constraints: {
               requiredCharacters: {
+                uppercase: true,
                 lowercase: true,
                 nonAlphanumeric: true,
                 numeric: true,
-                uppercase: true,
               },
               minLength: 8,
               maxLength: 30,
             },
           },
-        ],
+        ]
+        expect(validConfig.passwordPolicyVersions).to.deep.equal(expectedPasswordPolicyVersions);
+      });
+
+      it('should set readonly property "forceUpgradeOnSignin"',() => {
+        expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
       });
     });
-  });
-});});
+
+    describe('toJSON()',() => {
+      it('should return expected JSON representation',() => {
+        const config = new PasswordPolicyAuthConfig({
+          passwordPolicyEnforcementState: 'ENFORCE',
+          passwordPolicyVersions: [
+            {
+              customStrengthOptions: {
+                containsNumericCharacter: true,
+                containsLowercaseCharacter: true,
+                containsNonAlphanumericCharacter: true,
+                containsUppercaseCharacter: true,
+                minPasswordLength: 8,
+                maxPasswordLength: 30,
+              },
+            },
+          ],
+          forceUpgradeOnSignin: true,
+        });
+        expect(config.toJSON()).to.deep.equal({
+          enforcementState: 'ENFORCE',
+          forceUpgradeOnSignin: true,
+          passwordPolicyVersions: [
+            {
+              constraints: {
+                requiredCharacters: {
+                  lowercase: true,
+                  nonAlphanumeric: true,
+                  numeric: true,
+                  uppercase: true,
+                },
+                minLength: 8,
+                maxLength: 30,
+              },
+            },
+          ],
+        });
+      });
+    });
+  });});
 
 describe('PasswordPolicyAutConfig',() => {
   describe('constructor',() => {
