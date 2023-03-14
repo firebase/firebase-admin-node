@@ -91,6 +91,12 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
+  PasswordPolicyAuthConfig,
+  PasswordPolicyConfig,
+  PasswordPolicyVersionConfig,
+  PasswordPolicyEnforcementState, 
+  PasswordPolicyConstraints, 
+  RequiredCharactersConfig,
 } from './auth-config';
 
 export {

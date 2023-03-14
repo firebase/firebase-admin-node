@@ -66,6 +66,9 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The password policy configurations for the tenant
+   */
   public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
 
   /**
@@ -100,7 +103,6 @@ export class ProjectConfig {
 
     // Validate Password policy Config if provided
     if (typeof request.passwordPolicyConfig !== 'undefined') {
-      console.log('REQ= ', JSON.stringify(request.passwordPolicyConfig));
       PasswordPolicyAuthConfig.validate(request.passwordPolicyConfig);
     }
   }

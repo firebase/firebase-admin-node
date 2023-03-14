@@ -61,7 +61,7 @@ export interface UpdateTenantRequest {
    */
   smsRegionConfig?: SmsRegionConfig;
   /**
-   * The password policy configurations for the tenant
+   * The password policy configuration for the tenant
    */
   passwordPolicyConfig?: PasswordPolicyConfig;
 }
@@ -143,6 +143,9 @@ export class Tenant {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The password policy configuration for the tenant
+   */
   public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
 
   /**

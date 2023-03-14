@@ -323,6 +323,38 @@ export interface OIDCUpdateAuthProviderRequest {
 }
 
 // @public
+export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
+    readonly enforcementState: PasswordPolicyEnforcementState;
+    readonly forceUpgradeOnSignin?: boolean;
+    readonly passwordPolicyVersions: PasswordPolicyVersionConfig[];
+    // (undocumented)
+    toJSON(): object;
+    static validate(options: PasswordPolicyConfig): void;
+}
+
+// @public
+export interface PasswordPolicyConfig {
+    enforcementState?: PasswordPolicyEnforcementState;
+    forceUpgradeOnSignin?: boolean;
+    passwordPolicyVersions?: PasswordPolicyVersionConfig[];
+}
+
+// @public
+export interface PasswordPolicyConstraints {
+    maxLength?: number;
+    minLength?: number;
+    requiredCharacters?: RequiredCharactersConfig;
+}
+
+// @public
+export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
+
+// @public
+export interface PasswordPolicyVersionConfig {
+    constraints?: PasswordPolicyConstraints;
+}
+
+// @public
 export interface PhoneIdentifier {
     // (undocumented)
     phoneNumber: string;
@@ -336,9 +368,6 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    // Warning: (ae-forgotten-export) The symbol "PasswordPolicyAuthConfig" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
@@ -356,6 +385,14 @@ export interface ProviderIdentifier {
     providerId: string;
     // (undocumented)
     providerUid: string;
+}
+
+// @public
+export interface RequiredCharactersConfig {
+    lowercase?: boolean;
+    nonAlphanumeric?: boolean;
+    numeric?: boolean;
+    uppercase?: boolean;
 }
 
 // @public
@@ -393,7 +430,6 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    // (undocumented)
     readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
@@ -440,7 +476,6 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
-    // Warning: (ae-forgotten-export) The symbol "PasswordPolicyConfig" needs to be exported by the entry point index.d.ts
     passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
 }

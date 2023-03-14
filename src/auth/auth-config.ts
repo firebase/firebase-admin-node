@@ -1632,6 +1632,9 @@ export interface PasswordPolicyVersionConfig {
  * Constraints to enforce on user passwords.
  */
 export interface PasswordPolicyConstraints {
+  /**
+   * Set of character requirements for the password
+   */
   requiredCharacters?: RequiredCharactersConfig;
   /**
    * Minimum password length. Range from 6 to 30
@@ -1671,8 +1674,17 @@ export interface RequiredCharactersConfig {
  */
 export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
 
+  /**
+ * Identifies a password policy configuration state.
+ */
   public readonly enforcementState: PasswordPolicyEnforcementState;
+  /**
+   * Users must have a password compliant with the password policy to sign-in
+   */
   public readonly forceUpgradeOnSignin?: boolean;
+  /**
+   * Must be of length 1. Contains the strength attributes for the password policy
+   */
   public readonly passwordPolicyVersions: PasswordPolicyVersionConfig[];
 
   /**
