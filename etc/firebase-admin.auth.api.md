@@ -336,6 +336,10 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    // Warning: (ae-forgotten-export) The symbol "PasswordPolicyAuthConfig" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -389,6 +393,8 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    // (undocumented)
+    readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
@@ -434,6 +440,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    // Warning: (ae-forgotten-export) The symbol "PasswordPolicyConfig" needs to be exported by the entry point index.d.ts
+    passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
@@ -457,6 +465,7 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
