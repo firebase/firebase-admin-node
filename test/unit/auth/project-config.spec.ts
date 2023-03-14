@@ -36,7 +36,7 @@ describe('ProjectConfig', () => {
   const serverResponse: ProjectConfigServerResponse = {
     smsRegionConfig: {
       allowByDefault: {
-        disallowedRegions: ['AC', 'AD'],
+        disallowedRegions: [ 'AC', 'AD' ],
       },
     },
   };
@@ -44,7 +44,7 @@ describe('ProjectConfig', () => {
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
     smsRegionConfig: {
       allowByDefault: {
-        disallowedRegions: ['AC', 'AD'],
+        disallowedRegions: [ 'AC', 'AD' ],
       },
     },
   };
@@ -52,7 +52,7 @@ describe('ProjectConfig', () => {
   const updateProjectConfigRequest2: UpdateProjectConfigRequest = {
     smsRegionConfig: {
       allowlistOnly: {
-        allowedRegions: ['AC', 'AD'],
+        allowedRegions: [ 'AC', 'AD' ],
       },
     },
     emailPrivacyConfig: {
@@ -63,7 +63,7 @@ describe('ProjectConfig', () => {
   const updateProjectConfigRequest3: any = {
     smsRegionConfig: {
       allowlistOnly: {
-        allowedRegions: ['AC', 'AD'],
+        allowedRegions: [ 'AC', 'AD' ],
       },
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
@@ -95,7 +95,7 @@ describe('ProjectConfig', () => {
 
       it('should throw on invalid allowlistOnly attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest2) as any;
-        configOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = ['AC', 'AD'];
+        configOptionsClientRequest.smsRegionConfig.allowlistOnly.disallowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"disallowedRegions" is not a valid SmsRegionConfig.allowlistOnly parameter.');
@@ -103,7 +103,7 @@ describe('ProjectConfig', () => {
 
       it('should throw on invalid allowByDefault attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        configOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = ['AC', 'AD'];
+        configOptionsClientRequest.smsRegionConfig.allowByDefault.allowedRegions = [ 'AC', 'AD' ];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"allowedRegions" is not a valid SmsRegionConfig.allowByDefault parameter.');
@@ -197,7 +197,7 @@ describe('ProjectConfig', () => {
     it('should set readonly property smsRegionConfig', () => {
       const expectedSmsRegionConfig = {
         allowByDefault: {
-          disallowedRegions: ['AC', 'AD'],
+          disallowedRegions: [ 'AC', 'AD' ],
         },
       };
       expect(projectConfig.smsRegionConfig).to.deep.equal(expectedSmsRegionConfig);

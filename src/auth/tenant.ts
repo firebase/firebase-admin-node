@@ -21,7 +21,8 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, EmailPrivacyConfig, 
+  EmailPrivacyAuthConfig
 } from './auth-config';
 
 /**
@@ -74,7 +75,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   displayName?: string;
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: { [key: string]: string };
+  testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -87,7 +88,7 @@ export interface TenantServerResponse {
   enableEmailLinkSignin?: boolean;
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: { [key: string]: string };
+  testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -129,7 +130,7 @@ export class Tenant {
   /**
    * The map containing the test phone number / code pairs for the tenant.
    */
-  public readonly testPhoneNumbers?: { [phoneNumber: string]: string };
+  public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
@@ -232,7 +233,7 @@ export class Tenant {
     }
     // Validate displayName type if provided.
     if (typeof request.displayName !== 'undefined' &&
-      !validator.isNonEmptyString(request.displayName)) {
+        !validator.isNonEmptyString(request.displayName)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `"${label}.displayName" must be a valid non-empty string.`,
@@ -245,7 +246,7 @@ export class Tenant {
     }
     // Validate test phone numbers if provided.
     if (typeof request.testPhoneNumbers !== 'undefined' &&
-      request.testPhoneNumbers !== null) {
+        request.testPhoneNumbers !== null) {
       validateTestPhoneNumbers(request.testPhoneNumbers);
     } else if (request.testPhoneNumbers === null && createRequest) {
       // null allowed only for update operations.
@@ -260,7 +261,7 @@ export class Tenant {
       MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
     }
     // Validate SMS Regions Config if provided.
-    if (typeof request.smsRegionConfig !== 'undefined') {
+    if (typeof request.smsRegionConfig != 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
 
