@@ -323,16 +323,6 @@ export interface OIDCUpdateAuthProviderRequest {
 }
 
 // @public
-export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
-    readonly enforcementState: PasswordPolicyEnforcementState;
-    readonly forceUpgradeOnSignin?: boolean;
-    readonly passwordPolicyVersions: PasswordPolicyVersionConfig[];
-    // (undocumented)
-    toJSON(): object;
-    static validate(options: PasswordPolicyConfig): void;
-}
-
-// @public
 export interface PasswordPolicyConfig {
     enforcementState?: PasswordPolicyEnforcementState;
     forceUpgradeOnSignin?: boolean;
@@ -368,7 +358,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
-    readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -430,7 +420,7 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {

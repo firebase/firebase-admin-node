@@ -69,7 +69,7 @@ export class ProjectConfig {
   /**
    * The password policy configurations for the tenant
    */
-  public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
+  public readonly passwordPolicyConfig?: PasswordPolicyConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
@@ -150,7 +150,7 @@ export class ProjectConfig {
     // JSON serialization
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
-      passwordPolicyConfig: this.passwordPolicyConfig?.toJSON(),
+      passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;

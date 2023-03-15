@@ -146,7 +146,7 @@ export class Tenant {
   /**
    * The password policy configuration for the tenant
    */
-  public readonly passwordPolicyConfig?: PasswordPolicyAuthConfig;
+  public readonly passwordPolicyConfig?: PasswordPolicyConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -343,7 +343,7 @@ export class Tenant {
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
-      passwordPolicyConfig: this.passwordPolicyConfig?.toJSON(),
+      passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;

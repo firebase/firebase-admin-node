@@ -91,7 +91,6 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
-  PasswordPolicyAuthConfig,
   PasswordPolicyConfig,
   PasswordPolicyVersionConfig,
   PasswordPolicyEnforcementState, 

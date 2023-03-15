@@ -1671,12 +1671,14 @@ export interface RequiredCharactersConfig {
 /**
  * Defines the password policy config class used to convert client side PasswordPolicyConfig
  * to a format that is understood by the Auth server.
+ * 
+ * @internal
  */
 export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
 
   /**
- * Identifies a password policy configuration state.
- */
+   * Identifies a password policy configuration state.
+   */
   public readonly enforcementState: PasswordPolicyEnforcementState;
   /**
    * Users must have a password compliant with the password policy to sign-in
@@ -1727,6 +1729,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
    * Validates the PasswordPolicyConfig options object. Throws an error on failure.
    *
    * @param options - The options object to validate.
+   * @internal
    */
   public static validate(options: PasswordPolicyConfig): void {
     const validKeys = {
@@ -1954,15 +1957,6 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       })
     });
     this.forceUpgradeOnSignin = response.forceUpgradeOnSignin;
-  }
-
-  /** @returns The plain object representation of the password policy config instance. */
-  public toJSON(): object {
-    return {
-      enforcementState: this.enforcementState,
-      passwordPolicyVersions: this.passwordPolicyVersions,
-      forceUpgradeOnSignin: this.forceUpgradeOnSignin,
-    };
   }
 }
 

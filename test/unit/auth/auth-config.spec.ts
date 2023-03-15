@@ -1149,45 +1149,6 @@ describe('OIDCConfig', () => {
         expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
       });
     });
-
-    describe('toJSON()',() => {
-      it('should return expected JSON representation',() => {
-        const config = new PasswordPolicyAuthConfig({
-          passwordPolicyEnforcementState: 'ENFORCE',
-          passwordPolicyVersions: [
-            {
-              customStrengthOptions: {
-                containsNumericCharacter: true,
-                containsLowercaseCharacter: true,
-                containsNonAlphanumericCharacter: true,
-                containsUppercaseCharacter: true,
-                minPasswordLength: 8,
-                maxPasswordLength: 30,
-              },
-            },
-          ],
-          forceUpgradeOnSignin: true,
-        });
-        expect(config.toJSON()).to.deep.equal({
-          enforcementState: 'ENFORCE',
-          forceUpgradeOnSignin: true,
-          passwordPolicyVersions: [
-            {
-              constraints: {
-                requiredCharacters: {
-                  lowercase: true,
-                  nonAlphanumeric: true,
-                  numeric: true,
-                  uppercase: true,
-                },
-                minLength: 8,
-                maxLength: 30,
-              },
-            },
-          ],
-        });
-      });
-    });
   });});
 
 describe('PasswordPolicyAutConfig',() => {
@@ -1250,45 +1211,6 @@ describe('PasswordPolicyAutConfig',() => {
 
     it('should set readonly property "forceUpgradeOnSignin"',() => {
       expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
-    });
-  });
-
-  describe('toJSON()',() => {
-    it('should return expected JSON representation',() => {
-      const config = new PasswordPolicyAuthConfig({
-        passwordPolicyEnforcementState: 'ENFORCE',
-        passwordPolicyVersions: [
-          {
-            customStrengthOptions: {
-              containsNumericCharacter: true,
-              containsLowercaseCharacter: true,
-              containsNonAlphanumericCharacter: true,
-              containsUppercaseCharacter: true,
-              minPasswordLength: 8,
-              maxPasswordLength: 30,
-            },
-          },
-        ],
-        forceUpgradeOnSignin: true,
-      });
-      expect(config.toJSON()).to.deep.equal({
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-                uppercase: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
-      });
     });
   });
 });
