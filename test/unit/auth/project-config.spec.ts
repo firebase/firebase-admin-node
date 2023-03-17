@@ -99,7 +99,7 @@ describe('ProjectConfig', () => {
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
       },
-    }
+    },
   };
 
   describe('buildServerRequest()', () => {
