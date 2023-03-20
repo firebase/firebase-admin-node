@@ -53,10 +53,10 @@ describe('isArray()', () => {
     expect(isArray(undefined as any)).to.be.false;
   });
 
-  const nonBooleans = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
-  nonBooleans.forEach((nonBoolean) => {
-    it('should return false given a non-array argument: ' + JSON.stringify(nonBoolean), () => {
-      expect(isArray(nonBoolean as any)).to.be.false;
+  const nonArrays = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
+  nonArrays.forEach((nonArray) => {
+    it('should return false given a non-array argument: ' + JSON.stringify(nonArray), () => {
+      expect(isArray(nonArray as any)).to.be.false;
     });
   });
 
@@ -84,10 +84,10 @@ describe('isNonEmptyArray()', () => {
     expect(isNonEmptyArray(undefined as any)).to.be.false;
   });
 
-  const nonBooleans = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
-  nonBooleans.forEach((nonBoolean) => {
-    it('should return false given a non-array argument: ' + JSON.stringify(nonBoolean), () => {
-      expect(isNonEmptyArray(nonBoolean as any)).to.be.false;
+  const nonArrays = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
+  nonArrays.forEach((nonArray) => {
+    it('should return false given a non-array argument: ' + JSON.stringify(nonArray), () => {
+      expect(isNonEmptyArray(nonArray as any)).to.be.false;
     });
   });
 
@@ -231,10 +231,10 @@ describe('isObject()', () => {
     expect(isObject(undefined as any)).to.be.false;
   });
 
-  const nonStrings = [NaN, 0, 1, true, false, '', 'a', _.noop];
-  nonStrings.forEach((nonString) => {
-    it('should return false given a non-object argument: ' + JSON.stringify(nonString), () => {
-      expect(isObject(nonString as any)).to.be.false;
+  const nonObjects = [NaN, 0, 1, true, false, '', 'a', _.noop];
+  nonObjects.forEach((nonObject) => {
+    it('should return false given a non-object argument: ' + JSON.stringify(nonObject), () => {
+      expect(isObject(nonObject as any)).to.be.false;
     });
   });
 
@@ -264,10 +264,10 @@ describe('isNonNullObject()', () => {
     expect(isNonNullObject(undefined as any)).to.be.false;
   });
 
-  const nonStrings = [NaN, 0, 1, true, false, '', 'a', _.noop];
-  nonStrings.forEach((nonString) => {
-    it('should return false given a non-object argument: ' + JSON.stringify(nonString), () => {
-      expect(isNonNullObject(nonString as any)).to.be.false;
+  const nonObjects = [NaN, 0, 1, true, false, '', 'a', _.noop];
+  nonObjects.forEach((nonObject) => {
+    it('should return false given a non-object argument: ' + JSON.stringify(nonObject), () => {
+      expect(isNonNullObject(nonObject as any)).to.be.false;
     });
   });
 

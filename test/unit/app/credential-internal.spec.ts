@@ -36,11 +36,12 @@ import {
 } from '../../../src/app/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential
 } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { deepCopy } from '../../../src/utils/deep-copy';
 
 chai.should();
 chai.use(sinonChai);
@@ -59,6 +60,17 @@ const MOCK_REFRESH_TOKEN_CONFIG = {
   type: 'authorized_user',
   refresh_token: 'test_token',
 };
+const MOCK_IMPERSONATED_TOKEN_CONFIG = {
+  delegates: [],
+  service_account_impersonation_url: '',
+  source_credentials: {
+    client_id: 'test_client_id',
+    client_secret: 'test_client_secret',
+    refresh_token: 'test_refresh_token',
+    type: 'authorized_user'
+  },
+  type: 'impersonated_service_account'
+}
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const FIVE_MINUTES_IN_SECONDS = 5 * 60;
@@ -333,6 +345,23 @@ describe('Credential', () => {
       });
     });
 
+    it('should create id tokens', () => {
+      const expected = 'an-id-token-encoded';
+      const response = utils.responseFrom(expected);
+      httpStub.resolves(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getIDToken('my-audience.cloudfunctions.net').then((token) => {
+        expect(token).to.equal(expected);
+        expect(httpStub).to.have.been.calledOnce.and.calledWith({
+          method: 'GET',
+          url: 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=my-audience.cloudfunctions.net',
+          headers: { 'Metadata-Flavor': 'Google' },
+          httpAgent: undefined,
+        });
+      });
+    });
+
     it('should discover project id', () => {
       const expectedProjectId = 'test-project-id';
       const response = utils.responseFrom(expectedProjectId);
@@ -392,6 +421,75 @@ describe('Credential', () => {
     });
   });
 
+  describe('ImpersonatedServiceAccountCredential', () => {
+    it('should throw if called with the path to an invalid file', () => {
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
+      expect(() => new ImpersonatedServiceAccountCredential(invalidPath))
+        .to.throw('Failed to parse impersonated service account file');
+    });
+
+    it('should throw given an object without a "clientId" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.client_id = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.client_id" property.');
+    });
+
+    it('should throw given an object without a "clientSecret" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.client_secret = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.client_secret" property.');
+    });
+
+    it('should throw given an object without a "refreshToken" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.refresh_token = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.refresh_token" property.');
+    });
+
+    it('should throw given an object without a "type" property', () => {
+      const invalidCredential = deepCopy(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      invalidCredential.source_credentials.type = '';
+      expect(() => new ImpersonatedServiceAccountCredential(invalidCredential as any))
+        .to.throw('Impersonated Service Account must contain a "source_credentials.type" property.');
+    });
+
+    it('should return a Credential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      expect(c).to.deep.include({
+        implicit: false,
+      });
+    });
+
+    it('should return an implicit Credential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG, undefined, true);
+      expect(c).to.deep.include({
+        implicit: true,
+      });
+    });
+
+    it('should create access tokens', () => {
+      const scope = nock('https://www.googleapis.com')
+        .post('/oauth2/v4/token')
+        .reply(200, {
+          access_token: 'token',
+          token_type: 'Bearer',
+          expires_in: 60 * 60,
+        }, {
+          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+        });
+      mockedRequests.push(scope);
+
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.be.a('string').and.to.not.be.empty;
+        expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
+      });
+    });
+  });
+
   describe('getApplicationDefault()', () => {
     let fsStub: sinon.SinonStub;
 
@@ -405,6 +503,13 @@ describe('Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = getApplicationDefault();
       expect(c).to.be.an.instanceof(ServiceAccountCredential);
+    });
+
+    it('should return a ImpersonatedCredential with impersonated GOOGLE_APPLICATION_CREDENTIALS set', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS
+        = path.resolve(__dirname, '../../resources/mock.impersonated_key.json');
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ImpersonatedServiceAccountCredential);
     });
 
     it('should throw if explicitly pointing to an invalid path', () => {
@@ -521,6 +626,15 @@ describe('Credential', () => {
       expect(isApplicationDefault(c)).to.be.true;
     });
 
+    it('should return true for ImpersonatedServiceAccountCredential loaded from GOOGLE_APPLICATION_CREDENTIALS', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(
+        __dirname, '../../resources/mock.impersonated_key.json'
+      );
+      const c = getApplicationDefault();
+      expect(c).is.instanceOf(ImpersonatedServiceAccountCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
     it('should return true for credential loaded from gcloud SDK', () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
@@ -550,6 +664,11 @@ describe('Credential', () => {
 
     it('should return false for explicitly loaded RefreshTokenCredential', () => {
       const c = new RefreshTokenCredential(mocks.refreshToken);
+      expect(isApplicationDefault(c)).to.be.false;
+    });
+
+    it('should return false for explicitly loaded ImpersonatedServiceAccountCredential', () => {
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG);
       expect(isApplicationDefault(c)).to.be.false;
     });
 
@@ -613,6 +732,16 @@ describe('Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const agent = new Agent();
       const c = getApplicationDefault(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
+      });
+    });
+
+    it('ImpersonatedServiceAccountCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new ImpersonatedServiceAccountCredential(MOCK_IMPERSONATED_TOKEN_CONFIG, agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;

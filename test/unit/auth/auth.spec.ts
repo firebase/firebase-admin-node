@@ -2869,10 +2869,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
       { api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false },
       { api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false },
       { api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true },
+      { api: 'generateVerifyAndChangeEmailLink', requestType: 'VERIFY_AND_CHANGE_EMAIL', requiresSettings: false },
     ];
     emailActionFlows.forEach((emailActionFlow) => {
       describe(`${emailActionFlow.api}()`, () => {
         const email = 'user@example.com';
+        const newEmail = 'usernew@example.com';
         const actionCodeSettings = {
           url: 'https://www.example.com/path/file?a=1&b=2',
           handleCodeInApp: true,
@@ -2898,32 +2900,71 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected given no email', () => {
-          return (auth as any)[emailActionFlow.api](undefined, actionCodeSettings)
+          let args: any = [ undefined, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ undefined, newEmail, actionCodeSettings ];
+          }
+          return (auth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-email');
         });
 
         it('should be rejected given an invalid email', () => {
-          return (auth as any)[emailActionFlow.api]('invalid', actionCodeSettings)
+          let args: any = [ 'invalid', actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ 'invalid', newEmail, actionCodeSettings ];
+          }
+          return (auth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-email');
         });
 
+        it('should be rejected given no new email when request type is `generateVerifyAndChangeEmailLink`', () => {
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            return (auth as any)[emailActionFlow.api](email)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+          }
+        });
+
+        it('should be rejected given an invalid new email when request type is `generateVerifyAndChangeEmailLink`',
+          () => {
+            if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+              return (auth as any)[emailActionFlow.api](email, 'invalid')
+                .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-new-email');
+            }
+          });
+
         it('should be rejected given an invalid ActionCodeSettings object', () => {
-          return (auth as any)[emailActionFlow.api](email, 'invalid')
+          let args: any = [ email, 'invalid' ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, 'invalid' ];
+          }
+          return (auth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
 
         it('should be rejected given an app which returns null access tokens', () => {
-          return (nullAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          let args: any = [ email, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, actionCodeSettings ];
+          }
+          return (nullAccessTokenAuth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
         });
 
         it('should be rejected given an app which returns invalid access tokens', () => {
-          return (malformedAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          let args: any = [ email, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, actionCodeSettings ];
+          }
+          return (malformedAccessTokenAuth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
         });
 
         it('should be rejected given an app which fails to generate access tokens', () => {
-          return (rejectedPromiseAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          let args: any = [ email, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, actionCodeSettings ];
+          }
+          return (rejectedPromiseAccessTokenAuth as any)[emailActionFlow.api](...args)
             .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
         });
 
@@ -2932,7 +2973,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
           const getEmailActionLinkStub = sinon.stub(testConfig.RequestHandler.prototype, 'getEmailActionLink')
             .resolves(expectedLink);
           stubs.push(getEmailActionLinkStub);
-          return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          let args: any = [ email, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, actionCodeSettings ];
+          }
+          return (auth as any)[emailActionFlow.api](...args)
             .then((actualLink: string) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
@@ -2953,7 +2998,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             const getEmailActionLinkStub = sinon.stub(testConfig.RequestHandler.prototype, 'getEmailActionLink')
               .resolves(expectedLink);
             stubs.push(getEmailActionLinkStub);
-            return (auth as any)[emailActionFlow.api](email)
+            let args: any = [ email ];
+            if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+              args = [ email, newEmail ];
+            }
+            return (auth as any)[emailActionFlow.api](...args)
               .then((actualLink: string) => {
                 // Confirm underlying API called with expected parameters.
                 expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
@@ -2969,7 +3018,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
           const getEmailActionLinkStub = sinon.stub(testConfig.RequestHandler.prototype, 'getEmailActionLink')
             .rejects(expectedError);
           stubs.push(getEmailActionLinkStub);
-          return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          let args: any = [ email, actionCodeSettings ];
+          if (emailActionFlow.api === 'generateVerifyAndChangeEmailLink') {
+            args = [ email, newEmail, actionCodeSettings ];
+          }
+          return (auth as any)[emailActionFlow.api](...args)
             .then(() => {
               throw new Error('Unexpected success');
             }, (error: any) => {
@@ -3842,7 +3895,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expect(decoded).to.have.property('payload').that.has.property('uid', 'uid1');
 
         // Make sure this doesn't throw
-        jwt.verify(token, '', { algorithms: ['none'] });
+        jwt.verify(token, undefined as any, { algorithms: ['none'] });
       });
 
       it('verifyIdToken() should reject revoked ID tokens', () => {
@@ -3856,10 +3909,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none',
           subject: uid,
+          header: {},
         }, {
           iat: oneSecBeforeValidSince,
           auth_time: oneSecBeforeValidSince,
-        });
+        }, 'secret');
 
         // verifyIdToken should force checking revocation in emulator mode,
         // even if checkRevoked=false.
@@ -3889,7 +3943,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         }, {
           iat: oneSecBeforeValidSince,
           auth_time: oneSecBeforeValidSince,
-        });
+        }, 'secret');
 
         // verifySessionCookie should force checking revocation in emulator
         // mode, even if checkRevoked=false.
@@ -3907,7 +3961,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
-        });
+        }, undefined, 'secret');
 
         const errorMessage = 'Error while making request: connect ECONNREFUSED 127.0.0.1. Error code: ECONNREFUSED';
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser').rejects(new Error(errorMessage));

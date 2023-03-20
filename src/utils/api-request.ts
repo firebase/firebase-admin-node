@@ -505,7 +505,12 @@ class AsyncHttpCall {
       // Listen to timeouts and throw an error.
       req.setTimeout(timeout, timeoutCallback);
       req.on('socket', (socket) => {
+        socket.setMaxListeners(socket.getMaxListeners() + 1);
         socket.setTimeout(timeout, timeoutCallback);
+        socket.on('end', () => {
+          socket.setTimeout(0);
+          socket.setMaxListeners(Math.max(socket.getMaxListeners() - 1, 0));
+        });
       });
     }
 
@@ -588,8 +593,8 @@ class AsyncHttpCall {
   private handleMultipartResponse(
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new dicer({ boundary });
+    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];

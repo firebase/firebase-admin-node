@@ -28,6 +28,7 @@ import * as jwt from 'jsonwebtoken';
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
+import { ComputeEngineCredential } from '../../src/app/credential-internal';
 
 const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -87,6 +88,19 @@ export class MockCredential implements Credential {
       access_token: 'mock-token',
       expires_in: 3600,
     });
+  }
+}
+
+export class MockComputeEngineCredential extends ComputeEngineCredential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    return Promise.resolve({
+      access_token: 'mock-token',
+      expires_in: 3600,
+    });
+  }
+  
+  public getIDToken(): Promise<string> {
+    return Promise.resolve('mockIdToken');
   }
 }
 
@@ -192,9 +206,10 @@ export const jwksKeyPair = {
  *
  * @param {object} overrides Overrides for the generated token's attributes.
  * @param {object} claims Extra claims to add to the token.
+ * @param {string} secret Custom key to sign the token with.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: object, claims?: object): string {
+export function generateIdToken(overrides?: object, claims?: object, secret?: string): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -211,7 +226,7 @@ export function generateIdToken(overrides?: object, claims?: object): string {
     ...claims,
   };
 
-  return jwt.sign(payload, certificateObject.private_key, options);
+  return jwt.sign(payload, secret ?? certificateObject.private_key, options);
 }
 
 /**
@@ -219,9 +234,10 @@ export function generateIdToken(overrides?: object, claims?: object): string {
  *
  * @param overrides Overrides for the generated token's attributes.
  * @param claims Extra claims to add to the token.
+ * @param {string} secret Custom key to sign the token with.
  * @return A mocked Auth Blocking token with any provided overrides included.
  */
-export function generateAuthBlockingToken(overrides?: object, claims?: object): string {
+export function generateAuthBlockingToken(overrides?: object, claims?: object, secret?: string): string {
   const options = _.assign({
     audience: `https://us-central1-${projectId}.cloudfunctions.net/functionName`,
     expiresIn: TEN_MINUTES_IN_SECONDS,
@@ -238,7 +254,7 @@ export function generateAuthBlockingToken(overrides?: object, claims?: object): 
     ...claims,
   };
 
-  return jwt.sign(payload, certificateObject.private_key, options);
+  return jwt.sign(payload, secret ?? certificateObject.private_key, options);
 }
 
 /**

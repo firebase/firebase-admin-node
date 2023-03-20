@@ -56,7 +56,7 @@ describe('AppCheckApiClient', () => {
   const TEST_TOKEN_TO_EXCHANGE = 'signed-custom-token';
 
   const TEST_RESPONSE = {
-    attestationToken: 'token',
+    token: 'token',
     ttl: '3s'
   };
 
@@ -203,11 +203,11 @@ describe('AppCheckApiClient', () => {
       stubs.push(stub);
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
         .then((resp) => {
-          expect(resp.token).to.deep.equal(TEST_RESPONSE.attestationToken);
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
           expect(resp.ttlMillis).to.deep.equal(3000);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebaseappcheck.googleapis.com/v1beta/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
             headers: EXPECTED_HEADERS,
             data: { customToken: TEST_TOKEN_TO_EXCHANGE }
           });
@@ -229,7 +229,7 @@ describe('AppCheckApiClient', () => {
           stubs.push(stub);
           return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
             .then((resp) => {
-              expect(resp.token).to.deep.equal(response.attestationToken);
+              expect(resp.token).to.deep.equal(response.token);
               expect(resp.ttlMillis).to.deep.equal(ttlMillis);
             });
         });

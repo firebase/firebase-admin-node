@@ -24,9 +24,34 @@ export interface ActionCodeSettings {
 }
 
 // @public
+export interface AllowByDefault {
+    disallowedRegions: string[];
+}
+
+// @public
+export interface AllowByDefaultWrap {
+    allowByDefault: AllowByDefault;
+    // @alpha (undocumented)
+    allowlistOnly?: never;
+}
+
+// @public
+export interface AllowlistOnly {
+    allowedRegions: string[];
+}
+
+// @public
+export interface AllowlistOnlyWrap {
+    // @alpha (undocumented)
+    allowByDefault?: never;
+    allowlistOnly: AllowlistOnly;
+}
+
+// @public
 export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
+    projectConfigManager(): ProjectConfigManager;
     tenantManager(): TenantManager;
 }
 
@@ -55,6 +80,7 @@ export abstract class BaseAuth {
     generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
+    generateVerifyAndChangeEmailLink(email: string, newEmail: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
     getUser(uid: string): Promise<UserRecord>;
     getUserByEmail(email: string): Promise<UserRecord>;
@@ -309,6 +335,18 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 }
 
 // @public
+export class ProjectConfig {
+    readonly smsRegionConfig?: SmsRegionConfig;
+    toJSON(): object;
+}
+
+// @public
+export class ProjectConfigManager {
+    getProjectConfig(): Promise<ProjectConfig>;
+    updateProjectConfig(projectConfigOptions: UpdateProjectConfigRequest): Promise<ProjectConfig>;
+}
+
+// @public
 export interface ProviderIdentifier {
     // (undocumented)
     providerId: string;
@@ -342,12 +380,16 @@ export interface SessionCookieOptions {
 }
 
 // @public
+export type SmsRegionConfig = AllowByDefaultWrap | AllowlistOnlyWrap;
+
+// @public
 export class Tenant {
     // (undocumented)
     readonly anonymousSignInEnabled: boolean;
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
         [phoneNumber: string]: string;
@@ -391,6 +433,11 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 }
 
 // @public
+export interface UpdateProjectConfigRequest {
+    smsRegionConfig?: SmsRegionConfig;
+}
+
+// @public
 export interface UpdateRequest {
     disabled?: boolean;
     displayName?: string | null;
@@ -410,6 +457,7 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
     } | null;

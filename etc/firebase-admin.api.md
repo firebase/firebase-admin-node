@@ -274,6 +274,14 @@ export namespace firestore {
     import WhereFilterOp = _firestore.WhereFilterOp;
     import WriteBatch = _firestore.WriteBatch;
     import WriteResult = _firestore.WriteResult;
+    import PartialWithFieldValue = _firestore.PartialWithFieldValue;
+    import WithFieldValue = _firestore.WithFieldValue;
+    import Primitive = _firestore.Primitive;
+    import NestedUpdateFields = _firestore.NestedUpdateFields;
+    import ChildUpdateFields = _firestore.ChildUpdateFields;
+    import AddPrefixToKeys = _firestore.AddPrefixToKeys;
+    import UnionToIntersection = _firestore.UnionToIntersection;
+    import ReadOnlyTransactionOptions = _firestore.ReadOnlyTransactionOptions;
     import setLogFunction = _firestore.setLogFunction;
 }
 
@@ -312,6 +320,8 @@ export function machineLearning(app?: App): machineLearning.MachineLearning;
 // @public (undocumented)
 export namespace machineLearning {
     // Warning: (ae-forgotten-export) The symbol "AutoMLTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // @deprecated
     export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
     // Warning: (ae-forgotten-export) The symbol "GcsTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
     export type GcsTfliteModelOptions = GcsTfliteModelOptions;

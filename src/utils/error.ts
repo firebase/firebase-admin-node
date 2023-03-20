@@ -452,6 +452,10 @@ export class AuthClientErrorCode {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
   };
+  public static INVALID_NEW_EMAIL = {
+    code: 'invalid-new-email',
+    message: 'The new email address is improperly formatted.',
+  };
   public static INVALID_ENROLLED_FACTORS = {
     code: 'invalid-enrolled-factors',
     message: 'The enrolled factors must be a valid array of MultiFactorInfo objects.',
@@ -908,6 +912,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid new email provided.
+  INVALID_NEW_EMAIL: 'INVALID_NEW_EMAIL',
   // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
   INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
   // Invalid ID token provided.

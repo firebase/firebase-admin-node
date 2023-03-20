@@ -32,7 +32,9 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
 const GOOGLE_METADATA_SERVICE_TOKEN_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_IDENTITY_PATH = '/computeMetadata/v1/instance/service-accounts/default/identity';
 const GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH = '/computeMetadata/v1/project/project-id';
+const GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH = '/computeMetadata/v1/instance/service-accounts/default/email';
 
 const configDir = (() => {
   // Windows has a dedicated low-rights location for apps at ~/Application Data
@@ -197,6 +199,7 @@ export class ComputeEngineCredential implements Credential {
   private readonly httpClient = new HttpClient();
   private readonly httpAgent?: Agent;
   private projectId?: string;
+  private accountId?: string;
 
   constructor(httpAgent?: Agent) {
     this.httpAgent = httpAgent;
@@ -205,6 +208,16 @@ export class ComputeEngineCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const request = this.buildRequest(GOOGLE_METADATA_SERVICE_TOKEN_PATH);
     return requestAccessToken(this.httpClient, request);
+  }
+
+  /**
+   * getIDToken returns a OIDC token from the compute metadata service 
+   * that can be used to make authenticated calls to audience
+   * @param audience the URL the returned ID token will be used to call.
+  */
+  public getIDToken(audience: string): Promise<string> {
+    const request = this.buildRequest(`${GOOGLE_METADATA_SERVICE_IDENTITY_PATH}?audience=${audience}`);
+    return requestIDToken(this.httpClient, request);
   }
 
   public getProjectId(): Promise<string> {
@@ -223,6 +236,25 @@ export class ComputeEngineCredential implements Credential {
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine project ID: ${detail}`);
+      });
+  }
+
+  public getServiceAccountEmail(): Promise<string> {
+    if (this.accountId) {
+      return Promise.resolve(this.accountId);
+    }
+
+    const request = this.buildRequest(GOOGLE_METADATA_SERVICE_ACCOUNT_ID_PATH);
+    return this.httpClient.send(request)
+      .then((resp) => {
+        this.accountId = resp.text!;
+        return this.accountId;
+      })
+      .catch((err) => {
+        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_CREDENTIAL,
+          `Failed to determine service account email: ${detail}`);
       });
   }
 
@@ -335,6 +367,107 @@ class RefreshToken {
 
 
 /**
+ * Implementation of Credential that uses impersonated service account.
+ */
+export class ImpersonatedServiceAccountCredential implements Credential {
+
+  private readonly impersonatedServiceAccount: ImpersonatedServiceAccount;
+  private readonly httpClient: HttpClient;
+
+  /**
+   * Creates a new ImpersonatedServiceAccountCredential from the given parameters.
+   *
+   * @param impersonatedServiceAccountPathOrObject - Impersonated Service account json object or
+   * path to a service account json file.
+   * @param httpAgent - Optional http.Agent to use when calling the remote token server.
+   * @param implicit - An optional boolean indicating whether this credential was implicitly
+   *   discovered from the environment, as opposed to being explicitly specified by the developer.
+   *
+   * @constructor
+   */
+  constructor(
+    impersonatedServiceAccountPathOrObject: string | object,
+    private readonly httpAgent?: Agent,
+    readonly implicit: boolean = false) {
+
+    this.impersonatedServiceAccount = (typeof impersonatedServiceAccountPathOrObject === 'string') ?
+      ImpersonatedServiceAccount.fromPath(impersonatedServiceAccountPathOrObject)
+      : new ImpersonatedServiceAccount(impersonatedServiceAccountPathOrObject);
+    this.httpClient = new HttpClient();
+  }
+
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    const postData =
+      'client_id=' + this.impersonatedServiceAccount.clientId + '&' +
+      'client_secret=' + this.impersonatedServiceAccount.clientSecret + '&' +
+      'refresh_token=' + this.impersonatedServiceAccount.refreshToken + '&' +
+      'grant_type=refresh_token';
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: `https://${REFRESH_TOKEN_HOST}${REFRESH_TOKEN_PATH}`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: postData,
+      httpAgent: this.httpAgent,
+    };
+    return requestAccessToken(this.httpClient, request);
+  }
+}
+
+/**
+ * A struct containing the properties necessary to use impersonated service account JSON credentials.
+ */
+class ImpersonatedServiceAccount {
+
+  public readonly clientId: string;
+  public readonly clientSecret: string;
+  public readonly refreshToken: string;
+  public readonly type: string;
+
+  /*
+   * Tries to load a ImpersonatedServiceAccount from a path. Throws if the path doesn't exist or the
+   * data at the path is invalid.
+   */
+  public static fromPath(filePath: string): ImpersonatedServiceAccount {
+    try {
+      return new ImpersonatedServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+    } catch (error) {
+      // Throw a nicely formed error message if the file contents cannot be parsed
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse impersonated service account file: ' + error,
+      );
+    }
+  }
+
+  constructor(json: object) {
+    const sourceCredentials = (json as {[key: string]: any})['source_credentials']
+    if (sourceCredentials) {
+      copyAttr(this, sourceCredentials, 'clientId', 'client_id');
+      copyAttr(this, sourceCredentials, 'clientSecret', 'client_secret');
+      copyAttr(this, sourceCredentials, 'refreshToken', 'refresh_token');
+      copyAttr(this, sourceCredentials, 'type', 'type');
+    }
+
+    let errorMessage;
+    if (!util.isNonEmptyString(this.clientId)) {
+      errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_id" property.';
+    } else if (!util.isNonEmptyString(this.clientSecret)) {
+      errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_secret" property.';
+    } else if (!util.isNonEmptyString(this.refreshToken)) {
+      errorMessage = 'Impersonated Service Account must contain a "source_credentials.refresh_token" property.';
+    } else if (!util.isNonEmptyString(this.type)) {
+      errorMessage = 'Impersonated Service Account must contain a "source_credentials.type" property.';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+    }
+  }
+}
+
+/**
  * Checks if the given credential was loaded via the application default credentials mechanism. This
  * includes all ComputeEngineCredential instances, and the ServiceAccountCredential and RefreshTokenCredential
  * instances that were loaded from well-known files or environment variables, rather than being explicitly
@@ -345,20 +478,19 @@ class RefreshToken {
 export function isApplicationDefault(credential?: Credential): boolean {
   return credential instanceof ComputeEngineCredential ||
     (credential instanceof ServiceAccountCredential && credential.implicit) ||
-    (credential instanceof RefreshTokenCredential && credential.implicit);
+    (credential instanceof RefreshTokenCredential && credential.implicit) ||
+    (credential instanceof ImpersonatedServiceAccountCredential && credential.implicit);
 }
 
 export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    return credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
+    return credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent, false)!;
   }
 
   // It is OK to not have this file. If it is present, it must be valid.
   if (GCLOUD_CREDENTIAL_PATH) {
-    const refreshToken = readCredentialFile(GCLOUD_CREDENTIAL_PATH, true);
-    if (refreshToken) {
-      return new RefreshTokenCredential(refreshToken, httpAgent, true);
-    }
+    const credential =  credentialFromFile(GCLOUD_CREDENTIAL_PATH, httpAgent, true);
+    if (credential) return credential
   }
 
   return new ComputeEngineCredential(httpAgent);
@@ -401,6 +533,23 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
 }
 
 /**
+ * Obtain a new OIDC token by making a remote service call.
+ */
+function requestIDToken(client: HttpClient, request: HttpRequestConfig): Promise<string> {
+  return client.send(request).then((resp) => {
+    if (!resp.text) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Unexpected response while fetching id token: response.text is undefined',
+      );
+    }
+    return resp.text;
+  }).catch((err) => {
+    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
+  });
+}
+
+/**
  * Constructs a human-readable error message from the given Error.
  */
 function getErrorMessage(err: Error): string {
@@ -425,9 +574,10 @@ function getDetailFromResponse(response: HttpResponse): string {
   return response.text || 'Missing error payload';
 }
 
-function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
-  const credentialsFile = readCredentialFile(filePath);
+function credentialFromFile(filePath: string, httpAgent?: Agent, ignoreMissing?: boolean): Credential | null {
+  const credentialsFile = readCredentialFile(filePath, ignoreMissing);
   if (typeof credentialsFile !== 'object' || credentialsFile === null) {
+    if (ignoreMissing) { return null; }
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_CREDENTIAL,
       'Failed to parse contents of the credentials file as an object',
@@ -440,6 +590,10 @@ function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
 
   if (credentialsFile.type === 'authorized_user') {
     return new RefreshTokenCredential(credentialsFile, httpAgent, true);
+  }
+
+  if (credentialsFile.type === 'impersonated_service_account') {
+    return new ImpersonatedServiceAccountCredential(credentialsFile, httpAgent, true)
   }
 
   throw new FirebaseAppError(

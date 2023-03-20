@@ -22,6 +22,7 @@ import { getAppCheck, AppCheck } from 'firebase-admin/app-check';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getDatabase, getDatabaseWithUrl, Database, ServerValue } from 'firebase-admin/database';
 import { getFirestore, DocumentReference, Firestore, FieldValue } from 'firebase-admin/firestore';
+import { getFunctions, Functions } from 'firebase-admin/functions';
 import { getInstanceId, InstanceId } from 'firebase-admin/instance-id';
 import { getMachineLearning, MachineLearning } from 'firebase-admin/machine-learning';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
@@ -114,6 +115,12 @@ describe('Modular API', () => {
   it('Should return a DocumentReference', () => {
     const ref = getFirestore(app).collection('test').doc();
     expect(ref).to.be.instanceOf(DocumentReference);
+  });
+
+  it('Should return a Functions client', () => {
+    const fn: Functions = getFunctions(app);
+    expect(fn).to.be.not.undefined;
+    expect(typeof fn.taskQueue).to.equal('function');
   });
 
   it('Should return an InstanceId client', () => {

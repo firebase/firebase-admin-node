@@ -163,6 +163,16 @@ export class SecurityRulesApiClient {
     return this.getResource<Release>(`releases/${name}`);
   }
 
+  public updateOrCreateRelease(name: string, rulesetName: string): Promise<Release> {
+    return this.updateRelease(name, rulesetName).catch((error) => {
+      // if ruleset update failed with a NOT_FOUND error, attempt to create instead.
+      if (error.code === `security-rules/${ERROR_CODE_MAPPING.NOT_FOUND}`) {
+        return this.createRelease(name, rulesetName);
+      }
+      throw error;
+    });
+  }
+
   public updateRelease(name: string, rulesetName: string): Promise<Release> {
     return this.getUrl()
       .then((url) => {
@@ -172,6 +182,21 @@ export class SecurityRulesApiClient {
               method: 'PATCH',
               url: `${url}/releases/${name}`,
               data: { release },
+            };
+            return this.sendRequest<Release>(request);
+          });
+      });
+  }
+
+  public createRelease(name: string, rulesetName: string): Promise<Release> {
+    return this.getUrl()
+      .then((url) => {
+        return this.getReleaseDescription(name, rulesetName)
+          .then((release) => {
+            const request: HttpRequestConfig = {
+              method: 'POST',
+              url: `${url}/releases`,
+              data: release,
             };
             return this.sendRequest<Release>(request);
           });
