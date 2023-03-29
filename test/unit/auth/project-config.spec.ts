@@ -39,6 +39,17 @@ describe('ProjectConfig', () => {
         disallowedRegions: [ 'AC', 'AD' ],
       },
     },
+    mfa: {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -172,20 +183,36 @@ describe('ProjectConfig', () => {
       };
       expect(projectConfig.smsRegionConfig).to.deep.equal(expectedSmsRegionConfig);
     });
+
+    it('should set readonly property multiFactorConfig', () => {
+      const expectedMultiFactorConfig = {
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
+      };
+      expect(projectConfig.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
+    });
   });
 
   describe('toJSON()', () => {
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
-        smsRegionConfig: deepCopy(serverResponse.smsRegionConfig)
+        smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
+        multiFactorConfig: deepCopy(serverResponse.mfa)
       });
     });
 
     it('should not populate optional fields if not available', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
       delete serverResponseOptionalCopy.smsRegionConfig;
-
+      delete serverResponseOptionalCopy.mfa;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({});
     });
   });

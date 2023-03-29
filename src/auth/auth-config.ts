@@ -478,6 +478,7 @@ const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
 export interface MultiFactorAuthServerConfig {
   state?: MultiFactorConfigState;
   enabledProviders?: AuthFactorServerType[];
+  providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
@@ -506,16 +507,58 @@ export interface MultiFactorConfig {
    * Currently only ‘phone’ is supported.
    */
   factorIds?: AuthFactorType[];
+
+  /**
+   * A list of multi-factor provider configurations. 
+   * MFA providers (except phone) indicate whether they're enabled through this field.   */
+  providerConfigs?: MultiFactorProviderConfig[];
+}
+
+/**
+ * Interface representing a multi-factor auth provider configuration. 
+ * This interface is used for second factor auth providers other than SMS. 
+ * Currently, only TOTP is supported.
+ */export interface MultiFactorProviderConfig {
+  /**
+   * Indicates whether this multi-factor provider is enabled or disabled.    */
+  state: MultiFactorConfigState;
+  /**
+   * TOTP multi-factor provider config.   */
+  totpProviderConfig?: TotpMultiFactorProviderConfig;
+}
+
+/**
+ * Interface representing configuration settings for TOTP second factor auth. 
+ */
+export interface TotpMultiFactorProviderConfig {
+  /**
+    *  The allowed number of adjacent intervals that will be used for verification
+    *  to compensate for clock skew.   */
+  adjacentIntervals?: number;
 }
 
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
+ * 
+ * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
 
+  /**
+   * The multi-factor config state.
+   */
   public readonly state: MultiFactorConfigState;
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
   public readonly factorIds: AuthFactorType[];
+  /**
+   * A list of multi-factor provider specific config. 
+   * New MFA providers (except phone) will indicate enablement/disablement through this field.
+   */
+  public readonly providerConfigs: MultiFactorProviderConfig[];
 
   /**
    * Static method to convert a client side request to a MultiFactorAuthServerConfig.
@@ -543,6 +586,9 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         request.enabledProviders = [];
       }
     }
+    if (Object.prototype.hasOwnProperty.call(options, 'providerConfigs')) {
+      request.providerConfigs = options.providerConfigs;
+    }
     return request;
   }
 
@@ -551,10 +597,11 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    *
    * @param options - The options object to validate.
    */
-  private static validate(options: MultiFactorConfig): void {
+  public static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
+      providerConfigs: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -599,6 +646,71 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         }
       });
     }
+
+    if (typeof options.providerConfigs !== 'undefined') {
+      if (!validator.isArray(options.providerConfigs)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."',
+        );
+      }
+      //Validate content of array.
+      options.providerConfigs.forEach((multiFactorProviderConfig) => {
+        if (typeof multiFactorProviderConfig === 'undefined' || !validator.isObject(multiFactorProviderConfig)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfig" type.`
+          )
+        }
+        const validProviderConfigKeys = {
+          state: true,
+          totpProviderConfig: true,
+        };
+        for (const key in multiFactorProviderConfig) {
+          if (!(key in validProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid ProviderConfig parameter.`,
+            );
+          }
+        }
+        if (typeof multiFactorProviderConfig.state === 'undefined' ||
+          (multiFactorProviderConfig.state !== 'ENABLED' &&
+            multiFactorProviderConfig.state !== 'DISABLED')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
+          )
+        }
+        // Since TOTP is the only provider config available right now, not defining it will lead into an error
+        if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
+          )
+        }
+        const validTotpProviderConfigKeys = {
+          adjacentIntervals: true,
+        };
+        for (const key in multiFactorProviderConfig.totpProviderConfig) {
+          if (!(key in validTotpProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid TotpProviderConfig parameter.`,
+            );
+          }
+        }
+        const adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
+        if (typeof adjIntervals !== 'undefined' &&
+          (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+            ' be a valid number between 0 and 10 (both inclusive).'
+          )
+        }
+      });
+    }
   }
 
   /**
@@ -624,13 +736,29 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         this.factorIds.push(AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider]);
       }
     })
+    this.providerConfigs = [];
+    (response.providerConfigs || []).forEach((providerConfig) => {
+      if (typeof providerConfig !== 'undefined') {
+        if (typeof providerConfig.state === 'undefined' ||
+          typeof providerConfig.totpProviderConfig === 'undefined' ||
+          (typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
+            typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'number')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+        }
+        this.providerConfigs.push(providerConfig);
+      }
+    })
   }
 
-  /** @returns The plain object representation of the multi-factor config instance. */
+  /** Converts MultiFactorConfig to JSON object
+   * @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,
       factorIds: this.factorIds,
+      providerConfigs: this.providerConfigs,
     };
   }
 }
