@@ -376,6 +376,8 @@ export class Messaging {
    *
    * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
+   *
+   * @deprecated Use {@link Messaging.send} instead.
    */
   public sendToDevice(
     registrationTokenOrTokens: string | string[],
@@ -445,6 +447,8 @@ export class Messaging {
    *
    * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
+   *
+   * @deprecated Use {@link Messaging.send} instead.
    */
   public sendToDeviceGroup(
     notificationKey: string,
