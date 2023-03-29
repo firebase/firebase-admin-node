@@ -92,10 +92,8 @@ export {
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
   PasswordPolicyConfig,
-  PasswordPolicyVersionConfig,
   PasswordPolicyEnforcementState, 
-  PasswordPolicyConstraints, 
-  RequiredCharactersConfig,
+  CustomStrengthOptionsConfig,
 } from './auth-config';
 
 export {

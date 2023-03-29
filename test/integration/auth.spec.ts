@@ -1215,20 +1215,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
@@ -1240,20 +1234,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'OFF',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const expectedProjectConfig1: any = {
@@ -1265,20 +1253,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const expectedProjectConfig2: any = {
@@ -1290,20 +1272,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'OFF',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
 
@@ -1348,20 +1324,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const expectedCreatedTenant: any = {
@@ -1386,20 +1356,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const expectedUpdatedTenant: any = {
@@ -1422,20 +1386,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
     const expectedUpdatedTenant2: any = {
@@ -1457,20 +1415,14 @@ describe('admin.auth', () => {
       passwordPolicyConfig: {
         enforcementState: 'ENFORCE',
         forceUpgradeOnSignin: true,
-        passwordPolicyVersions: [
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ],
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       },
     };
 

@@ -1608,9 +1608,9 @@ export interface PasswordPolicyConfig {
    */
   forceUpgradeOnSignin?: boolean;
   /**
-   * Must be of length 1. Contains the strength attributes for the password policy
+   * Set of strength constraints for the password
    */
-  passwordPolicyVersions?: PasswordPolicyVersionConfig[];
+  constraints?: CustomStrengthOptionsConfig;
 }
 
 /**
@@ -1619,23 +1619,25 @@ export interface PasswordPolicyConfig {
 export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
 
 /**
- * The strength attributes for the password policy on the project or tenant
+ * Constraints to be enforced on the password policy
  */
-export interface PasswordPolicyVersionConfig {
+export interface CustomStrengthOptionsConfig {
   /**
-   * The constraints enforced by the password policy
+   * The password must contain an upper case character
    */
-  constraints?: PasswordPolicyConstraints;
-}
-
-/**
- * Constraints to enforce on user passwords.
- */
-export interface PasswordPolicyConstraints {
+  requireUppercase?: boolean;
   /**
-   * Set of character requirements for the password
+   *  The password must contain a lower case character
    */
-  requiredCharacters?: RequiredCharactersConfig;
+  requireLowercase?: boolean;
+  /**
+   * The password must contain a non alpha numeric character
+   */
+  requireNonAlphanumeric?: boolean;
+  /**
+   * The password must contain a number
+   */
+  requireNumeric?: boolean;
   /**
    * Minimum password length. Range from 6 to 30
    */
@@ -1644,28 +1646,6 @@ export interface PasswordPolicyConstraints {
    * Maximum password length. No default max length
    */
   maxLength?: number;
-}
-
-/**
- * Required characters to be enforced on the password policy
- */
-export interface RequiredCharactersConfig {
-  /**
-   * The password must contain an upper case character
-   */
-  uppercase?: boolean;
-  /**
-   *  The password must contain a lower case character
-   */
-  lowercase?: boolean;
-  /**
-   * The password must contain a non alpha numeric character
-   */
-  nonAlphanumeric?: boolean;
-  /**
-   * The password must contain a number
-   */
-  numeric?: boolean;
 }
 
 /**
@@ -1687,7 +1667,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
   /**
    * Must be of length 1. Contains the strength attributes for the password policy
    */
-  public readonly passwordPolicyVersions: PasswordPolicyVersionConfig[];
+  public readonly constraints?: CustomStrengthOptionsConfig;
 
   /**
    * Static method to convert a client side request to a PasswordPolicyAuthServerConfig.
@@ -1706,21 +1686,17 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     if (Object.prototype.hasOwnProperty.call(options, 'forceUpgradeOnSignin')) {
       request.forceUpgradeOnSignin = options.forceUpgradeOnSignin;
     }
-    if (Object.prototype.hasOwnProperty.call(options, 'passwordPolicyVersions')) {
-      (options.passwordPolicyVersions || []).forEach(policyVersion => {
-        if (typeof request.passwordPolicyVersions === 'undefined') {
-          request.passwordPolicyVersions = [];
-        }
-        const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
-          containsUppercaseCharacter: policyVersion.constraints?.requiredCharacters?.uppercase,
-          containsLowercaseCharacter: policyVersion.constraints?.requiredCharacters?.lowercase,
-          containsNonAlphanumericCharacter: policyVersion.constraints?.requiredCharacters?.nonAlphanumeric,
-          containsNumericCharacter: policyVersion.constraints?.requiredCharacters?.numeric,
-          minPasswordLength: policyVersion.constraints?.minLength,
-          maxPasswordLength: policyVersion.constraints?.maxLength,
-        };
-        request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
-      })
+    if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
+      request.passwordPolicyVersions = [];
+      const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+        containsUppercaseCharacter: options.constraints?.requireUppercase,
+        containsLowercaseCharacter: options.constraints?.requireLowercase,
+        containsNonAlphanumericCharacter: options.constraints?.requireNonAlphanumeric,
+        containsNumericCharacter: options.constraints?.requireNumeric,
+        minPasswordLength: options.constraints?.minLength,
+        maxPasswordLength: options.constraints?.maxLength,
+      };
+      request.passwordPolicyVersions.push({customStrengthOptions: constraintsRequest})
     }
     return request;
   }
@@ -1735,7 +1711,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     const validKeys = {
       enforcementState: true,
       forceUpgradeOnSignin: true,
-      passwordPolicyVersions: true,
+      constraints: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -1772,158 +1748,105 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       }
     }
 
-    if (typeof options.passwordPolicyVersions !== 'undefined') {
-      // check for invalid array type
-      if (!validator.isArray(options.passwordPolicyVersions)) {
+    if (typeof options.constraints !== 'undefined') {
+      if (options.enforcementState === 'ENFORCE' && !validator.isNonNullObject(options.constraints)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.',
+          '"PasswordPolicyConfig.constraints" must be a non-empty object.',
         );
       }
 
-      if (options.enforcementState === 'ENFORCE' && options.passwordPolicyVersions.length < 1) {
+      const validCharKeys = {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumeric: true,
+        requireNonAlphanumeric: true,
+        minLength: true,
+        maxLength: true,
+      };
+
+      // Check for unsupported  attributes.
+      for (const key in options.constraints) {
+        if (!(key in validCharKeys)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid PasswordPolicyConfig.constraints parameter.`,
+          );
+        }
+      }
+      if (typeof options.constraints.requireUppercase !== undefined &&
+        !validator.isBoolean(options.constraints.requireUppercase)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"PassworPolicyConfig.passwordPolicyVersions" must be a non-empty array.',
+          '"PasswordPolicyConfig.constraints.requireUppercase" must be a boolean.',
         );
       }
-
-      options.passwordPolicyVersions.forEach(policyVersion => {
-        const validVersionKeys = {
-          constraints: true,
-        };
-        if (!validator.isNonNullObject(policyVersion)) {
+      if (typeof options.constraints.requireLowercase !== undefined &&
+        !validator.isBoolean(options.constraints.requireLowercase)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireLowercase" must be a boolean.',
+        );
+      }
+      if (typeof options.constraints.requireNonAlphanumeric !== undefined &&
+        !validator.isBoolean(options.constraints.requireNonAlphanumeric)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
+            ' must be a boolean.',
+        );
+      }
+      if (typeof options.constraints.requireNumeric !== undefined &&
+        !validator.isBoolean(options.constraints.requireNumeric)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireNumeric" must be a boolean.',
+        );
+      }
+      if (!validator.isNumber(options.constraints.minLength)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.minLength" must be a number.',
+        );
+      }
+      if (!validator.isNumber(options.constraints.maxLength)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.maxLength" must be a number.',
+        );
+      }
+      if (options.constraints.minLength === undefined) {
+        options.constraints.minLength = 6;
+      } else {
+        if (!(options.constraints.minLength >= 6
+          && options.constraints.minLength <= 30)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"Constraints" must be specified.',
+            '"PasswordPolicyConfig.constraints.minLength"' +
+            ' must be an integer between 6 and 30, inclusive.',
           );
         }
-        // Check for unsupported  attributes.
-        for (const key in policyVersion) {
-          if (!(key in validVersionKeys)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              `"${key}" is not a valid PasswordPolicyConfig.PasswordPolicyVersions parameter.`,
-            );
-          }
-        }
-
-        const validConstraintKeys = {
-          requiredCharacters: true,
-          minLength: true,
-          maxLength: true,
-        };
-        if (typeof policyVersion.constraints !== 'object' ||
-        !validator.isNonNullObject(policyVersion.constraints)) {
+      }
+      if (options.constraints.maxLength === undefined) {
+        options.constraints.maxLength = 4096;
+      } else {
+        if (!(options.constraints.maxLength >= options.constraints.minLength &&
+          options.constraints.maxLength <= 4096)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints" must be a non-null object.',
+            '"PasswordPolicyConfig.constraints.maxLength"' +
+            ' must be greater than or equal to minLength and at max 4096.',
           );
         }
-        // Check for unsupported  attributes.
-        for (const key in policyVersion.constraints) {
-          if (!(key in validConstraintKeys)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              `"${key}" is not a valid PasswordPolicyConfig.passwordPolicyVersions.constraints parameter.`,
-            );
-          }
-        }
-        if (!validator.isNumber(policyVersion.constraints.minLength)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength" must be a number.',
-          );
-        }
-        if (!validator.isNumber(policyVersion.constraints.maxLength)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength" must be a number.',
-          );
-        }
-        if (policyVersion.constraints.minLength === undefined) {
-          policyVersion.constraints.minLength = 6;
-        } else {
-          if (!(policyVersion.constraints.minLength >= 6
-            && policyVersion.constraints.minLength <= 30)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.minLength"' +
-              ' must be an integer between 6 and 30, inclusive.',
-            );
-          }
-        }
-
-        if (policyVersion.constraints.maxLength === undefined) {
-          policyVersion.constraints.maxLength = 4096;
-        } else {
-          if (!(policyVersion.constraints.maxLength >= policyVersion.constraints.minLength &&
-            policyVersion.constraints.maxLength <= 4096)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              '"PasswordPolicyConfig.passwordPolicyVersions.constraints.maxLength"' +
-              ' must be greater than or equal to minLength and at max 4096.',
-            );
-          }
-        }
-
-
-        const validCharKeys = {
-          uppercase: true,
-          lowercase: true,
-          numeric: true,
-          nonAlphanumeric: true,
-        };
-        if (!(typeof policyVersion.constraints.requiredCharacters === 'object')) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.constraints.requiredCharacters" must be a valid object.',
-          );
-        }
-        // Check for unsupported  attributes.
-        for (const key in policyVersion.constraints.requiredCharacters) {
-          if (!(key in validCharKeys)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
-              `"${key}" is not a valid RequiredCharacters parameter.`,
-            );
-          }
-        }
-        if (typeof policyVersion.constraints.requiredCharacters.uppercase !== undefined &&
-          !validator.isBoolean(policyVersion.constraints.requiredCharacters.uppercase)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.uppercase" must be a boolean.',
-          );
-        }
-
-        if (typeof policyVersion.constraints.requiredCharacters.lowercase !== undefined &&
-          !validator.isBoolean(policyVersion.constraints.requiredCharacters.lowercase)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.lowercase" must be a boolean.',
-          );
-        }
-
-        if (typeof policyVersion.constraints.requiredCharacters.nonAlphanumeric !== undefined &&
-          !validator.isBoolean(policyVersion.constraints.requiredCharacters.nonAlphanumeric)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.nonAlphanumeric"' +
-             ' must be a boolean.',
-          );
-        }
-
-        if (typeof policyVersion.constraints.requiredCharacters.numeric !== undefined &&
-          !validator.isBoolean(policyVersion.constraints.requiredCharacters.numeric)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
-            '"PasswordPolicyConfig.passwordPolicyVersions.constraints.requiredCharacters.numeric" must be a boolean.',
-          );
-        }
-      });
+      }
+    } else {
+      if (options.enforcementState === 'ENFORCE') {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints" must be defined.',
+        );
+      }
     }
-
   }
 
   /**
@@ -1941,21 +1864,20 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         'INTERNAL ASSERT FAILED: Invalid password policy configuration response');
     }
     this.enforcementState = response.passwordPolicyEnforcementState;
-    this.passwordPolicyVersions = [];
-    (response.passwordPolicyVersions || []).forEach((policyVersion) => {
-      this.passwordPolicyVersions.push({
-        constraints: {
-          requiredCharacters: {
-            uppercase: policyVersion.customStrengthOptions?.containsUppercaseCharacter,
-            lowercase: policyVersion.customStrengthOptions?.containsLowercaseCharacter,
-            numeric: policyVersion.customStrengthOptions?.containsNumericCharacter,
-            nonAlphanumeric: policyVersion.customStrengthOptions?.containsNonAlphanumericCharacter,
-          },
+    let constraintsResponse: CustomStrengthOptionsConfig = {};
+    if (typeof response.passwordPolicyVersions !== 'undefined') {
+      (response.passwordPolicyVersions || []).forEach((policyVersion) => {
+        constraintsResponse = {
+          requireLowercase: policyVersion.customStrengthOptions?.containsLowercaseCharacter,
+          requireUppercase: policyVersion.customStrengthOptions?.containsUppercaseCharacter,
+          requireNonAlphanumeric: policyVersion.customStrengthOptions?.containsNonAlphanumericCharacter,
+          requireNumeric: policyVersion.customStrengthOptions?.containsNumericCharacter,
           minLength: policyVersion.customStrengthOptions?.minPasswordLength,
           maxLength: policyVersion.customStrengthOptions?.maxPasswordLength,
-        },
-      })
-    });
+        };
+      });
+    }
+    this.constraints = constraintsResponse;
     this.forceUpgradeOnSignin = response.forceUpgradeOnSignin;
   }
 }

@@ -138,6 +138,16 @@ export interface CreateRequest extends UpdateRequest {
 // @public
 export type CreateTenantRequest = UpdateTenantRequest;
 
+// @public
+export interface CustomStrengthOptionsConfig {
+    maxLength?: number;
+    minLength?: number;
+    requireLowercase?: boolean;
+    requireNonAlphanumeric?: boolean;
+    requireNumeric?: boolean;
+    requireUppercase?: boolean;
+}
+
 // @alpha (undocumented)
 export interface DecodedAuthBlockingToken {
     // (undocumented)
@@ -324,25 +334,13 @@ export interface OIDCUpdateAuthProviderRequest {
 
 // @public
 export interface PasswordPolicyConfig {
+    constraints?: CustomStrengthOptionsConfig;
     enforcementState?: PasswordPolicyEnforcementState;
     forceUpgradeOnSignin?: boolean;
-    passwordPolicyVersions?: PasswordPolicyVersionConfig[];
-}
-
-// @public
-export interface PasswordPolicyConstraints {
-    maxLength?: number;
-    minLength?: number;
-    requiredCharacters?: RequiredCharactersConfig;
 }
 
 // @public
 export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
-
-// @public
-export interface PasswordPolicyVersionConfig {
-    constraints?: PasswordPolicyConstraints;
-}
 
 // @public
 export interface PhoneIdentifier {
@@ -375,14 +373,6 @@ export interface ProviderIdentifier {
     providerId: string;
     // (undocumented)
     providerUid: string;
-}
-
-// @public
-export interface RequiredCharactersConfig {
-    lowercase?: boolean;
-    nonAlphanumeric?: boolean;
-    numeric?: boolean;
-    uppercase?: boolean;
 }
 
 // @public

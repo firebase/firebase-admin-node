@@ -27,7 +27,7 @@ import {
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
   PasswordPolicyAuthConfig,
-  PasswordPolicyVersionConfig,
+  CustomStrengthOptionsConfig,
 } from '../../../src/auth/auth-config';
 import {
   SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
@@ -1087,7 +1087,7 @@ describe('OIDCConfig', () => {
       });
     });
   });
-  describe('PasswordPolicyAutConfig',() => {
+  describe('PasswordPolicyAuthConfig',() => {
     describe('constructor',() => {
       const validConfig = new PasswordPolicyAuthConfig({
         passwordPolicyEnforcementState: 'ENFORCE',
@@ -1127,22 +1127,16 @@ describe('OIDCConfig', () => {
         expect(offStateConfig.enforcementState).to.equal('OFF');
       });
 
-      it('should set readonly property "passwordPolicyVersions"',() => {
-        const expectedPasswordPolicyVersions: PasswordPolicyVersionConfig[]=[
-          {
-            constraints: {
-              requiredCharacters: {
-                uppercase: true,
-                lowercase: true,
-                nonAlphanumeric: true,
-                numeric: true,
-              },
-              minLength: 8,
-              maxLength: 30,
-            },
-          },
-        ]
-        expect(validConfig.passwordPolicyVersions).to.deep.equal(expectedPasswordPolicyVersions);
+      it('should set readonly property "constraints"',() => {
+        const expectedConstraints: CustomStrengthOptionsConfig = {
+            requireUppercase: true,
+            requireLowercase: true,
+            requireNonAlphanumeric: true,
+            requireNumeric: true,
+            minLength: 8,
+            maxLength: 30,
+        }
+        expect(validConfig.constraints).to.deep.equal(expectedConstraints);
       });
 
       it('should set readonly property "forceUpgradeOnSignin"',() => {
@@ -1151,7 +1145,7 @@ describe('OIDCConfig', () => {
     });
   });});
 
-describe('PasswordPolicyAutConfig',() => {
+describe('PasswordPolicyAuthConfig',() => {
   describe('constructor',() => {
     const validConfig=new PasswordPolicyAuthConfig({
       passwordPolicyEnforcementState: 'ENFORCE',
@@ -1191,23 +1185,17 @@ describe('PasswordPolicyAutConfig',() => {
       expect(offStateConfig.enforcementState).to.equal('OFF');
     });
 
-    it('should set readonly property "passwordPolicyVersions"',() => {
-      const expectedPasswordPolicyVersions: PasswordPolicyVersionConfig[]=[
-        {
-          constraints: {
-            requiredCharacters: {
-              uppercase: true,
-              lowercase: true,
-              nonAlphanumeric: true,
-              numeric: true,
-            },
+    it('should set readonly property "constraints"',() => {
+        const expectedConstraints: CustomStrengthOptionsConfig = {
+            requireUppercase: true,
+            requireLowercase: true,
+            requireNonAlphanumeric: true,
+            requireNumeric: true,
             minLength: 8,
             maxLength: 30,
-          },
-        },
-      ]
-      expect(validConfig.passwordPolicyVersions).to.deep.equal(expectedPasswordPolicyVersions);
-    });
+        }
+        expect(validConfig.constraints).to.deep.equal(expectedConstraints);
+      });
 
     it('should set readonly property "forceUpgradeOnSignin"',() => {
       expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
