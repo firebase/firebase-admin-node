@@ -509,25 +509,21 @@ export interface MultiFactorConfig {
   factorIds?: AuthFactorType[];
 
   /**
-   * A list of multi-factor provider specific config. 
-   * New MFA providers (except phone) will indicate enablement/disablement through this field.
-   */
+   * A list of multi-factor provider configurations. 
+   * MFA providers (except phone) indicate whether they're enabled through this field.   */
   providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
- * Interface representing Multi Factor Provider configuration. 
- * This config is used to set second factor auth except for SMS. 
+ * Interface representing a multi-factor auth provider configuration. 
+ * This interface is used for second factor auth providers other than SMS. 
  * Currently, only TOTP is supported.
- */
-export interface MultiFactorProviderConfig {
+ */export interface MultiFactorProviderConfig {
   /**
-   * Indicates whether this multi-factor provider is enabled/disabled. 
-   */
+   * Indicates whether this multi-factor provider is enabled or disabled.    */
   state: MultiFactorConfigState;
   /**
-   * TOTP MultiFactor provider config.
-   */
+   * TOTP multi-factor provider config.   */
   totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
@@ -537,8 +533,7 @@ export interface MultiFactorProviderConfig {
 export interface TotpMultiFactorProviderConfig {
   /**
     *  The allowed number of adjacent intervals that will be used for verification
-    *  to avoid clock skew.
-   */
+    *  to compensate for clock skew.   */
   adjacentIntervals?: number;
 }
 

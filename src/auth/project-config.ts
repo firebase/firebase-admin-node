@@ -67,11 +67,9 @@ export class ProjectConfig {
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
   /**
-   * The Multi Factor Config for the project.
-   * Configures the multi factor settings for the project.
+   * The project's multi-factor auth configuration.
    * Supports only phone and TOTP.
-   */
-  private readonly multiFactorConfig_?: MultiFactorConfig;
+   */  private readonly multiFactorConfig_?: MultiFactorConfig;
   /**
    * The multi-factor auth configuration.
    */
