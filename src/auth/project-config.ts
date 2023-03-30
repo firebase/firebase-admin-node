@@ -86,7 +86,7 @@ export class ProjectConfig {
     return this.multiFactorConfig_;
   }
   /**
-   * The password policy configurations for the tenant
+   * The password policy configuration for the project
    */
   public readonly passwordPolicyConfig?: PasswordPolicyConfig;
 
