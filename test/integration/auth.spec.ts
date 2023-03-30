@@ -1274,6 +1274,10 @@ describe('admin.auth', () => {
         }
       },
       multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+      },
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: expectedProjectConfig2.smsRegionConfig,
@@ -1287,64 +1291,6 @@ describe('admin.auth', () => {
           }
         ],
       },
-    };
-
-    it('updateProjectConfig() should resolve with the updated project config', () => {
-      return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
-        .then((actualProjectConfig) => {
-          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
-          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
-        })
-        .then((actualProjectConfig) => {
-          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
-          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
-        }).then((actualProjectConfig) => {
-          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
-        });
-    });
-
-    it('getProjectConfig() should resolve with expected project config', () => {
-      return getAuth().projectConfigManager().getProjectConfig()
-        .then((actualConfig) => {
-          const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
-        });
-    });
-  });
-
-  describe('Project config management operations', () => {
-    before(function() {
-      if (authEmulatorHost) {
-        this.skip(); // getConfig is not supported in Auth Emulator
-      }
-    });
-    const projectConfigOption1: UpdateProjectConfigRequest = {
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-        useAccountDefender: true,
-      },
-    };
-    const projectConfigOption2: UpdateProjectConfigRequest = {
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        useAccountDefender: false,
-      },
-    };
-    const projectConfigOption3: UpdateProjectConfigRequest = {
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        useAccountDefender: true,
-      },
-    };
-    const expectedProjectConfig1: any = {
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
-        useAccountDefender: true,
-      },
-    };
-    const expectedProjectConfig2: any = {
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
         managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
@@ -1361,6 +1307,10 @@ describe('admin.auth', () => {
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
+        })
+        .then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
 
@@ -1368,7 +1318,7 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
           const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
+          expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
   });
@@ -1485,6 +1435,16 @@ describe('admin.auth', () => {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: false,
       },
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
@@ -2070,7 +2030,10 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 

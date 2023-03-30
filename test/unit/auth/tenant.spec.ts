@@ -117,6 +117,14 @@ describe('Tenant', () => {
     mfaConfig: {
       state: 'ENABLED',
       enabledProviders: ['PHONE_SMS'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
     },
     testPhoneNumbers: {
       '+16505551234': '019287',
