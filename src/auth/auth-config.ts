@@ -1824,7 +1824,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         minPasswordLength: options.constraints?.minLength,
         maxPasswordLength: options.constraints?.maxLength,
       };
-      request.passwordPolicyVersions.push({customStrengthOptions: constraintsRequest})
+      request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
     }
     return request;
   }

@@ -1281,12 +1281,12 @@ describe('OIDCConfig', () => {
 
       it('should set readonly property "constraints"',() => {
         const expectedConstraints: CustomStrengthOptionsConfig = {
-            requireUppercase: true,
-            requireLowercase: true,
-            requireNonAlphanumeric: true,
-            requireNumeric: true,
-            minLength: 8,
-            maxLength: 30,
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
         }
         expect(validConfig.constraints).to.deep.equal(expectedConstraints);
       });
@@ -1338,16 +1338,16 @@ describe('PasswordPolicyAuthConfig',() => {
     });
 
     it('should set readonly property "constraints"',() => {
-        const expectedConstraints: CustomStrengthOptionsConfig = {
-            requireUppercase: true,
-            requireLowercase: true,
-            requireNonAlphanumeric: true,
-            requireNumeric: true,
-            minLength: 8,
-            maxLength: 30,
-        }
-        expect(validConfig.constraints).to.deep.equal(expectedConstraints);
-      });
+      const expectedConstraints: CustomStrengthOptionsConfig = {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30,
+      }
+      expect(validConfig.constraints).to.deep.equal(expectedConstraints);
+    });
 
     it('should set readonly property "forceUpgradeOnSignin"',() => {
       expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
