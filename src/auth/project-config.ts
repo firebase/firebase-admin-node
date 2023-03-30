@@ -142,11 +142,11 @@ export class ProjectConfig {
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
     const request: ProjectConfigClientRequest = {};
-    if (typeof configOptions.multiFactorConfig !== 'undefined') {
-      request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
-    }
     if (typeof configOptions.smsRegionConfig !== 'undefined') {
       request.smsRegionConfig = configOptions.smsRegionConfig;
+    }
+    if (typeof configOptions.multiFactorConfig !== 'undefined') {
+      request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
     if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);
