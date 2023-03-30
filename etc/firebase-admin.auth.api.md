@@ -138,6 +138,16 @@ export interface CreateRequest extends UpdateRequest {
 // @public
 export type CreateTenantRequest = UpdateTenantRequest;
 
+// @public
+export interface CustomStrengthOptionsConfig {
+    maxLength?: number;
+    minLength?: number;
+    requireLowercase?: boolean;
+    requireNonAlphanumeric?: boolean;
+    requireNumeric?: boolean;
+    requireUppercase?: boolean;
+}
+
 // @alpha (undocumented)
 export interface DecodedAuthBlockingToken {
     // (undocumented)
@@ -279,6 +289,7 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
+    providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }
 
@@ -297,6 +308,12 @@ export abstract class MultiFactorInfo {
     readonly factorId: string;
     toJSON(): object;
     readonly uid: string;
+}
+
+// @public
+export interface MultiFactorProviderConfig {
+    state: MultiFactorConfigState;
+    totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
 // @public
@@ -335,6 +352,16 @@ export interface OIDCUpdateAuthProviderRequest {
 }
 
 // @public
+export interface PasswordPolicyConfig {
+    constraints?: CustomStrengthOptionsConfig;
+    enforcementState?: PasswordPolicyEnforcementState;
+    forceUpgradeOnSignin?: boolean;
+}
+
+// @public
+export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
+
+// @public
 export interface PhoneIdentifier {
     // (undocumented)
     phoneNumber: string;
@@ -350,6 +377,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 export class ProjectConfig {
     // (undocumented)
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
+    get multiFactorConfig(): MultiFactorConfig | undefined;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -405,6 +434,7 @@ export class Tenant {
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
@@ -432,6 +462,11 @@ export class TenantManager {
 }
 
 // @public
+export interface TotpMultiFactorProviderConfig {
+    adjacentIntervals?: number;
+}
+
+// @public
 export interface UidIdentifier {
     // (undocumented)
     uid: string;
@@ -452,6 +487,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 export interface UpdateProjectConfigRequest {
     // (undocumented)
     emailPrivacyConfig?: EmailPrivacyConfig;
+    multiFactorConfig?: MultiFactorConfig;
+    passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
@@ -477,6 +514,7 @@ export interface UpdateTenantRequest {
     emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;

@@ -26,6 +26,8 @@ import {
   OIDCConfigServerResponse,
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
+  PasswordPolicyAuthConfig,
+  CustomStrengthOptionsConfig,
 } from '../../../src/auth/auth-config';
 import {
   SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
@@ -206,10 +208,26 @@ describe('MultiFactorAuthConfig', () => {
       const config = new MultiFactorAuthConfig({
         state: 'ENABLED',
         enabledProviders: ['PHONE_SMS'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       });
       expect(config.toJSON()).to.deep.equal({
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       });
     });
   });
@@ -294,6 +312,142 @@ describe('MultiFactorAuthConfig', () => {
             factorIds: [factorId],
           } as any);
         }).to.throw(`"${factorId}" is not a valid "AuthFactorType".`);
+      });
+    });
+
+    const totpBaseConfig = {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {},
+        },
+      ],
+    } as any;
+    const expectedTotpConfig = deepCopy(totpBaseConfig);
+    it('should build server request with TOTP enabled', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
+    });
+
+    it('should build server request with TOTP disabled', () => {
+      totpBaseConfig.providerConfigs[0].state = 'DISABLED';
+      const expectedTotpConfig = deepCopy(totpBaseConfig);
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
+    });
+
+    it('should return expected server request on valid TOTP provider config', () => {
+      totpBaseConfig.providerConfigs[0].totpProviderConfig.adjacentIntervals = 5;
+      const expectedTotpConfig = deepCopy(totpBaseConfig);
+      expect(MultiFactorAuthConfig.buildServerRequest(totpBaseConfig)).to.deep.equal(expectedTotpConfig);
+    });
+
+    it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        factorIds: [],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        enabledProviders: [],
+      });
+    });
+
+    const invalidProviderConfigs = [NaN, 0, 1, '', 'a', {}, { a: 1 }, _.noop, true, false,]
+    invalidProviderConfigs.forEach((config) => {
+      it('should throw an error for invalid providerConfigs type:' + JSON.stringify(config), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: config,
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."')
+      });
+    });
+    it('should throw on providerConfig with unsupported attribute', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              unsupported: true,
+              state: 'ENABLED',
+              totpProviderConfig: {},
+            }
+          ],
+        } as any);
+      }).to.throw('"unsupported" is not a valid ProviderConfig parameter.');
+    });
+    const invalidProviderConfigObjects = [undefined, NaN, 0, 1, 'a', [], true, false,]
+    invalidProviderConfigObjects.forEach((object) => {
+      it('should throw an error for invalid providerConfig type:' + JSON.stringify(object), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              object
+            ],
+          } as any);
+        }).to.throw(`"${object}" is not a valid "MultiFactorProviderConfig" type.`)
+      });
+    });
+    invalidState.forEach((state) => {
+      it('should throw an error for invalid providerConfig.state type', () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              {
+                state,
+                totpProviderConfig: {},
+              },
+            ],
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".')
+      });
+    });
+    it('should throw on totpProviderConfig with unsupported attribute', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              state: 'ENABLED',
+              totpProviderConfig: {
+                unsupported: true,
+              },
+            }
+          ],
+        } as any);
+      }).to.throw('"unsupported" is not a valid TotpProviderConfig parameter.');
+    });
+    it('should throw an error for undefined totpProviderConfig', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'DISABLED',
+          providerConfigs: [
+            {
+              state: 'ENABLED',
+            },
+          ],
+        } as any);
+      }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.')
+    });
+    const invalidAdjacentIntervals = [null, NaN, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false, -1, 11, 1.1]
+    invalidAdjacentIntervals.forEach((interval) => {
+      it('should throw an error for invalid adjacentIntervals type: ' + JSON.stringify(interval), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'DISABLED',
+            providerConfigs: [
+              {
+                state: 'ENABLED',
+                totpProviderConfig: {
+                  adjacentIntervals: interval,
+                },
+              },
+            ],
+          } as any);
+        }).to.throw('"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+          ' be a valid number between 0 and 10 (both inclusive).')
       });
     });
   });
@@ -1083,6 +1237,120 @@ describe('OIDCConfig', () => {
         expect(() => OIDCConfig.validate(invalidClientRequest))
           .to.throw('"OIDCAuthProviderConfig.responseType.code" must be a boolean.');
       });
+    });
+  });
+  describe('PasswordPolicyAuthConfig',() => {
+    describe('constructor',() => {
+      const validConfig = new PasswordPolicyAuthConfig({
+        passwordPolicyEnforcementState: 'ENFORCE',
+        passwordPolicyVersions: [
+          {
+            customStrengthOptions: {
+              containsNumericCharacter: true,
+              containsLowercaseCharacter: true,
+              containsNonAlphanumericCharacter: true,
+              containsUppercaseCharacter: true,
+              minPasswordLength: 8,
+              maxPasswordLength: 30,
+            },
+          },
+        ],
+        forceUpgradeOnSignin: true,
+      });
+
+      it('should throw an error on missing state',() => {
+        expect(() => new PasswordPolicyAuthConfig({
+          passwordPolicyVersions: [
+            {
+              customStrengthOptions: {},
+            }
+          ],
+        } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+      });
+
+      it('should set readonly property "enforcementState" to ENFORCE on state enforced',() => {
+        expect(validConfig.enforcementState).to.equal('ENFORCE');
+      });
+
+      it('should set readonly property "enforcementState" to OFF on state disabling',() => {
+        const offStateConfig=new PasswordPolicyAuthConfig({
+          passwordPolicyEnforcementState: 'OFF',
+        });
+        expect(offStateConfig.enforcementState).to.equal('OFF');
+      });
+
+      it('should set readonly property "constraints"',() => {
+        const expectedConstraints: CustomStrengthOptionsConfig = {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        }
+        expect(validConfig.constraints).to.deep.equal(expectedConstraints);
+      });
+
+      it('should set readonly property "forceUpgradeOnSignin"',() => {
+        expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
+      });
+    });
+  });});
+
+describe('PasswordPolicyAuthConfig',() => {
+  describe('constructor',() => {
+    const validConfig=new PasswordPolicyAuthConfig({
+      passwordPolicyEnforcementState: 'ENFORCE',
+      passwordPolicyVersions: [
+        {
+          customStrengthOptions: {
+            containsNumericCharacter: true,
+            containsLowercaseCharacter: true,
+            containsNonAlphanumericCharacter: true,
+            containsUppercaseCharacter: true,
+            minPasswordLength: 8,
+            maxPasswordLength: 30,
+          },
+        },
+      ],
+      forceUpgradeOnSignin: true,
+    });
+
+    it('should throw an error on missing state',() => {
+      expect(() => new PasswordPolicyAuthConfig({
+        passwordPolicyVersions: [
+          {
+            customStrengthOptions: {},
+          }
+        ],
+      } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+    });
+
+    it('should set readonly property "enforcementState" to ENFORCE on state enforced',() => {
+      expect(validConfig.enforcementState).to.equal('ENFORCE');
+    });
+
+    it('should set readonly property "enforcementState" to OFF on state disabling',() => {
+      const offStateConfig=new PasswordPolicyAuthConfig({
+        passwordPolicyEnforcementState: 'OFF',
+      });
+      expect(offStateConfig.enforcementState).to.equal('OFF');
+    });
+
+    it('should set readonly property "constraints"',() => {
+      const expectedConstraints: CustomStrengthOptionsConfig = {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30,
+      }
+      expect(validConfig.constraints).to.deep.equal(expectedConstraints);
+    });
+
+    it('should set readonly property "forceUpgradeOnSignin"',() => {
+      expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
     });
   });
 });

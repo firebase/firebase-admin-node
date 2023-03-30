@@ -80,6 +80,7 @@ export {
   MultiFactorConfigState,
   MultiFactorCreateSettings,
   MultiFactorUpdateSettings,
+  MultiFactorProviderConfig,
   OAuthResponseType,
   OIDCAuthProviderConfig,
   OIDCUpdateAuthProviderRequest,
@@ -91,6 +92,10 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
+  TotpMultiFactorProviderConfig,
+  PasswordPolicyConfig,
+  PasswordPolicyEnforcementState, 
+  CustomStrengthOptionsConfig,
   EmailPrivacyConfig,
 } from './auth-config';
 

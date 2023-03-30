@@ -478,6 +478,7 @@ const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
 export interface MultiFactorAuthServerConfig {
   state?: MultiFactorConfigState;
   enabledProviders?: AuthFactorServerType[];
+  providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
@@ -506,16 +507,58 @@ export interface MultiFactorConfig {
    * Currently only ‘phone’ is supported.
    */
   factorIds?: AuthFactorType[];
+
+  /**
+   * A list of multi-factor provider configurations. 
+   * MFA providers (except phone) indicate whether they're enabled through this field.   */
+  providerConfigs?: MultiFactorProviderConfig[];
+}
+
+/**
+ * Interface representing a multi-factor auth provider configuration. 
+ * This interface is used for second factor auth providers other than SMS. 
+ * Currently, only TOTP is supported.
+ */export interface MultiFactorProviderConfig {
+  /**
+   * Indicates whether this multi-factor provider is enabled or disabled.    */
+  state: MultiFactorConfigState;
+  /**
+   * TOTP multi-factor provider config.   */
+  totpProviderConfig?: TotpMultiFactorProviderConfig;
+}
+
+/**
+ * Interface representing configuration settings for TOTP second factor auth. 
+ */
+export interface TotpMultiFactorProviderConfig {
+  /**
+    *  The allowed number of adjacent intervals that will be used for verification
+    *  to compensate for clock skew.   */
+  adjacentIntervals?: number;
 }
 
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
+ * 
+ * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
 
+  /**
+   * The multi-factor config state.
+   */
   public readonly state: MultiFactorConfigState;
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
   public readonly factorIds: AuthFactorType[];
+  /**
+   * A list of multi-factor provider specific config. 
+   * New MFA providers (except phone) will indicate enablement/disablement through this field.
+   */
+  public readonly providerConfigs: MultiFactorProviderConfig[];
 
   /**
    * Static method to convert a client side request to a MultiFactorAuthServerConfig.
@@ -543,6 +586,9 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         request.enabledProviders = [];
       }
     }
+    if (Object.prototype.hasOwnProperty.call(options, 'providerConfigs')) {
+      request.providerConfigs = options.providerConfigs;
+    }
     return request;
   }
 
@@ -551,10 +597,11 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    *
    * @param options - The options object to validate.
    */
-  private static validate(options: MultiFactorConfig): void {
+  public static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
+      providerConfigs: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -599,6 +646,71 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         }
       });
     }
+
+    if (typeof options.providerConfigs !== 'undefined') {
+      if (!validator.isArray(options.providerConfigs)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."',
+        );
+      }
+      //Validate content of array.
+      options.providerConfigs.forEach((multiFactorProviderConfig) => {
+        if (typeof multiFactorProviderConfig === 'undefined' || !validator.isObject(multiFactorProviderConfig)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfig" type.`
+          )
+        }
+        const validProviderConfigKeys = {
+          state: true,
+          totpProviderConfig: true,
+        };
+        for (const key in multiFactorProviderConfig) {
+          if (!(key in validProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid ProviderConfig parameter.`,
+            );
+          }
+        }
+        if (typeof multiFactorProviderConfig.state === 'undefined' ||
+          (multiFactorProviderConfig.state !== 'ENABLED' &&
+            multiFactorProviderConfig.state !== 'DISABLED')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
+          )
+        }
+        // Since TOTP is the only provider config available right now, not defining it will lead into an error
+        if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
+          )
+        }
+        const validTotpProviderConfigKeys = {
+          adjacentIntervals: true,
+        };
+        for (const key in multiFactorProviderConfig.totpProviderConfig) {
+          if (!(key in validTotpProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid TotpProviderConfig parameter.`,
+            );
+          }
+        }
+        const adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
+        if (typeof adjIntervals !== 'undefined' &&
+          (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+            ' be a valid number between 0 and 10 (both inclusive).'
+          )
+        }
+      });
+    }
   }
 
   /**
@@ -624,13 +736,29 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         this.factorIds.push(AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider]);
       }
     })
+    this.providerConfigs = [];
+    (response.providerConfigs || []).forEach((providerConfig) => {
+      if (typeof providerConfig !== 'undefined') {
+        if (typeof providerConfig.state === 'undefined' ||
+          typeof providerConfig.totpProviderConfig === 'undefined' ||
+          (typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
+            typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'number')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+        }
+        this.providerConfigs.push(providerConfig);
+      }
+    })
   }
 
-  /** @returns The plain object representation of the multi-factor config instance. */
+  /** Converts MultiFactorConfig to JSON object
+   * @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,
       factorIds: this.factorIds,
+      providerConfigs: this.providerConfigs,
     };
   }
 }
@@ -1593,6 +1721,321 @@ export class SmsRegionsAuthConfig {
       }
     }
   }
+}
+
+/** 
+ * The request configuration for the password policy on the project or tenant 
+*/
+export interface PasswordPolicyConfig {
+  /**
+   * Enforcement state for the password policy
+   */
+  enforcementState?: PasswordPolicyEnforcementState;
+  /**
+   * Users must have a password compliant with the password policy to sign-in
+   */
+  forceUpgradeOnSignin?: boolean;
+  /**
+   * Set of strength constraints for the password
+   */
+  constraints?: CustomStrengthOptionsConfig;
+}
+
+/**
+ * Identifies a password policy configuration state.
+ */
+export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
+
+/**
+ * Constraints to be enforced on the password policy
+ */
+export interface CustomStrengthOptionsConfig {
+  /**
+   * The password must contain an upper case character
+   */
+  requireUppercase?: boolean;
+  /**
+   *  The password must contain a lower case character
+   */
+  requireLowercase?: boolean;
+  /**
+   * The password must contain a non alpha numeric character
+   */
+  requireNonAlphanumeric?: boolean;
+  /**
+   * The password must contain a number
+   */
+  requireNumeric?: boolean;
+  /**
+   * Minimum password length. Range from 6 to 30
+   */
+  minLength?: number;
+  /**
+   * Maximum password length. No default max length
+   */
+  maxLength?: number;
+}
+
+/**
+ * Defines the password policy config class used to convert client side PasswordPolicyConfig
+ * to a format that is understood by the Auth server.
+ * 
+ * @internal
+ */
+export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
+
+  /**
+   * Identifies a password policy configuration state.
+   */
+  public readonly enforcementState: PasswordPolicyEnforcementState;
+  /**
+   * Users must have a password compliant with the password policy to sign-in
+   */
+  public readonly forceUpgradeOnSignin?: boolean;
+  /**
+   * Must be of length 1. Contains the strength attributes for the password policy
+   */
+  public readonly constraints?: CustomStrengthOptionsConfig;
+
+  /**
+   * Static method to convert a client side request to a PasswordPolicyAuthServerConfig.
+   * Throws an error if validation fails.
+   *
+   * @param options - The options object to convert to a server request.
+   * @returns The resulting server request.
+   * @internal
+   */
+  public static buildServerRequest(options: PasswordPolicyConfig): PasswordPolicyAuthServerConfig {
+    const request: PasswordPolicyAuthServerConfig = {};
+    PasswordPolicyAuthConfig.validate(options);
+    if (Object.prototype.hasOwnProperty.call(options, 'enforcementState')) {
+      request.passwordPolicyEnforcementState = options.enforcementState;
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'forceUpgradeOnSignin')) {
+      request.forceUpgradeOnSignin = options.forceUpgradeOnSignin;
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
+      request.passwordPolicyVersions = [];
+      const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+        containsUppercaseCharacter: options.constraints?.requireUppercase,
+        containsLowercaseCharacter: options.constraints?.requireLowercase,
+        containsNonAlphanumericCharacter: options.constraints?.requireNonAlphanumeric,
+        containsNumericCharacter: options.constraints?.requireNumeric,
+        minPasswordLength: options.constraints?.minLength,
+        maxPasswordLength: options.constraints?.maxLength,
+      };
+      request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
+    }
+    return request;
+  }
+
+  /**
+   * Validates the PasswordPolicyConfig options object. Throws an error on failure.
+   *
+   * @param options - The options object to validate.
+   * @internal
+   */
+  public static validate(options: PasswordPolicyConfig): void {
+    const validKeys = {
+      enforcementState: true,
+      forceUpgradeOnSignin: true,
+      constraints: true,
+    };
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"PasswordPolicyConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid PasswordPolicyConfig parameter.`,
+        );
+      }
+    }
+    // Validate content.
+    if (typeof options.enforcementState === 'undefined' ||
+      !(options.enforcementState === 'ENFORCE' ||
+      options.enforcementState === 'OFF')) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
+      );
+    }
+
+
+    if (typeof options.forceUpgradeOnSignin !== 'undefined') {
+      if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.',
+        );
+      }
+    }
+
+    if (typeof options.constraints !== 'undefined') {
+      if (options.enforcementState === 'ENFORCE' && !validator.isNonNullObject(options.constraints)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints" must be a non-empty object.',
+        );
+      }
+
+      const validCharKeys = {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumeric: true,
+        requireNonAlphanumeric: true,
+        minLength: true,
+        maxLength: true,
+      };
+
+      // Check for unsupported  attributes.
+      for (const key in options.constraints) {
+        if (!(key in validCharKeys)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${key}" is not a valid PasswordPolicyConfig.constraints parameter.`,
+          );
+        }
+      }
+      if (typeof options.constraints.requireUppercase !== undefined &&
+        !validator.isBoolean(options.constraints.requireUppercase)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireUppercase" must be a boolean.',
+        );
+      }
+      if (typeof options.constraints.requireLowercase !== undefined &&
+        !validator.isBoolean(options.constraints.requireLowercase)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireLowercase" must be a boolean.',
+        );
+      }
+      if (typeof options.constraints.requireNonAlphanumeric !== undefined &&
+        !validator.isBoolean(options.constraints.requireNonAlphanumeric)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
+            ' must be a boolean.',
+        );
+      }
+      if (typeof options.constraints.requireNumeric !== undefined &&
+        !validator.isBoolean(options.constraints.requireNumeric)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.requireNumeric" must be a boolean.',
+        );
+      }
+      if (!validator.isNumber(options.constraints.minLength)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.minLength" must be a number.',
+        );
+      }
+      if (!validator.isNumber(options.constraints.maxLength)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints.maxLength" must be a number.',
+        );
+      }
+      if (options.constraints.minLength === undefined) {
+        options.constraints.minLength = 6;
+      } else {
+        if (!(options.constraints.minLength >= 6
+          && options.constraints.minLength <= 30)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.minLength"' +
+            ' must be an integer between 6 and 30, inclusive.',
+          );
+        }
+      }
+      if (options.constraints.maxLength === undefined) {
+        options.constraints.maxLength = 4096;
+      } else {
+        if (!(options.constraints.maxLength >= options.constraints.minLength &&
+          options.constraints.maxLength <= 4096)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"PasswordPolicyConfig.constraints.maxLength"' +
+            ' must be greater than or equal to minLength and at max 4096.',
+          );
+        }
+      }
+    } else {
+      if (options.enforcementState === 'ENFORCE') {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"PasswordPolicyConfig.constraints" must be defined.',
+        );
+      }
+    }
+  }
+
+  /**
+   * The PasswordPolicyAuthConfig constructor.
+   *
+   * @param response - The server side response used to initialize the
+   *     PasswordPolicyAuthConfig object.
+   * @constructor
+   * @internal
+   */
+  constructor(response: PasswordPolicyAuthServerConfig) {
+    if (typeof response.passwordPolicyEnforcementState === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+    }
+    this.enforcementState = response.passwordPolicyEnforcementState;
+    let constraintsResponse: CustomStrengthOptionsConfig = {};
+    if (typeof response.passwordPolicyVersions !== 'undefined') {
+      (response.passwordPolicyVersions || []).forEach((policyVersion) => {
+        constraintsResponse = {
+          requireLowercase: policyVersion.customStrengthOptions?.containsLowercaseCharacter,
+          requireUppercase: policyVersion.customStrengthOptions?.containsUppercaseCharacter,
+          requireNonAlphanumeric: policyVersion.customStrengthOptions?.containsNonAlphanumericCharacter,
+          requireNumeric: policyVersion.customStrengthOptions?.containsNumericCharacter,
+          minLength: policyVersion.customStrengthOptions?.minPasswordLength,
+          maxLength: policyVersion.customStrengthOptions?.maxPasswordLength,
+        };
+      });
+    }
+    this.constraints = constraintsResponse;
+    this.forceUpgradeOnSignin = response.forceUpgradeOnSignin;
+  }
+}
+
+/** 
+ * Server side password policy configuration.
+ */
+export interface PasswordPolicyAuthServerConfig {
+  passwordPolicyEnforcementState?: PasswordPolicyEnforcementState;
+  passwordPolicyVersions?: PasswordPolicyVersionsAuthServerConfig[];
+  forceUpgradeOnSignin?: boolean;
+}
+
+/**
+ * Server side password policy versions configuration. 
+ */
+export interface PasswordPolicyVersionsAuthServerConfig {
+  customStrengthOptions?: CustomStrengthOptionsAuthServerConfig;
+}
+
+/**
+ * Server side password policy constraints configuration. 
+ */
+export interface CustomStrengthOptionsAuthServerConfig {
+  containsLowercaseCharacter?: boolean;
+  containsUppercaseCharacter?: boolean;
+  containsNumericCharacter?: boolean;
+  containsNonAlphanumericCharacter?: boolean;
+  minPasswordLength?: number;
+  maxPasswordLength?: number;
 }
 
 export interface EmailPrivacyConfig {
