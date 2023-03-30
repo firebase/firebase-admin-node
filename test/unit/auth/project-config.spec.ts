@@ -381,16 +381,16 @@ describe('ProjectConfig', () => {
 
     it('should set readonly property passwordPolicyConfig', () => {
       const expectedPasswordPolicyConfig = {
-          enforcementState: 'ENFORCE',
-          forceUpgradeOnSignin: true,
-          constraints: {
-            requireLowercase: true,
-            requireNonAlphanumeric: true,
-            requireNumeric: true,
-            requireUppercase: true,
-            minLength: 8,
-            maxLength: 30,
-          },
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        constraints: {
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          requireUppercase: true,
+          minLength: 8,
+          maxLength: 30,
+        },
       };
       expect(projectConfig.passwordPolicyConfig).to.deep.equal(expectedPasswordPolicyConfig);
     });
