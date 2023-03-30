@@ -31,7 +31,8 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
+  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
+  PasswordPolicyConfig
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -1206,24 +1207,38 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
+    const mfaConfig: MultiFactorConfig = {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    };
+    const passwordConfig: PasswordPolicyConfig = {
+      enforcementState: 'ENFORCE',
+      forceUpgradeOnSignin: true,
+      constraints: {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30,
+      },
+    }
     const projectConfigOption1: UpdateProjectConfigRequest = {
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      multiFactorConfig: mfaConfig,
+      passwordPolicyConfig: passwordConfig,
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: {
@@ -1231,17 +1246,18 @@ describe('admin.auth', () => {
           allowedRegions: ['AC', 'AD'],
         }
       },
-      passwordPolicyConfig: {
-        enforcementState: 'OFF',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
+    };
+    const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
+      smsRegionConfig: projectConfigOption2.smsRegionConfig,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          }
+        ],
       },
     };
     const expectedProjectConfig1: any = {
@@ -1250,18 +1266,8 @@ describe('admin.auth', () => {
           disallowedRegions: ['AC', 'AD'],
         }
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      multiFactorConfig: mfaConfig,
+      passwordPolicyConfig: passwordConfig,
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: {
@@ -1269,18 +1275,22 @@ describe('admin.auth', () => {
           allowedRegions: ['AC', 'AD'],
         }
       },
-      passwordPolicyConfig: {
-        enforcementState: 'OFF',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
+      multiFactorConfig: mfaConfig,
+      passwordPolicyConfig: passwordConfig,
+    };
+    const expectedProjectConfigSmsEnabledTotpDisabled: any = {
+      smsRegionConfig: expectedProjectConfig2.smsRegionConfig,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          }
+        ],
       },
+      passwordPolicyConfig: passwordConfig,
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
@@ -1291,6 +1301,9 @@ describe('admin.auth', () => {
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
+        }).then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
 
@@ -1298,7 +1311,7 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
           const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
+          expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
   });
@@ -1315,6 +1328,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // Add random phone number / code pairs.
       testPhoneNumbers: {
@@ -1344,6 +1365,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // These test phone numbers will not be checked when running integration
       // tests against the emulator suite and are ignored in auth emulator
@@ -1376,6 +1405,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'DISABLED',
         factorIds: [],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // Test phone numbers will not be checked when running integration tests
       // against emulator suite. For more information, please refer to:
@@ -1406,6 +1443,47 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
+      },
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
+      passwordPolicyConfig: {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        constraints: {
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          minLength: 8,
+          maxLength: 30,
+        },
+      },
+    };
+    const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
+      displayName: 'testTenantUpdated',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: false,
+      },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       smsRegionConfig: {
         allowByDefault: {
@@ -1895,6 +1973,59 @@ describe('admin.auth', () => {
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not update MFA-related config of tenant when MultiFactorConfig is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updateRequestNoMfaConfig: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Configuring test phone numbers are not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('updateTenant() should not disable SMS MFA when TOTP is disabled', () => {
+      expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
+      const updateRequestSMSEnabledTOTPDisabled: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: {
+          state: 'ENABLED',
+          factorIds: ['phone'],
+          providerConfigs: [
+            {
+              state: 'DISABLED',
+              totpProviderConfig: {}
+            },
+          ],
+        },
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Configuring test phone numbers are not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenantSmsEnabledTotpDisabled.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
         });
     });
 

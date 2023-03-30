@@ -18,6 +18,9 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
+  MultiFactorConfig,
+  MultiFactorAuthConfig,
+  MultiFactorAuthServerConfig,
   PasswordPolicyAuthConfig,
   PasswordPolicyAuthServerConfig,
   PasswordPolicyConfig,
@@ -33,6 +36,10 @@ export interface UpdateProjectConfigRequest {
    */
   smsRegionConfig?: SmsRegionConfig;
   /**
+   * The multi-factor auth configuration to update on the project.
+   */
+  multiFactorConfig?: MultiFactorConfig;
+  /**
    * The password policy configuration to update on the project
    */
   passwordPolicyConfig?: PasswordPolicyConfig;
@@ -44,6 +51,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
+  mfa?: MultiFactorAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
@@ -53,6 +61,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
+  mfa?: MultiFactorAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
@@ -66,6 +75,16 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The project's multi-factor auth configuration.
+   * Supports only phone and TOTP.
+   */  private readonly multiFactorConfig_?: MultiFactorConfig;
+  /**
+   * The multi-factor auth configuration.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
+  }
   /**
    * The password policy configurations for the tenant
    */
@@ -85,6 +104,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
+      multiFactorConfig: true,
       passwordPolicyConfig: true,
     }
     // Check for unsupported top level attributes.
@@ -99,6 +119,11 @@ export class ProjectConfig {
     // Validate SMS Regions Config if provided.
     if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
+    }
+
+    // Validate Multi Factor Config if provided
+    if (typeof request.multiFactorConfig !== 'undefined') {
+      MultiFactorAuthConfig.validate(request.multiFactorConfig);
     }
 
     // Validate Password policy Config if provided
@@ -117,6 +142,9 @@ export class ProjectConfig {
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
     const request: ProjectConfigClientRequest = {};
+    if (typeof configOptions.multiFactorConfig !== 'undefined') {
+      request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
+    }
     if (typeof configOptions.smsRegionConfig !== 'undefined') {
       request.smsRegionConfig = configOptions.smsRegionConfig;
     }
@@ -137,6 +165,11 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
+    //The SDK exposes it as multiFactorConfig always.
+    if (typeof response.mfa !== 'undefined') {
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);
+    }
     if (typeof response.passwordPolicyConfig !== 'undefined') {
       this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
     }
@@ -150,10 +183,14 @@ export class ProjectConfig {
     // JSON serialization
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      multiFactorConfig: deepCopy(this.multiFactorConfig),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.multiFactorConfig === 'undefined') {
+      delete json.multiFactorConfig;
     }
     if (typeof json.passwordPolicyConfig === 'undefined') {
       delete json.passwordPolicyConfig;

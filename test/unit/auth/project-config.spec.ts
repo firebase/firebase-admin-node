@@ -39,6 +39,17 @@ describe('ProjectConfig', () => {
         disallowedRegions: [ 'AC', 'AD' ],
       },
     },
+    mfa: {
+      state: 'DISABLED',
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    },
     passwordPolicyConfig: {
       passwordPolicyEnforcementState: 'ENFORCE',
       forceUpgradeOnSignin: true,
@@ -353,6 +364,21 @@ describe('ProjectConfig', () => {
       expect(projectConfig.smsRegionConfig).to.deep.equal(expectedSmsRegionConfig);
     });
 
+    it('should set readonly property multiFactorConfig', () => {
+      const expectedMultiFactorConfig = {
+        state: 'DISABLED',
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
+      };
+      expect(projectConfig.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
+    });
+
     it('should set readonly property passwordPolicyConfig', () => {
       const expectedPasswordPolicyConfig = {
           enforcementState: 'ENFORCE',
@@ -375,24 +401,15 @@ describe('ProjectConfig', () => {
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
         smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
-        passwordPolicyConfig: {
-          enforcementState: 'ENFORCE',
-          forceUpgradeOnSignin: true,
-          constraints: {
-            requireLowercase: true,
-            requireNonAlphanumeric: true,
-            requireNumeric: true,
-            requireUppercase: true,
-            minLength: 8,
-            maxLength: 30,
-          },
-        },
+        multiFactorConfig: deepCopy(serverResponse.mfa),
+        passwordPolicyConfig: deepCopy(serverResponse.passwordPolicyConfig),
       });
     });
 
     it('should not populate optional fields if not available', () => {
       const serverResponseOptionalCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
       delete serverResponseOptionalCopy.smsRegionConfig;
+      delete serverResponseOptionalCopy.mfa;
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({});
     });
