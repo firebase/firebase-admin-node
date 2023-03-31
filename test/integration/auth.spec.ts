@@ -1981,7 +1981,7 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
-        recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
+        passwordPolicyConfig: deepCopy(expectedUpdatedTenant.passwordPolicyConfig),
         emailPrivacyConfig: deepCopy(expectedUpdatedTenant.emailPrivacyConfig),
       };
       const updatedOptions2: UpdateTenantRequest = {
@@ -1993,6 +1993,9 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        emailPrivacyConfig: {
+          enableImprovedEmailPrivacy: false,
+        },
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
