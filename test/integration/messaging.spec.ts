@@ -108,6 +108,37 @@ describe('admin.messaging', () => {
       });
   });
 
+  it('sendEach()', () => {
+    const messages: Message[] = [message, message, message];
+    return getMessaging().sendEach(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendEach(500)', () => {
+    const messages: Message[] = [];
+    for (let i = 0; i < 500; i++) {
+      messages.push({ topic: `foo-bar-${i % 10}` });
+    }
+    return getMessaging().sendEach(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
   it('sendAll()', () => {
     const messages: Message[] = [message, message, message];
     return getMessaging().sendAll(messages, true)
@@ -135,6 +166,25 @@ describe('admin.messaging', () => {
         response.responses.forEach((resp) => {
           expect(resp.success).to.be.true;
           expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendEachForMulticast()', () => {
+    const multicastMessage: MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      tokens: ['not-a-token', 'also-not-a-token'],
+    };
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
         });
       });
   });
