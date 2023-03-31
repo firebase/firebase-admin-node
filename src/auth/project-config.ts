@@ -50,7 +50,6 @@ export interface UpdateProjectConfigRequest {
 
 /**
  * Response received when getting or updating the project config.
- * Currently only includes the reCAPTCHA and SMS Region config.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
@@ -60,7 +59,6 @@ export interface ProjectConfigServerResponse {
 
 /**
  * Request to update the project config.
- * Currently only includes the reCAPTCHA and SMS Region config.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
@@ -145,7 +143,7 @@ export class ProjectConfig {
    * Build the corresponding server request for a UpdateProjectConfigRequest object.
    * @param configOptions - The properties to convert to a server request.
    * @returns  The equivalent server request.
-   * 
+   *
    * @internal
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {

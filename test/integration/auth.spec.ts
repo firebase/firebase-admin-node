@@ -1227,7 +1227,12 @@ describe('admin.auth', () => {
       multiFactorConfig: mfaConfig,
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
         useAccountDefender: true,
       },
     };
@@ -1263,7 +1268,12 @@ describe('admin.auth', () => {
       multiFactorConfig: mfaConfig,
       recaptchaConfig: {
         emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
         useAccountDefender: true,
       },
     };
@@ -1276,7 +1286,12 @@ describe('admin.auth', () => {
       multiFactorConfig: mfaConfig,
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
       },
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
@@ -1293,7 +1308,12 @@ describe('admin.auth', () => {
       },
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-        managedRules: [{ endScore: 0.1, action: 'BLOCK' }],
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
       },
     };
 
