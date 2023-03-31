@@ -96,6 +96,7 @@ export {
   PasswordPolicyConfig,
   PasswordPolicyEnforcementState, 
   CustomStrengthOptionsConfig,
+  EmailPrivacyConfig,
 } from './auth-config';
 
 export {

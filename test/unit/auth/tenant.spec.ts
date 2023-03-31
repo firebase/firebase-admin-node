@@ -100,6 +100,9 @@ describe('Tenant', () => {
     },
     smsRegionConfig: smsAllowByDefault,
     passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequest: UpdateTenantRequest = {
@@ -126,6 +129,9 @@ describe('Tenant', () => {
     },
     smsRegionConfig: smsAllowByDefault,
     passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const serverRequestWithoutMfa: TenantServerResponse = {
@@ -134,6 +140,9 @@ describe('Tenant', () => {
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
     passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequestWithoutMfa: UpdateTenantRequest = {
@@ -143,6 +152,9 @@ describe('Tenant', () => {
       passwordRequired: false,
     },
     passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   describe('buildServerRequest()', () => {
@@ -415,6 +427,30 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
         ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
       it('should not throw on valid client request object', () => {
@@ -718,6 +754,30 @@ describe('Tenant', () => {
         ' must be greater than or equal to minLength and at max 4096.');
       });
 
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
+      });
+
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
@@ -858,6 +918,7 @@ describe('Tenant', () => {
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
         smsRegionConfig: deepCopy(clientRequest.smsRegionConfig),
         passwordPolicyConfig: deepCopy(clientRequest.passwordPolicyConfig),
+        emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
       });
     });
 
@@ -867,6 +928,7 @@ describe('Tenant', () => {
       delete serverRequestCopyWithoutMfa.testPhoneNumbers;
       delete serverRequestCopyWithoutMfa.smsRegionConfig;
       delete serverRequestCopyWithoutMfa.passwordPolicyConfig;
+      delete serverRequestCopyWithoutMfa.emailPrivacyConfig;
 
       expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',

@@ -66,6 +66,9 @@ describe('ProjectConfig', () => {
         },
       ],
     },
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -85,6 +88,9 @@ describe('ProjectConfig', () => {
         minLength: 8,
         maxLength: 30,
       },
+    },
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: false,
     },
   };
 
@@ -328,6 +334,30 @@ describe('ProjectConfig', () => {
         ' must be greater than or equal to minLength and at max 4096.');
       });
 
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
+      });
+
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid UpdateProjectConfigRequest:' + JSON.stringify(request), () => {
@@ -394,6 +424,13 @@ describe('ProjectConfig', () => {
       };
       expect(projectConfig.passwordPolicyConfig).to.deep.equal(expectedPasswordPolicyConfig);
     });
+
+    it('should set readonly property emailPrivacyConfig', () => {
+      const expectedEmailPrivacyConfig = {
+        enableImprovedEmailPrivacy: true,
+      };
+      expect(projectConfig.emailPrivacyConfig).to.deep.equal(expectedEmailPrivacyConfig);
+    });
   });
 
   describe('toJSON()', () => {
@@ -403,6 +440,7 @@ describe('ProjectConfig', () => {
         smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
         multiFactorConfig: deepCopy(serverResponse.mfa),
         passwordPolicyConfig: deepCopy(serverResponse.passwordPolicyConfig),
+        emailPrivacyConfig: deepCopy(serverResponse.emailPrivacyConfig),
       });
     });
 
@@ -411,6 +449,7 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.smsRegionConfig;
       delete serverResponseOptionalCopy.mfa;
       delete serverResponseOptionalCopy.passwordPolicyConfig;
+      delete serverResponseOptionalCopy.emailPrivacyConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({});
     });
   });
