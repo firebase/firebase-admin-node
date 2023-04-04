@@ -36,6 +36,7 @@ import {
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
+import {SmsRegionConfig} from 'firebase-admin/lib/auth/auth-config';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -1207,7 +1208,7 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
-    const mfaConfig: MultiFactorConfig = {
+    const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
       state: 'ENABLED',
       factorIds: ['phone'],
       providerConfigs: [
@@ -1219,6 +1220,16 @@ describe('admin.auth', () => {
         },
       ],
     };
+    const mfaSmsEnabledTotpDisabledConfig: MultiFactorConfig = {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'DISABLED',
+          totpProviderConfig: {},
+        }
+      ],
+    }
     const passwordConfig: PasswordPolicyConfig = {
       enforcementState: 'ENFORCE',
       forceUpgradeOnSignin: true,
@@ -1231,65 +1242,41 @@ describe('admin.auth', () => {
         maxLength: 30,
       },
     }
+    const smsRegionAllowByDefaultConfig: SmsRegionConfig = {
+      allowByDefault: {
+        disallowedRegions: ['AC', 'AD'],
+      }
+    }
+    const smsRegionAllowlistOnlyConfig: SmsRegionConfig = {
+      allowlistOnly: {
+        allowedRegions: ['AC', 'AD'],
+      }
+    }
     const projectConfigOption1: UpdateProjectConfigRequest = {
-      smsRegionConfig: {
-        allowByDefault: {
-          disallowedRegions: ['AC', 'AD'],
-        }
-      },
-      multiFactorConfig: mfaConfig,
+      smsRegionConfig: smsRegionAllowByDefaultConfig,
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
-      smsRegionConfig: {
-        allowlistOnly: {
-          allowedRegions: ['AC', 'AD'],
-        }
-      },
+      smsRegionConfig: smsRegionAllowlistOnlyConfig,
     };
     const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
-      smsRegionConfig: projectConfigOption2.smsRegionConfig,
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'DISABLED',
-            totpProviderConfig: {},
-          }
-        ],
-      },
+      smsRegionConfig: smsRegionAllowlistOnlyConfig,
+      multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
     };
     const expectedProjectConfig1: any = {
-      smsRegionConfig: {
-        allowByDefault: {
-          disallowedRegions: ['AC', 'AD'],
-        }
-      },
-      multiFactorConfig: mfaConfig,
+      smsRegionConfig: smsRegionAllowByDefaultConfig,
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
     };
     const expectedProjectConfig2: any = {
-      smsRegionConfig: {
-        allowlistOnly: {
-          allowedRegions: ['AC', 'AD'],
-        }
-      },
-      multiFactorConfig: mfaConfig,
+      smsRegionConfig: smsRegionAllowlistOnlyConfig,
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
-      smsRegionConfig: expectedProjectConfig2.smsRegionConfig,
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'DISABLED',
-            totpProviderConfig: {},
-          }
-        ],
-      },
+      smsRegionConfig: smsRegionAllowlistOnlyConfig,
+      multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       passwordPolicyConfig: passwordConfig,
     };
 
@@ -1319,41 +1306,68 @@ describe('admin.auth', () => {
   describe('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
+    const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    };
+    const mfaSmsEnabledTotpDisabledConfig: MultiFactorConfig = {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'DISABLED',
+          totpProviderConfig: {},
+        }
+      ],
+    }
+    const mfaSmsDisabledTotpEnabledConfig: MultiFactorConfig = {
+      state: 'DISABLED',
+      factorIds: [],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {},
+        }
+      ],
+    }
+    const passwordConfig: PasswordPolicyConfig = {
+      enforcementState: 'ENFORCE',
+      forceUpgradeOnSignin: true,
+      constraints: {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30,
+      },
+    }
+    const smsRegionAllowByDefaultConfig: SmsRegionConfig = {
+      allowByDefault: {
+        disallowedRegions: ['AC', 'AD'],
+      }
+    }
     const tenantOptions: CreateTenantRequest = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
       },
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {
-              adjacentIntervals: 5,
-            },
-          },
-        ],
-      },
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       // Add random phone number / code pairs.
       testPhoneNumbers: {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      passwordPolicyConfig: passwordConfig,
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
@@ -1362,18 +1376,7 @@ describe('admin.auth', () => {
         passwordRequired: true,
       },
       anonymousSignInEnabled: false,
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {
-              adjacentIntervals: 5,
-            },
-          },
-        ],
-      },
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       // These test phone numbers will not be checked when running integration
       // tests against the emulator suite and are ignored in auth emulator
       // altogether. For more information, please refer to this section of the
@@ -1382,18 +1385,7 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -1402,36 +1394,14 @@ describe('admin.auth', () => {
         passwordRequired: true,
       },
       anonymousSignInEnabled: false,
-      multiFactorConfig: {
-        state: 'DISABLED',
-        factorIds: [],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {
-              adjacentIntervals: 5,
-            },
-          },
-        ],
-      },
+      multiFactorConfig: mfaSmsDisabledTotpEnabledConfig,
       // Test phone numbers will not be checked when running integration tests
       // against emulator suite. For more information, please refer to:
       // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1440,33 +1410,9 @@ describe('admin.auth', () => {
         passwordRequired: false,
       },
       anonymousSignInEnabled: false,
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'ENABLED',
-            totpProviderConfig: {},
-          },
-        ],
-      },
-      smsRegionConfig: {
-        allowByDefault: {
-          disallowedRegions: ['AC', 'AD'],
-        }
-      },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
+      smsRegionConfig: smsRegionAllowByDefaultConfig,
+      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
       displayName: 'testTenantUpdated',
@@ -1475,33 +1421,9 @@ describe('admin.auth', () => {
         passwordRequired: false,
       },
       anonymousSignInEnabled: false,
-      multiFactorConfig: {
-        state: 'ENABLED',
-        factorIds: ['phone'],
-        providerConfigs: [
-          {
-            state: 'DISABLED',
-            totpProviderConfig: {},
-          },
-        ],
-      },
-      smsRegionConfig: {
-        allowByDefault: {
-          disallowedRegions: ['AC', 'AD'],
-        }
-      },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
+      multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
+      smsRegionConfig: smsRegionAllowByDefaultConfig,
+      passwordPolicyConfig: passwordConfig,
     };
 
     // https://mochajs.org/
