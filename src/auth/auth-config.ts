@@ -1865,8 +1865,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
       );
     }
-
-
+    
     if (typeof options.forceUpgradeOnSignin !== 'undefined') {
       if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
         throw new FirebaseAuthError(
