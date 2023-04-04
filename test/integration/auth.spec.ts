@@ -1250,7 +1250,7 @@ describe('admin.auth', () => {
       allowlistOnly: {
         allowedRegions: ['AC', 'AD'],
       }
-    }
+    };
     const projectConfigOption1: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowByDefaultConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
