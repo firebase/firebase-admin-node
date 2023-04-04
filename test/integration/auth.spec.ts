@@ -36,7 +36,7 @@ import {
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import {SmsRegionConfig} from 'firebase-admin/lib/auth/auth-config';
+import { SmsRegionConfig } from 'firebase-admin/lib/auth/auth-config';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
