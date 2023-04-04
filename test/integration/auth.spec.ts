@@ -1228,7 +1228,7 @@ describe('admin.auth', () => {
           totpProviderConfig: {},
         }
       ],
-    }
+    };
     const passwordConfig: PasswordPolicyConfig = {
       enforcementState: 'ENFORCE',
       forceUpgradeOnSignin: true,
@@ -1240,12 +1240,12 @@ describe('admin.auth', () => {
         minLength: 8,
         maxLength: 30,
       },
-    }
+    };
     const smsRegionAllowByDefaultConfig: SmsRegionConfig = {
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
       }
-    }
+    };
     const smsRegionAllowlistOnlyConfig: SmsRegionConfig = {
       allowlistOnly: {
         allowedRegions: ['AC', 'AD'],
