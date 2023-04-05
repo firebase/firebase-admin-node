@@ -1724,25 +1724,25 @@ export class SmsRegionsAuthConfig {
 }
 
 /** 
- * The request configuration for the password policy on the project or tenant 
+ * A password policy configuration for a project or tenant 
 */
 export interface PasswordPolicyConfig {
   /**
-   * Enforcement state for the password policy
+   * Enforcement state of the password policy
    */
   enforcementState?: PasswordPolicyEnforcementState;
   /**
-   * Users must have a password compliant with the password policy to sign-in
+   * Require users to have a policy-compliant password to sign in
    */
   forceUpgradeOnSignin?: boolean;
   /**
-   * Set of strength constraints for the password
+   * The constraints that make up the password strength policy
    */
   constraints?: CustomStrengthOptionsConfig;
 }
 
 /**
- * Identifies a password policy configuration state.
+ * A password policy's enforcement state.
  */
 export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
 
@@ -1759,7 +1759,7 @@ export interface CustomStrengthOptionsConfig {
    */
   requireLowercase?: boolean;
   /**
-   * The password must contain a non alpha numeric character
+   * The password must contain a non-alphanumeric character
    */
   requireNonAlphanumeric?: boolean;
   /**
@@ -1767,7 +1767,7 @@ export interface CustomStrengthOptionsConfig {
    */
   requireNumeric?: boolean;
   /**
-   * Minimum password length. Range from 6 to 30
+   * Minimum password length. Valid values are from 6 to 30
    */
   minLength?: number;
   /**
