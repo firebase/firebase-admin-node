@@ -1231,7 +1231,7 @@ describe('admin.auth', () => {
     };
     const passwordConfig: PasswordPolicyConfig = {
       enforcementState: 'ENFORCE',
-      forceUpgradeOnSignin: true,
+      forceUpgradeOnSignin: false,
       constraints: {
         requireUppercase: true,
         requireLowercase: true,
@@ -1339,7 +1339,7 @@ describe('admin.auth', () => {
     }
     const passwordConfig: PasswordPolicyConfig = {
       enforcementState: 'ENFORCE',
-      forceUpgradeOnSignin: true,
+      forceUpgradeOnSignin: false,
       constraints: {
         requireUppercase: true,
         requireLowercase: true,
