@@ -1366,7 +1366,6 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
-      passwordPolicyConfig: passwordConfig,
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
@@ -1400,7 +1399,6 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
-      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1846,6 +1844,7 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        passwordPolicyConfig: deepCopy(expectedUpdatedTenant2.passwordPolicyConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
