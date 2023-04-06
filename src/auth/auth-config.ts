@@ -1791,7 +1791,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
   /**
    * Users must have a password compliant with the password policy to sign-in
    */
-  public readonly forceUpgradeOnSignin?: boolean;
+  public readonly forceUpgradeOnSignin: boolean;
   /**
    * Must be of length 1. Contains the strength attributes for the password policy
    */
@@ -2005,7 +2005,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       });
     }
     this.constraints = constraintsResponse;
-    this.forceUpgradeOnSignin = response.forceUpgradeOnSignin;
+    this.forceUpgradeOnSignin = response.forceUpgradeOnSignin?true:false;
   }
 }
 

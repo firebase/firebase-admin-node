@@ -1207,6 +1207,24 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
+
+    after(() => {
+      getAuth().projectConfigManager().updateProjectConfig({
+        passwordPolicyConfig: {
+          enforcementState: 'OFF',
+          forceUpgradeOnSignin: false,
+          constraints: {
+            requireLowercase: false,
+            requireNonAlphanumeric: false,
+            requireNumeric: false,
+            requireUppercase: false,
+            maxLength: 4096,
+            minLength: 6,
+          }
+        }
+      }) 
+    });
+
     const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
       state: 'ENABLED',
       factorIds: ['phone'],
@@ -1231,7 +1249,7 @@ describe('admin.auth', () => {
     };
     const passwordConfig: PasswordPolicyConfig = {
       enforcementState: 'ENFORCE',
-      forceUpgradeOnSignin: false,
+      forceUpgradeOnSignin: true,
       constraints: {
         requireUppercase: true,
         requireLowercase: true,
@@ -1337,18 +1355,6 @@ describe('admin.auth', () => {
         }
       ],
     }
-    const passwordConfig: PasswordPolicyConfig = {
-      enforcementState: 'ENFORCE',
-      forceUpgradeOnSignin: false,
-      constraints: {
-        requireUppercase: true,
-        requireLowercase: true,
-        requireNonAlphanumeric: true,
-        requireNumeric: true,
-        minLength: 8,
-        maxLength: 30,
-      },
-    }
     const smsRegionAllowByDefaultConfig: SmsRegionConfig = {
       allowByDefault: {
         disallowedRegions: ['AC', 'AD'],
@@ -1383,7 +1389,6 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
-      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -1409,7 +1414,6 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
-      passwordPolicyConfig: passwordConfig,
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
       displayName: 'testTenantUpdated',
@@ -1420,7 +1424,6 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
-      passwordPolicyConfig: passwordConfig,
     };
 
     // https://mochajs.org/
@@ -1833,7 +1836,6 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
-        passwordPolicyConfig: deepCopy(expectedUpdatedTenant.passwordPolicyConfig),
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
@@ -1844,7 +1846,6 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
-        passwordPolicyConfig: deepCopy(expectedUpdatedTenant2.passwordPolicyConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
@@ -1966,6 +1967,44 @@ describe('admin.auth', () => {
         anonymousSignInEnabled: false,
       });
       expect(tenant.anonymousSignInEnabled).to.be.false;
+    });
+
+    it('updateTenant() should enforce password policies on tenant', () => {
+      const passwordConfig: PasswordPolicyConfig = {
+        enforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: true,
+        constraints: {
+          requireLowercase: true,
+          requireNonAlphanumeric: true,
+          requireNumeric: true,
+          requireUppercase: true,
+          minLength: 6,
+          maxLength: 30,
+        },
+      };
+      return getAuth().tenantManager().updateTenant(createdTenantId, {passwordPolicyConfig: passwordConfig})
+      .then((actualTenant) => {
+        expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
+      });
+    });
+
+    it('updateTenant() should disable password policies on tenant', () => {
+      const passwordConfig: PasswordPolicyConfig = {
+        enforcementState: 'OFF',
+        forceUpgradeOnSignin: false,
+        constraints: {
+          requireLowercase: false,
+          requireNonAlphanumeric: false,
+          requireNumeric: false,
+          requireUppercase: false,
+          minLength: 6,
+          maxLength: 4096,
+        },
+      };
+      return getAuth().tenantManager().updateTenant(createdTenantId, {passwordPolicyConfig: passwordConfig})
+      .then((actualTenant) => {
+        expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
+      });
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {
