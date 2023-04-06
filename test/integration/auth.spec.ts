@@ -1982,10 +1982,10 @@ describe('admin.auth', () => {
           maxLength: 30,
         },
       };
-      return getAuth().tenantManager().updateTenant(createdTenantId, {passwordPolicyConfig: passwordConfig})
-      .then((actualTenant) => {
-        expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
-      });
+      return getAuth().tenantManager().updateTenant(createdTenantId, { passwordPolicyConfig: passwordConfig })
+        .then((actualTenant) => {
+          expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
+        });
     });
 
     it('updateTenant() should disable password policies on tenant', () => {
@@ -2001,10 +2001,10 @@ describe('admin.auth', () => {
           maxLength: 4096,
         },
       };
-      return getAuth().tenantManager().updateTenant(createdTenantId, {passwordPolicyConfig: passwordConfig})
-      .then((actualTenant) => {
-        expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
-      });
+      return getAuth().tenantManager().updateTenant(createdTenantId, { passwordPolicyConfig: passwordConfig })
+        .then((actualTenant) => {
+          expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
+        });
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {
