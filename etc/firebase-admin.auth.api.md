@@ -381,7 +381,7 @@ export interface RecaptchaKey {
 }
 
 // @public
-export type RecaptchaKeyClientType = 'WEB';
+export type RecaptchaKeyClientType = 'WEB' | 'IOS' | 'ANDROID';
 
 // @public
 export interface RecaptchaManagedRule {
