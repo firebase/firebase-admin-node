@@ -258,9 +258,9 @@ export class Messaging {
   * in the given array.
   *
   * The responses list obtained from the return value corresponds to the order of `messages`.
-  * An error from this method or a `BatchResponse` with all failures indicates a total failure
-  * -- i.e. none of the messages in the list could be sent. Partial failures or no failures
-  * are only indicated by a `BatchResponse` return value.
+  * An error from this method or a `BatchResponse` with all failures indicates a total failure,
+  * meaning that none of the messages in the list could be sent. Partial failures or no
+  * failures are only indicated by a `BatchResponse` return value.
   *
   * @param messages - A non-empty array
   *   containing up to 500 messages.
@@ -328,9 +328,9 @@ export class Messaging {
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
    * return value corresponds to the order of tokens in the `MulticastMessage`.
-   * An error from this method or a `BatchResponse` with all failures indicates a total failure
-   * -- i.e. none of the messages in the list could be sent. Partial failures or no failures
-   * are only indicated by a `BatchResponse` return value.
+   * An error from this method or a `BatchResponse` with all failures indicates a total
+   * failure, meaning that the messages in the list could be sent. Partial failures or
+   * failures are only indicated by a `BatchResponse` return value.
    *
    * @param message - A multicast message
    *   containing up to 500 tokens.
@@ -377,8 +377,8 @@ export class Messaging {
    *
    * The responses list obtained from the return value
    * corresponds to the order of tokens in the `MulticastMessage`. An error
-   * from this method indicates a total failure -- i.e. none of the messages in
-   * the list could be sent. Partial failures are indicated by a `BatchResponse`
+   * from this method indicates a total failure, meaning that none of the messages
+   * in the list could be sent. Partial failures are indicated by a `BatchResponse`
    * return value.
    *
    * @param messages - A non-empty array
@@ -437,9 +437,9 @@ export class Messaging {
    * This method uses the `sendAll()` API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
    * return value corresponds to the order of tokens in the `MulticastMessage`.
-   * An error from this method indicates a total failure -- i.e. the message was
-   * not sent to any of the tokens in the list. Partial failures are indicated by
-   * a `BatchResponse` return value.
+   * An error from this method indicates a total failure, meaning that the message
+   * was not sent to any of the tokens in the list. Partial failures are indicated
+   * by a `BatchResponse` return value.
    *
    * @param message - A multicast message
    *   containing up to 500 tokens.
