@@ -267,6 +267,7 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
+    providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }
 
@@ -285,6 +286,12 @@ export abstract class MultiFactorInfo {
     readonly factorId: string;
     toJSON(): object;
     readonly uid: string;
+}
+
+// @public
+export interface MultiFactorProviderConfig {
+    state: MultiFactorConfigState;
+    totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
 // @public
@@ -336,6 +343,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -416,6 +424,11 @@ export class TenantManager {
 }
 
 // @public
+export interface TotpMultiFactorProviderConfig {
+    adjacentIntervals?: number;
+}
+
+// @public
 export interface UidIdentifier {
     // (undocumented)
     uid: string;
@@ -434,6 +447,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    multiFactorConfig?: MultiFactorConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "11.5.0",
+  "version": "11.6.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -196,9 +196,9 @@
     }
   },
   "dependencies": {
-    "@fastify/busboy": "^1.1.0",
-    "@firebase/database-compat": "^0.3.0",
-    "@firebase/database-types": "^0.10.0",
+    "@fastify/busboy": "^1.2.1",
+    "@firebase/database-compat": "^0.3.4",
+    "@firebase/database-types": "^0.10.4",
     "@types/node": ">=12.12.47",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
@@ -206,8 +206,8 @@
     "uuid": "^9.0.0"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^6.4.0",
-    "@google-cloud/storage": "^6.5.2"
+    "@google-cloud/firestore": "^6.5.0",
+    "@google-cloud/storage": "^6.9.5"
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.3.0",
@@ -228,7 +228,7 @@
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^10.0.2",
     "@types/sinon-chai": "^3.0.0",
-    "@types/uuid": "^8.3.4",
+    "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.0.0",
     "bcrypt": "^5.0.0",

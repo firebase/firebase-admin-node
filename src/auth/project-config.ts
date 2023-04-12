@@ -18,6 +18,9 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
+  MultiFactorConfig,
+  MultiFactorAuthConfig,
+  MultiFactorAuthServerConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -29,6 +32,10 @@ export interface UpdateProjectConfigRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The multi-factor auth configuration to update on the project.
+   */
+  multiFactorConfig?: MultiFactorConfig;
 }
 
 /**
@@ -37,6 +44,7 @@ export interface UpdateProjectConfigRequest {
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
+  mfa?: MultiFactorAuthServerConfig;
 }
 
 /**
@@ -45,6 +53,7 @@ export interface ProjectConfigServerResponse {
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
+  mfa?: MultiFactorAuthServerConfig;
 }
 
 /**
@@ -57,13 +66,23 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The project's multi-factor auth configuration.
+   * Supports only phone and TOTP.
+   */  private readonly multiFactorConfig_?: MultiFactorConfig;
+  /**
+   * The multi-factor auth configuration.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
+  }
 
   /**
    * Validates a project config options object. Throws an error on failure.
    *
    * @param request - The project config options object to validate.
    */
-  private static validate(request: ProjectConfigClientRequest): void {
+  private static validate(request: UpdateProjectConfigRequest): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -72,6 +91,7 @@ export class ProjectConfig {
     }
     const validKeys = {
       smsRegionConfig: true,
+      multiFactorConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -86,6 +106,11 @@ export class ProjectConfig {
     if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
+
+    // Validate Multi Factor Config if provided
+    if (typeof request.multiFactorConfig !== 'undefined') {
+      MultiFactorAuthConfig.validate(request.multiFactorConfig);
+    }
   }
 
   /**
@@ -97,7 +122,16 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    return configOptions as ProjectConfigClientRequest;
+    const request = configOptions as any;
+    if (configOptions.multiFactorConfig !== undefined) {
+      request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
+    }
+    // Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
+    // The SDK exposes it as multiFactorConfig always. 
+    // See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
+    // and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
+    delete request.multiFactorConfig;
+    return request as ProjectConfigClientRequest;
   }
 
   /**
@@ -111,6 +145,11 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
+    //The SDK exposes it as multiFactorConfig always.
+    if (typeof response.mfa !== 'undefined') {
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -121,9 +160,13 @@ export class ProjectConfig {
     // JSON serialization
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
+      multiFactorConfig: deepCopy(this.multiFactorConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
+    }
+    if (typeof json.multiFactorConfig === 'undefined') {
+      delete json.multiFactorConfig;
     }
     return json;
   }

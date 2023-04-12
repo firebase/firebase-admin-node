@@ -940,7 +940,11 @@ export interface MessagingOptions {
   [key: string]: any | undefined;
 }
 
-/* Individual status response payload from single devices */
+/**
+ * Individual status response payload from single devices
+ *
+ * @deprecated Returned by {@link Messaging#sendToDevice}, which is also deprecated.
+ */
 export interface MessagingDeviceResult {
   /**
    * The error that occurred when processing the message for the recipient.
@@ -967,6 +971,8 @@ export interface MessagingDeviceResult {
  * See
  * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_individual_devices |
  * Send to individual devices} for code samples and detailed documentation.
+ *
+ * @deprecated Returned by {@link Messaging.sendToDevice}, which is also deprecated.
  */
 export interface MessagingDevicesResponse {
   canonicalRegistrationTokenCount: number;
@@ -983,6 +989,8 @@ export interface MessagingDevicesResponse {
  * See
  * {@link https://firebase.google.com/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups |
  * Send messages to device groups} for code samples and detailed documentation.
+ *
+ * @deprecated Returned by {@link Messaging.sendToDeviceGroup}, which is also deprecated.
  */
 export interface MessagingDeviceGroupResponse {
 
