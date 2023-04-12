@@ -184,7 +184,11 @@ export type Message = TokenMessage | TopicMessage | ConditionMessage;
 export class Messaging {
     get app(): App;
     send(message: Message, dryRun?: boolean): Promise<string>;
+    // @deprecated
     sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+    // @deprecated
     sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
     // @deprecated
