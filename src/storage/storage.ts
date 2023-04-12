@@ -17,14 +17,9 @@
 
 import { App } from '../app';
 import { FirebaseError } from '../utils/error';
+import { FirebaseStorageClient, FirebaseStorageBucket } from './cloud-extensions';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
-import {
-  Bucket,
-  BucketOptions,
-  File,
-  FileOptions,
-  Storage as StorageClient,
-} from '@google-cloud/storage';
+
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
@@ -134,29 +129,3 @@ export class Storage {
   }
 }
 
-class FirebaseStorageFile extends File{
-  async getDownloadUrl(): Promise<string> {
-    const [metadata] = await this.getMetadata();
-    if (!metadata?.metadata?.firebaseStorageDownloadTokens) {
-      throw new FirebaseError({
-        code: 'storage/no-download-token',
-        message: 'No download token available. Please create one in the Firebase Console.',
-      });
-    }
-    const [token] = metadata.metadata.firebaseStorageDownloadTokens.split(',');
-    const baseUrl = process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com';
-    return `${baseUrl}/v0/b/${this.bucket.name}/o/${encodeURIComponent(this.name)}?alt=media&token=${token}`;
-  }
-}
-
-class FirebaseStorageBucket extends Bucket {
-  file(name: string, options?: FileOptions): FirebaseStorageFile {
-    return new FirebaseStorageFile(this, name, options);
-  }
-}
-
-class FirebaseStorageClient extends StorageClient {
-  bucket(bucketName: string, options?: BucketOptions): FirebaseStorageBucket {
-    return new FirebaseStorageBucket(this, bucketName, options);
-  }
-}
