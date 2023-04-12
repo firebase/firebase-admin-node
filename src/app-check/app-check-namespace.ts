@@ -19,6 +19,7 @@ import {
   AppCheckToken as TAppCheckToken,
   AppCheckTokenOptions as TAppCheckTokenOptions,
   DecodedAppCheckToken as TDecodedAppCheckToken,
+  VerifyAppCheckTokenOptions as TVerifyAppCheckTokenOptions,
   VerifyAppCheckTokenResponse as TVerifyAppCheckTokenResponse,
 } from './app-check-api';
 import { AppCheck as TAppCheck } from './app-check';
@@ -74,4 +75,6 @@ export namespace appCheck {
   export type VerifyAppCheckTokenResponse = TVerifyAppCheckTokenResponse;
 
   export type AppCheckTokenOptions = TAppCheckTokenOptions;
+
+  export type VerifyAppCheckTokenOptions = TVerifyAppCheckTokenOptions;
 }

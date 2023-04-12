@@ -15,7 +15,7 @@ export class AppCheck {
     // (undocumented)
     readonly app: App;
     createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken>;
-    verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse>;
+    verifyToken(appCheckToken: string, options?: VerifyAppCheckTokenOptions): Promise<VerifyAppCheckTokenResponse>;
 }
 
 // @public
@@ -33,6 +33,7 @@ export interface AppCheckTokenOptions {
 export interface DecodedAppCheckToken {
     // (undocumented)
     [key: string]: any;
+    already_consumed?: boolean;
     app_id: string;
     aud: string[];
     exp: number;
@@ -43,6 +44,11 @@ export interface DecodedAppCheckToken {
 
 // @public
 export function getAppCheck(app?: App): AppCheck;
+
+// @public
+export interface VerifyAppCheckTokenOptions {
+    consume?: boolean;
+}
 
 // @public
 export interface VerifyAppCheckTokenResponse {
