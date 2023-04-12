@@ -27,6 +27,7 @@ import { AppCheckToken } from './app-check-api'
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
+const ONE_TIME_USE_TOKEN_VERIFICATION_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}:verifyAppCheckToken';
 
 const FIREBASE_APP_CHECK_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -86,6 +87,31 @@ export class AppCheckApiClient {
       });
   }
 
+  public verifyOneTimeProtection(token: string): Promise<boolean> {
+    if (!validator.isNonEmptyString(token)) {
+      throw new FirebaseAppCheckError(
+        'invalid-argument',
+        '`token` must be a non-empty string.');
+    }
+    return this.getVerifyTokenUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url,
+          headers: FIREBASE_APP_CHECK_CONFIG_HEADERS,
+          data: { token }
+        };
+        return this.httpClient.send(request);
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .then((resp) => {
+        return true;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
   private getUrl(appId: string): Promise<string> {
     return this.getProjectId()
       .then((projectId) => {
@@ -94,6 +120,17 @@ export class AppCheckApiClient {
           appId,
         };
         const baseUrl = utils.formatString(FIREBASE_APP_CHECK_V1_API_URL_FORMAT, urlParams);
+        return utils.formatString(baseUrl);
+      });
+  }
+
+  private getVerifyTokenUrl(): Promise<string> {
+    return this.getProjectId()
+      .then((projectId) => {
+        const urlParams = {
+          projectId
+        };
+        const baseUrl = utils.formatString(ONE_TIME_USE_TOKEN_VERIFICATION_URL_FORMAT, urlParams);
         return utils.formatString(baseUrl);
       });
   }

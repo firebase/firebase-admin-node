@@ -42,6 +42,18 @@ export interface AppCheckTokenOptions {
 }
 
 /**
+ * Interface representing options for {@link AppCheck.verifyToken} method.
+ */
+export interface VerifyAppCheckTokenOptions {
+  /**
+   * Sets the one-time use tokens feature.
+   * When set to `true`, checks if this token has already been consumed.
+   * This feature requires an additional network call to the backend and could be slower when enabled.
+   */
+  consume?: boolean;
+}
+
+/**
  * Interface representing a decoded Firebase App Check token, returned from the
  * {@link AppCheck.verifyToken} method.
  */
@@ -86,6 +98,15 @@ export interface DecodedAppCheckToken {
    * convenience, and is set as the value of the {@link DecodedAppCheckToken.sub | sub} property.
    */
   app_id: string;
+
+  /**
+   * Indicates weather this token was already consumed.
+   * If this is the first time {@link AppCheck.verifyToken} method has seen this token,
+   * this field will contain the value `false`. The given token will then be
+   * marked as `already_consumed` for all future invocations of this {@link AppCheck.verifyToken}
+   * method for this token.
+   */
+  already_consumed?: boolean;
   [key: string]: any;
 }
 

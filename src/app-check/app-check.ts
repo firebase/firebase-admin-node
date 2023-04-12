@@ -15,8 +15,10 @@
  * limitations under the License.
  */
 
+import * as validator from '../utils/validator';
+
 import { App } from '../app';
-import { AppCheckApiClient } from './app-check-api-client-internal';
+import { AppCheckApiClient, FirebaseAppCheckError } from './app-check-api-client-internal';
 import {
   appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator,
 } from './token-generator';
@@ -26,6 +28,7 @@ import { cryptoSignerFromApp } from '../utils/crypto-signer';
 import {
   AppCheckToken,
   AppCheckTokenOptions,
+  VerifyAppCheckTokenOptions,
   VerifyAppCheckTokenResponse,
 } from './app-check-api';
 
@@ -75,17 +78,41 @@ export class AppCheck {
    * rejected.
    *
    * @param appCheckToken - The App Check token to verify.
+   * @param options - Optional {@link VerifyAppCheckTokenOptions} object when verifying an App Check Token.
    *
    * @returns A promise fulfilled with the token's decoded claims
    *   if the App Check token is valid; otherwise, a rejected promise.
    */
-  public verifyToken(appCheckToken: string): Promise<VerifyAppCheckTokenResponse> {
+  public verifyToken(appCheckToken: string, options?: VerifyAppCheckTokenOptions)
+    : Promise<VerifyAppCheckTokenResponse> {
+    this.validateVerifyAppCheckTokenOptions(options);
     return this.appCheckTokenVerifier.verifyToken(appCheckToken)
       .then((decodedToken) => {
+        if (options?.consume) {
+          return this.client.verifyOneTimeProtection(appCheckToken)
+            .then((alreadyConsumed) => {
+              decodedToken.already_consumed = alreadyConsumed;
+              return {
+                appId: decodedToken.app_id,
+                token: decodedToken,
+              };
+            });
+        }
         return {
           appId: decodedToken.app_id,
           token: decodedToken,
         };
       });
+  }
+
+  private validateVerifyAppCheckTokenOptions(options?: VerifyAppCheckTokenOptions): void {
+    if (typeof options === 'undefined') {
+      return;
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAppCheckError(
+        'invalid-argument',
+        'VerifyAppCheckTokenOptions must be a non-null object.');
+    }
   }
 }
