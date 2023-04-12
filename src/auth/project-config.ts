@@ -21,6 +21,8 @@ import {
   MultiFactorConfig,
   MultiFactorAuthConfig,
   MultiFactorAuthServerConfig,
+  RecaptchaConfig,
+  RecaptchaAuthConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -36,24 +38,32 @@ export interface UpdateProjectConfigRequest {
    * The multi-factor auth configuration to update on the project.
    */
   multiFactorConfig?: MultiFactorConfig;
+
+  /**
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   */
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
- * Response received from getting or updating a project config.
- * This object currently exposes only the SMS Region config.
+ * Response received when getting or updating the project config.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
- * Request sent to update project config.
- * This object currently exposes only the SMS Region config.
+ * Request to update the project config.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
+  recaptchaConfig?: RecaptchaConfig;
 }
 
 /**
@@ -66,10 +76,21 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+
   /**
    * The project's multi-factor auth configuration.
    * Supports only phone and TOTP.
-   */  private readonly multiFactorConfig_?: MultiFactorConfig;
+   */  
+  private readonly multiFactorConfig_?: MultiFactorConfig;
+
+  /**
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   */
+  private readonly recaptchaConfig_?: RecaptchaAuthConfig;
+  
   /**
    * The multi-factor auth configuration.
    */
@@ -92,6 +113,7 @@ export class ProjectConfig {
     const validKeys = {
       smsRegionConfig: true,
       multiFactorConfig: true,
+      recaptchaConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -110,6 +132,10 @@ export class ProjectConfig {
     // Validate Multi Factor Config if provided
     if (typeof request.multiFactorConfig !== 'undefined') {
       MultiFactorAuthConfig.validate(request.multiFactorConfig);
+    }
+    // Validate reCAPTCHA config attribute.
+    if (typeof request.recaptchaConfig !== 'undefined') {
+      RecaptchaAuthConfig.validate(request.recaptchaConfig);
     }
   }
 
@@ -133,7 +159,13 @@ export class ProjectConfig {
     delete request.multiFactorConfig;
     return request as ProjectConfigClientRequest;
   }
-
+ 
+  /**
+   * The reCAPTCHA configuration.
+   */
+  get recaptchaConfig(): RecaptchaConfig | undefined {
+    return this.recaptchaConfig_;
+  }
   /**
    * The Project Config object constructor.
    *
@@ -150,6 +182,9 @@ export class ProjectConfig {
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);
     }
+    if (typeof response.recaptchaConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -161,12 +196,16 @@ export class ProjectConfig {
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       multiFactorConfig: deepCopy(this.multiFactorConfig),
+      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
     }
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
+    }
+    if (typeof json.recaptchaConfig === 'undefined') {
+      delete json.recaptchaConfig;
     }
     return json;
   }
