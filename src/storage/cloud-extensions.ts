@@ -43,27 +43,16 @@ export class FirebaseStorageFile extends File {
   getFirebaseMetadata(): Promise<FirebaseMetadata> {
     // Build any custom headers based on the defined interceptors on the parent
     // storage object and this object
-    const storageInterceptors = this.storage?.interceptors || [];
-    const fileInterceptors = this.interceptors || [];
-    const allInterceptors = storageInterceptors.concat(fileInterceptors);
     const uri = `${this.endpoint}/b/${this.bucket.name}/o/${encodeURIComponent(
       this.name
     )}`;
 
-    const headers = allInterceptors.reduce((acc, curInterceptor) => {
-      const currentHeaders = curInterceptor.request({
-        uri,
-      });
-
-      Object.assign(acc, currentHeaders.headers);
-      return acc;
-    }, {});
+    
     return new Promise((resolve, reject) => {
       this.storage.makeAuthenticatedRequest(
         {
           method: "GET",
           uri,
-          headers,
         },
         (err, body) => {
           if (err) {

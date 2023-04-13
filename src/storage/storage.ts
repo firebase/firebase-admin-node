@@ -39,7 +39,7 @@ export class Storage {
    * @constructor
    * @internal
    */
-  constructor(app: App, private userEndpoint?: string) {
+  constructor(app: App, userEndpoint?: string) {
 
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
@@ -60,7 +60,7 @@ export class Storage {
 
       process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
     }
-    this.endpoint = userEndpoint || process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com';
+    this.endpoint = (userEndpoint || process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com') + '/v0';
 
     let storage: typeof FirebaseStorageClient;
     try {

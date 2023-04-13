@@ -20,13 +20,12 @@ import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';
 import { getStorage } from '../../lib/storage/index';
-
 chai.should();
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe('admin.storage', () => {
+describe.only('admin.storage', () => {
   it('bucket() returns a handle to the default bucket', () => {
     const bucket: Bucket = getStorage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
@@ -38,6 +37,12 @@ describe('admin.storage', () => {
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
+  it.only('bucket(string) creates a download token', async () => {
+    const bucket = getStorage().bucket(projectId + '.appspot.com');
+    await bucket.file('test').getDownloadUrl();
+    return verifyBucket(bucket, 'storage().bucket(string)')
+      .should.eventually.be.fulfilled;
+  });
 
   it('bucket(non-existing) returns a handle which can be queried for existence', () => {
     const bucket: Bucket = getStorage().bucket('non.existing');
@@ -46,6 +51,7 @@ describe('admin.storage', () => {
         expect(data[0]).to.be.false;
       });
   });
+
 });
 
 function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
