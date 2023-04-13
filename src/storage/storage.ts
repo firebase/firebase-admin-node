@@ -32,13 +32,15 @@ export class Storage {
 
   private readonly appInternal: App;
   private readonly storageClient: FirebaseStorageClient;
+  private readonly endpoint: string;
 
   /**
    * @param app - The app for this Storage service.
    * @constructor
    * @internal
    */
-  constructor(app: App) {
+  constructor(app: App, private userEndpoint?: string) {
+
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
@@ -58,6 +60,7 @@ export class Storage {
 
       process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
     }
+    this.endpoint = userEndpoint || process.env.STORAGE_EMULATOR_HOST || 'https://firebasestorage.googleapis.com';
 
     let storage: typeof FirebaseStorageClient;
     try {
@@ -75,7 +78,7 @@ export class Storage {
     const projectId: string | null = utils.getExplicitProjectId(app);
     const credential = app.options.credential;
     if (credential instanceof ServiceAccountCredential) {
-      this.storageClient = new storage({
+      this.storageClient = new storage(this.endpoint, {
         // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
         // guaranteed to be available.
         projectId: projectId!,
@@ -86,7 +89,7 @@ export class Storage {
       });
     } else if (isApplicationDefault(app.options.credential)) {
       // Try to use the Google application default credentials.
-      this.storageClient = new storage();
+      this.storageClient = new storage(this.endpoint);
     } else {
       throw new FirebaseError({
         code: 'storage/invalid-credential',
