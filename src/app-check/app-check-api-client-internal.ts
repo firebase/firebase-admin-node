@@ -87,7 +87,7 @@ export class AppCheckApiClient {
       });
   }
 
-  public verifyOneTimeProtection(token: string): Promise<boolean> {
+  public verifyReplayProtection(token: string): Promise<boolean> {
     if (!validator.isNonEmptyString(token)) {
       throw new FirebaseAppCheckError(
         'invalid-argument',

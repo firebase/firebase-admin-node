@@ -197,6 +197,143 @@ describe('AppCheck', () => {
         .then((tokenResponse) => {
           expect(tokenResponse.appId).equals('app-id');
           expect(tokenResponse.token).equals(response);
+          expect(tokenResponse.alreadyConsumed).equals(undefined);
+        });
+    });
+
+    it('should throw given an invalid options', () => {
+      [null, 100, -100, 'abc', [], true].forEach((invalidOptions) => {
+        expect(() => {
+          return appCheck.verifyToken('token', invalidOptions as any)
+        }).to.throw(
+          'VerifyAppCheckTokenOptions must be a non-null object.');
+      });
+    });
+
+    it('should call verifyReplayProtection when consume is set to true', () => {
+      const response = {
+        sub: 'app-id',
+        iss: 'https://firebaseappcheck.googleapis.com/123456',
+        app_id: 'app-id',
+        aud: ['123456', 'project-id'],
+        exp: 1617741496,
+        iat: 1516239022,
+      };
+      const verifierStub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .resolves(response);
+      const replayStub = sinon
+        .stub(AppCheckApiClient.prototype, 'verifyReplayProtection')
+        .resolves(true);
+      stubs.push(verifierStub);
+      stubs.push(replayStub);
+      return appCheck.verifyToken('token', { consume: true })
+        .then((tokenResponse) => {
+          expect(tokenResponse.appId).equals('app-id');
+          expect(tokenResponse.token).equals(response);
+          expect(tokenResponse.alreadyConsumed).equals(true);
+
+          expect(verifierStub).to.have.been.calledOnce.and.calledWith('token');
+          expect(replayStub).to.have.been.calledOnce.and.calledWith('token');
+        });
+    });
+
+    it('should not call verifyReplayProtection when consume is set to false', () => {
+      const response = {
+        sub: 'app-id',
+        iss: 'https://firebaseappcheck.googleapis.com/123456',
+        app_id: 'app-id',
+        aud: ['123456', 'project-id'],
+        exp: 1617741496,
+        iat: 1516239022,
+      };
+      const verifierStub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .resolves(response);
+      const replayStub = sinon
+        .stub(AppCheckApiClient.prototype, 'verifyReplayProtection')
+        .resolves(true);
+      stubs.push(verifierStub);
+      stubs.push(replayStub);
+      return appCheck.verifyToken('token', { consume: false })
+        .then((tokenResponse) => {
+          expect(tokenResponse.appId).equals('app-id');
+          expect(tokenResponse.token).equals(response);
+          expect(tokenResponse.alreadyConsumed).equals(undefined);
+
+          expect(verifierStub).to.have.been.calledOnce.and.calledWith('token');
+          expect(replayStub).to.not.have.been.called;
+        });
+    });
+
+    it('should not call verifyReplayProtection when consume is set to undefined', () => {
+      const response = {
+        sub: 'app-id',
+        iss: 'https://firebaseappcheck.googleapis.com/123456',
+        app_id: 'app-id',
+        aud: ['123456', 'project-id'],
+        exp: 1617741496,
+        iat: 1516239022,
+      };
+      const verifierStub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .resolves(response);
+      const replayStub = sinon
+        .stub(AppCheckApiClient.prototype, 'verifyReplayProtection')
+        .resolves(true);
+      stubs.push(verifierStub);
+      stubs.push(replayStub);
+      return appCheck.verifyToken('token', { consume: undefined })
+        .then((tokenResponse) => {
+          expect(tokenResponse.appId).equals('app-id');
+          expect(tokenResponse.token).equals(response);
+          expect(tokenResponse.alreadyConsumed).equals(undefined);
+
+          expect(verifierStub).to.have.been.calledOnce.and.calledWith('token');
+          expect(replayStub).to.not.have.been.called;
+        });
+    });
+
+    it('should not call verifyReplayProtection for an invalid token when consume is set to true', () => {
+      const verifierStub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .rejects(INTERNAL_ERROR);
+      const replayStub = sinon
+        .stub(AppCheckApiClient.prototype, 'verifyReplayProtection')
+        .resolves(true);
+      stubs.push(verifierStub);
+      stubs.push(replayStub);
+      appCheck.verifyToken('token', { consume: true })
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+      expect(verifierStub).to.have.been.calledOnce.and.calledWith('token');
+      return expect(replayStub).to.not.have.been.called;
+    });
+
+    it('should resolve with VerifyAppCheckTokenResponse on success with already_consumed set', () => {
+      const response = {
+        sub: 'app-id',
+        iss: 'https://firebaseappcheck.googleapis.com/123456',
+        app_id: 'app-id',
+        aud: ['123456', 'project-id'],
+        exp: 1617741496,
+        iat: 1516239022,
+      };
+      const verifierStub = sinon
+        .stub(AppCheckTokenVerifier.prototype, 'verifyToken')
+        .resolves(response);
+      const replayStub = sinon
+        .stub(AppCheckApiClient.prototype, 'verifyReplayProtection')
+        .resolves(false);
+      stubs.push(verifierStub);
+      stubs.push(replayStub);
+      return appCheck.verifyToken('token', { consume: true })
+        .then((tokenResponse) => {
+          expect(tokenResponse.appId).equals('app-id');
+          expect(tokenResponse.token).equals(response);
+          expect(tokenResponse.alreadyConsumed).equals(false);
+
+          expect(verifierStub).to.have.been.calledOnce.and.calledWith('token');
+          expect(replayStub).to.have.been.calledOnce.and.calledWith('token');
         });
     });
   });
