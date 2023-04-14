@@ -57,14 +57,10 @@ export namespace appCheck {
     // Warning: (ae-forgotten-export) The symbol "AppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type AppCheckToken = AppCheckToken;
     // Warning: (ae-forgotten-export) The symbol "AppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type AppCheckTokenOptions = AppCheckTokenOptions;
     // Warning: (ae-forgotten-export) The symbol "DecodedAppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type DecodedAppCheckToken = DecodedAppCheckToken;
     // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type VerifyAppCheckTokenOptions = VerifyAppCheckTokenOptions;
     // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenResponse" needs to be exported by the entry point default-namespace.d.ts
     export type VerifyAppCheckTokenResponse = VerifyAppCheckTokenResponse;

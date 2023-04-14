@@ -103,9 +103,8 @@ export class AppCheckApiClient {
         };
         return this.httpClient.send(request);
       })
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .then((resp) => {
-        return true;
+        return resp.data.already_consumed;
       })
       .catch((err) => {
         throw this.toFirebaseError(err);

@@ -74,7 +74,13 @@ export namespace appCheck {
    */
   export type VerifyAppCheckTokenResponse = TVerifyAppCheckTokenResponse;
 
+  /**
+   * Type alias to {@link firebase-admin.app-check#AppCheckTokenOptions}.
+   */
   export type AppCheckTokenOptions = TAppCheckTokenOptions;
 
+  /**
+   * Type alias to {@link firebase-admin.app-check#VerifyAppCheckTokenOptions}.
+   */
   export type VerifyAppCheckTokenOptions = TVerifyAppCheckTokenOptions;
 }

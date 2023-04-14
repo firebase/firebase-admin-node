@@ -46,9 +46,18 @@ export interface AppCheckTokenOptions {
  */
 export interface VerifyAppCheckTokenOptions {
   /**
-   * Sets the one-time use tokens feature.
-   * When set to `true`, checks if this token has already been consumed.
-   * This feature requires an additional network call to the backend and could be slower when enabled.
+   * To use the replay protection feature, set this to true to mark the token as consumed.
+   * Tokens that are found to be already consumed will be marked as such in the response.
+   * 
+   * Tokens are only considered to be consumed if it is sent to App Check backend by calling the
+   * {@link AppCheck.verifyToken} method with this field set to `true`; other uses of the token
+   * do not consume it.
+   * 
+   * This replay protection feature requires an additional network call to the App Check backend
+   * and forces your clients to obtain a fresh attestation from your chosen attestation providers.
+   * This can therefore negatively impact performance and can potentially deplete your attestation
+   * providers' quotas faster. We recommend that you use this feature only for protecting
+   * low volume, security critical, or expensive operations.
    */
   consume?: boolean;
 }
@@ -98,15 +107,6 @@ export interface DecodedAppCheckToken {
    * convenience, and is set as the value of the {@link DecodedAppCheckToken.sub | sub} property.
    */
   app_id: string;
-
-  /**
-   * Indicates weather this token was already consumed.
-   * If this is the first time {@link AppCheck.verifyToken} method has seen this token,
-   * this field will contain the value `false`. The given token will then be
-   * marked as `already_consumed` for all future invocations of this {@link AppCheck.verifyToken}
-   * method for this token.
-   */
-  already_consumed?: boolean;
   [key: string]: any;
 }
 
@@ -123,4 +123,17 @@ export interface VerifyAppCheckTokenResponse {
    * The decoded Firebase App Check token.
    */
   token: DecodedAppCheckToken;
+
+  /**
+   * Indicates weather this token was already consumed.
+   * If this is the first time {@link AppCheck.verifyToken} method has seen this token,
+   * this field will contain the value `false`. The given token will then be
+   * marked as `already_consumed` for all future invocations of this {@link AppCheck.verifyToken}
+   * method for this token.
+   * 
+   * When this field is `true`, the caller is attempting to reuse a previously consumed token.
+   * You should take precautions against such a caller; for example, you can take actions such as
+   * rejecting the request or ask the caller to pass additional layers of security checks.
+   */
+  alreadyConsumed?: boolean;
 }

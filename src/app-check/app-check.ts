@@ -91,8 +91,8 @@ export class AppCheck {
         if (options?.consume) {
           return this.client.verifyOneTimeProtection(appCheckToken)
             .then((alreadyConsumed) => {
-              decodedToken.already_consumed = alreadyConsumed;
               return {
+                alreadyConsumed,
                 appId: decodedToken.app_id,
                 token: decodedToken,
               };

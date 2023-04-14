@@ -33,7 +33,6 @@ export interface AppCheckTokenOptions {
 export interface DecodedAppCheckToken {
     // (undocumented)
     [key: string]: any;
-    already_consumed?: boolean;
     app_id: string;
     aud: string[];
     exp: number;
@@ -52,6 +51,7 @@ export interface VerifyAppCheckTokenOptions {
 
 // @public
 export interface VerifyAppCheckTokenResponse {
+    alreadyConsumed?: boolean;
     appId: string;
     token: DecodedAppCheckToken;
 }
