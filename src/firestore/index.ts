@@ -186,3 +186,5 @@ export function initializeFirestore(
 
   return firestoreService.initializeDatabase(databaseId, settings);
 }
+
+export { FirebaseFirestoreError } from '../utils/error';
