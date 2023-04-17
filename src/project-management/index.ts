@@ -63,4 +63,4 @@ export function getProjectManagement(app?: App): ProjectManagement {
   return firebaseApp.getOrInitService('projectManagement', (app) => new ProjectManagement(app));
 }
 
-export { FirebaseProjectManagementError } from '../utils/error';
+export { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';

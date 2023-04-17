@@ -163,4 +163,5 @@ export {
 
 export {
   FirebaseAuthError,
-} from '../utils/error.ts';
+  AuthClientErrorCode,
+} from '../utils/error';

@@ -71,4 +71,4 @@ export function getInstanceId(app?: App): InstanceId {
   return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
 }
 
-export { FirebaseInstanceIdError } from '../utils/error';
+export { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
