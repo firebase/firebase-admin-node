@@ -51,17 +51,6 @@ describe('ProjectConfigManager', () => {
         allowedRegions: [ 'AC', 'AD' ],
       },
     },
-    recaptchaConfig: {
-      emailPasswordEnforcementState: 'AUDIT',
-      managedRules: [ {
-        endScore: 0.2,
-        action: 'BLOCK'
-      } ],
-      recaptchaKeys: [ {
-        type: 'WEB',
-        key: 'test-key-1' }
-      ],
-    }
   };
 
   before(() => {
@@ -142,13 +131,6 @@ describe('ProjectConfigManager', () => {
           disallowedRegions: [ 'AC', 'AD' ],
         },
       },
-      recaptchaConfig: {
-        emailPasswordEnforcementState: 'AUDIT',
-        managedRules: [ {
-          endScore: 0.2,
-          action: 'BLOCK'
-        } ],
-      }
     };
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
     const expectedError = new FirebaseAuthError(
