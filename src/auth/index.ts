@@ -160,3 +160,7 @@ export {
   UserMetadata,
   UserRecord,
 } from './user-record';
+
+export {
+  FirebaseAuthError,
+} from '../utils/error.ts';
