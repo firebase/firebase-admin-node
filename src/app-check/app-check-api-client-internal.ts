@@ -104,6 +104,10 @@ export class AppCheckApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
+        if (!validator.isBoolean(resp.data?.already_consumed)) {
+          throw new FirebaseAppCheckError(
+            'invalid-argument', '`already_consumed` must be a boolean value.');
+        }
         return resp.data.already_consumed;
       })
       .catch((err) => {
