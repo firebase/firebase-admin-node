@@ -37,7 +37,7 @@ describe('admin.storage', () => {
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
-  it.only('bucket(string) creates a download token', async () => {
+  it('bucket(string) creates a download token', async () => {
     const bucket = getStorage().bucket(projectId + '.appspot.com');
     await bucket.file('test').getDownloadUrl();
     return verifyBucket(bucket, 'storage().bucket(string)')
