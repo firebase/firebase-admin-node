@@ -38,7 +38,7 @@ export class FirebaseStorageFile extends File {
     this.endpoint = (process.env.STORAGE_EMULATOR_HOST || process.env.STORAGE_HOST_OVERRIDE || 'https://firebasestorage.googleapis.com') + '/v0';
   }
   /**
-   * Gets metadata from firebase backend instead of GCS
+   * Gets metadata from Firebase backend instead of GCS
    * @returns {FirebaseMetadata}
    */
   private getFirebaseMetadata(): Promise<FirebaseMetadata> {

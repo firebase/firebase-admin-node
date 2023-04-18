@@ -25,7 +25,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe.only('admin.storage', () => {
+describe('admin.storage', () => {
   it('bucket() returns a handle to the default bucket', () => {
     const bucket: Bucket = getStorage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
