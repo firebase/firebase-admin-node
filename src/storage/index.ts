@@ -45,11 +45,11 @@ export { Storage } from './storage';
  * const otherStorage = getStorage(otherApp);
  * ```
  */
-export function getStorage(app?: App, storageEndpoint?: string): Storage {
+export function getStorage(app?: App): Storage {
   if (typeof app === 'undefined') {
     app = getApp();
   }
 
   const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('storage', (app) => new Storage(app, storageEndpoint));
+  return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
 }
