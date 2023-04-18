@@ -219,7 +219,7 @@
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
     "@types/firebase-token-generator": "^2.0.28",
-    "@types/jsonwebtoken": "8.5.1",
+    "@types/jsonwebtoken": "9.0.1",
     "@types/lodash": "^4.14.104",
     "@types/minimist": "^1.2.2",
     "@types/mocha": "^10.0.0",
