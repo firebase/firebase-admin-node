@@ -42,11 +42,13 @@ export interface AppCheckTokenOptions {
 }
 
 /**
- * Interface representing options for {@link AppCheck.verifyToken} method.
+ * Interface representing options for the {@link AppCheck.verifyToken} method.
  */
 export interface VerifyAppCheckTokenOptions {
   /**
-   * To use the replay protection feature, set this to true to mark the token as consumed.
+   * To use the replay protection feature, set this to `true`. The {@link AppCheck.verifyToken}
+   * method will mark the token as consumed after verifying it.
+   * 
    * Tokens that are found to be already consumed will be marked as such in the response.
    * 
    * Tokens are only considered to be consumed if it is sent to App Check backend by calling the
