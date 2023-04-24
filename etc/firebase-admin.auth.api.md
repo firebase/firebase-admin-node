@@ -364,8 +364,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 // @public
 export class ProjectConfig {
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -448,8 +448,8 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
@@ -501,8 +501,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 // @public
 export interface UpdateProjectConfigRequest {
     multiFactorConfig?: MultiFactorConfig;
-    recaptchaConfig?: RecaptchaConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
+    recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
@@ -526,8 +526,8 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
-    recaptchaConfig?: RecaptchaConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
+    recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
