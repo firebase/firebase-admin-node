@@ -1273,9 +1273,28 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowByDefaultConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
+      },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
     const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1285,28 +1304,60 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowByDefaultConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
+      },
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       passwordPolicyConfig: passwordConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
         .then((actualProjectConfig) => {
+          // ReCAPTCHA keys are generated differently each time.
+          delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
+          console.log("PROJECT_CONFIG == ", actualProjectConfig);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
-        }).then((actualProjectConfig) => {
+        })
+        .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
@@ -1404,6 +1455,16 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1414,6 +1475,16 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: false,
+      },
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
       displayName: 'testTenantUpdated',
@@ -1424,6 +1495,16 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: false,
+      },
     };
 
     // https://mochajs.org/
@@ -1836,6 +1917,7 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
@@ -1846,6 +1928,7 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant2.recaptchaConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
@@ -1871,7 +1954,10 @@ describe('admin.auth', () => {
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 
@@ -1893,7 +1979,10 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 
@@ -1914,11 +2003,32 @@ describe('admin.auth', () => {
           });
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
+    });
+      
+    it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        recaptchaConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
-
     it('updateTenant() should not disable SMS MFA when TOTP is disabled', () => {
       expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
       const updateRequestSMSEnabledTOTPDisabled: UpdateTenantRequest = {
@@ -1946,7 +2056,10 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 

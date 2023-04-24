@@ -21,6 +21,8 @@ import {
   MultiFactorConfig,
   MultiFactorAuthConfig,
   MultiFactorAuthServerConfig,
+  RecaptchaConfig,
+  RecaptchaAuthConfig,
   PasswordPolicyAuthConfig,
   PasswordPolicyAuthServerConfig,
   PasswordPolicyConfig,
@@ -39,6 +41,14 @@ export interface UpdateProjectConfigRequest {
    * The multi-factor auth configuration to update on the project.
    */
   multiFactorConfig?: MultiFactorConfig;
+
+  /**
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   */
+  recaptchaConfig?: RecaptchaConfig;
   /**
    * The password policy configuration to update on the project
    */
@@ -46,22 +56,22 @@ export interface UpdateProjectConfigRequest {
 }
 
 /**
- * Response received from getting or updating a project config.
- * This object currently exposes only the SMS Region config.
+ * Response received when getting or updating the project config.
  */
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
+  recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
 /**
- * Request sent to update project config.
- * This object currently exposes only the SMS Region config.
+ * Request to update the project config.
  */
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
+  recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
 }
 
@@ -75,10 +85,21 @@ export class ProjectConfig {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+
   /**
    * The project's multi-factor auth configuration.
    * Supports only phone and TOTP.
-   */  private readonly multiFactorConfig_?: MultiFactorConfig;
+   */  
+  private readonly multiFactorConfig_?: MultiFactorConfig;
+
+  /**
+   * The reCAPTCHA configuration to update on the project.
+   * By enabling reCAPTCHA Enterprise integration, you are
+   * agreeing to the reCAPTCHA Enterprise
+   * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+   */
+  private readonly recaptchaConfig_?: RecaptchaAuthConfig;
+  
   /**
    * The multi-factor auth configuration.
    */
@@ -105,6 +126,7 @@ export class ProjectConfig {
     const validKeys = {
       smsRegionConfig: true,
       multiFactorConfig: true,
+      recaptchaConfig: true,
       passwordPolicyConfig: true,
     }
     // Check for unsupported top level attributes.
@@ -124,6 +146,10 @@ export class ProjectConfig {
     // Validate Multi Factor Config if provided
     if (typeof request.multiFactorConfig !== 'undefined') {
       MultiFactorAuthConfig.validate(request.multiFactorConfig);
+    }
+    // Validate reCAPTCHA config attribute.
+    if (typeof request.recaptchaConfig !== 'undefined') {
+      RecaptchaAuthConfig.validate(request.recaptchaConfig);
     }
 
     // Validate Password policy Config if provided
@@ -153,7 +179,13 @@ export class ProjectConfig {
     }
     return request;
   }
-
+ 
+  /**
+   * The reCAPTCHA configuration.
+   */
+  get recaptchaConfig(): RecaptchaConfig | undefined {
+    return this.recaptchaConfig_;
+  }
   /**
    * The Project Config object constructor.
    *
@@ -170,6 +202,9 @@ export class ProjectConfig {
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);
     }
+    if (typeof response.recaptchaConfig !== 'undefined') {
+      this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
+    }
     if (typeof response.passwordPolicyConfig !== 'undefined') {
       this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
     }
@@ -184,6 +219,7 @@ export class ProjectConfig {
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       multiFactorConfig: deepCopy(this.multiFactorConfig),
+      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
@@ -191,6 +227,9 @@ export class ProjectConfig {
     }
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
+    }
+    if (typeof json.recaptchaConfig === 'undefined') {
+      delete json.recaptchaConfig;
     }
     if (typeof json.passwordPolicyConfig === 'undefined') {
       delete json.passwordPolicyConfig;

@@ -364,6 +364,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 // @public
 export class ProjectConfig {
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
@@ -382,6 +383,35 @@ export interface ProviderIdentifier {
     // (undocumented)
     providerUid: string;
 }
+
+// @public
+export type RecaptchaAction = 'BLOCK';
+
+// @public
+export interface RecaptchaConfig {
+    emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+    managedRules?: RecaptchaManagedRule[];
+    recaptchaKeys?: RecaptchaKey[];
+    useAccountDefender?: boolean;
+}
+
+// @public
+export interface RecaptchaKey {
+    key: string;
+    type?: RecaptchaKeyClientType;
+}
+
+// @public
+export type RecaptchaKeyClientType = 'WEB' | 'IOS' | 'ANDROID';
+
+// @public
+export interface RecaptchaManagedRule {
+    action?: RecaptchaAction;
+    endScore: number;
+}
+
+// @public
+export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
 
 // @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
@@ -418,6 +448,7 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
@@ -470,6 +501,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 // @public
 export interface UpdateProjectConfigRequest {
     multiFactorConfig?: MultiFactorConfig;
+    recaptchaConfig?: RecaptchaConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
@@ -494,6 +526,7 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    recaptchaConfig?: RecaptchaConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
