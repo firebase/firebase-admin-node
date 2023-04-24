@@ -1288,12 +1288,7 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       recaptchaConfig: {
         emailPasswordEnforcementState:  'OFF',
-        managedRules: [
-          {
-            endScore: 0.1,
-            action: 'BLOCK',
-          },
-        ],
+        useAccountDefender: false,
       },
     };
     const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
