@@ -1345,7 +1345,6 @@ describe('admin.auth', () => {
           // ReCAPTCHA keys are generated differently each time.
           delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
-          console.log("PROJECT_CONFIG == ", actualProjectConfig);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
         })
         .then((actualProjectConfig) => {
