@@ -112,6 +112,22 @@ describe('ProjectManagement', () => {
       // We expect referential equality here
       expect(projectManagement.app).to.equal(mockApp);
     });
+
+    it('AppPlatform.IOS and AppPlatform.ANDROID arent equal', () => {
+      return AppPlatform.IOS.should.not.equal(AppPlatform.ANDROID);
+    });
+
+    it('AppPlatform.IOS is \'IOS\'', () => {
+      return AppPlatform.IOS.should.equal('IOS');
+    });
+
+    it('AppPlatform.ANDROID is \'ANDROID\'', () => {
+      return AppPlatform.ANDROID.should.equal('ANDROID');
+    });
+
+    it('AppPlatform.PLATFORM_UNKNOWN is \'PLATFORM_UNKNOWN\'', () => {
+      return AppPlatform.PLATFORM_UNKNOWN.should.equal('PLATFORM_UNKNOWN');
+    });
   });
 
   describe('listAndroidApps', () => {
