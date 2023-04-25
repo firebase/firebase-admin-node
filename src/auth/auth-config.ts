@@ -2040,7 +2040,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     }
     if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
       request.passwordPolicyVersions = [];
-      let constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+      const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
         containsUppercaseCharacter: false,
         containsLowercaseCharacter: false,
         containsNonAlphanumericCharacter: false,
@@ -2050,22 +2050,22 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       };
       if (options) {
         if (options.constraints?.requireUppercase !== undefined) {
-            constraintsRequest.containsUppercaseCharacter = options.constraints.requireUppercase;
+          constraintsRequest.containsUppercaseCharacter = options.constraints.requireUppercase;
         }
         if (options.constraints?.requireLowercase !== undefined) {
-            constraintsRequest.containsLowercaseCharacter = options.constraints.requireLowercase;
+          constraintsRequest.containsLowercaseCharacter = options.constraints.requireLowercase;
         }
         if (options.constraints?.requireNonAlphanumeric !== undefined) {
-            constraintsRequest.containsNonAlphanumericCharacter = options.constraints.requireNonAlphanumeric;
+          constraintsRequest.containsNonAlphanumericCharacter = options.constraints.requireNonAlphanumeric;
         }
         if (options.constraints?.requireNumeric !== undefined) {
-            constraintsRequest.containsNumericCharacter = options.constraints.requireNumeric;
+          constraintsRequest.containsNumericCharacter = options.constraints.requireNumeric;
         }
         if (options.constraints?.minLength !== undefined) {
-            constraintsRequest.minPasswordLength = options.constraints.minLength;
+          constraintsRequest.minPasswordLength = options.constraints.minLength;
         }
         if (options.constraints?.maxLength !== undefined) {
-            constraintsRequest.maxPasswordLength = options.constraints.maxLength;
+          constraintsRequest.maxPasswordLength = options.constraints.maxLength;
         }
       }
       request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
