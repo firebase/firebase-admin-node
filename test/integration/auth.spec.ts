@@ -2098,7 +2098,9 @@ describe('admin.auth', () => {
     it('updateTenant() should disable password policies on tenant', () => {
       const passwordConfig: PasswordPolicyConfig = {
         enforcementState: 'OFF',
-        forceUpgradeOnSignin: false,
+      };
+      const expectedPasswordConfig: any = {
+        enforcementState: 'OFF',
         constraints: {
           requireLowercase: false,
           requireNonAlphanumeric: false,
@@ -2110,7 +2112,7 @@ describe('admin.auth', () => {
       };
       return getAuth().tenantManager().updateTenant(createdTenantId, { passwordPolicyConfig: passwordConfig })
         .then((actualTenant) => {
-          expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(passwordConfig as any);
+          expect(deepCopy(actualTenant.passwordPolicyConfig)).to.deep.equal(expectedPasswordConfig);
         });
     });
 
