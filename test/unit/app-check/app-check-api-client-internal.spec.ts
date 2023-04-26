@@ -305,23 +305,23 @@ describe('AppCheckApiClient', () => {
 
     ['', 'abc', '3s2', 'sssa', '3.000000001', '3.2', null, NaN, [], {}, 100, 1.2, -200, -2.4]
       .forEach((invalidAlreadyConsumed) => {
-        it(`should throw if the returned already_consumed value is: ${invalidAlreadyConsumed}`, () => {
-          const response = { already_consumed: invalidAlreadyConsumed };
+        it(`should throw if the returned alreadyConsumed value is: ${invalidAlreadyConsumed}`, () => {
+          const response = { alreadyConsumed: invalidAlreadyConsumed };
           const stub = sinon
             .stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom(response, 200));
           stubs.push(stub);
           const expected = new FirebaseAppCheckError(
-            'invalid-argument', '`already_consumed` must be a boolean value.');
+            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
           return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
             .should.eventually.be.rejected.and.deep.include(expected);
         });
       });
 
-    it('should resolve with the already_consumed status on success', () => {
+    it('should resolve with the alreadyConsumed status on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({ already_consumed: true }, 200));
+        .resolves(utils.responseFrom({ alreadyConsumed: true }, 200));
       stubs.push(stub);
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
         .then((alreadyConsumed) => {
@@ -336,9 +336,9 @@ describe('AppCheckApiClient', () => {
     });
 
     [true, false].forEach((expectedAlreadyConsumed) => {
-      it(`should resolve with alreadyConsumed as ${expectedAlreadyConsumed} when already_consumed
+      it(`should resolve with alreadyConsumed as ${expectedAlreadyConsumed} when alreadyConsumed
        from server is: ${expectedAlreadyConsumed}`, () => {
-        const response = { already_consumed: expectedAlreadyConsumed };
+        const response = { alreadyConsumed: expectedAlreadyConsumed };
         const stub = sinon
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(response, 200));
@@ -348,6 +348,19 @@ describe('AppCheckApiClient', () => {
             expect(alreadyConsumed).to.equal(expectedAlreadyConsumed);
           });
       });
+    });
+
+    it(`should resolve with alreadyConsumed as false when alreadyConsumed
+      from server is: undefined`, () => {
+      const response = { };
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(response, 200));
+      stubs.push(stub);
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .then((alreadyConsumed) => {
+          expect(alreadyConsumed).to.equal(false);
+        });
     });
   });
 

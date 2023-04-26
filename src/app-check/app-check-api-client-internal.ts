@@ -104,11 +104,12 @@ export class AppCheckApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!validator.isBoolean(resp.data?.already_consumed)) {
+        if (typeof resp.data.alreadyConsumed !== 'undefined'
+          && !validator.isBoolean(resp.data?.alreadyConsumed)) {
           throw new FirebaseAppCheckError(
-            'invalid-argument', '`already_consumed` must be a boolean value.');
+            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
         }
-        return resp.data.already_consumed;
+        return resp.data.alreadyConsumed || false;
       })
       .catch((err) => {
         throw this.toFirebaseError(err);

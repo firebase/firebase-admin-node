@@ -309,7 +309,7 @@ describe('AppCheck', () => {
       return expect(replayStub).to.not.have.been.called;
     });
 
-    it('should resolve with VerifyAppCheckTokenResponse on success with already_consumed set', () => {
+    it('should resolve with VerifyAppCheckTokenResponse on success with alreadyConsumed set', () => {
       const response = {
         sub: 'app-id',
         iss: 'https://firebaseappcheck.googleapis.com/123456',
