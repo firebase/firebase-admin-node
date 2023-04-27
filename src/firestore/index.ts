@@ -41,6 +41,7 @@ export {
   DocumentSnapshot,
   FieldPath,
   FieldValue,
+  Filter,
   Firestore,
   FirestoreDataConverter,
   GeoPoint,
