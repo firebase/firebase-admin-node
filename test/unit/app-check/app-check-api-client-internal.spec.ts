@@ -330,7 +330,7 @@ describe('AppCheckApiClient', () => {
             method: 'POST',
             url: 'https://firebaseappcheck.googleapis.com/v1beta/projects/test-project:verifyAppCheckToken',
             headers: EXPECTED_HEADERS,
-            data: { token: TEST_TOKEN_TO_EXCHANGE }
+            data: { app_check_token: TEST_TOKEN_TO_EXCHANGE }
           });
         });
     });
