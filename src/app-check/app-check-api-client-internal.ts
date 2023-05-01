@@ -99,7 +99,7 @@ export class AppCheckApiClient {
           method: 'POST',
           url,
           headers: FIREBASE_APP_CHECK_CONFIG_HEADERS,
-          data: { token }
+          data: { app_check_token: token }
         };
         return this.httpClient.send(request);
       })
