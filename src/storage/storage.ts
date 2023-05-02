@@ -17,8 +17,8 @@
 
 import { App } from '../app';
 import { FirebaseError } from '../utils/error';
-import { FirebaseStorageClient, FirebaseStorageBucket } from './cloud-extensions';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
+import { Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -31,7 +31,7 @@ import * as validator from '../utils/validator';
 export class Storage {
 
   private readonly appInternal: App;
-  private readonly storageClient: FirebaseStorageClient;
+  private readonly storageClient: StorageClient;
 
   /**
    * @param app - The app for this Storage service.
@@ -60,10 +60,9 @@ export class Storage {
       process.env.STORAGE_EMULATOR_HOST = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}`;
     }
 
-    let storage: typeof FirebaseStorageClient;
+    let storage: typeof StorageClient;
     try {
-      require('@google-cloud/storage').Storage;
-      storage = FirebaseStorageClient;
+      storage = require('@google-cloud/storage').Storage;
     } catch (err) {
       throw new FirebaseError({
         code: 'storage/missing-dependencies',
@@ -107,7 +106,7 @@ export class Storage {
    * @returns A {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket | Bucket}
    * instance as defined in the `@google-cloud/storage` package.
    */
-  public bucket(name?: string): FirebaseStorageBucket {
+  public bucket(name?: string): Bucket {
     const bucketName = (typeof name !== 'undefined')
       ? name :  this.appInternal.options.storageBucket;
     if (validator.isNonEmptyString(bucketName)) {
@@ -120,7 +119,6 @@ export class Storage {
                 'explicitly when calling the getBucket() method.',
     });
   }
-
   /**
    * Optional app whose `Storage` service to
    * return. If not provided, the default `Storage` service will be returned.
