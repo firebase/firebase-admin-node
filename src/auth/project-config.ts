@@ -174,6 +174,9 @@ export class ProjectConfig {
     if (typeof configOptions.multiFactorConfig !== 'undefined') {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
+    if (typeof configOptions.recaptchaConfig !== 'undefined') {
+      request.recaptchaConfig = configOptions.recaptchaConfig;
+    }
     if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);
     }
