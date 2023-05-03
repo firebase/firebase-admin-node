@@ -184,10 +184,16 @@ export type Message = TokenMessage | TopicMessage | ConditionMessage;
 export class Messaging {
     get app(): App;
     send(message: Message, dryRun?: boolean): Promise<string>;
+    // @deprecated
     sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+    // @deprecated
     sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
+    // @deprecated
     sendToDevice(registrationTokenOrTokens: string | string[], payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDevicesResponse>;
+    // @deprecated
     sendToDeviceGroup(notificationKey: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDeviceGroupResponse>;
     sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
@@ -199,14 +205,14 @@ export interface MessagingConditionResponse {
     messageId: number;
 }
 
-// @public
+// @public @deprecated
 export interface MessagingDeviceGroupResponse {
     failedRegistrationTokens: string[];
     failureCount: number;
     successCount: number;
 }
 
-// @public (undocumented)
+// @public @deprecated
 export interface MessagingDeviceResult {
     canonicalRegistrationToken?: string;
     // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
@@ -214,7 +220,7 @@ export interface MessagingDeviceResult {
     messageId?: string;
 }
 
-// @public
+// @public @deprecated
 export interface MessagingDevicesResponse {
     // (undocumented)
     canonicalRegistrationTokenCount: number;

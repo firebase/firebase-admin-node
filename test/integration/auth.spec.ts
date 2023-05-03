@@ -31,7 +31,7 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
-  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata,
+  UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -1206,11 +1206,34 @@ describe('admin.auth', () => {
         this.skip(); // getConfig is not supported in Auth Emulator
       }
     });
+    const mfaConfig: MultiFactorConfig = {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    };
     const projectConfigOption1: UpdateProjectConfigRequest = {
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
       },
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
@@ -1219,12 +1242,39 @@ describe('admin.auth', () => {
           allowedRegions: ['AC', 'AD'],
         }
       },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        useAccountDefender: false,
+      },
+    };
+    const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          },
+        ],
+      },
     };
     const expectedProjectConfig1: any = {
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
       },
     };
     const expectedProjectConfig2: any = {
@@ -1233,16 +1283,54 @@ describe('admin.auth', () => {
           allowedRegions: ['AC', 'AD'],
         }
       },
+      multiFactorConfig: mfaConfig,
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+      },
+    };
+    const expectedProjectConfigSmsEnabledTotpDisabled: any = {
+      smsRegionConfig: expectedProjectConfig2.smsRegionConfig,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          }
+        ],
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.1,
+            action: 'BLOCK',
+          },
+        ],
+      },
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
       return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption1)
         .then((actualProjectConfig) => {
+          // ReCAPTCHA keys are generated differently each time.
+          delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig1);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
         })
         .then((actualProjectConfig) => {
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
+          return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
+        })
+        .then((actualProjectConfig) => {
+          expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
 
@@ -1250,7 +1338,7 @@ describe('admin.auth', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
           const actualConfigObj = actualConfig.toJSON();
-          expect(actualConfigObj).to.deep.equal(expectedProjectConfig2);
+          expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
   });
@@ -1267,6 +1355,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // Add random phone number / code pairs.
       testPhoneNumbers: {
@@ -1284,6 +1380,14 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // These test phone numbers will not be checked when running integration
       // tests against the emulator suite and are ignored in auth emulator
@@ -1304,12 +1408,30 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'DISABLED',
         factorIds: [],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       },
       // Test phone numbers will not be checked when running integration tests
       // against emulator suite. For more information, please refer to:
       // go/firebase-auth-emulator-dd#heading=h.odk06so2ydjd
       testPhoneNumbers: {
         '+16505551234': '123456',
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'AUDIT',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: true,
       },
     };
     const expectedUpdatedTenant2: any = {
@@ -1322,11 +1444,60 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {},
+          },
+        ],
       },
       smsRegionConfig: {
         allowByDefault: {
           disallowedRegions: ['AC', 'AD'],
         }
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: false,
+      },
+    };
+    const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
+      displayName: 'testTenantUpdated',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: false,
+      },
+      anonymousSignInEnabled: false,
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+        providerConfigs: [
+          {
+            state: 'DISABLED',
+            totpProviderConfig: {},
+          },
+        ],
+      },
+      smsRegionConfig: {
+        allowByDefault: {
+          disallowedRegions: ['AC', 'AD'],
+        }
+      },
+      recaptchaConfig: {
+        emailPasswordEnforcementState:  'OFF',
+        managedRules: [
+          {
+            endScore: 0.3,
+            action: 'BLOCK',
+          },
+        ],
+        useAccountDefender: false,
       },
     };
 
@@ -1740,6 +1911,7 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
@@ -1750,6 +1922,7 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant2.recaptchaConfig),
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
@@ -1775,7 +1948,10 @@ describe('admin.auth', () => {
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 
@@ -1797,7 +1973,87 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
         .then((actualTenant) => {
-          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
+        });
+    });
+
+    it('updateTenant() should not update MFA-related config of tenant when MultiFactorConfig is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updateRequestNoMfaConfig: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Configuring test phone numbers are not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
+    });
+      
+    it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      const updatedOptions2: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        recaptchaConfig: undefined,
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenant2.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenant2);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2)
+        .then((actualTenant) => {
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
+        });
+    });
+    it('updateTenant() should not disable SMS MFA when TOTP is disabled', () => {
+      expectedUpdatedTenantSmsEnabledTotpDisabled.tenantId = createdTenantId;
+      const updateRequestSMSEnabledTOTPDisabled: UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant2.displayName,
+        multiFactorConfig: {
+          state: 'ENABLED',
+          factorIds: ['phone'],
+          providerConfigs: [
+            {
+              state: 'DISABLED',
+              totpProviderConfig: {}
+            },
+          ],
+        },
+      };
+      if (authEmulatorHost) {
+        return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
+          .then((actualTenant) => {
+            const actualTenantObj = actualTenant.toJSON();
+            // Configuring test phone numbers are not supported in Auth Emulator
+            delete (actualTenantObj as { testPhoneNumbers?: Record<string, string> }).testPhoneNumbers;
+            delete expectedUpdatedTenantSmsEnabledTotpDisabled.testPhoneNumbers;
+            expect(actualTenantObj).to.deep.equal(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          });
+      }
+      return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestSMSEnabledTOTPDisabled)
+        .then((actualTenant) => {
+          // response from backend ignores account defender status is recaptcha status is OFF.
+          const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
 

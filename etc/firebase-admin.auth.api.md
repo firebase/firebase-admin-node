@@ -267,6 +267,7 @@ export interface ListUsersResult {
 // @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
+    providerConfigs?: MultiFactorProviderConfig[];
     state: MultiFactorConfigState;
 }
 
@@ -285,6 +286,12 @@ export abstract class MultiFactorInfo {
     readonly factorId: string;
     toJSON(): object;
     readonly uid: string;
+}
+
+// @public
+export interface MultiFactorProviderConfig {
+    state: MultiFactorConfigState;
+    totpProviderConfig?: TotpMultiFactorProviderConfig;
 }
 
 // @public
@@ -336,6 +343,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    get multiFactorConfig(): MultiFactorConfig | undefined;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
 }
@@ -353,6 +362,35 @@ export interface ProviderIdentifier {
     // (undocumented)
     providerUid: string;
 }
+
+// @public
+export type RecaptchaAction = 'BLOCK';
+
+// @public
+export interface RecaptchaConfig {
+    emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+    managedRules?: RecaptchaManagedRule[];
+    recaptchaKeys?: RecaptchaKey[];
+    useAccountDefender?: boolean;
+}
+
+// @public
+export interface RecaptchaKey {
+    key: string;
+    type?: RecaptchaKeyClientType;
+}
+
+// @public
+export type RecaptchaKeyClientType = 'WEB' | 'IOS' | 'ANDROID';
+
+// @public
+export interface RecaptchaManagedRule {
+    action?: RecaptchaAction;
+    endScore: number;
+}
+
+// @public
+export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
 
 // @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
@@ -389,6 +427,7 @@ export class Tenant {
     readonly displayName?: string;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
     readonly testPhoneNumbers?: {
@@ -416,6 +455,11 @@ export class TenantManager {
 }
 
 // @public
+export interface TotpMultiFactorProviderConfig {
+    adjacentIntervals?: number;
+}
+
+// @public
 export interface UidIdentifier {
     // (undocumented)
     uid: string;
@@ -434,6 +478,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    multiFactorConfig?: MultiFactorConfig;
+    recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
 
@@ -457,6 +503,7 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {
         [phoneNumber: string]: string;

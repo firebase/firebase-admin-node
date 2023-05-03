@@ -478,6 +478,7 @@ const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
 export interface MultiFactorAuthServerConfig {
   state?: MultiFactorConfigState;
   enabledProviders?: AuthFactorServerType[];
+  providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
@@ -506,16 +507,58 @@ export interface MultiFactorConfig {
    * Currently only ‘phone’ is supported.
    */
   factorIds?: AuthFactorType[];
+
+  /**
+   * A list of multi-factor provider configurations. 
+   * MFA providers (except phone) indicate whether they're enabled through this field.   */
+  providerConfigs?: MultiFactorProviderConfig[];
+}
+
+/**
+ * Interface representing a multi-factor auth provider configuration. 
+ * This interface is used for second factor auth providers other than SMS. 
+ * Currently, only TOTP is supported.
+ */export interface MultiFactorProviderConfig {
+  /**
+   * Indicates whether this multi-factor provider is enabled or disabled.    */
+  state: MultiFactorConfigState;
+  /**
+   * TOTP multi-factor provider config.   */
+  totpProviderConfig?: TotpMultiFactorProviderConfig;
+}
+
+/**
+ * Interface representing configuration settings for TOTP second factor auth. 
+ */
+export interface TotpMultiFactorProviderConfig {
+  /**
+    *  The allowed number of adjacent intervals that will be used for verification
+    *  to compensate for clock skew.   */
+  adjacentIntervals?: number;
 }
 
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
+ * 
+ * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
 
+  /**
+   * The multi-factor config state.
+   */
   public readonly state: MultiFactorConfigState;
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
   public readonly factorIds: AuthFactorType[];
+  /**
+   * A list of multi-factor provider specific config. 
+   * New MFA providers (except phone) will indicate enablement/disablement through this field.
+   */
+  public readonly providerConfigs: MultiFactorProviderConfig[];
 
   /**
    * Static method to convert a client side request to a MultiFactorAuthServerConfig.
@@ -543,6 +586,9 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         request.enabledProviders = [];
       }
     }
+    if (Object.prototype.hasOwnProperty.call(options, 'providerConfigs')) {
+      request.providerConfigs = options.providerConfigs;
+    }
     return request;
   }
 
@@ -551,10 +597,11 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    *
    * @param options - The options object to validate.
    */
-  private static validate(options: MultiFactorConfig): void {
+  public static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
+      providerConfigs: true,
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
@@ -599,6 +646,71 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         }
       });
     }
+
+    if (typeof options.providerConfigs !== 'undefined') {
+      if (!validator.isArray(options.providerConfigs)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."',
+        );
+      }
+      //Validate content of array.
+      options.providerConfigs.forEach((multiFactorProviderConfig) => {
+        if (typeof multiFactorProviderConfig === 'undefined' || !validator.isObject(multiFactorProviderConfig)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfig" type.`
+          )
+        }
+        const validProviderConfigKeys = {
+          state: true,
+          totpProviderConfig: true,
+        };
+        for (const key in multiFactorProviderConfig) {
+          if (!(key in validProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid ProviderConfig parameter.`,
+            );
+          }
+        }
+        if (typeof multiFactorProviderConfig.state === 'undefined' ||
+          (multiFactorProviderConfig.state !== 'ENABLED' &&
+            multiFactorProviderConfig.state !== 'DISABLED')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
+          )
+        }
+        // Since TOTP is the only provider config available right now, not defining it will lead into an error
+        if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
+          )
+        }
+        const validTotpProviderConfigKeys = {
+          adjacentIntervals: true,
+        };
+        for (const key in multiFactorProviderConfig.totpProviderConfig) {
+          if (!(key in validTotpProviderConfigKeys)) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CONFIG,
+              `"${key}" is not a valid TotpProviderConfig parameter.`,
+            );
+          }
+        }
+        const adjIntervals = multiFactorProviderConfig.totpProviderConfig.adjacentIntervals
+        if (typeof adjIntervals !== 'undefined' &&
+          (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
+            ' be a valid number between 0 and 10 (both inclusive).'
+          )
+        }
+      });
+    }
   }
 
   /**
@@ -624,13 +736,29 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         this.factorIds.push(AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider]);
       }
     })
+    this.providerConfigs = [];
+    (response.providerConfigs || []).forEach((providerConfig) => {
+      if (typeof providerConfig !== 'undefined') {
+        if (typeof providerConfig.state === 'undefined' ||
+          typeof providerConfig.totpProviderConfig === 'undefined' ||
+          (typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
+            typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'number')) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+        }
+        this.providerConfigs.push(providerConfig);
+      }
+    })
   }
 
-  /** @returns The plain object representation of the multi-factor config instance. */
+  /** Converts MultiFactorConfig to JSON object
+   * @returns The plain object representation of the multi-factor config instance. */
   public toJSON(): object {
     return {
       state: this.state,
       factorIds: this.factorIds,
+      providerConfigs: this.providerConfigs,
     };
   }
 }
@@ -1592,5 +1720,229 @@ export class SmsRegionsAuthConfig {
         );
       }
     }
+  }
+}
+/**
+* Enforcement state of reCAPTCHA protection.
+*   - 'OFF': Unenforced.
+*   - 'AUDIT': Create assessment but don't enforce the result.
+*   - 'ENFORCE': Create assessment and enforce the result.
+*/
+export type RecaptchaProviderEnforcementState =  'OFF' | 'AUDIT' | 'ENFORCE';
+
+/**
+* The actions to take for reCAPTCHA-protected requests.
+*   - 'BLOCK': The reCAPTCHA-protected request will be blocked.
+*/
+export type RecaptchaAction = 'BLOCK';
+
+/**
+ * The config for a reCAPTCHA action rule.
+ */
+export interface RecaptchaManagedRule {
+ /**
+  * The action will be enforced if the reCAPTCHA score of a request is larger than endScore.
+  */
+ endScore: number;
+  /**
+  * The action for reCAPTCHA-protected requests.
+  */
+ action?: RecaptchaAction;
+}
+
+/**
+ * The key's platform type.
+ */
+export type RecaptchaKeyClientType = 'WEB' | 'IOS' | 'ANDROID';
+
+/**
+ * The reCAPTCHA key config.
+ */
+export interface RecaptchaKey {
+  /**
+   * The key's client platform type.
+   */
+  type?: RecaptchaKeyClientType;
+
+  /**
+   * The reCAPTCHA site key.
+   */
+  key: string;
+}
+
+/**
+ * The request interface for updating a reCAPTCHA Config.
+ * By enabling reCAPTCHA Enterprise Integration you are
+ * agreeing to reCAPTCHA Enterprise
+ * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
+ */
+export interface RecaptchaConfig {
+  /**
+  * The enforcement state of the email password provider.
+  */
+  emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  /**
+   *  The reCAPTCHA managed rules.
+   */
+  managedRules?: RecaptchaManagedRule[];
+
+  /**
+   * The reCAPTCHA keys.
+   */
+  recaptchaKeys?: RecaptchaKey[];
+
+  /**
+   * Whether to use account defender for reCAPTCHA assessment.
+   * The default value is false.
+   */
+  useAccountDefender?: boolean;
+}
+
+export class RecaptchaAuthConfig implements RecaptchaConfig {
+  public readonly emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  public readonly managedRules?: RecaptchaManagedRule[];
+  public readonly recaptchaKeys?: RecaptchaKey[];
+  public readonly useAccountDefender?: boolean;
+
+  constructor(recaptchaConfig: RecaptchaConfig) {
+    this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
+    this.managedRules = recaptchaConfig.managedRules;
+    this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
+    this.useAccountDefender = recaptchaConfig.useAccountDefender;
+  }
+
+  /**
+   * Validates the RecaptchaConfig options object. Throws an error on failure.
+   * @param options - The options object to validate.
+   */
+  public static validate(options: RecaptchaConfig): void {
+    const validKeys = {
+      emailPasswordEnforcementState: true,
+      managedRules: true,
+      recaptchaKeys: true,
+      useAccountDefender: true,
+    };
+
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaConfig" must be a non-null object.',
+      );
+    }
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RecaptchaConfig parameter.`,
+        );
+      }
+    }
+
+    // Validation
+    if (typeof options.emailPasswordEnforcementState !== undefined) {
+      if (!validator.isNonEmptyString(options.emailPasswordEnforcementState)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"RecaptchaConfig.emailPasswordEnforcementState" must be a valid non-empty string.',
+        );
+      }
+
+      if (options.emailPasswordEnforcementState !== 'OFF' &&
+        options.emailPasswordEnforcementState !== 'AUDIT' &&
+        options.emailPasswordEnforcementState !== 'ENFORCE') {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
+        );
+      }
+    }
+
+    if (typeof options.managedRules !== 'undefined') {
+      // Validate array
+      if (!validator.isArray(options.managedRules)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".',
+        );
+      }
+      // Validate each rule of the array
+      options.managedRules.forEach((managedRule) => {
+        RecaptchaAuthConfig.validateManagedRule(managedRule);
+      });
+    }
+
+    if (typeof options.useAccountDefender != 'undefined') {
+      if (!validator.isBoolean(options.useAccountDefender)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaConfig.useAccountDefender" must be a boolean value".',
+        );
+      }
+    }
+  }
+
+  /**
+   * Validate each element in ManagedRule array
+   * @param options - The options object to validate.
+   */
+  private static validateManagedRule(options: RecaptchaManagedRule): void {
+    const validKeys = {
+      endScore: true,
+      action: true,
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaManagedRule" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid RecaptchaManagedRule parameter.`,
+        );
+      }
+    }
+
+    // Validate content.
+    if (typeof options.action !== 'undefined' &&
+        options.action !== 'BLOCK') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"RecaptchaManagedRule.action" must be "BLOCK".',
+      );
+    }
+  }
+
+  /**
+   * Returns a JSON-serializable representation of this object.
+   * @returns The JSON-serializable object representation of the ReCaptcha config instance
+   */
+  public toJSON(): object {
+    const json: any = {
+      emailPasswordEnforcementState: this.emailPasswordEnforcementState,
+      managedRules: deepCopy(this.managedRules),
+      recaptchaKeys: deepCopy(this.recaptchaKeys),
+      useAccountDefender: this.useAccountDefender,
+    }
+
+    if (typeof json.emailPasswordEnforcementState === 'undefined') {
+      delete json.emailPasswordEnforcementState;
+    }
+    if (typeof json.managedRules === 'undefined') {
+      delete json.managedRules;
+    }
+    if (typeof json.recaptchaKeys === 'undefined') {
+      delete json.recaptchaKeys;
+    }
+
+    if (typeof json.useAccountDefender === 'undefined') {
+      delete json.useAccountDefender;
+    }
+
+    return json;
   }
 }

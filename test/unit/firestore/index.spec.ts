@@ -33,7 +33,8 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('Firestore', () => {
-  let mockApp: App;
+  let mockAppOne: App;
+  let mockAppTwo: App;
   let mockCredentialApp: App;
 
   const noProjectIdError = 'Failed to initialize Google Cloud Firestore client with the '
@@ -41,7 +42,8 @@ describe('Firestore', () => {
   + 'application default credentials to use Cloud Firestore API.';
 
   beforeEach(() => {
-    mockApp = mocks.app();
+    mockAppOne = mocks.app();
+    mockAppTwo = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
   });
 
@@ -61,26 +63,26 @@ describe('Firestore', () => {
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return getFirestore(mockApp);
+        return getFirestore(mockAppOne);
       }).not.to.throw();
     });
 
     it('should return the same instance for a given app instance', () => {
-      const db1: Firestore = getFirestore(mockApp);
-      const db2: Firestore = getFirestore(mockApp, DEFAULT_DATABASE_ID);
+      const db1: Firestore = getFirestore(mockAppOne);
+      const db2: Firestore = getFirestore(mockAppOne, DEFAULT_DATABASE_ID);
       expect(db1).to.equal(db2);
     });
 
     it('should return the same instance for a given app instance and databaseId', () => {
-      const db1: Firestore = getFirestore(mockApp, 'db');
-      const db2: Firestore = getFirestore(mockApp, 'db');
+      const db1: Firestore = getFirestore(mockAppOne, 'db');
+      const db2: Firestore = getFirestore(mockAppOne, 'db');
       expect(db1).to.equal(db2);
     });
 
     it('should return the different instance for given same app instance, but different databaseId', () => {
-      const db0: Firestore = getFirestore(mockApp, DEFAULT_DATABASE_ID);
-      const db1: Firestore = getFirestore(mockApp, 'db1');
-      const db2: Firestore = getFirestore(mockApp, 'db2');
+      const db0: Firestore = getFirestore(mockAppOne, DEFAULT_DATABASE_ID);
+      const db1: Firestore = getFirestore(mockAppOne, 'db1');
+      const db2: Firestore = getFirestore(mockAppOne, 'db2');
       expect(db0).to.not.equal(db1);
       expect(db0).to.not.equal(db2);
       expect(db1).to.not.equal(db2);
@@ -97,41 +99,65 @@ describe('Firestore', () => {
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return initializeFirestore(mockApp);
+        return initializeFirestore(mockAppOne);
       }).not.to.throw();
     });
 
     it('should return the same instance for a given app instance', () => {
-      const db1: Firestore = initializeFirestore(mockApp);
-      const db2: Firestore = initializeFirestore(mockApp, {}, DEFAULT_DATABASE_ID);
+      const db1: Firestore = initializeFirestore(mockAppOne);
+      const db2: Firestore = initializeFirestore(mockAppOne, {}, DEFAULT_DATABASE_ID);
+
+      const db3: Firestore = initializeFirestore(mockAppTwo, { preferRest: true });
+      const db4: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, DEFAULT_DATABASE_ID);
+
       expect(db1).to.equal(db2);
+      expect(db3).to.equal(db4);
     });
 
     it('should return the same instance for a given app instance and databaseId', () => {
-      const db1: Firestore = initializeFirestore(mockApp, {}, 'db');
-      const db2: Firestore = initializeFirestore(mockApp, {}, 'db');
+      const db1: Firestore = initializeFirestore(mockAppOne, {}, 'db');
+      const db2: Firestore = initializeFirestore(mockAppOne, {}, 'db');
+
+      const db3: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, 'db');
+      const db4: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, 'db');
+
       expect(db1).to.equal(db2);
+      expect(db3).to.equal(db4);
     });
 
-    it('should return the different instance for given same app instance, but different databaseId', () => {
-      const db0: Firestore = initializeFirestore(mockApp, {}, DEFAULT_DATABASE_ID);
-      const db1: Firestore = initializeFirestore(mockApp, {}, 'db1');
-      const db2: Firestore = initializeFirestore(mockApp, {}, 'db2');
+    it('should return a different instance for given same app instance, but different databaseId', () => {
+      const db0: Firestore = initializeFirestore(mockAppOne, {}, DEFAULT_DATABASE_ID);
+      const db1: Firestore = initializeFirestore(mockAppOne, {}, 'db1');
+      const db2: Firestore = initializeFirestore(mockAppOne, {}, 'db2');
+
+      const db3: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, DEFAULT_DATABASE_ID);
+      const db4: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, 'db1');
+      const db5: Firestore = initializeFirestore(mockAppTwo, { preferRest: true }, 'db2');
+
       expect(db0).to.not.equal(db1);
       expect(db0).to.not.equal(db2);
       expect(db1).to.not.equal(db2);
+
+      expect(db3).to.not.equal(db4);
+      expect(db3).to.not.equal(db5);
+      expect(db4).to.not.equal(db5);
     });
 
     it('getFirestore should return the same instance as initializeFirestore returned earlier', () => {
-      const db1: Firestore = initializeFirestore(mockApp, {}, 'db');
-      const db2: Firestore = getFirestore(mockApp, 'db');
+      const db1: Firestore = initializeFirestore(mockAppOne, {}, 'db');
+      const db2: Firestore = getFirestore(mockAppOne, 'db');
+      
+      const db3: Firestore = initializeFirestore(mockAppTwo, { preferRest: true });
+      const db4: Firestore = getFirestore(mockAppTwo);
+
       expect(db1).to.equal(db2);
+      expect(db3).to.equal(db4);
     });
 
     it('initializeFirestore should not allow create an instance with different settings', () => {
-      initializeFirestore(mockApp, {}, 'db');
+      initializeFirestore(mockAppTwo, {}, 'db');
       expect(() => {
-        return initializeFirestore(mockApp, { preferRest: true }, 'db');
+        return initializeFirestore(mockAppTwo, { preferRest: true }, 'db');
       }).to.throw(/has already been called with different options/);
     });
   });

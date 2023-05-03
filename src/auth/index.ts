@@ -80,9 +80,16 @@ export {
   MultiFactorConfigState,
   MultiFactorCreateSettings,
   MultiFactorUpdateSettings,
+  MultiFactorProviderConfig,
   OAuthResponseType,
   OIDCAuthProviderConfig,
   OIDCUpdateAuthProviderRequest,
+  RecaptchaAction,
+  RecaptchaConfig,
+  RecaptchaKey,
+  RecaptchaKeyClientType,
+  RecaptchaManagedRule,
+  RecaptchaProviderEnforcementState,
   SAMLAuthProviderConfig,
   SAMLUpdateAuthProviderRequest,
   SmsRegionConfig,
@@ -91,6 +98,7 @@ export {
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
+  TotpMultiFactorProviderConfig,
 } from './auth-config';
 
 export {
