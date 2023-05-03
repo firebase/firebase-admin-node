@@ -9,7 +9,9 @@
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { File } from '@google-cloud/storage';
-import { FileOptions } from '@google-cloud/storage';
+
+// @public (undocumented)
+export function getDownloadUrl(file: File): Promise<string>;
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
@@ -19,8 +21,7 @@ export function getStorage(app?: App): Storage;
 // @public
 export class Storage {
     get app(): App;
-    // Warning: (ae-forgotten-export) The symbol "FirebaseStorageBucket" needs to be exported by the entry point index.d.ts
-    bucket(name?: string): FirebaseStorageBucket;
+    bucket(name?: string): Bucket;
 }
 
 ```

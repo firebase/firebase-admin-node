@@ -8,8 +8,6 @@
 
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
-import { File } from '@google-cloud/storage';
-import { FileOptions } from '@google-cloud/storage';
 import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
