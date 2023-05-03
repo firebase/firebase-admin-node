@@ -20,31 +20,15 @@
  * @packageDocumentation
  */
 
-import { File } from "@google-cloud/storage";
-import { App, getApp } from "../app";
-import { FirebaseApp } from "../app/firebase-app";
-import { Storage } from "./storage";
-import { FirebaseError } from "../utils/error";
+import { File } from '@google-cloud/storage';
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { Storage } from './storage';
+import { FirebaseError } from '../utils/error';
+import { getFirebaseMetadata } from './utils';
 
-export { Storage } from "./storage";
+export { Storage } from './storage';
 
-interface FirebaseMetadata {
-  name: string;
-  bucket: string;
-  generation: string;
-  metageneration: string;
-  contentType: string;
-  timeCreated: string;
-  updated: string;
-  storageClass: string;
-  size: string;
-  md5Hash: string;
-  contentEncoding: string;
-  contentDisposition: string;
-  crc32c: string;
-  etag: string;
-  downloadTokens?: string;
-}
 
 /**
  * Gets the {@link Storage} service for the default app or a given app.
@@ -66,63 +50,30 @@ interface FirebaseMetadata {
  * ```
  */
 export function getStorage(app?: App): Storage {
-  if (typeof app === "undefined") {
+  if (typeof app === 'undefined') {
     app = getApp();
   }
 
   const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService("storage", (app) => new Storage(app));
-}
-/**
- * Gets metadata from Firebase backend instead of GCS
- * @returns {FirebaseMetadata}
- */
-function getFirebaseMetadata(
-  endpoint: string,
-  file: File
-): Promise<FirebaseMetadata> {
-  // Build any custom headers based on the defined interceptors on the parent
-  // storage object and this object
-  const uri = `${endpoint}/b/${file.bucket.name}/o/${encodeURIComponent(
-    file.name
-  )}`;
-
-  return new Promise((resolve, reject) => {
-    file.storage.makeAuthenticatedRequest(
-      {
-        method: "GET",
-        uri,
-      },
-      (err, body) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(body);
-        }
-      }
-    );
-  });
+  return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
 }
 
-/**
- * Gets the download URL for a given file. Will throw a `FirebaseError` if there are no download tokens available.
- * @returns {Promise<string>}
- */
 
-export async function getDownloadUrl(file: File) {
+
+export async function getDownloadUrl(file: File): Promise<string> {
   const endpoint =
     (process.env.STORAGE_EMULATOR_HOST ||
       process.env.STORAGE_HOST_OVERRIDE ||
-      "https://firebasestorage.googleapis.com") + "/v0";
+      'https://firebasestorage.googleapis.com') + '/v0';
   const { downloadTokens } = await getFirebaseMetadata(endpoint, file);
   if (!downloadTokens) {
     throw new FirebaseError({
-      code: "storage/no-download-token",
+      code: 'storage/no-download-token',
       message:
-        "No download token available. Please create one in the Firebase Console.",
+        'No download token available. Please create one in the Firebase Console.',
     });
   }
-  const [token] = downloadTokens.split(",");
+  const [token] = downloadTokens.split(',');
   return `${endpoint}/b/${file.bucket.name}/o/${encodeURIComponent(
     file.name
   )}?alt=media&token=${token}`;

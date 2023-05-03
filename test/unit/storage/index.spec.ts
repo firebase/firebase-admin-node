@@ -23,10 +23,9 @@ import { createSandbox, SinonSandbox } from 'sinon';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import { File as GCFile } from '@google-cloud/storage';
 import { App } from '../../../src/app/index';
-import { getStorage, Storage } from '../../../src/storage/index';
-import { MetadataResponse } from '@google-cloud/storage/build/src/nodejs-common';
+import * as StorageUtils from '../../../src/storage/utils';
+import { getStorage, Storage, getDownloadUrl } from '../../../src/storage/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -78,44 +77,39 @@ describe('Storage', () => {
       const storage2: Storage = getStorage(mockApp);
       expect(storage1).to.equal(storage2);
     });
-    it('should return an error when no metadata', async () => {
-      sandbox.stub(GCFile.prototype, 'getMetadata').callsFake(() =>
-        Promise.resolve([
-          { metadata: null },
-          {
-            statusCode: 200,
-            body: {},
-            request: null,
-            statusMessage: '',
-          },
-        ] as unknown as MetadataResponse)
-      );
+    it('should return an error when no metadata is available', async () => {
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(Promise.resolve({} as StorageUtils.FirebaseMetadata));
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(fileRef.getDownloadUrl()).to.be.rejectedWith(
+      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
         'No download token available. Please create one in the Firebase Console.'
+      );
+    });
+    it('should return an error when unable to fetch metadata', async () => {
+      const error = new Error('Something went wrong');
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(Promise.reject(error));
+      const storage1 = getStorage(mockApp);
+      const fileRef = storage1.bucket('gs://mock').file('abc');
+      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
+        error
       );
     });
     it('should return the proper download url when metadata is available', async () => {
       const downloadTokens = ['abc', 'def'];
-      sandbox.stub(GCFile.prototype, 'getMetadata').callsFake(() =>
-        Promise.resolve([
-          {
-            metadata: {
-              firebaseStorageDownloadTokens: downloadTokens.join(','),
-            },
-          },
-          {
-            statusCode: 200,
-            body: {},
-            request: null,
-            statusMessage: '',
-          },
-        ] as unknown as MetadataResponse)
-      );
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(
+          Promise.resolve({
+            downloadTokens: downloadTokens.join(','),
+          } as StorageUtils.FirebaseMetadata)
+        );
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(fileRef.getDownloadUrl()).to.eventually.eq(
+      await expect(getDownloadUrl(fileRef)).to.eventually.eq(
         `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${downloadTokens[0]}`
       );
     });
@@ -123,24 +117,14 @@ describe('Storage', () => {
       const HOST = 'https://localhost:9091';
       process.env.STORAGE_EMULATOR_HOST = HOST;
       const downloadTokens = ['abc', 'def'];
-      sandbox.stub(GCFile.prototype, 'getMetadata').callsFake(() =>
-        Promise.resolve([
-          {
-            metadata: {
-              firebaseStorageDownloadTokens: downloadTokens.join(','),
-            },
-          },
-          {
-            statusCode: 200,
-            body: {},
-            request: null,
-            statusMessage: '',
-          },
-        ] as unknown as MetadataResponse)
+      sandbox.stub(StorageUtils, 'getFirebaseMetadata').returns(
+        Promise.resolve({
+          downloadTokens: downloadTokens.join(','),
+        } as StorageUtils.FirebaseMetadata)
       );
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(fileRef.getDownloadUrl()).to.eventually.eq(
+      await expect(getDownloadUrl(fileRef)).to.eventually.eq(
         `${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${downloadTokens[0]}`
       );
     });

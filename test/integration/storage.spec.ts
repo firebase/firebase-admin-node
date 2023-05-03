@@ -19,7 +19,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';
-import { getStorage } from '../../lib/storage/index';
+import { getDownloadUrl, getStorage } from '../../lib/storage/index';
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -39,7 +39,8 @@ describe('admin.storage', () => {
   });
   it('bucket(string) creates a download token', async () => {
     const bucket = getStorage().bucket(projectId + '.appspot.com');
-    await bucket.file('test').getDownloadUrl();
+    const file = bucket.file('test');
+    await getDownloadUrl(file);
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
