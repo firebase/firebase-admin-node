@@ -1932,7 +1932,7 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
         recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
-        emailPrivacyConfig: {enableImprovedEmailPrivacy: false},
+        emailPrivacyConfig: { enableImprovedEmailPrivacy: false },
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
