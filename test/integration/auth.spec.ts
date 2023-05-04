@@ -1347,6 +1347,7 @@ describe('admin.auth', () => {
           },
         ],
       },
+      emailPrivacyConfig: {},
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
@@ -1475,9 +1476,7 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: true,
       },
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: false,
-      },
+      emailPrivacyConfig: {},
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1933,7 +1932,7 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
         recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
-        emailPrivacyConfig: deepCopy(expectedUpdatedTenant.emailPrivacyConfig),
+        emailPrivacyConfig: {enableImprovedEmailPrivacy: false},
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
