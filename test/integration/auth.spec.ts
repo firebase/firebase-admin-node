@@ -1347,7 +1347,6 @@ describe('admin.auth', () => {
           },
         ],
       },
-      passwordPolicyConfig: passwordConfig,
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
