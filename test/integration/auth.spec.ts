@@ -1428,18 +1428,6 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
       },
@@ -1459,18 +1447,6 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '019287',
         '+16505550676': '985235',
-      },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
       },
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
@@ -1523,18 +1499,6 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: false,
       },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
-      },
       emailPrivacyConfig: {},
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
@@ -1555,18 +1519,6 @@ describe('admin.auth', () => {
           },
         ],
         useAccountDefender: false,
-      },
-      passwordPolicyConfig: {
-        enforcementState: 'ENFORCE',
-        forceUpgradeOnSignin: true,
-        constraints: {
-          requireUppercase: true,
-          requireLowercase: true,
-          requireNonAlphanumeric: true,
-          requireNumeric: true,
-          minLength: 8,
-          maxLength: 30,
-        },
       },
       emailPrivacyConfig: {},
     };

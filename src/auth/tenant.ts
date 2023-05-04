@@ -363,9 +363,6 @@ export class Tenant {
     if (typeof response.emailPrivacyConfig !== 'undefined') {
       this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
     }
-    if (typeof response.emailPrivacyConfig !== 'undefined') {
-      this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
-    }
   }
 
   /**
