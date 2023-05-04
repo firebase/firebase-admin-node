@@ -2039,14 +2039,14 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     if (Object.prototype.hasOwnProperty.call(options, 'forceUpgradeOnSignin')) {
       request.forceUpgradeOnSignin = options.forceUpgradeOnSignin;
     }
-    let constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
-        containsUppercaseCharacter: false,
-        containsLowercaseCharacter: false,
-        containsNonAlphanumericCharacter: false,
-        containsNumericCharacter: false,
-        minPasswordLength: 6,
-        maxPasswordLength: 4096,
-      };
+    const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+      containsUppercaseCharacter: false,
+      containsLowercaseCharacter: false,
+      containsNonAlphanumericCharacter: false,
+      containsNumericCharacter: false,
+      minPasswordLength: 6,
+      maxPasswordLength: 4096,
+    };
     request.passwordPolicyVersions = [];
     if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
       if (options) {
