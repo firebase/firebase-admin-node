@@ -235,4 +235,133 @@ describe('AppCheckApiClient', () => {
         });
       });
   });
+
+  describe('verifyReplayProtection', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should throw given no token', () => {
+      expect(() => {
+        (apiClient as any).verifyReplayProtection(undefined);
+      }).to.throw('`token` must be a non-empty string.');
+    });
+
+    [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop].forEach((invalidToken) => {
+      it('should throw given a non-string token: ' + JSON.stringify(invalidToken), () => {
+        expect(() => {
+          apiClient.verifyReplayProtection(invalidToken as any);
+        }).to.throw('`token` must be a non-empty string.');
+      });
+    });
+
+    it('should throw given an empty string token', () => {
+      expect(() => {
+        apiClient.verifyReplayProtection('');
+      }).to.throw('`token` must be a non-empty string.');
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found');
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}');
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseAppCheckError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    ['', 'abc', '3s2', 'sssa', '3.000000001', '3.2', null, NaN, [], {}, 100, 1.2, -200, -2.4]
+      .forEach((invalidAlreadyConsumed) => {
+        it(`should throw if the returned alreadyConsumed value is: ${invalidAlreadyConsumed}`, () => {
+          const response = { alreadyConsumed: invalidAlreadyConsumed };
+          const stub = sinon
+            .stub(HttpClient.prototype, 'send')
+            .resolves(utils.responseFrom(response, 200));
+          stubs.push(stub);
+          const expected = new FirebaseAppCheckError(
+            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
+          return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+            .should.eventually.be.rejected.and.deep.include(expected);
+        });
+      });
+
+    it('should resolve with the alreadyConsumed status on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({ alreadyConsumed: true }, 200));
+      stubs.push(stub);
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .then((alreadyConsumed) => {
+          expect(alreadyConsumed).to.equal(true);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaseappcheck.googleapis.com/v1beta/projects/test-project:verifyAppCheckToken',
+            headers: EXPECTED_HEADERS,
+            data: { app_check_token: TEST_TOKEN_TO_EXCHANGE }
+          });
+        });
+    });
+
+    [true, false].forEach((expectedAlreadyConsumed) => {
+      it(`should resolve with alreadyConsumed as ${expectedAlreadyConsumed} when alreadyConsumed
+       from server is: ${expectedAlreadyConsumed}`, () => {
+        const response = { alreadyConsumed: expectedAlreadyConsumed };
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(response, 200));
+        stubs.push(stub);
+        return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+          .then((alreadyConsumed) => {
+            expect(alreadyConsumed).to.equal(expectedAlreadyConsumed);
+          });
+      });
+    });
+
+    it(`should resolve with alreadyConsumed as false when alreadyConsumed
+      from server is: undefined`, () => {
+      const response = { };
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(response, 200));
+      stubs.push(stub);
+      return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
+        .then((alreadyConsumed) => {
+          expect(alreadyConsumed).to.equal(false);
+        });
+    });
+  });
+
 });
