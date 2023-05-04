@@ -1476,9 +1476,7 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: true,
       },
-      emailPrivacyConfig: {
-        enableImprovedEmailPrivacy: false,
-      },
+      emailPrivacyConfig: {},
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1934,7 +1932,8 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
         passwordPolicyConfig: deepCopy(expectedUpdatedTenant.passwordPolicyConfig),
-        emailPrivacyConfig: deepCopy(expectedUpdatedTenant.emailPrivacyConfig),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
+        emailPrivacyConfig: {enableImprovedEmailPrivacy: false},
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
