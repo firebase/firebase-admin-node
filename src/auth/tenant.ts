@@ -341,6 +341,7 @@ export class Tenant {
     }
     if (typeof response.passwordPolicyConfig !== 'undefined') {
       this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
+      //console.log("PASSWORD_POLICY_RESPONSE=", this.passwordPolicyConfig);
     }
   }
 

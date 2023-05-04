@@ -2101,6 +2101,7 @@ describe('admin.auth', () => {
       };
       const expectedPasswordConfig: any = {
         enforcementState: 'OFF',
+        forceUpgradeOnSignin: false,
         constraints: {
           requireLowercase: false,
           requireNonAlphanumeric: false,

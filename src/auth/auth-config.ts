@@ -2035,12 +2035,11 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     if (Object.prototype.hasOwnProperty.call(options, 'enforcementState')) {
       request.passwordPolicyEnforcementState = options.enforcementState;
     }
+    request.forceUpgradeOnSignin = false;
     if (Object.prototype.hasOwnProperty.call(options, 'forceUpgradeOnSignin')) {
       request.forceUpgradeOnSignin = options.forceUpgradeOnSignin;
     }
-    if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
-      request.passwordPolicyVersions = [];
-      const constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
+    let constraintsRequest: CustomStrengthOptionsAuthServerConfig = {
         containsUppercaseCharacter: false,
         containsLowercaseCharacter: false,
         containsNonAlphanumericCharacter: false,
@@ -2048,6 +2047,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         minPasswordLength: 6,
         maxPasswordLength: 4096,
       };
+    request.passwordPolicyVersions = [];
+    if (Object.prototype.hasOwnProperty.call(options, 'constraints')) {
       if (options) {
         if (options.constraints?.requireUppercase !== undefined) {
           constraintsRequest.containsUppercaseCharacter = options.constraints.requireUppercase;
@@ -2068,8 +2069,8 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
           constraintsRequest.maxPasswordLength = options.constraints.maxLength;
         }
       }
-      request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest })
     }
+    request.passwordPolicyVersions.push({ customStrengthOptions: constraintsRequest });
     return request;
   }
 
