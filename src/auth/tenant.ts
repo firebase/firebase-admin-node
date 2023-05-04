@@ -359,7 +359,9 @@ export class Tenant {
     }
     if (typeof response.passwordPolicyConfig !== 'undefined') {
       this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
-      //console.log("PASSWORD_POLICY_RESPONSE=", this.passwordPolicyConfig);
+    }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
     }
     if (typeof response.emailPrivacyConfig !== 'undefined') {
       this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);

@@ -1347,7 +1347,7 @@ describe('admin.auth', () => {
           },
         ],
       },
-      emailPrivacyConfig: {},
+      passwordPolicyConfig: passwordConfig,
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
@@ -1993,6 +1993,9 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        emailPrivacyConfig: {
+          enableImprovedEmailPrivacy: false,
+        },
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)
