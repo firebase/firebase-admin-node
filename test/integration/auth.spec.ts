@@ -1931,7 +1931,6 @@ describe('admin.auth', () => {
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
-        passwordPolicyConfig: deepCopy(expectedUpdatedTenant.passwordPolicyConfig),
         recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
         emailPrivacyConfig: {enableImprovedEmailPrivacy: false},
       };
@@ -1944,6 +1943,7 @@ describe('admin.auth', () => {
         // Test clearing of phone numbers.
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
+        recaptchaConfig: deepCopy(expectedUpdatedTenant2.recaptchaConfig),
         emailPrivacyConfig: {
           enableImprovedEmailPrivacy: false,
         },
