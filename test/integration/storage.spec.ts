@@ -20,6 +20,7 @@ import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';
 import { getDownloadUrl, getStorage } from '../../lib/storage/index';
+import { getFirebaseMetadata } from '../../src/storage/utils';
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -37,12 +38,23 @@ describe('admin.storage', () => {
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
-  it('bucket(string) creates a download token', async () => {
-    const bucket = getStorage().bucket(projectId + '.appspot.com');
-    const file = bucket.file('test');
-    await getDownloadUrl(file);
-    return verifyBucket(bucket, 'storage().bucket(string)')
-      .should.eventually.be.fulfilled;
+  it('getDownloadUrl returns a download URL', async () => {
+    const bucket = getStorage().bucket(projectId + ".appspot.com");
+    const destination = "test_files/test.txt";
+    const [fileRef] = await bucket.upload("./test/integration/test.txt", {
+      destination,
+    });
+    const downloadUrl = await getDownloadUrl(fileRef);
+    // Note: For now, this generates a download token when needed, but in the future it may not, so the `downloadTokens!` assertion may fail if/when that functionality changes
+    const metadata = await getFirebaseMetadata(
+      "https://firebasestorage.googleapis.com/v0",
+      fileRef
+    );
+    const [token] = metadata.downloadTokens!.split(",");
+    const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${
+      bucket.name
+    }/o/${encodeURIComponent(destination)}?alt=media&token=${token}`;
+    expect(downloadUrl).to.equal(storageEndpoint);
   });
 
   it('bucket(non-existing) returns a handle which can be queried for existence', () => {
