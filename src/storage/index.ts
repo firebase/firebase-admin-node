@@ -60,6 +60,17 @@ export function getStorage(app?: App): Storage {
 
 
 
+/**
+ * Gets the download URL for the given {@link @google-cloud/storage#File}.
+ * 
+ * @example
+ * ```javascript
+ * // Get the downloadUrl for a given file ref
+ * const storage = getStorage();
+ * const myRef = ref(storage, 'images/mountains.jpg');
+ * const downloadUrl = await getDownloadUrl(myRef);
+ * ```
+ */
 export async function getDownloadUrl(file: File): Promise<string> {
   const endpoint =
     (process.env.STORAGE_EMULATOR_HOST ||
