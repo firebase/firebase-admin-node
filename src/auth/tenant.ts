@@ -287,7 +287,7 @@ export class Tenant {
       MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
     }
     // Validate SMS Regions Config if provided.
-    if (typeof request.smsRegionConfig != 'undefined') {
+    if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
     // Validate reCAPTCHAConfig type if provided.

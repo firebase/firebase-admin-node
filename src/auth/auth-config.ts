@@ -1517,7 +1517,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       const allKeys = Object.keys(options.responseType).length;
       const enabledCount = Object.values(options.responseType).filter(Boolean).length;
       // Only one of OAuth response types can be set to true.
-      if (allKeys > 1 && enabledCount != 1) {
+      if (allKeys > 1 && enabledCount !== 1) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
           'Only exactly one OAuth responseType should be set to true.',
@@ -1872,7 +1872,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       });
     }
 
-    if (typeof options.useAccountDefender != 'undefined') {
+    if (typeof options.useAccountDefender !== 'undefined') {
       if (!validator.isBoolean(options.useAccountDefender)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
