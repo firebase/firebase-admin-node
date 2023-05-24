@@ -21,6 +21,7 @@ import { DocumentReference } from '@google-cloud/firestore';
 import { DocumentSnapshot } from '@google-cloud/firestore';
 import { FieldPath } from '@google-cloud/firestore';
 import { FieldValue } from '@google-cloud/firestore';
+import { Filter } from '@google-cloud/firestore';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreDataConverter } from '@google-cloud/firestore';
 import { GeoPoint } from '@google-cloud/firestore';
@@ -77,6 +78,8 @@ export { DocumentSnapshot }
 export { FieldPath }
 
 export { FieldValue }
+
+export { Filter }
 
 export { Firestore }
 
