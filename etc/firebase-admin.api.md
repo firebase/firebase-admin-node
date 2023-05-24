@@ -255,6 +255,7 @@ export namespace firestore {
     import DocumentSnapshot = _firestore.DocumentSnapshot;
     import FieldPath = _firestore.FieldPath;
     import FieldValue = _firestore.FieldValue;
+    import Filter = _firestore.Filter;
     import Firestore = _firestore.Firestore;
     import FirestoreDataConverter = _firestore.FirestoreDataConverter;
     import GeoPoint = _firestore.GeoPoint;
