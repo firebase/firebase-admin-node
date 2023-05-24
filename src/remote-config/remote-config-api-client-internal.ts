@@ -110,7 +110,7 @@ export class RemoteConfigApiClient {
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
-    if (options && options.force == true) {
+    if (options && options.force === true) {
       // setting `If-Match: *` forces the Remote Config template to be updated
       // and circumvent the ETag, and the protection from that it provides.
       ifMatch = '*';
@@ -244,7 +244,7 @@ export class RemoteConfigApiClient {
    * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
    */
   private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
-    const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
+    const etag = (typeof customEtag === 'undefined') ? resp.headers['etag'] : customEtag;
     this.validateEtag(etag);
     return {
       conditions: resp.data.conditions,
