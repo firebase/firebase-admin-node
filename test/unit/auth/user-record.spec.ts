@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse,
+  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse, TotpMultiFactorInfo,
 } from '../../../src/auth/user-record';
 import {
   UserInfo, UserMetadata, UserRecord, MultiFactorSettings, MultiFactorInfo, PhoneMultiFactorInfo,
@@ -379,18 +379,157 @@ describe('PhoneMultiFactorInfo', () => {
   });
 });
 
-describe('MultiFactorInfo', () => {
+describe('TotpMultiFactorInfo', () => {
   const serverResponse: MultiFactorInfoResponse = {
+    mfaEnrollmentId: 'enrollmentId1',
+    displayName: 'displayName1',
+    enrolledAt: now.toISOString(),
+    totpInfo: {},
+  };
+  const totpMultiFactorInfo = new TotpMultiFactorInfo(serverResponse);
+  const totpMultiFactorInfoMissingFields = new TotpMultiFactorInfo({
+    mfaEnrollmentId: serverResponse.mfaEnrollmentId,
+    totpInfo: serverResponse.totpInfo,
+  });
+
+  describe('constructor', () => {
+    it('should throw when an empty object is provided', () => {
+      expect(() =>  {
+        return new TotpMultiFactorInfo({} as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    });
+
+    it('should throw when an undefined response is provided', () => {
+      expect(() =>  {
+        return new TotpMultiFactorInfo(undefined as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    });
+
+    it('should succeed when mfaEnrollmentId and totpInfo are both provided', () => {
+      expect(() => {
+        return new TotpMultiFactorInfo({
+          mfaEnrollmentId: 'enrollmentId1',
+          totpInfo: {},
+        });
+      }).not.to.throw(Error);
+    });
+
+    it('should throw when only mfaEnrollmentId is provided', () => {
+      expect(() =>  {
+        return new TotpMultiFactorInfo({
+          mfaEnrollmentId: 'enrollmentId1',
+        } as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    });
+
+    it('should throw when only totpInfo is provided', () => {
+      expect(() =>  {
+        return new TotpMultiFactorInfo({
+          totpInfo: {},
+        } as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    });
+  });
+
+  describe('getters', () => {
+    it('should set missing optional fields to null', () => {
+      expect(totpMultiFactorInfoMissingFields.uid).to.equal(serverResponse.mfaEnrollmentId);
+      expect(totpMultiFactorInfoMissingFields.displayName).to.be.undefined;
+      expect(totpMultiFactorInfoMissingFields.totpInfo).to.equal(serverResponse.totpInfo);
+      expect(totpMultiFactorInfoMissingFields.enrollmentTime).to.be.null;
+      expect(totpMultiFactorInfoMissingFields.factorId).to.equal('totp');
+    });
+
+    it('should return expected factorId', () => {
+      expect(totpMultiFactorInfo.factorId).to.equal('totp');
+    });
+
+    it('should throw when modifying readonly factorId property', () => {
+      expect(() => {
+        (totpMultiFactorInfo as any).factorId = 'other';
+      }).to.throw(Error);
+    });
+
+    it('should return expected displayName', () => {
+      expect(totpMultiFactorInfo.displayName).to.equal(serverResponse.displayName);
+    });
+
+    it('should throw when modifying readonly displayName property', () => {
+      expect(() => {
+        (totpMultiFactorInfo as any).displayName = 'Modified';
+      }).to.throw(Error);
+    });
+
+    it('should return expected totpInfo object', () => {
+      expect(totpMultiFactorInfo.totpInfo).to.equal(serverResponse.totpInfo);
+    });
+
+    it('should return expected uid', () => {
+      expect(totpMultiFactorInfo.uid).to.equal(serverResponse.mfaEnrollmentId);
+    });
+
+    it('should throw when modifying readonly uid property', () => {
+      expect(() => {
+        (totpMultiFactorInfo as any).uid = 'modifiedEnrollmentId';
+      }).to.throw(Error);
+    });
+
+    it('should return expected enrollmentTime', () => {
+      expect(totpMultiFactorInfo.enrollmentTime).to.equal(now.toUTCString());
+    });
+
+    it('should throw when modifying readonly uid property', () => {
+      expect(() => {
+        (totpMultiFactorInfo as any).enrollmentTime = new Date().toISOString();
+      }).to.throw(Error);
+    });
+  });
+
+  describe('toJSON', () => {
+    it('should return expected JSON object', () => {
+      expect(totpMultiFactorInfo.toJSON()).to.deep.equal({
+        uid: 'enrollmentId1',
+        displayName: 'displayName1',
+        enrollmentTime: now.toUTCString(),
+        totpInfo: {},
+        factorId: 'totp',
+      });
+    });
+
+    it('should return expected JSON object with missing fields set to null', () => {
+      expect(totpMultiFactorInfoMissingFields.toJSON()).to.deep.equal({
+        uid: 'enrollmentId1',
+        displayName: undefined,
+        enrollmentTime: null,
+        totpInfo: {},
+        factorId: 'totp',
+      });
+    });
+  });
+});
+
+describe('MultiFactorInfo', () => {
+  const phoneServerResponse: MultiFactorInfoResponse = {
     mfaEnrollmentId: 'enrollmentId1',
     displayName: 'displayName1',
     enrolledAt: now.toISOString(),
     phoneInfo: '+16505551234',
   };
-  const phoneMultiFactorInfo = new PhoneMultiFactorInfo(serverResponse);
+  const phoneMultiFactorInfo = new PhoneMultiFactorInfo(phoneServerResponse);
+  const totpServerResponse: MultiFactorInfoResponse = {
+    mfaEnrollmentId: 'enrollmentId1',
+    displayName: 'displayName1',
+    enrolledAt: now.toISOString(),
+    totpInfo: {},
+  };
+  const totpMultiFactorInfo = new TotpMultiFactorInfo(totpServerResponse);
 
   describe('initMultiFactorInfo', () => {
     it('should return expected PhoneMultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
+      expect(MultiFactorInfo.initMultiFactorInfo(phoneServerResponse)).to.deep.equal(phoneMultiFactorInfo);
+    });
+    it('should return expected TotpMultiFactorInfo', () => {
+      expect(MultiFactorInfo.initMultiFactorInfo(totpServerResponse)).to.deep.equal(totpMultiFactorInfo);
     });
 
     it('should return null for invalid MultiFactorInfo', () => {
@@ -425,6 +564,12 @@ describe('MultiFactorSettings', () => {
         enrolledAt: now.toISOString(),
         secretKey: 'SECRET_KEY',
       },
+      {
+        mfaEnrollmentId: 'enrollmentId5',
+        displayName: 'displayName1',
+        enrolledAt: now.toISOString(),
+        totpInfo: {},
+      },
     ],
   };
   const expectedMultiFactorInfo = [
@@ -439,6 +584,12 @@ describe('MultiFactorSettings', () => {
       enrolledAt: now.toISOString(),
       phoneInfo: '+16505556789',
     }),
+    new TotpMultiFactorInfo({
+      mfaEnrollmentId: 'enrollmentId5',
+      displayName: 'displayName1',
+      enrolledAt: now.toISOString(),
+      totpInfo: {},
+    })
   ];
 
   describe('constructor', () => {
@@ -457,9 +608,10 @@ describe('MultiFactorSettings', () => {
     it('should populate expected enrolledFactors', () => {
       const multiFactor = new MultiFactorSettings(serverResponse);
 
-      expect(multiFactor.enrolledFactors.length).to.equal(2);
+      expect(multiFactor.enrolledFactors.length).to.equal(3);
       expect(multiFactor.enrolledFactors[0]).to.deep.equal(expectedMultiFactorInfo[0]);
       expect(multiFactor.enrolledFactors[1]).to.deep.equal(expectedMultiFactorInfo[1]);
+      expect(multiFactor.enrolledFactors[2]).to.deep.equal(expectedMultiFactorInfo[2]);
     });
   });
 
@@ -504,6 +656,7 @@ describe('MultiFactorSettings', () => {
         enrolledFactors: [
           expectedMultiFactorInfo[0].toJSON(),
           expectedMultiFactorInfo[1].toJSON(),
+          expectedMultiFactorInfo[2].toJSON(),
         ],
       });
     });
