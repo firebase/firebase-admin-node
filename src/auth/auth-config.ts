@@ -509,14 +509,14 @@ export interface MultiFactorConfig {
   factorIds?: AuthFactorType[];
 
   /**
-   * A list of multi-factor provider configurations. 
+   * A list of multi-factor provider configurations.
    * MFA providers (except phone) indicate whether they're enabled through this field.   */
   providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
- * Interface representing a multi-factor auth provider configuration. 
- * This interface is used for second factor auth providers other than SMS. 
+ * Interface representing a multi-factor auth provider configuration.
+ * This interface is used for second factor auth providers other than SMS.
  * Currently, only TOTP is supported.
  */export interface MultiFactorProviderConfig {
   /**
@@ -528,7 +528,7 @@ export interface MultiFactorConfig {
 }
 
 /**
- * Interface representing configuration settings for TOTP second factor auth. 
+ * Interface representing configuration settings for TOTP second factor auth.
  */
 export interface TotpMultiFactorProviderConfig {
   /**
@@ -540,7 +540,7 @@ export interface TotpMultiFactorProviderConfig {
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
- * 
+ *
  * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
@@ -555,7 +555,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    */
   public readonly factorIds: AuthFactorType[];
   /**
-   * A list of multi-factor provider specific config. 
+   * A list of multi-factor provider specific config.
    * New MFA providers (except phone) will indicate enablement/disablement through this field.
    */
   public readonly providerConfigs: MultiFactorProviderConfig[];
@@ -1947,8 +1947,8 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   }
 }
 
-/** 
- * A password policy configuration for a project or tenant 
+/**
+ * A password policy configuration for a project or tenant
 */
 export interface PasswordPolicyConfig {
   /**
@@ -2003,7 +2003,7 @@ export interface CustomStrengthOptionsConfig {
 /**
  * Defines the password policy config class used to convert client side PasswordPolicyConfig
  * to a format that is understood by the Auth server.
- * 
+ *
  * @internal
  */
 export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
@@ -2110,7 +2110,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
       );
     }
-    
+
     if (typeof options.forceUpgradeOnSignin !== 'undefined') {
       if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
         throw new FirebaseAuthError(
@@ -2254,7 +2254,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
   }
 }
 
-/** 
+/**
  * Server side password policy configuration.
  */
 export interface PasswordPolicyAuthServerConfig {
@@ -2264,14 +2264,14 @@ export interface PasswordPolicyAuthServerConfig {
 }
 
 /**
- * Server side password policy versions configuration. 
+ * Server side password policy versions configuration.
  */
 export interface PasswordPolicyVersionsAuthServerConfig {
   customStrengthOptions?: CustomStrengthOptionsAuthServerConfig;
 }
 
 /**
- * Server side password policy constraints configuration. 
+ * Server side password policy constraints configuration.
  */
 export interface CustomStrengthOptionsAuthServerConfig {
   containsLowercaseCharacter?: boolean;
@@ -2280,4 +2280,51 @@ export interface CustomStrengthOptionsAuthServerConfig {
   containsNonAlphanumericCharacter?: boolean;
   minPasswordLength?: number;
   maxPasswordLength?: number;
+}
+
+/**
+ * The configuration for the email privacy on the project or tenant.
+*/
+export interface EmailPrivacyConfig {
+  /**
+   * Variable indiciating email privacy enabled of not.
+   */
+  enableImprovedEmailPrivacy?: boolean;
+}
+
+/**
+ * Defines the EmailPrivacyAuthConfig class used for validation.
+ *
+ * @internal
+ */
+export class EmailPrivacyAuthConfig {
+  public static validate(options: EmailPrivacyConfig): void {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"EmailPrivacyConfig" must be a non-null object.',
+      );
+    }
+
+    const validKeys = {
+      enableImprovedEmailPrivacy: true,
+    };
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid "EmailPrivacyConfig" parameter.`,
+        );
+      }
+    }
+
+    if (typeof options.enableImprovedEmailPrivacy !== 'undefined'
+      && !validator.isBoolean(options.enableImprovedEmailPrivacy)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.',
+      );
+    }
+  }
 }
