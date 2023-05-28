@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { EmailSignInConfig, MultiFactorAuthConfig, RecaptchaAuthConfig, 
+import { EmailSignInConfig, MultiFactorAuthConfig, RecaptchaAuthConfig,
   PasswordPolicyAuthServerConfig, PasswordPolicyConfig,
 } from '../../../src/auth/auth-config';
 import { TenantServerResponse } from '../../../src/auth/tenant';
@@ -100,6 +100,9 @@ describe('Tenant', () => {
     },
     smsRegionConfig: smsAllowByDefault,
     passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequest: UpdateTenantRequest = {
@@ -126,6 +129,9 @@ describe('Tenant', () => {
     },
     smsRegionConfig: smsAllowByDefault,
     passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const serverRequestWithoutMfa: TenantServerResponse = {
@@ -134,6 +140,9 @@ describe('Tenant', () => {
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
     passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequestWithoutMfa: UpdateTenantRequest = {
@@ -143,6 +152,9 @@ describe('Tenant', () => {
       passwordRequired: false,
     },
     passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequestWithRecaptcha: UpdateTenantRequest = {
@@ -203,6 +215,10 @@ describe('Tenant', () => {
       useAccountDefender: true,
     },
     smsRegionConfig: smsAllowByDefault,
+    passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   describe('buildServerRequest()', () => {
@@ -369,7 +385,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -439,7 +455,7 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
-      
+
       it('should throw on invalid constraints attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
@@ -521,7 +537,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' +
         ' must be an integer between 6 and 30, inclusive.');
       });
 
@@ -542,6 +558,30 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
         ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
       it('should not throw on valid client request object', () => {
@@ -740,7 +780,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -810,7 +850,7 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
-      
+
       it('should throw on invalid constraints attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
@@ -892,7 +932,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' +
         ' must be an integer between 6 and 30, inclusive.');
       });
 
@@ -913,6 +953,30 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
         ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -1034,6 +1098,13 @@ describe('Tenant', () => {
         deepCopy(clientRequest.passwordPolicyConfig));
     });
 
+    it('should set readonly property emailPrivacyConfig', () => {
+      const expectedEmailPrivacyConfig = {
+        enableImprovedEmailPrivacy: true,
+      };
+      expect(clientRequest.emailPrivacyConfig).to.deep.equal(expectedEmailPrivacyConfig);
+    });
+
     it('should throw when no tenant ID is provided', () => {
       const invalidOptions = deepCopy(serverRequest);
       // Use resource name that does not include a tenant ID.
@@ -1074,6 +1145,8 @@ describe('Tenant', () => {
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
         smsRegionConfig: deepCopy(clientRequest.smsRegionConfig),
         recaptchaConfig: deepCopy(serverResponseWithRecaptcha.recaptchaConfig),
+        passwordPolicyConfig: deepCopy(clientRequest.passwordPolicyConfig),
+        emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
       });
     });
 
@@ -1084,6 +1157,7 @@ describe('Tenant', () => {
       delete serverRequestCopyWithoutMfa.smsRegionConfig;
       delete serverRequestCopyWithoutMfa.recaptchaConfig;
       delete serverRequestCopyWithoutMfa.passwordPolicyConfig;
+      delete serverRequestCopyWithoutMfa.emailPrivacyConfig;
       expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
         displayName: 'TENANT-DISPLAY-NAME',
