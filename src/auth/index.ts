@@ -100,8 +100,9 @@ export {
   UpdateRequest,
   TotpMultiFactorProviderConfig,
   PasswordPolicyConfig,
-  PasswordPolicyEnforcementState, 
+  PasswordPolicyEnforcementState,
   CustomStrengthOptionsConfig,
+  EmailPrivacyConfig,
 } from './auth-config';
 
 export {
