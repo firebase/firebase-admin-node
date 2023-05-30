@@ -49,11 +49,11 @@ export interface MultiFactorInfoResponse {
   phoneInfo?: string;
   totpInfo?: TotpInfoResponse;
   enrolledAt?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TotpInfoResponse {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProviderUserInfoResponse {
