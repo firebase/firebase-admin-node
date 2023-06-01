@@ -121,7 +121,7 @@ describe("Storage", () => {
         "FIREBASE_STORAGE_EMULATOR_HOST",
         "STORAGE_EMULATOR_HOST",
       ];
-      for (let env in envsToCheck) {
+      for (let env of envsToCheck) {
         process[env] = HOST;
         const downloadTokens = ["abc", "def"];
         sandbox.stub(StorageUtils, "getFirebaseMetadata").returns(
