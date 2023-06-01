@@ -38,6 +38,7 @@ export namespace firestore {
   export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
+  export import Filter = _firestore.Filter;
   export import Firestore = _firestore.Firestore;
   export import FirestoreDataConverter = _firestore.FirestoreDataConverter;
   export import GeoPoint = _firestore.GeoPoint;

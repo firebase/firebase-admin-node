@@ -466,7 +466,7 @@ export class FirebaseTokenVerifier {
   private safeDecode(jwtToken: string): Promise<DecodedToken> {
     return decodeJwt(jwtToken)
       .catch((err: JwtError) => {
-        if (err.code == JwtErrorCode.INVALID_ARGUMENT) {
+        if (err.code === JwtErrorCode.INVALID_ARGUMENT) {
           const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
             `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
           const errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed ` +

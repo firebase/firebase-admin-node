@@ -1603,7 +1603,7 @@ export abstract class AbstractAuthRequestHandler {
    * @param email - The email of the user the link is being sent to.
    * @param actionCodeSettings - The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
+   *     deep link, etc. Required when requestType === 'EMAIL_SIGNIN'
    * @param newEmail - The email address the account is being updated to.
    *     Required only for VERIFY_AND_CHANGE_EMAIL requests.
    * @returns A promise that resolves with the email action link.

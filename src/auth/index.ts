@@ -99,6 +99,9 @@ export {
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
   TotpMultiFactorProviderConfig,
+  PasswordPolicyConfig,
+  PasswordPolicyEnforcementState, 
+  CustomStrengthOptionsConfig,
 } from './auth-config';
 
 export {
