@@ -21,6 +21,8 @@ import { Bucket, File } from '@google-cloud/storage';
 import { projectId } from './setup';
 import { getDownloadUrl, getStorage } from '../../lib/storage/index';
 import { getFirebaseMetadata } from '../../src/storage/utils';
+import { FirebaseError } from '../../src/utils/error';
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -38,23 +40,33 @@ describe('admin.storage', () => {
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   });
+
   it('getDownloadUrl returns a download URL', async () => {
-    const bucket = getStorage().bucket(projectId + '.appspot.com');
-    const destination = 'test_files/test.txt';
-    const [fileRef] = await bucket.upload('./test/integration/test.txt', {
-      destination,
-    });
-    const downloadUrl = await getDownloadUrl(fileRef);
-    // Note: For now, this generates a download token when needed, but in the future it may not, 
-    // so the `downloadTokens!` assertion may fail if/when that functionality is removed.
+    const bucket = getStorage().bucket(projectId + ".appspot.com");
+    const fileRef = await verifyBucketDownloadUrl(bucket, 'testName');
+    // Note: For now, this generates a download token when needed, but in the future it may not.
     const metadata = await getFirebaseMetadata(
-      'https://firebasestorage.googleapis.com/v0',
+      "https://firebasestorage.googleapis.com/v0",
       fileRef
     );
-    const [token] = metadata.downloadTokens!.split(',');
+    if (!metadata.downloadTokens) {
+      expect(getDownloadUrl(fileRef)).to.eventually.throw(
+        new FirebaseError({
+          code: "storage/invalid-argument",
+          message:
+            "Bucket name not specified or invalid. Specify a valid bucket name via the " +
+            "storageBucket option when initializing the app, or specify the bucket name " +
+            "explicitly when calling the getBucket() method.",
+        })
+      );
+      return;
+    }
+    const downloadUrl = await getDownloadUrl(fileRef);
+
+    const [token] = metadata.downloadTokens!.split(",");
     const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${
       bucket.name
-    }/o/${encodeURIComponent(destination)}?alt=media&token=${token}`;
+    }/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${token}`;
     expect(downloadUrl).to.equal(storageEndpoint);
   });
 
@@ -85,4 +97,11 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
     .then((data) => {
       expect(data[0], 'File not deleted').to.be.false;
     });
+}
+
+async function verifyBucketDownloadUrl(bucket: Bucket, testName: string) {
+const expected: string = 'Hello World: ' + testName;
+  const file: File = bucket.file('data_' + Date.now() + '.txt');
+  await file.save(expected)
+  return file;
 }

@@ -39,7 +39,6 @@ export class Storage {
    * @internal
    */
   constructor(app: App) {
-
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
@@ -127,4 +126,3 @@ export class Storage {
     return this.appInternal;
   }
 }
-
