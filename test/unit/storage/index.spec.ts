@@ -121,8 +121,8 @@ describe("Storage", () => {
         "FIREBASE_STORAGE_EMULATOR_HOST",
         "STORAGE_EMULATOR_HOST",
       ];
-      for (let env of envsToCheck) {
-        process[env] = HOST;
+      for (let storageEnv of envsToCheck) {
+        process.env[storageEnv] = HOST;
         const downloadTokens = ["abc", "def"];
         sandbox.stub(StorageUtils, "getFirebaseMetadata").returns(
           Promise.resolve({
@@ -136,7 +136,7 @@ describe("Storage", () => {
             fileRef.name
           )}?alt=media&token=${downloadTokens[0]}`
         );
-        delete process[env];
+        delete process.env[storageEnv];
       }
     });
   });
