@@ -42,28 +42,28 @@ describe('admin.storage', () => {
   });
 
   it('getDownloadUrl returns a download URL', async () => {
-    const bucket = getStorage().bucket(projectId + ".appspot.com");
+    const bucket = getStorage().bucket(projectId + '.appspot.com');
     const fileRef = await verifyBucketDownloadUrl(bucket, 'testName');
     // Note: For now, this generates a download token when needed, but in the future it may not.
     const metadata = await getFirebaseMetadata(
-      "https://firebasestorage.googleapis.com/v0",
+      'https://firebasestorage.googleapis.com/v0',
       fileRef
     );
     if (!metadata.downloadTokens) {
       expect(getDownloadUrl(fileRef)).to.eventually.throw(
         new FirebaseError({
-          code: "storage/invalid-argument",
+          code: 'storage/invalid-argument',
           message:
-            "Bucket name not specified or invalid. Specify a valid bucket name via the " +
-            "storageBucket option when initializing the app, or specify the bucket name " +
-            "explicitly when calling the getBucket() method.",
+            'Bucket name not specified or invalid. Specify a valid bucket name via the ' +
+            'storageBucket option when initializing the app, or specify the bucket name ' +
+            'explicitly when calling the getBucket() method.',
         })
       );
       return;
     }
     const downloadUrl = await getDownloadUrl(fileRef);
 
-    const [token] = metadata.downloadTokens!.split(",");
+    const [token] = metadata.downloadTokens!.split(',');
     const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${
       bucket.name
     }/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${token}`;
@@ -99,8 +99,8 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
     });
 }
 
-async function verifyBucketDownloadUrl(bucket: Bucket, testName: string) {
-const expected: string = 'Hello World: ' + testName;
+async function verifyBucketDownloadUrl(bucket: Bucket, testName: string): Promise<File> {
+  const expected: string = 'Hello World: ' + testName;
   const file: File = bucket.file('data_' + Date.now() + '.txt');
   await file.save(expected)
   return file;
