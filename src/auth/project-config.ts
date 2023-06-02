@@ -97,7 +97,7 @@ export class ProjectConfig {
   /**
    * The project's multi-factor auth configuration.
    * Supports only phone and TOTP.
-   */
+   */  
   private readonly multiFactorConfig_?: MultiFactorConfig;
   /**
    * The multi-factor auth configuration.
@@ -112,6 +112,7 @@ export class ProjectConfig {
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
+  
   /**
    * The password policy configuration for the project
    */
@@ -201,7 +202,7 @@ export class ProjectConfig {
     }
     return request;
   }
-
+ 
   /**
    * The reCAPTCHA configuration.
    */
@@ -219,7 +220,7 @@ export class ProjectConfig {
     if (typeof response.smsRegionConfig !== 'undefined') {
       this.smsRegionConfig = response.smsRegionConfig;
     }
-    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
+    //Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config. 
     //The SDK exposes it as multiFactorConfig always.
     if (typeof response.mfa !== 'undefined') {
       this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfa);

@@ -1222,7 +1222,7 @@ describe('admin.auth', () => {
             minLength: 6,
           }
         }
-      })
+      }) 
     });
 
     const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
@@ -2022,7 +2022,7 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
     });
-
+      
     it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       const updatedOptions2: UpdateTenantRequest = {
