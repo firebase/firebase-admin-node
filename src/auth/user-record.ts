@@ -134,6 +134,8 @@ export abstract class MultiFactorInfo {
         multiFactorInfo = new PhoneMultiFactorInfo(response);
       } else if (response.totpInfo !== undefined) {
         multiFactorInfo = new TotpMultiFactorInfo(response);
+      } else {
+        // Ignore the other SDK unsupported MFA factors to prevent blocking developers using the current SDK.
       }
     } catch (e) {
       // Ignore error.
@@ -237,6 +239,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
         phoneNumber: this.phoneNumber,
       });
   }
+
   /**
    * Returns the factor ID based on the response provided.
    *
