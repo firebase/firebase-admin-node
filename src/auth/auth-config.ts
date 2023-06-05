@@ -2287,7 +2287,7 @@ export interface CustomStrengthOptionsAuthServerConfig {
 */
 export interface EmailPrivacyConfig {
   /**
-   * Variable indiciating email privacy enabled of not.
+   * Variable indicating email privacy enabled of not.
    */
   enableImprovedEmailPrivacy?: boolean;
 }
