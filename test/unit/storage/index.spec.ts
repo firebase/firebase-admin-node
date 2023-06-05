@@ -116,27 +116,28 @@ describe('Storage', () => {
       );
     });
     it('should use the emulator host name when either envs are set', async () => {
-      const HOST = 'https://localhost:9091';
+      const HOST = 'localhost:9091';
       const envsToCheck = [
-        'FIREBASE_STORAGE_EMULATOR_HOST',
-        'STORAGE_EMULATOR_HOST',
+        { envName: 'FIREBASE_STORAGE_EMULATOR_HOST', value: HOST },
+        { envName: 'STORAGE_EMULATOR_HOST', value: `http://${HOST}` },
       ];
-      for (const storageEnv of envsToCheck) {
-        process.env[storageEnv] = HOST;
-        const downloadTokens = ['abc', 'def'];
-        sandbox.stub(StorageUtils, 'getFirebaseMetadata').returns(
-          Promise.resolve({
-            downloadTokens: downloadTokens.join(','),
-          } as StorageUtils.FirebaseMetadata)
-        );
+      const downloadTokens = ['abc', 'def'];
+      sandbox.stub(StorageUtils, 'getFirebaseMetadata').returns(
+        Promise.resolve({
+          downloadTokens: downloadTokens.join(','),
+        } as StorageUtils.FirebaseMetadata)
+      );
+      for (const { envName, value } of envsToCheck) {
+        process.env[envName] = value;
+        
         const storage1 = getStorage(mockApp);
         const fileRef = storage1.bucket('gs://mock').file('abc');
         await expect(getDownloadUrl(fileRef)).to.eventually.eq(
-          `${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(
+          `http://${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(
             fileRef.name
           )}?alt=media&token=${downloadTokens[0]}`
         );
-        delete process.env[storageEnv];
+        delete process.env[envName];
       }
     });
   });
