@@ -119,6 +119,7 @@ describe('Storage', () => {
       const HOST = 'localhost:9091';
       const envsToCheck = [
         { envName: 'FIREBASE_STORAGE_EMULATOR_HOST', value: HOST },
+        { envName: 'STORAGE_HOST_OVERRIDE', value: `http://${HOST}` },
         { envName: 'STORAGE_EMULATOR_HOST', value: `http://${HOST}` },
       ];
       const downloadTokens = ['abc', 'def'];
@@ -128,9 +129,13 @@ describe('Storage', () => {
         } as StorageUtils.FirebaseMetadata)
       );
       for (const { envName, value } of envsToCheck) {
+        delete process.env.STORAGE_EMULATOR_HOST;
+        console.log(`setting ${envName} to ${value}`);
+        delete process.env[envName];
         process.env[envName] = value;
         
-        const storage1 = getStorage(mockApp);
+        // Need to create a new mock app to force `getStorage`'s checking of env vars.
+        const storage1 = getStorage(mocks.app(envName));
         const fileRef = storage1.bucket('gs://mock').file('abc');
         await expect(getDownloadUrl(fileRef)).to.eventually.eq(
           `http://${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(
