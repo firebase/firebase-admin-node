@@ -385,7 +385,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -455,7 +455,7 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
-
+      
       it('should throw on invalid constraints attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
@@ -537,7 +537,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' +
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
         ' must be an integer between 6 and 30, inclusive.');
       });
 
@@ -780,7 +780,7 @@ describe('Tenant', () => {
 
       it('should throw on non-array disallowedRegions attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array';
+        tenantOptionsClientRequest.smsRegionConfig.allowByDefault.disallowedRegions = 'non-array'; 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.');
@@ -850,7 +850,7 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
-
+      
       it('should throw on invalid constraints attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
@@ -932,7 +932,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' +
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
         ' must be an integer between 6 and 30, inclusive.');
       });
 

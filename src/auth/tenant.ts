@@ -61,7 +61,7 @@ export interface UpdateTenantRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
-
+  
   /**
    * The reCAPTCHA configuration to update on the tenant.
    * By enabling reCAPTCHA Enterprise integration, you are

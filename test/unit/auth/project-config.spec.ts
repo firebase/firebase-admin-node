@@ -322,7 +322,7 @@ describe('ProjectConfig', () => {
           ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
-
+      
       it('should throw on invalid constraints attribute', ()=> {
         const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
@@ -404,7 +404,7 @@ describe('ProjectConfig', () => {
         tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
           ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
-        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' +
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
         ' must be an integer between 6 and 30, inclusive.');
       });
 
