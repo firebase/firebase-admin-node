@@ -314,7 +314,7 @@ export class Tenant {
       PasswordPolicyAuthConfig.buildServerRequest(request.passwordPolicyConfig);
     }
     // Validate Email Privacy Config if provided.
-    if (typeof request.emailPrivacyConfig != 'undefined') {
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
       EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
   }
