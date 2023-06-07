@@ -49,7 +49,7 @@ describe('admin.storage', () => {
   });
 
   it('getDownloadUrl returns a download URL', async () => {
-    const bucket = getStorage().bucket(projectId);
+    const bucket = getStorage().bucket(projectId + '.appspot.com');
     currentRef = await verifyBucketDownloadUrl(bucket, 'testName');
     // Note: For now, this generates a download token when needed, but in the future it may not.
     const metadata = await getFirebaseMetadata(
@@ -96,6 +96,7 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
     })
     .then((data) => {
       expect(data[0].toString()).to.equal(expected);
+      return file.delete();
     })
     .then(() => {
       return file.exists();
