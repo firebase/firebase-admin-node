@@ -128,6 +128,7 @@ describe('Storage', () => {
         } as StorageUtils.FirebaseMetadata)
       );
       for (const { envName, value } of envsToCheck) {
+        
         delete process.env.STORAGE_EMULATOR_HOST;
         delete process.env[envName];
         process.env[envName] = value;

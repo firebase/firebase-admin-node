@@ -63,7 +63,7 @@ describe('admin.storage', () => {
     }
     const downloadUrl = await getDownloadUrl(fileRef);
 
-    const [token] = metadata.downloadTokens!.split(',');
+    const [token] = metadata.downloadTokens.split(',');
     const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${
       bucket.name
     }/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${token}`;
