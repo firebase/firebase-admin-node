@@ -2283,11 +2283,11 @@ export interface CustomStrengthOptionsAuthServerConfig {
 }
 
 /**
- * The configuration for the email privacy on the project or tenant.
-*/
+ * The email privacy configuration of a project or tenant.
+ */
 export interface EmailPrivacyConfig {
   /**
-   * Variable indicating email privacy enabled of not.
+   * Whether enhanced email privacy is enabled.
    */
   enableImprovedEmailPrivacy?: boolean;
 }
