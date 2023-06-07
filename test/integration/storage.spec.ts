@@ -29,6 +29,13 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('admin.storage', () => {
+  let currentRef: File | null = null;
+  afterEach(async () => {
+    if (currentRef) {
+      await currentRef.delete();
+    }
+    currentRef = null;
+  });
   it('bucket() returns a handle to the default bucket', () => {
     const bucket: Bucket = getStorage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
@@ -42,15 +49,15 @@ describe('admin.storage', () => {
   });
 
   it('getDownloadUrl returns a download URL', async () => {
-    const bucket = getStorage().bucket(projectId + '.appspot.com');
-    const fileRef = await verifyBucketDownloadUrl(bucket, 'testName');
+    const bucket = getStorage().bucket(projectId);
+    currentRef = await verifyBucketDownloadUrl(bucket, 'testName');
     // Note: For now, this generates a download token when needed, but in the future it may not.
     const metadata = await getFirebaseMetadata(
       'https://firebasestorage.googleapis.com/v0',
-      fileRef
+      currentRef
     );
     if (!metadata.downloadTokens) {
-      expect(getDownloadUrl(fileRef)).to.eventually.throw(
+      expect(getDownloadUrl(currentRef)).to.eventually.throw(
         new FirebaseError({
           code: 'storage/invalid-argument',
           message:
@@ -61,12 +68,12 @@ describe('admin.storage', () => {
       );
       return;
     }
-    const downloadUrl = await getDownloadUrl(fileRef);
+    const downloadUrl = await getDownloadUrl(currentRef);
 
     const [token] = metadata.downloadTokens.split(',');
     const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${
       bucket.name
-    }/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${token}`;
+    }/o/${encodeURIComponent(currentRef.name)}?alt=media&token=${token}`;
     expect(downloadUrl).to.equal(storageEndpoint);
   });
 
@@ -89,7 +96,6 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
     })
     .then((data) => {
       expect(data[0].toString()).to.equal(expected);
-      return file.delete();
     })
     .then(() => {
       return file.exists();
