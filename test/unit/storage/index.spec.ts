@@ -19,11 +19,13 @@
 
 import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
+import { createSandbox, SinonSandbox } from 'sinon';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
-import { getStorage, Storage } from '../../../src/storage/index';
+import * as StorageUtils from '../../../src/storage/utils';
+import { getStorage, Storage, getDownloadUrl } from '../../../src/storage/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -35,13 +37,19 @@ describe('Storage', () => {
   let mockApp: App;
   let mockCredentialApp: App;
 
-  const noProjectIdError = 'Failed to initialize Google Cloud Storage client with the '
-  + 'available credential. Must initialize the SDK with a certificate credential or '
-  + 'application default credentials to use Cloud Storage API.';
+  const noProjectIdError =
+    'Failed to initialize Google Cloud Storage client with the ' +
+    'available credential. Must initialize the SDK with a certificate credential or ' +
+    'application default credentials to use Cloud Storage API.';
 
+  let sandbox: SinonSandbox;
   beforeEach(() => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
+    sandbox = createSandbox();
+  });
+  afterEach(() => {
+    sandbox.restore();
   });
 
   describe('getStorage()', () => {
@@ -68,6 +76,73 @@ describe('Storage', () => {
       const storage1: Storage = getStorage(mockApp);
       const storage2: Storage = getStorage(mockApp);
       expect(storage1).to.equal(storage2);
+    });
+
+    it('should return an error when no metadata is available', async () => {
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(Promise.resolve({} as StorageUtils.FirebaseMetadata));
+      const storage1 = getStorage(mockApp);
+      const fileRef = storage1.bucket('gs://mock').file('abc');
+      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
+        'No download token available. Please create one in the Firebase Console.'
+      );
+    });
+
+    it('should return an error when unable to fetch metadata', async () => {
+      const error = new Error('Could not get metadata');
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(Promise.reject(error));
+      const storage1 = getStorage(mockApp);
+      const fileRef = storage1.bucket('gs://mock').file('abc');
+      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
+        error
+      );
+    });
+    it('should return the proper download url when metadata is available', async () => {
+      const downloadTokens = ['abc', 'def'];
+      sandbox
+        .stub(StorageUtils, 'getFirebaseMetadata')
+        .returns(
+          Promise.resolve({
+            downloadTokens: downloadTokens.join(','),
+          } as StorageUtils.FirebaseMetadata)
+        );
+      const storage1 = getStorage(mockApp);
+      const fileRef = storage1.bucket('gs://mock').file('abc');
+      await expect(getDownloadUrl(fileRef)).to.eventually.eq(
+        `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${downloadTokens[0]}`
+      );
+    });
+    it('should use the emulator host name when either envs are set', async () => {
+      const HOST = 'localhost:9091';
+      const envsToCheck = [
+        { envName: 'FIREBASE_STORAGE_EMULATOR_HOST', value: HOST },
+        { envName: 'STORAGE_EMULATOR_HOST', value: `http://${HOST}` },
+      ];
+      const downloadTokens = ['abc', 'def'];
+      sandbox.stub(StorageUtils, 'getFirebaseMetadata').returns(
+        Promise.resolve({
+          downloadTokens: downloadTokens.join(','),
+        } as StorageUtils.FirebaseMetadata)
+      );
+      for (const { envName, value } of envsToCheck) {
+        
+        delete process.env.STORAGE_EMULATOR_HOST;
+        delete process.env[envName];
+        process.env[envName] = value;
+        
+        // Need to create a new mock app to force `getStorage`'s checking of env vars.
+        const storage1 = getStorage(mocks.app(envName));
+        const fileRef = storage1.bucket('gs://mock').file('abc');
+        await expect(getDownloadUrl(fileRef)).to.eventually.eq(
+          `http://${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(
+            fileRef.name
+          )}?alt=media&token=${downloadTokens[0]}`
+        );
+        delete process.env[envName];
+      }
     });
   });
 });

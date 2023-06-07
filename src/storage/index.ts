@@ -20,11 +20,15 @@
  * @packageDocumentation
  */
 
+import { File } from '@google-cloud/storage';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Storage } from './storage';
+import { FirebaseError } from '../utils/error';
+import { getFirebaseMetadata } from './utils';
 
 export { Storage } from './storage';
+
 
 /**
  * Gets the {@link Storage} service for the default app or a given app.
@@ -52,4 +56,35 @@ export function getStorage(app?: App): Storage {
 
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
+}
+
+
+
+/**
+ * Gets the download URL for the given {@link @google-cloud/storage#File}.
+ * 
+ * @example
+ * ```javascript
+ * // Get the downloadUrl for a given file ref
+ * const storage = getStorage();
+ * const myRef = ref(storage, 'images/mountains.jpg');
+ * const downloadUrl = await getDownloadUrl(myRef);
+ * ```
+ */
+export async function getDownloadUrl(file: File): Promise<string> {
+  const endpoint =
+    (process.env.STORAGE_EMULATOR_HOST ||
+      'https://firebasestorage.googleapis.com') + '/v0';
+  const { downloadTokens } = await getFirebaseMetadata(endpoint, file);
+  if (!downloadTokens) {
+    throw new FirebaseError({
+      code: 'storage/no-download-token',
+      message:
+        'No download token available. Please create one in the Firebase Console.',
+    });
+  }
+  const [token] = downloadTokens.split(',');
+  return `${endpoint}/b/${file.bucket.name}/o/${encodeURIComponent(
+    file.name
+  )}?alt=media&token=${token}`;
 }
