@@ -74,7 +74,6 @@ export function getStorage(app?: App): Storage {
 export async function getDownloadUrl(file: File): Promise<string> {
   const endpoint =
     (process.env.STORAGE_EMULATOR_HOST ||
-      process.env.STORAGE_HOST_OVERRIDE ||
       'https://firebasestorage.googleapis.com') + '/v0';
   const { downloadTokens } = await getFirebaseMetadata(endpoint, file);
   if (!downloadTokens) {

@@ -119,7 +119,6 @@ describe('Storage', () => {
       const HOST = 'localhost:9091';
       const envsToCheck = [
         { envName: 'FIREBASE_STORAGE_EMULATOR_HOST', value: HOST },
-        { envName: 'STORAGE_HOST_OVERRIDE', value: `http://${HOST}` },
         { envName: 'STORAGE_EMULATOR_HOST', value: `http://${HOST}` },
       ];
       const downloadTokens = ['abc', 'def'];
@@ -130,7 +129,6 @@ describe('Storage', () => {
       );
       for (const { envName, value } of envsToCheck) {
         delete process.env.STORAGE_EMULATOR_HOST;
-        console.log(`setting ${envName} to ${value}`);
         delete process.env[envName];
         process.env[envName] = value;
         
