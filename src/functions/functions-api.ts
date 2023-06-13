@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+import { FirebaseError } from '../utils/error';
+
 /**
  * Interface representing task options with delayed delivery.
  */
@@ -58,6 +60,38 @@ export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
    * The default is 10 minutes. The deadline must be in the range of 15 seconds and 30 minutes.
    */
   dispatchDeadlineSeconds?: number;
+  /**
+   * The id to use for the enqueued event.
+   * If not provided, one will be automatically generated.
+   * If provided explicitly specifying a task ID enables task de-duplication. If a task's ID is
+   * identical to that of an existing task or a task that was deleted or executed recently then
+   * the call will throw a TaskAlreadyExists error. Another task with the same id can't be
+   * created for ~1hour after the original task was deleted or executed.
+   * 
+   * Because there is an extra lookup cost to identify duplicate task ids, setting id
+   * significantly increases latency. Using hashed strings for the task id or for the prefix of
+   * the task id is recommended. Choosing task ids that are sequential or have sequential
+   * prefixes, for example using a timestamp, causes an increase in latency and error rates in
+   * all task commands. The infrastructure relies on an approximately uniform distribution of
+   * task ids to store and serve tasks efficiently.
+   *
+   * "Push IDs" from the Firebase Realtime Database make poor IDs because they are based on
+   * timestamps and will cause contention (slow downs) in your task queue. Reversed push IDs
+   * however form a perfect distribution and are an ideal key. To reverse a string in
+   * javascript use `someString.split("").reverse().join("")`
+   */
+  id?: string;
+  /**
+   * HTTP request headers to include in the request to the task queue function.
+   * These headers represent a subset of the headers that will accompany the task's HTTP
+   * request. Some HTTP request headers will be ignored or replaced, e.g. Authorization, Host, Content-Length,
+   * User-Agent etc. cannot be overridden.
+   *
+   * By default, Content-Type is set to 'application/json'.
+   *
+   * The size of the headers must be less than 80KB.
+   */
+  headers?: Record<string, string>;
 }
 
 /**
@@ -69,4 +103,16 @@ export interface TaskOptionsExperimental {
  * @beta
  */
   uri?: string;
+}
+
+export class TaskAlreadyExists extends FirebaseError {
+  constructor(code: string, message: string) {
+    super({ code, message });
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = TaskAlreadyExists.prototype;
+  }
 }

@@ -30,7 +30,8 @@ export {
   AbsoluteDelivery,
   DeliverySchedule,
   TaskOptions,
-  TaskOptionsExperimental
+  TaskOptionsExperimental,
+  TaskAlreadyExists
 } from './functions-api';
 export {
   Functions,
