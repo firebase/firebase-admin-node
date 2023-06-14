@@ -100,10 +100,19 @@ export function getFirestore(): Firestore;
 // @public
 export function getFirestore(app: App): Firestore;
 
+// @beta
+export function getFirestore(databaseId: string): Firestore;
+
+// @beta
+export function getFirestore(app: App, databaseId: string): Firestore;
+
 export { GrpcStatus }
 
 // @public
 export function initializeFirestore(app: App, settings?: FirestoreSettings): Firestore;
+
+// @beta
+export function initializeFirestore(app: App, settings: FirestoreSettings, databaseId: string): Firestore;
 
 export { NestedUpdateFields }
 
