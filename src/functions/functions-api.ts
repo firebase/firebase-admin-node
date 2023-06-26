@@ -60,6 +60,7 @@ export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
    * The default is 10 minutes. The deadline must be in the range of 15 seconds and 30 minutes.
    */
   dispatchDeadlineSeconds?: number;
+
   /**
    * The id to use for the enqueued event.
    * If not provided, one will be automatically generated.
@@ -81,6 +82,7 @@ export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
    * javascript use `someString.split("").reverse().join("")`
    */
   id?: string;
+  
   /**
    * HTTP request headers to include in the request to the task queue function.
    * These headers represent a subset of the headers that will accompany the task's HTTP
