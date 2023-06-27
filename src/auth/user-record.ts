@@ -47,8 +47,13 @@ export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;
   displayName?: string;
   phoneInfo?: string;
+  totpInfo?: TotpInfoResponse;
   enrolledAt?: string;
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+export interface TotpInfoResponse {
+  [key: string]: unknown;
 }
 
 export interface ProviderUserInfoResponse {
@@ -84,6 +89,7 @@ export interface GetAccountInfoUserResponse {
 
 enum MultiFactorId {
   Phone = 'phone',
+  Totp = 'totp',
 }
 
 /**
@@ -102,7 +108,9 @@ export abstract class MultiFactorInfo {
   public readonly displayName?: string;
 
   /**
-   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   * The type identifier of the second factor.
+   * For SMS second factors, this is `phone`.
+   * For TOTP second factors, this is `totp`.
    */
   public readonly factorId: string;
 
@@ -120,9 +128,15 @@ export abstract class MultiFactorInfo {
    */
   public static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
-    // Only PhoneMultiFactorInfo currently available.
+    // PhoneMultiFactorInfo, TotpMultiFactorInfo currently available.
     try {
-      multiFactorInfo = new PhoneMultiFactorInfo(response);
+      if (response.phoneInfo !== undefined) {
+        multiFactorInfo = new PhoneMultiFactorInfo(response);
+      } else if (response.totpInfo !== undefined) {
+        multiFactorInfo = new TotpMultiFactorInfo(response);
+      } else {
+        // Ignore the other SDK unsupported MFA factors to prevent blocking developers using the current SDK.
+      }
     } catch (e) {
       // Ignore error.
     }
@@ -241,13 +255,67 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 }
 
 /**
+ * TotpInfo struct associated with a second factor
+ */
+export class TotpInfo {
+
+}
+
+/**
+ * Interface representing a TOTP specific user-enrolled second factor.
+ */
+export class TotpMultiFactorInfo extends MultiFactorInfo {
+
+  /**
+   * TotpInfo struct associated with a second factor
+   */
+  public readonly totpInfo: TotpInfo;
+
+  /**
+   * Initializes the TotpMultiFactorInfo object using the server side response.
+   *
+   * @param response - The server side response.
+   * @constructor
+   * @internal
+   */
+  constructor(response: MultiFactorInfoResponse) {
+    super(response);
+    utils.addReadonlyGetter(this, 'totpInfo', response.totpInfo);
+  }
+
+  /**
+   * {@inheritdoc MultiFactorInfo.toJSON}
+   */
+  public toJSON(): object {
+    return Object.assign(
+      super.toJSON(),
+      {
+        totpInfo: this.totpInfo,
+      });
+  }
+
+  /**
+   * Returns the factor ID based on the response provided.
+   *
+   * @param response - The server side response.
+   * @returns The multi-factor ID associated with the provided response. If the response is
+   *     not associated with any known multi-factor ID, null is returned.
+   *
+   * @internal
+   */
+  protected getFactorId(response: MultiFactorInfoResponse): string | null {
+    return (response && response.totpInfo) ? MultiFactorId.Totp : null;
+  }
+}
+
+/**
  * The multi-factor related user settings.
  */
 export class MultiFactorSettings {
 
   /**
    * List of second factors enrolled with the current user.
-   * Currently only phone second factors are supported.
+   * Currently only phone and totp second factors are supported.
    */
   public enrolledFactors: MultiFactorInfo[];
 
