@@ -1297,4 +1297,28 @@ describe('PasswordPolicyAuthConfig',() => {
       expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
     });
   });
+
+  describe('buildServerRequest()', () => {
+    it('should return server request with default constraints', () => {
+      expect(PasswordPolicyAuthConfig.buildServerRequest({
+        enforcementState: 'ENFORCE',
+        constraints: {},
+      })).to.deep.equal({
+        passwordPolicyEnforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: false,
+        passwordPolicyVersions: [
+          {
+            customStrengthOptions: {
+              containsLowercaseCharacter: false,
+              containsUppercaseCharacter: false,
+              containsNumericCharacter: false,
+              containsNonAlphanumericCharacter: false,
+              minPasswordLength: 6,
+              maxPasswordLength: 4096,
+            }
+          }
+        ]
+      });
+    });
+  });
 });
