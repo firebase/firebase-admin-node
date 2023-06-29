@@ -59,7 +59,7 @@ export class FunctionsApiClient {
    * Deletes a task from a queue.
    *
    * @param id - The ID of the task to delete.
-   * @param functionName - The functionName of the queue.
+   * @param functionName - The function name of the queue.
    * @param extensionId - Optional canonical ID of the extension.
    */
   public async delete(id: string, functionName: string, extensionId?: string): Promise<void> {

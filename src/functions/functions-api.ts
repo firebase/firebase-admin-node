@@ -60,22 +60,22 @@ export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
   dispatchDeadlineSeconds?: number;
 
   /**
-   * The id to use for the enqueued event.
+   * The ID to use for the enqueued event.
    * If not provided, one will be automatically generated.
-   * If provided explicitly specifying a task ID enables task de-duplication. If a task's ID is
+   * If provided, an explicitly specified task ID enables task de-duplication. If a task's ID is
    * identical to that of an existing task or a task that was deleted or executed recently then
-   * the call will throw a TaskAlreadyExists error. Another task with the same id can't be
-   * created for ~1hour after the original task was deleted or executed.
+   * the call will throw an error with code "functions/task-already-exists". Another task with 
+   * the same ID can't be created for ~1hour after the original task was deleted or executed.
    * 
-   * Because there is an extra lookup cost to identify duplicate task ids, setting id
-   * significantly increases latency. Using hashed strings for the task id or for the prefix of
-   * the task id is recommended. Choosing task ids that are sequential or have sequential
+   * Because there is an extra lookup cost to identify duplicate task IDs, setting ID
+   * significantly increases latency. Using hashed strings for the task ID or for the prefix of
+   * the task ID is recommended. Choosing task IDs that are sequential or have sequential
    * prefixes, for example using a timestamp, causes an increase in latency and error rates in
    * all task commands. The infrastructure relies on an approximately uniform distribution of
-   * task ids to store and serve tasks efficiently.
+   * task IDs to store and serve tasks efficiently.
    *
    * "Push IDs" from the Firebase Realtime Database make poor IDs because they are based on
-   * timestamps and will cause contention (slow downs) in your task queue. Reversed push IDs
+   * timestamps and will cause contention (slowdowns) in your task queue. Reversed push IDs
    * however form a perfect distribution and are an ideal key. To reverse a string in
    * javascript use `someString.split("").reverse().join("")`
    */
