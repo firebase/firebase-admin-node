@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-import { FirebaseError } from '../utils/error';
-
 /**
  * Interface representing task options with delayed delivery.
  */
@@ -105,16 +103,4 @@ export interface TaskOptionsExperimental {
  * @beta
  */
   uri?: string;
-}
-
-export class TaskAlreadyExists extends FirebaseError {
-  constructor(code: string, message: string) {
-    super({ code, message });
-
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = TaskAlreadyExists.prototype;
-  }
 }

@@ -31,7 +31,6 @@ export {
   DeliverySchedule,
   TaskOptions,
   TaskOptionsExperimental,
-  TaskAlreadyExists
 } from './functions-api';
 export {
   Functions,

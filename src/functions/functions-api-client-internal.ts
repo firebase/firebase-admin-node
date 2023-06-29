@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { TaskAlreadyExists, TaskOptions } from './functions-api';
+import { TaskOptions } from './functions-api';
 import { ComputeEngineCredential } from '../app/credential-internal';
 
 const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
@@ -158,10 +158,7 @@ export class FunctionsApiClient {
     } catch (err: unknown) {
       if (err instanceof HttpError) {
         if (err.response.status === 409) {
-          throw new TaskAlreadyExists(
-            'functions/invalid-argument', 
-            `A task with ID ${opts?.id} already exists`
-          );
+          throw new FirebaseFunctionsError('task-already-exists', `A task with ID ${opts?.id} already exists`);
         } else {
           throw this.toFirebaseError(err);
         }
@@ -399,7 +396,8 @@ export type FunctionsErrorCode =
   | 'permission-denied'
   | 'unauthenticated'
   | 'not-found'
-  | 'unknown-error';
+  | 'unknown-error'
+  | 'task-already-exists';
 
 /**
  * Firebase Functions error code structure. This extends PrefixedFirebaseError.

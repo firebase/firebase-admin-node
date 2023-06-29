@@ -29,7 +29,6 @@ import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/f
 import { HttpClient } from '../../../src/utils/api-request';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { TaskAlreadyExists } from '../../../src/functions/functions-api';
 
 const expect = chai.expect;
 
@@ -253,8 +252,8 @@ describe('FunctionsApiClient', () => {
         .rejects(utils.errorFrom({}, 409));
       stubs.push(stub);
       expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })).to.eventually.throw(
-        new TaskAlreadyExists(
-          'functions/invalid-argument', 
+        new FirebaseFunctionsError(
+          'task-already-exists',
           'A task with ID mock-task already exists'
         )
       )
