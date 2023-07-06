@@ -117,7 +117,6 @@ export class Storage {
                 'explicitly when calling the getBucket() method.',
     });
   }
-
   /**
    * Optional app whose `Storage` service to
    * return. If not provided, the default `Storage` service will be returned.
