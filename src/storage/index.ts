@@ -61,7 +61,7 @@ export function getStorage(app?: App): Storage {
 
 
 /**
- * Gets the download URL for the given {@link @google-cloud/storage#File}.
+ * Gets the download URL for the given {@link https://cloud.google.com/nodejs/docs/reference/storage/latest/storage/file | File}.
  * 
  * @example
  * ```javascript
