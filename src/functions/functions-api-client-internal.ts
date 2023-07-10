@@ -26,7 +26,8 @@ import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
 import { ComputeEngineCredential } from '../app/credential-internal';
 
-const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
+const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
+const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/' + CLOUD_TASKS_API_RESOURCE_PATH;
 const FIREBASE_FUNCTION_URL_FORMAT = 'https://{locationId}-{projectId}.cloudfunctions.net/{resourceId}';
 
 const FIREBASE_FUNCTIONS_CONFIG_HEADERS = {
@@ -54,6 +55,61 @@ export class FunctionsApiClient {
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
+  /**
+   * Deletes a task from a queue.
+   *
+   * @param id - The ID of the task to delete.
+   * @param functionName - The function name of the queue.
+   * @param extensionId - Optional canonical ID of the extension.
+   */
+  public async delete(id: string, functionName: string, extensionId?: string): Promise<void> {
+    if (!validator.isNonEmptyString(functionName)) {
+      throw new FirebaseFunctionsError(
+        'invalid-argument', 'Function name must be a non empty string');
+    }
+    if (!validator.isTaskId(id)) {
+      throw new FirebaseFunctionsError(
+        'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), ' 
+        + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+    }
+
+    let resources: utils.ParsedResource;
+    try {
+      resources = utils.parseResourceName(functionName, 'functions');
+    } catch (err) {
+      throw new FirebaseFunctionsError(
+        'invalid-argument', 'Function name must be a single string or a qualified resource name');
+    }
+    resources.projectId = resources.projectId || await this.getProjectId();
+    resources.locationId = resources.locationId || DEFAULT_LOCATION;
+    if (!validator.isNonEmptyString(resources.resourceId)) {
+      throw new FirebaseFunctionsError(
+        'invalid-argument', 'No valid function name specified to enqueue tasks for.');
+    }
+    if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
+      resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
+    }
+
+    try {
+      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
+      const request: HttpRequestConfig = {
+        method: 'DELETE',
+        url: serviceUrl,
+        headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
+      };
+      await this.httpClient.send(request);
+    } catch (err: unknown) {
+      if (err instanceof HttpError) {
+        if (err.response.status === 404) {
+          // if no task with the provided ID exists, then ignore the delete.
+          return;
+        }
+        throw this.toFirebaseError(err);
+      } else {
+        throw err;
+      }
+    }
+  }
 
   /**
    * Creates a task and adds it to a queue.
@@ -63,47 +119,53 @@ export class FunctionsApiClient {
    * @param extensionId - Optional canonical ID of the extension.
    * @param opts - Optional options when enqueuing a new task.
    */
-  public enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
+  public async enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
       throw new FirebaseFunctionsError(
         'invalid-argument', 'Function name must be a non empty string');
     }
 
-    const task = this.validateTaskOptions(data, opts);
     let resources: utils.ParsedResource;
     try {
       resources = utils.parseResourceName(functionName, 'functions');
-    }
-    catch (err) {
+    } catch (err) {
       throw new FirebaseFunctionsError(
         'invalid-argument', 'Function name must be a single string or a qualified resource name');
     }
-
+    resources.projectId = resources.projectId || await this.getProjectId();
+    resources.locationId = resources.locationId || DEFAULT_LOCATION;
+    if (!validator.isNonEmptyString(resources.resourceId)) {
+      throw new FirebaseFunctionsError(
+        'invalid-argument', 'No valid function name specified to enqueue tasks for.');
+    }
     if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
       resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
     }
-    
-    return this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT)
-      .then((serviceUrl) => {
-        return this.updateTaskPayload(task, resources, extensionId)
-          .then((task) => {
-            const request: HttpRequestConfig = {
-              method: 'POST',
-              url: serviceUrl,
-              headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
-              data: {
-                task,
-              }
-            };
-            return this.httpClient.send(request);
-          })
-      })
-      .then(() => {
-        return;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+
+    const task = this.validateTaskOptions(data, resources, opts);
+    try {
+      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+      const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
+      const request: HttpRequestConfig = {
+        method: 'POST',
+        url: serviceUrl,
+        headers: FIREBASE_FUNCTIONS_CONFIG_HEADERS,
+        data: {
+          task: taskPayload,
+        }
+      };
+      await this.httpClient.send(request);
+    } catch (err: unknown) {
+      if (err instanceof HttpError) {
+        if (err.response.status === 409) {
+          throw new FirebaseFunctionsError('task-already-exists', `A task with ID ${opts?.id} already exists`);
+        } else {
+          throw this.toFirebaseError(err);
+        }
+      } else {
+        throw err;
+      }
+    }
   }
 
   private getUrl(resourceName: utils.ParsedResource, urlFormat: string): Promise<string> {
@@ -167,7 +229,7 @@ export class FunctionsApiClient {
       });
   }
 
-  private validateTaskOptions(data: any, opts?: TaskOptions): Task {
+  private validateTaskOptions(data: any, resources: utils.ParsedResource, opts?: TaskOptions): Task {
     const task: Task = {
       httpRequest: {
         url: '',
@@ -175,7 +237,10 @@ export class FunctionsApiClient {
           serviceAccountEmail: '',
         },
         body: Buffer.from(JSON.stringify({ data })).toString('base64'),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...opts?.headers,
+        }
       }
     }
 
@@ -213,6 +278,19 @@ export class FunctionsApiClient {
             + 'and must be in the range of 15s to 30 mins.');
         }
         task.dispatchDeadline = `${opts.dispatchDeadlineSeconds}s`;
+      }
+      if ('id' in opts && typeof opts.id !== 'undefined') {
+        if (!validator.isTaskId(opts.id)) {
+          throw new FirebaseFunctionsError(
+            'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+            + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+        }
+        const resourcePath = utils.formatString(CLOUD_TASKS_API_RESOURCE_PATH, {
+          projectId: resources.projectId,
+          locationId: resources.locationId,
+          resourceId: resources.resourceId,
+        });
+        task.name = resourcePath.concat('/', opts.id);
       }
       if (typeof opts.uri !== 'undefined') {
         if (!validator.isURL(opts.uri)) {
@@ -280,6 +358,7 @@ interface Error {
  * containing the relevant fields for enqueueing tasks that tirgger Cloud Functions.
  */
 export interface Task {
+  name?: string;
   // A timestamp in RFC3339 UTC "Zulu" format, with nanosecond resolution and up to nine fractional
   // digits. Examples: "2014-10-02T15:01:23Z" and "2014-10-02T15:01:23.045123456Z".
   scheduleTime?: string;
@@ -317,7 +396,8 @@ export type FunctionsErrorCode =
   | 'permission-denied'
   | 'unauthenticated'
   | 'not-found'
-  | 'unknown-error';
+  | 'unknown-error'
+  | 'task-already-exists';
 
 /**
  * Firebase Functions error code structure. This extends PrefixedFirebaseError.
