@@ -137,63 +137,72 @@ describe('FunctionsApiClient', () => {
     
     for (const invalidName of [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop, undefined]) {
       it(`should throw if functionName is ${invalidName}`, () => {
-        expect(() => apiClient.enqueue({}, invalidName as any))
-          .to.throw('Function name must be a non empty string');
+        expect(apiClient.enqueue({}, invalidName as any))
+          .to.eventually.throw('Function name must be a non empty string');
       });
     }
 
     for (const invalidName of ['project/abc/locations/east/fname', 'location/west/', '//']) {
       it(`should throw if functionName is ${invalidName}`, () => {
-        expect(() => apiClient.enqueue({}, invalidName as any))
-          .to.throw('Function name must be a single string or a qualified resource name');
+        expect(apiClient.enqueue({}, invalidName as any))
+          .to.eventually.throw('Function name must be a single string or a qualified resource name');
       });
     }
 
     for (const invalidOption of [null, 'abc', '', [], true, 102, 1.2]) {
       it(`should throw if options is ${invalidOption}`, () => {
-        expect(() => apiClient.enqueue({}, FUNCTION_NAME, '', invalidOption as any))
-          .to.throw('TaskOptions must be a non-null object');
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '', invalidOption as any))
+          .to.eventually.throw('TaskOptions must be a non-null object');
       });
     }
 
     for (const invalidScheduleTime of [null, '', 'abc', 102, 1.2, [], {}, true, NaN]) {
       it(`should throw if scheduleTime is ${invalidScheduleTime}`, () => {
-        expect(() => apiClient.enqueue({}, FUNCTION_NAME, '', { scheduleTime: invalidScheduleTime } as any))
-          .to.throw('scheduleTime must be a valid Date object.');
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '', { scheduleTime: invalidScheduleTime } as any))
+          .to.eventually.throw('scheduleTime must be a valid Date object.');
       });
     }
 
     for (const invalidScheduleDelaySeconds of [null, 'abc', '', [], {}, true, NaN, -1]) {
       it(`should throw if scheduleDelaySeconds is ${invalidScheduleDelaySeconds}`, () => {
-        expect(() => apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
           { scheduleDelaySeconds: invalidScheduleDelaySeconds } as any))
-          .to.throw('scheduleDelaySeconds must be a non-negative duration in seconds.');
+          .to.eventually.throw('scheduleDelaySeconds must be a non-negative duration in seconds.');
       });
     }
 
     for (const invalidDispatchDeadlineSeconds of [null, 'abc', '', [], {}, true, NaN, -1, 14, 1801]) {
       it(`should throw if dispatchDeadlineSeconds is ${invalidDispatchDeadlineSeconds}`, () => {
-        expect(() => apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
           { dispatchDeadlineSeconds: invalidDispatchDeadlineSeconds } as any))
-          .to.throw('dispatchDeadlineSeconds must be a non-negative duration in seconds '
+          .to.eventually.throw('dispatchDeadlineSeconds must be a non-negative duration in seconds '
           + 'and must be in the range of 15s to 30 mins.');
       });
     }
 
     for (const invalidUri of [null, '', 'a', 'foo', 'image.jpg', [], {}, true, NaN]) {
       it(`should throw given an invalid uri: ${invalidUri}`, () => {
-        expect(() => apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
           { uri: invalidUri } as any))
-          .to.throw('uri must be a valid URL string.');
+          .to.eventually.throw('uri must be a valid URL string.');
+      });
+    }
+
+    for (const invalidTaskId of [1234, 'task!', 'id:0', '[1234]', '(1234)']) {
+      it(`should throw given an invalid task ID: ${invalidTaskId}`, () => {
+        expect(apiClient.enqueue({}, FUNCTION_NAME, '', 
+        { id: invalidTaskId } as any ))
+          .to.eventually.throw('id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.')
       });
     }
 
     it('should throw when both scheduleTime and scheduleDelaySeconds are provided', () => {
-      expect(() => apiClient.enqueue({}, FUNCTION_NAME, '', {
+      expect(apiClient.enqueue({}, FUNCTION_NAME, '', {
         scheduleTime: new Date(),
         scheduleDelaySeconds: 1000
       } as any))
-        .to.throw('Both scheduleTime and scheduleDelaySeconds are provided. Only one value should be set.');
+        .to.eventually.throw('Both scheduleTime and scheduleDelaySeconds are provided. Only one value should be set.');
     });
 
     it('should reject when a full platform error response is received', () => {
@@ -235,6 +244,19 @@ describe('FunctionsApiClient', () => {
       stubs.push(stub);
       return apiClient.enqueue({}, FUNCTION_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject when a task with the same ID exists', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 409));
+      stubs.push(stub);
+      expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })).to.eventually.throw(
+        new FirebaseFunctionsError(
+          'task-already-exists',
+          'A task with ID mock-task already exists'
+        )
+      )
     });
 
     it('should resolve on success', () => {
@@ -455,4 +477,48 @@ describe('FunctionsApiClient', () => {
         });
     });
   });
+
+  describe('delete', () => {
+    for (const invalidTaskId of [1234, 'task!', 'id:0', '[1234]', '(1234)']) {
+      it(`should throw given an invalid task ID: ${invalidTaskId}`, () => {
+        expect(apiClient.delete(invalidTaskId as any, FUNCTION_NAME))
+          .to.eventually.throw('id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.')
+      });
+    }
+    
+    it('should reject when no valid function name is specified', () => {
+      expect(apiClient.delete('mock-task', '/projects/abc/locations/def'))
+        .to.eventually.throw('No valid function name specified to enqueue tasks for.');
+    });
+
+    it('should resolve on success', async () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      await apiClient.delete('mock-task', FUNCTION_NAME);
+      expect(stub).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS,
+      });
+    });
+
+    it('should ignore deletes if no task with task ID exists', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      expect(apiClient.delete('nonexistent-task', FUNCTION_NAME)).to.eventually.not.throw(utils.errorFrom({}, 404));
+    });
+
+    it('should throw on non-404 HTTP errors', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 500));
+      stubs.push(stub);
+      expect(apiClient.delete('mock-task', FUNCTION_NAME)).to.eventually.throw(utils.errorFrom({}, 500));
+    });
+  })
 });
