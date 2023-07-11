@@ -25,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
 import * as StorageUtils from '../../../src/storage/utils';
-import { getStorage, Storage, getDownloadUrl } from '../../../src/storage/index';
+import { getStorage, Storage, getDownloadURL } from '../../../src/storage/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -84,7 +84,7 @@ describe('Storage', () => {
         .returns(Promise.resolve({} as StorageUtils.FirebaseMetadata));
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
+      await expect(getDownloadURL(fileRef)).to.be.rejectedWith(
         'No download token available. Please create one in the Firebase Console.'
       );
     });
@@ -96,7 +96,7 @@ describe('Storage', () => {
         .returns(Promise.reject(error));
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(getDownloadUrl(fileRef)).to.be.rejectedWith(
+      await expect(getDownloadURL(fileRef)).to.be.rejectedWith(
         error
       );
     });
@@ -111,7 +111,7 @@ describe('Storage', () => {
         );
       const storage1 = getStorage(mockApp);
       const fileRef = storage1.bucket('gs://mock').file('abc');
-      await expect(getDownloadUrl(fileRef)).to.eventually.eq(
+      await expect(getDownloadURL(fileRef)).to.eventually.eq(
         `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(fileRef.name)}?alt=media&token=${downloadTokens[0]}`
       );
     });
@@ -136,7 +136,7 @@ describe('Storage', () => {
         // Need to create a new mock app to force `getStorage`'s checking of env vars.
         const storage1 = getStorage(mocks.app(envName));
         const fileRef = storage1.bucket('gs://mock').file('abc');
-        await expect(getDownloadUrl(fileRef)).to.eventually.eq(
+        await expect(getDownloadURL(fileRef)).to.eventually.eq(
           `http://${HOST}/v0/b/${fileRef.bucket.name}/o/${encodeURIComponent(
             fileRef.name
           )}?alt=media&token=${downloadTokens[0]}`
