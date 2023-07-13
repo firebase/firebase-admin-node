@@ -197,8 +197,8 @@
   },
   "dependencies": {
     "@fastify/busboy": "^1.2.1",
-    "@firebase/database-compat": "^1.0.0",
-    "@firebase/database-types": "^1.0.0",
+    "@firebase/database-compat": "^0.3.4",
+    "@firebase/database-types": "^0.10.4",
     "@types/node": ">=12.12.47",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
