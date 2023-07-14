@@ -11,7 +11,7 @@ import { Bucket } from '@google-cloud/storage';
 import { File } from '@google-cloud/storage';
 
 // @public
-export function getDownloadUrl(file: File): Promise<string>;
+export function getDownloadURL(file: File): Promise<string>;
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
