@@ -255,7 +255,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 }
 
 /**
- * TotpInfo struct associated with a second factor
+ * `TotpInfo` struct associated with a second factor
  */
 export class TotpInfo {
 
@@ -267,12 +267,12 @@ export class TotpInfo {
 export class TotpMultiFactorInfo extends MultiFactorInfo {
 
   /**
-   * TotpInfo struct associated with a second factor
+   * `TotpInfo` struct associated with a second factor
    */
   public readonly totpInfo: TotpInfo;
 
   /**
-   * Initializes the TotpMultiFactorInfo object using the server side response.
+   * Initializes the `TotpMultiFactorInfo` object using the server side response.
    *
    * @param response - The server side response.
    * @constructor
@@ -299,7 +299,7 @@ export class TotpMultiFactorInfo extends MultiFactorInfo {
    *
    * @param response - The server side response.
    * @returns The multi-factor ID associated with the provided response. If the response is
-   *     not associated with any known multi-factor ID, null is returned.
+   *     not associated with any known multi-factor ID, `null` is returned.
    *
    * @internal
    */
@@ -315,12 +315,12 @@ export class MultiFactorSettings {
 
   /**
    * List of second factors enrolled with the current user.
-   * Currently only phone and totp second factors are supported.
+   * Currently only phone and TOTP second factors are supported.
    */
   public enrolledFactors: MultiFactorInfo[];
 
   /**
-   * Initializes the MultiFactor object using the server side or JWT format response.
+   * Initializes the `MultiFactor` object using the server side or JWT format response.
    *
    * @param response - The server side response.
    * @constructor
@@ -380,7 +380,7 @@ export class UserMetadata {
   public readonly lastRefreshTime?: string | null;
 
   /**
-   * @param response - The server side response returned from the getAccountInfo
+   * @param response - The server side response returned from the `getAccountInfo`
    *     endpoint.
    * @constructor
    * @internal

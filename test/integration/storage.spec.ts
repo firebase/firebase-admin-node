@@ -19,7 +19,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';
-import { getDownloadUrl, getStorage } from '../../lib/storage/index';
+import { getDownloadURL, getStorage } from '../../lib/storage/index';
 import { getFirebaseMetadata } from '../../src/storage/utils';
 import { FirebaseError } from '../../src/utils/error';
 
@@ -57,7 +57,7 @@ describe('admin.storage', () => {
       currentRef
     );
     if (!metadata.downloadTokens) {
-      expect(getDownloadUrl(currentRef)).to.eventually.throw(
+      expect(getDownloadURL(currentRef)).to.eventually.throw(
         new FirebaseError({
           code: 'storage/invalid-argument',
           message:
@@ -68,7 +68,7 @@ describe('admin.storage', () => {
       );
       return;
     }
-    const downloadUrl = await getDownloadUrl(currentRef);
+    const downloadUrl = await getDownloadURL(currentRef);
 
     const [token] = metadata.downloadTokens.split(',');
     const storageEndpoint = `https://firebasestorage.googleapis.com/v0/b/${

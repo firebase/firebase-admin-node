@@ -40,6 +40,8 @@ export function getFunctions(app?: App): Functions;
 // @public
 export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
     dispatchDeadlineSeconds?: number;
+    id?: string;
+    headers?: Record<string, string>;
 };
 
 // @public
@@ -50,6 +52,7 @@ export interface TaskOptionsExperimental {
 
 // @public
 export class TaskQueue<Args = Record<string, any>> {
+    delete(id: string): Promise<void>;
     enqueue(data: Args, opts?: TaskOptions): Promise<void>;
 }
 
