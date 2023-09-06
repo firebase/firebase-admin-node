@@ -207,7 +207,7 @@
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^6.6.0",
-    "@google-cloud/storage": "^6.9.5"
+    "@google-cloud/storage": "^7.0.1"
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.3.0",
