@@ -1486,7 +1486,7 @@ export abstract class AbstractAuthRequestHandler {
         } catch (e) {
           return Promise.reject(e);
         }
-        if (request.mfa.enrollments.length === 0) {
+        if (request.mfa.enrollments === null || request.mfa.enrollments.length === 0) {
           delete request.mfa.enrollments;
         }
       }
