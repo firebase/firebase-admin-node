@@ -1283,6 +1283,9 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: true,
       },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
+      }
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1290,6 +1293,9 @@ describe('admin.auth', () => {
         emailPasswordEnforcementState:  'OFF',
         useAccountDefender: false,
       },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: false,
+      }
     };
     const projectConfigOptionSmsEnabledTotpDisabled: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1309,6 +1315,9 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: true,
       },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
+      },
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1323,6 +1332,7 @@ describe('admin.auth', () => {
           },
         ],
       },
+      emailPrivacyConfig: {},
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1337,6 +1347,7 @@ describe('admin.auth', () => {
           },
         ],
       },
+      emailPrivacyConfig: {},
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
@@ -1417,6 +1428,9 @@ describe('admin.auth', () => {
         '+16505551234': '019287',
         '+16505550676': '985235',
       },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
@@ -1433,6 +1447,9 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '019287',
         '+16505550676': '985235',
+      },
+      emailPrivacyConfig: {
+        enableImprovedEmailPrivacy: true,
       },
     };
     const expectedUpdatedTenant: any = {
@@ -1459,6 +1476,7 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: true,
       },
+      emailPrivacyConfig: {},
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1479,6 +1497,7 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: false,
       },
+      emailPrivacyConfig: {},
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
       displayName: 'testTenantUpdated',
@@ -1499,6 +1518,7 @@ describe('admin.auth', () => {
         ],
         useAccountDefender: false,
       },
+      emailPrivacyConfig: {},
     };
 
     // https://mochajs.org/
@@ -1912,6 +1932,7 @@ describe('admin.auth', () => {
         multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
         testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
         recaptchaConfig: deepCopy(expectedUpdatedTenant.recaptchaConfig),
+        emailPrivacyConfig: { enableImprovedEmailPrivacy: false },
       };
       const updatedOptions2: UpdateTenantRequest = {
         emailSignInConfig: {
@@ -1923,6 +1944,9 @@ describe('admin.auth', () => {
         testPhoneNumbers: null,
         smsRegionConfig: deepCopy(expectedUpdatedTenant2.smsRegionConfig),
         recaptchaConfig: deepCopy(expectedUpdatedTenant2.recaptchaConfig),
+        emailPrivacyConfig: {
+          enableImprovedEmailPrivacy: false,
+        },
       };
       if (authEmulatorHost) {
         return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions)

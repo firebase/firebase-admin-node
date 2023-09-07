@@ -22,8 +22,8 @@ import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
   MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig,
-  PasswordPolicyConfig, 
-  PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig,
+  PasswordPolicyConfig,
+  PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig,
 } from './auth-config';
 
 /**
@@ -73,6 +73,10 @@ export interface UpdateTenantRequest {
    * The password policy configuration for the tenant
    */
   passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration for the tenant
+   */
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -90,6 +94,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   smsRegionConfig?: SmsRegionConfig;
   recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /** The tenant server response interface. */
@@ -104,6 +109,7 @@ export interface TenantServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   recaptchaConfig? : RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -165,6 +171,10 @@ export class Tenant {
    * The password policy configuration for the tenant
    */
   public readonly passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration for the tenant
+   */
+  public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -204,6 +214,9 @@ export class Tenant {
     if (typeof tenantOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(tenantOptions.passwordPolicyConfig);
     }
+    if (typeof tenantOptions.emailPrivacyConfig !== 'undefined') {
+      request.emailPrivacyConfig = tenantOptions.emailPrivacyConfig;
+    }
     return request;
   }
 
@@ -240,6 +253,7 @@ export class Tenant {
       smsRegionConfig: true,
       recaptchaConfig: true,
       passwordPolicyConfig: true,
+      emailPrivacyConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -299,6 +313,10 @@ export class Tenant {
       // This will throw an error if invalid.
       PasswordPolicyAuthConfig.buildServerRequest(request.passwordPolicyConfig);
     }
+    // Validate Email Privacy Config if provided.
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
+      EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -342,6 +360,9 @@ export class Tenant {
     if (typeof response.passwordPolicyConfig !== 'undefined') {
       this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
     }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -381,6 +402,7 @@ export class Tenant {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       recaptchaConfig: this.recaptchaConfig_?.toJSON(),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
+      emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -396,6 +418,9 @@ export class Tenant {
     }
     if (typeof json.passwordPolicyConfig === 'undefined') {
       delete json.passwordPolicyConfig;
+    }
+    if (typeof json.emailPrivacyConfig === 'undefined') {
+      delete json.emailPrivacyConfig;
     }
     return json;
   }

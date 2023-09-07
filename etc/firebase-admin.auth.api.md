@@ -239,6 +239,11 @@ export interface EmailIdentifier {
 }
 
 // @public
+export interface EmailPrivacyConfig {
+    enableImprovedEmailPrivacy?: boolean;
+}
+
+// @public
 export interface EmailSignInProviderConfig {
     enabled: boolean;
     passwordRequired?: boolean;
@@ -363,6 +368,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
@@ -446,6 +452,7 @@ export class Tenant {
     // (undocumented)
     readonly anonymousSignInEnabled: boolean;
     readonly displayName?: string;
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
@@ -500,6 +507,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    emailPrivacyConfig?: EmailPrivacyConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;
@@ -524,6 +532,7 @@ export interface UpdateRequest {
 export interface UpdateTenantRequest {
     anonymousSignInEnabled?: boolean;
     displayName?: string;
+    emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
