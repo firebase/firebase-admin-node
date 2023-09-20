@@ -2279,3 +2279,50 @@ export interface CustomStrengthOptionsAuthServerConfig {
   minPasswordLength?: number;
   maxPasswordLength?: number;
 }
+
+/**
+ * The email privacy configuration of a project or tenant.
+ */
+export interface EmailPrivacyConfig {
+  /**
+   * Whether enhanced email privacy is enabled.
+   */
+  enableImprovedEmailPrivacy?: boolean;
+}
+
+/**
+ * Defines the EmailPrivacyAuthConfig class used for validation.
+ *
+ * @internal
+ */
+export class EmailPrivacyAuthConfig {
+  public static validate(options: EmailPrivacyConfig): void {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"EmailPrivacyConfig" must be a non-null object.',
+      );
+    }
+
+    const validKeys = {
+      enableImprovedEmailPrivacy: true,
+    };
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid "EmailPrivacyConfig" parameter.`,
+        );
+      }
+    }
+
+    if (typeof options.enableImprovedEmailPrivacy !== 'undefined'
+      && !validator.isBoolean(options.enableImprovedEmailPrivacy)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.',
+      );
+    }
+  }
+}
