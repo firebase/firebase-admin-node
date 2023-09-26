@@ -96,7 +96,7 @@ jobs:
     #   3. with the label 'release:publish', and
     #   4. the title prefix '[chore] Release '.
     if: github.event.pull_request.merged &&
-      github.ref == 'master' &&
+      github.ref == 'refs/heads/master' &&
       contains(github.event.pull_request.labels.*.name, 'release:publish') &&
       startsWith(github.event.pull_request.title, '[chore] Release ')
 
