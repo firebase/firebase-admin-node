@@ -17,8 +17,16 @@ import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 export interface UpdatePasskeyConfigRequest {
-    name?: string;
+    /**
+     * The relying party ID for the purpose of passkeys verifications.
+     * This cannot be changed once created.
+     */
     rpId?: string;
+    /**
+     * The website or app origins associated with the customer's sites or apps.
+     * Only challenges signed from these origins will be allowed to sign in
+     * with passkeys.
+     */
     expectedOrigins?: string[];
   }
 
@@ -35,15 +43,26 @@ export interface PasskeyConfigServerResponse {
  * Response received when getting or updating the passkey config.
  */
 export interface PasskeyConfigClientRequest {
-    name?: string;
     rpId?: string;
     expectedOrigins?: string[];
   }
 
 export class PasskeyConfig {
-  private readonly name_?: string;
-  private readonly rpId_?: string;
-  private readonly expectedOrigins_?: string[];
+  /** 
+     * The name of the PasskeyConfig resource.
+     */
+  public readonly name_?: string;
+  /**
+   * The relying party ID for the purpose of passkeys verifications.
+   * This cannot be changed once created.
+   */
+  public readonly rpId_?: string;
+  /**
+   * The website or app origins associated with the customer's sites or apps.
+   * Only challenges signed from these origins will be allowed to sign in
+   * with passkeys.
+   */
+  public readonly expectedOrigins_?: string[];
 
   /**
    *
@@ -57,7 +76,6 @@ export class PasskeyConfig {
       );
     }
     const validKeys = {
-      name: true,
       rpId: true,
       expectedOrigins: true,
     }
@@ -82,9 +100,6 @@ export class PasskeyConfig {
   public static buildServerRequest(configOptions: UpdatePasskeyConfigRequest): PasskeyConfigClientRequest {
     PasskeyConfig.validate(configOptions);
     const request: PasskeyConfigClientRequest = {};
-    if (typeof configOptions.name !== 'undefined') {
-      request.name = configOptions.name;
-    }
     if (typeof configOptions.rpId !== 'undefined') {
       request.rpId = request.rpId
     }
@@ -106,10 +121,10 @@ export class PasskeyConfig {
       this.name_ = response.name;
     }
     if (typeof response.rpId !== 'undefined') {
-        this.rpId_ = response.rpId;
+      this.rpId_ = response.rpId;
     }
     if (typeof response.expectedOrigins !== 'undefined') {
-    this.expectedOrigins_ = response.expectedOrigins;
+      this.expectedOrigins_ = response.expectedOrigins;
     }
   }
   /**

@@ -44,6 +44,7 @@ import {
 } from './auth-config';
 import {PasskeyConfig, PasskeyConfigServerResponse, UpdatePasskeyConfigRequest } from './passkey-config'
 import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
+import {isUndefined} from 'lodash';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -2071,7 +2072,7 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
     }
   });
 
-  /** Instantiates the getConfig endpoint settings. */
+/** Instantiates the getPasskeyConfig endpoint settings at project level. */
 const GET_PROJECT_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig', 'GET')
 .setResponseValidator((response: any) => {
   // Response should always contain at least the config name.
@@ -2083,7 +2084,7 @@ const GET_PROJECT_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig', 'GET')
   }
 });
 
-/** Instantiates the updateConfig endpoint settings. */
+/** Instantiates the updatePasskeyConfig endpoint settings at project level. */
 const UPDATE_PROJECT_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask={updateMask}', 'PATCH')
 .setResponseValidator((response: any) => {
   // Response should always contain at least the config name.
@@ -2095,7 +2096,7 @@ const UPDATE_PROJECT_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask
   }
 });
 
-  /** Instantiates the getConfig endpoint settings. */
+/** Instantiates the getPasskeyConfig endpoint settings at tenant level. */
   const GET_TENANT_PASSKEY_CONFIG = new ApiSettings('/tenants/{tenantId}/passkeyConfig', 'GET')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the config name.
@@ -2107,7 +2108,7 @@ const UPDATE_PROJECT_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask
     }
   });
   
-  /** Instantiates the updateConfig endpoint settings. */
+  /** Instantiates the updatePasskeyConfig endpoint settings at tenant level. */
   const UPDATE_TENANT_PASSKEY_CONFIG = new ApiSettings('/tenants/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the config name.
@@ -2295,46 +2296,38 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * Get the current project's passkey config
+   * Get the passkey config for the project or tenant(if tenantId specified)
    * @returns A promise that resolves with the passkey config information.
    */
-  public getPasskeyConfig(tenantId: string = ""): Promise<PasskeyConfigServerResponse> {
-    if(validator.isNonEmptyString(tenantId)) {
-      return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT_PASSKEY_CONFIG, {}, {tenantId})
-      .then((response: any) => {
-        return response as PasskeyConfigServerResponse;
-      });
-    } else {
-    return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_PROJECT_CONFIG, {}, {})
-      .then((response: any) => {
-        return response as PasskeyConfigServerResponse;
-      });
+  public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
+    let endpoint:ApiSettings = GET_PROJECT_PASSKEY_CONFIG
+    let additionalParams:any = {};
+    if(isUndefined(tenantId)) {
+      endpoint = GET_TENANT_PASSKEY_CONFIG;
+      additionalParams = {tenantId};
     }
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, endpoint, {}, additionalParams)
+      .then((response: any) => {
+        return response as PasskeyConfigServerResponse;
+      });
   }
 
   /**
-   * Update the current project's config.
-   * @returns A promise that resolves with the project config information.
+   * Update the passkey config for the project or tenant(if tenantId specified)
+   * @returns A promise that resolves with the passkey config information.
    */
-  public updatePasskeyConfig(tenantId: string = "", options: UpdatePasskeyConfigRequest): Promise<PasskeyConfigServerResponse> {
-    if (validator.isNonEmptyString(tenantId)) {
-      try {
-        const request = PasskeyConfig.buildServerRequest(options);
-        const updateMask = utils.generateUpdateMask(request);
-        return this.invokeRequestHandler(
-          this.authResourceUrlBuilder, UPDATE_TENANT_PASSKEY_CONFIG, request, { tenantId, updateMask: updateMask.join(',') })
-          .then((response: any) => {
-            return response as PasskeyConfigServerResponse;
-          });
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    } else {
-      try {
-      const request = PasskeyConfig.buildServerRequest(options);
-      const updateMask = utils.generateUpdateMask(request);
+  public updatePasskeyConfig(options: UpdatePasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfigServerResponse> {
+    const request = PasskeyConfig.buildServerRequest(options);
+    const updateMask = utils.generateUpdateMask(request);
+    let endpoint:ApiSettings = UPDATE_PROJECT_PASSKEY_CONFIG
+    let additionalParams:any = { updateMask: updateMask.join(',') };
+    if(isUndefined(tenantId)) {
+      endpoint = UPDATE_TENANT_PASSKEY_CONFIG;
+      additionalParams = {tenantId, updateMask: updateMask.join(',')};
+    }
+    try {
       return this.invokeRequestHandler(
-        this.authResourceUrlBuilder, UPDATE_PROJECT_PASSKEY_CONFIG, request, { updateMask: updateMask.join(',') })
+        this.authResourceUrlBuilder, endpoint, request, additionalParams)
         .then((response: any) => {
           return response as PasskeyConfigServerResponse;
         });
@@ -2342,7 +2335,6 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       return Promise.reject(e);
     }
   }
-}
 }
 
 /**

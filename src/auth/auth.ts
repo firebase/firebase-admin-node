@@ -20,6 +20,7 @@ import { AuthRequestHandler } from './auth-api-request';
 import { TenantManager } from './tenant-manager';
 import { BaseAuth } from './base-auth';
 import { ProjectConfigManager } from './project-config-manager';
+import {PasskeyConfigManager} from './passkey-config-manager';
 
 /**
  * Auth service bound to the provided app.
@@ -30,6 +31,7 @@ export class Auth extends BaseAuth {
   private readonly tenantManager_: TenantManager;
   private readonly projectConfigManager_: ProjectConfigManager;
   private readonly app_: App;
+  private readonly passkeyConfigManager_:PasskeyConfigManager;
 
   /**
    * @param app - The app for this Auth service.
@@ -41,6 +43,7 @@ export class Auth extends BaseAuth {
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
     this.projectConfigManager_ = new ProjectConfigManager(app);
+    this.passkeyConfigManager_ = new PasskeyConfigManager(app);
   }
 
   /**
@@ -68,5 +71,14 @@ export class Auth extends BaseAuth {
    */
   public projectConfigManager(): ProjectConfigManager {
     return this.projectConfigManager_;
+  }
+
+  /**
+   * Returns the passkey config manager instance associated with the current project.
+   *
+   * @returns The passkey config manager instance associated with the current project.
+   */
+  public passkeyConfigManager(): PasskeyConfigManager {
+    return this.passkeyConfigManager_;
   }
 }

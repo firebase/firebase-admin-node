@@ -344,6 +344,18 @@ export interface OIDCUpdateAuthProviderRequest {
     responseType?: OAuthResponseType;
 }
 
+// @public (undocumented)
+export class PasskeyConfig {
+    toJSON(): object;
+}
+
+// @public
+export class PasskeyConfigManager {
+    constructor(app: App);
+    getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
+    updatePasskeyConfig(passkeyConfigOptions: UpdatePasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+}
+
 // @public
 export interface PasswordPolicyConfig {
     constraints?: CustomStrengthOptionsConfig;
@@ -499,6 +511,13 @@ export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpda
 
 // @public
 export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+
+// @public (undocumented)
+export interface UpdatePasskeyConfigRequest {
+    expectedOrigins?: string[];
+    name?: string;
+    rpId?: string;
+}
 
 // @public
 export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
