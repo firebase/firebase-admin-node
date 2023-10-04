@@ -32,10 +32,11 @@ import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
   UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
-  PasswordPolicyConfig, SmsRegionConfig,
+  PasswordPolicyConfig, SmsRegionConfig
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
+import {PasskeyConfigRequest} from '../../src/auth';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -2196,6 +2197,54 @@ describe('admin.auth', () => {
         });
     });
   });
+
+  describe('Passkey config management operations', () => {
+    // Define expected passkey configuration
+    const expectedPasskeyConfig = {
+      name: `projects/{$projectId}/passkeyConfig`,
+      rpId: `{$projectId}.firebaseapp.com`,
+      expectedOrigins: ['app1', 'example.com'],
+    };
+  
+    // Helper function to reset passkey config to the initial state
+    async function resetPasskeyConfig() {
+      const resetRequest = { expectedOrigins: expectedPasskeyConfig.expectedOrigins };
+      await getAuth().passkeyConfigManager().updatePasskeyConfig(resetRequest);
+    }
+  
+    // Before each test, reset the passkey config to the initial state
+    beforeEach(async () => {
+      await resetPasskeyConfig();
+    });
+  
+    it('createPasskeyConfig() should create passkey config with expected passkeyConfig', async () => {
+      const rpId = `{$projectId}.firebaseapp.com`;
+      const createRequest = { expectedOrigins: ['app1', 'example.com'] };
+  
+      const createdPasskeyConfig = await getAuth().passkeyConfigManager().createPasskeyConfig(rpId, createRequest);
+      const passkeyConfigObj = createdPasskeyConfig.toJSON();
+  
+      expect(passkeyConfigObj).to.deep.equal(expectedPasskeyConfig);
+    });
+  
+    it('getPasskeyConfig() should resolve with expected passkeyConfig', async () => {
+      const actualPasskeyConfig = await getAuth().passkeyConfigManager().getPasskeyConfig();
+      const actualPasskeyConfigObj = actualPasskeyConfig.toJSON();
+  
+      expect(actualPasskeyConfigObj).to.deep.equal(expectedPasskeyConfig);
+    });
+  
+    it('updatePasskeyConfig() should resolve with updated expectedOrigins', async () => {
+      const updateRequest = { expectedOrigins: ['app1', 'example.com', 'app2'] };
+      const expectedUpdatedPasskeyConfig = { ...expectedPasskeyConfig, expectedOrigins: updateRequest.expectedOrigins };
+  
+      const updatedPasskeyConfig = await getAuth().passkeyConfigManager().updatePasskeyConfig(updateRequest);
+      const passkeyConfigObj = updatedPasskeyConfig.toJSON();
+  
+      expect(passkeyConfigObj).to.deep.equal(expectedUpdatedPasskeyConfig);
+    });
+  });
+  
 
   describe('SAML configuration operations', () => {
     const authProviderConfig1 = {

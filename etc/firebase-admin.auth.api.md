@@ -51,6 +51,7 @@ export interface AllowlistOnlyWrap {
 export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
+    passkeyConfigManager(): PasskeyConfigManager;
     projectConfigManager(): ProjectConfigManager;
     tenantManager(): TenantManager;
 }
@@ -342,6 +343,41 @@ export interface OIDCUpdateAuthProviderRequest {
     enabled?: boolean;
     issuer?: string;
     responseType?: OAuthResponseType;
+}
+
+// @public (undocumented)
+export class PasskeyConfig {
+    // Warning: (ae-forgotten-export) The symbol "PasskeyConfigServerResponse" needs to be exported by the entry point index.d.ts
+    constructor(response: PasskeyConfigServerResponse);
+    // Warning: (ae-forgotten-export) The symbol "PasskeyConfigClientRequest" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): PasskeyConfigClientRequest;
+    // (undocumented)
+    readonly expectedOrigins?: string[];
+    // (undocumented)
+    readonly name?: string;
+    // (undocumented)
+    readonly rpId?: string;
+    // (undocumented)
+    toJSON(): object;
+}
+
+// @public (undocumented)
+export class PasskeyConfigManager {
+    constructor(app: App);
+    // (undocumented)
+    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfigRequest>;
+    // (undocumented)
+    getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
+    // (undocumented)
+    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfigRequest>;
+}
+
+// @public (undocumented)
+export interface PasskeyConfigRequest {
+    // (undocumented)
+    expectedOrigins?: string[];
 }
 
 // @public
