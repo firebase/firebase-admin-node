@@ -36,7 +36,6 @@ import {
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import {PasskeyConfigRequest} from '../../src/auth';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -2206,15 +2205,10 @@ describe('admin.auth', () => {
       expectedOrigins: ['app1', 'example.com'],
     };
   
-    // Helper function to reset passkey config to the initial state
-    async function resetPasskeyConfig() {
-      const resetRequest = { expectedOrigins: expectedPasskeyConfig.expectedOrigins };
-      await getAuth().passkeyConfigManager().updatePasskeyConfig(resetRequest);
-    }
-  
     // Before each test, reset the passkey config to the initial state
     beforeEach(async () => {
-      await resetPasskeyConfig();
+      const resetRequest = { expectedOrigins: expectedPasskeyConfig.expectedOrigins };
+      await getAuth().passkeyConfigManager().updatePasskeyConfig(resetRequest);
     });
   
     it('createPasskeyConfig() should create passkey config with expected passkeyConfig', async () => {
@@ -2223,7 +2217,7 @@ describe('admin.auth', () => {
   
       const createdPasskeyConfig = await getAuth().passkeyConfigManager().createPasskeyConfig(rpId, createRequest);
       const passkeyConfigObj = createdPasskeyConfig.toJSON();
-  
+
       expect(passkeyConfigObj).to.deep.equal(expectedPasskeyConfig);
     });
   
