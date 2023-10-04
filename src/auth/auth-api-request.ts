@@ -43,6 +43,7 @@ import {
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
 import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
+import {PasskeyConfig, PasskeyConfigServerResponse, PasskeyConfigRequest} from './passkey-config';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -2070,6 +2071,54 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
     }
   });
 
+/** Instantiates the getPasskeyConfig endpoint settings. */
+const GET_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig', 'GET')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get project config',
+      );
+    }
+  });
+
+/** Instantiates the getPasskeyConfig endpoint settings. */
+const GET_TENANT_PASSKEY_CONFIG = new ApiSettings('/tenants/{tenantId}/passkeyConfig', 'GET')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get project config',
+      );
+    }
+  });
+
+/** Instantiates the getPasskeyConfig endpoint settings. */
+const UPDATE_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask={updateMask}', 'PATCH')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get project config',
+      );
+    }
+  });
+
+/** Instantiates the getPasskeyConfig endpoint settings. */
+const UPDATE_TENANT_PASSKEY_CONFIG = new ApiSettings('/tenant/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the config name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get project config',
+      );
+    }
+  });
+
 
 /**
  * Utility for sending requests to Auth server that are Auth instance related. This includes user, tenant,
@@ -2240,6 +2289,27 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
         { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as TenantServerResponse;
+        });
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, tenantId? GET_TENANT_PASSKEY_CONFIG: GET_PASSKEY_CONFIG, {}, {})
+      .then((response: any) => {
+        return response as PasskeyConfigServerResponse;
+      });
+  }
+
+  public updatePasskeyConfig(isCreateRequest: boolean, tenantId?: string, options?: PasskeyConfigRequest, rpId?: string): Promise<PasskeyConfigServerResponse> {
+    try {
+      const request = PasskeyConfig.buildServerRequest(isCreateRequest, options, rpId);
+      const updateMask = utils.generateUpdateMask(request);
+      return this.invokeRequestHandler(
+        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG, request, { updateMask: updateMask.join(',') })
+        .then((response: any) => {
+          return response as PasskeyConfigServerResponse;
         });
     } catch (e) {
       return Promise.reject(e);
