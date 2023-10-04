@@ -19,11 +19,9 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {
-    PasskeyConfig, PasskeyConfigRequest, PasskeyConfigServerResponse,
+    PasskeyConfig, PasskeyConfigRequest, PasskeyConfigServerResponse, PasskeyConfigClientRequest
   } from '../../../src/auth/passkey-config';
 import {deepCopy} from '../../../src/utils/deep-copy';
-import {ServerResponse} from 'http';
-import exp from 'constants';
 
 chai.should();
 chai.use(sinonChai);
@@ -42,6 +40,15 @@ describe('PasskeyConfig', () => {
     };
     describe('buildServerRequest', () => {
         describe('for a create request', () => {
+            const validRpId = 'project-id.firebaseapp.com';
+            it('should create a client request with valid params', () => {
+                const expectedRequest: PasskeyConfigClientRequest = {
+                    rpId: validRpId, 
+                    expectedOrigins: passkeyConfigRequest.expectedOrigins,
+                };
+                expect(PasskeyConfig.buildServerRequest(true, passkeyConfigRequest, validRpId)).to.deep.equal(expectedRequest);
+            });
+
             const invalidRpId = [null, NaN, 0, 1, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
             invalidRpId.forEach((rpId) => {
                 it('should throw on invalid rpId {$rpId}', () => {
@@ -54,8 +61,14 @@ describe('PasskeyConfig', () => {
             it('should throw error if rpId is defined', () => {
                 expect(PasskeyConfig.buildServerRequest(false, passkeyConfigRequest, 'project-id.firebaseapp.com')).to.throw(`'rpId' must be a valid non-empty string'`);
             });
-        });
 
+            it('should create a client request with valid params', () => {
+                const expectedRequest: PasskeyConfigClientRequest = { 
+                    expectedOrigins: passkeyConfigRequest.expectedOrigins,
+                };
+                expect(PasskeyConfig.buildServerRequest(false, passkeyConfigRequest)).to.deep.equal(expectedRequest);
+            });
+        });
         
         describe('for passkey config request', () => {
             const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -104,8 +117,6 @@ describe('PasskeyConfig', () => {
             expect(passkeyConfig.rpId).to.equal(expectedServerResponse.rpId);
             expect(passkeyConfig.expectedOrigins).to.equal(expectedServerResponse.expectedOrigins);
         });
-        
-
     });
 
     describe('toJSON', () => {
