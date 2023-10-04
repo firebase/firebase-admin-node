@@ -36,7 +36,7 @@ describe('PasskeyConfig', () => {
         expectedOrigins: ['app1', 'example.com'],
     };
     const passkeyConfigRequest: PasskeyConfigRequest = {
-        expectedOrigins: ['app1', 'website.com'],
+        expectedOrigins: ['app1', 'example.com'],
     };
     describe('buildServerRequest', () => {
         describe('for a create request', () => {
@@ -51,15 +51,17 @@ describe('PasskeyConfig', () => {
 
             const invalidRpId = [null, NaN, 0, 1, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
             invalidRpId.forEach((rpId) => {
-                it('should throw on invalid rpId {$rpId}', () => {
-                    expect(PasskeyConfig.buildServerRequest(true, passkeyConfigRequest, rpId as any)).to.throw(`'rpId' must be a valid non-empty string'`);
+                it(`should throw on invalid rpId ${rpId}`, () => {
+                    expect(() => PasskeyConfig.buildServerRequest(true, passkeyConfigRequest, rpId as any)).to.throw(`'rpId' must be a valid non-empty string`);
                 });
             });
         }); 
 
         describe('for update request', () => {
             it('should throw error if rpId is defined', () => {
-                expect(PasskeyConfig.buildServerRequest(false, passkeyConfigRequest, 'project-id.firebaseapp.com')).to.throw(`'rpId' must be a valid non-empty string'`);
+                expect(() => {
+                    PasskeyConfig.buildServerRequest(false, passkeyConfigRequest, 'rpId');
+                }).to.throw(`'rpId' cannot be changed once created.`);
             });
 
             it('should create a client request with valid params', () => {
@@ -75,7 +77,7 @@ describe('PasskeyConfig', () => {
             nonObjects.forEach((request) => {
                 it('should throw on invalid PasskeyConfigRequest:' + JSON.stringify(request), () => {
                 expect(() => {
-                    PasskeyConfig.buildServerRequest(true, request as any);
+                    PasskeyConfig.buildServerRequest(false, request as any);
                 }).to.throw(`'passkeyConfigRequest' must be a valid non-empty object.'`);
                 });
             });
@@ -84,7 +86,7 @@ describe('PasskeyConfig', () => {
                 const invalidAttributeObject = deepCopy(passkeyConfigRequest) as any;
                 invalidAttributeObject.invalidAttribute = 'invalid';
                 expect(() => {
-                    PasskeyConfig.buildServerRequest(invalidAttributeObject);
+                    PasskeyConfig.buildServerRequest(false, invalidAttributeObject);
                   }).to.throw(`'invalidAttribute' is not a valid PasskeyConfigRequest parameter.`);          
             });
 
@@ -94,7 +96,7 @@ describe('PasskeyConfig', () => {
                         let request = deepCopy(passkeyConfigRequest) as any;
                         request.expectedOrigins = expectedOriginsObject;
                         expect(() => {
-                            PasskeyConfig.buildServerRequest(true, request as any);
+                            PasskeyConfig.buildServerRequest(false, request as any);
                         }).to.throw(`'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`);
                     });
                 });
@@ -115,7 +117,7 @@ describe('PasskeyConfig', () => {
             };
             expect(passkeyConfig.name).to.equal(expectedServerResponse.name);
             expect(passkeyConfig.rpId).to.equal(expectedServerResponse.rpId);
-            expect(passkeyConfig.expectedOrigins).to.equal(expectedServerResponse.expectedOrigins);
+            expect(passkeyConfig.expectedOrigins).to.deep.equal(expectedServerResponse.expectedOrigins);
         });
     });
 

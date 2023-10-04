@@ -69,20 +69,20 @@ export class PasskeyConfig {
           );
         }
       }
-    if(!validator.isNonEmptyArray(passkeyConfigRequest.expectedOrigins) || !validator.isNonNullObject(passkeyConfigRequest.expectedOrigins)) {
+    if(!validator.isNonEmptyArray(passkeyConfigRequest.expectedOrigins)) {
         throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
             `'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`,
           );
     }
-    for(const origin in passkeyConfigRequest.expectedOrigins) {
-        if(!validator.isString(origin)) {
-            throw new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_ARGUMENT,
-                `'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`,
-              );
-        }
-    }
+    for (const origin of passkeyConfigRequest.expectedOrigins) {
+      if (!validator.isNonEmptyString(origin)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          `'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`,
+        );
+      }
+    }    
   };
 
   public static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): PasskeyConfigClientRequest {
@@ -91,8 +91,8 @@ export class PasskeyConfig {
     if(isCreateRequest && typeof rpId !== 'undefined') {
         request.rpId = rpId;
     }
-    if(typeof request.expectedOrigins !== 'undefined') {
-        request.expectedOrigins = passkeyConfigRequest?.expectedOrigins;
+    if(typeof passkeyConfigRequest?.expectedOrigins !== 'undefined') {
+        request.expectedOrigins = passkeyConfigRequest.expectedOrigins;
     }
     return request;
   };
