@@ -43,7 +43,7 @@ import {
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
 import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
-import {PasskeyConfig, PasskeyConfigServerResponse, PasskeyConfigRequest} from './passkey-config';
+import { PasskeyConfig, PasskeyConfigServerResponse, PasskeyConfigRequest } from './passkey-config';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -2108,7 +2108,8 @@ const UPDATE_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask={update
   });
 
 /** Instantiates the getPasskeyConfig endpoint settings. */
-const UPDATE_TENANT_PASSKEY_CONFIG = new ApiSettings('/tenant/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
+const UPDATE_TENANT_PASSKEY_CONFIG = new ApiSettings(
+  '/tenant/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the config name.
     if (!validator.isNonEmptyString(response.name)) {
@@ -2296,18 +2297,21 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
-    return this.invokeRequestHandler(this.authResourceUrlBuilder, tenantId? GET_TENANT_PASSKEY_CONFIG: GET_PASSKEY_CONFIG, {}, {})
+    return this.invokeRequestHandler(this.authResourceUrlBuilder, 
+      tenantId? GET_TENANT_PASSKEY_CONFIG: GET_PASSKEY_CONFIG, {}, {})
       .then((response: any) => {
         return response as PasskeyConfigServerResponse;
       });
   }
 
-  public updatePasskeyConfig(isCreateRequest: boolean, tenantId?: string, options?: PasskeyConfigRequest, rpId?: string): Promise<PasskeyConfigServerResponse> {
+  public updatePasskeyConfig(isCreateRequest: boolean, tenantId?: string,
+    options?: PasskeyConfigRequest, rpId?: string): Promise<PasskeyConfigServerResponse> {
     try {
       const request = PasskeyConfig.buildServerRequest(isCreateRequest, options, rpId);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(
-        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG, request, { updateMask: updateMask.join(',') })
+        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG, 
+        request, { updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as PasskeyConfigServerResponse;
         });
