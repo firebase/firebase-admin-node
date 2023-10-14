@@ -17,7 +17,7 @@ import { App } from '../app';
 import {
   AuthRequestHandler,
 } from './auth-api-request';
-import {PasskeyConfig, PasskeyConfigClientRequest, PasskeyConfigRequest, PasskeyConfigServerResponse} from './passkey-config';
+import { PasskeyConfig, PasskeyConfigClientRequest, PasskeyConfigRequest, PasskeyConfigServerResponse } from './passkey-config';
 
 
 export class PasskeyConfigManager {
@@ -28,7 +28,7 @@ export class PasskeyConfigManager {
   }
 
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig> {
-    return this.authRequestHandler.getPasskeyConfig()
+    return this.authRequestHandler.getPasskeyConfig(tenantId)
       .then((response: PasskeyConfigServerResponse) => {
         return new PasskeyConfig(response);
       });
@@ -38,13 +38,13 @@ export class PasskeyConfigManager {
     return this.authRequestHandler.updatePasskeyConfig(true, tenantId, passkeyConfigRequest, rpId)
       .then((response: PasskeyConfigClientRequest) => {
         return new PasskeyConfig(response);
-      })
+      });
   }
 
   public updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig> {
     return this.authRequestHandler.updatePasskeyConfig(false, tenantId, passkeyConfigRequest)
       .then((response: PasskeyConfigClientRequest) => {
         return new PasskeyConfig(response);
-      })
+      });
   }
 }

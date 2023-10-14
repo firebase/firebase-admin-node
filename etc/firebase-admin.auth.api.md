@@ -367,11 +367,11 @@ export class PasskeyConfig {
 export class PasskeyConfigManager {
     constructor(app: App);
     // (undocumented)
-    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfigRequest>;
+    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
     // (undocumented)
     getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
     // (undocumented)
-    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfigRequest>;
+    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
 }
 
 // @public (undocumented)
