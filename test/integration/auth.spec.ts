@@ -2200,8 +2200,8 @@ describe('admin.auth', () => {
   describe('Passkey config management operations', () => {
     // Define expected passkey configuration
     const expectedPasskeyConfig = {
-      name: 'projects/{$projectId}/passkeyConfig',
-      rpId: '{$projectId}.firebaseapp.com',
+      name: 'projects/' + projectId  + '/passkeyConfig',
+      rpId: projectId + '.firebaseapp.com',
       expectedOrigins: ['app1', 'example.com'],
     };
   
@@ -2212,7 +2212,7 @@ describe('admin.auth', () => {
     });
   
     it('createPasskeyConfig() should create passkey config with expected passkeyConfig', async () => {
-      const rpId = '{$projectId}.firebaseapp.com';
+      const rpId = projectId + '.firebaseapp.com';
       const createRequest = { expectedOrigins: ['app1', 'example.com'] };
   
       const createdPasskeyConfig = await getAuth().passkeyConfigManager().createPasskeyConfig(rpId, createRequest);
