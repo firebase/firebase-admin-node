@@ -44,10 +44,10 @@ describe('PasskeyConfigManager', () => {
   let malformedAccessTokenPasskeyConfigManager: PasskeyConfigManager;
   let rejectedPromiseAccessTokenPasskeyConfigManager: PasskeyConfigManager;
   const GET_CONFIG_RESPONSE: PasskeyConfigServerResponse = {
-    name: `projects/project-id/passkeyConfig`,
-    rpId: `project-id.firebaseapp.com`,
+    name: 'projects/project-id/passkeyConfig',
+    rpId: 'project-id.firebaseapp.com',
     expectedOrigins: ['app1', 'example.com'],
-};
+  };
 
   before(() => {
     mockApp = mocks.app();
@@ -121,7 +121,7 @@ describe('PasskeyConfigManager', () => {
   });
 
   describe('createPasskeyConfig()', () => {
-    const rpId: string = 'project-id.firebaseapp.com';
+    const rpId = 'project-id.firebaseapp.com';
     const expectedOrigins: string[] = ['app1', 'example.com']
     const passkeyConfigRequest: PasskeyConfigRequest = {
       expectedOrigins: expectedOrigins ,
@@ -131,31 +131,31 @@ describe('PasskeyConfigManager', () => {
       AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to create the config provided.');
     // Stubs used to simulate underlying API calls.
-    let stubs: sinon.SinonStub[] = [];
+    const stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       sinon.restore();
     });
 
     it('should be rejected given no passkeyConfigOptions', () => {
-        return (passkeyConfigManager as any).createPasskeyConfig(null as unknown as PasskeyConfigRequest)
-          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
-      });
+      return (passkeyConfigManager as any).createPasskeyConfig(null as unknown as PasskeyConfigRequest)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
   
-      it('should be rejected given an app which returns null access tokens', () => {
-        console.log("TEST===" + JSON.stringify(passkeyConfigRequest));
-        return nullAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
-          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
+    it('should be rejected given an app which returns null access tokens', () => {
+      console.log('TEST===' + JSON.stringify(passkeyConfigRequest));
+      return nullAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
   
-      it('should be rejected given an app which returns invalid access tokens', () => {
-        return malformedAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
-          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
   
-      it('should be rejected given an app which fails to generate access tokens', () => {
-        return rejectedPromiseAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
-          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
 
     it('should resolve with a PasskeyConfig on createPasskeyConfig request success', () => {
       // Stub createPasskeyConfig to return expected result.

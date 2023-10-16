@@ -15,7 +15,7 @@
  */
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import {deepCopy} from '../utils/deep-copy';
+import { deepCopy } from '../utils/deep-copy';
 
 export interface PasskeyConfigRequest {
     expectedOrigins?: string[];
@@ -38,76 +38,77 @@ export class PasskeyConfig {
   public readonly rpId?: string;
   public readonly expectedOrigins?: string[];
 
-  private static validate(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string) {
-    if(isCreateRequest && !validator.isNonEmptyString(rpId)) {
-        throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            `'rpId' must be a valid non-empty string'`,
-          );
+  private static validate(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): void {
+    if (isCreateRequest && !validator.isNonEmptyString(rpId)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '\'rpId\' must be a valid non-empty string\'',
+      );
     }
-    if(!isCreateRequest && typeof rpId !== 'undefined') {
-        throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            `'rpId' cannot be changed once created.'`,
-          );
+    if (!isCreateRequest && typeof rpId !== 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '\'rpId\' cannot be changed once created.\'',
+      );
     }
-    if(!validator.isNonNullObject(passkeyConfigRequest)) {
-        throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            `'passkeyConfigRequest' must be a valid non-empty object.'`,
-          );
+    if (!validator.isNonNullObject(passkeyConfigRequest)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '\'passkeyConfigRequest\' must be a valid non-empty object.\'',
+      );
     }
     const validKeys = {
-        expectedOrigins: true,
+      expectedOrigins: true,
     };
     // Check for unsupported top level attributes.
     for (const key in passkeyConfigRequest) {
-        if (!(key in validKeys)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            `'${key}' is not a valid PasskeyConfigRequest parameter.`,
-          );
-        }
-      }
-    if(!validator.isNonEmptyArray(passkeyConfigRequest.expectedOrigins)) {
+      if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            `'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`,
-          );
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          `'${key}' is not a valid PasskeyConfigRequest parameter.`,
+        );
+      }
+    }
+    if (!validator.isNonEmptyArray(passkeyConfigRequest.expectedOrigins)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '\'passkeyConfigRequest.expectedOrigins\' must be a valid non-empty array of strings.\'',
+      );
     }
     for (const origin of passkeyConfigRequest.expectedOrigins) {
       if (!validator.isNonEmptyString(origin)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          `'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.'`,
+          '\'passkeyConfigRequest.expectedOrigins\' must be a valid non-empty array of strings.\'',
         );
       }
     }    
-  };
+  }
 
-  public static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): PasskeyConfigClientRequest {
+  public static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, 
+    rpId?: string): PasskeyConfigClientRequest {
     PasskeyConfig.validate(isCreateRequest, passkeyConfigRequest, rpId);
-    let request: PasskeyConfigClientRequest = {};
-    if(isCreateRequest && typeof rpId !== 'undefined') {
-        request.rpId = rpId;
+    const request: PasskeyConfigClientRequest = {};
+    if (isCreateRequest && typeof rpId !== 'undefined') {
+      request.rpId = rpId;
     }
-    if(typeof passkeyConfigRequest?.expectedOrigins !== 'undefined') {
-        request.expectedOrigins = passkeyConfigRequest.expectedOrigins;
+    if (typeof passkeyConfigRequest?.expectedOrigins !== 'undefined') {
+      request.expectedOrigins = passkeyConfigRequest.expectedOrigins;
     }
     return request;
-  };
+  }
 
   constructor(response: PasskeyConfigServerResponse) {
-    if(typeof response.name !== 'undefined') {
-        this.name = response.name;
+    if (typeof response.name !== 'undefined') {
+      this.name = response.name;
     }
-    if(typeof response.rpId !== 'undefined') {
-        this.rpId = response.rpId;
-    };
-    if(typeof response.expectedOrigins !== 'undefined') {
-        this.expectedOrigins = response.expectedOrigins;
+    if (typeof response.rpId !== 'undefined') {
+      this.rpId = response.rpId;
     }
-  };
+    if (typeof response.expectedOrigins !== 'undefined') {
+      this.expectedOrigins = response.expectedOrigins;
+    }
+  }
 
   public toJSON(): object {
     const json = {
@@ -115,17 +116,17 @@ export class PasskeyConfig {
       rpId: deepCopy(this.rpId),
       expectedOrigins: deepCopy(this.expectedOrigins),
     };
-    if(typeof json.name === 'undefined') {
+    if (typeof json.name === 'undefined') {
       delete json.name;
     }
-    if(typeof json.rpId === 'undefined') {
+    if (typeof json.rpId === 'undefined') {
       delete json.rpId;
     }
-    if(typeof json.expectedOrigins === 'undefined') {
+    if (typeof json.expectedOrigins === 'undefined') {
       delete json.expectedOrigins;
     }
     return json;
   }
 
-};
+}
 
