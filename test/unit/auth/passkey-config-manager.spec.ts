@@ -142,7 +142,6 @@ describe('PasskeyConfigManager', () => {
     });
   
     it('should be rejected given an app which returns null access tokens', () => {
-      console.log('TEST===' + JSON.stringify(passkeyConfigRequest));
       return nullAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
         .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });

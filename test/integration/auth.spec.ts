@@ -2214,14 +2214,15 @@ describe('admin.auth', () => {
       expect(createdPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');
       expect(createdPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);
     });
+
+    // TODO: uncomment when the GET endpoint is released in prod
+    // it('getPasskeyConfig() should resolve with expected passkeyConfig', async () => {
+    //   const actualPasskeyConfig = await getAuth().passkeyConfigManager().getPasskeyConfig();
   
-    it('getPasskeyConfig() should resolve with expected passkeyConfig', async () => {
-      const actualPasskeyConfig = await getAuth().passkeyConfigManager().getPasskeyConfig();
-  
-      expect(actualPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');
-      expect(actualPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');
-      expect(actualPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);
-    });
+    //   expect(actualPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');
+    //   expect(actualPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');
+    //   expect(actualPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);
+    // });
   
     it('updatePasskeyConfig() should resolve with updated expectedOrigins', async () => {
       const updateRequest = { 
@@ -2233,7 +2234,7 @@ describe('admin.auth', () => {
       expect(updatedPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');
       // TODO: backend validation needs to fixed in order for this statement to succeed. 
       // expect(updatedPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');
-      expect(updatedPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);
+      expect(updatedPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com', 'app2']);
     });
   });
   
