@@ -372,7 +372,7 @@ export class PasskeyInfo {
   /**
    * The name of the user.
    */
-  public readonly name?: string;
+  public readonly name: string;
   /**
    * Identifier for the registered credential.
    */
@@ -382,6 +382,13 @@ export class PasskeyInfo {
    */
   public readonly displayName?: string;
 
+  /**
+   * Initializes the PasskeyInfo object using the server side response.
+   * 
+   * @param response - The server side response.
+   * @constructor
+   * @internal
+   */
   constructor(response: PasskeyInfoResponse) {
     if (!isNonNullObject(response)) {
       throw new FirebaseAuthError(
@@ -399,14 +406,12 @@ export class PasskeyInfo {
    * @returns A JSON-serializable representation of this passkey info object.
    */
   public toJSON(): object {
-    const json: any = {
+    return {
       name: this.name,
       credentialId: this.credentialId,
       displayName: this.displayName,
-    }
-    return json;
-  }
-
+    };
+  }    
 }
 
 /**
@@ -694,12 +699,12 @@ export class UserRecord {
     if (multiFactor.enrolledFactors.length > 0) {
       utils.addReadonlyGetter(this, 'multiFactor', multiFactor);
     }
-    if(response.passkeyInfo) {
-      let passkeys: PasskeyInfo[] = [];
+    if (response.passkeyInfo) {
+      const passkeys: PasskeyInfo[] = [];
       response.passkeyInfo.forEach((passkey) => {
         passkeys.push(new PasskeyInfo(passkey));
       });
-      if(passkeys.length > 0) {
+      if (passkeys.length > 0) {
         utils.addReadonlyGetter(this, 'passkeyInfo', passkeys);
       }
     }
@@ -730,7 +735,7 @@ export class UserRecord {
     if (this.multiFactor) {
       json.multiFactor =  this.multiFactor.toJSON();
     }
-    if(this.passkeyInfo) {
+    if (this.passkeyInfo) {
       json.passkeyInfo = [];
       this.passkeyInfo.forEach((passkey) => {
         json.passkeyInfo.push(passkey.toJSON());

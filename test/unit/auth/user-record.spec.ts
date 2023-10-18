@@ -102,14 +102,14 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
     ],
     passkeyInfo: [
       {
-        name: "name1@google.com",
-        credentialId: "credentialId1",
-        displayName: "passkey1",
+        name: 'name1@google.com',
+        credentialId: 'credentialId1',
+        displayName: 'passkey1',
       },
       {
-        name: "name2@google.com",
-        credentialId: "credentialId2",
-        displayName: "passkey2",
+        name: 'name2@google.com',
+        credentialId: 'credentialId2',
+        displayName: 'passkey2',
       }
     ]
   };
@@ -199,14 +199,14 @@ function getUserJSON(tenantId?: string): object {
     },
     passkeyInfo: [
       {
-        name: "name1@google.com",
-        credentialId: "credentialId1",
-        displayName: "passkey1",
+        name: 'name1@google.com',
+        credentialId: 'credentialId1',
+        displayName: 'passkey1',
       },
       {
-        name: "name2@google.com",
-        credentialId: "credentialId2",
-        displayName: "passkey2",
+        name: 'name2@google.com',
+        credentialId: 'credentialId2',
+        displayName: 'passkey2',
       }
     ]
   };
@@ -699,10 +699,10 @@ describe('PasskeyInfo', () => {
     it('should create a PasskeyInfo object with valid data', () => {
       expect(passkeyInfo).to.be.an.instanceOf(PasskeyInfo);
     });
-
+    
     it('should throw when missing required fields', () => {
       expect(() => {
-        return new PasskeyInfo({});
+        return new PasskeyInfo(null as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid passkey info response');
     });
   });

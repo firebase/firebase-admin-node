@@ -366,6 +366,14 @@ export interface PasskeyConfigRequest {
 }
 
 // @public
+export class PasskeyInfo {
+    readonly credentialId: string;
+    readonly displayName?: string;
+    readonly name: string;
+    toJSON(): object;
+}
+
+// @public
 export interface PasswordPolicyConfig {
     constraints?: CustomStrengthOptionsConfig;
     enforcementState?: PasswordPolicyEnforcementState;
@@ -664,6 +672,7 @@ export class UserRecord {
     readonly emailVerified: boolean;
     readonly metadata: UserMetadata;
     readonly multiFactor?: MultiFactorSettings;
+    readonly passkeyInfo?: PasskeyInfo[];
     readonly passwordHash?: string;
     readonly passwordSalt?: string;
     readonly phoneNumber?: string;
