@@ -24,14 +24,30 @@ import {
   PasskeyConfigServerResponse 
 } from './passkey-config';
 
-
+/**
+ * Manages Passkey Configuration for a Firebase app.
+ */
 export class PasskeyConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;
   
+  /**
+   * Initializes a PasskeyConfigManager instance for a specified FirebaseApp.
+   * 
+   * @param app - The Firebase app associated with this PasskeyConfigManager instance.
+   *
+   * @constructor
+   * @internal
+   */
   constructor(app: App) {
     this.authRequestHandler = new AuthRequestHandler(app);
   }
 
+  /**
+   * Retrieves the Passkey Configuration.
+   * 
+   * @param tenantId - (optional) The tenant ID if querying passkeys on a specific tenant.
+   * @returns A promise fulfilled with the passkey configuration.
+   */
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig> {
     return this.authRequestHandler.getPasskeyConfig(tenantId)
       .then((response: PasskeyConfigServerResponse) => {
@@ -39,6 +55,14 @@ export class PasskeyConfigManager {
       });
   }
 
+  /**
+   * Creates a new passkey configuration.
+   * 
+   * @param rpId - The relying party ID.
+   * @param passkeyConfigRequest - Configuration details for the passkey.
+   * @param tenantId - (optional) The tenant ID for which the passkey config is created.
+   * @returns A promise fulfilled with the newly created passkey configuration.
+   */
   public createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, 
     tenantId?: string): Promise<PasskeyConfig> {
     return this.authRequestHandler.updatePasskeyConfig(true, tenantId, passkeyConfigRequest, rpId)
@@ -47,6 +71,13 @@ export class PasskeyConfigManager {
       });
   }
 
+  /**
+   * Updates an existing passkey configuration.
+   * 
+   * @param passkeyConfigRequest - Updated configuration details for the passkey.
+   * @param tenantId - (optional) The tenant ID for which the passkey config is updated.
+   * @returns A promise fulfilled with the updated passkey configuration.
+   */
   public updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig> {
     return this.authRequestHandler.updatePasskeyConfig(false, tenantId, passkeyConfigRequest)
       .then((response: PasskeyConfigClientRequest) => {
