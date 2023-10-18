@@ -345,38 +345,23 @@ export interface OIDCUpdateAuthProviderRequest {
     responseType?: OAuthResponseType;
 }
 
-// @public (undocumented)
+// @public
 export class PasskeyConfig {
-    // Warning: (ae-forgotten-export) The symbol "PasskeyConfigServerResponse" needs to be exported by the entry point index.d.ts
-    constructor(response: PasskeyConfigServerResponse);
-    // Warning: (ae-forgotten-export) The symbol "PasskeyConfigClientRequest" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): PasskeyConfigClientRequest;
-    // (undocumented)
     readonly expectedOrigins?: string[];
-    // (undocumented)
     readonly name?: string;
-    // (undocumented)
     readonly rpId?: string;
-    // (undocumented)
     toJSON(): object;
 }
 
-// @public (undocumented)
+// @public
 export class PasskeyConfigManager {
-    constructor(app: App);
-    // (undocumented)
     createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
-    // (undocumented)
     getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
-    // (undocumented)
     updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
 }
 
-// @public (undocumented)
+// @public
 export interface PasskeyConfigRequest {
-    // (undocumented)
     expectedOrigins?: string[];
 }
 
