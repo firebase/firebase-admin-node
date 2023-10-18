@@ -366,6 +366,26 @@ export interface PasskeyConfigRequest {
 }
 
 // @public
+export class PasskeyConfig {
+    readonly expectedOrigins?: string[];
+    readonly name?: string;
+    readonly rpId?: string;
+    toJSON(): object;
+}
+
+// @public
+export class PasskeyConfigManager {
+    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+    getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
+    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+}
+
+// @public
+export interface PasskeyConfigRequest {
+    expectedOrigins?: string[];
+}
+
+// @public
 export interface PasswordPolicyConfig {
     constraints?: CustomStrengthOptionsConfig;
     enforcementState?: PasswordPolicyEnforcementState;
