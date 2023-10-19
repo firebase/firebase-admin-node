@@ -18,12 +18,12 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { deepCopy } from '../utils/deep-copy';
 
 /**
- * Interface representing the properties to update in the provided passkey config.
+ * Interface representing the properties to update in a passkey config.
  */
 export interface PasskeyConfigRequest {
     /**
-     * An array of website or app origins associated with the customer's sites or apps.
-     * Only challenges signed from these origins will be allowed for signing in with passkeys.
+     * An array of website or app origins. Only challenges signed
+     * from these origins will be allowed for signing in with passkeys.
      */
     expectedOrigins?: string[];
 }
@@ -59,7 +59,7 @@ export class PasskeyConfig {
    */
   public readonly rpId?: string;
   /**
-   * The website or app origins associated with the customer's sites or apps.
+   * The allowed website or app origins.
    * Only challenges signed from these origins will be allowed for signing in with passkeys.
    */
   public readonly expectedOrigins?: string[];
@@ -78,7 +78,7 @@ export class PasskeyConfig {
     if (isCreateRequest && !validator.isNonEmptyString(rpId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        "'rpId' must be a valid non-empty string.",
+        "'rpId' must be a non-empty string.",
       );
     }
     // Validation for updating an existing PasskeyConfig.
@@ -91,7 +91,7 @@ export class PasskeyConfig {
     if (!validator.isNonNullObject(passkeyConfigRequest)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        "'passkeyConfigRequest' must be a valid non-empty object.",
+        "'passkeyConfigRequest' must not be null.",
       );
     }
     const validKeys = {
@@ -109,21 +109,21 @@ export class PasskeyConfig {
     if (!validator.isNonEmptyArray(passkeyConfigRequest.expectedOrigins)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        "'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.",
+        "'passkeyConfigRequest.expectedOrigins' must contain at least one item.",
       );
     }
     for (const origin of passkeyConfigRequest.expectedOrigins) {
       if (!validator.isNonEmptyString(origin)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          "'passkeyConfigRequest.expectedOrigins' must be a valid non-empty array of strings.",
+          "'passkeyConfigRequest.expectedOrigins' cannot contain empty strings.",
         );
       }
     }    
   }
 
   /**
-   * Build the corresponding server request for a Passkey Config object.
+   * Build a server request for a Passkey Config object.
    * @param isCreateRequest - A boolean stating if it's a create request.
    * @param passkeyConfigRequest - Passkey config to be updated.
    * @param rpId - (optional) Relying party ID for the request if it's a create request.

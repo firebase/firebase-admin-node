@@ -25,7 +25,7 @@ import {
 } from './passkey-config';
 
 /**
- * Manages Passkey Configuration for a Firebase app.
+ * Manages Passkey configuration for a Firebase app.
  */
 export class PasskeyConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;
@@ -43,7 +43,7 @@ export class PasskeyConfigManager {
   }
 
   /**
-   * Retrieves the Passkey Configuration.
+   * Retrieves the Passkey configuration.
    * 
    * @param tenantId - (optional) The tenant ID if querying passkeys on a specific tenant.
    * @returns A promise fulfilled with the passkey configuration.
