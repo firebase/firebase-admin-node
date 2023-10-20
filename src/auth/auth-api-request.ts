@@ -2084,7 +2084,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
    *
    * @param app - The app used to fetch access tokens to sign API requests.
-   * @constructor.
+   * @constructor
    */
   constructor(app: App) {
     super(app);
