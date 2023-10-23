@@ -60,7 +60,6 @@ export interface PasskeyInfoResponse {
   name?: string;
   credentialId?: string;
   displayName?: string;
-  [key: string]: unknown;
 }
 
 export interface ProviderUserInfoResponse {
