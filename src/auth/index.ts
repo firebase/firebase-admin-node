@@ -172,4 +172,5 @@ export {
   UserInfo,
   UserMetadata,
   UserRecord,
+  PasskeyInfo,
 } from './user-record';
