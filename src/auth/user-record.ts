@@ -365,7 +365,7 @@ export class MultiFactorSettings {
 }
 
 /**
- * Information about passkeys
+ * Interface representing a user-enrolled passkey.
  */
 export class PasskeyInfo {
   /**
@@ -639,7 +639,7 @@ export class UserRecord {
   public readonly multiFactor?: MultiFactorSettings;
 
   /**
-   * Information about Passkeys
+   * Passkey-related properties for the current user, if available.
    */
   public readonly passkeyInfo?: PasskeyInfo[];
 
