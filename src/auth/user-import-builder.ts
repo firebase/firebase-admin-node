@@ -262,9 +262,14 @@ export interface AuthFactorInfo {
   displayName?: string;
   phoneInfo?: string;
   enrolledAt?: string;
+  totpInfo?: TotpInfoResponse;
   [key: string]: any;
 }
 
+export interface TotpInfoResponse {
+  sharedSecretKey?: string;
+  [key: string]: any;
+}
 
 /** UploadAccount endpoint request user interface. */
 interface UploadAccountUser {

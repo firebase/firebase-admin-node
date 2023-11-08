@@ -93,11 +93,18 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
   phoneNumber: string;
 }
 
+export interface UpdateTotpMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
+  totpInfo: TotpInfo;
+}
+
+export interface TotpInfo {
+  sharedSecretKey: string;
+}
 /**
  * Type representing the properties of a user-enrolled second factor
  * for an `UpdateRequest`.
  */
-export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
+export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest | UpdateTotpMultiFactorInfoRequest;
 
 /**
  * The multi-factor related user settings for create operations.
