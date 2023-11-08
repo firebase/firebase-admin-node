@@ -43,7 +43,6 @@ import {
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
 import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
-import {TotpInfo} from './user-record';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
