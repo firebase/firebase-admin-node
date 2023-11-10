@@ -163,12 +163,12 @@ Otherwise you can obtain the following credentials from your current project:
 
 1. Service account certificate: This can be downloaded as a JSON file from the
 **'Settings > Service Accounts'** tab of the Firebase console. Copy the file into the repo
-so it's available at `cert.json`.
+so it's available at `test/resources/key.json`.
 
 
 2. Web API key: This is displayed in the **'Settings > General'** tab of the Firebase console
 after enabling Authentication as described in the steps below. Copy it and save to a new text
-file at `apikey.txt`.
+file at `test/resources/apikey.txt`.
 
 
 Set up your Firebase project as follows:
