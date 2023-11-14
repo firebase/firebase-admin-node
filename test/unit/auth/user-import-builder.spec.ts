@@ -115,7 +115,7 @@ describe('UserImportBuilder', () => {
             enrollmentTime: now.toUTCString(),
             displayName: 'displayNameTotp',
             totpInfo: {
-              sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
+              sharedSecretKey: 'VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4'
             },
             factorId: 'totp',
           },
@@ -184,13 +184,13 @@ describe('UserImportBuilder', () => {
           enrolledAt: now.toISOString(),
           displayName: 'displayNameTotp',
           totpInfo: {
-            sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
+            sharedSecretKey: 'VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4'
           }
         },
         {
           mfaEnrollmentId: 'enrolledSecondFactor4',
           totpInfo: {
-            sharedSecretKey: "WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF"
+            sharedSecretKey: 'WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF'
           }
         },
       ],

@@ -327,9 +327,9 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
  * @param multiFactorInfo - The client format second factor.
  * @returns The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest, isUploadRequest: boolean = false): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest, 
+  isUploadRequest = false): AuthFactorInfo {
   let enrolledAt;
-  console.log("enrollmentTime: ", multiFactorInfo.enrollmentTime);
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
       // Convert from UTC date string (client side format) to ISO date string (server side format).
@@ -489,7 +489,7 @@ function populateUploadAccountUser(
   if (typeof userValidator === 'function') {
     userValidator(result);
   }
-  console.log("RESULT=$=", JSON.stringify(result))
+  console.log('RESULT=$=', JSON.stringify(result))
   return result;
   
 }
