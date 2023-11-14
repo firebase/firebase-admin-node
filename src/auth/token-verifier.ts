@@ -414,7 +414,7 @@ export class FirebaseTokenVerifier {
   public _verifyAuthBlockingToken(
     jwtToken: string,
     isEmulator: boolean,
-    audience: string | undefined): Promise<DecodedAuthBlockingToken> {
+    audience: string | undefined, eventType?: string): Promise<DecodedAuthBlockingToken> {
     if (!validator.isString(jwtToken)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -454,10 +454,10 @@ export class FirebaseTokenVerifier {
     token: string,
     projectId: string,
     isEmulator: boolean,
-    audience?: string): Promise<DecodedToken> {
+    audience?: string, eventType?: string): Promise<DecodedToken> {
     return this.safeDecode(token)
       .then((decodedToken) => {
-        this.verifyContent(decodedToken, projectId, isEmulator, audience);
+        this.verifyContent(decodedToken, projectId, isEmulator, audience, eventType);
         return this.verifySignature(token, isEmulator)
           .then(() => decodedToken);
       });
@@ -490,7 +490,8 @@ export class FirebaseTokenVerifier {
     fullDecodedToken: DecodedToken,
     projectId: string | null,
     isEmulator: boolean,
-    audience: string | undefined): void {
+    audience: string | undefined,
+    eventType?: string): void {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 
@@ -529,13 +530,15 @@ export class FirebaseTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
         `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
-    } else if (typeof payload.sub !== 'string') {
-      errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
-    } else if (payload.sub === '') {
-      errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
-    } else if (payload.sub.length > 128) {
-      errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
-        verifyJwtTokenDocsMessage;
+    } else if (!(eventType === 'beforeEmailSent' || eventType === 'beforeSmsSent')) {
+      if(typeof payload.sub !== 'string') {
+        errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
+      } else if (payload.sub === '') {
+        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
+      } else if (payload.sub.length > 128) {
+        errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
+          verifyJwtTokenDocsMessage;
+      }
     }
     if (errorMessage) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
