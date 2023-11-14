@@ -20,7 +20,8 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings, UpdateTotpMultiFactorInfoRequest
+  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings, 
+  UpdateTotpMultiFactorInfoRequest
 } from './auth-config';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
@@ -355,7 +356,9 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       }
     }
     return authFactorInfo;
-  } else if(isTotpFactor(multiFactorInfo)) {
+  } else if (isTotpFactor(multiFactorInfo)) {
+    console.log('TOTP_FACTOR_');
+    console.log(multiFactorInfo.uid);
     // If any required field is missing or invalid, validation will still fail later.
     const authFactorInfo: AuthFactorInfo = {
       mfaEnrollmentId: multiFactorInfo.uid,
@@ -412,7 +415,7 @@ function getNumberField(obj: any, key: string): number {
  */
 function populateUploadAccountUser(
   user: UserImportRecord, userValidator?: ValidatorFunction): UploadAccountUser {
-    console.log("USER_IN_PROGRESS= ", user.uid);
+  console.log('USER_IN_PROGRESS= ', user.uid);
   const result: UploadAccountUser = {
     localId: user.uid,
     email: user.email,
@@ -466,7 +469,7 @@ function populateUploadAccountUser(
   if (validator.isNonNullObject(user.multiFactor) &&
       validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
     user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
-      console.log("MFA_INFO= ", JSON.stringify(multiFactorInfo));
+      console.log('MFA_INFO= ', JSON.stringify(multiFactorInfo));
       result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
     });
   }
@@ -519,7 +522,7 @@ export class UserImportBuilder {
     this.validatedUsers = [];
     this.userImportResultErrors = [];
     this.indexMap = {};
-    console.log("USERS_ppl = ", JSON.stringify(users));
+    console.log('USERS_ppl = ', JSON.stringify(users));
     this.validatedUsers = this.populateUsers(users, userRequestValidator);
     this.validatedOptions = this.populateOptions(options, this.requiresHashOptions);
   }
@@ -769,7 +772,7 @@ export class UserImportBuilder {
     const populatedUsers: UploadAccountUser[] = [];
     users.forEach((user, index) => {
       try {
-        console.log("user uid= ", user.uid);
+        console.log('user uid= ', user.uid);
         const result = populateUploadAccountUser(user, userValidator);
         if (typeof result.passwordHash !== 'undefined') {
           this.requiresHashOptions = true;

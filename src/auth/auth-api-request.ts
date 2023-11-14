@@ -294,7 +294,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
         `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
         'E.164 standard compliant identifier string.');
     }
-  } else if(typeof request.totpInfo !== 'undefined') {
+  } else if (typeof request.totpInfo !== 'undefined') {
     validateTotpInfo(request.totpInfo);
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
@@ -326,7 +326,7 @@ function validateTotpInfo(request: TotpInfoResponse): void {
       !validator.isString(request.sharedSecretKey)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_SHARED_SECRET_KEY,
-      `"totpInfo.sharedSecretKey" must be a valid string.`,
+      '"totpInfo.sharedSecretKey" must be a valid string.',
     );
   }
 }

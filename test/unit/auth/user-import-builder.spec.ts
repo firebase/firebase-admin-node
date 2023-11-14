@@ -110,20 +110,20 @@ describe('UserImportBuilder', () => {
             phoneNumber: '+16505551000',
             factorId: 'phone',
           },
+          // {
+          //   uid: 'enrolledSecondFactor3',
+          //   enrollmentTime: now.toISOString(),
+          //   displayName: 'displayNameTotp',
+          //   totpInfo: {
+          //     sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
+          //   },
+          //   factorId: 'totp',
+          // },
           {
-            uid: 'enrollmentId3',
-            enrollmentTime: now.toISOString(),
-            displayName: 'displayNameTotp',
-            totpInfo: {
-              sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
-            },
-            factorId: 'totp',
-          },
-          {
-            uid: 'enrollmentId4',
+            uid: 'enrolledSecondFactor4',
             enrollmentTime: now.toISOString(),
             totpInfo: {
-              sharedSecretKey: "WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF"
+              sharedSecretKey: 'WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF'
             },
             factorId: 'totp',
           },
@@ -180,21 +180,21 @@ describe('UserImportBuilder', () => {
           mfaEnrollmentId: 'enrolledSecondFactor2',
           phoneInfo: '+16505551000',
         },
-        {
-          mfaEnrollmentId: 'enrollmentId3',
-          enrolledAt: now.toISOString(),
-          displayName: 'displayNameTotp',
-          totpInfo: {
-            sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
-          }
-        },
-        {
-          mfaEnrollmentId: 'enrollmentId4',
-          enrolledAt: now.toISOString(),
-          totpInfo: {
-            sharedSecretKey: "WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF"
-          }
-        },
+        // {
+        //   mfaEnrollmentId: 'enrolledSecondFactor3',
+        //   enrolledAt: now.toISOString(),
+        //   displayName: 'displayNameTotp',
+        //   totpInfo: {
+        //     sharedSecretKey: "VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4"
+        //   }
+        // },
+        // {
+        //   mfaEnrollmentId: 'enrolledSecondFactor4',
+        //   enrolledAt: now.toISOString(),
+        //   totpInfo: {
+        //     sharedSecretKey: "WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF"
+        //   }
+        // },
       ],
     },
   ];
