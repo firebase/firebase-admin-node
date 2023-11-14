@@ -322,6 +322,13 @@ export interface FirebaseTokenInfo {
 }
 
 /**
+ * Shorthand auth blocking events from GCIP.
+ * @hidden
+ * @alpha
+ */
+export type AuthBlockingEventType = "beforeCreate" | "beforeSignIn" | "beforeSendEmail" | "beforeSendSms";
+
+/**
  * Class for verifying general purpose Firebase JWTs. This verifies ID tokens and session cookies.
  *
  * @internal
@@ -414,7 +421,8 @@ export class FirebaseTokenVerifier {
   public _verifyAuthBlockingToken(
     jwtToken: string,
     isEmulator: boolean,
-    audience: string | undefined, eventType?: string): Promise<DecodedAuthBlockingToken> {
+    audience: string | undefined, 
+    eventType?: AuthBlockingEventType): Promise<DecodedAuthBlockingToken> {
     if (!validator.isString(jwtToken)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -427,7 +435,7 @@ export class FirebaseTokenVerifier {
         if (typeof audience === 'undefined') {
           audience = `${projectId}.cloudfunctions.net/`;
         }
-        return this.decodeAndVerify(jwtToken, projectId, isEmulator, audience);
+        return this.decodeAndVerify(jwtToken, projectId, isEmulator, audience, eventType);
       })
       .then((decoded) => {
         const decodedAuthBlockingToken = decoded.payload as DecodedAuthBlockingToken;
@@ -454,7 +462,7 @@ export class FirebaseTokenVerifier {
     token: string,
     projectId: string,
     isEmulator: boolean,
-    audience?: string, eventType?: string): Promise<DecodedToken> {
+    audience?: string, eventType?: AuthBlockingEventType): Promise<DecodedToken> {
     return this.safeDecode(token)
       .then((decodedToken) => {
         this.verifyContent(decodedToken, projectId, isEmulator, audience, eventType);
@@ -491,7 +499,7 @@ export class FirebaseTokenVerifier {
     projectId: string | null,
     isEmulator: boolean,
     audience: string | undefined,
-    eventType?: string): void {
+    eventType?: AuthBlockingEventType): void {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 
@@ -530,7 +538,7 @@ export class FirebaseTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
         `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
-    } else if (!(eventType === 'beforeEmailSent' || eventType === 'beforeSmsSent')) {
+    } else if (!(eventType === 'beforeSendSms' || eventType === 'beforeSendEmail')) {
       if(typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
