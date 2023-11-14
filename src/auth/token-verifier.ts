@@ -326,7 +326,7 @@ export interface FirebaseTokenInfo {
  * @hidden
  * @alpha
  */
-export type AuthBlockingEventType = "beforeCreate" | "beforeSignIn" | "beforeSendEmail" | "beforeSendSms";
+export type AuthBlockingEventType = 'beforeCreate' | 'beforeSignIn' | 'beforeSendEmail' | 'beforeSendSms';
 
 /**
  * Class for verifying general purpose Firebase JWTs. This verifies ID tokens and session cookies.
@@ -539,10 +539,11 @@ export class FirebaseTokenVerifier {
         `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
     } else if (!(eventType === 'beforeSendSms' || eventType === 'beforeSendEmail')) {
-      if(typeof payload.sub !== 'string') {
+      if (typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
-        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
+        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + 
+          verifyJwtTokenDocsMessage;
       } else if (payload.sub.length > 128) {
         errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
           verifyJwtTokenDocsMessage;
