@@ -327,8 +327,9 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
  * @param multiFactorInfo - The client format second factor.
  * @returns The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest, isUploadRequest: boolean = false): AuthFactorInfo {
   let enrolledAt;
+  console.log("enrollmentTime: ", multiFactorInfo.enrollmentTime);
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
       // Convert from UTC date string (client side format) to ISO date string (server side format).
@@ -356,9 +357,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       }
     }
     return authFactorInfo;
-  } else if (isTotpFactor(multiFactorInfo)) {
-    console.log('TOTP_FACTOR_');
-    console.log(multiFactorInfo.uid);
+  } else if (isUploadRequest && isTotpFactor(multiFactorInfo)) {
     // If any required field is missing or invalid, validation will still fail later.
     const authFactorInfo: AuthFactorInfo = {
       mfaEnrollmentId: multiFactorInfo.uid,
@@ -464,13 +463,11 @@ function populateUploadAccountUser(
       });
     });
   }
-
   // Convert user.multiFactor.enrolledFactors to server format.
   if (validator.isNonNullObject(user.multiFactor) &&
       validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
     user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
-      console.log('MFA_INFO= ', JSON.stringify(multiFactorInfo));
-      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo, true));
     });
   }
 
@@ -492,7 +489,9 @@ function populateUploadAccountUser(
   if (typeof userValidator === 'function') {
     userValidator(result);
   }
+  console.log("RESULT=$=", JSON.stringify(result))
   return result;
+  
 }
 
 
@@ -772,7 +771,6 @@ export class UserImportBuilder {
     const populatedUsers: UploadAccountUser[] = [];
     users.forEach((user, index) => {
       try {
-        console.log('user uid= ', user.uid);
         const result = populateUploadAccountUser(user, userValidator);
         if (typeof result.passwordHash !== 'undefined') {
           this.requiresHashOptions = true;
