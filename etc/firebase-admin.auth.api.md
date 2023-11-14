@@ -94,8 +94,10 @@ export abstract class BaseAuth {
     setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
     updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
+    // Warning: (ae-forgotten-export) The symbol "AuthBlockingEventType" needs to be exported by the entry point index.d.ts
+    //
     // @alpha (undocumented)
-    _verifyAuthBlockingToken(token: string, audience?: string): Promise<DecodedAuthBlockingToken>;
+    _verifyAuthBlockingToken(token: string, audience?: string, eventType?: AuthBlockingEventType): Promise<DecodedAuthBlockingToken>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 }

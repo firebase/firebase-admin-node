@@ -323,8 +323,7 @@ export interface FirebaseTokenInfo {
 
 /**
  * Shorthand auth blocking events from GCIP.
- * @hidden
- * @alpha
+ * 
  */
 export type AuthBlockingEventType = 'beforeCreate' | 'beforeSignIn' | 'beforeSendEmail' | 'beforeSendSms';
 
