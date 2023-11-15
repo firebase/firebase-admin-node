@@ -144,8 +144,7 @@ export {
 
 export {
   DecodedIdToken,
-  DecodedAuthBlockingToken,
-  AuthBlockingEventType
+  DecodedAuthBlockingToken
 } from './token-verifier';
 
 export {

@@ -56,9 +56,6 @@ export class Auth extends BaseAuth {
 }
 
 // @public
-export type AuthBlockingEventType = 'beforeCreate' | 'beforeSignIn' | 'beforeSendEmail' | 'beforeSendSms';
-
-// @public
 export type AuthFactorType = 'phone';
 
 // @public
@@ -98,7 +95,7 @@ export abstract class BaseAuth {
     updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
     // @alpha (undocumented)
-    _verifyAuthBlockingToken(token: string, audience?: string, eventType?: AuthBlockingEventType): Promise<DecodedAuthBlockingToken>;
+    _verifyAuthBlockingToken(token: string, audience?: string): Promise<DecodedAuthBlockingToken>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 }

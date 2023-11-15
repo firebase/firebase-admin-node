@@ -28,7 +28,6 @@ import {
   createAuthBlockingTokenVerifier,
   DecodedIdToken,
   DecodedAuthBlockingToken,
-  AuthBlockingEventType,
 } from './token-verifier';
 import {
   AuthProviderConfig, SAMLAuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults,
@@ -1096,11 +1095,10 @@ export abstract class BaseAuth {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
     token: string,  
-    audience?: string,
-    eventType?: AuthBlockingEventType,
+    audience?: string
   ): Promise<DecodedAuthBlockingToken> {
     const isEmulator = useEmulator();
-    return this.authBlockingTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience, eventType)
+    return this.authBlockingTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
       .then((decodedAuthBlockingToken: DecodedAuthBlockingToken) => {
         return decodedAuthBlockingToken;
       });
