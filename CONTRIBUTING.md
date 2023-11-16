@@ -216,7 +216,7 @@ Set up your Firebase project as follows:
    1. Go to the
    [Google Cloud console | Firebase ML API](https://console.cloud.google.com/apis/api/firebaseml.googleapis.com/overview)
    and make sure your project is selected.
-   2. If the API is not already enabled, click **'Enable'**.
+   2. If the API is not already enabled, click **Enable**.
 
 
 6. Enable the IAM API:
