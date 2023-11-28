@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "11.11.0",
+  "version": "11.11.1",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -206,7 +206,7 @@
     "uuid": "^9.0.0"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^6.6.0",
+    "@google-cloud/firestore": "^6.8.0",
     "@google-cloud/storage": "^6.9.5"
   },
   "devDependencies": {
