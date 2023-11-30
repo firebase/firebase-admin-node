@@ -239,7 +239,7 @@ Set up your Firebase project as follows:
 8. Ensure your service account has the **Firebase Authentication Admin** role. This is required
 to ensure that exported user records contain the password hashes of the user accounts:
    1. Go to [Google Cloud console | IAM & admin](https://console.cloud.google.com/iam-admin).
-   2. Find your service account in the list. If not added click the **pencil** icon to edit its
+   2. Find your service account in the list. If not added click the pencil icon to edit its
    permissions.
    3. Click **ADD ANOTHER ROLE** and choose **Firebase Authentication Admin**.
    4. Click **SAVE**.
