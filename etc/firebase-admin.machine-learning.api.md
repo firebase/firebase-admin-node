@@ -8,14 +8,6 @@
 
 import { Agent } from 'http';
 
-// @public @deprecated (undocumented)
-export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
-    // (undocumented)
-    tfliteModel: {
-        automlModel: string;
-    };
-}
-
 // @public (undocumented)
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
     // (undocumented)
@@ -74,7 +66,7 @@ export class Model {
 }
 
 // @public (undocumented)
-export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions;
 
 // @public
 export interface ModelOptionsBase {
@@ -86,8 +78,6 @@ export interface ModelOptionsBase {
 
 // @public
 export interface TFLiteModel {
-    // @deprecated
-    readonly automlModel?: string;
     readonly gcsTfliteUri?: string;
     readonly sizeBytes: number;
 }

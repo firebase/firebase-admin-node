@@ -38,16 +38,7 @@ export interface GcsTfliteModelOptions extends ModelOptionsBase {
   };
 }
 
-/**
- * @deprecated AutoMLTfliteModelOptions will be removed in the next major version.
- */
-export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
-  tfliteModel: {
-    automlModel: string;
-  };
-}
-
-export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions;
 
 /**
  * Interface representing options for listing Models.
@@ -108,7 +99,6 @@ export interface ModelContent {
   };
   readonly tfliteModel?: {
     readonly gcsTfliteUri?: string;
-    readonly automlModel?: string;
 
     readonly sizeBytes: number;
   };
