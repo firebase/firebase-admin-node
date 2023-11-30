@@ -64,20 +64,6 @@ describe('MachineLearningApiClient', () => {
       sizeBytes: 2220022,
     },
   };
-  const MODEL_RESPONSE_AUTOML = {
-    name: 'projects/test-project/models/3456789',
-    createTime: '2020-07-15T18:12:25.123987Z',
-    updateTime: '2020-07-15T19:15:32.965435Z',
-    etag: 'etag345',
-    modelHash: 'modelHash345',
-    displayName: 'model_automl',
-    tags: ['tag_automl'],
-    state: { published: true },
-    tfliteModel: {
-      automlModel: 'projects/65432/models/ICN123',
-      sizeBytes: 3330033,
-    },
-  };
 
   const PROJECT_ID = 'test-project';
   const PROJECT_NUMBER = '1234567';
@@ -104,10 +90,6 @@ describe('MachineLearningApiClient', () => {
       basicOperationStatus: 'BASIC_OPERATION_STATUS_UPLOADING'
     },
     done: false,
-  };
-  const OPERATION_AUTOML_RESPONSE = {
-    done: true,
-    response: MODEL_RESPONSE_AUTOML,
   };
   const LOCKED_MODEL_RESPONSE = {
     name: 'projects/test-project/models/1234567',
@@ -179,12 +161,6 @@ describe('MachineLearningApiClient', () => {
         gcsTfliteUri: 'gcsUri1',
       },
     };
-    const AUTOML_OPTIONS: ModelOptions = {
-      displayName: 'name3',
-      tfliteModel: {
-        automlModel: 'automlModel',
-      },
-    };
 
     const invalidContent: any[] = [null, undefined, {}, { tags: [] }];
     invalidContent.forEach((content) => {
@@ -233,19 +209,6 @@ describe('MachineLearningApiClient', () => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
-        });
-    });
-
-    it('should accept AutoML options', () => {
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(OPERATION_AUTOML_RESPONSE));
-      stubs.push(stub);
-      return apiClient.createModel(AUTOML_OPTIONS)
-        .then((resp) => {
-          expect(resp.done).to.be.true;
-          expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE_AUTOML);
         });
     });
 
@@ -302,20 +265,12 @@ describe('MachineLearningApiClient', () => {
         gcsTfliteUri: 'gcsUri1',
       },
     };
-    const AUTOML_OPTIONS: ModelOptions = {
-      displayName: 'name3',
-      tfliteModel: {
-        automlModel: 'automlModel',
-      },
-    };
 
     const NAME_ONLY_MASK_LIST = ['displayName'];
     const GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
-    const AUTOML_MASK_LIST = ['displayName', 'tfliteModel.automlModel'];
 
     const NAME_ONLY_UPDATE_MASK_STRING = 'updateMask=displayName';
     const GCS_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.gcsTfliteUri';
-    const AUTOML_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.automlModel';
 
     const invalidOptions: any[] = [null, undefined];
     invalidOptions.forEach((option) => {
@@ -381,25 +336,6 @@ describe('MachineLearningApiClient', () => {
             headers: EXPECTED_HEADERS,
             url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${GCS_UPDATE_MASK_STRING}`,
             data: GCS_OPTIONS,
-          });
-        });
-    });
-
-    it('should resolve with the updated AutoML resource on success', () => {
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
-      stubs.push(stub);
-      return apiClient.updateModel(MODEL_ID, AUTOML_OPTIONS, AUTOML_MASK_LIST)
-        .then((resp) => {
-          expect(resp.done).to.be.true;
-          expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'PATCH',
-            headers: EXPECTED_HEADERS,
-            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${AUTOML_UPDATE_MASK_STRING}`,
-            data: AUTOML_OPTIONS,
           });
         });
     });

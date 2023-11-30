@@ -40,9 +40,6 @@ export interface ListModelsResult {
 
 /**
  * A TensorFlow Lite Model output object
- *
- * One of either the `gcsTfliteUri` or `automlModel` properties will be
- * defined.
  */
 export interface TFLiteModel {
   /** The size of the model. */
@@ -50,13 +47,6 @@ export interface TFLiteModel {
 
   /** The URI from which the model was originally provided to Firebase. */
   readonly gcsTfliteUri?: string;
-  /**
-   * The AutoML model reference from which the model was originally provided
-   * to Firebase.
-   * 
-   * @deprecated AutoML model support will be removed in the next major version.
-   */
-  readonly automlModel?: string;
 }
 
 /**
@@ -400,11 +390,9 @@ export class Model {
     }
     const tmpModel = deepCopy(model);
 
-    // If tflite Model is specified, it must have a source consisting of
-    // oneof {gcsTfliteUri, automlModel}
+    // If tflite Model is specified, it must have a source of {gcsTfliteUri}
     if (model.tfliteModel &&
-        !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+        !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri)) {
       // If we have some other source, ignore the whole tfliteModel.
       delete (tmpModel as any).tfliteModel;
     }

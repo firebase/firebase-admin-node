@@ -31,7 +31,6 @@ export {
   TFLiteModel,
 } from './machine-learning';
 export {
-  AutoMLTfliteModelOptions,
   GcsTfliteModelOptions,
   ListModelsOptions,
   ModelOptions,
