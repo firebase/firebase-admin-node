@@ -28,6 +28,13 @@ import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 export {
   AddPrefixToKeys,
+  AggregateField,
+  AggregateFieldType,
+  AggregateQuery,
+  AggregateQuerySnapshot,
+  AggregateSpecData,
+  AggregateSpec,
+  AggregateType,
   BulkWriter,
   BulkWriterOptions,
   BundleBuilder,

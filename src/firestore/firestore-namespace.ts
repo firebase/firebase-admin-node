@@ -26,6 +26,13 @@ export namespace firestore {
   export import v1beta1 = _firestore.v1beta1;
   export import v1 = _firestore.v1;
 
+  export import AggregateField = _firestore.AggregateField;
+  export import AggregateFieldType = _firestore.AggregateFieldType;
+  export import AggregateQuery = _firestore.AggregateQuery;
+  export import AggregateQuerySnapshot = _firestore.AggregateQuerySnapshot;
+  export import AggregateSpecData = _firestore.AggregateSpecData;
+  export import AggregateSpec = _firestore.AggregateSpec;
+  export import AggregateType = _firestore.AggregateType;
   export import BulkWriter = _firestore.BulkWriter;
   export import BulkWriterOptions = _firestore.BulkWriterOptions;
   export import BundleBuilder = _firestore.BundleBuilder;
