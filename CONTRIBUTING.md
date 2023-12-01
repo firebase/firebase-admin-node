@@ -87,7 +87,7 @@ information on using pull requests.
 
 ### Prerequisites
 
-1. Node.js 14 or higher.
+1. Node.js 16 or higher.
 2. `npm` 6 or higher.
 3. Google Cloud SDK ([`gcloud`](https://cloud.google.com/sdk/downloads) utility).
 
