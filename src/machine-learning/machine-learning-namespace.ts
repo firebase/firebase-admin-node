@@ -22,7 +22,6 @@ import {
   TFLiteModel as TTFLiteModel,
 } from './machine-learning';
 import {
-  AutoMLTfliteModelOptions as TAutoMLTfliteModelOptions,
   GcsTfliteModelOptions as TGcsTfliteModelOptions,
   ListModelsOptions as TListModelsOptions,
   ModelOptions as TModelOptions,
@@ -79,13 +78,6 @@ export namespace machineLearning {
    * Type alias to {@link firebase-admin.machine-learning#TFLiteModel}.
    */
   export type TFLiteModel = TTFLiteModel;
-
-  /**
-   * Type alias to {@link firebase-admin.machine-learning#AutoMLTfliteModelOptions}.
-   * 
-   * @deprecated AutoMLTfliteModelOptions will be removed in the next major version.
-   */
-  export type AutoMLTfliteModelOptions = TAutoMLTfliteModelOptions;
 
   /**
    * Type alias to {@link firebase-admin.machine-learning#GcsTfliteModelOptions}.
