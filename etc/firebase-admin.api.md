@@ -243,6 +243,13 @@ export function firestore(app?: App): _firestore.Firestore;
 export namespace firestore {
     import v1beta1 = _firestore.v1beta1;
     import v1 = _firestore.v1;
+    import AggregateField = _firestore.AggregateField;
+    import AggregateFieldType = _firestore.AggregateFieldType;
+    import AggregateQuery = _firestore.AggregateQuery;
+    import AggregateQuerySnapshot = _firestore.AggregateQuerySnapshot;
+    import AggregateSpecData = _firestore.AggregateSpecData;
+    import AggregateSpec = _firestore.AggregateSpec;
+    import AggregateType = _firestore.AggregateType;
     import BulkWriter = _firestore.BulkWriter;
     import BulkWriterOptions = _firestore.BulkWriterOptions;
     import BundleBuilder = _firestore.BundleBuilder;
