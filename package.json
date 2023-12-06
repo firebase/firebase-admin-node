@@ -197,9 +197,9 @@
   },
   "dependencies": {
     "@fastify/busboy": "^1.2.1",
-    "@firebase/database-compat": "^0.3.4",
-    "@firebase/database-types": "^0.10.4",
-    "@types/node": ">=12.12.47",
+    "@firebase/database-compat": "^1.0.2",
+    "@firebase/database-types": "^1.0.0",
+    "@types/node": "^20.10.3",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.0.1",
     "node-forge": "^1.3.1",
@@ -207,7 +207,7 @@
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^7.1.0",
-    "@google-cloud/storage": "^7.6.0"
+    "@google-cloud/storage": "^7.7.0"
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.3.0",
@@ -229,8 +229,8 @@
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@types/uuid": "^9.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
@@ -258,7 +258,7 @@
     "sinon": "^17.0.1",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typescript": "^4.6.4",
+    "typescript": "5.1.6",
     "yargs": "^17.0.1"
   }
 }
