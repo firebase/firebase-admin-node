@@ -229,8 +229,8 @@
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@types/uuid": "^9.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
@@ -258,7 +258,7 @@
     "sinon": "^17.0.1",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typescript": "^5.2.2",
+    "typescript": "5.1.6",
     "yargs": "^17.0.1"
   }
 }
