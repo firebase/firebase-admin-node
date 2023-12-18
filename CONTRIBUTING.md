@@ -167,6 +167,7 @@ which is required for all integration tests. This can be downloaded as a JSON fi
 **Settings > Service Accounts** tab of the Firebase console when you click the
 **Generate new private key** button. Copy the file into the repo so it's available at
 `test/resources/key.json`.
+   > **Note:** Service accounts should be carefully managed and their keys should never be stored in publicly accessible source code or repositories.
 
 
 2. Web API key: This allows for Auth sign-in needed for some Authentication and Tenant Management
