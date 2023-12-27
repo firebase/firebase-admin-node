@@ -34,7 +34,7 @@ async function main() {
  */
 async function applyExtras() {
   const extras = await getExtraFiles();
-  await Promise.all(extras.map((source) => applyExtraContentFrom(source)));
+  await Promise.all(extras.map(applyExtraContentFrom));
 }
 
 /**
