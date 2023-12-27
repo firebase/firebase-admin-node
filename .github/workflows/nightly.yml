@@ -52,7 +52,7 @@ jobs:
 
     - name: Run emulator-based integration tests
       run: |
-        npm install -g firebase-tools
+        npm install -g firebase-tools@11.30.0
         firebase emulators:exec --project fake-project-id --only auth,database,firestore \
           'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
 

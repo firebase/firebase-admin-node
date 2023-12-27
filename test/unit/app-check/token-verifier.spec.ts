@@ -102,7 +102,7 @@ describe('AppCheckTokenVerifier', () => {
 
     it('should be rejected given an App Check token with an incorrect algorithm', () => {
       const mockAppCheckToken = mocks.generateAppCheckToken({
-        algorithm: 'HS256',
+        algorithm: 'PS256',
       });
       return tokenVerifier.verifyToken(mockAppCheckToken)
         .should.eventually.be.rejectedWith('The provided App Check token has incorrect algorithm');

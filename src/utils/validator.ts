@@ -278,3 +278,19 @@ export function isTopic(topic: any): boolean {
   const VALID_TOPIC_REGEX = /^(\/topics\/)?(private\/)?[a-zA-Z0-9-_.~%]+$/;
   return VALID_TOPIC_REGEX.test(topic);
 }
+
+/**
+ * Validates that the provided string can be used as a task ID
+ * for Cloud Tasks.
+ * 
+ * @param taskId - the task ID to validate.
+ * @returns Whether the provided task ID is valid. 
+ */
+export function isTaskId(taskId: any): boolean {
+  if (typeof taskId !== 'string') {
+    return false;
+  }
+
+  const VALID_TASK_ID_REGEX = /^[A-Za-z0-9_-]+$/;
+  return VALID_TASK_ID_REGEX.test(taskId);
+}

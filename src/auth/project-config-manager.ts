@@ -20,14 +20,10 @@ import {
 } from './auth-api-request';
 
 /**
- * Defines the project config manager used to help manage project config related operations.
- * This includes:
- * <ul>
- * <li>The ability to update and get project config.</li>
+ * Manages (gets and updates) the current project config.
  */
 export class ProjectConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;
-
   /**
    * Initializes a ProjectConfigManager instance for a specified FirebaseApp.
    *

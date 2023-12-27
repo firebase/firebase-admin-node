@@ -504,9 +504,6 @@ class AsyncHttpCall {
     if (timeout) {
       // Listen to timeouts and throw an error.
       req.setTimeout(timeout, timeoutCallback);
-      req.on('socket', (socket) => {
-        socket.setTimeout(timeout, timeoutCallback);
-      });
     }
 
     // Send the request
@@ -921,8 +918,8 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
   private numTries = 0;
   private completed = false;
 
-  private masterTimer: NodeJS.Timer;
-  private repollTimer: NodeJS.Timer;
+  private masterTimer: NodeJS.Timeout;
+  private repollTimer: NodeJS.Timeout;
 
   private pollCallback?: () => Promise<T>;
   private resolve: (result: T) => void;

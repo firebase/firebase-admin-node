@@ -23,11 +23,18 @@
 import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { FirestoreService } from './firestore-internal';
+import { FirestoreService, FirestoreSettings } from './firestore-internal';
 import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 export {
   AddPrefixToKeys,
+  AggregateField,
+  AggregateFieldType,
+  AggregateQuery,
+  AggregateQuerySnapshot,
+  AggregateSpecData,
+  AggregateSpec,
+  AggregateType,
   BulkWriter,
   BulkWriterOptions,
   BundleBuilder,
@@ -41,6 +48,7 @@ export {
   DocumentSnapshot,
   FieldPath,
   FieldValue,
+  Filter,
   Firestore,
   FirestoreDataConverter,
   GeoPoint,
@@ -71,59 +79,75 @@ export {
   setLogFunction,
 } from '@google-cloud/firestore';
 
+export { FirestoreSettings };
+
 /**
- * Gets the {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * Gets the default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
  * service for the default app.
- *
- * `getFirestore()` can be called with no arguments to access the default
- * app's `Firestore` service or as `getFirestore(app)` to access the
- * `Firestore` service associated with a specific app.
  *
  * @example
  * ```javascript
- * // Get the Firestore service for the default app
+ * // Get the default Firestore service for the default app
  * const defaultFirestore = getFirestore();
  * ```
 
  * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
- *   service if no app is provided or the `Firestore` service associated with the
- *   provided app.
+ * service for the default app.
  */
 export function getFirestore(): Firestore;
 
 /**
- * Gets the {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * Gets the default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
  * service for the given app.
- *
- * `getFirestore()` can be called with no arguments to access the default
- * app's `Firestore` service or as `getFirestore(app)` to access the
- * `Firestore` service associated with a specific app.
  *
  * @example
  * ```javascript
- * // Get the Firestore service for a specific app
+ * // Get the default Firestore service for a specific app
  * const otherFirestore = getFirestore(app);
  * ```
  *
- * @param App - whose `Firestore` service to
- *   return. If not provided, the default `Firestore` service will be returned.
+ * @param app - which `Firestore` service to return.
  *
  * @returns The default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
- *   service if no app is provided or the `Firestore` service associated with the
- *   provided app.
+ * service associated with the provided app.
  */
 export function getFirestore(app: App): Firestore;
 
 /**
- * @param databaseId
- * @internal
+ * Gets the named {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the default app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a named database and default app
+ * const otherFirestore = getFirestore('otherDb');
+ * ```
+ *
+ * @param databaseId - name of database to return.
+ *
+ * @returns The named {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the default app.
+ * @beta
  */
 export function getFirestore(databaseId: string): Firestore;
 
 /**
- * @param app
- * @param databaseId
- * @internal
+ * Gets the named {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the given app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a named database and specific app.
+ * const otherFirestore = getFirestore('otherDb');
+ * ```
+ *
+ * @param app - which `Firestore` service to return.
+ *
+ * @param databaseId - name of database to return.
+ *
+ * @returns The named {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service associated with the provided app.
+ * @beta
  */
 export function getFirestore(app: App, databaseId: string): Firestore;
 
@@ -138,4 +162,61 @@ export function getFirestore(
   const firestoreService = firebaseApp.getOrInitService(
     'firestore', (app) => new FirestoreService(app));
   return firestoreService.getDatabase(databaseId);
+}
+
+/**
+ * Gets the default {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the given app, passing extra parameters to its constructor.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a specific app, require HTTP/1.1 REST transport
+ * const otherFirestore = initializeFirestore(app, {preferRest: true});
+ * ```
+ *
+ * @param app - which `Firestore` service to return.
+ *
+ * @param settings - Settings object to be passed to the constructor.
+ *
+ * @returns The default `Firestore` service associated with the provided app and settings.
+ */
+export function initializeFirestore(app: App, settings?: FirestoreSettings): Firestore;
+
+/**
+ * Gets the named {@link https://googleapis.dev/nodejs/firestore/latest/Firestore.html | Firestore}
+ * service for the given app, passing extra parameters to its constructor.
+ *
+ * @example
+ * ```javascript
+ * // Get the Firestore service for a specific app, require HTTP/1.1 REST transport
+ * const otherFirestore = initializeFirestore(app, {preferRest: true}, 'otherDb');
+ * ```
+ *
+ * @param app - which `Firestore` service to return.
+ *
+ * @param settings - Settings object to be passed to the constructor.
+ *
+ * @param databaseId - name of database to return.
+ *
+ * @returns The named `Firestore` service associated with the provided app and settings.
+ * @beta
+ */
+export function initializeFirestore(
+  app: App,
+  settings: FirestoreSettings,
+  databaseId: string
+): Firestore;
+
+export function initializeFirestore(
+  app: App,
+  settings?: FirestoreSettings,
+  databaseId?: string
+): Firestore {
+  settings ??= {};
+  databaseId ??= DEFAULT_DATABASE_ID;
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  const firestoreService = firebaseApp.getOrInitService(
+    'firestore', (app) => new FirestoreService(app));
+
+  return firestoreService.initializeDatabase(databaseId, settings);
 }

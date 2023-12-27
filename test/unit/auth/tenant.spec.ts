@@ -20,7 +20,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { EmailSignInConfig, MultiFactorAuthConfig } from '../../../src/auth/auth-config';
+import { EmailSignInConfig, MultiFactorAuthConfig, RecaptchaAuthConfig,
+  PasswordPolicyAuthServerConfig, PasswordPolicyConfig,
+} from '../../../src/auth/auth-config';
 import { TenantServerResponse } from '../../../src/auth/tenant';
 import {
   CreateTenantRequest, UpdateTenantRequest, EmailSignInProviderConfig, Tenant,
@@ -45,6 +47,36 @@ describe('Tenant', () => {
     },
   };
 
+  const passwordPolicyClientConfig: PasswordPolicyConfig = {
+    enforcementState: 'ENFORCE',
+    forceUpgradeOnSignin: true,
+    constraints: {
+      requireLowercase: true,
+      requireUppercase: true,
+      requireNonAlphanumeric: true,
+      requireNumeric: true,
+      minLength: 8,
+      maxLength: 30,
+    }
+  };
+
+  const passwordPolicyServerConfig: PasswordPolicyAuthServerConfig = {
+    passwordPolicyEnforcementState: 'ENFORCE',
+    forceUpgradeOnSignin: true,
+    passwordPolicyVersions: [
+      {
+        customStrengthOptions: {
+          containsLowercaseCharacter: true,
+          containsNonAlphanumericCharacter: true,
+          containsNumericCharacter: true,
+          containsUppercaseCharacter: true,
+          minPasswordLength: 8,
+          maxPasswordLength: 30,
+        },
+      },
+    ],
+  };
+
   const serverRequest: TenantServerResponse = {
     name: 'projects/project1/tenants/TENANT-ID',
     displayName: 'TENANT-DISPLAY-NAME',
@@ -53,15 +85,79 @@ describe('Tenant', () => {
     mfaConfig: {
       state: 'ENABLED',
       enabledProviders: ['PHONE_SMS'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
     },
     testPhoneNumbers: {
       '+16505551234': '019287',
       '+16505550676': '985235',
     },
     smsRegionConfig: smsAllowByDefault,
+    passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
   };
 
   const clientRequest: UpdateTenantRequest = {
+    displayName: 'TENANT-DISPLAY-NAME',
+    emailSignInConfig: {
+      enabled: true,
+      passwordRequired: false,
+    },
+    multiFactorConfig: {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    },
+    testPhoneNumbers: {
+      '+16505551234': '019287',
+      '+16505550676': '985235',
+    },
+    smsRegionConfig: smsAllowByDefault,
+    passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
+  };
+
+  const serverRequestWithoutMfa: TenantServerResponse = {
+    name: 'projects/project1/tenants/TENANT-ID',
+    displayName: 'TENANT-DISPLAY-NAME',
+    allowPasswordSignup: true,
+    enableEmailLinkSignin: true,
+    passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
+  };
+
+  const clientRequestWithoutMfa: UpdateTenantRequest = {
+    displayName: 'TENANT-DISPLAY-NAME',
+    emailSignInConfig: {
+      enabled: true,
+      passwordRequired: false,
+    },
+    passwordPolicyConfig: passwordPolicyClientConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
+    },
+  };
+
+  const clientRequestWithRecaptcha: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -75,21 +171,53 @@ describe('Tenant', () => {
       '+16505551234': '019287',
       '+16505550676': '985235',
     },
-    smsRegionConfig: smsAllowByDefault,
+    recaptchaConfig: {
+      managedRules: [{
+        endScore: 0.2,
+        action: 'BLOCK'
+      }],
+      emailPasswordEnforcementState: 'AUDIT',
+      useAccountDefender: true,
+    },
   };
 
-  const serverRequestWithoutMfa: TenantServerResponse = {
+  const serverResponseWithRecaptcha: TenantServerResponse = {
     name: 'projects/project1/tenants/TENANT-ID',
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
-  };
-
-  const clientRequestWithoutMfa: UpdateTenantRequest = {
-    displayName: 'TENANT-DISPLAY-NAME',
-    emailSignInConfig: {
-      enabled: true,
-      passwordRequired: false,
+    mfaConfig: {
+      state: 'ENABLED',
+      enabledProviders: ['PHONE_SMS'],
+      providerConfigs: [
+        {
+          state: 'ENABLED',
+          totpProviderConfig: {
+            adjacentIntervals: 5,
+          },
+        },
+      ],
+    },
+    testPhoneNumbers: {
+      '+16505551234': '019287',
+      '+16505550676': '985235',
+    },
+    recaptchaConfig: {
+      emailPasswordEnforcementState: 'AUDIT',
+      managedRules: [ {
+        endScore: 0.2,
+        action: 'BLOCK'
+      } ],
+      recaptchaKeys: [ {
+        type: 'WEB',
+        key: 'test-key-1' }
+      ],
+      useAccountDefender: true,
+    },
+    smsRegionConfig: smsAllowByDefault,
+    passwordPolicyConfig: passwordPolicyServerConfig,
+    emailPrivacyConfig: {
+      enableImprovedEmailPrivacy: true,
     },
   };
 
@@ -105,7 +233,7 @@ describe('Tenant', () => {
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
-      it('should return the expected server request with multi-factor and phone config', () => {
+      it('should return the expected server request with multi-factor (SMS, TOTP) and testPhoneNumber config', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         delete (tenantOptionsServerRequest as any).name;
@@ -134,6 +262,73 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".');
+      });
+
+      it('should throw on null RecaptchaConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid RecaptchaConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid RecaptchaConfig parameter.');
+      });
+
+      it('should throw on null emailPasswordEnforcementState attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.emailPasswordEnforcementState = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be a valid non-empty string.');
+      });
+
+      it('should throw on invalid emailPasswordEnforcementState attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig
+          .emailPasswordEnforcementState = 'INVALID';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
+      });
+
+      it('should throw on non-array managedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = 'non-array';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
+      });
+
+      it('should throw on non-boolean useAccountDefender attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = 'yes';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+      });
+
+      it('should throw on invalid managedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules =
+        [{ 'score': 0.1, 'action': 'BLOCK' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"score" is not a valid RecaptchaManagedRule parameter.');
+      });
+
+      it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules =
+        [{ 'endScore': 0.1, 'action': 'ALLOW' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
@@ -213,8 +408,184 @@ describe('Tenant', () => {
         }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
       });
 
+      it('should throw on null PasswordPolicyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid PasswordPolicyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.invalidParameter = 'invalid',
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig parameter.');
+      });
+
+      it('should throw on missing enforcementState', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        delete tenantOptionsClientRequest.passwordPolicyConfig.enforcementState;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
+      });
+
+      it('should throw on invalid enforcementState', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.enforcementState = 'INVALID_STATE';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
+      });
+
+      it('should throw on invalid forceUpgradeOnSignin', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.forceUpgradeOnSignin = 'INVALID';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.');
+      });
+
+      it('should throw on undefined constraints when state is enforced', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        delete tenantOptionsClientRequest.passwordPolicyConfig.constraints;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
+      });
+      
+      it('should throw on invalid constraints attribute', ()=> {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.constraints parameter.');
+      });
+
+      it('should throw on null constraints object', ()=> {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
+      });
+
+      it('should throw on invalid constraints object', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
+      });
+
+      it('should throw on invalid uppercase type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireUppercase = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireUppercase"' +
+         ' must be a boolean.');
+      });
+
+      it('should throw on invalid lowercase type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireLowercase = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireLowercase"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid numeric type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNumeric = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireNumeric"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid non-alphanumeric type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNonAlphanumeric = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid minLength type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength" must be a number.');
+      });
+
+      it('should throw on invalid maxLength type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength" must be a number.');
+      });
+
+      it('should throw on invalid minLength range', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
+        ' must be an integer between 6 and 30, inclusive.');
+      });
+
+      it('should throw on invalid maxLength range', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 5000;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
+        ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw if minLength is greater than maxLength', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 20;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 7;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
+        ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
+      });
+
       it('should not throw on valid client request object', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest);
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha);
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).not.to.throw;
@@ -276,12 +647,82 @@ describe('Tenant', () => {
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
 
-      it('should throw on invalid MultiFactorConfig attribute', () => {
+      it('should throw on invalid MultiFactorConfig.factorIds attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.multiFactorConfig.factorIds = ['invalid'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"invalid" is not a valid "AuthFactorType".',);
+      });
+
+      it('should throw on null RecaptchaConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid RecaptchaConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid RecaptchaConfig parameter.');
+      });
+
+      it('should throw on null emailPasswordEnforcementState attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.emailPasswordEnforcementState = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be a valid non-empty string.');
+      });
+
+      it('should throw on invalid emailPasswordEnforcementState attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig
+          .emailPasswordEnforcementState = 'INVALID';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
+      });
+
+      it('should throw on non-array managedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = 'non-array';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
+      });
+
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it('should throw on non-boolean useAccountDefender attribute', () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
+      });
+
+      it('should throw on invalid managedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules =
+        [{ 'score': 0.1, 'action': 'BLOCK' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"score" is not a valid RecaptchaManagedRule parameter.');
+      });
+
+      it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.managedRules =
+        [{ 'endScore': 0.1, 'action': 'ALLOW' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
@@ -362,6 +803,182 @@ describe('Tenant', () => {
         }).to.throw('SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.');
       });
 
+      it('should throw on null PasswordPolicyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid PasswordPolicyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.invalidParameter = 'invalid',
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig parameter.');
+      });
+
+      it('should throw on missing enforcementState', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        delete tenantOptionsClientRequest.passwordPolicyConfig.enforcementState;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
+      });
+
+      it('should throw on invalid enforcementState', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.enforcementState = 'INVALID_STATE';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
+      });
+
+      it('should throw on invalid forceUpgradeOnSignin', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.forceUpgradeOnSignin = 'INVALID';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.');
+      });
+
+      it('should throw on undefined constraints when state is enforced', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        delete tenantOptionsClientRequest.passwordPolicyConfig.constraints;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
+      });
+      
+      it('should throw on invalid constraints attribute', ()=> {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.constraints parameter.');
+      });
+
+      it('should throw on null constraints object', ()=> {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
+      });
+
+      it('should throw on invalid constraints object', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
+      });
+
+      it('should throw on invalid uppercase type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireUppercase = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireUppercase"' +
+         ' must be a boolean.');
+      });
+
+      it('should throw on invalid lowercase type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireLowercase = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireLowercase"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid numeric type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNumeric = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireNumeric"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid non-alphanumeric type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNonAlphanumeric = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
+        ' must be a boolean.');
+      });
+
+      it('should throw on invalid minLength type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength" must be a number.');
+      });
+
+      it('should throw on invalid maxLength type', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength" must be a number.');
+      });
+
+      it('should throw on invalid minLength range', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
+        ' must be an integer between 6 and 30, inclusive.');
+      });
+
+      it('should throw on invalid maxLength range', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 5000;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
+        ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw if minLength is greater than maxLength', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 20;
+        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 7;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
+        ' must be greater than or equal to minLength and at max 4096.');
+      });
+
+      it('should throw on null EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig = null;
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid EmailPrivacyConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.invalidParameter = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalidParameter" is not a valid "EmailPrivacyConfig" parameter.');
+      });
+
+      it('should throw on invalid enableImprovedEmailPrivacy attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailPrivacyConfig.enableImprovedEmailPrivacy = [];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
+      });
+
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
@@ -435,8 +1052,35 @@ describe('Tenant', () => {
       const expectedMultiFactorConfig = new MultiFactorAuthConfig({
         state: 'ENABLED',
         enabledProviders: ['PHONE_SMS'],
+        providerConfigs: [
+          {
+            state: 'ENABLED',
+            totpProviderConfig: {
+              adjacentIntervals: 5,
+            },
+          },
+        ],
       });
       expect(tenant.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
+    });
+
+    it('should set readonly property recaptchaConfig', () => {
+      const serverRequestWithRecaptchaCopy: TenantServerResponse =
+       deepCopy(serverResponseWithRecaptcha);
+      const tenantWithRecaptcha = new Tenant(serverRequestWithRecaptchaCopy);
+      const expectedRecaptchaConfig = new RecaptchaAuthConfig({
+        emailPasswordEnforcementState: 'AUDIT',
+        managedRules: [{
+          endScore: 0.2,
+          action: 'BLOCK'
+        }],
+        recaptchaKeys: [ {
+          type: 'WEB',
+          key: 'test-key-1' }
+        ],
+        useAccountDefender: true,
+      });
+      expect(tenantWithRecaptcha.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
     });
 
     it('should set readonly property testPhoneNumbers', () => {
@@ -447,6 +1091,18 @@ describe('Tenant', () => {
     it('should set readonly property smsRegionConfig', () => {
       expect(tenant.smsRegionConfig).to.deep.equal(
         deepCopy(clientRequest.smsRegionConfig));
+    });
+
+    it('should set readonly property passwordPolicyConfig', () => {
+      expect(tenant.passwordPolicyConfig).to.deep.equal(
+        deepCopy(clientRequest.passwordPolicyConfig));
+    });
+
+    it('should set readonly property emailPrivacyConfig', () => {
+      const expectedEmailPrivacyConfig = {
+        enableImprovedEmailPrivacy: true,
+      };
+      expect(clientRequest.emailPrivacyConfig).to.deep.equal(expectedEmailPrivacyConfig);
     });
 
     it('should throw when no tenant ID is provided', () => {
@@ -475,7 +1131,7 @@ describe('Tenant', () => {
   });
 
   describe('toJSON()', () => {
-    const serverRequestCopy: TenantServerResponse = deepCopy(serverRequest);
+    const serverRequestCopy: TenantServerResponse = deepCopy(serverResponseWithRecaptcha);
     it('should return the expected object representation of a tenant', () => {
       expect(new Tenant(serverRequestCopy).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
@@ -488,15 +1144,20 @@ describe('Tenant', () => {
         multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
         smsRegionConfig: deepCopy(clientRequest.smsRegionConfig),
+        recaptchaConfig: deepCopy(serverResponseWithRecaptcha.recaptchaConfig),
+        passwordPolicyConfig: deepCopy(clientRequest.passwordPolicyConfig),
+        emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
       });
     });
 
     it('should not populate optional fields if not available', () => {
-      const serverRequestCopyWithoutMfa: TenantServerResponse = deepCopy(serverRequest);
+      const serverRequestCopyWithoutMfa: TenantServerResponse = deepCopy(serverResponseWithRecaptcha);
       delete serverRequestCopyWithoutMfa.mfaConfig;
       delete serverRequestCopyWithoutMfa.testPhoneNumbers;
       delete serverRequestCopyWithoutMfa.smsRegionConfig;
-
+      delete serverRequestCopyWithoutMfa.recaptchaConfig;
+      delete serverRequestCopyWithoutMfa.passwordPolicyConfig;
+      delete serverRequestCopyWithoutMfa.emailPrivacyConfig;
       expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
         displayName: 'TENANT-DISPLAY-NAME',

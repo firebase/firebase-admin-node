@@ -97,6 +97,34 @@ export class FirebaseMessagingRequestHandler {
   }
 
   /**
+   * Invokes the request handler with the provided request data.
+   *
+   * @param host - The host to which to send the request.
+   * @param path - The path to which to send the request.
+   * @param requestData - The request data.
+   * @returns A promise that resolves with the {@link SendResponse}.
+   */
+  public invokeRequestHandlerForSendResponse(host: string, path: string, requestData: object): Promise<SendResponse> {
+    const request: HttpRequestConfig = {
+      method: FIREBASE_MESSAGING_HTTP_METHOD,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+    };
+    return this.httpClient.send(request).then((response) => {
+      return this.buildSendResponse(response);
+    })
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          return this.buildSendResponseFromError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
+      });
+  }
+
+  /**
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
    * a BatchResponse object.
    *
@@ -135,5 +163,12 @@ export class FirebaseMessagingRequestHandler {
       result.error = createFirebaseError(new HttpError(response));
     }
     return result;
+  }
+
+  private buildSendResponseFromError(err: HttpError): SendResponse {
+    return {
+      success: false,
+      error: createFirebaseError(err)
+    };
   }
 }

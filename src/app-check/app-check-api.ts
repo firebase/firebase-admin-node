@@ -42,6 +42,29 @@ export interface AppCheckTokenOptions {
 }
 
 /**
+ * Interface representing options for the {@link AppCheck.verifyToken} method.
+ */
+export interface VerifyAppCheckTokenOptions {
+  /**
+   * To use the replay protection feature, set this to `true`. The {@link AppCheck.verifyToken}
+   * method will mark the token as consumed after verifying it.
+   * 
+   * Tokens that are found to be already consumed will be marked as such in the response.
+   * 
+   * Tokens are only considered to be consumed if it is sent to App Check backend by calling the
+   * {@link AppCheck.verifyToken} method with this field set to `true`; other uses of the token
+   * do not consume it.
+   * 
+   * This replay protection feature requires an additional network call to the App Check backend
+   * and forces your clients to obtain a fresh attestation from your chosen attestation providers.
+   * This can therefore negatively impact performance and can potentially deplete your attestation
+   * providers' quotas faster. We recommend that you use this feature only for protecting
+   * low volume, security critical, or expensive operations.
+   */
+  consume?: boolean;
+}
+
+/**
  * Interface representing a decoded Firebase App Check token, returned from the
  * {@link AppCheck.verifyToken} method.
  */
@@ -102,4 +125,17 @@ export interface VerifyAppCheckTokenResponse {
    * The decoded Firebase App Check token.
    */
   token: DecodedAppCheckToken;
+
+  /**
+   * Indicates weather this token was already consumed.
+   * If this is the first time {@link AppCheck.verifyToken} method has seen this token,
+   * this field will contain the value `false`. The given token will then be
+   * marked as `already_consumed` for all future invocations of this {@link AppCheck.verifyToken}
+   * method for this token.
+   * 
+   * When this field is `true`, the caller is attempting to reuse a previously consumed token.
+   * You should take precautions against such a caller; for example, you can take actions such as
+   * rejecting the request or ask the caller to pass additional layers of security checks.
+   */
+  alreadyConsumed?: boolean;
 }

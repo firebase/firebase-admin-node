@@ -57,11 +57,11 @@ export namespace appCheck {
     // Warning: (ae-forgotten-export) The symbol "AppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type AppCheckToken = AppCheckToken;
     // Warning: (ae-forgotten-export) The symbol "AppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
-    //
-    // (undocumented)
     export type AppCheckTokenOptions = AppCheckTokenOptions;
     // Warning: (ae-forgotten-export) The symbol "DecodedAppCheckToken" needs to be exported by the entry point default-namespace.d.ts
     export type DecodedAppCheckToken = DecodedAppCheckToken;
+    // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenOptions" needs to be exported by the entry point default-namespace.d.ts
+    export type VerifyAppCheckTokenOptions = VerifyAppCheckTokenOptions;
     // Warning: (ae-forgotten-export) The symbol "VerifyAppCheckTokenResponse" needs to be exported by the entry point default-namespace.d.ts
     export type VerifyAppCheckTokenResponse = VerifyAppCheckTokenResponse;
 }
@@ -243,6 +243,13 @@ export function firestore(app?: App): _firestore.Firestore;
 export namespace firestore {
     import v1beta1 = _firestore.v1beta1;
     import v1 = _firestore.v1;
+    import AggregateField = _firestore.AggregateField;
+    import AggregateFieldType = _firestore.AggregateFieldType;
+    import AggregateQuery = _firestore.AggregateQuery;
+    import AggregateQuerySnapshot = _firestore.AggregateQuerySnapshot;
+    import AggregateSpecData = _firestore.AggregateSpecData;
+    import AggregateSpec = _firestore.AggregateSpec;
+    import AggregateType = _firestore.AggregateType;
     import BulkWriter = _firestore.BulkWriter;
     import BulkWriterOptions = _firestore.BulkWriterOptions;
     import BundleBuilder = _firestore.BundleBuilder;
@@ -255,6 +262,7 @@ export namespace firestore {
     import DocumentSnapshot = _firestore.DocumentSnapshot;
     import FieldPath = _firestore.FieldPath;
     import FieldValue = _firestore.FieldValue;
+    import Filter = _firestore.Filter;
     import Firestore = _firestore.Firestore;
     import FirestoreDataConverter = _firestore.FirestoreDataConverter;
     import GeoPoint = _firestore.GeoPoint;
@@ -319,8 +327,6 @@ export function machineLearning(app?: App): machineLearning.MachineLearning;
 
 // @public (undocumented)
 export namespace machineLearning {
-    // Warning: (ae-forgotten-export) The symbol "AutoMLTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
-    export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
     // Warning: (ae-forgotten-export) The symbol "GcsTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
     export type GcsTfliteModelOptions = GcsTfliteModelOptions;
     // Warning: (ae-forgotten-export) The symbol "ListModelsOptions" needs to be exported by the entry point default-namespace.d.ts

@@ -103,7 +103,7 @@ describe('admin.appCheck', () => {
       return admin.appCheck().verifyToken(validToken.token)
         .then((verifedToken) => {
           expect(verifedToken).to.have.keys(['token', 'appId']);
-          expect(verifedToken.token).to.have.keys(['iss', 'sub', 'aud', 'exp', 'iat', 'app_id']);
+          expect(verifedToken.token).to.include.keys(['iss', 'sub', 'aud', 'exp', 'iat', 'app_id']);
           expect(verifedToken.token.app_id).to.be.a('string').and.equals(appId);
         });
     });
