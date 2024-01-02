@@ -196,7 +196,7 @@
     }
   },
   "dependencies": {
-    "@fastify/busboy": "^1.2.1",
+    "@fastify/busboy": "^2.1.0",
     "@firebase/database-compat": "^1.0.2",
     "@firebase/database-types": "^1.0.0",
     "@types/node": "^20.10.3",
