@@ -8,6 +8,13 @@
 
 import { AddPrefixToKeys } from '@google-cloud/firestore';
 import { Agent } from 'http';
+import { AggregateField } from '@google-cloud/firestore';
+import { AggregateFieldType } from '@google-cloud/firestore';
+import { AggregateQuery } from '@google-cloud/firestore';
+import { AggregateQuerySnapshot } from '@google-cloud/firestore';
+import { AggregateSpec } from '@google-cloud/firestore';
+import { AggregateSpecData } from '@google-cloud/firestore';
+import { AggregateType } from '@google-cloud/firestore';
 import { BulkWriter } from '@google-cloud/firestore';
 import { BulkWriterOptions } from '@google-cloud/firestore';
 import { BundleBuilder } from '@google-cloud/firestore';
@@ -52,6 +59,20 @@ import { WriteBatch } from '@google-cloud/firestore';
 import { WriteResult } from '@google-cloud/firestore';
 
 export { AddPrefixToKeys }
+
+export { AggregateField }
+
+export { AggregateFieldType }
+
+export { AggregateQuery }
+
+export { AggregateQuerySnapshot }
+
+export { AggregateSpec }
+
+export { AggregateSpecData }
+
+export { AggregateType }
 
 export { BulkWriter }
 
