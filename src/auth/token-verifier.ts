@@ -493,7 +493,7 @@ export class FirebaseTokenVerifier {
     audience: string | undefined): void {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
-    console.log("PAYLOAD= ", JSON.stringify(payload));
+
     const projectIdMatchMessage = ` Make sure the ${this.tokenInfo.shortName} comes from the same ` +
       'Firebase project as the service account used to authenticate this SDK.';
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
@@ -533,7 +533,7 @@ export class FirebaseTokenVerifier {
       if (typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
-        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + 
+        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` +
           verifyJwtTokenDocsMessage;
       } else if (payload.sub.length > 128) {
         errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
