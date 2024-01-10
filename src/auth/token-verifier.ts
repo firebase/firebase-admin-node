@@ -529,7 +529,8 @@ export class FirebaseTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
         `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
-    } else if (!(payload.event_type !== undefined && (payload.event_type === 'beforeSendSms' || payload.event_type === 'beforeSendEmail'))) {
+    } else if (!(payload.event_type !== undefined &&
+      (payload.event_type === 'beforeSendSms' || payload.event_type === 'beforeSendEmail'))) {
       if (typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
