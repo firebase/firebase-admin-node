@@ -40,12 +40,12 @@ jobs:
     # via the 'ref' client parameter.
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: 14.x
 
@@ -104,7 +104,7 @@ jobs:
 
     steps:
     - name: Checkout source for publish
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     # Download the artifacts created by the stage_release job.
     - name: Download release candidates
@@ -114,7 +114,7 @@ jobs:
 
     # Node.js and NPM are needed to complete the publish.
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: 14.x
 
