@@ -70,7 +70,7 @@ if [[ ! "${RELEASE_VERSION}" =~ ^([0-9]*)\.([0-9]*)\.([0-9]*)$ ]]; then
 fi
 
 echo_info "Extracted release version: ${RELEASE_VERSION}"
-echo "::set-output name=version::v${RELEASE_VERSION}"
+echo "version=v${RELEASE_VERSION}" >> $GITHUB_OUTPUT
 
 
 echo_info ""
@@ -132,7 +132,7 @@ if [[ -n "${EXISTING_TAG}" ]]; then
   echo_warn "  $ git tag -d v${RELEASE_VERSION}"
   echo_warn "  $ git push --delete origin v${RELEASE_VERSION}"
 
-  readonly RELEASE_URL="https://github.com/firebase/firebase-admin-node/releases/tag/v${RELEASE_VERSION}"
+  readonly RELEASE_URL="https://github.com/firebase/firebase-admin-python/releases/tag/v${RELEASE_VERSION}"
   echo_warn "Delete any corresponding releases at ${RELEASE_URL}."
   terminate
 fi
@@ -156,12 +156,13 @@ readonly CHANGELOG=`${CURRENT_DIR}/generate_changelog.sh`
 echo "$CHANGELOG"
 
 # Parse and preformat the text to handle multi-line output.
-# See https://github.community/t5/GitHub-Actions/set-output-Truncates-Multiline-Strings/td-p/37870
+# See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-of-a-multiline-string
+# and https://github.com/github/docs/issues/21529#issue-1418590935
 FILTERED_CHANGELOG=`echo "$CHANGELOG" | grep -v "\\[INFO\\]"` || true
-FILTERED_CHANGELOG="${FILTERED_CHANGELOG//'%'/'%25'}"
-FILTERED_CHANGELOG="${FILTERED_CHANGELOG//$'\n'/'%0A'}"
-FILTERED_CHANGELOG="${FILTERED_CHANGELOG//$'\r'/'%0D'}"
-echo "::set-output name=changelog::${FILTERED_CHANGELOG}"
+FILTERED_CHANGELOG="${FILTERED_CHANGELOG//$'\''/'"'}"
+echo "changelog<<CHANGELOGEOF" >> $GITHUB_OUTPUT
+echo -e "$FILTERED_CHANGELOG" >> $GITHUB_OUTPUT
+echo "CHANGELOGEOF" >> $GITHUB_OUTPUT
 
 
 echo ""
