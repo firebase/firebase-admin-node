@@ -132,7 +132,7 @@ if [[ -n "${EXISTING_TAG}" ]]; then
   echo_warn "  $ git tag -d v${RELEASE_VERSION}"
   echo_warn "  $ git push --delete origin v${RELEASE_VERSION}"
 
-  readonly RELEASE_URL="https://github.com/firebase/firebase-admin-python/releases/tag/v${RELEASE_VERSION}"
+  readonly RELEASE_URL="https://github.com/firebase/firebase-admin-node/releases/tag/v${RELEASE_VERSION}"
   echo_warn "Delete any corresponding releases at ${RELEASE_URL}."
   terminate
 fi
