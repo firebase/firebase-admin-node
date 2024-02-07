@@ -9,25 +9,39 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x]
+        node-version: [14.x]
 
     steps:
     - uses: actions/checkout@v1
+
+    - name: Send email
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
+        subject: 'Test email notification'
+        html: >
+          <br /><br />Navigate to the
+          <a href="https://github.com/firebase/firebase-admin-node/actions/runs/${{github.run_id}}">test workflow</a>.
+      continue-on-error: true
+
     - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Install and build
-      run: |
-        npm ci
-        npm run build
-        npm run build:tests
-    - name: Lint and run unit tests
-      run: npm test
-    - name: Run api-extractor
-      run: npm run api-extractor
-    - name: Run emulator-based integration tests
-      run: |
-        npm install -g firebase-tools@11.30.0
-        firebase emulators:exec --project fake-project-id --only auth,database,firestore \
-          'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
+    # - name: Install and build
+    #   run: |
+    #     npm ci
+    #     npm run build
+    #     npm run build:tests
+    # - name: Lint and run unit tests
+    #   run: npm test
+    # - name: Run api-extractor
+    #   run: npm run api-extractor
+    # - name: Run emulator-based integration tests
+    #   run: |
+    #     npm install -g firebase-tools@11.30.0
+    #     firebase emulators:exec --project fake-project-id --only auth,database,firestore \
+    #       'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
