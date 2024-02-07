@@ -102,4 +102,13 @@ export class TaskQueue<Args = Record<string, any>> {
   public enqueue(data: Args, opts?: TaskOptions): Promise<void> {
     return this.client.enqueue(data, this.functionName, this.extensionId, opts);
   }
+
+  /**
+   * Deletes an enqueued task if it has not yet completed.
+   * @param id - the ID of the task, relative to this queue.
+   * @returns A promise that resolves when the task has been deleted.
+   */
+  public delete(id: string): Promise<void> {
+    return this.client.delete(id, this.functionName, this.extensionId);
+  }
 }

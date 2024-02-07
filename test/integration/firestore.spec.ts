@@ -110,6 +110,10 @@ describe('admin.firestore', () => {
     expect(typeof admin.firestore.FieldValue).to.be.not.undefined;
   });
 
+  it('admin.firestore.Filter type is defined', () => {
+    expect(typeof admin.firestore.Filter).to.be.not.undefined;
+  });
+
   it('admin.firestore.GeoPoint type is defined', () => {
     expect(typeof admin.firestore.GeoPoint).to.be.not.undefined;
   });

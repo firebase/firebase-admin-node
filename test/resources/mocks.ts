@@ -104,8 +104,8 @@ export class MockComputeEngineCredential extends ComputeEngineCredential {
   }
 }
 
-export function app(): FirebaseApp {
-  return new FirebaseApp(appOptions, appName);
+export function app(altName?: string): FirebaseApp {
+  return new FirebaseApp(appOptions, altName || appName);
 }
 
 export function mockCredentialApp(): FirebaseApp {
