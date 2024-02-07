@@ -40,5 +40,5 @@ inputs:
     description: HTML body of the message.
     required: false
 runs:
-  using: 'node20'
+  using: 'node12'
   main: 'dist/index.js'
