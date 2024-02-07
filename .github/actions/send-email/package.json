@@ -1,6 +1,6 @@
 {
   "name": "send-email",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Send Emails from GitHub Actions workflows using Mailgun.",
   "main": "index.js",
   "scripts": {
@@ -18,6 +18,6 @@
     "mailgun.js": "^3.3.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.1"
+    "@zeit/ncc": "^0.21.1"
   }
 }
