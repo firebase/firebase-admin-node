@@ -13,6 +13,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+
+    - name: Send email
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
+        subject: 'Test email notification'
+        html: >
+          <br /><br />Navigate to the
+          <a href="https://github.com/firebase/firebase-admin-node/actions/runs/${{github.run_id}}">test workflow</a>.
+      continue-on-error: true
+
     - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
