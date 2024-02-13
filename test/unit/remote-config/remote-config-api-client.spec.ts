@@ -668,7 +668,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    // // tests for api response validations
+    // tests for api response validations
     runEtagHeaderTests(() => apiClient.getServerTemplate());
     runErrorResponseTests(() => apiClient.getServerTemplate());
 
@@ -685,7 +685,7 @@ describe('RemoteConfigApiClient', () => {
           expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
-            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/templates/server',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/serverRemoteConfig',
             headers: EXPECTED_HEADERS,
           });
         });

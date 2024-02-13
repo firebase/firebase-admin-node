@@ -177,7 +177,7 @@ export class RemoteConfigApiClient {
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
-          url: `${url}/templates/server`,
+          url: `${url}/namespaces/firebase-server/serverRemoteConfig`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS
         };
         return this.httpClient.send(request);
