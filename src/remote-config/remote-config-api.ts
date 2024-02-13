@@ -55,6 +55,27 @@ export interface RemoteConfigCondition {
 }
 
 /**
+ * Interface representing a Remote Config condition in the data-plane.
+ * A condition targets a specific group of users. A list of these conditions make up
+ * part of a Remote Config template.
+ */
+export interface RemoteConfigServerCondition {
+
+  /**
+   * A non-empty and unique name of this condition.
+   */
+  name: string;
+
+  /**
+   * The logic of this condition.
+   * See the documentation on
+   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
+   * for the expected syntax of this field.
+   */
+  expression: string;
+}
+
+/**
  * Interface representing an explicit parameter value.
  */
 export interface ExplicitParameterValue {
@@ -135,7 +156,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 /**
- * Interface representing a Remote Config template.
+ * Interface representing a Remote Config client template.
  */
 export interface RemoteConfigTemplate {
   /**
@@ -165,6 +186,58 @@ export interface RemoteConfigTemplate {
    * Version information for the current Remote Config template.
    */
   version?: Version;
+}
+
+/**
+ * Interface representing the template data returned by the Remote Config API in the data-plane.
+ */
+export interface RemoteConfigServerTemplateData {
+  /**
+   * A list of conditions in descending order by priority.
+   */
+  conditions: RemoteConfigServerCondition[];
+
+  /**
+   * Map of parameter keys to their optional default values and optional conditional values.
+   */
+  parameters: { [key: string]: RemoteConfigParameter };
+
+  /**
+   * ETag of the current Remote Config template (readonly).
+   */
+  readonly etag: string;
+
+  /**
+   * Version information for the current Remote Config template.
+   */
+  version?: Version;
+}
+
+/**
+ * Interface representing non-API data for the Remote Config template in the data-plane.
+ */
+export interface RemoteConfigServerTemplate {
+
+  /**
+   * Cached {@link RemoteConfigServerTemplateData}
+   */
+  cache: RemoteConfigServerTemplateData;
+
+  /**
+   * A {@link RemoteConfigServerConfig} containing default values for Config
+   */
+  defaultConfig: RemoteConfigServerConfig;
+
+  /**
+   * Evaluates the current template to produce a {@link RemoteConfigServerConfig}
+   */
+  evaluate(): RemoteConfigServerConfig;
+
+  /**
+   * Fetches and caches the current active version of the 
+   * {@link RemoteConfigServerTemplate} of the project.
+   */
+  load(): Promise<void>;
 }
 
 /**
@@ -289,3 +362,8 @@ export interface ListVersionsOptions {
    */
   endTime?: Date | string;
 }
+
+/**
+ * Defines the type for the configuration produced by evaluating a server template.
+ */
+export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }
