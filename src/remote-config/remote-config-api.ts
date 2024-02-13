@@ -189,7 +189,7 @@ export interface RemoteConfigTemplate {
 }
 
 /**
- * Interface representing the template data returned by the Remote Config API in the data-plane.
+ * Interface representing the data in a Remote Config server template.
  */
 export interface RemoteConfigServerTemplateData {
   /**
@@ -214,7 +214,7 @@ export interface RemoteConfigServerTemplateData {
 }
 
 /**
- * Interface representing non-API data for the Remote Config template in the data-plane.
+ * Interface representing a stateful abstraction for a Remote Config server template.
  */
 export interface RemoteConfigServerTemplate {
 
@@ -234,7 +234,7 @@ export interface RemoteConfigServerTemplate {
   evaluate(): RemoteConfigServerConfig;
 
   /**
-   * Fetches and caches the current active version of the 
+   * Fetches and caches the current active version of the
    * {@link RemoteConfigServerTemplate} of the project.
    */
   load(): Promise<void>;
@@ -364,6 +364,6 @@ export interface ListVersionsOptions {
 }
 
 /**
- * Defines the type for the configuration produced by evaluating a server template.
+ * Type representing the configuration produced by evaluating a server template.
  */
 export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }
