@@ -23,9 +23,15 @@ import {
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,
+  RemoteConfigServerTemplate,
   RemoteConfigTemplate,
   RemoteConfigUser,
   Version,
+  ExplicitParameterValue,
+  InAppDefaultValue,
+  ParameterValueType,
+  RemoteConfigServerConfig,
+  RemoteConfigServerTemplateData
 } from './remote-config-api';
 
 /**
@@ -34,6 +40,12 @@ import {
 export class RemoteConfig {
 
   private readonly client: RemoteConfigApiClient;
+
+  /**
+   * An in-memory cache for the {@link RemoteConfigServerTemplate} of the project.
+   */
+  public cachedServerTemplate: RemoteConfigServerTemplate;
+
 
   /**
    * @param app - The app for this RemoteConfig service.
@@ -168,6 +180,33 @@ export class RemoteConfig {
 
     return new RemoteConfigTemplateImpl(template);
   }
+
+  /**
+   * Instantiates {@link RemoteConfigServerTemplate} and then fetches and caches the latest
+   * template version of the project.
+   */
+  public async getServerTemplate(options?: {
+    defaultConfig?: RemoteConfigServerConfig,
+    template?: RemoteConfigServerTemplateData,
+  }): Promise<RemoteConfigServerTemplate> {
+    const template = this.initServerTemplate(options);
+    await template.load();
+    return template;
+  }
+
+  /**
+   * Synchronously instantiates {@link RemoteConfigServerTemplate}.
+   */
+  public initServerTemplate(options?: {
+    defaultConfig?: RemoteConfigServerConfig,
+    template?: RemoteConfigServerTemplateData,
+  }): RemoteConfigServerTemplate {
+    const template = new RemoteConfigServerTemplateImpl(this.client, options?.defaultConfig);
+    if (options?.template) {
+      template.cache = options?.template;
+    }
+    return template;
+  }
 }
 
 /**
@@ -250,6 +289,143 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       parameterGroups: this.parameterGroups,
       etag: this.etag,
       version: this.version,
+    }
+  }
+}
+
+/**
+ * Remote Config data-plane template data implementation.
+ */
+class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
+  public cache: RemoteConfigServerTemplateData;
+
+  constructor(
+    private readonly apiClient: RemoteConfigApiClient,
+    public readonly defaultConfig: RemoteConfigServerConfig = {}
+  ) { }
+
+  /**
+   * Fetches and caches the current active version of the {@link RemoteConfigServerTemplate} of the project.
+   */
+  public load(): Promise<void> {
+    return this.apiClient.getServerTemplate()
+      .then((template) => {
+        this.cache = new RemoteConfigServerTemplateDataImpl(template);
+      });
+  }
+
+  /**
+   * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}
+   */
+  public evaluate(): RemoteConfigServerConfig {
+    if (!this.cache) {
+      throw new FirebaseRemoteConfigError(
+        'failed-precondition',
+        'No Remote Config Server template in cache. Call load() before calling evaluate().');
+    }
+
+    const renderedConfig: RemoteConfigServerConfig = {};
+
+    for (const [key, parameter] of Object.entries(this.cache.parameters)) {
+      const { defaultValue, valueType } = parameter;
+
+      if (!defaultValue) {
+        console.debug(`Filtering out parameter ${key} with no default value`);
+        continue;
+      }
+
+      if ((defaultValue as InAppDefaultValue).useInAppDefault) {
+        console.debug(`Filtering out parameter ${key} with "use in-app default" value`);
+        continue;
+      }
+
+      const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
+
+      renderedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
+    }
+
+    // Merges rendered config over default config.
+    const mergedConfig = Object.assign(this.defaultConfig, renderedConfig);
+
+    // Enables config to be a convenient object, but with the ability to perform additional
+    // functionality when a value is retrieved.
+    const proxyHandler = {
+      get(target: RemoteConfigServerConfig, prop: string) {
+        return target[prop];
+      }
+    };
+
+    return new Proxy(mergedConfig, proxyHandler);
+  }
+
+  /**
+   * Private helper method to process and parse a parameter value based on {@link ParameterValueType}
+   */
+  private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
+    parameterDefaultValue: string): string | number | boolean {
+    const BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
+    const DEFAULT_VALUE_FOR_NUMBER = 0;
+    const DEFAULT_VALUE_FOR_STRING = '';
+
+    if (parameterType === 'BOOLEAN') {
+      return BOOLEAN_TRUTHY_VALUES.indexOf(parameterDefaultValue) >= 0;
+    } else if (parameterType === 'NUMBER') {
+      const num = Number(parameterDefaultValue);
+      if (isNaN(num)) {
+        return DEFAULT_VALUE_FOR_NUMBER;
+      }
+      return num;
+    } else {
+      // Treat everything else as string
+      return parameterDefaultValue || DEFAULT_VALUE_FOR_STRING;
+    }
+  }
+}
+
+/**
+ * Remote Config data-plane template data implementation.
+ */
+class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
+  public parameters: { [key: string]: RemoteConfigParameter };
+  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+  public conditions: RemoteConfigCondition[];
+  public readonly etag: string;
+  public version?: Version;
+
+  constructor(template: RemoteConfigServerTemplateData) {
+    if (!validator.isNonNullObject(template) ||
+      !validator.isNonEmptyString(template.etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Invalid Remote Config template: ${JSON.stringify(template)}`);
+    }
+
+    this.etag = template.etag;
+
+    if (typeof template.parameters !== 'undefined') {
+      if (!validator.isNonNullObject(template.parameters)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Remote Config parameters must be a non-null object');
+      }
+      this.parameters = template.parameters;
+    } else {
+      this.parameters = {};
+    }
+
+    if (typeof template.conditions !== 'undefined') {
+      if (!validator.isArray(template.conditions)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Remote Config conditions must be an array');
+      }
+      this.conditions = template.conditions;
+    } else {
+      this.conditions = [];
+    }
+
+    if (typeof template.version !== 'undefined') {
+      this.version = new VersionImpl(template.version);
     }
   }
 }

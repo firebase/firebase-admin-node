@@ -23,6 +23,7 @@ import {
   RemoteConfigCondition,
   RemoteConfigTemplate,
 } from '../../lib/remote-config/index';
+import { RemoteConfigServerTemplate } from '../../src/remote-config/remote-config-api';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -285,6 +286,64 @@ describe('admin.remoteConfig', () => {
       expect(newTemplate.conditions).to.deep.equal(VALID_CONDITIONS);
       expect(newTemplate.parameters).to.deep.equal(VALID_PARAMETERS);
       expect(newTemplate.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+    });
+  });
+
+  describe('getServerTemplate', () => {
+    it('should return the most recently published template', () => {
+      // TODO: use global mock data once there's a REST API for server templates.
+      // Until then, copy/paste this into test server.
+      const VALID_TEMPLATE = {
+        'conditions': [
+          {
+            'name': 'ios',
+            'expression': "device.os == 'ios'"
+          },
+          {
+            'name': 'android',
+            'expression': "device.os == 'android'"
+          }
+        ],
+        'etag': 'etag-123-456',
+        'parameters': {
+          'holiday_promo_enabled': {
+            'defaultValue': {
+              'useInAppDefault': true
+            },
+            'description': 'promo indicator',
+            'valueType': 'STRING'
+          },
+          'welcome_message': {
+            'conditionalValues': {
+              'android': {
+                'value': 'welcome android text'
+              },
+              'ios': {
+                'value': 'welcome ios text'
+              }
+            },
+            'defaultValue': {
+              'value': 'welcome text 1706578886883'
+            },
+            'valueType': 'STRING'
+          }
+        },
+        'version': {
+          'description': 'asd'
+        }
+      };
+
+      const rc = getRemoteConfig();
+
+      // Set FIREBASE_REMOTE_CONFIG_URL_BASE env var to point this at a local server,
+      // eg `FIREBASE_REMOTE_CONFIG_URL_BASE=http://localhost:3000 npm run integration`
+      // Note this applies to all RC endpoints, so filter to just this test if using a
+      // server that doesn't implement all endpoints.
+      return rc.getServerTemplate()
+        .then((template: RemoteConfigServerTemplate) => {
+          expect(template.cache).to.deep.equal(VALID_TEMPLATE);
+          expect(template.evaluate()).to.deep.equal({ welcome_message:'welcome text 1706578886883' });
+        });
     });
   });
 });
