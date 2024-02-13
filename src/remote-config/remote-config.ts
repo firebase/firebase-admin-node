@@ -42,12 +42,6 @@ export class RemoteConfig {
   private readonly client: RemoteConfigApiClient;
 
   /**
-   * An in-memory cache for the {@link RemoteConfigServerTemplate} of the project.
-   */
-  public cachedServerTemplate: RemoteConfigServerTemplate;
-
-
-  /**
    * @param app - The app for this RemoteConfig service.
    * @constructor
    * @internal
@@ -324,7 +318,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
         'No Remote Config Server template in cache. Call load() before calling evaluate().');
     }
 
-    const renderedConfig: RemoteConfigServerConfig = {};
+    const evaluatedConfig: RemoteConfigServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const { defaultValue, valueType } = parameter;
@@ -341,11 +335,11 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 
       const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
 
-      renderedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
+      evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
     }
 
     // Merges rendered config over default config.
-    const mergedConfig = Object.assign(this.defaultConfig, renderedConfig);
+    const mergedConfig = Object.assign(this.defaultConfig, evaluatedConfig);
 
     // Enables config to be a convenient object, but with the ability to perform additional
     // functionality when a value is retrieved.
