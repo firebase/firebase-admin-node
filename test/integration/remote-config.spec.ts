@@ -22,8 +22,10 @@ import {
   ParameterValueType,
   RemoteConfigCondition,
   RemoteConfigTemplate,
+  RemoteConfigServerConfig,
+  RemoteConfigServerTemplate,
+  RemoteConfigServerTemplateData
 } from '../../lib/remote-config/index';
-import { RemoteConfigServerTemplate } from '../../src/remote-config/remote-config-api';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -341,8 +343,14 @@ describe('admin.remoteConfig', () => {
       // server that doesn't implement all endpoints.
       return rc.getServerTemplate()
         .then((template: RemoteConfigServerTemplate) => {
-          expect(template.cache).to.deep.equal(VALID_TEMPLATE);
-          expect(template.evaluate()).to.deep.equal({ welcome_message:'welcome text 1706578886883' });
+          // Demonstrates explicit template data type usage.
+          const templateData: RemoteConfigServerTemplateData = template.cache;
+          expect(templateData).to.deep.equal(VALID_TEMPLATE);
+          // Demonstrates config type usage.
+          const config: RemoteConfigServerConfig = template.evaluate();
+          expect(config).to.deep.equal({
+            welcome_message: 'welcome text 1706578886883'
+          });
         });
     });
   });
