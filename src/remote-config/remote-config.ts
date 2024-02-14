@@ -31,7 +31,8 @@ import {
   InAppDefaultValue,
   ParameterValueType,
   RemoteConfigServerConfig,
-  RemoteConfigServerTemplateData
+  RemoteConfigServerTemplateData,
+  RemoteConfigServerTemplateOptions,
 } from './remote-config-api';
 
 /**
@@ -179,10 +180,7 @@ export class RemoteConfig {
    * Instantiates {@link RemoteConfigServerTemplate} and then fetches and caches the latest
    * template version of the project.
    */
-  public async getServerTemplate(options?: {
-    defaultConfig?: RemoteConfigServerConfig,
-    template?: RemoteConfigServerTemplateData,
-  }): Promise<RemoteConfigServerTemplate> {
+  public async getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate> {
     const template = this.initServerTemplate(options);
     await template.load();
     return template;
@@ -191,10 +189,7 @@ export class RemoteConfig {
   /**
    * Synchronously instantiates {@link RemoteConfigServerTemplate}.
    */
-  public initServerTemplate(options?: {
-    defaultConfig?: RemoteConfigServerConfig,
-    template?: RemoteConfigServerTemplateData,
-  }): RemoteConfigServerTemplate {
+  public initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate {
     const template = new RemoteConfigServerTemplateImpl(this.client, options?.defaultConfig);
     if (options?.template) {
       template.cache = options?.template;
