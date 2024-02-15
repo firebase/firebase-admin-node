@@ -337,7 +337,15 @@ describe('admin.remoteConfig', () => {
 
       const rc = getRemoteConfig();
 
-      // Set FIREBASE_REMOTE_CONFIG_URL_BASE env var to point this at a local server,
+      /**
+        * Set a `FIREBASE_REMOTE_CONFIG_URL_BASE` environment variable to direct
+        * template evaluation to a local server, for example:
+        * 
+        *     `FIREBASE_REMOTE_CONFIG_URL_BASE=http://localhost:3000 npm run integration`
+        * 
+        * Note that this applies to all Remote Config endpoints, so if you're using a
+        * server that doesn't implement all endpoints, filter for this specific test.
+        */
       // eg `FIREBASE_REMOTE_CONFIG_URL_BASE=http://localhost:3000 npm run integration`
       // Note this applies to all RC endpoints, so filter to just this test if using a
       // server that doesn't implement all endpoints.

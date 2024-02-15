@@ -214,7 +214,7 @@ export interface RemoteConfigServerTemplateData {
 }
 
 /**
- * Interface representing optional arguments for instantiating {@link RemoteConfigServerTemplate}.
+ * Represents optional arguments that can be used when instantiating {@link RemoteConfigServerTemplate}.
  */
 export interface RemoteConfigServerTemplateOptions {
   defaultConfig?: RemoteConfigServerConfig,

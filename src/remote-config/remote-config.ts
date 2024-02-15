@@ -283,7 +283,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 }
 
 /**
- * Remote Config data-plane template data implementation.
+ * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   public cache: RemoteConfigServerTemplateData;
@@ -294,7 +294,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   ) { }
 
   /**
-   * Fetches and caches the current active version of the {@link RemoteConfigServerTemplate} of the project.
+   * Fetches and caches the current active version of the project's {@link RemoteConfigServerTemplate}.
    */
   public load(): Promise<void> {
     return this.apiClient.getServerTemplate()
@@ -304,7 +304,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   /**
-   * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}
+   * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}.
    */
   public evaluate(): RemoteConfigServerConfig {
     if (!this.cache) {
@@ -348,7 +348,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   /**
-   * Private helper method to process and parse a parameter value based on {@link ParameterValueType}
+   * Private helper method that processes and parses a parameter value based on {@link ParameterValueType}.
    */
   private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
     parameterDefaultValue: string): string | number | boolean {
@@ -372,7 +372,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 }
 
 /**
- * Remote Config data-plane template data implementation.
+ * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
