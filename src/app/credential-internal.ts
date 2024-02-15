@@ -238,8 +238,8 @@ export class RefreshTokenCredential implements Credential {
     readonly implicit: boolean = false) {
 
     (typeof refreshTokenPathOrObject === 'string') ?
-      RefreshToken.fromPath(refreshTokenPathOrObject)
-      : new RefreshToken(refreshTokenPathOrObject);
+      RefreshToken.validateFromPath(refreshTokenPathOrObject)
+      : RefreshToken.validateFromJSON(refreshTokenPathOrObject);
   }
 
   private getGoogleAuth(): GoogleAuth {
@@ -261,18 +261,18 @@ export class RefreshTokenCredential implements Credential {
 
 class RefreshToken {
 
-  public readonly clientId: string;
-  public readonly clientSecret: string;
-  public readonly refreshToken: string;
-  public readonly type: string;
+  // public readonly clientId: string;
+  // public readonly clientSecret: string;
+  // public readonly refreshToken: string;
+  // public readonly type: string;
 
   /*
    * Tries to load a RefreshToken from a path. Throws if the path doesn't exist or the
    * data at the path is invalid.
    */
-  public static fromPath(filePath: string): RefreshToken {
+  public static validateFromPath(filePath: string): void {
     try {
-      return new RefreshToken(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+      RefreshToken.validateFromJSON(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -282,20 +282,20 @@ class RefreshToken {
     }
   }
 
-  constructor(json: object) {
-    copyAttr(this, json, 'clientId', 'client_id');
-    copyAttr(this, json, 'clientSecret', 'client_secret');
-    copyAttr(this, json, 'refreshToken', 'refresh_token');
-    copyAttr(this, json, 'type', 'type');
+  public static validateFromJSON(json: object): void {
+
+    const {
+      client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, type
+    } = (json as { [key: string]: any });
 
     let errorMessage;
-    if (!util.isNonEmptyString(this.clientId)) {
+    if (!util.isNonEmptyString(clientId)) {
       errorMessage = 'Refresh token must contain a "client_id" property.';
-    } else if (!util.isNonEmptyString(this.clientSecret)) {
+    } else if (!util.isNonEmptyString(clientSecret)) {
       errorMessage = 'Refresh token must contain a "client_secret" property.';
-    } else if (!util.isNonEmptyString(this.refreshToken)) {
+    } else if (!util.isNonEmptyString(refreshToken)) {
       errorMessage = 'Refresh token must contain a "refresh_token" property.';
-    } else if (!util.isNonEmptyString(this.type)) {
+    } else if (!util.isNonEmptyString(type)) {
       errorMessage = 'Refresh token must contain a "type" property.';
     }
 
@@ -329,8 +329,8 @@ export class ImpersonatedServiceAccountCredential implements Credential {
     readonly implicit: boolean = false) {
 
     (typeof impersonatedServiceAccountPathOrObject === 'string') ?
-      ImpersonatedServiceAccount.fromPath(impersonatedServiceAccountPathOrObject)
-      : new ImpersonatedServiceAccount(impersonatedServiceAccountPathOrObject);
+      ImpersonatedServiceAccount.validateFromPath(impersonatedServiceAccountPathOrObject)
+      : ImpersonatedServiceAccount.validateFromJSON(impersonatedServiceAccountPathOrObject);
   }
 
   private getGoogleAuth(): GoogleAuth {
@@ -351,22 +351,17 @@ export class ImpersonatedServiceAccountCredential implements Credential {
 }
 
 /**
- * A struct containing the properties necessary to use impersonated service account JSON credentials.
+ * A helper class to validate the properties necessary to use impersonated service account credentials.
  */
 class ImpersonatedServiceAccount {
-
-  public readonly clientId: string;
-  public readonly clientSecret: string;
-  public readonly refreshToken: string;
-  public readonly type: string;
 
   /*
    * Tries to load a ImpersonatedServiceAccount from a path. Throws if the path doesn't exist or the
    * data at the path is invalid.
    */
-  public static fromPath(filePath: string): ImpersonatedServiceAccount {
+  public static validateFromPath(filePath: string): void {
     try {
-      return new ImpersonatedServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+      ImpersonatedServiceAccount.validateFromJSON(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -376,23 +371,19 @@ class ImpersonatedServiceAccount {
     }
   }
 
-  constructor(json: object) {
-    const sourceCredentials = (json as { [key: string]: any })['source_credentials']
-    if (sourceCredentials) {
-      copyAttr(this, sourceCredentials, 'clientId', 'client_id');
-      copyAttr(this, sourceCredentials, 'clientSecret', 'client_secret');
-      copyAttr(this, sourceCredentials, 'refreshToken', 'refresh_token');
-      copyAttr(this, sourceCredentials, 'type', 'type');
-    }
+  public static validateFromJSON(json: object): void {
+    const {
+      client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, type
+    } = (json as { [key: string]: any })['source_credentials'];
 
     let errorMessage;
-    if (!util.isNonEmptyString(this.clientId)) {
+    if (!util.isNonEmptyString(clientId)) {
       errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_id" property.';
-    } else if (!util.isNonEmptyString(this.clientSecret)) {
+    } else if (!util.isNonEmptyString(clientSecret)) {
       errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_secret" property.';
-    } else if (!util.isNonEmptyString(this.refreshToken)) {
+    } else if (!util.isNonEmptyString(refreshToken)) {
       errorMessage = 'Impersonated Service Account must contain a "source_credentials.refresh_token" property.';
-    } else if (!util.isNonEmptyString(this.type)) {
+    } else if (!util.isNonEmptyString(type)) {
       errorMessage = 'Impersonated Service Account must contain a "source_credentials.type" property.';
     }
 
