@@ -746,7 +746,7 @@ describe('RemoteConfig', () => {
         stubs.push(stub);
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            // if parameters are not present in the response, we set it to an empty object.
+            // If parameters are not present in the response, we set it to an empty object.
             expect(template.cache.parameters).deep.equals({});
           });
       });
@@ -760,7 +760,7 @@ describe('RemoteConfig', () => {
         stubs.push(stub);
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            // if conditions are not present in the response, we set it to an empty array.
+            // If conditions are not present in the response, we set it to an empty array.
             expect(template.cache.conditions).deep.equals([]);
           });
       });
