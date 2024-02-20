@@ -55,7 +55,7 @@ export interface RemoteConfigCondition {
 }
 
 /**
- * Interface representing a Remote Config condition in the data-plane.
+ * Represents a Remote Config condition in the dataplane.
  * A condition targets a specific group of users. A list of these conditions make up
  * part of a Remote Config template.
  */
@@ -156,7 +156,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 /**
- * Interface representing a Remote Config client template.
+ * Represents a Remote Config client template.
  */
 export interface RemoteConfigTemplate {
   /**
@@ -189,7 +189,7 @@ export interface RemoteConfigTemplate {
 }
 
 /**
- * Interface representing the data in a Remote Config server template.
+ * Represents the data in a Remote Config server template.
  */
 export interface RemoteConfigServerTemplateData {
   /**
@@ -203,7 +203,7 @@ export interface RemoteConfigServerTemplateData {
   parameters: { [key: string]: RemoteConfigParameter };
 
   /**
-   * ETag of the current Remote Config template (readonly).
+   * Current Remote Config template ETag (read-only).
    */
   readonly etag: string;
 
@@ -222,28 +222,28 @@ export interface RemoteConfigServerTemplateOptions {
 }
 
 /**
- * Interface representing a stateful abstraction for a Remote Config server template.
+ * Represents a stateful abstraction for a Remote Config server template.
  */
 export interface RemoteConfigServerTemplate {
 
   /**
-   * Cached {@link RemoteConfigServerTemplateData}
+   * Cached {@link RemoteConfigServerTemplateData}.
    */
   cache: RemoteConfigServerTemplateData;
 
   /**
-   * A {@link RemoteConfigServerConfig} containing default values for Config
+   * A {@link RemoteConfigServerConfig} that contains default Config values.
    */
   defaultConfig: RemoteConfigServerConfig;
 
   /**
-   * Evaluates the current template to produce a {@link RemoteConfigServerConfig}
+   * Evaluates the current template to produce a {@link RemoteConfigServerConfig}.
    */
   evaluate(): RemoteConfigServerConfig;
 
   /**
    * Fetches and caches the current active version of the
-   * {@link RemoteConfigServerTemplate} of the project.
+   * project's {@link RemoteConfigServerTemplate}.
    */
   load(): Promise<void>;
 }
@@ -372,6 +372,6 @@ export interface ListVersionsOptions {
 }
 
 /**
- * Type representing the configuration produced by evaluating a server template.
+ * Represents the configuration produced by evaluating a server template.
  */
 export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }

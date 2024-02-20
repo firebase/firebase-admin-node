@@ -29,7 +29,10 @@ import {
 } from './remote-config-api';
 
 // Remote Config backend constants
-// Honors env param to enable URL override independent of binary change.
+/**
+  * Allows the `FIREBASE_REMOTE_CONFIG_URL_BASE` environment
+  * variable to override the default API endpoint URL.
+  */
 const FIREBASE_REMOTE_CONFIG_URL_BASE = process.env.FIREBASE_REMOTE_CONFIG_URL_BASE || 'https://firebaseremoteconfig.googleapis.com';
 const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
