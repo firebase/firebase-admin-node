@@ -36,7 +36,7 @@ import {
 } from '../../../src/app/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential
+  getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential, ApplicationDefaultCredential
 } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
@@ -332,7 +332,7 @@ describe('Credential', () => {
       const response = utils.responseFrom(expected);
       httpStub.resolves(response);
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal('anAccessToken');
         expect(token.expires_in).to.equal(42);
@@ -350,7 +350,7 @@ describe('Credential', () => {
       const response = utils.responseFrom(expected);
       httpStub.resolves(response);
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getIDToken('my-audience.cloudfunctions.net').then((token) => {
         expect(token).to.equal(expected);
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
@@ -367,7 +367,7 @@ describe('Credential', () => {
       const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getProjectId().then((projectId) => {
         expect(projectId).to.equal(expectedProjectId);
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
@@ -384,7 +384,7 @@ describe('Credential', () => {
       const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getProjectId()
         .then((projectId) => {
           expect(projectId).to.equal(expectedProjectId);
@@ -404,7 +404,7 @@ describe('Credential', () => {
     it('should reject when the metadata service is not available', () => {
       httpStub.rejects(new FirebaseAppError('network-error', 'Failed to connect'));
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getProjectId().should.eventually
         .rejectedWith('Failed to determine project ID: Failed to connect')
         .and.have.property('code', 'app/invalid-credential');
@@ -414,7 +414,7 @@ describe('Credential', () => {
       const response = utils.errorFrom('Unexpected error');
       httpStub.rejects(response);
 
-      const c = new ComputeEngineCredential();
+      const c = new ApplicationDefaultCredential();
       return c.getProjectId().should.eventually
         .rejectedWith('Failed to determine project ID: Unexpected error')
         .and.have.property('code', 'app/invalid-credential');
@@ -562,7 +562,7 @@ describe('Credential', () => {
     it('should return a MetadataServiceCredential as a last resort', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').throws(new Error('no gcloud credential file'));
-      expect(getApplicationDefault()).to.be.an.instanceof(ComputeEngineCredential);
+      expect(getApplicationDefault()).to.be.an.instanceof(ApplicationDefaultCredential);
     });
 
     it('should create access tokens', () => {
@@ -653,7 +653,7 @@ describe('Credential', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').throws(new Error('no gcloud credential file'));
       const c = getApplicationDefault();
-      expect(c).to.be.an.instanceof(ComputeEngineCredential);
+      expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
       expect(isApplicationDefault(c)).to.be.true;
     });
 
@@ -720,7 +720,7 @@ describe('Credential', () => {
 
     it('ComputeEngineCredential should use the provided HTTP Agent', () => {
       const agent = new Agent();
-      const c = new ComputeEngineCredential(agent);
+      const c = new ApplicationDefaultCredential(agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;

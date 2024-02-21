@@ -261,10 +261,10 @@ export class RefreshTokenCredential implements Credential {
 
 class RefreshToken {
 
-  // public readonly clientId: string;
-  // public readonly clientSecret: string;
-  // public readonly refreshToken: string;
-  // public readonly type: string;
+  public readonly clientId: string;
+  public readonly clientSecret: string;
+  public readonly refreshToken: string;
+  public readonly type: string;
 
   /*
    * Tries to load a RefreshToken from a path. Throws if the path doesn't exist or the
@@ -284,18 +284,21 @@ class RefreshToken {
 
   public static validateFromJSON(json: object): void {
 
-    const {
-      client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, type
-    } = (json as { [key: string]: any });
+    const creds = { clientId: '', clientSecret: '', refreshToken: '', type: '' };
+
+    copyAttr(creds, json, 'clientId', 'client_id');
+    copyAttr(creds, json, 'clientSecret', 'client_secret');
+    copyAttr(creds, json, 'refreshToken', 'refresh_token');
+    copyAttr(creds, json, 'type', 'type');
 
     let errorMessage;
-    if (!util.isNonEmptyString(clientId)) {
+    if (!util.isNonEmptyString(creds.clientId)) {
       errorMessage = 'Refresh token must contain a "client_id" property.';
-    } else if (!util.isNonEmptyString(clientSecret)) {
+    } else if (!util.isNonEmptyString(creds.clientSecret)) {
       errorMessage = 'Refresh token must contain a "client_secret" property.';
-    } else if (!util.isNonEmptyString(refreshToken)) {
+    } else if (!util.isNonEmptyString(creds.refreshToken)) {
       errorMessage = 'Refresh token must contain a "refresh_token" property.';
-    } else if (!util.isNonEmptyString(type)) {
+    } else if (!util.isNonEmptyString(creds.type)) {
       errorMessage = 'Refresh token must contain a "type" property.';
     }
 

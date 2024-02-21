@@ -26,11 +26,11 @@ import {
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { ComputeEngineCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { getSdkVersion } from '../../../src/utils/index';
+import { ApplicationDefaultCredential } from '../../../src/app/credential-internal';
 
 interface Obj {
   [key: string]: any;
@@ -203,7 +203,7 @@ describe('findProjectId()', () => {
     const response = utils.responseFrom(expectedProjectId);
     httpStub.resolves(response);
     const app: FirebaseApp = mocks.appWithOptions({
-      credential: new ComputeEngineCredential(),
+      credential: new ApplicationDefaultCredential(),
     });
     return findProjectId(app).should.eventually.equal(expectedProjectId);
   });
@@ -211,7 +211,7 @@ describe('findProjectId()', () => {
   it('should reject when the metadata service is not available', () => {
     httpStub.rejects(new FirebaseAppError('network-error', 'Failed to connect'));
     const app: FirebaseApp = mocks.appWithOptions({
-      credential: new ComputeEngineCredential(),
+      credential: new ApplicationDefaultCredential(),
     });
     return findProjectId(app).should.eventually
       .rejectedWith('Failed to determine project ID: Failed to connect');
