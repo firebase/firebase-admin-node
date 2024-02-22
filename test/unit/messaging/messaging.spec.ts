@@ -632,6 +632,20 @@ describe('Messaging', () => {
         });
     });
 
+    it('should only reject invalid messages and perform the rest', ()=>{
+      const messageIds = [
+        'projects/projec_id/messages/3',
+      ];
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      const badlyFormedUrlMsg: Message = { token: 'a', notification: { imageUrl: 'abcde' } };
+      return messaging.sendEach([validMessage, badlyFormedUrlMsg, ]).then((response: BatchResponse) => {
+        console.log(response)
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        
+      })
+    })
+
     it('should be fulfilled with a BatchResponse given array-like (issue #566)', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
