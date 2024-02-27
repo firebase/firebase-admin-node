@@ -24,6 +24,11 @@ export interface InAppDefaultValue {
 }
 
 // @public
+export interface InServerDefaultValue {
+    useInServerDefault: boolean;
+}
+
+// @public
 export interface ListVersionsOptions {
     endTime?: Date | string;
     endVersionNumber?: string | number;
@@ -84,7 +89,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 // @public
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | InServerDefaultValue;
 
 // @public
 export interface RemoteConfigServerCondition {
