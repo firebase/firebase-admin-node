@@ -96,11 +96,21 @@ export interface InAppDefaultValue {
 }
 
 /**
+ * Represents an in-server-default value.
+ */
+export interface InServerDefaultValue {
+  /**
+   * If `true`, `RemoteConfigServerTemplate` will use the parameter's default value.
+   */
+  useInServerDefault: boolean;
+}
+
+/**
  * Type representing a Remote Config parameter value.
  * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or
  * an `InAppDefaultValue`.
  */
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | InServerDefaultValue;
 
 /**
  * Interface representing a Remote Config parameter.

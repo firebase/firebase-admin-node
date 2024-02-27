@@ -120,7 +120,7 @@ describe('RemoteConfig', () => {
     parameters: {
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
-        conditionalValues: { ios: { useInAppDefault: true } },
+        conditionalValues: { ios: { useInServerDefault: true } },
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
@@ -580,7 +580,7 @@ describe('RemoteConfig', () => {
           const key = 'holiday_promo_enabled';
           const p1 = template.cache.parameters[key];
           expect(p1.defaultValue).deep.equals({ value: 'true' });
-          expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+          expect(p1.conditionalValues).deep.equals({ ios: { useInServerDefault: true } });
           expect(p1.description).equals('this is a promo');
           expect(p1.valueType).equals('BOOLEAN');
 
@@ -791,7 +791,7 @@ describe('RemoteConfig', () => {
             const key = 'holiday_promo_enabled';
             const p1 = template.cache.parameters[key];
             expect(p1.defaultValue).deep.equals({ value: 'true' });
-            expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+            expect(p1.conditionalValues).deep.equals({ ios: { useInServerDefault: true } });
             expect(p1.description).equals('this is a promo');
             expect(p1.valueType).equals('BOOLEAN');
 

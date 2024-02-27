@@ -27,6 +27,7 @@ import { RemoteConfig } from './remote-config';
 export {
   ExplicitParameterValue,
   InAppDefaultValue,
+  InServerDefaultValue,
   ListVersionsOptions,
   ListVersionsResult,
   ParameterValueType,

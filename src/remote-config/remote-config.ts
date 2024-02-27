@@ -28,7 +28,7 @@ import {
   RemoteConfigUser,
   Version,
   ExplicitParameterValue,
-  InAppDefaultValue,
+  InServerDefaultValue,
   ParameterValueType,
   RemoteConfigServerConfig,
   RemoteConfigServerTemplateData,
@@ -323,8 +323,8 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
         continue;
       }
 
-      if ((defaultValue as InAppDefaultValue).useInAppDefault) {
-        console.log(`Filtering out parameter ${key} with "use in-app default" value`);
+      if ((defaultValue as InServerDefaultValue).useInServerDefault) {
+        console.log(`Filtering out parameter ${key} with "use in-server default" value`);
         continue;
       }
 
