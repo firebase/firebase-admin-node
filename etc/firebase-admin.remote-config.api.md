@@ -24,6 +24,11 @@ export interface InAppDefaultValue {
 }
 
 // @public
+export interface InServerDefaultValue {
+    useInServerDefault: boolean;
+}
+
+// @public
 export interface ListVersionsOptions {
     endTime?: Date | string;
     endVersionNumber?: string | number;
@@ -46,7 +51,6 @@ export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
-    getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
     initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate;
@@ -84,7 +88,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 // @public
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | InServerDefaultValue;
 
 // @public
 export interface RemoteConfigServerCondition {
