@@ -202,7 +202,7 @@ describe('RemoteConfig', () => {
   });
 
   describe('evaluateCondition', () => {
-    it('empty and condition evaluates to false', () => {
+    it('should evaluate empty and condition to false', () => {
       const templateData = {
         parameters: {
           is_enabled: {
@@ -216,6 +216,38 @@ describe('RemoteConfig', () => {
           name: 'is_enabled',
           and: {
             conditions: []
+          }
+        }],
+        etag: 'asd'
+      } as RemoteConfigServerTemplateData;
+      const template = remoteConfig.initServerTemplate({template: templateData})
+      const config = template.evaluate();
+      expect(config.is_enabled).to.be.false;
+    });
+
+    it('should evaluate empty and.or condition to false', () => {
+      const templateData = {
+        parameters: {
+          is_enabled: {
+            defaultValue: { value: 'false' },
+            conditionalValues: { is_enabled: { value: 'true' } },
+            description: 'this is a promo',
+            valueType: 'BOOLEAN',
+          },
+        },
+        conditions: [{
+          name: 'is_enabled',
+          and: {
+            conditions: [
+              {
+                name: '', // Note we should differentiate named from unnamed conditions
+                or: {
+                  conditions: [
+                    
+                  ]
+                }
+              }
+            ]
           }
         }],
         etag: 'asd'

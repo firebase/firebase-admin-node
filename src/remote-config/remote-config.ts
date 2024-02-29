@@ -35,6 +35,7 @@ import {
   RemoteConfigServerTemplateData,
   RemoteConfigServerTemplateOptions,
   RemoteConfigServerCondition,
+  OrCondition,
 } from './remote-config-api';
 
 /**
@@ -349,6 +350,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return new Proxy(mergedConfig, proxyHandler);
   }
 
+  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=387;rcl=490046284
   private evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean {
     if (nestingLevel >= 10) {
       throw new Error("Targeting Condition exceeded maximum depth!");
@@ -356,9 +358,13 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (condition.and) {
       return this.evaluateAndCondition(condition.and, nestingLevel + 1)
     }
+    if (condition.or) {
+      return this.evaluateOrCondition(condition.or, nestingLevel + 1)
+    }
     throw new Error('Undefined condition');
   }
 
+  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=517;rcl=490046284
   private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
@@ -372,6 +378,22 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       }
     }
     return true;
+  }
+
+  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=556;rcl=490046284
+  private evaluateOrCondition(orCondition: OrCondition, nestingLevel: number): boolean {
+
+    const subConditions = orCondition.conditions || [];
+
+    for (const subCondition of subConditions) {
+      // Recursive call.
+      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+      // Short-circuit the evaluation result for true.
+      if (result) {
+        return result;
+      }
+    }
+    return false;
   }
 
   /**
