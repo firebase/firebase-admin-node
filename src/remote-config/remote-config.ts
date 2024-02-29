@@ -351,7 +351,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=387;rcl=490046284
-  private evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean {
+  public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean {
     if (nestingLevel >= 10) {
       throw new Error("Targeting Condition exceeded maximum depth!");
     }
@@ -364,6 +364,9 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (condition.true) {
       return true;
     }
+    if (condition.false) {
+      return false;
+    }
     throw new Error('Undefined condition');
   }
 
@@ -371,7 +374,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
-
+    
     for (const subCondition of subConditions) {
       // Recursive call.
       const result = this.evaluateCondition(subCondition, nestingLevel + 1);
@@ -391,6 +394,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     for (const subCondition of subConditions) {
       // Recursive call.
       const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+
       // Short-circuit the evaluation result for true.
       if (result) {
         return result;

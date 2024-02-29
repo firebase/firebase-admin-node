@@ -77,6 +77,7 @@ export interface RemoteConfigServerCondition {
   and?: AndCondition;
   or?: OrCondition;
   true?: TrueCondition;
+  false?: FalseCondition;
   percent?: PercentCondition;
 }
 
@@ -97,6 +98,9 @@ export interface MicroPercentRange {
 }
 
 export interface TrueCondition {
+}
+
+export interface FalseCondition {
 }
 
 export interface PercentCondition {
@@ -284,6 +288,9 @@ export interface RemoteConfigServerTemplate {
    * Evaluates the current template to produce a {@link RemoteConfigServerConfig}.
    */
   evaluate(): RemoteConfigServerConfig;
+
+  // HACK
+  evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean;
 
   /**
    * Fetches and caches the current active version of the

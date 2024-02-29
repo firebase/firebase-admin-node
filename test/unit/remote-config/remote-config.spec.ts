@@ -202,95 +202,83 @@ describe('RemoteConfig', () => {
   });
 
   describe('evaluateCondition', () => {
-    it('should evaluate empty and condition to false', () => {
-      const templateData = {
-        parameters: {
-          is_enabled: {
-            defaultValue: { value: 'false' },
-            conditionalValues: { is_enabled: { value: 'true' } },
-            description: 'this is a promo',
-            valueType: 'BOOLEAN',
-          },
-        },
-        conditions: [{
-          name: 'is_enabled',
-          and: {
-            conditions: []
-          }
-        }],
-        etag: 'asd'
-      } as RemoteConfigServerTemplateData;
-      const template = remoteConfig.initServerTemplate({ template: templateData })
-      const config = template.evaluate();
-      expect(config.is_enabled).to.be.false;
+    it('should evaluate empty and condition to true', () => {
+      const condition = {
+        name: 'is_enabled',
+        and: {
+          conditions: [
+          ]
+        }
+      };
+      const template = remoteConfig.initServerTemplate()
+      expect(template.evaluateCondition(condition, 0)).to.be.true;
     });
 
     it('should evaluate empty and.or condition to false', () => {
-      const templateData = {
-        parameters: {
-          is_enabled: {
-            defaultValue: { value: 'false' },
-            conditionalValues: { is_enabled: { value: 'true' } },
-            description: 'this is a promo',
-            valueType: 'BOOLEAN',
-          },
-        },
-        conditions: [{
-          name: 'is_enabled',
-          and: {
-            conditions: [
-              {
-                name: '', // Note we should differentiate named from unnamed conditions
-                or: {
-                  conditions: [
-
-                  ]
-                }
+      const condition = {
+        name: 'is_enabled',
+        and: {
+          conditions: [
+            {
+              name: '', // Note we should differentiate named from unnamed conditions
+              or: {
+                conditions: [
+                ]
               }
-            ]
-          }
-        }],
-        etag: 'asd'
-      } as RemoteConfigServerTemplateData;
-      const template = remoteConfig.initServerTemplate({ template: templateData })
-      const config = template.evaluate();
-      expect(config.is_enabled).to.be.false;
+            }
+          ]
+        }
+      };
+      const template = remoteConfig.initServerTemplate()
+      expect(template.evaluateCondition(condition, 0)).to.be.false;
     });
 
     it('should evaluate and.or.true condition to true', () => {
-      const templateData = {
-        parameters: {
-          is_enabled: {
-            defaultValue: { value: 'false' },
-            conditionalValues: { is_enabled: { value: 'true' } },
-            description: 'this is a promo',
-            valueType: 'BOOLEAN',
-          },
-        },
-        conditions: [{
-          name: 'is_enabled',
-          and: {
-            conditions: [
-              {
-                name: '', // Note we should differentiate named from unnamed conditions
-                or: {
-                  conditions: [
-                    {
-                      name: '',
-                      true: {
-                      }
+      const condition = {
+        name: 'is_enabled',
+        and: {
+          conditions: [
+            {
+              name: '', // Note we should differentiate named from unnamed conditions
+              or: {
+                conditions: [
+                  {
+                    name: '',
+                    true: {
                     }
-                  ]
-                }
+                  }
+                ]
               }
-            ]
-          }
-        }],
-        etag: 'asd'
-      } as RemoteConfigServerTemplateData;
-      const template = remoteConfig.initServerTemplate({ template: templateData })
-      const config = template.evaluate();
-      expect(config.is_enabled).to.be.true;
+            }
+          ]
+        }
+      };
+      const template = remoteConfig.initServerTemplate()
+      expect(template.evaluateCondition(condition, 0)).to.be.true;
+    });
+
+    it('should evaluate and.or.false condition to false', () => {
+      const condition = {
+        name: 'is_enabled',
+        and: {
+          conditions: [
+            {
+              name: '', // Note we should differentiate named from unnamed conditions
+              or: {
+                conditions: [
+                  {
+                    name: '',
+                    false: {
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      };
+      const template = remoteConfig.initServerTemplate()
+      expect(template.evaluateCondition(condition, 0)).to.be.false;
     });
   });
 
