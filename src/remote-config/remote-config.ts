@@ -355,11 +355,11 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (nestingLevel >= 10) {
       throw new Error("Targeting Condition exceeded maximum depth!");
     }
-    if (condition.and) {
-      return this.evaluateAndCondition(condition.and, nestingLevel + 1)
-    }
     if (condition.or) {
       return this.evaluateOrCondition(condition.or, nestingLevel + 1)
+    }
+    if (condition.and) {
+      return this.evaluateAndCondition(condition.and, nestingLevel + 1)
     }
     if (condition.true) {
       return true;
@@ -368,22 +368,6 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       return false;
     }
     throw new Error('Undefined condition');
-  }
-
-  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=517;rcl=490046284
-  private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
-
-    const subConditions = andCondition.conditions || [];
-    
-    for (const subCondition of subConditions) {
-      // Recursive call.
-      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
-      // Short-circuit the evaluation result for false.
-      if (!result) {
-        return result;
-      }
-    }
-    return true;
   }
 
   // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=556;rcl=490046284
@@ -401,6 +385,22 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       }
     }
     return false;
+  }
+
+  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=517;rcl=490046284
+  private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
+
+    const subConditions = andCondition.conditions || [];
+
+    for (const subCondition of subConditions) {
+      // Recursive call.
+      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+      // Short-circuit the evaluation result for false.
+      if (!result) {
+        return result;
+      }
+    }
+    return true;
   }
 
   /**

@@ -202,11 +202,26 @@ describe('RemoteConfig', () => {
   });
 
   describe('evaluateCondition', () => {
-    it('should evaluate empty and condition to true', () => {
+    it('should evaluate empty OR condition to false', () => {
       const condition = {
         name: 'is_enabled',
-        and: {
+        or: {
+        }
+      };
+      const template = remoteConfig.initServerTemplate()
+      expect(template.evaluateCondition(condition, 0)).to.be.false;
+    });
+
+    it('should evaluate empty OR.AND condition to true', () => {
+      const condition = {
+        name: 'is_enabled',
+        or: {
           conditions: [
+            {
+              name: '', // Note we should differentiate named from unnamed conditions
+              and: {
+              }
+            }
           ]
         }
       };
@@ -214,33 +229,14 @@ describe('RemoteConfig', () => {
       expect(template.evaluateCondition(condition, 0)).to.be.true;
     });
 
-    it('should evaluate empty and.or condition to false', () => {
+    it('should evaluate OR.AND.TRUE condition to true', () => {
       const condition = {
         name: 'is_enabled',
-        and: {
+        or: {
           conditions: [
             {
               name: '', // Note we should differentiate named from unnamed conditions
-              or: {
-                conditions: [
-                ]
-              }
-            }
-          ]
-        }
-      };
-      const template = remoteConfig.initServerTemplate()
-      expect(template.evaluateCondition(condition, 0)).to.be.false;
-    });
-
-    it('should evaluate and.or.true condition to true', () => {
-      const condition = {
-        name: 'is_enabled',
-        and: {
-          conditions: [
-            {
-              name: '', // Note we should differentiate named from unnamed conditions
-              or: {
+              and: {
                 conditions: [
                   {
                     name: '',
@@ -257,14 +253,14 @@ describe('RemoteConfig', () => {
       expect(template.evaluateCondition(condition, 0)).to.be.true;
     });
 
-    it('should evaluate and.or.false condition to false', () => {
+    it('should evaluate OR.AND.FALSE condition to false', () => {
       const condition = {
         name: 'is_enabled',
-        and: {
+        or: {
           conditions: [
             {
               name: '', // Note we should differentiate named from unnamed conditions
-              or: {
+              and: {
                 conditions: [
                   {
                     name: '',
