@@ -18,6 +18,7 @@ import { App } from '../app';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import {
+  AndCondition,
   ListVersionsOptions,
   ListVersionsResult,
   RemoteConfigCondition,
@@ -33,6 +34,7 @@ import {
   RemoteConfigServerConfig,
   RemoteConfigServerTemplateData,
   RemoteConfigServerTemplateOptions,
+  RemoteConfigServerCondition,
 } from './remote-config-api';
 
 /**
@@ -347,6 +349,31 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return new Proxy(mergedConfig, proxyHandler);
   }
 
+  private evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean {
+    if (nestingLevel >= 10) {
+      throw new Error("Targeting Condition exceeded maximum depth!");
+    }
+    if (condition.and) {
+      return this.evaluateAndCondition(condition.and, nestingLevel + 1)
+    }
+    throw new Error('Undefined condition');
+  }
+
+  private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
+
+    const subConditions = andCondition.conditions || [];
+
+    for (const subCondition of subConditions) {
+      // Recursive call.
+      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+      // Short-circuit the evaluation result for false.
+      if (!result) {
+        return result;
+      }
+    }
+    return true;
+  }
+
   /**
    * Private helper method that processes and parses a parameter value based on {@link ParameterValueType}.
    */
@@ -377,7 +404,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
-  public conditions: RemoteConfigCondition[];
+  public conditions: RemoteConfigServerCondition[];
   public readonly etag: string;
   public version?: Version;
 

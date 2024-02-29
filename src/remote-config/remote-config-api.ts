@@ -72,7 +72,33 @@ export interface RemoteConfigServerCondition {
    * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
    * for the expected syntax of this field.
    */
-  expression: string;
+
+  and?: AndCondition;
+  or?: OrCondition;
+  percent?: PercentCondition;
+}
+
+export type PercentConditionOperator =
+    'UNKNOWN'|'LESS_OR_EQUAL'|'GREATER_THAN'|'BETWEEN';
+
+export interface AndCondition {
+  conditions?: Array<RemoteConfigServerCondition>;
+}
+
+export interface OrCondition {
+  conditions?: Array<RemoteConfigServerCondition>;
+}
+
+export interface MicroPercentRange {
+  microPercentLowerBound?: number;
+  microPercentUpperBound?: number;
+}
+
+export interface PercentCondition {
+  operator?: PercentConditionOperator;
+  microPercent?: number;
+  seed?: string;
+  microPercentRange?: MicroPercentRange;
 }
 
 /**
