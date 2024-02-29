@@ -220,7 +220,7 @@ describe('RemoteConfig', () => {
         }],
         etag: 'asd'
       } as RemoteConfigServerTemplateData;
-      const template = remoteConfig.initServerTemplate({template: templateData})
+      const template = remoteConfig.initServerTemplate({ template: templateData })
       const config = template.evaluate();
       expect(config.is_enabled).to.be.false;
     });
@@ -243,7 +243,7 @@ describe('RemoteConfig', () => {
                 name: '', // Note we should differentiate named from unnamed conditions
                 or: {
                   conditions: [
-                    
+
                   ]
                 }
               }
@@ -252,9 +252,45 @@ describe('RemoteConfig', () => {
         }],
         etag: 'asd'
       } as RemoteConfigServerTemplateData;
-      const template = remoteConfig.initServerTemplate({template: templateData})
+      const template = remoteConfig.initServerTemplate({ template: templateData })
       const config = template.evaluate();
       expect(config.is_enabled).to.be.false;
+    });
+
+    it('should evaluate and.or.true condition to true', () => {
+      const templateData = {
+        parameters: {
+          is_enabled: {
+            defaultValue: { value: 'false' },
+            conditionalValues: { is_enabled: { value: 'true' } },
+            description: 'this is a promo',
+            valueType: 'BOOLEAN',
+          },
+        },
+        conditions: [{
+          name: 'is_enabled',
+          and: {
+            conditions: [
+              {
+                name: '', // Note we should differentiate named from unnamed conditions
+                or: {
+                  conditions: [
+                    {
+                      name: '',
+                      true: {
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }],
+        etag: 'asd'
+      } as RemoteConfigServerTemplateData;
+      const template = remoteConfig.initServerTemplate({ template: templateData })
+      const config = template.evaluate();
+      expect(config.is_enabled).to.be.true;
     });
   });
 

@@ -361,6 +361,9 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (condition.or) {
       return this.evaluateOrCondition(condition.or, nestingLevel + 1)
     }
+    if (condition.true) {
+      return true;
+    }
     throw new Error('Undefined condition');
   }
 

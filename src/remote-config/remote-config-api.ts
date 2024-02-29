@@ -73,8 +73,10 @@ export interface RemoteConfigServerCondition {
    * for the expected syntax of this field.
    */
 
+  // Ref http://google3/blaze-out/bin/google/internal/firebase/targeting/firebasetargeting_api_interfaces.ts;l=1298;rcl=610592324
   and?: AndCondition;
   or?: OrCondition;
+  true?: TrueCondition;
   percent?: PercentCondition;
 }
 
@@ -92,6 +94,9 @@ export interface OrCondition {
 export interface MicroPercentRange {
   microPercentLowerBound?: number;
   microPercentUpperBound?: number;
+}
+
+export interface TrueCondition {
 }
 
 export interface PercentCondition {
