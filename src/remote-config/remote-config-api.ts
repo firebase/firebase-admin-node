@@ -289,9 +289,6 @@ export interface RemoteConfigServerTemplate {
    */
   evaluate(): RemoteConfigServerConfig;
 
-  // HACK
-  evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean;
-
   /**
    * Fetches and caches the current active version of the
    * project's {@link RemoteConfigServerTemplate}.

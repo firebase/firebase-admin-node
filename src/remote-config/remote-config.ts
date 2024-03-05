@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { App } from '../app';
+import {App} from '../app';
 import * as validator from '../utils/validator';
-import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
+import {FirebaseRemoteConfigError, RemoteConfigApiClient} from './remote-config-api-client-internal';
+import {RemoteConfigConditionEvaluator} from './remote-config-condition-evaluator-internal';
 import {
-  AndCondition,
   ListVersionsOptions,
   ListVersionsResult,
   RemoteConfigCondition,
@@ -35,7 +35,6 @@ import {
   RemoteConfigServerTemplateData,
   RemoteConfigServerTemplateOptions,
   RemoteConfigServerCondition,
-  OrCondition,
   RemoteConfigParameterValue,
 } from './remote-config-api';
 
@@ -108,7 +107,7 @@ export class RemoteConfig {
    *
    * @returns A Promise that fulfills with the published `RemoteConfigTemplate`.
    */
-  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
+  public publishTemplate(template: RemoteConfigTemplate, options?: {force: boolean}): Promise<RemoteConfigTemplate> {
     return this.client.publishTemplate(template, options)
       .then((templateResponse) => {
         return new RemoteConfigTemplateImpl(templateResponse);
@@ -194,7 +193,8 @@ export class RemoteConfig {
    * Synchronously instantiates {@link RemoteConfigServerTemplate}.
    */
   public initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate {
-    const template = new RemoteConfigServerTemplateImpl(this.client, options?.defaultConfig);
+    const template = new RemoteConfigServerTemplateImpl(
+      this.client, new RemoteConfigConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
       template.cache = options?.template;
     }
@@ -207,8 +207,8 @@ export class RemoteConfig {
  */
 class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
-  public parameters: { [key: string]: RemoteConfigParameter };
-  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+  public parameters: {[key: string]: RemoteConfigParameter};
+  public parameterGroups: {[key: string]: RemoteConfigParameterGroup};
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
   public version?: Version;
@@ -290,12 +290,11 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
-  private static MAX_CONDITION_RECURSION_DEPTH = 10;
-
   public cache: RemoteConfigServerTemplateData;
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
+    private readonly conditionEvaluator: RemoteConfigConditionEvaluator,
     public readonly defaultConfig: RemoteConfigServerConfig = {}
   ) { }
 
@@ -319,16 +318,16 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
         'No Remote Config Server template in cache. Call load() before calling evaluate().');
     }
 
-    const evaluatedConditions = this.evaluateConditions(this.cache.conditions);
+    const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
+      this.cache.conditions);
 
     const evaluatedConfig: RemoteConfigServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
-      const { conditionalValues, defaultValue, valueType } = parameter;
+      const {conditionalValues, defaultValue, valueType} = parameter;
 
       let parameterValueWrapper: RemoteConfigParameterValue | undefined = undefined;
 
-      // Conditional values may be undefined, in which case default to an empty object.
       for (const [conditionName, conditionalValueWrapper] of Object.entries(conditionalValues || {})) {
         if (evaluatedConditions.get(conditionName)) {
           parameterValueWrapper = conditionalValueWrapper;
@@ -375,74 +374,6 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return new Proxy(mergedConfig, proxyHandler);
   }
 
-
-  public evaluateConditions(conditions: RemoteConfigServerCondition[]): Map<String, Boolean> {
-    // Note the order of the conditions is significant.
-    // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
-    // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
-    const evaluatedConditions = new Map();
-
-    for (const condition of conditions) {
-      evaluatedConditions.set(condition.name, this.evaluateCondition(condition));
-    }
-
-    return evaluatedConditions;
-  }
-
-  public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number = 0): boolean {
-    if (nestingLevel >= RemoteConfigServerTemplateImpl.MAX_CONDITION_RECURSION_DEPTH) {
-      console.log('Evaluating condition to false because it exceeded maximum depth ' +
-        RemoteConfigServerTemplateImpl.MAX_CONDITION_RECURSION_DEPTH);
-      return false;
-    }
-    if (condition.or) {
-      return this.evaluateOrCondition(condition.or, nestingLevel + 1)
-    }
-    if (condition.and) {
-      return this.evaluateAndCondition(condition.and, nestingLevel + 1)
-    }
-    if (condition.true) {
-      return true;
-    }
-    if (condition.false) {
-      return false;
-    }
-    console.log(`Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
-    return false;
-  }
-
-  private evaluateOrCondition(orCondition: OrCondition, nestingLevel: number): boolean {
-
-    const subConditions = orCondition.conditions || [];
-
-    for (const subCondition of subConditions) {
-      // Recursive call.
-      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
-
-      // Short-circuit the evaluation result for true.
-      if (result) {
-        return result;
-      }
-    }
-    return false;
-  }
-
-  private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
-
-    const subConditions = andCondition.conditions || [];
-
-    for (const subCondition of subConditions) {
-      // Recursive call.
-      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
-
-      // Short-circuit the evaluation result for false.
-      if (!result) {
-        return result;
-      }
-    }
-    return true;
-  }
-
   /**
    * Private helper method that processes and parses a parameter value based on {@link ParameterValueType}.
    */
@@ -471,8 +402,8 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
  * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
-  public parameters: { [key: string]: RemoteConfigParameter };
-  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+  public parameters: {[key: string]: RemoteConfigParameter};
+  public parameterGroups: {[key: string]: RemoteConfigParameterGroup};
   public conditions: RemoteConfigServerCondition[];
   public readonly etag: string;
   public version?: Version;
