@@ -54,6 +54,11 @@ export interface RemoteConfigCondition {
   tagColor?: TagColor;
 }
 
+/**
+ * Represents a Remote Config condition in the dataplane.
+ * A condition targets a specific group of users. A list of these conditions
+ * make up part of a Remote Config template.
+ */
 export interface RemoteConfigServerNamedCondition {
 
   /**
@@ -61,24 +66,19 @@ export interface RemoteConfigServerNamedCondition {
    */
   name: string;
 
-  condition: RemoteConfigServerCondition;
-}
-
-/**
- * Represents a Remote Config condition in the dataplane.
- * A condition targets a specific group of users. A list of these conditions make up
- * part of a Remote Config template.
- */
-export interface RemoteConfigServerCondition {
-
   /**
    * The logic of this condition.
    * See the documentation on
    * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
    * for the expected syntax of this field.
    */
+  condition: RemoteConfigServerCondition;
+}
 
-  // Ref http://google3/blaze-out/bin/google/internal/firebase/targeting/firebasetargeting_api_interfaces.ts;l=1298;rcl=610592324
+/**
+ * Represents a tree of conditions.
+ */
+export interface RemoteConfigServerCondition {
   and?: RemoteConfigServerAndCondition;
   or?: RemoteConfigServerOrCondition;
   true?: RemoteConfigServerTrueCondition;
@@ -86,28 +86,51 @@ export interface RemoteConfigServerCondition {
   percent?: RemoteConfigServerPercentCondition;
 }
 
-export type PercentConditionOperator =
-    'UNKNOWN'|'LESS_OR_EQUAL'|'GREATER_THAN'|'BETWEEN';
-
+/**
+ * Represents a collection of conditions that evaluate to true if all are true.
+ */
 export interface RemoteConfigServerAndCondition {
   conditions?: Array<RemoteConfigServerCondition>;
 }
 
+/**
+ * Represents a collection of conditions that evaluate to true if any are true.
+ */
 export interface RemoteConfigServerOrCondition {
   conditions?: Array<RemoteConfigServerCondition>;
 }
 
+/**
+ * Represents a condition that always evaluates to true.
+ */
+export interface RemoteConfigServerTrueCondition {
+}
+
+/**
+ * Represents a condition that always evaluates to false.
+ */
+export interface RemoteConfigServerFalseCondition {
+}
+
+/**
+ * Defines supported operators for percent conditions.
+ */
+export type PercentConditionOperator =
+  'UNKNOWN' | 'LESS_OR_EQUAL' | 'GREATER_THAN' | 'BETWEEN';
+
+/**
+ * Represents the limit of percentiles to target in micro-percents. The value
+ * must be in the range [0 and 100000000]
+ */
 export interface MicroPercentRange {
   microPercentLowerBound?: number;
   microPercentUpperBound?: number;
 }
 
-export interface RemoteConfigServerTrueCondition {
-}
-
-export interface RemoteConfigServerFalseCondition {
-}
-
+/**
+ * Represents a condition that compares the instance pseudo-random percentile to
+ * a given limit.
+ */
 export interface RemoteConfigServerPercentCondition {
   operator?: PercentConditionOperator;
   microPercent?: number;
@@ -159,7 +182,7 @@ export interface RemoteConfigParameter {
    * (the one listed first in the Remote Config template's conditions list) determines the value of
    * this parameter.
    */
-  conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+  conditionalValues?: {[key: string]: RemoteConfigParameterValue};
 
   /**
    * A description for this parameter. Should not be over 100 characters and may contain any
@@ -192,7 +215,7 @@ export interface RemoteConfigParameterGroup {
    * Remote Config template. An ungrouped parameter appears at the top level, whereas a
    * parameter organized within a group appears within its group's map of parameters.
    */
-  parameters: { [key: string]: RemoteConfigParameter };
+  parameters: {[key: string]: RemoteConfigParameter};
 }
 
 /**
@@ -207,7 +230,7 @@ export interface RemoteConfigTemplate {
   /**
    * Map of parameter keys to their optional default values and optional conditional values.
    */
-  parameters: { [key: string]: RemoteConfigParameter };
+  parameters: {[key: string]: RemoteConfigParameter};
 
   /**
    * Map of parameter group names to their parameter group objects.
@@ -215,7 +238,7 @@ export interface RemoteConfigTemplate {
    * The name is limited to 256 characters and intended to be human-readable. Any Unicode
    * characters are allowed.
    */
-  parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+  parameterGroups: {[key: string]: RemoteConfigParameterGroup};
 
   /**
    * ETag of the current Remote Config template (readonly).
@@ -240,7 +263,7 @@ export interface RemoteConfigServerTemplateData {
   /**
    * Map of parameter keys to their optional default values and optional conditional values.
    */
-  parameters: { [key: string]: RemoteConfigParameter };
+  parameters: {[key: string]: RemoteConfigParameter};
 
   /**
    * Current Remote Config template ETag (read-only).
@@ -427,4 +450,4 @@ export interface ListVersionsOptions {
 /**
  * Represents the configuration produced by evaluating a server template.
  */
-export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }
+export type RemoteConfigServerConfig = {[key: string]: string | boolean | number}
