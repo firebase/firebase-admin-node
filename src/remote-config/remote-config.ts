@@ -34,8 +34,8 @@ import {
   RemoteConfigServerConfig,
   RemoteConfigServerTemplateData,
   RemoteConfigServerTemplateOptions,
-  RemoteConfigServerCondition,
   RemoteConfigParameterValue,
+  RemoteConfigServerNamedCondition,
 } from './remote-config-api';
 
 /**
@@ -409,7 +409,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
   public parameters: {[key: string]: RemoteConfigParameter};
   public parameterGroups: {[key: string]: RemoteConfigParameterGroup};
-  public conditions: RemoteConfigServerCondition[];
+  public conditions: RemoteConfigServerNamedCondition[];
   public readonly etag: string;
   public version?: Version;
 

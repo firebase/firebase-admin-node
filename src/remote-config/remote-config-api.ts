@@ -54,17 +54,22 @@ export interface RemoteConfigCondition {
   tagColor?: TagColor;
 }
 
+export interface RemoteConfigServerNamedCondition {
+
+  /**
+   * A non-empty and unique name of this condition.
+   */
+  name: string;
+
+  condition: RemoteConfigServerCondition;
+}
+
 /**
  * Represents a Remote Config condition in the dataplane.
  * A condition targets a specific group of users. A list of these conditions make up
  * part of a Remote Config template.
  */
 export interface RemoteConfigServerCondition {
-
-  /**
-   * A non-empty and unique name of this condition.
-   */
-  name: string;
 
   /**
    * The logic of this condition.
@@ -230,7 +235,7 @@ export interface RemoteConfigServerTemplateData {
   /**
    * A list of conditions in descending order by priority.
    */
-  conditions: RemoteConfigServerCondition[];
+  conditions: RemoteConfigServerNamedCondition[];
 
   /**
    * Map of parameter keys to their optional default values and optional conditional values.

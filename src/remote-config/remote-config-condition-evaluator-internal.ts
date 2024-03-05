@@ -19,6 +19,7 @@
 import {
   RemoteConfigServerAndCondition,
   RemoteConfigServerCondition,
+  RemoteConfigServerNamedCondition,
   RemoteConfigServerOrCondition,
   RemoteConfigServerPercentCondition,
 } from './remote-config-api';
@@ -26,14 +27,16 @@ import {
 export class RemoteConfigConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
-  public evaluateConditions(conditions: RemoteConfigServerCondition[]): Map<string, boolean> {
+  public evaluateConditions(namedConditions: RemoteConfigServerNamedCondition[]): Map<string, boolean> {
     // The order of the conditions is significant.
     // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
     // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
     const evaluatedConditions = new Map();
 
-    for (const condition of conditions) {
-      evaluatedConditions.set(condition.name, this.evaluateCondition(condition));
+    for (const namedCondition of namedConditions) {
+      evaluatedConditions.set(
+        namedCondition.name,
+        this.evaluateCondition(namedCondition.condition));
     }
 
     return evaluatedConditions;

@@ -27,15 +27,16 @@ import {
   TagColor,
   ListVersionsResult,
 } from '../../../src/remote-config/index';
-import { FirebaseApp } from '../../../src/app/firebase-app';
+import {FirebaseApp} from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
 import {
   FirebaseRemoteConfigError,
   RemoteConfigApiClient
 } from '../../../src/remote-config/remote-config-api-client-internal';
-import { deepCopy } from '../../../src/utils/deep-copy';
+import {deepCopy} from '../../../src/utils/deep-copy';
 import {
-  RemoteConfigServerCondition, RemoteConfigServerTemplate, RemoteConfigServerTemplateData
+  RemoteConfigServerTemplate,
+  RemoteConfigServerNamedCondition, RemoteConfigServerTemplateData
 } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
@@ -48,9 +49,9 @@ describe('RemoteConfig', () => {
       description: 'Description of the group.',
       parameters: {
         pumpkin_spice_season: {
-          defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
+          defaultValue: {value: 'A Gryffindor must love a pumpkin spice latte.'},
           conditionalValues: {
-            'android_en': { value: 'A Droid must love a pumpkin spice latte.' },
+            'android_en': {value: 'A Droid must love a pumpkin spice latte.'},
           },
           description: 'Description of the parameter.',
           valueType: 'STRING' as ParameterValueType,
@@ -75,7 +76,7 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<{ name: string; expression: string; tagColor: TagColor }>;
+    conditions?: Array<{name: string; expression: string; tagColor: TagColor}>;
     parameters?: object | null;
     parameterGroups?: object | null;
     etag: string;
@@ -90,8 +91,8 @@ describe('RemoteConfig', () => {
     ],
     parameters: {
       holiday_promo_enabled: {
-        defaultValue: { value: 'true' },
-        conditionalValues: { ios: { useInAppDefault: true } },
+        defaultValue: {value: 'true'},
+        conditionalValues: {ios: {useInAppDefault: true}},
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
@@ -106,7 +107,7 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<{ name: string; expression: string; }>;
+    conditions?: Array<RemoteConfigServerNamedCondition>;
     parameters?: object | null;
     etag: string;
     version?: object;
@@ -114,7 +115,8 @@ describe('RemoteConfig', () => {
     conditions: [
       {
         name: 'ios',
-        expression: 'device.os == \'ios\''
+        condition: {
+        }
       },
     ],
     parameters: {
@@ -137,8 +139,8 @@ describe('RemoteConfig', () => {
     }],
     parameters: {
       holiday_promo_enabled: {
-        defaultValue: { value: 'true' },
-        conditionalValues: { ios: { useInAppDefault: true } },
+        defaultValue: {value: 'true'},
+        conditionalValues: {ios: {useInAppDefault: true}},
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
@@ -202,7 +204,7 @@ describe('RemoteConfig', () => {
   });
 
   describe('Constructor', () => {
-    const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, {a: 1}, _.noop];
     invalidApps.forEach((invalidApp) => {
       it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
         expect(() => {
@@ -526,8 +528,8 @@ describe('RemoteConfig', () => {
 
       const key = 'holiday_promo_enabled';
       const p1 = newTemplate.parameters[key];
-      expect(p1.defaultValue).deep.equals({ value: 'true' });
-      expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+      expect(p1.defaultValue).deep.equals({value: 'true'});
+      expect(p1.conditionalValues).deep.equals({ios: {useInAppDefault: true}});
       expect(p1.description).equals('this is a promo');
       expect(p1.valueType).equals('BOOLEAN');
 
@@ -586,7 +588,7 @@ describe('RemoteConfig', () => {
 
           const c = template.cache.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
-          const cond = c as RemoteConfigServerCondition;
+          const cond = c as RemoteConfigServerNamedCondition;
           expect(cond.name).to.equal('ios');
           // expect(cond.expression).to.equal('device.os == \'ios\'');
 
@@ -630,7 +632,7 @@ describe('RemoteConfig', () => {
           valueType: 'STRING'
         }
       };
-      const initializedTemplate = remoteConfig.initServerTemplate({ template }).cache;
+      const initializedTemplate = remoteConfig.initServerTemplate({template}).cache;
       const parsed = JSON.parse(JSON.stringify(initializedTemplate));
       expect(parsed).deep.equals(deepCopy(template));
     });
@@ -797,9 +799,9 @@ describe('RemoteConfig', () => {
 
             const c = template.cache.conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
-            const cond = c as RemoteConfigServerCondition;
+            const cond = c as RemoteConfigServerNamedCondition;
             expect(cond.name).to.equal('ios');
-            // expect(cond.expression).to.equal('device.os == \'ios\'');
+            expect(cond.condition).deep.equals({});
 
             const parsed = JSON.parse(JSON.stringify(template.cache));
             const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
@@ -908,21 +910,22 @@ describe('RemoteConfig', () => {
       it('returns conditional value', () => {
         const condition = {
           name: 'is_true',
-          or: {
-            conditions: [
-              {
-                name: '', // Note we should differentiate named from unnamed conditions
-                and: {
-                  conditions: [
-                    {
-                      name: '',
-                      true: {
+          condition: {
+            or: {
+              conditions: [
+                {
+                  and: {
+                    conditions: [
+                      {
+                        name: '',
+                        true: {
+                        }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
-              }
-            ]
+              ]
+            }
           }
         };
         const template = remoteConfig.initServerTemplate({
@@ -930,8 +933,8 @@ describe('RemoteConfig', () => {
             conditions: [condition],
             parameters: {
               is_enabled: {
-                defaultValue: { value: 'false' },
-                conditionalValues: { is_true: { value: 'true' } },
+                defaultValue: {value: 'false'},
+                conditionalValues: {is_true: {value: 'true'}},
                 valueType: 'BOOLEAN',
               },
             },
@@ -948,40 +951,40 @@ describe('RemoteConfig', () => {
             conditions: [
               {
                 name: 'is_true',
-                or: {
-                  conditions: [
-                    {
-                      name: '', // Note we should differentiate named from unnamed conditions
-                      and: {
-                        conditions: [
-                          {
-                            name: '',
-                            true: {
+                condition: {
+                  or: {
+                    conditions: [
+                      {
+                        and: {
+                          conditions: [
+                            {
+                              true: {
+                              }
                             }
-                          }
-                        ]
+                          ]
+                        }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               },
               {
                 name: 'is_true_too',
-                or: {
-                  conditions: [
-                    {
-                      name: '', // Note we should differentiate named from unnamed conditions
-                      and: {
-                        conditions: [
-                          {
-                            name: '',
-                            true: {
+                condition: {
+                  or: {
+                    conditions: [
+                      {
+                        and: {
+                          conditions: [
+                            {
+                              true: {
+                              }
                             }
-                          }
-                        ]
+                          ]
+                        }
                       }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }],
             parameters: {
@@ -1143,7 +1146,7 @@ describe('RemoteConfig', () => {
   function runValidResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>,
     operationName: any): void {
     it('should resolve with parameters:{} when no parameters present in the response', () => {
-      const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
+      const response = deepCopy({conditions: [], parameterGroups: {}, etag: '0-1010-2'});
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, operationName)
         .resolves(response);
@@ -1159,7 +1162,7 @@ describe('RemoteConfig', () => {
 
     it('should resolve with parameterGroups:{} when no parameter groups present in the response',
       () => {
-        const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
+        const response = deepCopy({conditions: [], parameters: {}, etag: '0-1010-2'});
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response);
@@ -1174,7 +1177,7 @@ describe('RemoteConfig', () => {
       });
 
     it('should resolve with conditions:[] when no conditions present in the response', () => {
-      const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
+      const response = deepCopy({parameters: {}, parameterGroups: {}, etag: '0-1010-2'});
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, operationName)
         .resolves(response);
@@ -1219,8 +1222,8 @@ describe('RemoteConfig', () => {
 
           const key = 'holiday_promo_enabled';
           const p1 = template.parameters[key];
-          expect(p1.defaultValue).deep.equals({ value: 'true' });
-          expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+          expect(p1.defaultValue).deep.equals({value: 'true'});
+          expect(p1.conditionalValues).deep.equals({ios: {useInAppDefault: true}});
           expect(p1.description).equals('this is a promo');
           expect(p1.valueType).equals('BOOLEAN');
 
