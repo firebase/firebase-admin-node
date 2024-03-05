@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {App} from '../app';
+import { App } from '../app';
 import * as validator from '../utils/validator';
-import {FirebaseRemoteConfigError, RemoteConfigApiClient} from './remote-config-api-client-internal';
-import {RemoteConfigConditionEvaluator} from './remote-config-condition-evaluator-internal';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
+import { RemoteConfigConditionEvaluator } from './remote-config-condition-evaluator-internal';
 import {
   ListVersionsOptions,
   ListVersionsResult,
@@ -107,7 +107,7 @@ export class RemoteConfig {
    *
    * @returns A Promise that fulfills with the published `RemoteConfigTemplate`.
    */
-  public publishTemplate(template: RemoteConfigTemplate, options?: {force: boolean}): Promise<RemoteConfigTemplate> {
+  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     return this.client.publishTemplate(template, options)
       .then((templateResponse) => {
         return new RemoteConfigTemplateImpl(templateResponse);
@@ -207,8 +207,8 @@ export class RemoteConfig {
  */
 class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
-  public parameters: {[key: string]: RemoteConfigParameter};
-  public parameterGroups: {[key: string]: RemoteConfigParameterGroup};
+  public parameters: { [key: string]: RemoteConfigParameter };
+  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
   public version?: Version;
@@ -324,7 +324,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     const evaluatedConfig: RemoteConfigServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
-      const {conditionalValues, defaultValue, valueType} = parameter;
+      const { conditionalValues, defaultValue, valueType } = parameter;
 
       // Supports parameters with no conditional values.
       const normalizedConditionalValues = conditionalValues || {};
@@ -407,8 +407,8 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
  * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
-  public parameters: {[key: string]: RemoteConfigParameter};
-  public parameterGroups: {[key: string]: RemoteConfigParameterGroup};
+  public parameters: { [key: string]: RemoteConfigParameter };
+  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: RemoteConfigServerNamedCondition[];
   public readonly etag: string;
   public version?: Version;

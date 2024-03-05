@@ -22,69 +22,74 @@ import {RemoteConfigConditionEvaluator} from '../../../src/remote-config/remote-
 const expect = chai.expect;
 
 describe('RemoteConfigConditionEvaluator', () => {
-  describe('evaluateCondition', () => {
+  describe('evaluateConditions', () => {
     it('should evaluate empty OR condition to false', () => {
       const condition = {
         name: 'is_enabled',
-        or: {
+        condition: {
+          or: {
+          }
         }
       };
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateCondition(condition)).to.be.false;
+      expect(evaluator.evaluateConditions([condition])).deep.equals(
+        new Map([["is_enabled", false]]));
     });
 
     it('should evaluate empty OR.AND condition to true', () => {
       const condition = {
         name: 'is_enabled',
-        or: {
-          conditions: [
-            {
-              name: '', // Note we should differentiate named from unnamed conditions
-              and: {
+        condition: {
+          or: {
+            conditions: [
+              {
+                and: {
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       };
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateCondition(condition)).to.be.true;
+      expect(evaluator.evaluateConditions([condition])).deep.equals(
+        new Map([["is_enabled", true]]));
     });
 
     it('should evaluate OR.AND.TRUE condition to true', () => {
       const condition = {
         name: 'is_enabled',
-        or: {
-          conditions: [
-            {
-              name: '', // Note we should differentiate named from unnamed conditions
-              and: {
-                conditions: [
-                  {
-                    name: '',
-                    true: {
+        condition: {
+          or: {
+            conditions: [
+              {
+                and: {
+                  conditions: [
+                    {
+                      true: {
+                      }
                     }
-                  }
-                ]
+                  ]
+                }
               }
-            }
-          ]
+            ]
+          }
         }
       };
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateCondition(condition)).to.be.true;
+      expect(evaluator.evaluateConditions([condition])).deep.equals(
+        new Map([["is_enabled", true]]));
     });
 
     it('should evaluate OR.AND.FALSE condition to false', () => {
       const condition = {
         name: 'is_enabled',
+        condition: {
         or: {
           conditions: [
             {
-              name: '', // Note we should differentiate named from unnamed conditions
               and: {
                 conditions: [
                   {
-                    name: '',
                     false: {
                     }
                   }
@@ -93,9 +98,11 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           ]
         }
+        }
       };
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateCondition(condition)).to.be.false;
+      expect(evaluator.evaluateConditions([condition])).deep.equals(
+        new Map([["is_enabled", false]]));
     });
   });
 });

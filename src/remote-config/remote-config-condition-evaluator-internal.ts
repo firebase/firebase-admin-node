@@ -24,6 +24,12 @@ import {
   RemoteConfigServerPercentCondition,
 } from './remote-config-api';
 
+/**
+ * Encapsulates condition evaluation logic to simplify organization and
+ * facilitate testing.
+ *
+ * @internal
+ */
 export class RemoteConfigConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
@@ -42,7 +48,7 @@ export class RemoteConfigConditionEvaluator {
     return evaluatedConditions;
   }
 
-  public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number = 0): boolean {
+  private evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
       console.log('Evaluating condition to false because it exceeded maximum depth ' +
         RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH);
