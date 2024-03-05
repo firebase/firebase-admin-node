@@ -1019,6 +1019,63 @@ describe('RemoteConfig', () => {
         expect(config.is_enabled).to.be.true;
       });
 
+      it('handles multiple conditions', () => {
+        const template = remoteConfig.initServerTemplate({
+          template: {
+            conditions: [{
+              name: 'is_false',
+              or: {
+                conditions: [
+                  {
+                    name: '', // Note we should differentiate named from unnamed conditions
+                    and: {
+                      conditions: [
+                        {
+                          name: '',
+                          false: {
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }, {
+              name: 'is_true',
+              or: {
+                conditions: [
+                  {
+                    name: '', // Note we should differentiate named from unnamed conditions
+                    and: {
+                      conditions: [
+                        {
+                          name: '',
+                          true: {
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }],
+            parameters: {
+              dog_type: {
+                defaultValue: { value: 'chihuahua' },
+                conditionalValues: {
+                  is_false: { value: 'dachshund' },
+                  is_true: { value: 'corgi' }
+                },
+                valueType: 'STRING',
+              },
+            },
+            etag: "123"
+          }
+        });
+        const config = template.evaluate();
+        expect(config.dog_type).to.eq('corgi');
+      });
+
       it('uses local default if parameter not in template', () => {
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
