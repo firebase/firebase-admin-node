@@ -290,6 +290,8 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  * Remote Config dataplane template data implementation.
  */
 class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
+  private static MAX_CONDITION_RECURSION_DEPTH = 10;
+
   public cache: RemoteConfigServerTemplateData;
 
   constructor(
@@ -323,7 +325,6 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const { conditionalValues, defaultValue, valueType } = parameter;
-      // TODO: do we need to sort conditionalValues to match the order of evaluatedConditions?
 
       let parameterValueWrapper: RemoteConfigParameterValue | undefined = undefined;
 
@@ -357,7 +358,6 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       }
 
       const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
-
       evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
     }
 
@@ -389,10 +389,11 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return evaluatedConditions;
   }
 
-  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=387;rcl=490046284
   public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number = 0): boolean {
-    if (nestingLevel >= 10) {
-      throw new Error("Targeting Condition exceeded maximum depth!");
+    if (nestingLevel >= RemoteConfigServerTemplateImpl.MAX_CONDITION_RECURSION_DEPTH) {
+      console.log('Evaluating condition to false because it exceeded maximum depth ' +
+        RemoteConfigServerTemplateImpl.MAX_CONDITION_RECURSION_DEPTH);
+      return false;
     }
     if (condition.or) {
       return this.evaluateOrCondition(condition.or, nestingLevel + 1)
@@ -406,10 +407,10 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (condition.false) {
       return false;
     }
+    console.log(`Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
     return false;
   }
 
-  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=556;rcl=490046284
   private evaluateOrCondition(orCondition: OrCondition, nestingLevel: number): boolean {
 
     const subConditions = orCondition.conditions || [];
@@ -426,7 +427,6 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return false;
   }
 
-  // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=517;rcl=490046284
   private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
@@ -434,6 +434,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     for (const subCondition of subConditions) {
       // Recursive call.
       const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+
       // Short-circuit the evaluation result for false.
       if (!result) {
         return result;
