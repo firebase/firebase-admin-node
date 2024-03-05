@@ -20,6 +20,7 @@ import {
   RemoteConfigServerAndCondition,
   RemoteConfigServerCondition,
   RemoteConfigServerOrCondition,
+  RemoteConfigServerPercentCondition,
 } from './remote-config-api';
 
 export class RemoteConfigConditionEvaluator {
@@ -56,6 +57,9 @@ export class RemoteConfigConditionEvaluator {
     if (condition.false) {
       return false;
     }
+    if (condition.percent) {
+      return this.evaluatePercentCondition(condition.percent);
+    }
     console.log(`Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
     return false;
   }
@@ -90,5 +94,10 @@ export class RemoteConfigConditionEvaluator {
       }
     }
     return true;
+  }
+
+  private evaluatePercentCondition(percentCondition: RemoteConfigServerPercentCondition): boolean {
+    // TODO: implement
+    return false;
   }
 }

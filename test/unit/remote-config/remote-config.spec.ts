@@ -942,52 +942,57 @@ describe('RemoteConfig', () => {
         expect(config.is_enabled).to.be.true;
       });
 
-      it('handles multiple conditions', () => {
+      it('honors condition order', () => {
         const template = remoteConfig.initServerTemplate({
           template: {
-            conditions: [{
-              name: 'is_false',
-              or: {
-                conditions: [
-                  {
-                    name: '', // Note we should differentiate named from unnamed conditions
-                    and: {
-                      conditions: [
-                        {
-                          name: '',
-                          false: {
+            conditions: [
+              {
+                name: 'is_true',
+                or: {
+                  conditions: [
+                    {
+                      name: '', // Note we should differentiate named from unnamed conditions
+                      and: {
+                        conditions: [
+                          {
+                            name: '',
+                            true: {
+                            }
                           }
-                        }
-                      ]
+                        ]
+                      }
                     }
-                  }
-                ]
-              }
-            }, {
-              name: 'is_true',
-              or: {
-                conditions: [
-                  {
-                    name: '', // Note we should differentiate named from unnamed conditions
-                    and: {
-                      conditions: [
-                        {
-                          name: '',
-                          true: {
+                  ]
+                }
+              },
+              {
+                name: 'is_true_too',
+                or: {
+                  conditions: [
+                    {
+                      name: '', // Note we should differentiate named from unnamed conditions
+                      and: {
+                        conditions: [
+                          {
+                            name: '',
+                            true: {
+                            }
                           }
-                        }
-                      ]
+                        ]
+                      }
                     }
-                  }
-                ]
-              }
-            }],
+                  ]
+                }
+              }],
             parameters: {
               dog_type: {
-                defaultValue: { value: 'chihuahua' },
+                defaultValue: {value: 'chihuahua'},
                 conditionalValues: {
-                  is_false: { value: 'dachshund' },
-                  is_true: { value: 'corgi' }
+                  // The is_true and is_true_too conditions both return true,
+                  // but is_true is first in the list, so the corresponding
+                  // value is selected.
+                  is_true_too: {value: 'dachshund'},
+                  is_true: {value: 'corgi'}
                 },
                 valueType: 'STRING',
               },
