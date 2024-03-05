@@ -36,6 +36,7 @@ import {
   RemoteConfigServerTemplateOptions,
   RemoteConfigServerCondition,
   OrCondition,
+  RemoteConfigParameterValue,
 } from './remote-config-api';
 
 /**
@@ -316,10 +317,34 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
         'No Remote Config Server template in cache. Call load() before calling evaluate().');
     }
 
+    const evaluatedConditions = this.evaluateConditions(this.cache.conditions);
+
     const evaluatedConfig: RemoteConfigServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
-      const { defaultValue, valueType } = parameter;
+      const { conditionalValues, defaultValue, valueType } = parameter;
+      // TODO: do we need to sort conditionalValues to match the order of evaluatedConditions?
+
+      let parameterValueWrapper: RemoteConfigParameterValue | undefined = undefined;
+
+      // Conditional values may be undefined, in which case default to an empty object.
+      for (const [conditionName, conditionalValueWrapper] of Object.entries(conditionalValues || {})) {
+        if (evaluatedConditions.get(conditionName)) {
+          parameterValueWrapper = conditionalValueWrapper;
+          break;
+        }
+      }
+
+      if (parameterValueWrapper && (parameterValueWrapper as InAppDefaultValue).useInAppDefault) {
+        console.log(`Filtering out parameter ${key} with "use in-app default" non-default value`);
+        continue;
+      }
+
+      if (parameterValueWrapper) {
+        const parameterValue = (parameterValueWrapper as ExplicitParameterValue).value;
+        evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterValue);
+        continue;
+      }
 
       if (!defaultValue) {
         // TODO: add logging once we have a wrapped logger.
@@ -350,8 +375,22 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     return new Proxy(mergedConfig, proxyHandler);
   }
 
+
+  public evaluateConditions(conditions: RemoteConfigServerCondition[]): Map<String, Boolean> {
+    // Note the order of the conditions is significant.
+    // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
+    // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
+    const evaluatedConditions = new Map();
+
+    for (const condition of conditions) {
+      evaluatedConditions.set(condition.name, this.evaluateCondition(condition));
+    }
+
+    return evaluatedConditions;
+  }
+
   // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=387;rcl=490046284
-  public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number): boolean {
+  public evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel: number = 0): boolean {
     if (nestingLevel >= 10) {
       throw new Error("Targeting Condition exceeded maximum depth!");
     }
@@ -367,7 +406,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     if (condition.false) {
       return false;
     }
-    throw new Error('Undefined condition');
+    return false;
   }
 
   // Ref http://google3/java/com/google/developers/mobile/targeting/libs/evaluation/ConditionEvaluator.java;l=556;rcl=490046284
