@@ -117,9 +117,7 @@ export interface RemoteConfigServerTemplateData {
 
 // @public
 export interface RemoteConfigServerTemplateOptions {
-    // (undocumented)
     defaultConfig?: RemoteConfigServerConfig;
-    // (undocumented)
     template?: RemoteConfigServerTemplateData;
 }
 

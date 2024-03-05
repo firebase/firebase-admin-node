@@ -319,12 +319,12 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       const { defaultValue, valueType } = parameter;
 
       if (!defaultValue) {
-        console.log(`Filtering out parameter ${key} with no default value`);
+        // TODO: add logging once we have a wrapped logger.
         continue;
       }
 
       if ((defaultValue as InAppDefaultValue).useInAppDefault) {
-        console.log(`Filtering out parameter ${key} with "use in-app default" value`);
+        // TODO: add logging once we have a wrapped logger.
         continue;
       }
 
