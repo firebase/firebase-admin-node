@@ -341,7 +341,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       }
 
       if (parameterValueWrapper && (parameterValueWrapper as InAppDefaultValue).useInAppDefault) {
-        console.log(`Filtering out parameter ${key} with "use in-app default" non-default value`);
+        // TODO: log this implicit action once we have a log wrapper.
         continue;
       }
 
