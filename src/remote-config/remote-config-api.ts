@@ -74,21 +74,21 @@ export interface RemoteConfigServerCondition {
    */
 
   // Ref http://google3/blaze-out/bin/google/internal/firebase/targeting/firebasetargeting_api_interfaces.ts;l=1298;rcl=610592324
-  and?: AndCondition;
-  or?: OrCondition;
-  true?: TrueCondition;
-  false?: FalseCondition;
-  percent?: PercentCondition;
+  and?: RemoteConfigServerAndCondition;
+  or?: RemoteConfigServerOrCondition;
+  true?: RemoteConfigServerTrueCondition;
+  false?: RemoteConfigServerFalseCondition;
+  percent?: RemoteConfigServerPercentCondition;
 }
 
 export type PercentConditionOperator =
     'UNKNOWN'|'LESS_OR_EQUAL'|'GREATER_THAN'|'BETWEEN';
 
-export interface AndCondition {
+export interface RemoteConfigServerAndCondition {
   conditions?: Array<RemoteConfigServerCondition>;
 }
 
-export interface OrCondition {
+export interface RemoteConfigServerOrCondition {
   conditions?: Array<RemoteConfigServerCondition>;
 }
 
@@ -97,13 +97,13 @@ export interface MicroPercentRange {
   microPercentUpperBound?: number;
 }
 
-export interface TrueCondition {
+export interface RemoteConfigServerTrueCondition {
 }
 
-export interface FalseCondition {
+export interface RemoteConfigServerFalseCondition {
 }
 
-export interface PercentCondition {
+export interface RemoteConfigServerPercentCondition {
   operator?: PercentConditionOperator;
   microPercent?: number;
   seed?: string;

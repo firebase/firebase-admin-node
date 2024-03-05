@@ -17,9 +17,9 @@
 'use strict';
 
 import {
-  AndCondition,
+  RemoteConfigServerAndCondition,
   RemoteConfigServerCondition,
-  OrCondition,
+  RemoteConfigServerOrCondition,
 } from './remote-config-api';
 
 export class RemoteConfigConditionEvaluator {
@@ -60,7 +60,7 @@ export class RemoteConfigConditionEvaluator {
     return false;
   }
 
-  private evaluateOrCondition(orCondition: OrCondition, nestingLevel: number): boolean {
+  private evaluateOrCondition(orCondition: RemoteConfigServerOrCondition, nestingLevel: number): boolean {
 
     const subConditions = orCondition.conditions || [];
 
@@ -76,7 +76,7 @@ export class RemoteConfigConditionEvaluator {
     return false;
   }
 
-  private evaluateAndCondition(andCondition: AndCondition, nestingLevel: number): boolean {
+  private evaluateAndCondition(andCondition: RemoteConfigServerAndCondition, nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
 
