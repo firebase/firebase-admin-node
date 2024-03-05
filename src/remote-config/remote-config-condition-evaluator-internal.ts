@@ -25,8 +25,8 @@ import {
 export class RemoteConfigConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
-  public evaluateConditions(conditions: RemoteConfigServerCondition[]): Map<String, Boolean> {
-    // Note the order of the conditions is significant.
+  public evaluateConditions(conditions: RemoteConfigServerCondition[]): Map<string, boolean> {
+    // The order of the conditions is significant.
     // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
     // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
     const evaluatedConditions = new Map();

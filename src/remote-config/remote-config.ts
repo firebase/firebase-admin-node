@@ -326,11 +326,16 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const {conditionalValues, defaultValue, valueType} = parameter;
 
+      // Supports parameters with no conditional values.
+      const normalizedConditionalValues = conditionalValues || {};
+
       let parameterValueWrapper: RemoteConfigParameterValue | undefined = undefined;
 
-      for (const [conditionName, conditionalValueWrapper] of Object.entries(conditionalValues || {})) {
-        if (evaluatedConditions.get(conditionName)) {
-          parameterValueWrapper = conditionalValueWrapper;
+      // Iterates in order over condition list. If there is a value associated
+      // with a condition, this checks if the condition is true.
+      for (const [conditionName, conditionEvaluation] of evaluatedConditions) {
+        if (normalizedConditionalValues[conditionName] && conditionEvaluation) {
+          parameterValueWrapper = normalizedConditionalValues[conditionName];
           break;
         }
       }
