@@ -214,6 +214,27 @@ export interface RemoteConfigServerTemplateData {
 }
 
 /**
+ * Represents optional arguments that can be used when instantiating {@link RemoteConfigServerTemplate}.
+ */
+export interface RemoteConfigServerTemplateOptions {
+
+  /**
+   * Defines in-app default parameter values, so that your app behaves as
+   * intended before it connects to the Remote Config backend, and so that
+   * default values are available if none are set on the backend.
+   */
+  defaultConfig?: RemoteConfigServerConfig,
+
+  /**
+   * Enables integrations to use template data loaded independently. For
+   * example, customers can reduce initialization latency by pre-fetching and
+   * caching template data and then using this option to initialize the SDK with
+   * that data.
+   */
+  template?: RemoteConfigServerTemplateData,
+}
+
+/**
  * Represents a stateful abstraction for a Remote Config server template.
  */
 export interface RemoteConfigServerTemplate {

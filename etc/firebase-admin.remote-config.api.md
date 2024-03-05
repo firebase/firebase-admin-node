@@ -46,8 +46,10 @@ export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
+    getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
+    initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate;
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
     publishTemplate(template: RemoteConfigTemplate, options?: {
         force: boolean;
@@ -83,6 +85,41 @@ export interface RemoteConfigParameterGroup {
 
 // @public
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+
+// @public
+export interface RemoteConfigServerCondition {
+    expression: string;
+    name: string;
+}
+
+// @public
+export type RemoteConfigServerConfig = {
+    [key: string]: string | boolean | number;
+};
+
+// @public
+export interface RemoteConfigServerTemplate {
+    cache: RemoteConfigServerTemplateData;
+    defaultConfig: RemoteConfigServerConfig;
+    evaluate(): RemoteConfigServerConfig;
+    load(): Promise<void>;
+}
+
+// @public
+export interface RemoteConfigServerTemplateData {
+    conditions: RemoteConfigServerCondition[];
+    readonly etag: string;
+    parameters: {
+        [key: string]: RemoteConfigParameter;
+    };
+    version?: Version;
+}
+
+// @public
+export interface RemoteConfigServerTemplateOptions {
+    defaultConfig?: RemoteConfigServerConfig;
+    template?: RemoteConfigServerTemplateData;
+}
 
 // @public
 export interface RemoteConfigTemplate {
