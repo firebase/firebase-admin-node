@@ -115,8 +115,12 @@ export interface RemoteConfigServerFalseCondition {
 /**
  * Defines supported operators for percent conditions.
  */
-export type PercentConditionOperator =
-  'UNKNOWN' | 'LESS_OR_EQUAL' | 'GREATER_THAN' | 'BETWEEN';
+export enum PercentConditionOperator {
+  UNKNOWN = 'UNKNOWN',
+  LESS_OR_EQUAL = 'LESS_OR_EQUAL',
+  GREATER_THAN = 'GREATER_THAN',
+  BETWEEN = 'BETWEEN'
+}
 
 /**
  * Represents the limit of percentiles to target in micro-percents. The value

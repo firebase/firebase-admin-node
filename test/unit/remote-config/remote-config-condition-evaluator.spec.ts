@@ -17,7 +17,7 @@
 'use strict';
 
 import * as chai from 'chai';
-import {RemoteConfigConditionEvaluator} from '../../../src/remote-config/remote-config-condition-evaluator-internal';
+import { RemoteConfigConditionEvaluator } from '../../../src/remote-config/remote-config-condition-evaluator-internal';
 
 const expect = chai.expect;
 
@@ -84,20 +84,20 @@ describe('RemoteConfigConditionEvaluator', () => {
       const condition = {
         name: 'is_enabled',
         condition: {
-        or: {
-          conditions: [
-            {
-              and: {
-                conditions: [
-                  {
-                    false: {
+          or: {
+            conditions: [
+              {
+                and: {
+                  conditions: [
+                    {
+                      false: {
+                      }
                     }
-                  }
-                ]
+                  ]
+                }
               }
-            }
-          ]
-        }
+            ]
+          }
         }
       };
       const evaluator = new RemoteConfigConditionEvaluator();

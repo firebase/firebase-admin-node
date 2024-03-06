@@ -16,13 +16,17 @@
 
 'use strict';
 
+import { isNumber } from 'lodash';
 import {
   RemoteConfigServerAndCondition,
   RemoteConfigServerCondition,
   RemoteConfigServerNamedCondition,
   RemoteConfigServerOrCondition,
   RemoteConfigServerPercentCondition,
+  PercentConditionOperator
 } from './remote-config-api';
+import * as farmhash from 'farmhash';
+import { FirebaseRemoteConfigError } from './remote-config-api-client-internal';
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -105,8 +109,43 @@ export class RemoteConfigConditionEvaluator {
     return true;
   }
 
-  private evaluatePercentCondition(percentCondition: RemoteConfigServerPercentCondition): boolean {
-    // TODO: implement
-    return false;
+  private evaluatePercentCondition(
+    percentCondition: RemoteConfigServerPercentCondition, 
+    context = {id: ''} // TODO: update context interface once we have a RemoteConfigServerContext object
+    ): boolean {
+      const {seed, operator, microPercent, microPercentRange} = percentCondition;
+      
+      if (!operator) {
+        throw new FirebaseRemoteConfigError("failed-precondition", "invalid operator in remote config server condition");
+      }
+
+      const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
+      const stringToHash = `${seedPrefix}${context.id}`;
+      const hash64 = parseFloat(farmhash.fingerprint64(stringToHash));
+      const instanceMicroPercentile = hash64 % (100 * 1_000_000);
+
+      switch(operator) {
+        case PercentConditionOperator.LESS_OR_EQUAL:
+          if (isNumber(microPercent)) {
+            return instanceMicroPercentile <= microPercent;
+          }
+          break;
+        case PercentConditionOperator.GREATER_THAN:
+          if (isNumber(microPercent)) {
+            return instanceMicroPercentile > microPercent;
+          }
+          break;
+        case PercentConditionOperator.BETWEEN:
+          if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound) && isNumber(microPercentRange.microPercentUpperBound)) {
+            return instanceMicroPercentile > microPercentRange.microPercentLowerBound
+                  && instanceMicroPercentile <= microPercentRange.microPercentUpperBound;
+          }
+          break;
+        case PercentConditionOperator.UNKNOWN:
+        default:
+          break;
+      }
+    
+      throw new FirebaseRemoteConfigError("failed-precondition", "invalid operator in remote config server condition");
   }
 }
