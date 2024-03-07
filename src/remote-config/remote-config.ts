@@ -36,6 +36,7 @@ import {
   RemoteConfigServerTemplateOptions,
   RemoteConfigParameterValue,
   RemoteConfigServerNamedCondition,
+  RemoteConfigServerContext,
 } from './remote-config-api';
 
 /**
@@ -311,7 +312,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   /**
    * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}.
    */
-  public evaluate(): RemoteConfigServerConfig {
+  public evaluate(context: RemoteConfigServerContext = {}): RemoteConfigServerConfig {
     if (!this.cache) {
       throw new FirebaseRemoteConfigError(
         'failed-precondition',
@@ -319,7 +320,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     }
 
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
-      this.cache.conditions);
+      this.cache.conditions, context);
 
     const evaluatedConfig: RemoteConfigServerConfig = {};
 

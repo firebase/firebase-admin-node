@@ -319,7 +319,7 @@ export interface RemoteConfigServerTemplate {
   /**
    * Evaluates the current template to produce a {@link RemoteConfigServerConfig}.
    */
-  evaluate(): RemoteConfigServerConfig;
+  evaluate(context?: RemoteConfigServerContext): RemoteConfigServerConfig;
 
   /**
    * Fetches and caches the current active version of the
@@ -327,6 +327,11 @@ export interface RemoteConfigServerTemplate {
    */
   load(): Promise<void>;
 }
+
+/**
+ * Represents template evaluation input signals.
+ */
+export type RemoteConfigServerContext = { [key: string]: string };
 
 /**
  * Interface representing a Remote Config user.

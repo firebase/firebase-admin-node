@@ -31,8 +31,9 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         }
       };
+      const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateConditions([condition])).deep.equals(
+      expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([["is_enabled", false]]));
     });
 
@@ -50,8 +51,9 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         }
       };
+      const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateConditions([condition])).deep.equals(
+      expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([["is_enabled", true]]));
     });
 
@@ -75,8 +77,9 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         }
       };
+      const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateConditions([condition])).deep.equals(
+      expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([["is_enabled", true]]));
     });
 
@@ -100,8 +103,9 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         }
       };
+      const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
-      expect(evaluator.evaluateConditions([condition])).deep.equals(
+      expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([["is_enabled", false]]));
     });
   });

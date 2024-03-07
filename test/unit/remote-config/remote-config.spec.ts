@@ -897,9 +897,10 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        return remoteConfig.getServerTemplate()
-          .then((template: RemoteConfigServerTemplate) => {
-            const config = template.evaluate!();
+        const template = remoteConfig.initServerTemplate();
+        return template.load()
+          .then(() => {
+            const config = template.evaluate();
             expect(config.dog_type).to.equal('corgi');
             expect(config.dog_type_enabled).to.equal(true);
             expect(config.dog_age).to.equal(22);

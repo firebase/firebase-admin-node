@@ -20,6 +20,7 @@ import { isNumber } from 'lodash';
 import {
   RemoteConfigServerAndCondition,
   RemoteConfigServerCondition,
+  RemoteConfigServerContext,
   RemoteConfigServerNamedCondition,
   RemoteConfigServerOrCondition,
   RemoteConfigServerPercentCondition,
@@ -37,7 +38,9 @@ import { FirebaseRemoteConfigError } from './remote-config-api-client-internal';
 export class RemoteConfigConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
-  public evaluateConditions(namedConditions: RemoteConfigServerNamedCondition[]): Map<string, boolean> {
+  public evaluateConditions(
+    namedConditions: RemoteConfigServerNamedCondition[],
+    context: RemoteConfigServerContext): Map<string, boolean> {
     // The order of the conditions is significant.
     // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
     // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
@@ -46,23 +49,26 @@ export class RemoteConfigConditionEvaluator {
     for (const namedCondition of namedConditions) {
       evaluatedConditions.set(
         namedCondition.name,
-        this.evaluateCondition(namedCondition.condition));
+        this.evaluateCondition(namedCondition.condition, context));
     }
 
     return evaluatedConditions;
   }
 
-  private evaluateCondition(condition: RemoteConfigServerCondition, nestingLevel = 0): boolean {
+  private evaluateCondition(
+    condition: RemoteConfigServerCondition,
+    context: RemoteConfigServerContext,
+    nestingLevel: number = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
-      console.log('Evaluating condition to false because it exceeded maximum depth ' +
+      throw new Error('Evaluating condition to false because it exceeded maximum depth ' +
         RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH);
       return false;
     }
     if (condition.or) {
-      return this.evaluateOrCondition(condition.or, nestingLevel + 1)
+      return this.evaluateOrCondition(condition.or, context, nestingLevel + 1)
     }
     if (condition.and) {
-      return this.evaluateAndCondition(condition.and, nestingLevel + 1)
+      return this.evaluateAndCondition(condition.and, context, nestingLevel + 1)
     }
     if (condition.true) {
       return true;
@@ -71,19 +77,23 @@ export class RemoteConfigConditionEvaluator {
       return false;
     }
     if (condition.percent) {
-      return this.evaluatePercentCondition(condition.percent);
+      return this.evaluatePercentCondition(condition.percent, context);
     }
     console.log(`Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
     return false;
   }
 
-  private evaluateOrCondition(orCondition: RemoteConfigServerOrCondition, nestingLevel: number): boolean {
+  private evaluateOrCondition(
+    orCondition: RemoteConfigServerOrCondition,
+    context: RemoteConfigServerContext,
+    nestingLevel: number): boolean {
 
     const subConditions = orCondition.conditions || [];
 
     for (const subCondition of subConditions) {
       // Recursive call.
-      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+      const result = this.evaluateCondition(
+        subCondition, context, nestingLevel + 1);
 
       // Short-circuit the evaluation result for true.
       if (result) {
@@ -93,13 +103,17 @@ export class RemoteConfigConditionEvaluator {
     return false;
   }
 
-  private evaluateAndCondition(andCondition: RemoteConfigServerAndCondition, nestingLevel: number): boolean {
+  private evaluateAndCondition(
+    andCondition: RemoteConfigServerAndCondition,
+    context: RemoteConfigServerContext,
+    nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
 
     for (const subCondition of subConditions) {
       // Recursive call.
-      const result = this.evaluateCondition(subCondition, nestingLevel + 1);
+      const result = this.evaluateCondition(
+        subCondition, context, nestingLevel + 1);
 
       // Short-circuit the evaluation result for false.
       if (!result) {
@@ -110,13 +124,18 @@ export class RemoteConfigConditionEvaluator {
   }
 
   private evaluatePercentCondition(
-    percentCondition: RemoteConfigServerPercentCondition, 
-    context = { id: '' } // TODO: update context interface once we have a RemoteConfigServerContext object
+    percentCondition: RemoteConfigServerPercentCondition,
+    context: RemoteConfigServerContext
   ): boolean {
     const { seed, operator, microPercent, microPercentRange } = percentCondition;
-      
+
     if (!operator) {
       throw new FirebaseRemoteConfigError('failed-precondition', 'invalid operator in remote config server condition');
+    }
+
+    if (!context.id) {
+      throw new FirebaseRemoteConfigError('failed-precondition',
+        'context argument is missing an "id" field.');
     }
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
@@ -125,28 +144,30 @@ export class RemoteConfigConditionEvaluator {
     const instanceMicroPercentile = hash64 % (100 * 1_000_000);
 
     switch (operator) {
-    case PercentConditionOperator.LESS_OR_EQUAL:
-      if (isNumber(microPercent)) {
-        return instanceMicroPercentile <= microPercent;
-      }
-      break;
-    case PercentConditionOperator.GREATER_THAN:
-      if (isNumber(microPercent)) {
-        return instanceMicroPercentile > microPercent;
-      }
-      break;
-    case PercentConditionOperator.BETWEEN:
-      if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound) 
-        && isNumber(microPercentRange.microPercentUpperBound)) {
-        return instanceMicroPercentile > microPercentRange.microPercentLowerBound
-                  && instanceMicroPercentile <= microPercentRange.microPercentUpperBound;
-      }
-      break;
-    case PercentConditionOperator.UNKNOWN:
-    default:
-      break;
+      case PercentConditionOperator.LESS_OR_EQUAL:
+        if (isNumber(microPercent)) {
+          return instanceMicroPercentile <= microPercent;
+        }
+        break;
+      case PercentConditionOperator.GREATER_THAN:
+        if (isNumber(microPercent)) {
+          return instanceMicroPercentile > microPercent;
+        }
+        break;
+      case PercentConditionOperator.BETWEEN:
+        if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound)
+          && isNumber(microPercentRange.microPercentUpperBound)) {
+          return instanceMicroPercentile > microPercentRange.microPercentLowerBound
+            && instanceMicroPercentile <= microPercentRange.microPercentUpperBound;
+        }
+        break;
+      case PercentConditionOperator.UNKNOWN:
+      default:
+        break;
     }
-    
-    throw new FirebaseRemoteConfigError('failed-precondition', 'invalid operator in remote config server condition');
+
+    throw new FirebaseRemoteConfigError(
+      'failed-precondition',
+      'invalid operator in remote config server condition');
   }
 }
