@@ -177,16 +177,6 @@ export class RemoteConfig {
   }
 
   /**
-   * Instantiates {@link RemoteConfigServerTemplate} and then fetches and caches the latest
-   * template version of the project.
-   */
-  public async getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate> {
-    const template = this.initServerTemplate(options);
-    await template.load();
-    return template;
-  }
-
-  /**
    * Synchronously instantiates {@link RemoteConfigServerTemplate}.
    */
   public initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate {
