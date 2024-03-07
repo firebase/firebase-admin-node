@@ -35,7 +35,7 @@ import {
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  RemoteConfigServerCondition, RemoteConfigServerTemplateData
+  RemoteConfigServerCondition, RemoteConfigServerTemplate, RemoteConfigServerTemplateData
 } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
@@ -542,6 +542,82 @@ describe('RemoteConfig', () => {
     });
   });
 
+  describe('getServerTemplate', () => {
+    const operationName = 'getServerTemplate';
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+
+      return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should resolve a server template on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(SERVER_REMOTE_CONFIG_RESPONSE as RemoteConfigServerTemplateData);
+      stubs.push(stub);
+
+      return remoteConfig.getServerTemplate()
+        .then((template) => {
+          expect(template.cache.conditions.length).to.equal(1);
+          expect(template.cache.conditions[0].name).to.equal('ios');
+          expect(template.cache.conditions[0].expression).to.equal('device.os == \'ios\'');
+          expect(template.cache.etag).to.equal('etag-123456789012-5');
+
+          const version = template.cache.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
+
+          const key = 'holiday_promo_enabled';
+          const p1 = template.cache.parameters[key];
+          expect(p1.defaultValue).deep.equals({ value: 'true' });
+          expect(p1.conditionalValues).deep.equals({ ios: { useInServerDefault: true } });
+          expect(p1.description).equals('this is a promo');
+          expect(p1.valueType).equals('BOOLEAN');
+
+          const c = template.cache.conditions.find((c) => c.name === 'ios');
+          expect(c).to.be.not.undefined;
+          const cond = c as RemoteConfigServerCondition;
+          expect(cond.name).to.equal('ios');
+          expect(cond.expression).to.equal('device.os == \'ios\'');
+
+          const parsed = JSON.parse(JSON.stringify(template.cache));
+          const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+          const expectedVersion = deepCopy(VERSION_INFO);
+          expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+          expectedTemplate.version = expectedVersion;
+          expect(parsed).deep.equals(expectedTemplate);
+        });
+    });
+
+    it('should set defaultConfig when passed', () => {
+      const defaultConfig = {
+        holiday_promo_enabled: false,
+        holiday_promo_discount: 20,
+      };
+
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(SERVER_REMOTE_CONFIG_RESPONSE as RemoteConfigServerTemplateData);
+      stubs.push(stub);
+
+      return remoteConfig.getServerTemplate({ defaultConfig })
+        .then((template) => {
+          expect(template.defaultConfig.holiday_promo_enabled).to.equal(false);
+          expect(template.defaultConfig.holiday_promo_discount).to.equal(20);
+        });
+    });
+  });
+
   describe('initServerTemplate', () => {
     it('should set and instantiates template when passed', () => {
       const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as RemoteConfigServerTemplateData;
@@ -612,8 +688,8 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .rejects(INTERNAL_ERROR);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load().should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+
+        return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
       });
 
       it('should reject when API response is invalid', () => {
@@ -621,8 +697,7 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(undefined);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load().should.eventually.be.rejected.and.have.property(
+        return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.have.property(
           'message', 'Invalid Remote Config template: undefined');
       });
 
@@ -633,8 +708,7 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
+        return remoteConfig.getServerTemplate()
           .should.eventually.be.rejected.and.have.property(
             'message', `Invalid Remote Config template: ${JSON.stringify(response)}`);
       });
@@ -646,8 +720,7 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
+        return remoteConfig.getServerTemplate()
           .should.eventually.be.rejected.and.have.property(
             'message', 'Remote Config parameters must be a non-null object');
       });
@@ -659,8 +732,7 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
+        return remoteConfig.getServerTemplate()
           .should.eventually.be.rejected.and.have.property(
             'message', 'Remote Config conditions must be an array');
       });
@@ -672,9 +744,8 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             // If parameters are not present in the response, we set it to an empty object.
             expect(template.cache.parameters).deep.equals({});
           });
@@ -687,9 +758,8 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             // If conditions are not present in the response, we set it to an empty array.
             expect(template.cache.conditions).deep.equals([]);
           });
@@ -700,9 +770,9 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             expect(template.cache.conditions.length).to.equal(1);
             expect(template.cache.conditions[0].name).to.equal('ios');
             expect(template.cache.conditions[0].expression).to.equal('device.os == \'ios\'');
@@ -749,9 +819,9 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             expect(template.cache.etag).to.equal('etag-123456789012-5');
 
             const version = template.cache.version!;
@@ -775,9 +845,9 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             expect(template.cache.etag).to.equal('etag-123456789012-5');
 
             const version = template.cache.version!;
@@ -801,9 +871,9 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, operationName)
           .resolves(response as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
             expect(template.cache.etag).to.equal('etag-123456789012-5');
 
             const version = template.cache.version!;
@@ -825,9 +895,8 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate();
-        return template.load()
-          .then(() => {
+        return remoteConfig.getServerTemplate()
+          .then((template: RemoteConfigServerTemplate) => {
             const config = template.evaluate!();
             expect(config.dog_type).to.equal('corgi');
             expect(config.dog_type_enabled).to.equal(true);
@@ -841,13 +910,12 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate({
+        return remoteConfig.getServerTemplate({
           defaultConfig: {
             dog_coat: 'blue merle',
           }
-        });
-        return template.load()
-          .then(() => {
+        })
+          .then((template: RemoteConfigServerTemplate) => {
             const config = template.evaluate!();
             expect(config.dog_coat).to.equal(template.defaultConfig.dog_coat);
           });
@@ -858,15 +926,15 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate({
+        return remoteConfig.getServerTemplate({
           defaultConfig: {
             dog_no_remote_default_value: 'local default'
           }
         })
-        return template.load().then(() => {
-          const config = template.evaluate!();
-          expect(config.dog_no_remote_default_value).to.equal(template.defaultConfig.dog_no_remote_default_value);
-        });
+          .then((template: RemoteConfigServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.dog_no_remote_default_value).to.equal(template.defaultConfig.dog_no_remote_default_value);
+          });
       });
 
       it('uses local default when in-app default value specified', () => {
@@ -874,15 +942,15 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate({
+        return remoteConfig.getServerTemplate({
           defaultConfig: {
             dog_use_inapp_default: '🐕'
           }
         })
-        return template.load().then(() => {
-          const config = template.evaluate!();
-          expect(config.dog_use_inapp_default).to.equal(template.defaultConfig.dog_use_inapp_default);
-        });
+          .then((template: RemoteConfigServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.dog_use_inapp_default).to.equal(template.defaultConfig.dog_use_inapp_default);
+          });
       });
 
       it('overrides local default when value exists', () => {
@@ -890,15 +958,15 @@ describe('RemoteConfig', () => {
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as RemoteConfigServerTemplateData);
         stubs.push(stub);
-        const template = remoteConfig.initServerTemplate({
+        return remoteConfig.getServerTemplate({
           defaultConfig: {
             dog_type_enabled: false
           }
         })
-        return template.load().then(() => {
-          const config = template.evaluate!();
-          expect(config.dog_type_enabled).to.equal(template.defaultConfig.dog_type_enabled);
-        });
+          .then((template: RemoteConfigServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.dog_type_enabled).to.equal(template.defaultConfig.dog_type_enabled);
+          });
       });
     });
   });
