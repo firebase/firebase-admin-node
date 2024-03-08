@@ -132,8 +132,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", true]]));
       });
 
@@ -156,8 +157,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", true]]));
       });
 
@@ -183,8 +185,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", true]]));
       });
 
@@ -207,8 +210,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", false]]));
       });
 
@@ -231,8 +235,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", false]]));
       });
 
@@ -258,8 +263,9 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
+        const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
-        expect(evaluator.evaluateConditions([condition])).deep.equals(
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([["is_enabled", false]]));
       });
 
@@ -338,18 +344,18 @@ describe('RemoteConfigConditionEvaluator', () => {
         condition: RemoteConfigServerPercentCondition,
         numOfAssignments: number,
         conditionEvaluator: RemoteConfigConditionEvaluator): number {
+
         let evalTrueCount = 0;
         for (let i = 0; i < numOfAssignments; i++) {
-          let id = uuidv4();
           let clonedCondition = {
             ...clone(condition),
-            seed: id
+            seed: 'seed'
           };
-
+          const context = { id: uuidv4() }
           if (conditionEvaluator.evaluateConditions([{
             name: 'is_enabled',
             condition: { percent: clonedCondition }
-          }]).get('is_enabled') == true) { evalTrueCount++ }
+          }], context).get('is_enabled') == true) { evalTrueCount++ }
         }
         return evalTrueCount;
       }
