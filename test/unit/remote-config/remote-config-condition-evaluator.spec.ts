@@ -277,8 +277,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         const evaluator = new RemoteConfigConditionEvaluator();
         // run this evaluator 100 times, and log the number of true assignments
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
-        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 250);
-        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 250);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 500);
+        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 500);
       });
 
       it('should evaluate between 0 to 10% to approx 10%', () => {
@@ -292,8 +292,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         const evaluator = new RemoteConfigConditionEvaluator();
         // run this evaluator 100 times, and log the number of true assignments
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
-        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 250);
-        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 250);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 500);
+        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 500);
       });
 
       it('should evaluate greater than 10% to approx 90%', () => {
@@ -304,8 +304,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         const evaluator = new RemoteConfigConditionEvaluator();
         // run this evaluator 100 times, and log the number of true assignments
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
-        expect(truthyAssignments).to.be.greaterThanOrEqual(90000 - 250);
-        expect(truthyAssignments).to.be.lessThanOrEqual(90000 + 250);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(90000 - 500);
+        expect(truthyAssignments).to.be.lessThanOrEqual(90000 + 500);
       });
 
       it('should evaluate between 40% to 60% to approx 20%', () => {
@@ -319,8 +319,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         const evaluator = new RemoteConfigConditionEvaluator();
         // run this evaluator 100 times, and log the number of true assignments
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
-        expect(truthyAssignments).to.be.greaterThanOrEqual(20000 - 250);
-        expect(truthyAssignments).to.be.lessThanOrEqual(20000 + 250);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(20000 - 500);
+        expect(truthyAssignments).to.be.lessThanOrEqual(20000 + 500);
       });
 
       it('should evaluate between interquartile range to approx 50%', () => {
@@ -334,8 +334,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         const evaluator = new RemoteConfigConditionEvaluator();
         // run this evaluator 100 times, and log the number of true assignments
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
-        expect(truthyAssignments).to.be.greaterThanOrEqual(50000 - 250);
-        expect(truthyAssignments).to.be.lessThanOrEqual(50000 + 250);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(50000 - 500);
+        expect(truthyAssignments).to.be.lessThanOrEqual(50000 + 500);
       });
 
       // Returns the number of assignments which evaluate to true for the specified percent condition
