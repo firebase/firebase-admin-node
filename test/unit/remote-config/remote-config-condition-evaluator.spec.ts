@@ -18,6 +18,9 @@
 
 import * as chai from 'chai';
 import { RemoteConfigConditionEvaluator } from '../../../src/remote-config/remote-config-condition-evaluator-internal';
+import { PercentConditionOperator, RemoteConfigServerPercentCondition } from '../../../src/remote-config/remote-config-api';
+import { v4 as uuidv4 } from 'uuid';
+import { clone } from 'lodash';
 
 const expect = chai.expect;
 
@@ -107,6 +110,249 @@ describe('RemoteConfigConditionEvaluator', () => {
       const evaluator = new RemoteConfigConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([["is_enabled", false]]));
+    });
+
+    describe('percentCondition', () => {
+      it('should evaluate less or equal to max to true', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      seed: "abcdef",
+                      microPercent: 100_000_000
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", true]]));
+      });
+
+      it('should evaluate greater than min to true', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.GREATER_THAN,
+                      seed: "abcdef",
+                      microPercent: 0
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", true]]));
+      });
+
+      it('should evaluate between min and max to true', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.BETWEEN,
+                      seed: "abcdef",
+                      microPercentRange: {
+                        microPercentLowerBound: 0,
+                        microPercentUpperBound: 100_000_000
+                      }
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", true]]));
+      });
+
+      it('should evaluate less or equal to min to false', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      seed: "abcdef",
+                      microPercent: 0
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", false]]));
+      });
+
+      it('should evaluate greater than max to false', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.GREATER_THAN,
+                      seed: "abcdef",
+                      microPercent: 100_000_000
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", false]]));
+      });
+
+      it('should evaluate between equal bounds to false', () => {
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.BETWEEN,
+                      seed: "abcdef",
+                      microPercentRange: {
+                        microPercentLowerBound: 50000000,
+                        microPercentUpperBound: 50000000
+                      }
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition])).deep.equals(
+          new Map([["is_enabled", false]]));
+      });
+
+      it('should evaluate less or equal to 10% to approx 10%', () => {
+        const percentCondition = {
+          operator: PercentConditionOperator.LESS_OR_EQUAL,
+          microPercent: 10_000_000 // 10%
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        // run this evaluator 100 times, and log the number of true assignments
+        const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 250);
+        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 250);
+      });
+
+      it('should evaluate between 0 to 10% to approx 10%', () => {
+        const percentCondition = {
+          operator: PercentConditionOperator.BETWEEN,
+          microPercentRange: {
+            microPercentLowerBound: 0,
+            microPercentUpperBound: 10_000_000
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        // run this evaluator 100 times, and log the number of true assignments
+        const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(10000 - 250);
+        expect(truthyAssignments).to.be.lessThanOrEqual(10000 + 250);
+      });
+
+      it('should evaluate greater than 10% to approx 90%', () => {
+        const percentCondition = {
+          operator: PercentConditionOperator.GREATER_THAN,
+          microPercent: 10_000_000
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        // run this evaluator 100 times, and log the number of true assignments
+        const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(90000 - 250);
+        expect(truthyAssignments).to.be.lessThanOrEqual(90000 + 250);
+      });
+
+      it('should evaluate between 40% to 60% to approx 20%', () => {
+        const percentCondition = {
+          operator: PercentConditionOperator.BETWEEN,
+          microPercentRange: {
+            microPercentLowerBound: 40_000_000,
+            microPercentUpperBound: 60_000_000
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        // run this evaluator 100 times, and log the number of true assignments
+        const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(20000 - 250);
+        expect(truthyAssignments).to.be.lessThanOrEqual(20000 + 250);
+      });
+
+      it('should evaluate between interquartile range to approx 50%', () => {
+        const percentCondition = {
+          operator: PercentConditionOperator.BETWEEN,
+          microPercentRange: {
+            microPercentLowerBound: 25_000_000,
+            microPercentUpperBound: 75_000_000
+          }
+        };
+        const evaluator = new RemoteConfigConditionEvaluator();
+        // run this evaluator 100 times, and log the number of true assignments
+        const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
+        expect(truthyAssignments).to.be.greaterThanOrEqual(50000 - 250);
+        expect(truthyAssignments).to.be.lessThanOrEqual(50000 + 250);
+      });
+
+      // Returns the number of assignments which evaluate to true for the specified percent condition
+      // This method randomly generates the ids for each assignment for this purpose
+      function evaluateRandomAssignments(
+        condition: RemoteConfigServerPercentCondition,
+        numOfAssignments: number,
+        conditionEvaluator: RemoteConfigConditionEvaluator): number {
+        let evalTrueCount = 0;
+        for (let i = 0; i < numOfAssignments; i++) {
+          let id = uuidv4();
+          let clonedCondition = {
+            ...clone(condition),
+            seed: id
+          };
+
+          if (conditionEvaluator.evaluateConditions([{
+            name: 'is_enabled',
+            condition: { percent: clonedCondition }
+          }]).get('is_enabled') == true) { evalTrueCount++ }
+        }
+        return evalTrueCount;
+      }
     });
   });
 });
