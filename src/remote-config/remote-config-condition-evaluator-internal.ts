@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2024 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,9 +60,9 @@ export class RemoteConfigConditionEvaluator {
     context: RemoteConfigServerContext,
     nestingLevel: number = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
-      throw new Error('Evaluating condition to false because it exceeded maximum depth ' +
+      throw new FirebaseRemoteConfigError('failed-precondition',
+        'Evaluating condition to false because it exceeded maximum depth ' +
         RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH);
-      return false;
     }
     if (condition.or) {
       return this.evaluateOrCondition(condition.or, context, nestingLevel + 1)
@@ -79,8 +79,8 @@ export class RemoteConfigConditionEvaluator {
     if (condition.percent) {
       return this.evaluatePercentCondition(condition.percent, context);
     }
-    console.log(`Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
-    return false;
+    throw new FirebaseRemoteConfigError('failed-precondition',
+      `Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
   }
 
   private evaluateOrCondition(
