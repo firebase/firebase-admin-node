@@ -338,8 +338,8 @@ describe('RemoteConfigConditionEvaluator', () => {
         expect(truthyAssignments).to.be.lessThanOrEqual(50000 + range);
       });
 
-      // Returns the number of assignments which evaluate to true for the specified percent condition
-      // This method randomly generates the ids for each assignment for this purpose
+      // Returns the number of assignments which evaluate to true for the specified percent condition.
+      // This method randomly generates the ids for each assignment for this purpose.
       function evaluateRandomAssignments(
         condition: RemoteConfigServerPercentCondition,
         numOfAssignments: number,

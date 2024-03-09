@@ -57,7 +57,7 @@ export interface RemoteConfigCondition {
 /**
  * Represents a Remote Config condition in the dataplane.
  * A condition targets a specific group of users. A list of these conditions
- * make up part of a Remote Config template.
+ * comprise part of a Remote Config template.
  */
 export interface RemoteConfigServerNamedCondition {
 
