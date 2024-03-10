@@ -516,6 +516,7 @@ export interface UpdateProjectConfigRequest {
 
 // @public
 export interface UpdateRequest {
+    customUserClaims?: object | null;
     disabled?: boolean;
     displayName?: string | null;
     email?: string;

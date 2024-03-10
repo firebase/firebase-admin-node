@@ -124,10 +124,9 @@ export interface MultiFactorUpdateSettings {
 }
 
 /**
- * Interface representing the properties to update on the provided user.
+ * Interface representing the base properties for `CreateRequest` and `UpdateRequest`.
  */
-export interface UpdateRequest {
-
+export interface BaseCreateUpdateUserRequest {
   /**
    * Whether or not the user is disabled: `true` for disabled;
    * `false` for enabled.
@@ -163,6 +162,12 @@ export interface UpdateRequest {
    * The user's photo URL.
    */
   photoURL?: string | null;
+}
+
+/**
+ * Interface representing the properties to update on the provided user.
+ */
+export interface UpdateRequest extends BaseCreateUpdateUserRequest {
 
   /**
    * The user's updated multi-factor related properties.
@@ -188,6 +193,13 @@ export interface UpdateRequest {
    * Unlinks this user from the specified providers.
    */
   providersToUnlink?: string[];
+
+  /**
+   * If provided, sets additional developer claims on the user's token, overwriting
+   * any existing claims. Providing `null` will clear any existing custom claims.
+   * If not provided or `undefined`, then existing claims will remain unchanged.
+   */
+  customUserClaims?: object | null;
 }
 
 /**
@@ -231,7 +243,7 @@ export interface UserProvider {
  * Interface representing the properties to set on a new user record to be
  * created.
  */
-export interface CreateRequest extends UpdateRequest {
+export interface CreateRequest extends BaseCreateUpdateUserRequest {
 
   /**
    * The user's `uid`.
