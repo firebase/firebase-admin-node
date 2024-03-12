@@ -140,7 +140,8 @@ export class RemoteConfigConditionEvaluator {
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.id}`;
-    const hash64 = parseFloat(farmhash.fingerprint64(stringToHash));
+    const hash64 = Math.abs(parseFloat(farmhash.fingerprint64(stringToHash)));
+    
     const instanceMicroPercentile = hash64 % (100 * 1_000_000);
 
     switch (operator) {
