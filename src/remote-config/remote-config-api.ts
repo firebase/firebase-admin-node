@@ -103,12 +103,14 @@ export interface RemoteConfigServerOrCondition {
 /**
  * Represents a condition that always evaluates to true.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface RemoteConfigServerTrueCondition {
 }
 
 /**
  * Represents a condition that always evaluates to false.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface RemoteConfigServerFalseCondition {
 }
 

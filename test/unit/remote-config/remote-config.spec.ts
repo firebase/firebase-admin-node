@@ -810,13 +810,13 @@ describe('RemoteConfig', () => {
             const cond = c as RemoteConfigServerNamedCondition;
             expect(cond.name).to.equal('ios');
             expect(cond.condition).deep.equals({
-              "or": {
-                "conditions": [
+              'or': {
+                'conditions': [
                   {
-                    "and": {
-                      "conditions": [
+                    'and': {
+                      'conditions': [
                         {
-                          "true": {}
+                          'true': {}
                         }
                       ]
                     }
@@ -961,7 +961,7 @@ describe('RemoteConfig', () => {
                 valueType: 'BOOLEAN',
               },
             },
-            etag: "123"
+            etag: '123'
           }
         });
         const config = template.evaluate();
@@ -1023,7 +1023,7 @@ describe('RemoteConfig', () => {
                 valueType: 'STRING',
               },
             },
-            etag: "123"
+            etag: '123'
           }
         });
         const config = template.evaluate();

@@ -58,7 +58,7 @@ export class RemoteConfigConditionEvaluator {
   private evaluateCondition(
     condition: RemoteConfigServerCondition,
     context: RemoteConfigServerContext,
-    nestingLevel: number = 0): boolean {
+    nestingLevel = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
       throw new FirebaseRemoteConfigError('failed-precondition',
         'Evaluating condition to false because it exceeded maximum depth ' +
@@ -141,30 +141,30 @@ export class RemoteConfigConditionEvaluator {
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.id}`;
     const hash64 = Math.abs(parseFloat(farmhash.fingerprint64(stringToHash)));
-    
+
     const instanceMicroPercentile = hash64 % (100 * 1_000_000);
 
     switch (operator) {
-      case PercentConditionOperator.LESS_OR_EQUAL:
-        if (isNumber(microPercent)) {
-          return instanceMicroPercentile <= microPercent;
-        }
-        break;
-      case PercentConditionOperator.GREATER_THAN:
-        if (isNumber(microPercent)) {
-          return instanceMicroPercentile > microPercent;
-        }
-        break;
-      case PercentConditionOperator.BETWEEN:
-        if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound)
+    case PercentConditionOperator.LESS_OR_EQUAL:
+      if (isNumber(microPercent)) {
+        return instanceMicroPercentile <= microPercent;
+      }
+      break;
+    case PercentConditionOperator.GREATER_THAN:
+      if (isNumber(microPercent)) {
+        return instanceMicroPercentile > microPercent;
+      }
+      break;
+    case PercentConditionOperator.BETWEEN:
+      if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound)
           && isNumber(microPercentRange.microPercentUpperBound)) {
-          return instanceMicroPercentile > microPercentRange.microPercentLowerBound
+        return instanceMicroPercentile > microPercentRange.microPercentLowerBound
             && instanceMicroPercentile <= microPercentRange.microPercentUpperBound;
-        }
-        break;
-      case PercentConditionOperator.UNKNOWN:
-      default:
-        break;
+      }
+      break;
+    case PercentConditionOperator.UNKNOWN:
+    default:
+      break;
     }
 
     throw new FirebaseRemoteConfigError(

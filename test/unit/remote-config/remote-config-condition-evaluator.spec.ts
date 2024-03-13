@@ -19,7 +19,10 @@
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { RemoteConfigConditionEvaluator } from '../../../src/remote-config/remote-config-condition-evaluator-internal';
-import { PercentConditionOperator, RemoteConfigServerPercentCondition } from '../../../src/remote-config/remote-config-api';
+import {
+  PercentConditionOperator,
+  RemoteConfigServerPercentCondition
+} from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
 import * as farmhash from 'farmhash';
@@ -50,7 +53,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-        new Map([["is_enabled", false]]));
+        new Map([['is_enabled', false]]));
     });
 
     it('should evaluate empty OR.AND condition to true', () => {
@@ -70,7 +73,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-        new Map([["is_enabled", true]]));
+        new Map([['is_enabled', true]]));
     });
 
     it('should evaluate OR.AND.TRUE condition to true', () => {
@@ -96,7 +99,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-        new Map([["is_enabled", true]]));
+        new Map([['is_enabled', true]]));
     });
 
     it('should evaluate OR.AND.FALSE condition to false', () => {
@@ -122,7 +125,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       const context = {}
       const evaluator = new RemoteConfigConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-        new Map([["is_enabled", false]]));
+        new Map([['is_enabled', false]]));
     });
 
     describe('percentCondition', () => {
@@ -136,7 +139,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 100_000_000
                     }
                   }],
@@ -148,7 +151,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", true]]));
+          new Map([['is_enabled', true]]));
       });
 
       it('should evaluate less or equal to min to false', () => {
@@ -161,7 +164,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 0
                     }
                   }],
@@ -173,13 +176,13 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", false]]));
+          new Map([['is_enabled', false]]));
       });
 
       it('should evaluate 9 as less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("9");
+          .returns('9');
 
         stubs.push(stub);
         const condition = {
@@ -191,7 +194,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 10
                     }
                   }],
@@ -210,7 +213,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       it('should evaluate 10 as less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("10");
+          .returns('10');
 
         stubs.push(stub);
         const condition = {
@@ -222,7 +225,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 10
                     }
                   }],
@@ -241,7 +244,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       it('should evaluate 11 as not less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("11");
+          .returns('11');
 
         stubs.push(stub);
         const condition = {
@@ -253,7 +256,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 10
                     }
                   }],
@@ -279,7 +282,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 0
                     }
                   }],
@@ -291,13 +294,13 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", true]]));
+          new Map([['is_enabled', true]]));
       });
 
       it('should evaluate 11M as greater than 10M', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("11");
+          .returns('11');
 
         stubs.push(stub);
         const condition = {
@@ -309,7 +312,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 10
                     }
                   }],
@@ -328,7 +331,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       it('should evaluate 9 as not greater than 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("9");
+          .returns('9');
         stubs.push(stub);
 
         const condition = {
@@ -340,7 +343,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 10
                     }
                   }],
@@ -366,7 +369,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercent: 100_000_000
                     }
                   }],
@@ -378,7 +381,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", false]]));
+          new Map([['is_enabled', false]]));
       });
 
       it('should evaluate between min and max to true', () => {
@@ -391,7 +394,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 0,
                         microPercentUpperBound: 100_000_000
@@ -406,13 +409,13 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", true]]));
+          new Map([['is_enabled', true]]));
       });
 
       it('should evaluate 10 as between 9 and 11', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("10");
+          .returns('10');
         stubs.push(stub);
 
         const condition = {
@@ -424,7 +427,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 9,
                         microPercentUpperBound: 11
@@ -453,7 +456,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 50000000,
                         microPercentUpperBound: 50000000
@@ -468,13 +471,13 @@ describe('RemoteConfigConditionEvaluator', () => {
         const context = { id: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-          new Map([["is_enabled", false]]));
+          new Map([['is_enabled', false]]));
       });
 
       it('should evaluate 12 as not between 9 and 11', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns("12");
+          .returns('12');
         stubs.push(stub);
 
         const condition = {
@@ -486,7 +489,7 @@ describe('RemoteConfigConditionEvaluator', () => {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
-                      seed: "abcdef",
+                      seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 9,
                         microPercentUpperBound: 11
@@ -596,7 +599,7 @@ describe('RemoteConfigConditionEvaluator', () => {
 
         let evalTrueCount = 0;
         for (let i = 0; i < numOfAssignments; i++) {
-          let clonedCondition = {
+          const clonedCondition = {
             ...clone(condition),
             seed: 'seed'
           };
