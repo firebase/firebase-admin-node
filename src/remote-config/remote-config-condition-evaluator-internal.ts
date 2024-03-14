@@ -133,13 +133,13 @@ export class RemoteConfigConditionEvaluator {
       throw new FirebaseRemoteConfigError('failed-precondition', 'invalid operator in remote config server condition');
     }
 
-    if (!context.id) {
+    if (!context.randomizationId) {
       throw new FirebaseRemoteConfigError('failed-precondition',
-        'context argument is missing an "id" field.');
+        'context argument is missing an "randomizationId" field.');
     }
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
-    const stringToHash = `${seedPrefix}${context.id}`;
+    const stringToHash = `${seedPrefix}${context.randomizationId}`;
     const hash64 = Math.abs(parseFloat(farmhash.fingerprint64(stringToHash)));
 
     const instanceMicroPercentile = hash64 % (100 * 1_000_000);

@@ -148,7 +148,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
@@ -173,7 +173,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
@@ -203,7 +203,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -234,7 +234,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -265,7 +265,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -291,7 +291,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
@@ -321,7 +321,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -352,7 +352,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -378,7 +378,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
@@ -406,7 +406,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
@@ -439,7 +439,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -468,7 +468,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
@@ -501,7 +501,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             }
           }
         };
-        const context = { id: '123' }
+        const context = { randomizationId: '123' }
         const evaluator = new RemoteConfigConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
@@ -603,7 +603,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             ...clone(condition),
             seed: 'seed'
           };
-          const context = { id: uuidv4() }
+          const context = { randomizationId: uuidv4() }
           if (conditionEvaluator.evaluateConditions([{
             name: 'is_enabled',
             condition: { percent: clonedCondition }
