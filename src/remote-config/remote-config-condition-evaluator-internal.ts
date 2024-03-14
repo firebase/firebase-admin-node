@@ -27,7 +27,6 @@ import {
   PercentConditionOperator
 } from './remote-config-api';
 import * as farmhash from 'farmhash';
-import { FirebaseRemoteConfigError } from './remote-config-api-client-internal';
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -60,9 +59,8 @@ export class RemoteConfigConditionEvaluator {
     context: RemoteConfigServerContext,
     nestingLevel = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
-      throw new FirebaseRemoteConfigError('failed-precondition',
-        'Evaluating condition to false because it exceeded maximum depth ' +
-        RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH);
+      // TODO: add logging once we have a wrapped logger.
+      return false;
     }
     if (condition.or) {
       return this.evaluateOrCondition(condition.or, context, nestingLevel + 1)
@@ -79,8 +77,8 @@ export class RemoteConfigConditionEvaluator {
     if (condition.percent) {
       return this.evaluatePercentCondition(condition.percent, context);
     }
-    throw new FirebaseRemoteConfigError('failed-precondition',
-      `Evaluating unknown condition ${JSON.stringify(condition)} to false.`);
+    // TODO: add logging once we have a wrapped logger.
+    return false;
   }
 
   private evaluateOrCondition(
@@ -130,12 +128,13 @@ export class RemoteConfigConditionEvaluator {
     const { seed, operator, microPercent, microPercentRange } = percentCondition;
 
     if (!operator) {
-      throw new FirebaseRemoteConfigError('failed-precondition', 'invalid operator in remote config server condition');
+      // TODO: add logging once we have a wrapped logger.
+      return false;
     }
 
     if (!context.randomizationId) {
-      throw new FirebaseRemoteConfigError('failed-precondition',
-        'context argument is missing an "randomizationId" field.');
+      // TODO: add logging once we have a wrapped logger.
+      return false;
     }
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
@@ -167,8 +166,7 @@ export class RemoteConfigConditionEvaluator {
       break;
     }
 
-    throw new FirebaseRemoteConfigError(
-      'failed-precondition',
-      'invalid operator in remote config server condition');
+    // TODO: add logging once we have a wrapped logger.
+    return false;
   }
 }

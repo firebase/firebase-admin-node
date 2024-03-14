@@ -128,7 +128,47 @@ describe('RemoteConfigConditionEvaluator', () => {
         new Map([['is_enabled', false]]));
     });
 
+    it('should evaluate non-OR top-level condition', () => {
+      // The server wraps conditions in OR.AND, but the evaluation logic
+      // is more general.
+      const condition = {
+        name: 'is_enabled',
+        condition: {
+          true: {
+          }
+        }
+      };
+      const context = {}
+      const evaluator = new RemoteConfigConditionEvaluator();
+      expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+        new Map([['is_enabled', true]]));
+    });
+
     describe('percentCondition', () => {
+      it('should evaluate an unknown operator to false', () => {
+        // Verifies future operators won't trigger errors.
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            or: {
+              conditions: [{
+                and: {
+                  conditions: [{
+                    percent: {
+                      operator: PercentConditionOperator.UNKNOWN
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new RemoteConfigConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+          new Map([['is_enabled', false]]));
+      });
+
       it('should evaluate less or equal to max to true', () => {
         const condition = {
           name: 'is_enabled',

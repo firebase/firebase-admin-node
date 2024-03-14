@@ -77,8 +77,6 @@ export interface RemoteConfigServerNamedCondition {
 
 /**
  * Represents a condition that may be one of several types.
- * Emulates a Protobuf oneof
- * (https://protobuf.dev/programming-guides/proto2/#oneof).
  * Only the first defined field will be processed.
  */
 export interface RemoteConfigServerCondition {

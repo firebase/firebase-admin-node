@@ -314,6 +314,10 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
    */
   public evaluate(context: RemoteConfigServerContext = {}): RemoteConfigServerConfig {
     if (!this.cache) {
+
+      // This is the only place we should throw during evaluation, since it's under the
+      // control of application logic. To preserve forward-compatibility, we should only
+      // return false in cases where the SDK is unsure how to evaluate the fetched template.
       throw new FirebaseRemoteConfigError(
         'failed-precondition',
         'No Remote Config Server template in cache. Call load() before calling evaluate().');
@@ -342,7 +346,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
       }
 
       if (parameterValueWrapper && (parameterValueWrapper as InAppDefaultValue).useInAppDefault) {
-        // TODO: log this implicit action once we have a log wrapper.
+        // TODO: add logging once we have a wrapped logger.
         continue;
       }
 
@@ -381,25 +385,25 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   /**
-   * Private helper method that processes and parses a parameter value based on {@link ParameterValueType}.
+   * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
    */
   private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
-    parameterDefaultValue: string): string | number | boolean {
+    parameterValue: string): string | number | boolean {
     const BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
     const DEFAULT_VALUE_FOR_NUMBER = 0;
     const DEFAULT_VALUE_FOR_STRING = '';
 
     if (parameterType === 'BOOLEAN') {
-      return BOOLEAN_TRUTHY_VALUES.indexOf(parameterDefaultValue) >= 0;
+      return BOOLEAN_TRUTHY_VALUES.indexOf(parameterValue) >= 0;
     } else if (parameterType === 'NUMBER') {
-      const num = Number(parameterDefaultValue);
+      const num = Number(parameterValue);
       if (isNaN(num)) {
         return DEFAULT_VALUE_FOR_NUMBER;
       }
       return num;
     } else {
       // Treat everything else as string
-      return parameterDefaultValue || DEFAULT_VALUE_FOR_STRING;
+      return parameterValue || DEFAULT_VALUE_FOR_STRING;
     }
   }
 }
