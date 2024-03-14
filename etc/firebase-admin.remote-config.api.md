@@ -39,7 +39,21 @@ export interface ListVersionsResult {
 }
 
 // @public
+export interface MicroPercentRange {
+    microPercentLowerBound?: number;
+    microPercentUpperBound?: number;
+}
+
+// @public
 export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
+
+// @public
+export enum PercentConditionOperator {
+    BETWEEN = "BETWEEN",
+    GREATER_THAN = "GREATER_THAN",
+    LESS_OR_EQUAL = "LESS_OR_EQUAL",
+    UNKNOWN = "UNKNOWN"
+}
 
 // @public
 export class RemoteConfig {
@@ -87,9 +101,17 @@ export interface RemoteConfigParameterGroup {
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
 // @public
+export interface RemoteConfigServerAndCondition {
+    conditions?: Array<RemoteConfigServerCondition>;
+}
+
+// @public
 export interface RemoteConfigServerCondition {
-    expression: string;
-    name: string;
+    and?: RemoteConfigServerAndCondition;
+    false?: Record<string, never>;
+    or?: RemoteConfigServerOrCondition;
+    percent?: RemoteConfigServerPercentCondition;
+    true?: Record<string, never>;
 }
 
 // @public
@@ -98,16 +120,40 @@ export type RemoteConfigServerConfig = {
 };
 
 // @public
+export type RemoteConfigServerContext = {
+    randomizationId?: string;
+};
+
+// @public
+export interface RemoteConfigServerNamedCondition {
+    condition: RemoteConfigServerCondition;
+    name: string;
+}
+
+// @public
+export interface RemoteConfigServerOrCondition {
+    conditions?: Array<RemoteConfigServerCondition>;
+}
+
+// @public
+export interface RemoteConfigServerPercentCondition {
+    microPercent?: number;
+    microPercentRange?: MicroPercentRange;
+    operator?: PercentConditionOperator;
+    seed?: string;
+}
+
+// @public
 export interface RemoteConfigServerTemplate {
     cache: RemoteConfigServerTemplateData;
     defaultConfig: RemoteConfigServerConfig;
-    evaluate(): RemoteConfigServerConfig;
+    evaluate(context?: RemoteConfigServerContext): RemoteConfigServerConfig;
     load(): Promise<void>;
 }
 
 // @public
 export interface RemoteConfigServerTemplateData {
-    conditions: RemoteConfigServerCondition[];
+    conditions: RemoteConfigServerNamedCondition[];
     readonly etag: string;
     parameters: {
         [key: string]: RemoteConfigParameter;

@@ -76,13 +76,36 @@ export interface RemoteConfigServerNamedCondition {
 }
 
 /**
- * Represents a tree of conditions.
+ * Represents a condition that may be one of several types.
+ * Emulates a Protobuf oneof
+ * (https://protobuf.dev/programming-guides/proto2/#oneof).
+ * Only the first defined field will be processed.
  */
 export interface RemoteConfigServerCondition {
-  and?: RemoteConfigServerAndCondition;
+
+  /**
+   * Makes this condition an OR condition.
+   */
   or?: RemoteConfigServerOrCondition;
-  true?: RemoteConfigServerTrueCondition;
-  false?: RemoteConfigServerFalseCondition;
+
+  /**
+   * Makes this condition an AND condition.
+   */
+  and?: RemoteConfigServerAndCondition;
+
+  /**
+   * Makes this condition a constant true.
+   */
+  true?: Record<string, never>;
+
+  /**
+   * Makes this condition a constant false.
+   */
+  false?: Record<string, never>;
+
+  /**
+   * Makes this condition a percent condition.
+   */
   percent?: RemoteConfigServerPercentCondition;
 }
 
@@ -90,6 +113,10 @@ export interface RemoteConfigServerCondition {
  * Represents a collection of conditions that evaluate to true if all are true.
  */
 export interface RemoteConfigServerAndCondition {
+
+  /**
+   * The collection of conditions.
+   */
   conditions?: Array<RemoteConfigServerCondition>;
 }
 
@@ -97,50 +124,94 @@ export interface RemoteConfigServerAndCondition {
  * Represents a collection of conditions that evaluate to true if any are true.
  */
 export interface RemoteConfigServerOrCondition {
+
+  /**
+   * The collection of conditions.
+   */
   conditions?: Array<RemoteConfigServerCondition>;
-}
-
-/**
- * Represents a condition that always evaluates to true.
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface RemoteConfigServerTrueCondition {
-}
-
-/**
- * Represents a condition that always evaluates to false.
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface RemoteConfigServerFalseCondition {
 }
 
 /**
  * Defines supported operators for percent conditions.
  */
 export enum PercentConditionOperator {
+
+  /**
+   * A catchall error case.
+   */
   UNKNOWN = 'UNKNOWN',
+
+  /**
+   * Target percentiles less than or equal to the target percent.
+   * A condition using this operator must specify microPercent.
+   */
   LESS_OR_EQUAL = 'LESS_OR_EQUAL',
+
+  /**
+   * Target percentiles greater than the target percent.
+   * A condition using this operator must specify microPercent.
+   */
   GREATER_THAN = 'GREATER_THAN',
+
+  /**
+   * Target percentiles within an interval defined by a lower bound and an
+   * upper bound. The lower bound is an exclusive (open) bound and the
+   * micro_percent_range_upper_bound is an inclusive (closed) bound.
+   * A condition using this operator must specify microPercentRange.
+   */
   BETWEEN = 'BETWEEN'
 }
 
 /**
- * Represents the limit of percentiles to target in micro-percents. The value
- * must be in the range [0 and 100000000]
+ * Represents the limit of percentiles to target in micro-percents.
+ * The value must be in the range [0 and 100000000]
  */
 export interface MicroPercentRange {
+
+  /**
+   * The lower limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
   microPercentLowerBound?: number;
+
+  /**
+   * The upper limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
   microPercentUpperBound?: number;
 }
 
 /**
- * Represents a condition that compares the instance pseudo-random percentile to
- * a given limit.
+ * Represents a condition that compares the instance pseudo-random
+ * percentile to a given limit.
  */
 export interface RemoteConfigServerPercentCondition {
+
+  /**
+   * The choice of percent operator to determine how to compare targets
+   * to percent(s).
+   */
   operator?: PercentConditionOperator;
+
+  /**
+   * The limit of percentiles to target in micro-percents when
+   * using the LESS_OR_EQUAL and GREATER_THAN operators. The value must
+   * be in the range [0 and 100000000].
+   */
   microPercent?: number;
+
+  /**
+   * The seed used when evaluating the hash function to map an instance to
+   * a value in the hash space. This is a string which can have 0 - 32
+   * characters and can contain ASCII characters [-_.0-9a-zA-Z].The string
+   * is case-sensitive.
+   */
   seed?: string;
+
+  /**
+   * The micro-percent interval to be used with the
+   * BETWEEN operator.
+   */
   microPercentRange?: MicroPercentRange;
 }
 
@@ -333,7 +404,14 @@ export interface RemoteConfigServerTemplate {
 /**
  * Represents template evaluation input signals.
  */
-export type RemoteConfigServerContext = { [key: string]: string };
+export type RemoteConfigServerContext = {
+
+  /**
+   * Defines the identifier to use when splitting a group. For example,
+   * this is used by the percent condition.
+   */
+  randomizationId?: string
+};
 
 /**
  * Interface representing a Remote Config user.
