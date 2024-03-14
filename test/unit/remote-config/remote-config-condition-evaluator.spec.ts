@@ -21,7 +21,7 @@ import * as sinon from 'sinon';
 import { RemoteConfigConditionEvaluator } from '../../../src/remote-config/remote-config-condition-evaluator-internal';
 import {
   PercentConditionOperator,
-  RemoteConfigServerPercentCondition
+  PercentServerCondition
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
@@ -633,7 +633,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       // Returns the number of assignments which evaluate to true for the specified percent condition.
       // This method randomly generates the ids for each assignment for this purpose.
       function evaluateRandomAssignments(
-        condition: RemoteConfigServerPercentCondition,
+        condition: PercentServerCondition,
         numOfAssignments: number,
         conditionEvaluator: RemoteConfigConditionEvaluator): number {
 

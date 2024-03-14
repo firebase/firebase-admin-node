@@ -18,12 +18,12 @@
 
 import { isNumber } from 'lodash';
 import {
-  RemoteConfigServerAndCondition,
-  RemoteConfigServerCondition,
-  RemoteConfigServerContext,
-  RemoteConfigServerNamedCondition,
-  RemoteConfigServerOrCondition,
-  RemoteConfigServerPercentCondition,
+  AndServerCondition,
+  ServerCondition,
+  EvaluationContext,
+  NamedServerCondition,
+  OrServerCondition,
+  PercentServerCondition,
   PercentConditionOperator
 } from './remote-config-api';
 import * as farmhash from 'farmhash';
@@ -38,8 +38,8 @@ export class RemoteConfigConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
   public evaluateConditions(
-    namedConditions: RemoteConfigServerNamedCondition[],
-    context: RemoteConfigServerContext): Map<string, boolean> {
+    namedConditions: NamedServerCondition[],
+    context: EvaluationContext): Map<string, boolean> {
     // The order of the conditions is significant.
     // A JS Map preserves the order of insertion ("Iteration happens in insertion order"
     // - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#description).
@@ -55,8 +55,8 @@ export class RemoteConfigConditionEvaluator {
   }
 
   private evaluateCondition(
-    condition: RemoteConfigServerCondition,
-    context: RemoteConfigServerContext,
+    condition: ServerCondition,
+    context: EvaluationContext,
     nestingLevel = 0): boolean {
     if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
       // TODO: add logging once we have a wrapped logger.
@@ -82,8 +82,8 @@ export class RemoteConfigConditionEvaluator {
   }
 
   private evaluateOrCondition(
-    orCondition: RemoteConfigServerOrCondition,
-    context: RemoteConfigServerContext,
+    orCondition: OrServerCondition,
+    context: EvaluationContext,
     nestingLevel: number): boolean {
 
     const subConditions = orCondition.conditions || [];
@@ -102,8 +102,8 @@ export class RemoteConfigConditionEvaluator {
   }
 
   private evaluateAndCondition(
-    andCondition: RemoteConfigServerAndCondition,
-    context: RemoteConfigServerContext,
+    andCondition: AndServerCondition,
+    context: EvaluationContext,
     nestingLevel: number): boolean {
 
     const subConditions = andCondition.conditions || [];
@@ -122,8 +122,8 @@ export class RemoteConfigConditionEvaluator {
   }
 
   private evaluatePercentCondition(
-    percentCondition: RemoteConfigServerPercentCondition,
-    context: RemoteConfigServerContext
+    percentCondition: PercentServerCondition,
+    context: EvaluationContext
   ): boolean {
     const { seed, operator, microPercent, microPercentRange } = percentCondition;
 

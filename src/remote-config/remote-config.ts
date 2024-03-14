@@ -31,12 +31,12 @@ import {
   ExplicitParameterValue,
   InAppDefaultValue,
   ParameterValueType,
-  RemoteConfigServerConfig,
+  ServerConfig,
   RemoteConfigServerTemplateData,
   RemoteConfigServerTemplateOptions,
   RemoteConfigParameterValue,
-  RemoteConfigServerNamedCondition,
-  RemoteConfigServerContext,
+  NamedServerCondition,
+  EvaluationContext,
 } from './remote-config-api';
 
 /**
@@ -296,7 +296,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: RemoteConfigConditionEvaluator,
-    public readonly defaultConfig: RemoteConfigServerConfig = {}
+    public readonly defaultConfig: ServerConfig = {}
   ) { }
 
   /**
@@ -310,9 +310,9 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   /**
-   * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}.
+   * Evaluates the current template in cache to produce a {@link ServerConfig}.
    */
-  public evaluate(context: RemoteConfigServerContext = {}): RemoteConfigServerConfig {
+  public evaluate(context: EvaluationContext = {}): ServerConfig {
     if (!this.cache) {
 
       // This is the only place we should throw during evaluation, since it's under the
@@ -326,7 +326,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
       this.cache.conditions, context);
 
-    const evaluatedConfig: RemoteConfigServerConfig = {};
+    const evaluatedConfig: ServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const { conditionalValues, defaultValue, valueType } = parameter;
@@ -376,7 +376,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     // Enables config to be a convenient object, but with the ability to perform additional
     // functionality when a value is retrieved.
     const proxyHandler = {
-      get(target: RemoteConfigServerConfig, prop: string) {
+      get(target: ServerConfig, prop: string) {
         return target[prop];
       }
     };
@@ -414,7 +414,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
-  public conditions: RemoteConfigServerNamedCondition[];
+  public conditions: NamedServerCondition[];
   public readonly etag: string;
   public version?: Version;
 

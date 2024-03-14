@@ -59,7 +59,7 @@ export interface RemoteConfigCondition {
  * A condition targets a specific group of users. A list of these conditions
  * comprise part of a Remote Config template.
  */
-export interface RemoteConfigServerNamedCondition {
+export interface NamedServerCondition {
 
   /**
    * A non-empty and unique name of this condition.
@@ -72,24 +72,24 @@ export interface RemoteConfigServerNamedCondition {
    * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
    * for the expected syntax of this field.
    */
-  condition: RemoteConfigServerCondition;
+  condition: ServerCondition;
 }
 
 /**
  * Represents a condition that may be one of several types.
  * Only the first defined field will be processed.
  */
-export interface RemoteConfigServerCondition {
+export interface ServerCondition {
 
   /**
    * Makes this condition an OR condition.
    */
-  or?: RemoteConfigServerOrCondition;
+  or?: OrServerCondition;
 
   /**
    * Makes this condition an AND condition.
    */
-  and?: RemoteConfigServerAndCondition;
+  and?: AndServerCondition;
 
   /**
    * Makes this condition a constant true.
@@ -104,29 +104,29 @@ export interface RemoteConfigServerCondition {
   /**
    * Makes this condition a percent condition.
    */
-  percent?: RemoteConfigServerPercentCondition;
+  percent?: PercentServerCondition;
 }
 
 /**
  * Represents a collection of conditions that evaluate to true if all are true.
  */
-export interface RemoteConfigServerAndCondition {
+export interface AndServerCondition {
 
   /**
    * The collection of conditions.
    */
-  conditions?: Array<RemoteConfigServerCondition>;
+  conditions?: Array<ServerCondition>;
 }
 
 /**
  * Represents a collection of conditions that evaluate to true if any are true.
  */
-export interface RemoteConfigServerOrCondition {
+export interface OrServerCondition {
 
   /**
    * The collection of conditions.
    */
-  conditions?: Array<RemoteConfigServerCondition>;
+  conditions?: Array<ServerCondition>;
 }
 
 /**
@@ -183,7 +183,7 @@ export interface MicroPercentRange {
  * Represents a condition that compares the instance pseudo-random
  * percentile to a given limit.
  */
-export interface RemoteConfigServerPercentCondition {
+export interface PercentServerCondition {
 
   /**
    * The choice of percent operator to determine how to compare targets
@@ -333,7 +333,7 @@ export interface RemoteConfigServerTemplateData {
   /**
    * A list of conditions in descending order by priority.
    */
-  conditions: RemoteConfigServerNamedCondition[];
+  conditions: NamedServerCondition[];
 
   /**
    * Map of parameter keys to their optional default values and optional conditional values.
@@ -361,7 +361,7 @@ export interface RemoteConfigServerTemplateOptions {
    * intended before it connects to the Remote Config backend, and so that
    * default values are available if none are set on the backend.
    */
-  defaultConfig?: RemoteConfigServerConfig,
+  defaultConfig?: ServerConfig,
 
   /**
    * Enables integrations to use template data loaded independently. For
@@ -383,14 +383,14 @@ export interface RemoteConfigServerTemplate {
   cache: RemoteConfigServerTemplateData;
 
   /**
-   * A {@link RemoteConfigServerConfig} that contains default Config values.
+   * A {@link ServerConfig} that contains default Config values.
    */
-  defaultConfig: RemoteConfigServerConfig;
+  defaultConfig: ServerConfig;
 
   /**
-   * Evaluates the current template to produce a {@link RemoteConfigServerConfig}.
+   * Evaluates the current template to produce a {@link ServerConfig}.
    */
-  evaluate(context?: RemoteConfigServerContext): RemoteConfigServerConfig;
+  evaluate(context?: EvaluationContext): ServerConfig;
 
   /**
    * Fetches and caches the current active version of the
@@ -402,7 +402,7 @@ export interface RemoteConfigServerTemplate {
 /**
  * Represents template evaluation input signals.
  */
-export type RemoteConfigServerContext = {
+export type EvaluationContext = {
 
   /**
    * Defines the identifier to use when splitting a group. For example,
@@ -537,4 +537,4 @@ export interface ListVersionsOptions {
 /**
  * Represents the configuration produced by evaluating a server template.
  */
-export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }
+export type ServerConfig = { [key: string]: string | boolean | number }
