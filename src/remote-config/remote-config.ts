@@ -194,7 +194,7 @@ export class RemoteConfig {
    * Synchronously instantiates {@link ServerTemplate}.
    */
   public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
-    const template = new RemoteConfigServerTemplateImpl(
+    const template = new ServerTemplateImpl(
       this.client, new RemoteConfigConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
       template.cache = options?.template;
@@ -290,7 +290,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateImpl implements ServerTemplate {
+class ServerTemplateImpl implements ServerTemplate {
   public cache: ServerTemplateData;
 
   constructor(
@@ -305,7 +305,7 @@ class RemoteConfigServerTemplateImpl implements ServerTemplate {
   public load(): Promise<void> {
     return this.apiClient.getServerTemplate()
       .then((template) => {
-        this.cache = new RemoteConfigServerTemplateDataImpl(template);
+        this.cache = new ServerTemplateDataImpl(template);
       });
   }
 
@@ -411,7 +411,7 @@ class RemoteConfigServerTemplateImpl implements ServerTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateDataImpl implements ServerTemplateData {
+class ServerTemplateDataImpl implements ServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: NamedServerCondition[];
