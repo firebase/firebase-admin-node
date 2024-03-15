@@ -23,16 +23,16 @@ import {
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,
-  RemoteConfigServerTemplate,
+  ServerTemplate,
   RemoteConfigTemplate,
   RemoteConfigUser,
   Version,
   ExplicitParameterValue,
   InAppDefaultValue,
   ParameterValueType,
-  RemoteConfigServerConfig,
-  RemoteConfigServerTemplateData,
-  RemoteConfigServerTemplateOptions,
+  ServerConfig,
+  ServerTemplateData,
+  ServerTemplateOptions,
 } from './remote-config-api';
 
 /**
@@ -177,19 +177,19 @@ export class RemoteConfig {
   }
 
   /**
-   * Instantiates {@link RemoteConfigServerTemplate} and then fetches and caches the latest
+   * Instantiates {@link ServerTemplate} and then fetches and caches the latest
    * template version of the project.
    */
-  public async getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate> {
+  public async getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate> {
     const template = this.initServerTemplate(options);
     await template.load();
     return template;
   }
 
   /**
-   * Synchronously instantiates {@link RemoteConfigServerTemplate}.
+   * Synchronously instantiates {@link ServerTemplate}.
    */
-  public initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate {
+  public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
     const template = new RemoteConfigServerTemplateImpl(this.client, options?.defaultConfig);
     if (options?.template) {
       template.cache = options?.template;
@@ -285,16 +285,16 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
-  public cache: RemoteConfigServerTemplateData;
+class RemoteConfigServerTemplateImpl implements ServerTemplate {
+  public cache: ServerTemplateData;
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
-    public readonly defaultConfig: RemoteConfigServerConfig = {}
+    public readonly defaultConfig: ServerConfig = {}
   ) { }
 
   /**
-   * Fetches and caches the current active version of the project's {@link RemoteConfigServerTemplate}.
+   * Fetches and caches the current active version of the project's {@link ServerTemplate}.
    */
   public load(): Promise<void> {
     return this.apiClient.getServerTemplate()
@@ -304,16 +304,16 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   }
 
   /**
-   * Evaluates the current template in cache to produce a {@link RemoteConfigServerConfig}.
+   * Evaluates the current template in cache to produce a {@link ServerConfig}.
    */
-  public evaluate(): RemoteConfigServerConfig {
+  public evaluate(): ServerConfig {
     if (!this.cache) {
       throw new FirebaseRemoteConfigError(
         'failed-precondition',
         'No Remote Config Server template in cache. Call load() before calling evaluate().');
     }
 
-    const evaluatedConfig: RemoteConfigServerConfig = {};
+    const evaluatedConfig: ServerConfig = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const { defaultValue, valueType } = parameter;
@@ -339,7 +339,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
     // Enables config to be a convenient object, but with the ability to perform additional
     // functionality when a value is retrieved.
     const proxyHandler = {
-      get(target: RemoteConfigServerConfig, prop: string) {
+      get(target: ServerConfig, prop: string) {
         return target[prop];
       }
     };
@@ -374,14 +374,14 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
+class RemoteConfigServerTemplateDataImpl implements ServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: RemoteConfigCondition[];
   public readonly etag: string;
   public version?: Version;
 
-  constructor(template: RemoteConfigServerTemplateData) {
+  constructor(template: ServerTemplateData) {
     if (!validator.isNonNullObject(template) ||
       !validator.isNonEmptyString(template.etag)) {
       throw new FirebaseRemoteConfigError(
