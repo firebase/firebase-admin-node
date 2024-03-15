@@ -106,15 +106,14 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<{ name: string; expression: string; }>;
+    conditions?: Array<{ name: string; }>;
     parameters?: object | null;
     etag: string;
     version?: object;
   } = {
     conditions: [
       {
-        name: 'ios',
-        expression: 'device.os == \'ios\''
+        name: 'ios'
       },
     ],
     parameters: {
@@ -564,7 +563,6 @@ describe('RemoteConfig', () => {
         .then((template) => {
           expect(template.cache.conditions.length).to.equal(1);
           expect(template.cache.conditions[0].name).to.equal('ios');
-          expect(template.cache.conditions[0].expression).to.equal('device.os == \'ios\'');
           expect(template.cache.etag).to.equal('etag-123456789012-5');
 
           const version = template.cache.version!;
@@ -588,7 +586,6 @@ describe('RemoteConfig', () => {
           expect(c).to.be.not.undefined;
           const cond = c as NamedServerCondition;
           expect(cond.name).to.equal('ios');
-          expect(cond.expression).to.equal('device.os == \'ios\'');
 
           const parsed = JSON.parse(JSON.stringify(template.cache));
           const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
@@ -775,7 +772,6 @@ describe('RemoteConfig', () => {
           .then((template) => {
             expect(template.cache.conditions.length).to.equal(1);
             expect(template.cache.conditions[0].name).to.equal('ios');
-            expect(template.cache.conditions[0].expression).to.equal('device.os == \'ios\'');
             expect(template.cache.etag).to.equal('etag-123456789012-5');
 
             const version = template.cache.version!;
@@ -799,7 +795,6 @@ describe('RemoteConfig', () => {
             expect(c).to.be.not.undefined;
             const cond = c as NamedServerCondition;
             expect(cond.name).to.equal('ios');
-            expect(cond.expression).to.equal('device.os == \'ios\'');
 
             const parsed = JSON.parse(JSON.stringify(template.cache));
             const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);

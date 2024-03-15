@@ -65,14 +65,6 @@ export interface NamedServerCondition {
    * A non-empty and unique name of this condition.
    */
   name: string;
-
-  /**
-   * The logic of this condition.
-   * See the documentation on
-   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
-   * for the expected syntax of this field.
-   */
-  expression: string;
 }
 
 /**
