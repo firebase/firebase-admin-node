@@ -24,7 +24,7 @@ import {
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,
-  RemoteConfigServerTemplate,
+  ServerTemplate,
   RemoteConfigTemplate,
   RemoteConfigUser,
   Version,
@@ -32,11 +32,11 @@ import {
   InAppDefaultValue,
   ParameterValueType,
   ServerConfig,
-  RemoteConfigServerTemplateData,
-  RemoteConfigServerTemplateOptions,
   RemoteConfigParameterValue,
-  NamedServerCondition,
   EvaluationContext,
+  ServerTemplateData,
+  ServerTemplateOptions,
+  NamedServerCondition,
 } from './remote-config-api';
 
 /**
@@ -181,19 +181,19 @@ export class RemoteConfig {
   }
 
   /**
-   * Instantiates {@link RemoteConfigServerTemplate} and then fetches and caches the latest
+   * Instantiates {@link ServerTemplate} and then fetches and caches the latest
    * template version of the project.
    */
-  public async getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate> {
+  public async getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate> {
     const template = this.initServerTemplate(options);
     await template.load();
     return template;
   }
 
   /**
-   * Synchronously instantiates {@link RemoteConfigServerTemplate}.
+   * Synchronously instantiates {@link ServerTemplate}.
    */
-  public initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate {
+  public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
     const template = new RemoteConfigServerTemplateImpl(
       this.client, new RemoteConfigConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
@@ -290,8 +290,8 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
-  public cache: RemoteConfigServerTemplateData;
+class RemoteConfigServerTemplateImpl implements ServerTemplate {
+  public cache: ServerTemplateData;
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
@@ -300,7 +300,7 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
   ) { }
 
   /**
-   * Fetches and caches the current active version of the project's {@link RemoteConfigServerTemplate}.
+   * Fetches and caches the current active version of the project's {@link ServerTemplate}.
    */
   public load(): Promise<void> {
     return this.apiClient.getServerTemplate()
@@ -411,14 +411,14 @@ class RemoteConfigServerTemplateImpl implements RemoteConfigServerTemplate {
 /**
  * Remote Config dataplane template data implementation.
  */
-class RemoteConfigServerTemplateDataImpl implements RemoteConfigServerTemplateData {
+class RemoteConfigServerTemplateDataImpl implements ServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: NamedServerCondition[];
   public readonly etag: string;
   public version?: Version;
 
-  constructor(template: RemoteConfigServerTemplateData) {
+  constructor(template: ServerTemplateData) {
     if (!validator.isNonNullObject(template) ||
       !validator.isNonEmptyString(template.etag)) {
       throw new FirebaseRemoteConfigError(

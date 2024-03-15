@@ -329,7 +329,7 @@ export interface RemoteConfigTemplate {
 /**
  * Represents the data in a Remote Config server template.
  */
-export interface RemoteConfigServerTemplateData {
+export interface ServerTemplateData {
   /**
    * A list of conditions in descending order by priority.
    */
@@ -352,9 +352,9 @@ export interface RemoteConfigServerTemplateData {
 }
 
 /**
- * Represents optional arguments that can be used when instantiating {@link RemoteConfigServerTemplate}.
+ * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
  */
-export interface RemoteConfigServerTemplateOptions {
+export interface ServerTemplateOptions {
 
   /**
    * Defines in-app default parameter values, so that your app behaves as
@@ -369,18 +369,18 @@ export interface RemoteConfigServerTemplateOptions {
    * caching template data and then using this option to initialize the SDK with
    * that data.
    */
-  template?: RemoteConfigServerTemplateData,
+  template?: ServerTemplateData,
 }
 
 /**
  * Represents a stateful abstraction for a Remote Config server template.
  */
-export interface RemoteConfigServerTemplate {
+export interface ServerTemplate {
 
   /**
-   * Cached {@link RemoteConfigServerTemplateData}.
+   * Cached {@link ServerTemplateData}.
    */
-  cache: RemoteConfigServerTemplateData;
+  cache: ServerTemplateData;
 
   /**
    * A {@link ServerConfig} that contains default Config values.
@@ -394,7 +394,7 @@ export interface RemoteConfigServerTemplate {
 
   /**
    * Fetches and caches the current active version of the
-   * project's {@link RemoteConfigServerTemplate}.
+   * project's {@link ServerTemplate}.
    */
   load(): Promise<void>;
 }
