@@ -17,7 +17,7 @@
 import { App } from '../app';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
-import { RemoteConfigConditionEvaluator } from './remote-config-condition-evaluator-internal';
+import { ConditionEvaluator } from './condition-evaluator-internal';
 import {
   ListVersionsOptions,
   ListVersionsResult,
@@ -195,7 +195,7 @@ export class RemoteConfig {
    */
   public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
     const template = new ServerTemplateImpl(
-      this.client, new RemoteConfigConditionEvaluator(), options?.defaultConfig);
+      this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
       template.cache = options?.template;
     }
@@ -295,7 +295,7 @@ class ServerTemplateImpl implements ServerTemplate {
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
-    private readonly conditionEvaluator: RemoteConfigConditionEvaluator,
+    private readonly conditionEvaluator: ConditionEvaluator,
     public readonly defaultConfig: ServerConfig = {}
   ) { }
 

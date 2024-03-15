@@ -18,7 +18,7 @@
 
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { RemoteConfigConditionEvaluator } from '../../../src/remote-config/remote-config-condition-evaluator-internal';
+import { ConditionEvaluator } from '../../../src/remote-config/condition-evaluator-internal';
 import {
   PercentConditionOperator,
   PercentServerCondition
@@ -31,7 +31,7 @@ const expect = chai.expect;
 
 
 
-describe('RemoteConfigConditionEvaluator', () => {
+describe('ConditionEvaluator', () => {
   let stubs: sinon.SinonStub[] = [];
 
   afterEach(() => {
@@ -51,7 +51,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         }
       };
       const context = {}
-      const evaluator = new RemoteConfigConditionEvaluator();
+      const evaluator = new ConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([['is_enabled', false]]));
     });
@@ -71,7 +71,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         }
       };
       const context = {}
-      const evaluator = new RemoteConfigConditionEvaluator();
+      const evaluator = new ConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([['is_enabled', true]]));
     });
@@ -97,7 +97,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         }
       };
       const context = {}
-      const evaluator = new RemoteConfigConditionEvaluator();
+      const evaluator = new ConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([['is_enabled', true]]));
     });
@@ -123,7 +123,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         }
       };
       const context = {}
-      const evaluator = new RemoteConfigConditionEvaluator();
+      const evaluator = new ConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([['is_enabled', false]]));
     });
@@ -139,7 +139,7 @@ describe('RemoteConfigConditionEvaluator', () => {
         }
       };
       const context = {}
-      const evaluator = new RemoteConfigConditionEvaluator();
+      const evaluator = new ConditionEvaluator();
       expect(evaluator.evaluateConditions([condition], context)).deep.equals(
         new Map([['is_enabled', true]]));
     });
@@ -164,7 +164,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
       });
@@ -189,7 +189,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
       });
@@ -214,7 +214,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
       });
@@ -244,7 +244,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.true;
@@ -275,7 +275,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.true;
@@ -306,7 +306,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.false;
@@ -332,7 +332,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
       });
@@ -362,7 +362,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.true;
@@ -393,7 +393,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.false;
@@ -419,7 +419,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
       });
@@ -447,7 +447,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', true]]));
       });
@@ -480,7 +480,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.true;
@@ -509,7 +509,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
       });
@@ -542,7 +542,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           }
         };
         const context = { randomizationId: '123' }
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.false;
@@ -561,7 +561,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           operator: PercentConditionOperator.LESS_OR_EQUAL,
           microPercent: 10_000_000 // 10%
         };
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
         // 284 is 3 standard deviations for 100k trials with 10% probability.
         const tolerance = 284;
@@ -577,7 +577,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             microPercentUpperBound: 10_000_000
           }
         };
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
         // 284 is 3 standard deviations for 100k trials with 10% probability.
         const tolerance = 284;
@@ -590,7 +590,7 @@ describe('RemoteConfigConditionEvaluator', () => {
           operator: PercentConditionOperator.GREATER_THAN,
           microPercent: 10_000_000
         };
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
         // 284 is 3 standard deviations for 100k trials with 90% probability.
         const tolerance = 284;
@@ -606,7 +606,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             microPercentUpperBound: 60_000_000
           }
         };
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
         // 379 is 3 standard deviations for 100k trials with 20% probability.
         const tolerance = 379;
@@ -622,7 +622,7 @@ describe('RemoteConfigConditionEvaluator', () => {
             microPercentUpperBound: 75_000_000
           }
         };
-        const evaluator = new RemoteConfigConditionEvaluator();
+        const evaluator = new ConditionEvaluator();
         const truthyAssignments = evaluateRandomAssignments(percentCondition, 100_000, evaluator);
         // 474 is 3 standard deviations for 100k trials with 50% probability.
         const tolerance = 474;
@@ -635,7 +635,7 @@ describe('RemoteConfigConditionEvaluator', () => {
       function evaluateRandomAssignments(
         condition: PercentServerCondition,
         numOfAssignments: number,
-        conditionEvaluator: RemoteConfigConditionEvaluator): number {
+        conditionEvaluator: ConditionEvaluator): number {
 
         let evalTrueCount = 0;
         for (let i = 0; i < numOfAssignments; i++) {

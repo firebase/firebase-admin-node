@@ -34,7 +34,7 @@ import * as farmhash from 'farmhash';
  *
  * @internal
  */
-export class RemoteConfigConditionEvaluator {
+export class ConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
   public evaluateConditions(
@@ -58,7 +58,7 @@ export class RemoteConfigConditionEvaluator {
     condition: ServerCondition,
     context: EvaluationContext,
     nestingLevel = 0): boolean {
-    if (nestingLevel >= RemoteConfigConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
+    if (nestingLevel >= ConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
       // TODO: add logging once we have a wrapped logger.
       return false;
     }
