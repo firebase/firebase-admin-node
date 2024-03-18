@@ -781,15 +781,37 @@ describe('FirebaseTokenVerifier', () => {
         .should.eventually.be.rejectedWith('Firebase Auth Blocking token has no "kid" claim.');
     });
 
-    const eventTypes = ['beforeSendSms', 'beforeSendEmail'];
-    eventTypes.forEach((eventType) => {
-      it('should not decode sub when event_type is ${eventType}', async () => {
-        const mockAuthBlockingToken = mocks.generateAuthBlockingToken(undefined, {
+    const eventTypesWithoutUid = ['beforeSendSms', 'beforeSendEmail'];
+    eventTypesWithoutUid.forEach((eventType) => {
+      it('should not throw error on invalid `sub` when event_type is "' + eventType , async () => {
+        const verifierStub = sinon.stub(PublicKeySignatureVerifier.prototype, 'verify')
+          .resolves();
+        stubs.push(verifierStub);
+
+        const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
+          subject: ''
+        }, {
           event_type: eventType,
         });
-        const decoded = await authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined);
-        console.log("DECODED= ", JSON.stringify(decoded));
-        return;
+        return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
+          .should.eventually.be.fulfilled;
+      });
+    });
+
+    const eventTypesWithUid = ['beforeCreate', 'beforeSignIn', undefined];
+    eventTypesWithUid.forEach((eventType) => {
+      it('should not throw error on invalid `sub` when event_type is "' + eventType , async () => {
+        const verifierStub = sinon.stub(PublicKeySignatureVerifier.prototype, 'verify')
+          .resolves();
+        stubs.push(verifierStub);
+
+        const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
+          subject: ''
+        }, {
+          event_type: eventType,
+        });
+        return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
+          .should.eventually.be.rejectedWith('Firebase Auth Blocking token has an empty string "sub" (subject) claim.');
       });
     });
   });
