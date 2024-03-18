@@ -531,6 +531,8 @@ export class FirebaseTokenVerifier {
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
     } else if (!(payload.event_type !== undefined &&
       (payload.event_type === 'beforeSendSms' || payload.event_type === 'beforeSendEmail'))) {
+      // excluding `beforeSendSms` and `beforeSendEmail` from processing `sub` as there is no user record available.
+      // `sub` is the same as `uid` which is part of the user record.
       if (typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
