@@ -39,7 +39,7 @@ export interface ListVersionsResult {
 }
 
 // @public
-export interface NamedServerCondition {
+export interface NamedCondition {
     name: string;
 }
 
@@ -126,7 +126,7 @@ export interface ServerTemplate {
 
 // @public
 export interface ServerTemplateData {
-    conditions: NamedServerCondition[];
+    conditions: NamedCondition[];
     readonly etag: string;
     parameters: {
         [key: string]: RemoteConfigParameter;

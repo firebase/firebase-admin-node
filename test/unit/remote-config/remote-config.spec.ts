@@ -35,7 +35,7 @@ import {
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  NamedServerCondition, ServerTemplate, ServerTemplateData
+  NamedCondition, ServerTemplate, ServerTemplateData
 } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
@@ -584,7 +584,7 @@ describe('RemoteConfig', () => {
 
           const c = template.cache.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
-          const cond = c as NamedServerCondition;
+          const cond = c as NamedCondition;
           expect(cond.name).to.equal('ios');
 
           const parsed = JSON.parse(JSON.stringify(template.cache));
@@ -793,7 +793,7 @@ describe('RemoteConfig', () => {
 
             const c = template.cache.conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
-            const cond = c as NamedServerCondition;
+            const cond = c as NamedCondition;
             expect(cond.name).to.equal('ios');
 
             const parsed = JSON.parse(JSON.stringify(template.cache));

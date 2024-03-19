@@ -29,7 +29,7 @@ export {
   InAppDefaultValue,
   ListVersionsOptions,
   ListVersionsResult,
-  NamedServerCondition,
+  NamedCondition,
   ParameterValueType,
   RemoteConfigCondition,
   RemoteConfigParameter,

@@ -59,7 +59,7 @@ export interface RemoteConfigCondition {
  * A condition targets a specific group of users. A list of these conditions make up
  * part of a Remote Config template.
  */
-export interface NamedServerCondition {
+export interface NamedCondition {
 
   /**
    * A non-empty and unique name of this condition.
@@ -187,7 +187,7 @@ export interface ServerTemplateData {
   /**
    * A list of conditions in descending order by priority.
    */
-  conditions: NamedServerCondition[];
+  conditions: NamedCondition[];
 
   /**
    * Map of parameter keys to their optional default values and optional conditional values.
