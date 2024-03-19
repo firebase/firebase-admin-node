@@ -35,7 +35,7 @@ import {
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  NamedServerCondition, ServerTemplate, ServerTemplateData
+  NamedCondition, ServerTemplate, ServerTemplateData
 } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
@@ -106,7 +106,7 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<NamedServerCondition>;
+    conditions?: Array<NamedCondition>;
     parameters?: object | null;
     etag: string;
     version?: object;
@@ -597,7 +597,7 @@ describe('RemoteConfig', () => {
 
           const c = template.cache.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
-          const cond = c as NamedServerCondition;
+          const cond = c as NamedCondition;
           expect(cond.name).to.equal('ios');
 
           const parsed = JSON.parse(JSON.stringify(template.cache));
@@ -806,7 +806,7 @@ describe('RemoteConfig', () => {
 
             const c = template.cache.conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
-            const cond = c as NamedServerCondition;
+            const cond = c as NamedCondition;
             expect(cond.name).to.equal('ios');
             expect(cond.condition).deep.equals({
               'or': {

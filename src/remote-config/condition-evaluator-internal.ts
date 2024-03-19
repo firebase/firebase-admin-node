@@ -21,7 +21,7 @@ import {
   AndCondition,
   OneOfCondition,
   EvaluationContext,
-  NamedServerCondition,
+  NamedCondition,
   OrCondition,
   PercentCondition,
   PercentConditionOperator
@@ -38,7 +38,7 @@ export class ConditionEvaluator {
   private static MAX_CONDITION_RECURSION_DEPTH = 10;
 
   public evaluateConditions(
-    namedConditions: NamedServerCondition[],
+    namedConditions: NamedCondition[],
     context: EvaluationContext): Map<string, boolean> {
     // The order of the conditions is significant.
     // A JS Map preserves the order of insertion ("Iteration happens in insertion order"

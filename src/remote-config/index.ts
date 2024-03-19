@@ -32,7 +32,7 @@ export {
   ListVersionsOptions,
   ListVersionsResult,
   MicroPercentRange,
-  NamedServerCondition,
+  NamedCondition,
   OrCondition,
   ParameterValueType,
   PercentConditionOperator,

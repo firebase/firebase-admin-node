@@ -36,7 +36,7 @@ import {
   EvaluationContext,
   ServerTemplateData,
   ServerTemplateOptions,
-  NamedServerCondition,
+  NamedCondition,
 } from './remote-config-api';
 
 /**
@@ -414,7 +414,7 @@ class ServerTemplateImpl implements ServerTemplate {
 class ServerTemplateDataImpl implements ServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
-  public conditions: NamedServerCondition[];
+  public conditions: NamedCondition[];
   public readonly etag: string;
   public version?: Version;
 
