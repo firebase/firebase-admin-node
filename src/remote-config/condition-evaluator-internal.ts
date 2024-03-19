@@ -18,12 +18,12 @@
 
 import { isNumber } from 'lodash';
 import {
-  AndServerCondition,
-  ServerCondition,
+  AndCondition,
+  OneOfCondition,
   EvaluationContext,
   NamedServerCondition,
-  OrServerCondition,
-  PercentServerCondition,
+  OrCondition,
+  PercentCondition,
   PercentConditionOperator
 } from './remote-config-api';
 import * as farmhash from 'farmhash';
@@ -55,7 +55,7 @@ export class ConditionEvaluator {
   }
 
   private evaluateCondition(
-    condition: ServerCondition,
+    condition: OneOfCondition,
     context: EvaluationContext,
     nestingLevel = 0): boolean {
     if (nestingLevel >= ConditionEvaluator.MAX_CONDITION_RECURSION_DEPTH) {
@@ -82,7 +82,7 @@ export class ConditionEvaluator {
   }
 
   private evaluateOrCondition(
-    orCondition: OrServerCondition,
+    orCondition: OrCondition,
     context: EvaluationContext,
     nestingLevel: number): boolean {
 
@@ -102,7 +102,7 @@ export class ConditionEvaluator {
   }
 
   private evaluateAndCondition(
-    andCondition: AndServerCondition,
+    andCondition: AndCondition,
     context: EvaluationContext,
     nestingLevel: number): boolean {
 
@@ -122,7 +122,7 @@ export class ConditionEvaluator {
   }
 
   private evaluatePercentCondition(
-    percentCondition: PercentServerCondition,
+    percentCondition: PercentCondition,
     context: EvaluationContext
   ): boolean {
     const { seed, operator, microPercent, microPercentRange } = percentCondition;

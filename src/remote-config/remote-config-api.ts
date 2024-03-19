@@ -72,24 +72,24 @@ export interface NamedServerCondition {
    * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
    * for the expected syntax of this field.
    */
-  condition: ServerCondition;
+  condition: OneOfCondition;
 }
 
 /**
  * Represents a condition that may be one of several types.
  * Only the first defined field will be processed.
  */
-export interface ServerCondition {
+export interface OneOfCondition {
 
   /**
    * Makes this condition an OR condition.
    */
-  or?: OrServerCondition;
+  or?: OrCondition;
 
   /**
    * Makes this condition an AND condition.
    */
-  and?: AndServerCondition;
+  and?: AndCondition;
 
   /**
    * Makes this condition a constant true.
@@ -104,29 +104,29 @@ export interface ServerCondition {
   /**
    * Makes this condition a percent condition.
    */
-  percent?: PercentServerCondition;
+  percent?: PercentCondition;
 }
 
 /**
  * Represents a collection of conditions that evaluate to true if all are true.
  */
-export interface AndServerCondition {
+export interface AndCondition {
 
   /**
    * The collection of conditions.
    */
-  conditions?: Array<ServerCondition>;
+  conditions?: Array<OneOfCondition>;
 }
 
 /**
  * Represents a collection of conditions that evaluate to true if any are true.
  */
-export interface OrServerCondition {
+export interface OrCondition {
 
   /**
    * The collection of conditions.
    */
-  conditions?: Array<ServerCondition>;
+  conditions?: Array<OneOfCondition>;
 }
 
 /**
@@ -183,7 +183,7 @@ export interface MicroPercentRange {
  * Represents a condition that compares the instance pseudo-random
  * percentile to a given limit.
  */
-export interface PercentServerCondition {
+export interface PercentCondition {
 
   /**
    * The choice of percent operator to determine how to compare targets

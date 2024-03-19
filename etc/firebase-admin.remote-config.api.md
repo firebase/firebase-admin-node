@@ -9,8 +9,8 @@
 import { Agent } from 'http';
 
 // @public
-export interface AndServerCondition {
-    conditions?: Array<ServerCondition>;
+export interface AndCondition {
+    conditions?: Array<OneOfCondition>;
 }
 
 // @public
@@ -56,17 +56,34 @@ export interface MicroPercentRange {
 
 // @public
 export interface NamedServerCondition {
-    condition: ServerCondition;
+    condition: OneOfCondition;
     name: string;
 }
 
 // @public
-export interface OrServerCondition {
-    conditions?: Array<ServerCondition>;
+export interface OneOfCondition {
+    and?: AndCondition;
+    false?: Record<string, never>;
+    or?: OrCondition;
+    percent?: PercentCondition;
+    true?: Record<string, never>;
+}
+
+// @public
+export interface OrCondition {
+    conditions?: Array<OneOfCondition>;
 }
 
 // @public
 export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
+
+// @public
+export interface PercentCondition {
+    microPercent?: number;
+    microPercentRange?: MicroPercentRange;
+    operator?: PercentConditionOperator;
+    seed?: string;
+}
 
 // @public
 export enum PercentConditionOperator {
@@ -74,14 +91,6 @@ export enum PercentConditionOperator {
     GREATER_THAN = "GREATER_THAN",
     LESS_OR_EQUAL = "LESS_OR_EQUAL",
     UNKNOWN = "UNKNOWN"
-}
-
-// @public
-export interface PercentServerCondition {
-    microPercent?: number;
-    microPercentRange?: MicroPercentRange;
-    operator?: PercentConditionOperator;
-    seed?: string;
 }
 
 // @public
@@ -147,15 +156,6 @@ export interface RemoteConfigUser {
     email: string;
     imageUrl?: string;
     name?: string;
-}
-
-// @public
-export interface ServerCondition {
-    and?: AndServerCondition;
-    false?: Record<string, never>;
-    or?: OrServerCondition;
-    percent?: PercentServerCondition;
-    true?: Record<string, never>;
 }
 
 // @public
