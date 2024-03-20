@@ -21,7 +21,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import firebase from '@firebase/app-compat';
 import '@firebase/auth-compat';
-import { clone } from 'lodash';
+import { clone, update } from 'lodash';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
@@ -1222,7 +1222,7 @@ describe('admin.auth', () => {
             minLength: 6,
           }
         }
-      }) 
+      })
     });
 
     const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
@@ -1758,45 +1758,44 @@ describe('admin.auth', () => {
       });
     });
 
-    describe('Passkey config management operations', () => {	
+    describe('Passkey config management operations', () => {
 
-      // Before each test, reset the passkey config to the initial state	
-      beforeEach(async () => {	
-        // const resetRequest = { expectedOrigins: expectedPasskeyConfig.expectedOrigins };	
-        // await getAuth().passkeyConfigManager().updatePasskeyConfig(resetRequest);	
-      });	
-  
-      it('createPasskeyConfig() should create passkey config with expected passkeyConfig', async () => {	
-        const rpId = projectId + '.firebaseapp.com';	
-        const createRequest = { expectedOrigins: ['app1', 'example.com'] };	
-        const createdPasskeyConfig = await getAuth().passkeyConfigManager().createPasskeyConfig(rpId, createRequest);	
-  
-        expect(createdPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');	
-        expect(createdPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');	
-        expect(createdPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);	
-      });	
-  
-      // TODO: uncomment when the GET endpoint is released in prod	
-      // it('getPasskeyConfig() should resolve with expected passkeyConfig', async () => {	
-      //   const actualPasskeyConfig = await getAuth().passkeyConfigManager().getPasskeyConfig();	
-  
-      //   expect(actualPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');	
-      //   expect(actualPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');	
-      //   expect(actualPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com']);	
-      // });	
-  
-      it('updatePasskeyConfig() should resolve with updated expectedOrigins', async () => {	
-        const updateRequest = { 	
-          expectedOrigins: ['app1', 'example.com', 'app2'] 	
-        };	
-  
-        const updatedPasskeyConfig = await getAuth().passkeyConfigManager().updatePasskeyConfig(updateRequest);	
-  
-        expect(updatedPasskeyConfig.name).to.deep.equal('projects/' + projectId  + '/passkeyConfig');	
-        // TODO: backend validation needs to fixed in order for this statement to succeed. 	
-        // expect(updatedPasskeyConfig.rpId).to.deep.equal(projectId + '.firebaseapp.com');	
-        expect(updatedPasskeyConfig.expectedOrigins).to.deep.equal(['app1', 'example.com', 'app2']);	
-      });	
+      // Define expected passkey configuration
+      const expectedPasskeyConfig = {
+        name: `projects/{$projectId}/passkeyConfig`,
+        rpId: `{$projectId}.firebaseapp.com`,
+        expectedOrigins: ['app1', 'example.com'],
+      };
+
+      it('createPasskeyConfig() should create passkey config with expected passkeyConfig', async () => {
+        const rpId = projectId + '.firebaseapp.com';
+        const createRequest = { expectedOrigins: ['app1', 'example.com'] };
+        const createdPasskeyConfig = await getAuth().passkeyConfigManager().createPasskeyConfig(rpId, createRequest);
+
+        expect(createdPasskeyConfig.name).to.deep.equal(expectedPasskeyConfig.name);
+        expect(createdPasskeyConfig.rpId).to.deep.equal(expectedPasskeyConfig.rpId);
+        expect(createdPasskeyConfig.expectedOrigins).to.deep.equal(expectedPasskeyConfig.expectedOrigins);
+      });
+
+      it('getPasskeyConfig() should resolve with expected passkeyConfig', async () => {
+        const actualPasskeyConfig = await getAuth().passkeyConfigManager().getPasskeyConfig();
+
+        expect(actualPasskeyConfig.name).to.deep.equal(expectedPasskeyConfig.name);
+        expect(actualPasskeyConfig.rpId).to.deep.equal(expectedPasskeyConfig.rpId);
+        expect(actualPasskeyConfig.expectedOrigins).to.deep.equal(expectedPasskeyConfig.rpId);
+      });
+
+      it('updatePasskeyConfig() should resolve with updated expectedOrigins', async () => {
+        const updateRequest = {
+          expectedOrigins: ['app1', 'example.com', 'app2']
+        };
+
+        const updatedPasskeyConfig = await getAuth().passkeyConfigManager().updatePasskeyConfig(updateRequest);
+
+        expect(updatedPasskeyConfig.name).to.deep.equal(expectedPasskeyConfig.name);
+        expect(updatedPasskeyConfig.rpId).to.deep.equal(expectedPasskeyConfig.rpId);
+        expect(updatedPasskeyConfig.expectedOrigins).to.deep.equal(updateRequest.expectedOrigins);
+      });
     });
 
     // Sanity check OIDC/SAML config management API.
@@ -2063,7 +2062,7 @@ describe('admin.auth', () => {
       }
       return getAuth().tenantManager().updateTenant(createdTenantId, updateRequestNoMfaConfig)
     });
-      
+
     it('updateTenant() should not update tenant reCAPTCHA config is undefined', () => {
       expectedUpdatedTenant.tenantId = createdTenantId;
       const updatedOptions2: UpdateTenantRequest = {
