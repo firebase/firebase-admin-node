@@ -1762,8 +1762,8 @@ describe('admin.auth', () => {
 
       // Define expected passkey configuration
       const expectedPasskeyConfig = {
-        name: `projects/{$projectId}/passkeyConfig`,
-        rpId: `{$projectId}.firebaseapp.com`,
+        name: 'projects/{$projectId}/passkeyConfig',
+        rpId: '{$projectId}.firebaseapp.com',
         expectedOrigins: ['app1', 'example.com'],
       };
 
