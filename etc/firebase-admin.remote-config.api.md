@@ -62,9 +62,9 @@ export interface NamedCondition {
 
 // @public
 export interface OneOfCondition {
-    and?: AndCondition;
+    andCondition?: AndCondition;
     false?: Record<string, never>;
-    or?: OrCondition;
+    orCondition?: OrCondition;
     percent?: PercentCondition;
     true?: Record<string, never>;
 }
@@ -81,7 +81,7 @@ export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
 export interface PercentCondition {
     microPercent?: number;
     microPercentRange?: MicroPercentRange;
-    operator?: PercentConditionOperator;
+    percentOperator?: PercentConditionOperator;
     seed?: string;
 }
 
