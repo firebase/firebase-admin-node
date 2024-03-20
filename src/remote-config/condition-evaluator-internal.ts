@@ -62,11 +62,11 @@ export class ConditionEvaluator {
       // TODO: add logging once we have a wrapped logger.
       return false;
     }
-    if (condition.or) {
-      return this.evaluateOrCondition(condition.or, context, nestingLevel + 1)
+    if (condition.orCondition) {
+      return this.evaluateOrCondition(condition.orCondition, context, nestingLevel + 1)
     }
-    if (condition.and) {
-      return this.evaluateAndCondition(condition.and, context, nestingLevel + 1)
+    if (condition.andCondition) {
+      return this.evaluateAndCondition(condition.andCondition, context, nestingLevel + 1)
     }
     if (condition.true) {
       return true;

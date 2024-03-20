@@ -46,7 +46,7 @@ describe('ConditionEvaluator', () => {
       const condition = {
         name: 'is_enabled',
         condition: {
-          or: {
+          orCondition: {
           }
         }
       };
@@ -60,10 +60,10 @@ describe('ConditionEvaluator', () => {
       const condition = {
         name: 'is_enabled',
         condition: {
-          or: {
+          orCondition: {
             conditions: [
               {
-                and: {
+                andCondition: {
                 }
               }
             ]
@@ -80,10 +80,10 @@ describe('ConditionEvaluator', () => {
       const condition = {
         name: 'is_enabled',
         condition: {
-          or: {
+          orCondition: {
             conditions: [
               {
-                and: {
+                andCondition: {
                   conditions: [
                     {
                       true: {
@@ -106,10 +106,10 @@ describe('ConditionEvaluator', () => {
       const condition = {
         name: 'is_enabled',
         condition: {
-          or: {
+          orCondition: {
             conditions: [
               {
-                and: {
+                andCondition: {
                   conditions: [
                     {
                       false: {
@@ -150,9 +150,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.UNKNOWN
@@ -173,9 +173,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
@@ -198,9 +198,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
@@ -228,9 +228,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
@@ -259,9 +259,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
@@ -290,9 +290,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.LESS_OR_EQUAL,
@@ -316,9 +316,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
@@ -346,9 +346,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
@@ -377,9 +377,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
@@ -403,9 +403,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.GREATER_THAN,
@@ -428,9 +428,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
@@ -461,9 +461,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
@@ -490,9 +490,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,
@@ -523,9 +523,9 @@ describe('ConditionEvaluator', () => {
         const condition = {
           name: 'is_enabled',
           condition: {
-            or: {
+            orCondition: {
               conditions: [{
-                and: {
+                andCondition: {
                   conditions: [{
                     percent: {
                       operator: PercentConditionOperator.BETWEEN,

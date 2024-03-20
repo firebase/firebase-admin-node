@@ -84,12 +84,12 @@ export interface OneOfCondition {
   /**
    * Makes this condition an OR condition.
    */
-  or?: OrCondition;
+  orCondition?: OrCondition;
 
   /**
    * Makes this condition an AND condition.
    */
-  and?: AndCondition;
+  andCondition?: AndCondition;
 
   /**
    * Makes this condition a constant true.

@@ -115,10 +115,10 @@ describe('RemoteConfig', () => {
       {
         name: 'ios',
         condition: {
-          or: {
+          orCondition: {
             conditions: [
               {
-                and: {
+                andCondition: {
                   conditions: [
                     { true: {} }
                   ]
@@ -809,10 +809,10 @@ describe('RemoteConfig', () => {
             const cond = c as NamedCondition;
             expect(cond.name).to.equal('ios');
             expect(cond.condition).deep.equals({
-              'or': {
+              'orCondition': {
                 'conditions': [
                   {
-                    'and': {
+                    'andCondition': {
                       'conditions': [
                         {
                           'true': {}
@@ -932,10 +932,10 @@ describe('RemoteConfig', () => {
         const condition = {
           name: 'is_true',
           condition: {
-            or: {
+            orCondition: {
               conditions: [
                 {
-                  and: {
+                  andCondition: {
                     conditions: [
                       {
                         name: '',
@@ -973,10 +973,10 @@ describe('RemoteConfig', () => {
               {
                 name: 'is_true',
                 condition: {
-                  or: {
+                  orCondition: {
                     conditions: [
                       {
-                        and: {
+                        andCondition: {
                           conditions: [
                             {
                               true: {
@@ -992,10 +992,10 @@ describe('RemoteConfig', () => {
               {
                 name: 'is_true_too',
                 condition: {
-                  or: {
+                  orCondition: {
                     conditions: [
                       {
-                        and: {
+                        andCondition: {
                           conditions: [
                             {
                               true: {
