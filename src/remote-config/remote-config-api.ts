@@ -189,7 +189,7 @@ export interface PercentCondition {
    * The choice of percent operator to determine how to compare targets
    * to percent(s).
    */
-  operator?: PercentConditionOperator;
+  percentOperator?: PercentConditionOperator;
 
   /**
    * The limit of percentiles to target in micro-percents when

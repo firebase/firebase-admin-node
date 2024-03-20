@@ -16,7 +16,6 @@
 
 'use strict';
 
-import { isNumber } from 'lodash';
 import {
   AndCondition,
   OneOfCondition,
@@ -125,17 +124,24 @@ export class ConditionEvaluator {
     percentCondition: PercentCondition,
     context: EvaluationContext
   ): boolean {
-    const { seed, operator, microPercent, microPercentRange } = percentCondition;
-
-    if (!operator) {
-      // TODO: add logging once we have a wrapped logger.
-      return false;
-    }
-
     if (!context.randomizationId) {
       // TODO: add logging once we have a wrapped logger.
       return false;
     }
+
+    // This is the entry point for processing percent condition data from the response.
+    // We're not using a proto library, so we can't assume undefined fields have
+    // default values.
+    const { seed, percentOperator, microPercent, microPercentRange } = percentCondition;
+
+    if (!percentOperator) {
+      // TODO: add logging once we have a wrapped logger.
+      return false;
+    }
+
+    const normalizedMicroPercent = microPercent || 0;
+    const normalizedMicroPercentUpperBound = microPercentRange?.microPercentUpperBound || 0;
+    const normalizedMicroPercentLowerBound = microPercentRange?.microPercentLowerBound || 0;
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.randomizationId}`;
@@ -143,24 +149,14 @@ export class ConditionEvaluator {
 
     const instanceMicroPercentile = hash64 % (100 * 1_000_000);
 
-    switch (operator) {
+    switch (percentOperator) {
     case PercentConditionOperator.LESS_OR_EQUAL:
-      if (isNumber(microPercent)) {
-        return instanceMicroPercentile <= microPercent;
-      }
-      break;
+      return instanceMicroPercentile <= normalizedMicroPercent;
     case PercentConditionOperator.GREATER_THAN:
-      if (isNumber(microPercent)) {
-        return instanceMicroPercentile > microPercent;
-      }
-      break;
+      return instanceMicroPercentile > normalizedMicroPercent;
     case PercentConditionOperator.BETWEEN:
-      if (microPercentRange && isNumber(microPercentRange.microPercentLowerBound)
-          && isNumber(microPercentRange.microPercentUpperBound)) {
-        return instanceMicroPercentile > microPercentRange.microPercentLowerBound
-            && instanceMicroPercentile <= microPercentRange.microPercentUpperBound;
-      }
-      break;
+      return instanceMicroPercentile > normalizedMicroPercentLowerBound
+        && instanceMicroPercentile <= normalizedMicroPercentUpperBound;
     case PercentConditionOperator.UNKNOWN:
     default:
       break;

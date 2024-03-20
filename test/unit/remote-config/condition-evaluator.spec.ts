@@ -155,7 +155,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.UNKNOWN
+                      percentOperator: PercentConditionOperator.UNKNOWN
                     }
                   }],
                 }
@@ -178,7 +178,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
                       seed: 'abcdef',
                       microPercent: 100_000_000
                     }
@@ -203,7 +203,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
                       seed: 'abcdef',
                       microPercent: 0
                     }
@@ -217,6 +217,144 @@ describe('ConditionEvaluator', () => {
         const evaluator = new ConditionEvaluator();
         expect(evaluator.evaluateConditions([condition], context)).deep.equals(
           new Map([['is_enabled', false]]));
+      });
+
+      it('should use zero for undefined microPercent', () => {
+        // Stubs ID hasher to return a number larger than zero.
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          .returns('1');
+        stubs.push(stub);
+
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            orCondition: {
+              conditions: [{
+                andCondition: {
+                  conditions: [{
+                    percent: {
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
+                      // Leaves microPercent undefined
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new ConditionEvaluator();
+        const actual = evaluator.evaluateConditions([condition], context)
+          .get('is_enabled');
+
+        // Evaluates false because 1 is not <= 0
+        expect(actual).to.be.false;
+      });
+
+      it('should use zeros for undefined microPercentRange', () => {
+        // Stubs ID hasher to return a number in range.
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          .returns('1');
+        stubs.push(stub);
+
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            orCondition: {
+              conditions: [{
+                andCondition: {
+                  conditions: [{
+                    percent: {
+                      percentOperator: PercentConditionOperator.BETWEEN,
+                      // Leaves microPercentRange undefined
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new ConditionEvaluator();
+        const actual = evaluator.evaluateConditions([condition], context)
+          .get('is_enabled');
+
+        // Evaluates false because 1 is not in (0,0]
+        expect(actual).to.be.false;
+      });
+
+      it('should use zero for undefined microPercentUpperBound', () => {
+        // Stubs ID hasher to return a number outside range.
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          .returns('1');
+        stubs.push(stub);
+
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            orCondition: {
+              conditions: [{
+                andCondition: {
+                  conditions: [{
+                    percent: {
+                      percentOperator: PercentConditionOperator.BETWEEN,
+                      microPercentRange: {
+                        microPercentLowerBound: 0
+                        // Leaves upper bound undefined
+                      }
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new ConditionEvaluator();
+        const actual = evaluator.evaluateConditions([condition], context)
+          .get('is_enabled');
+
+        // Evaluates false because 1 is not in (0,0]
+        expect(actual).to.be.false;
+      });
+
+      it('should use zero for undefined microPercentLowerBound', () => {
+        // Stubs ID hasher to return a number in range.
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          .returns('1');
+        stubs.push(stub);
+
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            orCondition: {
+              conditions: [{
+                andCondition: {
+                  conditions: [{
+                    percent: {
+                      percentOperator: PercentConditionOperator.BETWEEN,
+                      microPercentRange: {
+                        microPercentUpperBound: 1
+                        // Leaves lower bound undefined
+                      }
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new ConditionEvaluator();
+        const actual = evaluator.evaluateConditions([condition], context)
+          .get('is_enabled');
+
+        // Evaluates true because 1 is in (0,1]
+        expect(actual).to.be.true;
       });
 
       it('should evaluate 9 as less or equal to 10', () => {
@@ -233,7 +371,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
                       seed: 'abcdef',
                       microPercent: 10
                     }
@@ -264,7 +402,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
                       seed: 'abcdef',
                       microPercent: 10
                     }
@@ -295,7 +433,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.LESS_OR_EQUAL,
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
                       seed: 'abcdef',
                       microPercent: 10
                     }
@@ -321,7 +459,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.GREATER_THAN,
+                      percentOperator: PercentConditionOperator.GREATER_THAN,
                       seed: 'abcdef',
                       microPercent: 0
                     }
@@ -351,7 +489,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.GREATER_THAN,
+                      percentOperator: PercentConditionOperator.GREATER_THAN,
                       seed: 'abcdef',
                       microPercent: 10
                     }
@@ -382,7 +520,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.GREATER_THAN,
+                      percentOperator: PercentConditionOperator.GREATER_THAN,
                       seed: 'abcdef',
                       microPercent: 10
                     }
@@ -408,7 +546,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.GREATER_THAN,
+                      percentOperator: PercentConditionOperator.GREATER_THAN,
                       seed: 'abcdef',
                       microPercent: 100_000_000
                     }
@@ -433,7 +571,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.BETWEEN,
+                      percentOperator: PercentConditionOperator.BETWEEN,
                       seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 0,
@@ -466,7 +604,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.BETWEEN,
+                      percentOperator: PercentConditionOperator.BETWEEN,
                       seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 9,
@@ -495,7 +633,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.BETWEEN,
+                      percentOperator: PercentConditionOperator.BETWEEN,
                       seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 50000000,
@@ -528,7 +666,7 @@ describe('ConditionEvaluator', () => {
                 andCondition: {
                   conditions: [{
                     percent: {
-                      operator: PercentConditionOperator.BETWEEN,
+                      percentOperator: PercentConditionOperator.BETWEEN,
                       seed: 'abcdef',
                       microPercentRange: {
                         microPercentLowerBound: 9,
@@ -558,7 +696,7 @@ describe('ConditionEvaluator', () => {
       //   print(binom.std(100_000, 0.5) * 3)
       it('should evaluate less or equal to 10% to approx 10%', () => {
         const percentCondition = {
-          operator: PercentConditionOperator.LESS_OR_EQUAL,
+          percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
           microPercent: 10_000_000 // 10%
         };
         const evaluator = new ConditionEvaluator();
@@ -571,7 +709,7 @@ describe('ConditionEvaluator', () => {
 
       it('should evaluate between 0 to 10% to approx 10%', () => {
         const percentCondition = {
-          operator: PercentConditionOperator.BETWEEN,
+          percentOperator: PercentConditionOperator.BETWEEN,
           microPercentRange: {
             microPercentLowerBound: 0,
             microPercentUpperBound: 10_000_000
@@ -587,7 +725,7 @@ describe('ConditionEvaluator', () => {
 
       it('should evaluate greater than 10% to approx 90%', () => {
         const percentCondition = {
-          operator: PercentConditionOperator.GREATER_THAN,
+          percentOperator: PercentConditionOperator.GREATER_THAN,
           microPercent: 10_000_000
         };
         const evaluator = new ConditionEvaluator();
@@ -600,7 +738,7 @@ describe('ConditionEvaluator', () => {
 
       it('should evaluate between 40% to 60% to approx 20%', () => {
         const percentCondition = {
-          operator: PercentConditionOperator.BETWEEN,
+          percentOperator: PercentConditionOperator.BETWEEN,
           microPercentRange: {
             microPercentLowerBound: 40_000_000,
             microPercentUpperBound: 60_000_000
@@ -616,7 +754,7 @@ describe('ConditionEvaluator', () => {
 
       it('should evaluate between interquartile range to approx 50%', () => {
         const percentCondition = {
-          operator: PercentConditionOperator.BETWEEN,
+          percentOperator: PercentConditionOperator.BETWEEN,
           microPercentRange: {
             microPercentLowerBound: 25_000_000,
             microPercentUpperBound: 75_000_000
