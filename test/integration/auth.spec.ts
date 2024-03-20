@@ -21,7 +21,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import firebase from '@firebase/app-compat';
 import '@firebase/auth-compat';
-import { clone, update } from 'lodash';
+import { clone } from 'lodash';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
