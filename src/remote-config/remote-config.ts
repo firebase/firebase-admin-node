@@ -336,7 +336,7 @@ class ServerTemplateImpl implements ServerTemplate {
 
     const mergedConfig = {};
 
-    // Merges rendered config and default config, prioritizing the former.
+    // Merges default config and rendered config, prioritizing the latter.
     Object.assign(mergedConfig, this.defaultConfig, evaluatedConfig);
 
     // Enables config to be a convenient object, but with the ability to perform additional
