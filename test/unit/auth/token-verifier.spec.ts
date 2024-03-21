@@ -341,7 +341,8 @@ describe('FirebaseTokenVerifier', () => {
         });
 
         return tokenVerifier.verifyJWT(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has a "sub" (subject) claim longer than 128 characters');
+          .should.eventually.be.rejectedWith('Firebase ID token has a "sub" (subject) claim longer than 128 ' +
+          'characters');
       });
     });
 
@@ -811,7 +812,9 @@ describe('FirebaseTokenVerifier', () => {
           event_type: eventType,
         });
         return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
-          .should.eventually.be.rejectedWith('Firebase Auth Blocking token has an empty "sub" (subject) claim. See https://cloud.google.com/identity-platform/docs/blocking-functions for details on how to retrieve an Auth Blocking token.');
+          .should.eventually.be.rejectedWith('Firebase Auth Blocking token has an empty "sub" (subject) claim.' +
+          ' See https://cloud.google.com/identity-platform/docs/blocking-functions for details on how to retrieve an' +
+          ' Auth Blocking token.');
       });
     });
   });
