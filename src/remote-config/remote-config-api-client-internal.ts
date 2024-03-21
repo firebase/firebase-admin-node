@@ -25,7 +25,7 @@ import {
   ListVersionsOptions,
   ListVersionsResult,
   RemoteConfigTemplate,
-  RemoteConfigServerTemplateData
+  ServerTemplateData
 } from './remote-config-api';
 
 // Remote Config backend constants
@@ -175,7 +175,7 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public getServerTemplate(): Promise<RemoteConfigServerTemplateData> {
+  public getServerTemplate(): Promise<ServerTemplateData> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -289,7 +289,7 @@ export class RemoteConfigApiClient {
    * @param {HttpResponse} resp API response object.
    * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
    */
-  private toRemoteConfigServerTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigServerTemplateData {
+  private toRemoteConfigServerTemplate(resp: HttpResponse, customEtag?: string): ServerTemplateData {
     const etag = (typeof customEtag === 'undefined') ? resp.headers['etag'] : customEtag;
     this.validateEtag(etag);
     return {

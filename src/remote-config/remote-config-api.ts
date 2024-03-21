@@ -59,20 +59,12 @@ export interface RemoteConfigCondition {
  * A condition targets a specific group of users. A list of these conditions make up
  * part of a Remote Config template.
  */
-export interface RemoteConfigServerCondition {
+export interface NamedCondition {
 
   /**
    * A non-empty and unique name of this condition.
    */
   name: string;
-
-  /**
-   * The logic of this condition.
-   * See the documentation on
-   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
-   * for the expected syntax of this field.
-   */
-  expression: string;
 }
 
 /**
@@ -191,11 +183,11 @@ export interface RemoteConfigTemplate {
 /**
  * Represents the data in a Remote Config server template.
  */
-export interface RemoteConfigServerTemplateData {
+export interface ServerTemplateData {
   /**
    * A list of conditions in descending order by priority.
    */
-  conditions: RemoteConfigServerCondition[];
+  conditions: NamedCondition[];
 
   /**
    * Map of parameter keys to their optional default values and optional conditional values.
@@ -214,16 +206,16 @@ export interface RemoteConfigServerTemplateData {
 }
 
 /**
- * Represents optional arguments that can be used when instantiating {@link RemoteConfigServerTemplate}.
+ * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
  */
-export interface RemoteConfigServerTemplateOptions {
+export interface ServerTemplateOptions {
 
   /**
    * Defines in-app default parameter values, so that your app behaves as
    * intended before it connects to the Remote Config backend, and so that
    * default values are available if none are set on the backend.
    */
-  defaultConfig?: RemoteConfigServerConfig,
+  defaultConfig?: ServerConfig,
 
   /**
    * Enables integrations to use template data loaded independently. For
@@ -231,32 +223,32 @@ export interface RemoteConfigServerTemplateOptions {
    * caching template data and then using this option to initialize the SDK with
    * that data.
    */
-  template?: RemoteConfigServerTemplateData,
+  template?: ServerTemplateData,
 }
 
 /**
  * Represents a stateful abstraction for a Remote Config server template.
  */
-export interface RemoteConfigServerTemplate {
+export interface ServerTemplate {
 
   /**
-   * Cached {@link RemoteConfigServerTemplateData}.
+   * Cached {@link ServerTemplateData}.
    */
-  cache: RemoteConfigServerTemplateData;
+  cache: ServerTemplateData;
 
   /**
-   * A {@link RemoteConfigServerConfig} that contains default Config values.
+   * A {@link ServerConfig} that contains default Config values.
    */
-  defaultConfig: RemoteConfigServerConfig;
+  defaultConfig: ServerConfig;
 
   /**
-   * Evaluates the current template to produce a {@link RemoteConfigServerConfig}.
+   * Evaluates the current template to produce a {@link ServerConfig}.
    */
-  evaluate(): RemoteConfigServerConfig;
+  evaluate(): ServerConfig;
 
   /**
    * Fetches and caches the current active version of the
-   * project's {@link RemoteConfigServerTemplate}.
+   * project's {@link ServerTemplate}.
    */
   load(): Promise<void>;
 }
@@ -387,4 +379,4 @@ export interface ListVersionsOptions {
 /**
  * Represents the configuration produced by evaluating a server template.
  */
-export type RemoteConfigServerConfig = { [key: string]: string | boolean | number }
+export type ServerConfig = { [key: string]: string | boolean | number }

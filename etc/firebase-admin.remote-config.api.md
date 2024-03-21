@@ -39,6 +39,11 @@ export interface ListVersionsResult {
 }
 
 // @public
+export interface NamedCondition {
+    name: string;
+}
+
+// @public
 export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
 
 // @public
@@ -46,10 +51,10 @@ export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
-    getServerTemplate(options?: RemoteConfigServerTemplateOptions): Promise<RemoteConfigServerTemplate>;
+    getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
-    initServerTemplate(options?: RemoteConfigServerTemplateOptions): RemoteConfigServerTemplate;
+    initServerTemplate(options?: ServerTemplateOptions): ServerTemplate;
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
     publishTemplate(template: RemoteConfigTemplate, options?: {
         force: boolean;
@@ -87,41 +92,6 @@ export interface RemoteConfigParameterGroup {
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
 // @public
-export interface RemoteConfigServerCondition {
-    expression: string;
-    name: string;
-}
-
-// @public
-export type RemoteConfigServerConfig = {
-    [key: string]: string | boolean | number;
-};
-
-// @public
-export interface RemoteConfigServerTemplate {
-    cache: RemoteConfigServerTemplateData;
-    defaultConfig: RemoteConfigServerConfig;
-    evaluate(): RemoteConfigServerConfig;
-    load(): Promise<void>;
-}
-
-// @public
-export interface RemoteConfigServerTemplateData {
-    conditions: RemoteConfigServerCondition[];
-    readonly etag: string;
-    parameters: {
-        [key: string]: RemoteConfigParameter;
-    };
-    version?: Version;
-}
-
-// @public
-export interface RemoteConfigServerTemplateOptions {
-    defaultConfig?: RemoteConfigServerConfig;
-    template?: RemoteConfigServerTemplateData;
-}
-
-// @public
 export interface RemoteConfigTemplate {
     conditions: RemoteConfigCondition[];
     readonly etag: string;
@@ -139,6 +109,35 @@ export interface RemoteConfigUser {
     email: string;
     imageUrl?: string;
     name?: string;
+}
+
+// @public
+export type ServerConfig = {
+    [key: string]: string | boolean | number;
+};
+
+// @public
+export interface ServerTemplate {
+    cache: ServerTemplateData;
+    defaultConfig: ServerConfig;
+    evaluate(): ServerConfig;
+    load(): Promise<void>;
+}
+
+// @public
+export interface ServerTemplateData {
+    conditions: NamedCondition[];
+    readonly etag: string;
+    parameters: {
+        [key: string]: RemoteConfigParameter;
+    };
+    version?: Version;
+}
+
+// @public
+export interface ServerTemplateOptions {
+    defaultConfig?: ServerConfig;
+    template?: ServerTemplateData;
 }
 
 // @public

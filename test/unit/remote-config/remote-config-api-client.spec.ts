@@ -33,7 +33,7 @@ import { getSdkVersion } from '../../../src/utils/index';
 import {
   RemoteConfigTemplate, Version, ListVersionsResult,
 } from '../../../src/remote-config/index';
-import { RemoteConfigServerTemplateData } from '../../../src/remote-config/remote-config-api';
+import { ServerTemplateData } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
 
@@ -708,7 +708,7 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  function runEtagHeaderTests(rcOperation: () => Promise<RemoteConfigTemplate | RemoteConfigServerTemplateData>): void {
+  function runEtagHeaderTests(rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData>): void {
     it('should reject when the etag is not present in the response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -722,7 +722,7 @@ describe('RemoteConfigApiClient', () => {
   }
 
   function runErrorResponseTests(
-    rcOperation: () => Promise<RemoteConfigTemplate | RemoteConfigServerTemplateData | ListVersionsResult>): void {
+    rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData | ListVersionsResult>): void {
     it('should reject when a full platform error response is received', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
