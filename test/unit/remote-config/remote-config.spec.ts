@@ -106,14 +106,27 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<{ name: string; }>;
+    conditions?: Array<NamedCondition>;
     parameters?: object | null;
     etag: string;
     version?: object;
   } = {
     conditions: [
       {
-        name: 'ios'
+        name: 'ios',
+        condition: {
+          orCondition: {
+            conditions: [
+              {
+                andCondition: {
+                  conditions: [
+                    { true: {} }
+                  ]
+                }
+              }
+            ]
+          }
+        }
       },
     ],
     parameters: {
@@ -795,6 +808,21 @@ describe('RemoteConfig', () => {
             expect(c).to.be.not.undefined;
             const cond = c as NamedCondition;
             expect(cond.name).to.equal('ios');
+            expect(cond.condition).deep.equals({
+              'orCondition': {
+                'conditions': [
+                  {
+                    'andCondition': {
+                      'conditions': [
+                        {
+                          'true': {}
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            });
 
             const parsed = JSON.parse(JSON.stringify(template.cache));
             const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
@@ -898,6 +926,106 @@ describe('RemoteConfig', () => {
             expect(config.dog_age).to.equal(22);
             expect(config.dog_jsonified).to.equal('{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}');
           });
+      });
+
+      it('returns conditional value', () => {
+        const condition = {
+          name: 'is_true',
+          condition: {
+            orCondition: {
+              conditions: [
+                {
+                  andCondition: {
+                    conditions: [
+                      {
+                        name: '',
+                        true: {
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: {
+            conditions: [condition],
+            parameters: {
+              is_enabled: {
+                defaultValue: { value: 'false' },
+                conditionalValues: { is_true: { value: 'true' } },
+                valueType: 'BOOLEAN',
+              },
+            },
+            etag: '123'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.is_enabled).to.be.true;
+      });
+
+      it('honors condition order', () => {
+        const template = remoteConfig.initServerTemplate({
+          template: {
+            conditions: [
+              {
+                name: 'is_true',
+                condition: {
+                  orCondition: {
+                    conditions: [
+                      {
+                        andCondition: {
+                          conditions: [
+                            {
+                              true: {
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                name: 'is_true_too',
+                condition: {
+                  orCondition: {
+                    conditions: [
+                      {
+                        andCondition: {
+                          conditions: [
+                            {
+                              true: {
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }],
+            parameters: {
+              dog_type: {
+                defaultValue: { value: 'chihuahua' },
+                conditionalValues: {
+                  // The is_true and is_true_too conditions both return true,
+                  // but is_true is first in the list, so the corresponding
+                  // value is selected.
+                  is_true_too: { value: 'dachshund' },
+                  is_true: { value: 'corgi' }
+                },
+                valueType: 'STRING',
+              },
+            },
+            etag: '123'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.dog_type).to.eq('corgi');
       });
 
       it('uses local default if parameter not in template', () => {

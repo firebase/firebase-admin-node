@@ -25,12 +25,19 @@ import { FirebaseApp } from '../app/firebase-app';
 import { RemoteConfig } from './remote-config';
 
 export {
+  AndCondition,
+  EvaluationContext,
   ExplicitParameterValue,
   InAppDefaultValue,
   ListVersionsOptions,
   ListVersionsResult,
+  MicroPercentRange,
   NamedCondition,
+  OneOfCondition,
+  OrCondition,
   ParameterValueType,
+  PercentConditionOperator,
+  PercentCondition,
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,

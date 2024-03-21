@@ -56,8 +56,8 @@ export interface RemoteConfigCondition {
 
 /**
  * Represents a Remote Config condition in the dataplane.
- * A condition targets a specific group of users. A list of these conditions make up
- * part of a Remote Config template.
+ * A condition targets a specific group of users. A list of these conditions
+ * comprise part of a Remote Config template.
  */
 export interface NamedCondition {
 
@@ -65,6 +65,152 @@ export interface NamedCondition {
    * A non-empty and unique name of this condition.
    */
   name: string;
+
+  /**
+   * The logic of this condition.
+   * See the documentation on
+   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
+   * for the expected syntax of this field.
+   */
+  condition: OneOfCondition;
+}
+
+/**
+ * Represents a condition that may be one of several types.
+ * Only the first defined field will be processed.
+ */
+export interface OneOfCondition {
+
+  /**
+   * Makes this condition an OR condition.
+   */
+  orCondition?: OrCondition;
+
+  /**
+   * Makes this condition an AND condition.
+   */
+  andCondition?: AndCondition;
+
+  /**
+   * Makes this condition a constant true.
+   */
+  true?: Record<string, never>;
+
+  /**
+   * Makes this condition a constant false.
+   */
+  false?: Record<string, never>;
+
+  /**
+   * Makes this condition a percent condition.
+   */
+  percent?: PercentCondition;
+}
+
+/**
+ * Represents a collection of conditions that evaluate to true if all are true.
+ */
+export interface AndCondition {
+
+  /**
+   * The collection of conditions.
+   */
+  conditions?: Array<OneOfCondition>;
+}
+
+/**
+ * Represents a collection of conditions that evaluate to true if any are true.
+ */
+export interface OrCondition {
+
+  /**
+   * The collection of conditions.
+   */
+  conditions?: Array<OneOfCondition>;
+}
+
+/**
+ * Defines supported operators for percent conditions.
+ */
+export enum PercentConditionOperator {
+
+  /**
+   * A catchall error case.
+   */
+  UNKNOWN = 'UNKNOWN',
+
+  /**
+   * Target percentiles less than or equal to the target percent.
+   * A condition using this operator must specify microPercent.
+   */
+  LESS_OR_EQUAL = 'LESS_OR_EQUAL',
+
+  /**
+   * Target percentiles greater than the target percent.
+   * A condition using this operator must specify microPercent.
+   */
+  GREATER_THAN = 'GREATER_THAN',
+
+  /**
+   * Target percentiles within an interval defined by a lower bound and an
+   * upper bound. The lower bound is an exclusive (open) bound and the
+   * micro_percent_range_upper_bound is an inclusive (closed) bound.
+   * A condition using this operator must specify microPercentRange.
+   */
+  BETWEEN = 'BETWEEN'
+}
+
+/**
+ * Represents the limit of percentiles to target in micro-percents.
+ * The value must be in the range [0 and 100000000]
+ */
+export interface MicroPercentRange {
+
+  /**
+   * The lower limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
+  microPercentLowerBound?: number;
+
+  /**
+   * The upper limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
+  microPercentUpperBound?: number;
+}
+
+/**
+ * Represents a condition that compares the instance pseudo-random
+ * percentile to a given limit.
+ */
+export interface PercentCondition {
+
+  /**
+   * The choice of percent operator to determine how to compare targets
+   * to percent(s).
+   */
+  percentOperator?: PercentConditionOperator;
+
+  /**
+   * The limit of percentiles to target in micro-percents when
+   * using the LESS_OR_EQUAL and GREATER_THAN operators. The value must
+   * be in the range [0 and 100000000].
+   */
+  microPercent?: number;
+
+  /**
+   * The seed used when evaluating the hash function to map an instance to
+   * a value in the hash space. This is a string which can have 0 - 32
+   * characters and can contain ASCII characters [-_.0-9a-zA-Z].The string
+   * is case-sensitive.
+   */
+  seed?: string;
+
+  /**
+   * The micro-percent interval to be used with the
+   * BETWEEN operator.
+   */
+  microPercentRange?: MicroPercentRange;
 }
 
 /**
@@ -244,7 +390,7 @@ export interface ServerTemplate {
   /**
    * Evaluates the current template to produce a {@link ServerConfig}.
    */
-  evaluate(): ServerConfig;
+  evaluate(context?: EvaluationContext): ServerConfig;
 
   /**
    * Fetches and caches the current active version of the
@@ -252,6 +398,18 @@ export interface ServerTemplate {
    */
   load(): Promise<void>;
 }
+
+/**
+ * Represents template evaluation input signals.
+ */
+export type EvaluationContext = {
+
+  /**
+   * Defines the identifier to use when splitting a group. For example,
+   * this is used by the percent condition.
+   */
+  randomizationId?: string
+};
 
 /**
  * Interface representing a Remote Config user.

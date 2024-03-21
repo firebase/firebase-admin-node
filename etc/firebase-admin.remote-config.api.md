@@ -9,6 +9,16 @@
 import { Agent } from 'http';
 
 // @public
+export interface AndCondition {
+    conditions?: Array<OneOfCondition>;
+}
+
+// @public
+export type EvaluationContext = {
+    randomizationId?: string;
+};
+
+// @public
 export interface ExplicitParameterValue {
     value: string;
 }
@@ -39,12 +49,49 @@ export interface ListVersionsResult {
 }
 
 // @public
+export interface MicroPercentRange {
+    microPercentLowerBound?: number;
+    microPercentUpperBound?: number;
+}
+
+// @public
 export interface NamedCondition {
+    condition: OneOfCondition;
     name: string;
 }
 
 // @public
+export interface OneOfCondition {
+    andCondition?: AndCondition;
+    false?: Record<string, never>;
+    orCondition?: OrCondition;
+    percent?: PercentCondition;
+    true?: Record<string, never>;
+}
+
+// @public
+export interface OrCondition {
+    conditions?: Array<OneOfCondition>;
+}
+
+// @public
 export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
+
+// @public
+export interface PercentCondition {
+    microPercent?: number;
+    microPercentRange?: MicroPercentRange;
+    percentOperator?: PercentConditionOperator;
+    seed?: string;
+}
+
+// @public
+export enum PercentConditionOperator {
+    BETWEEN = "BETWEEN",
+    GREATER_THAN = "GREATER_THAN",
+    LESS_OR_EQUAL = "LESS_OR_EQUAL",
+    UNKNOWN = "UNKNOWN"
+}
 
 // @public
 export class RemoteConfig {
@@ -120,7 +167,7 @@ export type ServerConfig = {
 export interface ServerTemplate {
     cache: ServerTemplateData;
     defaultConfig: ServerConfig;
-    evaluate(): ServerConfig;
+    evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
 }
 
