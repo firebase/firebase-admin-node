@@ -961,21 +961,6 @@ describe('RemoteConfig', () => {
 
         const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
 
-        // response.parameters = {
-        //   dog_type: {
-        //     defaultValue: {
-        //       useInAppDefault: true
-        //     },
-        //     valueType: 'STRING'
-        //   },
-        // }
-
-        // template.cache = response as ServerTemplateData;
-
-        
-
-        // expect(config.dog_type).to.equal(template.defaultConfig.dog_type);
-
         response.parameters = {
           dog_type: {
             defaultValue: {
