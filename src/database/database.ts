@@ -30,7 +30,7 @@ import { getSdkVersion } from '../utils/index';
 /**
  * The Firebase Database service interface. Extends the
  * {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.Database | Database}
- * interface provided by the `@firebase/database` package.
+ * interface provided by the `@firebase/database-compat` package.
  */
 export interface Database extends FirebaseDatabase {
   /**
