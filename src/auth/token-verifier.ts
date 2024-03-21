@@ -536,10 +536,10 @@ export class FirebaseTokenVerifier {
       if (typeof payload.sub !== 'string') {
         errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
       } else if (payload.sub === '') {
-        errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` +
+        errorMessage = `${this.tokenInfo.jwtName} has an empty "sub" (subject) claim.` +
           verifyJwtTokenDocsMessage;
       } else if (payload.sub.length > 128) {
-        errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
+        errorMessage = `${this.tokenInfo.jwtName} has a "sub" (subject) claim longer than 128 characters.` +
           verifyJwtTokenDocsMessage;
       }
     }
