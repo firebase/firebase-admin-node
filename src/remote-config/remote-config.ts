@@ -334,8 +334,10 @@ class ServerTemplateImpl implements ServerTemplate {
       evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
     }
 
-    // Merges rendered config over default config.
-    const mergedConfig = Object.assign(this.defaultConfig, evaluatedConfig);
+    const mergedConfig = {};
+
+    // Merges rendered config and default config, prioritizing the former.
+    Object.assign(mergedConfig, this.defaultConfig, evaluatedConfig);
 
     // Enables config to be a convenient object, but with the ability to perform additional
     // functionality when a value is retrieved.

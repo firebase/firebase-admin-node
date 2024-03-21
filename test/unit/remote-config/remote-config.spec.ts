@@ -948,19 +948,92 @@ describe('RemoteConfig', () => {
           });
       });
 
-      it('overrides local default when value exists', () => {
+      it('uses local default when in-app default value specified after loading remote values', async () => {
+        // We had a bug caused by forgetting the first argument to
+        // Object.assign. This resulted in defaultConfig being overwritten
+        // by the remote values. So this test asserts we can use in-app
+        // default after loading remote values.
+        const template = remoteConfig.initServerTemplate({
+          defaultConfig: {
+            dog_type: 'corgi'
+          }
+        });
+
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+
+        // response.parameters = {
+        //   dog_type: {
+        //     defaultValue: {
+        //       useInAppDefault: true
+        //     },
+        //     valueType: 'STRING'
+        //   },
+        // }
+
+        // template.cache = response as ServerTemplateData;
+
+        
+
+        // expect(config.dog_type).to.equal(template.defaultConfig.dog_type);
+
+        response.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            },
+            valueType: 'STRING'
+          },
+        }
+
+        template.cache = response as ServerTemplateData;
+
+        let config = template.evaluate();
+
+        expect(config.dog_type).to.equal('pug');
+
+        response.parameters = {
+          dog_type: {
+            defaultValue: {
+              useInAppDefault: true
+            },
+            valueType: 'STRING'
+          },
+        }
+
+        template.cache = response as ServerTemplateData;
+
+        config = template.evaluate();
+
+        expect(config.dog_type).to.equal('corgi');
+      });
+
+      it('overrides local default when remote value exists', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.parameters = {
+          dog_type_enabled: {
+            defaultValue: {
+              // Defines remote value
+              value: 'true'
+            },
+            valueType: 'BOOLEAN'
+          },
+        }
+
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
-          .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as ServerTemplateData);
+          .resolves(response as ServerTemplateData);
         stubs.push(stub);
+
         return remoteConfig.getServerTemplate({
           defaultConfig: {
+            // Defines local default
             dog_type_enabled: false
           }
         })
           .then((template: ServerTemplate) => {
-            const config = template.evaluate!();
-            expect(config.dog_type_enabled).to.equal(template.defaultConfig.dog_type_enabled);
+            const config = template.evaluate();
+            // Asserts remote value overrides local default.
+            expect(config.dog_type_enabled).to.be.true;
           });
       });
     });
