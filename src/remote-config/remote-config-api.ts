@@ -537,4 +537,15 @@ export interface ListVersionsOptions {
 /**
  * Represents the configuration produced by evaluating a server template.
  */
-export type ServerConfig = { [key: string]: string | boolean | number }
+export type ServerConfig = { [key: string]: string | boolean | number | JSONData }
+
+/**
+ * Represents parameter values of type JSON.
+ */
+export type JSONData =
+  | string
+  | number
+  | boolean
+  | null
+  | JSONData[]
+  | {[key: string]: JSONData};
