@@ -610,20 +610,28 @@ describe('RemoteConfig', () => {
     });
 
     it('should set defaultConfig when passed', () => {
+      // Defines template with no parameters to demonstrate
+      // default config will be used instead,
+      const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      template.parameters = {};
+
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(template);
+      stubs.push(stub);
+
       const defaultConfig = {
         holiday_promo_enabled: false,
         holiday_promo_discount: 20,
       };
 
-      const stub = sinon
-        .stub(RemoteConfigApiClient.prototype, operationName)
-        .resolves(SERVER_REMOTE_CONFIG_RESPONSE as ServerTemplateData);
-      stubs.push(stub);
-
       return remoteConfig.getServerTemplate({ defaultConfig })
         .then((template) => {
-          expect(template.defaultConfig.holiday_promo_enabled).to.equal(false);
-          expect(template.defaultConfig.holiday_promo_discount).to.equal(20);
+          const config = template.evaluate();
+          expect(config.holiday_promo_enabled).to.equal(
+            defaultConfig.holiday_promo_enabled);
+          expect(config.holiday_promo_discount).to.equal(
+            defaultConfig.holiday_promo_discount);
         });
     });
   });
@@ -1029,50 +1037,66 @@ describe('RemoteConfig', () => {
       });
 
       it('uses local default if parameter not in template', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {};
+  
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
-          .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as ServerTemplateData);
+          .resolves(template);
         stubs.push(stub);
-        return remoteConfig.getServerTemplate({
-          defaultConfig: {
-            dog_coat: 'blue merle',
-          }
-        })
+  
+        const defaultConfig = {
+          dog_coat: 'blue merle',
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
-            const config = template.evaluate!();
-            expect(config.dog_coat).to.equal(template.defaultConfig.dog_coat);
+            const config = template.evaluate();
+            expect(config.dog_coat).to.equal(defaultConfig.dog_coat);
           });
       });
 
       it('uses local default when parameter is in template but default value is undefined', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_no_remote_default_value: {}
+        };
+  
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
-          .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as ServerTemplateData);
+          .resolves(template);
         stubs.push(stub);
-        return remoteConfig.getServerTemplate({
-          defaultConfig: {
-            dog_no_remote_default_value: 'local default'
-          }
-        })
+  
+        const defaultConfig = {
+          dog_no_remote_default_value: 'local default'
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
             const config = template.evaluate!();
-            expect(config.dog_no_remote_default_value).to.equal(template.defaultConfig.dog_no_remote_default_value);
+            expect(config.dog_no_remote_default_value).to.equal(defaultConfig.dog_no_remote_default_value);
           });
       });
 
       it('uses local default when in-app default value specified', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_no_remote_default_value: {}
+        };
+  
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
-          .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as ServerTemplateData);
+          .resolves(template);
         stubs.push(stub);
-        return remoteConfig.getServerTemplate({
-          defaultConfig: {
-            dog_use_inapp_default: '🐕'
-          }
-        })
+
+        const defaultConfig = {
+          dog_use_inapp_default: '🐕'
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
             const config = template.evaluate!();
-            expect(config.dog_use_inapp_default).to.equal(template.defaultConfig.dog_use_inapp_default);
+            expect(config.dog_use_inapp_default).to.equal(defaultConfig.dog_use_inapp_default);
           });
       });
 

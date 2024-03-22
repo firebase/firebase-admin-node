@@ -296,7 +296,7 @@ class ServerTemplateImpl implements ServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    public readonly defaultConfig: ServerConfig = {}
+    private readonly defaultConfig: ServerConfig = {}
   ) { }
 
   /**

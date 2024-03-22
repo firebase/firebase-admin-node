@@ -383,11 +383,6 @@ export interface ServerTemplate {
   cache: ServerTemplateData;
 
   /**
-   * A {@link ServerConfig} that contains default Config values.
-   */
-  defaultConfig: ServerConfig;
-
-  /**
    * Evaluates the current template to produce a {@link ServerConfig}.
    */
   evaluate(context?: EvaluationContext): ServerConfig;
