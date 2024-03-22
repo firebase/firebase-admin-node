@@ -1037,7 +1037,6 @@ describe('RemoteConfig', () => {
       });
 
       it('uses local default if parameter not in template', () => {
-        // Defines a template without the parameter set by default config.
         const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         template.parameters = {};
   
