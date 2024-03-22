@@ -924,7 +924,12 @@ describe('RemoteConfig', () => {
             expect(config.dog_type).to.equal('corgi');
             expect(config.dog_type_enabled).to.equal(true);
             expect(config.dog_age).to.equal(22);
-            expect(config.dog_jsonified).to.equal('{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}');
+            expect(config.dog_jsonified).to.deep.equal({
+              name: 'Taro',
+              breed: 'Corgi',
+              age: 1,
+              fluffiness: 100
+            });
           });
       });
 

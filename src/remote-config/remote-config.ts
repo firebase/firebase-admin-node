@@ -19,7 +19,7 @@ import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import { ConditionEvaluator } from './condition-evaluator-internal';
 import {
-  JSONData,
+  JSONObject,
   ListVersionsOptions,
   ListVersionsResult,
   RemoteConfigCondition,
@@ -391,7 +391,7 @@ class ServerTemplateImpl implements ServerTemplate {
    * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
    */
   private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
-    parameterValue: string): string | number | boolean | JSONData {
+    parameterValue: string): string | number | boolean | JSONObject {
     const BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
     const DEFAULT_VALUE_FOR_NUMBER = 0;
     const DEFAULT_VALUE_FOR_STRING = '';
@@ -411,7 +411,7 @@ class ServerTemplateImpl implements ServerTemplate {
       } catch (e) {
         // TODO: add logging once we have a wrapped logger.
       }
-      return parsed as JSONData
+      return parsed as JSONObject
     } else {
       // Treat everything else as string
       return parameterValue || DEFAULT_VALUE_FOR_STRING;

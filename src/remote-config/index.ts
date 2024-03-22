@@ -29,7 +29,7 @@ export {
   EvaluationContext,
   ExplicitParameterValue,
   InAppDefaultValue,
-  JSONData,
+  JSONObject,
   ListVersionsOptions,
   ListVersionsResult,
   MicroPercentRange,
