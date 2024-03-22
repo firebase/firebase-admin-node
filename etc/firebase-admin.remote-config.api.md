@@ -166,7 +166,6 @@ export type ServerConfig = {
 // @public
 export interface ServerTemplate {
     cache: ServerTemplateData;
-    defaultConfig: ServerConfig;
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
 }
