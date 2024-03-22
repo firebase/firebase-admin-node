@@ -28,7 +28,9 @@ export {
   AndCondition,
   EvaluationContext,
   ExplicitParameterValue,
+  GetServerTemplateOptions,
   InAppDefaultValue,
+  InitServerTemplateOptions,
   ListVersionsOptions,
   ListVersionsResult,
   MicroPercentRange,
@@ -47,7 +49,6 @@ export {
   ServerConfig,
   ServerTemplate,
   ServerTemplateData,
-  ServerTemplateOptions,
   TagColor,
   Version,
 } from './remote-config-api';
