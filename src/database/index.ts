@@ -125,3 +125,5 @@ function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
   const dbService = firebaseApp.getOrInitService('database', (app) => new DatabaseService(app));
   return dbService.getDatabase(options.url);
 }
+
+export { FirebaseDatabaseError } from '../utils/error';

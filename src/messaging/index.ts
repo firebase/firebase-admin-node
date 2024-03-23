@@ -100,3 +100,5 @@ export function getMessaging(app?: App): Messaging {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('messaging', (app) => new Messaging(app));
 }
+
+export { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';

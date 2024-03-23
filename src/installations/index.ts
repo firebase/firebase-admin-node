@@ -61,3 +61,5 @@ export function getInstallations(app?: App): Installations {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('installations', (app) => new Installations(app));
 }
+
+export { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';

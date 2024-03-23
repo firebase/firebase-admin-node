@@ -70,3 +70,5 @@ export function getInstanceId(app?: App): InstanceId {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
 }
+
+export { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';

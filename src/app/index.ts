@@ -29,4 +29,6 @@ export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './credential';
 export { applicationDefault, cert, refreshToken } from './credential-factory';
 
+export { FirebaseAppError, AppErrorCodes } from '../utils/error';
+
 export const SDK_VERSION = getSdkVersion();
