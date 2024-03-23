@@ -387,7 +387,6 @@ describe('ConditionEvaluator', () => {
           .get('is_enabled');
         expect(actual).to.be.true;
       });
-      
 
       it('should evaluate 10 as less or equal to 10', () => {
         const stub = sinon
