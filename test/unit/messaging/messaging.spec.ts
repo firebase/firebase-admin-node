@@ -604,6 +604,19 @@ describe('Messaging', () => {
         .should.eventually.be.rejectedWith('Exactly one of topic, token or condition is required');
     });
 
+    it('should reject a message when it does not pass local validation, but still try the other messages', () => {
+      const invalidMessage: Message = { token: 'a', notification: { imageUrl: 'abc' } };
+      const messageIds = [
+        'projects/projec_id/messages/1',
+      ];
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      return messaging.sendEach([invalidMessage, validMessage])
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(1);
+          expect(response.failureCount).to.equal(1);
+        });
+    });
+
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidDryRun.forEach((dryRun) => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
