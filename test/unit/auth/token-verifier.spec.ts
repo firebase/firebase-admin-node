@@ -341,7 +341,8 @@ describe('FirebaseTokenVerifier', () => {
         });
 
         return tokenVerifier.verifyJWT(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has "sub" (subject) claim longer than 128 characters');
+          .should.eventually.be.rejectedWith('Firebase ID token has a "sub" (subject) claim longer than 128 ' +
+          'characters');
       });
     });
 
@@ -659,7 +660,7 @@ describe('FirebaseTokenVerifier', () => {
 
         return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
           .should.eventually.be.rejectedWith(
-            'Firebase Auth Blocking token has "sub" (subject) claim longer than 128 characters');
+            'Firebase Auth Blocking token has a "sub" (subject) claim longer than 128 characters');
       });
     });
 
@@ -779,6 +780,42 @@ describe('FirebaseTokenVerifier', () => {
       }, undefined, 'secret');
       await authBlockingTokenVerifier._verifyAuthBlockingToken(idTokenNoHeader, false, undefined)
         .should.eventually.be.rejectedWith('Firebase Auth Blocking token has no "kid" claim.');
+    });
+
+    const eventTypesWithoutUid = ['beforeSendSms', 'beforeSendEmail'];
+    eventTypesWithoutUid.forEach((eventType) => {
+      it('should not throw error on invalid `sub` when event_type is "' + eventType + '"' , async () => {
+        const verifierStub = sinon.stub(PublicKeySignatureVerifier.prototype, 'verify')
+          .resolves();
+        stubs.push(verifierStub);
+
+        const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
+          subject: ''
+        }, {
+          event_type: eventType,
+        });
+        return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
+          .should.eventually.be.fulfilled;
+      });
+    });
+
+    const eventTypesWithUid = ['beforeCreate', 'beforeSignIn', undefined];
+    eventTypesWithUid.forEach((eventType) => {
+      it('should not throw error on invalid `sub` when event_type is "' + eventType + '"', async () => {
+        const verifierStub = sinon.stub(PublicKeySignatureVerifier.prototype, 'verify')
+          .resolves();
+        stubs.push(verifierStub);
+
+        const mockAuthBlockingToken = mocks.generateAuthBlockingToken({
+          subject: ''
+        }, {
+          event_type: eventType,
+        });
+        return authBlockingTokenVerifier._verifyAuthBlockingToken(mockAuthBlockingToken, false, undefined)
+          .should.eventually.be.rejectedWith('Firebase Auth Blocking token has an empty "sub" (subject) claim.' +
+          ' See https://cloud.google.com/identity-platform/docs/blocking-functions for details on how to retrieve an' +
+          ' Auth Blocking token.');
+      });
     });
   });
 });
