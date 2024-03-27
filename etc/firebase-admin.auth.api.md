@@ -498,7 +498,7 @@ export interface UidIdentifier {
 export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
 // @public
-export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+export type UpdateMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest | UpdateTotpMultiFactorInfoRequest;
 
 // @public
 export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
@@ -541,6 +541,14 @@ export interface UpdateTenantRequest {
     testPhoneNumbers?: {
         [phoneNumber: string]: string;
     } | null;
+}
+
+// @public (undocumented)
+export interface UpdateTotpMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
+    // Warning: (ae-forgotten-export) The symbol "TotpInfo" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    totpInfo: TotpInfo;
 }
 
 // @public
