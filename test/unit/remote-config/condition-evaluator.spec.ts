@@ -450,6 +450,37 @@ describe('ConditionEvaluator', () => {
         expect(actual).to.be.false;
       });
 
+      it('should negate -11 to 11 and evaluate as not less or equal to 10', () => {
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          .returns('-11');
+
+        stubs.push(stub);
+        const condition = {
+          name: 'is_enabled',
+          condition: {
+            orCondition: {
+              conditions: [{
+                andCondition: {
+                  conditions: [{
+                    percent: {
+                      percentOperator: PercentConditionOperator.LESS_OR_EQUAL,
+                      seed: 'abcdef',
+                      microPercent: 10
+                    }
+                  }],
+                }
+              }]
+            }
+          }
+        };
+        const context = { randomizationId: '123' }
+        const evaluator = new ConditionEvaluator();
+        const actual = evaluator.evaluateConditions([condition], context)
+          .get('is_enabled');
+        expect(actual).to.be.false;
+      });
+
       it('should evaluate greater than min to true', () => {
         const condition = {
           name: 'is_enabled',
