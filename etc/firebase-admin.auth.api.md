@@ -51,6 +51,7 @@ export interface AllowlistOnlyWrap {
 export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
+    passkeyConfigManager(): PasskeyConfigManager;
     projectConfigManager(): ProjectConfigManager;
     tenantManager(): TenantManager;
 }
@@ -342,6 +343,26 @@ export interface OIDCUpdateAuthProviderRequest {
     enabled?: boolean;
     issuer?: string;
     responseType?: OAuthResponseType;
+}
+
+// @public
+export class PasskeyConfig {
+    readonly expectedOrigins?: string[];
+    readonly name?: string;
+    readonly rpId?: string;
+    toJSON(): object;
+}
+
+// @public
+export class PasskeyConfigManager {
+    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+    getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
+    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+}
+
+// @public
+export interface PasskeyConfigRequest {
+    expectedOrigins?: string[];
 }
 
 // @public
