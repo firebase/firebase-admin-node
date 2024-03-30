@@ -293,7 +293,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  */
 class ServerTemplateImpl implements ServerTemplate {
   public cache: ServerTemplateData;
-  private defaultConfigAsString: {[key: string]: string} = {};
+  private stringifiedDefaultConfig: {[key: string]: string} = {};
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
@@ -304,7 +304,7 @@ class ServerTemplateImpl implements ServerTemplate {
     // to declare default values with specific types, so this converts
     // the external declaration to an internal string representation.
     for (const key in defaultConfig) {
-      this.defaultConfigAsString[key] = String(defaultConfig[key]);
+      this.stringifiedDefaultConfig[key] = String(defaultConfig[key]);
     }
   }
 
@@ -335,8 +335,14 @@ class ServerTemplateImpl implements ServerTemplate {
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
       this.cache.conditions, context);
 
-    const evaluatedConfig: { [key: string]: string } = {};
+    const configValues: { [key: string]: Value } = {};
 
+    // Initializes config Value objects with default values.
+    for (const key in this.stringifiedDefaultConfig) {
+      configValues[key] = new ValueImpl('default', this.stringifiedDefaultConfig[key]);
+    }
+
+    // Overlays config Value objects derived by evaluating the template.
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
       const { conditionalValues, defaultValue } = parameter;
 
@@ -361,7 +367,7 @@ class ServerTemplateImpl implements ServerTemplate {
 
       if (parameterValueWrapper) {
         const parameterValue = (parameterValueWrapper as ExplicitParameterValue).value;
-        evaluatedConfig[key] = parameterValue;
+        configValues[key] = new ValueImpl('remote', parameterValue);
         continue;
       }
 
@@ -376,17 +382,16 @@ class ServerTemplateImpl implements ServerTemplate {
       }
 
       const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
-      evaluatedConfig[key] = parameterDefaultValue;
+      configValues[key] = new ValueImpl('remote', parameterDefaultValue);
     }
 
-    return new ServerConfigImpl(evaluatedConfig, this.defaultConfigAsString);
+    return new ServerConfigImpl(configValues);
   }
 }
 
 class ServerConfigImpl implements ServerConfig {
   constructor(
-    private readonly evaluatedConfig: { [key: string]: string },
-    private readonly defaultConfig: { [key: string]: string }
+    private readonly configValues: { [key: string]: Value },
   ){}
   getBoolean(key: string): boolean {
     return this.getValue(key).asBoolean();
@@ -398,13 +403,7 @@ class ServerConfigImpl implements ServerConfig {
     return this.getValue(key).asString();
   }
   getValue(key: string): Value {
-    if (key in this.evaluatedConfig) {
-      return new ValueImpl('remote', this.evaluatedConfig[key]);
-    } else if (key in this.defaultConfig) {
-      return new ValueImpl('default', this.defaultConfig[key]);
-    } else {
-      return new ValueImpl('static');
-    }
+    return this.configValues[key] || new ValueImpl('static');
   }
 }
 
@@ -431,7 +430,6 @@ class ValueImpl implements Value {
   getSource(): ValueSource {
     return this.source;
   }
-
 }
 
 /**

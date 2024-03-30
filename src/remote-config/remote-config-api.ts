@@ -574,6 +574,9 @@ export interface ServerConfig {
   /**
    * Gets the {@link Value} for the given key.
    *
+   * Ensures application logic will always have a type-safe reference,
+   * even if the parameter is removed remotely.
+   *
    * @param key - The name of the parameter.
    *
    * @returns The value for the given key.
@@ -583,7 +586,7 @@ export interface ServerConfig {
 
 /**
  * Wraps a parameter value with metadata and type-safe getters.
- * 
+ *
  * Type-safe getters insulate application logic from remote
  * changes to parameter names and types.
  */
@@ -619,7 +622,8 @@ export interface Value {
  * <ul>
  *   <li>"static" indicates the value was defined by a static constant.</li>
  *   <li>"default" indicates the value was defined by default config.</li>
- *   <li>"remote" indicates the value was defined by fetched config.</li>
+ *   <li>"remote" indicates the value was defined by config produced by
+ *   evaluating a template.</li>
  * </ul>
  */
 export type ValueSource = 'static' | 'default' | 'remote';
