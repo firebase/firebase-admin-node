@@ -293,12 +293,20 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  */
 class ServerTemplateImpl implements ServerTemplate {
   public cache: ServerTemplateData;
+  private defaultConfigAsString: {[key: string]: string} = {};
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
     public readonly defaultConfig: { [key: string]: string | number | boolean } = {}
-  ) { }
+  ) {
+    // RC stores all remote values as string, but it's more intuitive
+    // to declare default values with specific types, so this converts
+    // the external declaration to an internal string representation.
+    for (const key in defaultConfig) {
+      this.defaultConfigAsString[key] = String(defaultConfig[key]);
+    }
+  }
 
   /**
    * Fetches and caches the current active version of the project's {@link ServerTemplate}.
@@ -371,14 +379,14 @@ class ServerTemplateImpl implements ServerTemplate {
       evaluatedConfig[key] = parameterDefaultValue;
     }
 
-    return new ServerConfigImpl(evaluatedConfig, this.defaultConfig);
+    return new ServerConfigImpl(evaluatedConfig, this.defaultConfigAsString);
   }
 }
 
 class ServerConfigImpl implements ServerConfig {
   constructor(
     private readonly evaluatedConfig: { [key: string]: string },
-    private readonly defaultConfig: { [key: string]: string | number | boolean }
+    private readonly defaultConfig: { [key: string]: string }
   ){}
   getBoolean(key: string): boolean {
     return this.getValue(key).asBoolean();
@@ -393,7 +401,7 @@ class ServerConfigImpl implements ServerConfig {
     if (key in this.evaluatedConfig) {
       return new ValueImpl('remote', this.evaluatedConfig[key]);
     } else if (key in this.defaultConfig) {
-      return new ValueImpl('default', String(this.defaultConfig[key]));
+      return new ValueImpl('default', this.defaultConfig[key]);
     } else {
       return new ValueImpl('static');
     }
