@@ -30,13 +30,14 @@ import {
   Version,
   ExplicitParameterValue,
   InAppDefaultValue,
-  ParameterValueType,
   ServerConfig,
   RemoteConfigParameterValue,
   EvaluationContext,
   ServerTemplateData,
   ServerTemplateOptions,
   NamedCondition,
+  Value,
+  ValueSource,
 } from './remote-config-api';
 
 /**
@@ -296,7 +297,7 @@ class ServerTemplateImpl implements ServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    public readonly defaultConfig: ServerConfig = {}
+    public readonly defaultConfig: { [key: string]: string | number | boolean } = {}
   ) { }
 
   /**
@@ -326,10 +327,10 @@ class ServerTemplateImpl implements ServerTemplate {
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
       this.cache.conditions, context);
 
-    const evaluatedConfig: ServerConfig = {};
+    const evaluatedConfig: { [key: string]: string } = {};
 
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
-      const { conditionalValues, defaultValue, valueType } = parameter;
+      const { conditionalValues, defaultValue } = parameter;
 
       // Supports parameters with no conditional values.
       const normalizedConditionalValues = conditionalValues || {};
@@ -352,7 +353,7 @@ class ServerTemplateImpl implements ServerTemplate {
 
       if (parameterValueWrapper) {
         const parameterValue = (parameterValueWrapper as ExplicitParameterValue).value;
-        evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterValue);
+        evaluatedConfig[key] = parameterValue;
         continue;
       }
 
@@ -367,47 +368,62 @@ class ServerTemplateImpl implements ServerTemplate {
       }
 
       const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
-      evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
+      evaluatedConfig[key] = parameterDefaultValue;
     }
 
-    const mergedConfig = {};
-
-    // Merges default config and rendered config, prioritizing the latter.
-    Object.assign(mergedConfig, this.defaultConfig, evaluatedConfig);
-
-    // Enables config to be a convenient object, but with the ability to perform additional
-    // functionality when a value is retrieved.
-    const proxyHandler = {
-      get(target: ServerConfig, prop: string) {
-        return target[prop];
-      }
-    };
-
-    return new Proxy(mergedConfig, proxyHandler);
+    return new ServerConfigImpl(evaluatedConfig, this.defaultConfig);
   }
+}
 
-  /**
-   * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
-   */
-  private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
-    parameterValue: string): string | number | boolean {
-    const BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
-    const DEFAULT_VALUE_FOR_NUMBER = 0;
-    const DEFAULT_VALUE_FOR_STRING = '';
-
-    if (parameterType === 'BOOLEAN') {
-      return BOOLEAN_TRUTHY_VALUES.indexOf(parameterValue) >= 0;
-    } else if (parameterType === 'NUMBER') {
-      const num = Number(parameterValue);
-      if (isNaN(num)) {
-        return DEFAULT_VALUE_FOR_NUMBER;
-      }
-      return num;
+class ServerConfigImpl implements ServerConfig {
+  constructor(
+    private readonly evaluatedConfig: { [key: string]: string },
+    private readonly defaultConfig: { [key: string]: string | number | boolean }
+  ){}
+  getBoolean(key: string): boolean {
+    return this.getValue(key).asBoolean();
+  }
+  getNumber(key: string): number {
+    return this.getValue(key).asNumber();
+  }
+  getString(key: string): string {
+    return this.getValue(key).asString();
+  }
+  getValue(key: string): Value {
+    if (key in this.evaluatedConfig) {
+      return new ValueImpl('remote', this.evaluatedConfig[key]);
+    } else if (key in this.defaultConfig) {
+      return new ValueImpl('default', String(this.defaultConfig[key]));
     } else {
-      // Treat everything else as string
-      return parameterValue || DEFAULT_VALUE_FOR_STRING;
+      return new ValueImpl('static');
     }
   }
+}
+
+class ValueImpl implements Value {
+  static BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
+  static DEFAULT_VALUE_FOR_NUMBER = 0;
+  static DEFAULT_VALUE_FOR_STRING = '';
+  constructor(
+    private readonly source: ValueSource,
+    private readonly value = ValueImpl.DEFAULT_VALUE_FOR_STRING){}
+  asBoolean(): boolean {
+    return ValueImpl.BOOLEAN_TRUTHY_VALUES.indexOf(this.value) >= 0;
+  }
+  asNumber(): number {
+    const num = Number(this.value);
+    if (isNaN(num)) {
+      return ValueImpl.DEFAULT_VALUE_FOR_NUMBER;
+    }
+    return num;
+  }
+  asString(): string {
+    return this.value;
+  }
+  getSource(): ValueSource {
+    return this.source;
+  }
+
 }
 
 /**
