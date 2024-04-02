@@ -70,7 +70,7 @@ export class PasskeyConfig {
    * @param passkeyConfigRequest - Passkey config to be set.
    * @param rpId - (optional) Relying party ID if it's a create request.
    * @throws FirebaseAuthError - If validation fails.
-   * 
+   *
    * @internal
    */
   private static validate(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, rpId?: string): void {
@@ -119,7 +119,7 @@ export class PasskeyConfig {
           "'passkeyConfigRequest.expectedOrigins' cannot contain empty strings.",
         );
       }
-    }    
+    }
   }
 
   /**
@@ -129,10 +129,10 @@ export class PasskeyConfig {
    * @param rpId - (optional) Relying party ID for the request if it's a create request.
    * @returns The equivalent server request.
    * @throws FirebaseAuthError - If validation fails.
-   * 
+   *
    * @internal
    */
-  public static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest, 
+  public static buildServerRequest(isCreateRequest: boolean, passkeyConfigRequest?: PasskeyConfigRequest,
     rpId?: string): PasskeyConfigClientRequest {
     PasskeyConfig.validate(isCreateRequest, passkeyConfigRequest, rpId);
     const request: PasskeyConfigClientRequest = {};
@@ -149,7 +149,7 @@ export class PasskeyConfig {
    * The Passkey Config object constructor.
    * @param response - The server-side response used to initialize the Passkey Config object.
    * @constructor
-   * 
+   *
    * @internal
    */
   constructor(response: PasskeyConfigServerResponse) {
@@ -170,8 +170,8 @@ export class PasskeyConfig {
    */
   public toJSON(): object {
     const json = {
-      name: deepCopy(this.name),
-      rpId: deepCopy(this.rpId),
+      name: this.name,
+      rpId: this.rpId,
       expectedOrigins: deepCopy(this.expectedOrigins),
     };
     if (typeof json.name === 'undefined') {
