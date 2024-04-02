@@ -199,7 +199,7 @@ export class RemoteConfig {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
-      // Check and instantiates via json string
+      // Check and instantiates the template via a json string
       if (isString(options?.template)) {
         try {
           template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
@@ -210,7 +210,6 @@ export class RemoteConfig {
           );
         }
       } else {
-        // check and instantiates via ServerTemplateData
         template.cache = options?.template;
       }
     }
