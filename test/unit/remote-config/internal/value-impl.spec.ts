@@ -54,14 +54,19 @@ describe('ValueImpl', () => {
   });
 
   describe('asBoolean', () => {
-    it('returns true for truthy values', () => {
+    it("returns true for any value in RC's list of truthy values", () => {
       for (const truthyValue of ValueImpl.BOOLEAN_TRUTHY_VALUES) {
         const value = new ValueImpl('default', truthyValue);
         expect(value.asBoolean()).to.be.true;
       }
     });
 
-    it('returns false for falsy values', () => {
+    it('is case-insensitive', () => {
+      const value = new ValueImpl('default', 'TRUE');
+      expect(value.asBoolean()).to.be.true;
+    });
+
+    it("returns false for any value not in RC's list of truthy values", () => {
       const value = new ValueImpl('default', "I'm falsy");
       expect(value.asBoolean()).to.be.false;
     });

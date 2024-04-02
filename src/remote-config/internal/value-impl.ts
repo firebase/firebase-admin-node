@@ -36,7 +36,7 @@ export class ValueImpl implements Value {
         private readonly source: ValueSource,
         private readonly value = ValueImpl.DEFAULT_VALUE_FOR_STRING) { }
   asBoolean(): boolean {
-    return ValueImpl.BOOLEAN_TRUTHY_VALUES.indexOf(this.value) >= 0;
+    return ValueImpl.BOOLEAN_TRUTHY_VALUES.indexOf(this.value.toLowerCase()) >= 0;
   }
   asNumber(): number {
     const num = Number(this.value);
