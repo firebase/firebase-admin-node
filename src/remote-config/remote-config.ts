@@ -35,7 +35,8 @@ import {
   RemoteConfigParameterValue,
   EvaluationContext,
   ServerTemplateData,
-  ServerTemplateOptions,
+  GetServerTemplateOptions,
+  InitServerTemplateOptions,
   NamedCondition,
 } from './remote-config-api';
 import { isString } from 'lodash';
@@ -198,6 +199,20 @@ export class RemoteConfig {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
+      // Check and instantiates via json string
+      if (isString(options?.template)) {
+        try {
+          template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
+        } catch (e) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            `Failed to parse the JSON string: ${options?.template}. ` + e
+          );
+        }
+      } else {
+        // check and instantiates via ServerTemplateData
+        template.cache = options?.template;
+      }
       // Check and instantiates via json string
       if (isString(options?.template)) {
         try {
@@ -408,6 +423,14 @@ class ServerTemplateImpl implements ServerTemplate {
     return JSON.stringify(this.cache);
   }
 
+  /** 
+   * Convenient method that returns the JSON string of the cached template data
+   * @returns A JSON-string of this object.
+   */
+  public toJSON(): string {
+    return JSON.stringify(this.cache);
+  }
+
   /**
    * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
    */
@@ -451,7 +474,6 @@ class ServerTemplateDataImpl implements ServerTemplateData {
     }
 
     this.etag = template.etag;
- 
     if (typeof template.parameters !== 'undefined') {
       if (!validator.isNonNullObject(template.parameters)) {
         throw new FirebaseRemoteConfigError(
