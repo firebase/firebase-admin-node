@@ -14,6 +14,11 @@ export interface AndCondition {
 }
 
 // @public
+export type DefaultConfig = {
+    [key: string]: string | number | boolean;
+};
+
+// @public
 export type EvaluationContext = {
     randomizationId?: string;
 };
@@ -159,14 +164,17 @@ export interface RemoteConfigUser {
 }
 
 // @public
-export type ServerConfig = {
-    [key: string]: string | boolean | number;
-};
+export interface ServerConfig {
+    getBoolean(key: string): boolean;
+    getNumber(key: string): number;
+    getString(key: string): string;
+    getValue(key: string): Value;
+}
 
 // @public
 export interface ServerTemplate {
     cache: ServerTemplateData;
-    defaultConfig: ServerConfig;
+    defaultConfig: DefaultConfig;
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
 }
@@ -183,12 +191,23 @@ export interface ServerTemplateData {
 
 // @public
 export interface ServerTemplateOptions {
-    defaultConfig?: ServerConfig;
+    defaultConfig?: DefaultConfig;
     template?: ServerTemplateData;
 }
 
 // @public
 export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
+
+// @public
+export interface Value {
+    asBoolean(): boolean;
+    asNumber(): number;
+    asString(): string;
+    getSource(): ValueSource;
+}
+
+// @public
+export type ValueSource = 'static' | 'default' | 'remote';
 
 // @public
 export interface Version {
