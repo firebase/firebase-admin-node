@@ -110,6 +110,10 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
         name: 'name2@google.com',
         credentialId: 'credentialId2',
         displayName: 'passkey2',
+      },
+      {
+        name: 'name3@google.com',
+        credentialId: 'credentialId3',
       }
     ]
   };
@@ -207,6 +211,11 @@ function getUserJSON(tenantId?: string): object {
         name: 'name2@google.com',
         credentialId: 'credentialId2',
         displayName: 'passkey2',
+      },
+      {
+        name: 'name3@google.com',
+        credentialId: 'credentialId3',
+        displayName: undefined,
       }
     ]
   };
@@ -699,7 +708,7 @@ describe('PasskeyInfo', () => {
     it('should create a PasskeyInfo object with valid data', () => {
       expect(passkeyInfo).to.be.an.instanceOf(PasskeyInfo);
     });
-    
+
     it('should throw when missing required fields', () => {
       expect(() => {
         return new PasskeyInfo(null as any);
