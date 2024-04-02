@@ -361,7 +361,7 @@ export interface ServerTemplateOptions {
    * intended before it connects to the Remote Config backend, and so that
    * default values are available if none are set on the backend.
    */
-  defaultConfig?: { [key: string]: string | number | boolean };
+  defaultConfig?: DefaultConfig;
 
   /**
    * Enables integrations to use template data loaded independently. For
@@ -383,9 +383,11 @@ export interface ServerTemplate {
   cache: ServerTemplateData;
 
   /**
-   * A {@link ServerConfig} that contains default Config values.
+   * Defines in-app default parameter values, so that your app behaves as
+   * intended before it connects to the Remote Config backend, and so that
+   * default values are available if none are set on the backend.
    */
-  defaultConfig: { [key: string]: string | number | boolean };
+  defaultConfig: DefaultConfig;
 
   /**
    * Evaluates the current template to produce a {@link ServerConfig}.
@@ -627,3 +629,8 @@ export interface Value {
  * </ul>
  */
 export type ValueSource = 'static' | 'default' | 'remote';
+
+/**
+ * Defines the format for in-app default parameter values.
+ */
+export type DefaultConfig = { [key: string]: string | number | boolean };

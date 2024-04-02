@@ -37,7 +37,8 @@ import {
   ServerTemplateData,
   ServerTemplateOptions,
   NamedCondition,
-  Value
+  Value,
+  DefaultConfig
 } from './remote-config-api';
 
 /**
@@ -298,7 +299,7 @@ class ServerTemplateImpl implements ServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    public readonly defaultConfig: { [key: string]: string | number | boolean } = {}
+    public readonly defaultConfig: DefaultConfig = {}
   ) {
     // RC stores all remote values as string, but it's more intuitive
     // to declare default values with specific types, so this converts
