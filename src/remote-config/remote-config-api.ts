@@ -368,14 +368,7 @@ export interface GetServerTemplateOptions {
  * Represents optional arguments that can be used when instantiating
  * {@link ServerTemplate} synchonously.
  */
-export interface InitServerTemplateOptions {
-
-  /**
-   * Defines in-app default parameter values, so that your app behaves as
-   * intended before it connects to the Remote Config backend, and so that
-   * default values are available if none are set on the backend.
-   */
-  defaultConfig?: ServerConfig,
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
 
   /**
    * Enables integrations to use template data loaded independently. For

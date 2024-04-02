@@ -39,8 +39,7 @@ export interface InAppDefaultValue {
 }
 
 // @public
-export interface InitServerTemplateOptions {
-    defaultConfig?: ServerConfig;
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
     template?: ServerTemplateData;
 }
 
