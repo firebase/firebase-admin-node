@@ -354,7 +354,7 @@ export interface ServerTemplateData {
 /**
  * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
  */
-export interface ServerTemplateOptions {
+export interface GetServerTemplateOptions {
 
   /**
    * Defines in-app default parameter values, so that your app behaves as
@@ -362,6 +362,13 @@ export interface ServerTemplateOptions {
    * default values are available if none are set on the backend.
    */
   defaultConfig?: ServerConfig,
+}
+
+/**
+ * Represents optional arguments that can be used when instantiating
+ * {@link ServerTemplate} synchonously.
+ */
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
 
   /**
    * Enables integrations to use template data loaded independently. For
