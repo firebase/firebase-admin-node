@@ -35,9 +35,9 @@ import {
   RemoteConfigParameterValue,
   EvaluationContext,
   ServerTemplateData,
+  NamedCondition,
   GetServerTemplateOptions,
   InitServerTemplateOptions,
-  NamedCondition,
 } from './remote-config-api';
 import { isString } from 'lodash';
 
