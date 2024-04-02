@@ -1128,6 +1128,108 @@ describe('RemoteConfig', () => {
     });
   });
 
+  // Note the static source is set in the getValue() method, but the other sources
+  // are set in the evaluate() method, so these tests span a couple layers.
+  describe('ServerConfig', () => {
+    describe('getValue', () => {
+      it('should return static when default and remote are not defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        // Omits in-app default values.
+        const template = remoteConfig.initServerTemplate({ template: templateData });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('');
+        expect(value.getSource()).to.equal('static');
+      });
+  
+      it('should return default value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('shiba');
+        expect(value.getSource()).to.equal('default');
+      });
+  
+      it('should return remote value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Defines remote parameter values.
+        templateData.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          }
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('pug');
+        expect(value.getSource()).to.equal('remote');
+      });
+    });
+
+    describe('getString', () => {
+      it('returns a string value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getString('dog_type')).to.equal('shiba');
+      });
+    });
+
+    describe('getNumber', () => {
+      it('returns a numeric value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_age: 12
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getNumber('dog_age')).to.equal(12);
+      });
+    });
+
+    describe('getBoolean', () => {
+      it('returns a boolean value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_is_cute: true
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getBoolean('dog_is_cute')).to.be.true;
+      });
+    });
+  });
+
   function runInvalidResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>,
     operationName: any): void {
     it('should propagate API errors', () => {

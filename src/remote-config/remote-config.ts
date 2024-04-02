@@ -18,6 +18,7 @@ import { App } from '../app';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import { ConditionEvaluator } from './condition-evaluator-internal';
+import { ValueImpl } from './internal/value-impl';
 import {
   ListVersionsOptions,
   ListVersionsResult,
@@ -36,8 +37,7 @@ import {
   ServerTemplateData,
   ServerTemplateOptions,
   NamedCondition,
-  Value,
-  ValueSource,
+  Value
 } from './remote-config-api';
 
 /**
@@ -404,31 +404,6 @@ class ServerConfigImpl implements ServerConfig {
   }
   getValue(key: string): Value {
     return this.configValues[key] || new ValueImpl('static');
-  }
-}
-
-class ValueImpl implements Value {
-  static BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
-  static DEFAULT_VALUE_FOR_NUMBER = 0;
-  static DEFAULT_VALUE_FOR_STRING = '';
-  constructor(
-    private readonly source: ValueSource,
-    private readonly value = ValueImpl.DEFAULT_VALUE_FOR_STRING){}
-  asBoolean(): boolean {
-    return ValueImpl.BOOLEAN_TRUTHY_VALUES.indexOf(this.value) >= 0;
-  }
-  asNumber(): number {
-    const num = Number(this.value);
-    if (isNaN(num)) {
-      return ValueImpl.DEFAULT_VALUE_FOR_NUMBER;
-    }
-    return num;
-  }
-  asString(): string {
-    return this.value;
-  }
-  getSource(): ValueSource {
-    return this.source;
   }
 }
 
