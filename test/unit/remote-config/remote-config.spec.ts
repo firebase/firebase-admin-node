@@ -132,9 +132,7 @@ describe('RemoteConfig', () => {
     parameters: {
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
-        conditionalValues: { ios: { useInAppDefault: true } },
-        description: 'this is a promo',
-        valueType: 'BOOLEAN',
+        conditionalValues: { ios: { useInAppDefault: true } }
       },
     },
     etag: 'etag-123456789012-5',
@@ -592,8 +590,6 @@ describe('RemoteConfig', () => {
           const p1 = template.cache.parameters[key];
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
-          expect(p1.description).equals('this is a promo');
-          expect(p1.valueType).equals('BOOLEAN');
 
           const c = template.cache.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
@@ -635,9 +631,7 @@ describe('RemoteConfig', () => {
         dog_type: {
           defaultValue: {
             value: 'shiba'
-          },
-          description: 'Type of dog breed',
-          valueType: 'STRING'
+          }
         }
       };
       const initializedTemplate = remoteConfig.initServerTemplate({ template }).cache;
@@ -652,41 +646,29 @@ describe('RemoteConfig', () => {
       dog_type: {
         defaultValue: {
           value: 'corgi'
-        },
-        description: 'Type of dog breed',
-        valueType: 'STRING'
+        }
       },
       dog_type_enabled: {
         defaultValue: {
           value: 'true'
-        },
-        description: 'It\'s true or false',
-        valueType: 'BOOLEAN'
+        }
       },
       dog_age: {
         defaultValue: {
           value: '22'
-        },
-        description: 'Age',
-        valueType: 'NUMBER'
+        }
       },
       dog_jsonified: {
         defaultValue: {
           value: '{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}'
-        },
-        description: 'Dog Json Response',
-        valueType: 'JSON'
+        }
       },
       dog_use_inapp_default: {
         defaultValue: {
           useInAppDefault: true
-        },
-        description: 'Use in-app default dog',
-        valueType: 'STRING'
+        }
       },
       dog_no_remote_default_value: {
-        description: 'TIL: default values are optional!',
-        valueType: 'STRING'
       }
     };
 
@@ -801,8 +783,6 @@ describe('RemoteConfig', () => {
             const p1 = template.cache.parameters[key];
             expect(p1.defaultValue).deep.equals({ value: 'true' });
             expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
-            expect(p1.description).equals('this is a promo');
-            expect(p1.valueType).equals('BOOLEAN');
 
             const c = template.cache.conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
@@ -954,8 +934,7 @@ describe('RemoteConfig', () => {
             parameters: {
               is_enabled: {
                 defaultValue: { value: 'false' },
-                conditionalValues: { is_true: { value: 'true' } },
-                valueType: 'BOOLEAN',
+                conditionalValues: { is_true: { value: 'true' } }
               },
             },
             etag: '123'
@@ -1016,8 +995,7 @@ describe('RemoteConfig', () => {
                   // value is selected.
                   is_true_too: { value: 'dachshund' },
                   is_true: { value: 'corgi' }
-                },
-                valueType: 'STRING',
+                }
               },
             },
             etag: '123'
@@ -1094,8 +1072,7 @@ describe('RemoteConfig', () => {
           dog_type: {
             defaultValue: {
               value: 'pug'
-            },
-            valueType: 'STRING'
+            }
           },
         }
 
@@ -1109,8 +1086,7 @@ describe('RemoteConfig', () => {
           dog_type: {
             defaultValue: {
               useInAppDefault: true
-            },
-            valueType: 'STRING'
+            }
           },
         }
 
@@ -1128,8 +1104,7 @@ describe('RemoteConfig', () => {
             defaultValue: {
               // Defines remote value
               value: 'true'
-            },
-            valueType: 'BOOLEAN'
+            }
           },
         }
 
