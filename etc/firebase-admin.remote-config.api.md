@@ -34,8 +34,18 @@ export interface ExplicitParameterValue {
 export function getRemoteConfig(app?: App): RemoteConfig;
 
 // @public
+export interface GetServerTemplateOptions {
+    defaultConfig?: DefaultConfig;
+}
+
+// @public
 export interface InAppDefaultValue {
     useInAppDefault: boolean;
+}
+
+// @public
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
+    template?: ServerTemplateData;
 }
 
 // @public
@@ -103,10 +113,10 @@ export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
-    getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate>;
+    getServerTemplate(options?: GetServerTemplateOptions): Promise<ServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
-    initServerTemplate(options?: ServerTemplateOptions): ServerTemplate;
+    initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate;
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
     publishTemplate(template: RemoteConfigTemplate, options?: {
         force: boolean;
@@ -174,7 +184,6 @@ export interface ServerConfig {
 // @public
 export interface ServerTemplate {
     cache: ServerTemplateData;
-    defaultConfig: DefaultConfig;
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
 }
@@ -187,12 +196,6 @@ export interface ServerTemplateData {
         [key: string]: RemoteConfigParameter;
     };
     version?: Version;
-}
-
-// @public
-export interface ServerTemplateOptions {
-    defaultConfig?: DefaultConfig;
-    template?: ServerTemplateData;
 }
 
 // @public

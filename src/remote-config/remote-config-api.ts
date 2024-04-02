@@ -354,7 +354,7 @@ export interface ServerTemplateData {
 /**
  * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
  */
-export interface ServerTemplateOptions {
+export interface GetServerTemplateOptions {
 
   /**
    * Defines in-app default parameter values, so that your app behaves as
@@ -362,6 +362,13 @@ export interface ServerTemplateOptions {
    * default values are available if none are set on the backend.
    */
   defaultConfig?: DefaultConfig;
+}
+
+/**
+ * Represents optional arguments that can be used when instantiating
+ * {@link ServerTemplate} synchonously.
+ */
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
 
   /**
    * Enables integrations to use template data loaded independently. For
@@ -381,13 +388,6 @@ export interface ServerTemplate {
    * Cached {@link ServerTemplateData}.
    */
   cache: ServerTemplateData;
-
-  /**
-   * Defines in-app default parameter values, so that your app behaves as
-   * intended before it connects to the Remote Config backend, and so that
-   * default values are available if none are set on the backend.
-   */
-  defaultConfig: DefaultConfig;
 
   /**
    * Evaluates the current template to produce a {@link ServerConfig}.

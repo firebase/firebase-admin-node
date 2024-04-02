@@ -35,10 +35,11 @@ import {
   RemoteConfigParameterValue,
   EvaluationContext,
   ServerTemplateData,
-  ServerTemplateOptions,
   NamedCondition,
   Value,
-  DefaultConfig
+  DefaultConfig,
+  GetServerTemplateOptions,
+  InitServerTemplateOptions,
 } from './remote-config-api';
 
 /**
@@ -186,7 +187,7 @@ export class RemoteConfig {
    * Instantiates {@link ServerTemplate} and then fetches and caches the latest
    * template version of the project.
    */
-  public async getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate> {
+  public async getServerTemplate(options?: GetServerTemplateOptions): Promise<ServerTemplate> {
     const template = this.initServerTemplate(options);
     await template.load();
     return template;
@@ -195,7 +196,7 @@ export class RemoteConfig {
   /**
    * Synchronously instantiates {@link ServerTemplate}.
    */
-  public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
+  public initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
