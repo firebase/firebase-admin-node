@@ -186,7 +186,7 @@ export class RemoteConfig {
    * Instantiates {@link ServerTemplate} and then fetches and caches the latest
    * template version of the project.
    */
-  public async getServerTemplate(options?: ServerTemplateOptions): Promise<ServerTemplate> {
+  public async getServerTemplate(options?: GetServerTemplateOptions): Promise<ServerTemplate> {
     const template = this.initServerTemplate(options);
     await template.load();
     return template;
@@ -195,24 +195,10 @@ export class RemoteConfig {
   /**
    * Synchronously instantiates {@link ServerTemplate}.
    */
-  public initServerTemplate(options?: ServerTemplateOptions): ServerTemplate {
+  public initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
-      // Check and instantiates via json string
-      if (isString(options?.template)) {
-        try {
-          template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
-        } catch (e) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            `Failed to parse the JSON string: ${options?.template}. ` + e
-          );
-        }
-      } else {
-        // check and instantiates via ServerTemplateData
-        template.cache = options?.template;
-      }
       // Check and instantiates via json string
       if (isString(options?.template)) {
         try {
@@ -325,7 +311,7 @@ class ServerTemplateImpl implements ServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    public readonly defaultConfig: ServerConfig = {}
+    private readonly defaultConfig: ServerConfig = {}
   ) { }
 
   /**
@@ -413,14 +399,6 @@ class ServerTemplateImpl implements ServerTemplate {
     };
 
     return new Proxy(mergedConfig, proxyHandler);
-  }
-
-  /** 
-   * Convenient method that returns the JSON string of the cached template data
-   * @returns A JSON-string of this object.
-   */
-  public toJSON(): string {
-    return JSON.stringify(this.cache);
   }
 
   /** 
