@@ -57,8 +57,8 @@ export interface TotpInfoResponse {
 }
 
 export interface PasskeyInfoResponse {
-  name?: string;
-  credentialId?: string;
+  name: string;
+  credentialId: string;
   displayName?: string;
 }
 
@@ -383,7 +383,7 @@ export class PasskeyInfo {
 
   /**
    * Initializes the PasskeyInfo object using the server side response.
-   * 
+   *
    * @param response - The server side response.
    * @constructor
    * @internal
@@ -410,7 +410,7 @@ export class PasskeyInfo {
       credentialId: this.credentialId,
       displayName: this.displayName,
     };
-  }    
+  }
 }
 
 /**
