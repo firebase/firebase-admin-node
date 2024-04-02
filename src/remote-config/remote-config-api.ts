@@ -354,7 +354,7 @@ export interface ServerTemplateData {
 /**
  * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
  */
-export interface GetServerTemplateOptions {
+export interface ServerTemplateOptions {
 
   /**
    * Defines in-app default parameter values, so that your app behaves as
@@ -362,13 +362,6 @@ export interface GetServerTemplateOptions {
    * default values are available if none are set on the backend.
    */
   defaultConfig?: ServerConfig,
-}
-
-/**
- * Represents optional arguments that can be used when instantiating
- * {@link ServerTemplate} synchonously.
- */
-export interface InitServerTemplateOptions extends GetServerTemplateOptions {
 
   /**
    * Enables integrations to use template data loaded independently. For
@@ -376,7 +369,7 @@ export interface InitServerTemplateOptions extends GetServerTemplateOptions {
    * caching template data and then using this option to initialize the SDK with
    * that data.
    */
-  template?: ServerTemplateData,
+  template?: ServerTemplateData|string,
 }
 
 /**
@@ -390,6 +383,11 @@ export interface ServerTemplate {
   cache: ServerTemplateData;
 
   /**
+   * A {@link ServerConfig} that contains default Config values.
+   */
+  defaultConfig: ServerConfig;
+
+  /**
    * Evaluates the current template to produce a {@link ServerConfig}.
    */
   evaluate(context?: EvaluationContext): ServerConfig;
@@ -399,6 +397,12 @@ export interface ServerTemplate {
    * project's {@link ServerTemplate}.
    */
   load(): Promise<void>;
+
+  /** 
+   * Convenient method that returns the JSON string of the cached template data
+   * @returns A JSON-string of this object.
+   */
+  toJSON(): string;
 }
 
 /**
