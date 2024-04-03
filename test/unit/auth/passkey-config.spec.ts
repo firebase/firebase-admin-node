@@ -36,50 +36,55 @@ describe('PasskeyConfig', () => {
     expectedOrigins: ['app1', 'example.com'],
   };
   const passkeyConfigRequest: PasskeyConfigRequest = {
+    rpId: 'project-id.firebaseapp.com',
     expectedOrigins: ['app1', 'example.com'],
   };
   describe('buildServerRequest', () => {
     describe('for a create request', () => {
-      const validRpId = 'project-id.firebaseapp.com';
       it('should create a client request with valid params', () => {
         const expectedRequest: PasskeyConfigClientRequest = {
-          rpId: validRpId, 
+          rpId: passkeyConfigRequest.rpId,
           expectedOrigins: passkeyConfigRequest.expectedOrigins,
         };
-        expect(PasskeyConfig.buildServerRequest(true, passkeyConfigRequest, validRpId)).to.deep.equal(expectedRequest);
+        expect(PasskeyConfig.buildServerRequest(true, passkeyConfigRequest)).to.deep.equal(expectedRequest);
       });
 
       const invalidRpId = [null, NaN, 0, 1, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidRpId.forEach((rpId) => {
         it(`should throw on invalid rpId ${rpId}`, () => {
-          expect(() => PasskeyConfig.buildServerRequest(true, passkeyConfigRequest, rpId as any)).to.throw(
+          const passkeyConfigRequestWithInvalidRpId: PasskeyConfigRequest = {
+            rpId: rpId as any,
+            expectedOrigins: passkeyConfigRequest.expectedOrigins,
+          };
+          expect(() => PasskeyConfig.buildServerRequest(true, passkeyConfigRequestWithInvalidRpId)).to.throw(
             '\'rpId\' must be a valid non-empty string');
         });
       });
-    }); 
+    });
 
     describe('for update request', () => {
-      it('should throw error if rpId is defined', () => {
-        expect(() => {
-          PasskeyConfig.buildServerRequest(false, passkeyConfigRequest, 'rpId');
-        }).to.throw('\'rpId\' cannot be changed once created.');
-      });
+      // it('should throw error if rpId is defined', () => {
+      //   expect(() => {
+      //     PasskeyConfig.buildServerRequest(false, passkeyConfigRequest);
+      //   }).to.throw('\'rpId\' cannot be changed once created.');
+      // });
 
       it('should create a client request with valid params', () => {
-        const expectedRequest: PasskeyConfigClientRequest = { 
+        const expectedRequest: PasskeyConfigClientRequest = {
+          rpId: passkeyConfigRequest.rpId,
           expectedOrigins: passkeyConfigRequest.expectedOrigins,
         };
         expect(PasskeyConfig.buildServerRequest(false, passkeyConfigRequest)).to.deep.equal(expectedRequest);
       });
     });
-        
+
     describe('for passkey config request', () => {
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
-        it('should throw on invalid PasskeyConfigRequest:' + JSON.stringify(request), () => {
+        it('should throw on invalid PasskeyConfigRequest: ' + JSON.stringify(request), () => {
           expect(() => {
             PasskeyConfig.buildServerRequest(false, request as any);
-          }).to.throw('\'passkeyConfigRequest\' must be a valid non-empty object.\'');
+          }).to.throw('\'passkeyConfigRequest\' must be a valid non-empty object.');
         });
       });
 
@@ -88,7 +93,7 @@ describe('PasskeyConfig', () => {
         invalidAttributeObject.invalidAttribute = 'invalid';
         expect(() => {
           PasskeyConfig.buildServerRequest(false, invalidAttributeObject);
-        }).to.throw('\'invalidAttribute\' is not a valid PasskeyConfigRequest parameter.');          
+        }).to.throw('\'invalidAttribute\' is not a valid PasskeyConfigRequest parameter.');
       });
 
       const invalidExpectedOriginsObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -98,7 +103,7 @@ describe('PasskeyConfig', () => {
           request.expectedOrigins = expectedOriginsObject;
           expect(() => {
             PasskeyConfig.buildServerRequest(false, request as any);
-          }).to.throw('\'passkeyConfigRequest.expectedOrigins\' must be a valid non-empty array of strings.\'');
+          }).to.throw('\'passkeyConfigRequest.expectedOrigins\' must be a valid non-empty array of strings.');
         });
       });
     });

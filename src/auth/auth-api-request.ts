@@ -1612,9 +1612,9 @@ export abstract class AbstractAuthRequestHandler {
   public getEmailActionLink(
     requestType: string, email: string,
     actionCodeSettings?: ActionCodeSettings, newEmail?: string): Promise<string> {
-    let request = { 
-      requestType, 
-      email, 
+    let request = {
+      requestType,
+      email,
       returnOobLink: true,
       ...(typeof newEmail !== 'undefined') && { newEmail },
     };
@@ -2297,7 +2297,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
-    return this.invokeRequestHandler(this.authResourceUrlBuilder, 
+    return this.invokeRequestHandler(this.authResourceUrlBuilder,
       tenantId? GET_TENANT_PASSKEY_CONFIG: GET_PASSKEY_CONFIG, {}, {})
       .then((response: any) => {
         return response as PasskeyConfigServerResponse;
@@ -2305,12 +2305,12 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   public updatePasskeyConfig(isCreateRequest: boolean, tenantId?: string,
-    options?: PasskeyConfigRequest, rpId?: string): Promise<PasskeyConfigServerResponse> {
+    options?: PasskeyConfigRequest): Promise<PasskeyConfigServerResponse> {
     try {
-      const request = PasskeyConfig.buildServerRequest(isCreateRequest, options, rpId);
+      const request = PasskeyConfig.buildServerRequest(isCreateRequest, options);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(
-        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG, 
+        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG,
         request, { updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as PasskeyConfigServerResponse;
