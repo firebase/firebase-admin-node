@@ -124,6 +124,7 @@ describe('PasskeyConfigManager', () => {
     const rpId = 'project-id.firebaseapp.com';
     const expectedOrigins: string[] = ['app1', 'example.com']
     const passkeyConfigRequest: PasskeyConfigRequest = {
+      rpId: rpId,
       expectedOrigins: expectedOrigins ,
     };
     const expectedPasskeyConfig = new PasskeyConfig(GET_CONFIG_RESPONSE);
@@ -140,19 +141,19 @@ describe('PasskeyConfigManager', () => {
       return (passkeyConfigManager as any).createPasskeyConfig(null as unknown as PasskeyConfigRequest)
         .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
     });
-  
+
     it('should be rejected given an app which returns null access tokens', () => {
-      return nullAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+      return nullAccessTokenPasskeyConfigManager.createPasskeyConfig(passkeyConfigRequest)
         .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
-  
+
     it('should be rejected given an app which returns invalid access tokens', () => {
-      return malformedAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+      return malformedAccessTokenPasskeyConfigManager.createPasskeyConfig(passkeyConfigRequest)
         .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
-  
+
     it('should be rejected given an app which fails to generate access tokens', () => {
-      return rejectedPromiseAccessTokenPasskeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+      return rejectedPromiseAccessTokenPasskeyConfigManager.createPasskeyConfig(passkeyConfigRequest)
         .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
@@ -161,10 +162,10 @@ describe('PasskeyConfigManager', () => {
       const stub = sinon.stub(AuthRequestHandler.prototype, 'updatePasskeyConfig')
         .returns(Promise.resolve(GET_CONFIG_RESPONSE));
       stubs.push(stub);
-      return passkeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+      return passkeyConfigManager.createPasskeyConfig(passkeyConfigRequest)
         .then((actualPasskeyConfig) => {
           // Confirm underlying API called with expected parameters.
-          expect(stub).to.have.been.calledOnce.and.calledWith(true, undefined, passkeyConfigRequest, rpId);
+          expect(stub).to.have.been.calledOnce.and.calledWith(true, undefined, passkeyConfigRequest);
           // Confirm expected Passkey Config object returned.
           expect(actualPasskeyConfig).to.deep.equal(expectedPasskeyConfig);
         });
@@ -175,12 +176,12 @@ describe('PasskeyConfigManager', () => {
       const stub = sinon.stub(AuthRequestHandler.prototype, 'updatePasskeyConfig')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
-      return passkeyConfigManager.createPasskeyConfig(rpId, passkeyConfigRequest)
+      return passkeyConfigManager.createPasskeyConfig(passkeyConfigRequest)
         .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.
-          expect(stub).to.have.been.calledOnce.and.calledWith(true, undefined, passkeyConfigRequest, rpId);
+          expect(stub).to.have.been.calledOnce.and.calledWith(true, undefined, passkeyConfigRequest);
           // Confirm expected error returned.
           expect(error).to.equal(expectedError);
         });

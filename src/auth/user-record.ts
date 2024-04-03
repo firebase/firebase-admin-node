@@ -56,6 +56,12 @@ export interface TotpInfoResponse {
   [key: string]: unknown;
 }
 
+export interface PasskeyInfoResponse {
+  name: string;
+  credentialId: string;
+  displayName?: string;
+}
+
 export interface ProviderUserInfoResponse {
   rawId: string;
   displayName?: string;
@@ -81,6 +87,7 @@ export interface GetAccountInfoUserResponse {
   tenantId?: string;
   providerUserInfo?: ProviderUserInfoResponse[];
   mfaInfo?: MultiFactorInfoResponse[];
+  passkeyInfo?: PasskeyInfoResponse[];
   createdAt?: string;
   lastLoginAt?: string;
   lastRefreshAt?: string;
@@ -358,6 +365,55 @@ export class MultiFactorSettings {
 }
 
 /**
+ * Interface representing a user-enrolled passkey.
+ */
+export class PasskeyInfo {
+  /**
+   * The name of the user.
+   */
+  public readonly name: string;
+  /**
+   * Identifier for the registered credential.
+   */
+  public readonly credentialId: string;
+  /**
+   * The human-readable name of the user, intended for display.
+   */
+  public readonly displayName?: string;
+
+  /**
+   * Initializes the PasskeyInfo object using the server side response.
+   *
+   * @param response - The server side response.
+   * @constructor
+   * @internal
+   */
+  constructor(response: PasskeyInfoResponse) {
+    if (!isNonNullObject(response)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid passkey info response');
+    }
+    utils.addReadonlyGetter(this, 'name', response.name);
+    utils.addReadonlyGetter(this, 'credentialId', response.credentialId);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+  }
+
+  /**
+   * Returns a JSON-serializable representation of this passkey info object.
+   *
+   * @returns A JSON-serializable representation of this passkey info object.
+   */
+  public toJSON(): object {
+    return {
+      name: this.name,
+      credentialId: this.credentialId,
+      displayName: this.displayName,
+    };
+  }
+}
+
+/**
  * Represents a user's metadata.
  */
 export class UserMetadata {
@@ -583,6 +639,11 @@ export class UserRecord {
   public readonly multiFactor?: MultiFactorSettings;
 
   /**
+   * Passkey-related properties for the current user, if available.
+   */
+  public readonly passkeyInfo?: PasskeyInfo[];
+
+  /**
    * @param response - The server side response returned from the getAccountInfo
    *     endpoint.
    * @constructor
@@ -637,6 +698,15 @@ export class UserRecord {
     if (multiFactor.enrolledFactors.length > 0) {
       utils.addReadonlyGetter(this, 'multiFactor', multiFactor);
     }
+    if (response.passkeyInfo) {
+      const passkeys: PasskeyInfo[] = [];
+      response.passkeyInfo.forEach((passkey) => {
+        passkeys.push(new PasskeyInfo(passkey));
+      });
+      if (passkeys.length > 0) {
+        utils.addReadonlyGetter(this, 'passkeyInfo', passkeys);
+      }
+    }
   }
 
   /**
@@ -663,6 +733,12 @@ export class UserRecord {
     };
     if (this.multiFactor) {
       json.multiFactor =  this.multiFactor.toJSON();
+    }
+    if (this.passkeyInfo) {
+      json.passkeyInfo = [];
+      this.passkeyInfo.forEach((passkey) => {
+        json.passkeyInfo.push(passkey.toJSON());
+      })
     }
     json.providerData = [];
     for (const entry of this.providerData) {
