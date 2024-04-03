@@ -57,50 +57,50 @@ export namespace database {
   export type Database = TDatabase;
 
   /**
-   * Type alias to {@link https://firebase.google.com/docs/reference/js/firebase.database.DataSnapshot | DataSnapshot}
-   * type from the `@firebase/database` package.
+   * Type alias to {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.DataSnapshot | DataSnapshot}
+   * type from the `@firebase/database-compat` package.
    */
   export type DataSnapshot = rtdb.DataSnapshot;
 
   /**
-   * Type alias to the {@link https://firebase.google.com/docs/reference/js/firebase.database#eventtype | EventType}
-   * type from the `@firebase/database` package.
+   * Type alias to the {@link https://firebase.google.com/docs/reference/js/v8/firebase.database#eventtype | EventType}
+   * type from the `@firebase/database-compat` package.
    */
   export type EventType = rtdb.EventType;
 
   /**
-   * Type alias to {@link https://firebase.google.com/docs/reference/js/firebase.database.OnDisconnect | OnDisconnect}
-   * type from the `@firebase/database` package.
+   * Type alias to {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.OnDisconnect | OnDisconnect}
+   * type from the `@firebase/database-compat` package.
    */
   export type OnDisconnect = rtdb.OnDisconnect;
 
   /**
-   * Type alias to {@link https://firebase.google.com/docs/reference/js/firebase.database.Query | Query}
-   * type from the `@firebase/database` package.
+   * Type alias to {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.Query | Query}
+   * type from the `@firebase/database-compat` package.
    */
   export type Query = rtdb.Query;
 
   /**
-   * Type alias to {@link https://firebase.google.com/docs/reference/js/firebase.database.Reference | Reference}
-   * type from the `@firebase/database` package.
+   * Type alias to {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.Reference | Reference}
+   * type from the `@firebase/database-compat` package.
    */
   export type Reference = rtdb.Reference;
 
   /**
-   * Type alias to {@link https://firebase.google.com/docs/reference/js/firebase.database.ThenableReference |
-   * ThenableReference} type from the `@firebase/database` package.
+   * Type alias to {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.ThenableReference |
+   * ThenableReference} type from the `@firebase/database-compat` package.
    */
   export type ThenableReference = rtdb.ThenableReference;
 
   /**
-   * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
-   * function from the `@firebase/database` package.
+   * {@link https://firebase.google.com/docs/reference/js/v8/firebase.database#enablelogging | enableLogging}
+   * function from the `@firebase/database-compat` package.
    */
   export declare const enableLogging: typeof rtdb.enableLogging;
 
   /**
-   * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
-   * constant from the `@firebase/database` package.
+   * {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.ServerValue | ServerValue}
+   * constant from the `@firebase/database-compat` package.
    */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   export declare const ServerValue: rtdb.ServerValue;

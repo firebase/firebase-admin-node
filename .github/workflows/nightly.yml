@@ -29,12 +29,12 @@ jobs:
 
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: 14.x
 
