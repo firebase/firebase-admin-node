@@ -649,7 +649,7 @@ describe('RemoteConfig', () => {
         }
       };
       const initializedTemplate = remoteConfig.initServerTemplate({ template });
-      const parsed = JSON.parse(initializedTemplate.toJSON());
+      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
       expect(parsed).deep.equals(deepCopy(template));
     });
 
@@ -666,7 +666,7 @@ describe('RemoteConfig', () => {
       };
       const templateJson = JSON.stringify(template);
       const initializedTemplate = remoteConfig.initServerTemplate({ template: templateJson });
-      const parsed = JSON.parse(initializedTemplate.toJSON());
+      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
       const expectedVersion = deepCopy(VERSION_INFO);
       expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
       template.version = expectedVersion as Version;

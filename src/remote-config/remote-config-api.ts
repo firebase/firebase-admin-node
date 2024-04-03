@@ -399,12 +399,6 @@ export interface ServerTemplate {
    * project's {@link ServerTemplate}.
    */
   load(): Promise<void>;
-
-  /** 
-   * Convenient method that returns the JSON string of the cached template data
-   * @returns A JSON-string of this object.
-   */
-  toJSON(): string;
 }
 
 /**

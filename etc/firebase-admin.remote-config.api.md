@@ -178,7 +178,6 @@ export interface ServerTemplate {
     cache: ServerTemplateData;
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
-    toJSON(): string;
 }
 
 // @public
