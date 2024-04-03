@@ -400,14 +400,6 @@ class ServerTemplateImpl implements ServerTemplate {
     return new Proxy(mergedConfig, proxyHandler);
   }
 
-  /** 
-   * Convenient method that returns the JSON string of the cached template data
-   * @returns A JSON-string of this object.
-   */
-  public toJSON(): string {
-    return JSON.stringify(this.cache);
-  }
-
   /**
    * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
    */
