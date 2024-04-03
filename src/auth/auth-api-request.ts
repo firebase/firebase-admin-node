@@ -2297,11 +2297,17 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
-    return this.invokeRequestHandler(this.authResourceUrlBuilder,
-      tenantId? GET_TENANT_PASSKEY_CONFIG: GET_PASSKEY_CONFIG, {}, {})
-      .then((response: any) => {
-        return response as PasskeyConfigServerResponse;
-      });
+    if(tenantId) {
+      return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT_PASSKEY_CONFIG, {}, {tenantId})
+        .then((response: any) => {
+          return response as PasskeyConfigServerResponse;
+        });
+    } else {
+      return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_PASSKEY_CONFIG, {}, {})
+        .then((response: any) => {
+          return response as PasskeyConfigServerResponse;
+        });
+    }
   }
 
   public updatePasskeyConfig(isCreateRequest: boolean, tenantId?: string,
@@ -2309,12 +2315,20 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       const request = PasskeyConfig.buildServerRequest(isCreateRequest, options);
       const updateMask = utils.generateUpdateMask(request);
-      return this.invokeRequestHandler(
-        this.authResourceUrlBuilder, tenantId? UPDATE_TENANT_PASSKEY_CONFIG: UPDATE_PASSKEY_CONFIG,
-        request, { updateMask: updateMask.join(',') })
-        .then((response: any) => {
-          return response as PasskeyConfigServerResponse;
-        });
+      if(tenantId) {
+        return this.invokeRequestHandler(
+          this.authResourceUrlBuilder, UPDATE_TENANT_PASSKEY_CONFIG, request,
+          {tenantId, updateMask: updateMask.join(',') })
+          .then((response: any) => {
+            return response as PasskeyConfigServerResponse;
+          });
+      } else {
+        return this.invokeRequestHandler(
+          this.authResourceUrlBuilder, UPDATE_PASSKEY_CONFIG, request, { updateMask: updateMask.join(',') })
+          .then((response: any) => {
+            return response as PasskeyConfigServerResponse;
+          });
+      }
     } catch (e) {
       return Promise.reject(e);
     }
