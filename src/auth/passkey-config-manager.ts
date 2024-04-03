@@ -25,7 +25,7 @@ import {
 } from './passkey-config';
 
 /**
- * Manages Passkey Configuration for a Firebase app.
+ * Manages Passkey configuration for a Firebase app.
  */
 export class PasskeyConfigManager {
   private readonly authRequestHandler: AuthRequestHandler;
@@ -58,13 +58,11 @@ export class PasskeyConfigManager {
   /**
    * Creates a new passkey configuration.
    *
-   * @param rpId - The relying party ID.
    * @param passkeyConfigRequest - Configuration details for the passkey.
    * @param tenantId - (optional) The tenant ID for which the passkey config is created.
    * @returns A promise fulfilled with the newly created passkey configuration.
    */
-  public createPasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest,
-    tenantId?: string): Promise<PasskeyConfig> {
+  public createPasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig> {
     return this.authRequestHandler.updatePasskeyConfig(true, tenantId, passkeyConfigRequest)
       .then((response: PasskeyConfigClientRequest) => {
         return new PasskeyConfig(response);

@@ -294,7 +294,7 @@ export class Messaging {
 
     return this.getUrlPath()
       .then((urlPath) => {
-        const requests: Promise<SendResponse>[] = copy.map((message) => {
+        const requests: Promise<SendResponse>[] = copy.map(async (message) => {
           validateMessage(message);
           const request: { message: Message; validate_only?: boolean } = { message };
           if (dryRun) {

@@ -40,12 +40,12 @@ jobs:
     # via the 'ref' client parameter.
     steps:
     - name: Checkout source for staging
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         ref: ${{ github.event.client_payload.ref || github.ref }}
 
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: 14.x
 
@@ -104,7 +104,7 @@ jobs:
 
     steps:
     - name: Checkout source for publish
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     # Download the artifacts created by the stage_release job.
     - name: Download release candidates
@@ -114,7 +114,7 @@ jobs:
 
     # Node.js and NPM are needed to complete the publish.
     - name: Set up Node.js
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: 14.x
 
@@ -122,19 +122,13 @@ jobs:
       id: preflight
       run: ./.github/scripts/publish_preflight_check.sh
 
-    # We pull this action from a custom fork of a contributor until
-    # https://github.com/actions/create-release/pull/32 is merged. Also note that v1 of
-    # this action does not support the "body" parameter.
+    # See: https://cli.github.com/manual/gh_release_create
     - name: Create release tag
-      uses: fleskesvor/create-release@1a72e235c178bf2ae6c51a8ae36febc24568c5fe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.preflight.outputs.version }}
-        release_name: Firebase Admin Node.js SDK ${{ steps.preflight.outputs.version }}
-        body: ${{ steps.preflight.outputs.changelog }}
-        draft: false
-        prerelease: false
+      run: gh release create ${{ steps.preflight.outputs.version }}
+            --title "Firebase Admin Node.js SDK ${{ steps.preflight.outputs.version }}"
+            --notes '${{ steps.preflight.outputs.changelog }}'
 
     - name: Publish to NPM
       run: ./.github/scripts/publish_package.sh

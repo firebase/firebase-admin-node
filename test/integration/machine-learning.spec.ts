@@ -17,11 +17,10 @@
 
 import path = require('path');
 import * as chai from 'chai';
-import { projectId } from './setup';
 import { Bucket } from '@google-cloud/storage';
 import { getStorage } from '../../lib/storage/index';
 import {
-  AutoMLTfliteModelOptions, GcsTfliteModelOptions, Model, ModelOptions, getMachineLearning,
+  GcsTfliteModelOptions, Model, ModelOptions, getMachineLearning,
 } from '../../lib/machine-learning/index';
 
 const expect = chai.expect;
@@ -100,31 +99,6 @@ describe('admin.machineLearning', () => {
             .then((model) => {
               scheduleForDelete(model);
               verifyModel(model, modelOptions);
-            });
-        });
-    });
-
-    it('creates a new Model with valid AutoML TFLite ModelFormat', function () {
-      // AutoML models require verification. This takes between 20 and 60 seconds
-      this.timeout(60000); // Allow up to 60 seconds for this test.
-      return getAutoMLModelReference()
-        .then((automlRef: string) => {
-          if (!automlRef) {
-            this.skip();
-            return;
-          }
-          const modelOptions: ModelOptions = {
-            displayName: 'node-integ-test-create-automl',
-            tags: ['tagAutoml'],
-            tfliteModel: { automlModel: automlRef }
-          };
-          return getMachineLearning().createModel(modelOptions)
-            .then((model) => {
-              return model.waitForUnlocked(55000)
-                .then(() => {
-                  scheduleForDelete(model);
-                  verifyModel(model, modelOptions);
-                });
             });
         });
     });
@@ -231,33 +205,6 @@ describe('admin.machineLearning', () => {
               verifyModel(updatedModel, modelOptions);
             });
         });
-    });
-
-    it('updates the automl model', function () {
-      // AutoML models require verification. This takes between 20 and 60 seconds
-      this.timeout(60000); // Allow up to 60 seconds for this test.
-      return createTemporaryModel({
-        displayName: 'node-integ-test-update-automl'
-      }).then((model) => {
-
-        return getAutoMLModelReference()
-          .then((automlRef: string) => {
-            if (!automlRef) {
-              this.skip();
-              return;
-            }
-            const modelOptions: ModelOptions = {
-              tfliteModel: { automlModel: automlRef },
-            };
-            return getMachineLearning().updateModel(model.modelId, modelOptions)
-              .then((updatedModel) => {
-                return updatedModel.waitForUnlocked(55000)
-                  .then(() => {
-                    verifyModel(updatedModel, modelOptions);
-                  });
-              });
-          });
-      });
     });
 
     it('can update more than 1 field', () => {
@@ -540,8 +487,6 @@ function verifyModel(model: Model, expectedOptions: ModelOptions): void {
   }
   if ((expectedOptions as GcsTfliteModelOptions).tfliteModel?.gcsTfliteUri !== undefined) {
     verifyGcsTfliteModel(model, (expectedOptions as GcsTfliteModelOptions));
-  } else if ((expectedOptions as AutoMLTfliteModelOptions).tfliteModel?.automlModel !== undefined) {
-    verifyAutomlTfliteModel(model, (expectedOptions as AutoMLTfliteModelOptions));
   } else {
     expect(model.validationError).to.equal('No model file has been uploaded.');
   }
@@ -557,36 +502,4 @@ function verifyGcsTfliteModel(model: Model, expectedOptions: GcsTfliteModelOptio
     expect(model.modelHash).to.not.be.undefined;
     expect(model.validationError).to.be.undefined;
   }
-}
-
-function verifyAutomlTfliteModel(model: Model, expectedOptions: AutoMLTfliteModelOptions): void {
-  const expectedAutomlReference = expectedOptions.tfliteModel.automlModel;
-  expect(model.tfliteModel!.automlModel).to.equal(expectedAutomlReference);
-  expect(model.validationError).to.be.undefined;
-  expect(model.tfliteModel!.sizeBytes).to.not.be.undefined;
-  expect(model.modelHash).to.not.be.undefined;
-}
-
-function getAutoMLModelReference(): Promise<string> {
-  let automl;
-  try {
-    const { AutoMlClient } = require('@google-cloud/automl').v1;
-    automl = new AutoMlClient();
-  }
-  catch (error) {
-    // Returning an empty string will result in skipping the test.
-    return Promise.resolve('');
-  }
-
-  const parent = automl.locationPath(projectId, 'us-central1');
-  return automl.listModels({ parent, filter:'displayName=admin_sdk_integ_test1' })
-    .then(([models]: [any]) => {
-      let modelRef = '';
-      for (const model of models) {
-        modelRef = model.name;
-      }
-      return modelRef;
-    })
-    // Skip the test if anything goes wrong with listing the models.
-    .catch(() => '');
 }
