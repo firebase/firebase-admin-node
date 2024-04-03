@@ -2109,7 +2109,7 @@ const UPDATE_PASSKEY_CONFIG = new ApiSettings('/passkeyConfig?updateMask={update
 
 /** Instantiates the UPDATE_TENANT_PASSKEY_CONFIG endpoint settings. */
 const UPDATE_TENANT_PASSKEY_CONFIG = new ApiSettings(
-  '/tenant/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
+  '/tenants/{tenantId}/passkeyConfig?updateMask={updateMask}', 'PATCH')
   .setResponseValidator((response: any) => {
     // Validate the response for UPDATE_TENANT_PASSKEY_CONFIG.
     if (!validator.isNonEmptyString(response.name)) {
