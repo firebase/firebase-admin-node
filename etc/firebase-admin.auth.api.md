@@ -355,7 +355,7 @@ export class PasskeyConfig {
 
 // @public
 export class PasskeyConfigManager {
-    createPasskeyConfig(rpId: string, passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+    createPasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
     getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
     updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
 }
@@ -363,6 +363,8 @@ export class PasskeyConfigManager {
 // @public
 export interface PasskeyConfigRequest {
     expectedOrigins?: string[];
+    // (undocumented)
+    rpId?: string;
 }
 
 // @public
