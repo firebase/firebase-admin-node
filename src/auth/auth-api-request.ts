@@ -2297,8 +2297,8 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   public getPasskeyConfig(tenantId?: string): Promise<PasskeyConfigServerResponse> {
-    if(tenantId) {
-      return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT_PASSKEY_CONFIG, {}, {tenantId})
+    if (tenantId) {
+      return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT_PASSKEY_CONFIG, {}, { tenantId })
         .then((response: any) => {
           return response as PasskeyConfigServerResponse;
         });
@@ -2315,10 +2315,10 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       const request = PasskeyConfig.buildServerRequest(isCreateRequest, options);
       const updateMask = utils.generateUpdateMask(request);
-      if(tenantId) {
+      if (tenantId) {
         return this.invokeRequestHandler(
           this.authResourceUrlBuilder, UPDATE_TENANT_PASSKEY_CONFIG, request,
-          {tenantId, updateMask: updateMask.join(',') })
+          { tenantId, updateMask: updateMask.join(',') })
           .then((response: any) => {
             return response as PasskeyConfigServerResponse;
           });
