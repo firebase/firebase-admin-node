@@ -26,6 +26,7 @@ import {
   PercentConditionOperator
 } from './remote-config-api';
 import * as farmhash from 'farmhash';
+import long = require('long');
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -145,18 +146,27 @@ export class ConditionEvaluator {
 
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.randomizationId}`;
-    const hash64 = Math.abs(parseFloat(farmhash.fingerprint64(stringToHash)));
 
-    const instanceMicroPercentile = hash64 % (100 * 1_000_000);
 
+    // Using a 64-bit long for consistency with the Remote Config fetch endpoint.
+    let hash64 = long.fromString(farmhash.fingerprint64(stringToHash));
+
+    // Negate the hash if its value is less than 0. We handle this manually because the
+    // Long library doesn't provided an absolute value method.
+    if (hash64.lt(0)) {
+      hash64 = hash64.negate();
+    }
+
+    const instanceMicroPercentile = hash64.mod(100 * 1_000_000);
+    
     switch (percentOperator) {
     case PercentConditionOperator.LESS_OR_EQUAL:
-      return instanceMicroPercentile <= normalizedMicroPercent;
+      return instanceMicroPercentile.lte(normalizedMicroPercent);
     case PercentConditionOperator.GREATER_THAN:
-      return instanceMicroPercentile > normalizedMicroPercent;
+      return instanceMicroPercentile.gt(normalizedMicroPercent);
     case PercentConditionOperator.BETWEEN:
-      return instanceMicroPercentile > normalizedMicroPercentLowerBound
-        && instanceMicroPercentile <= normalizedMicroPercentUpperBound;
+      return instanceMicroPercentile.gt(normalizedMicroPercentLowerBound)
+        && instanceMicroPercentile.lte(normalizedMicroPercentUpperBound);
     case PercentConditionOperator.UNKNOWN:
     default:
       break;
