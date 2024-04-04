@@ -361,7 +361,7 @@ export interface GetServerTemplateOptions {
    * intended before it connects to the Remote Config backend, and so that
    * default values are available if none are set on the backend.
    */
-  defaultConfig?: ServerConfig,
+  defaultConfig?: DefaultConfig;
 }
 
 /**
@@ -541,4 +541,98 @@ export interface ListVersionsOptions {
 /**
  * Represents the configuration produced by evaluating a server template.
  */
-export type ServerConfig = { [key: string]: string | boolean | number }
+export interface ServerConfig {
+
+  /**
+   * Gets the value for the given key as a boolean.
+   *
+   * Convenience method for calling <code>serverConfig.getValue(key).asBoolean()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a boolean.
+   */
+  getBoolean(key: string): boolean;
+
+  /**
+   * Gets the value for the given key as a number.
+   *
+   * Convenience method for calling <code>serverConfig.getValue(key).asNumber()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a number.
+   */
+  getNumber(key: string): number;
+
+  /**
+   * Gets the value for the given key as a string.
+   * Convenience method for calling <code>serverConfig.getValue(key).asString()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a string.
+   */
+  getString(key: string): string;
+
+  /**
+   * Gets the {@link Value} for the given key.
+   *
+   * Ensures application logic will always have a type-safe reference,
+   * even if the parameter is removed remotely.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key.
+   */
+  getValue(key: string): Value;
+}
+
+/**
+ * Wraps a parameter value with metadata and type-safe getters.
+ *
+ * Type-safe getters insulate application logic from remote
+ * changes to parameter names and types.
+ */
+export interface Value {
+
+  /**
+   * Gets the value as a boolean.
+   *
+   * The following values (case insensitive) are interpreted as true:
+   * "1", "true", "t", "yes", "y", "on". Other values are interpreted as false.
+   */
+  asBoolean(): boolean;
+
+  /**
+   * Gets the value as a number. Comparable to calling <code>Number(value) || 0</code>.
+   */
+  asNumber(): number;
+
+  /**
+   * Gets the value as a string.
+   */
+  asString(): string;
+
+  /**
+   * Gets the {@link ValueSource} for the given key.
+   */
+  getSource(): ValueSource;
+}
+
+/**
+ * Indicates the source of a value.
+ *
+ * <ul>
+ *   <li>"static" indicates the value was defined by a static constant.</li>
+ *   <li>"default" indicates the value was defined by default config.</li>
+ *   <li>"remote" indicates the value was defined by config produced by
+ *   evaluating a template.</li>
+ * </ul>
+ */
+export type ValueSource = 'static' | 'default' | 'remote';
+
+/**
+ * Defines the format for in-app default parameter values.
+ */
+export type DefaultConfig = { [key: string]: string | number | boolean };

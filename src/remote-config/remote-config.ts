@@ -18,6 +18,7 @@ import { App } from '../app';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import { ConditionEvaluator } from './condition-evaluator-internal';
+import { ValueImpl } from './internal/value-impl';
 import {
   ListVersionsOptions,
   ListVersionsResult,
@@ -30,12 +31,13 @@ import {
   Version,
   ExplicitParameterValue,
   InAppDefaultValue,
-  ParameterValueType,
   ServerConfig,
   RemoteConfigParameterValue,
   EvaluationContext,
   ServerTemplateData,
   NamedCondition,
+  Value,
+  DefaultConfig,
   GetServerTemplateOptions,
   InitServerTemplateOptions,
 } from './remote-config-api';
@@ -306,12 +308,20 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  */
 class ServerTemplateImpl implements ServerTemplate {
   public cache: ServerTemplateData;
+  private stringifiedDefaultConfig: {[key: string]: string} = {};
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    private readonly defaultConfig: ServerConfig = {}
-  ) { }
+    public readonly defaultConfig: DefaultConfig = {}
+  ) {
+    // RC stores all remote values as string, but it's more intuitive
+    // to declare default values with specific types, so this converts
+    // the external declaration to an internal string representation.
+    for (const key in defaultConfig) {
+      this.stringifiedDefaultConfig[key] = String(defaultConfig[key]);
+    }
+  }
 
   /**
    * Fetches and caches the current active version of the project's {@link ServerTemplate}.
@@ -340,10 +350,16 @@ class ServerTemplateImpl implements ServerTemplate {
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
       this.cache.conditions, context);
 
-    const evaluatedConfig: ServerConfig = {};
+    const configValues: { [key: string]: Value } = {};
 
+    // Initializes config Value objects with default values.
+    for (const key in this.stringifiedDefaultConfig) {
+      configValues[key] = new ValueImpl('default', this.stringifiedDefaultConfig[key]);
+    }
+
+    // Overlays config Value objects derived by evaluating the template.
     for (const [key, parameter] of Object.entries(this.cache.parameters)) {
-      const { conditionalValues, defaultValue, valueType } = parameter;
+      const { conditionalValues, defaultValue } = parameter;
 
       // Supports parameters with no conditional values.
       const normalizedConditionalValues = conditionalValues || {};
@@ -366,7 +382,7 @@ class ServerTemplateImpl implements ServerTemplate {
 
       if (parameterValueWrapper) {
         const parameterValue = (parameterValueWrapper as ExplicitParameterValue).value;
-        evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterValue);
+        configValues[key] = new ValueImpl('remote', parameterValue);
         continue;
       }
 
@@ -381,46 +397,28 @@ class ServerTemplateImpl implements ServerTemplate {
       }
 
       const parameterDefaultValue = (defaultValue as ExplicitParameterValue).value;
-      evaluatedConfig[key] = this.parseRemoteConfigParameterValue(valueType, parameterDefaultValue);
+      configValues[key] = new ValueImpl('remote', parameterDefaultValue);
     }
 
-    const mergedConfig = {};
-
-    // Merges default config and rendered config, prioritizing the latter.
-    Object.assign(mergedConfig, this.defaultConfig, evaluatedConfig);
-
-    // Enables config to be a convenient object, but with the ability to perform additional
-    // functionality when a value is retrieved.
-    const proxyHandler = {
-      get(target: ServerConfig, prop: string) {
-        return target[prop];
-      }
-    };
-
-    return new Proxy(mergedConfig, proxyHandler);
+    return new ServerConfigImpl(configValues);
   }
+}
 
-  /**
-   * Private helper method that coerces a parameter value string to the {@link ParameterValueType}.
-   */
-  private parseRemoteConfigParameterValue(parameterType: ParameterValueType | undefined,
-    parameterValue: string): string | number | boolean {
-    const BOOLEAN_TRUTHY_VALUES = ['1', 'true', 't', 'yes', 'y', 'on'];
-    const DEFAULT_VALUE_FOR_NUMBER = 0;
-    const DEFAULT_VALUE_FOR_STRING = '';
-
-    if (parameterType === 'BOOLEAN') {
-      return BOOLEAN_TRUTHY_VALUES.indexOf(parameterValue) >= 0;
-    } else if (parameterType === 'NUMBER') {
-      const num = Number(parameterValue);
-      if (isNaN(num)) {
-        return DEFAULT_VALUE_FOR_NUMBER;
-      }
-      return num;
-    } else {
-      // Treat everything else as string
-      return parameterValue || DEFAULT_VALUE_FOR_STRING;
-    }
+class ServerConfigImpl implements ServerConfig {
+  constructor(
+    private readonly configValues: { [key: string]: Value },
+  ){}
+  getBoolean(key: string): boolean {
+    return this.getValue(key).asBoolean();
+  }
+  getNumber(key: string): number {
+    return this.getValue(key).asNumber();
+  }
+  getString(key: string): string {
+    return this.getValue(key).asString();
+  }
+  getValue(key: string): Value {
+    return this.configValues[key] || new ValueImpl('static');
   }
 }
 

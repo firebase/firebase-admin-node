@@ -26,6 +26,7 @@ import { RemoteConfig } from './remote-config';
 
 export {
   AndCondition,
+  DefaultConfig,
   EvaluationContext,
   ExplicitParameterValue,
   GetServerTemplateOptions,
@@ -50,6 +51,8 @@ export {
   ServerTemplate,
   ServerTemplateData,
   TagColor,
+  Value,
+  ValueSource,
   Version,
 } from './remote-config-api';
 export { RemoteConfig } from './remote-config';

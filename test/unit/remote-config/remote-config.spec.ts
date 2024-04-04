@@ -132,9 +132,7 @@ describe('RemoteConfig', () => {
     parameters: {
       holiday_promo_enabled: {
         defaultValue: { value: 'true' },
-        conditionalValues: { ios: { useInAppDefault: true } },
-        description: 'this is a promo',
-        valueType: 'BOOLEAN',
+        conditionalValues: { ios: { useInAppDefault: true } }
       },
     },
     etag: 'etag-123456789012-5',
@@ -592,8 +590,6 @@ describe('RemoteConfig', () => {
           const p1 = template.cache.parameters[key];
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
-          expect(p1.description).equals('this is a promo');
-          expect(p1.valueType).equals('BOOLEAN');
 
           const c = template.cache.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
@@ -628,9 +624,9 @@ describe('RemoteConfig', () => {
       return remoteConfig.getServerTemplate({ defaultConfig })
         .then((template) => {
           const config = template.evaluate();
-          expect(config.holiday_promo_enabled).to.equal(
+          expect(config.getBoolean('holiday_promo_enabled')).to.equal(
             defaultConfig.holiday_promo_enabled);
-          expect(config.holiday_promo_discount).to.equal(
+          expect(config.getNumber('holiday_promo_discount')).to.equal(
             defaultConfig.holiday_promo_discount);
         });
     });
@@ -643,9 +639,7 @@ describe('RemoteConfig', () => {
         dog_type: {
           defaultValue: {
             value: 'shiba'
-          },
-          description: 'Type of dog breed',
-          valueType: 'STRING'
+          }
         }
       };
       const initializedTemplate = remoteConfig.initServerTemplate({ template });
@@ -711,41 +705,29 @@ describe('RemoteConfig', () => {
       dog_type: {
         defaultValue: {
           value: 'corgi'
-        },
-        description: 'Type of dog breed',
-        valueType: 'STRING'
+        }
       },
       dog_type_enabled: {
         defaultValue: {
           value: 'true'
-        },
-        description: 'It\'s true or false',
-        valueType: 'BOOLEAN'
+        }
       },
       dog_age: {
         defaultValue: {
           value: '22'
-        },
-        description: 'Age',
-        valueType: 'NUMBER'
+        }
       },
       dog_jsonified: {
         defaultValue: {
           value: '{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}'
-        },
-        description: 'Dog Json Response',
-        valueType: 'JSON'
+        }
       },
       dog_use_inapp_default: {
         defaultValue: {
           useInAppDefault: true
-        },
-        description: 'Use in-app default dog',
-        valueType: 'STRING'
+        }
       },
       dog_no_remote_default_value: {
-        description: 'TIL: default values are optional!',
-        valueType: 'STRING'
       }
     };
 
@@ -860,8 +842,6 @@ describe('RemoteConfig', () => {
             const p1 = template.cache.parameters[key];
             expect(p1.defaultValue).deep.equals({ value: 'true' });
             expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
-            expect(p1.description).equals('this is a promo');
-            expect(p1.valueType).equals('BOOLEAN');
 
             const c = template.cache.conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
@@ -980,10 +960,9 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate()
           .then((template: ServerTemplate) => {
             const config = template.evaluate!();
-            expect(config.dog_type).to.equal('corgi');
-            expect(config.dog_type_enabled).to.equal(true);
-            expect(config.dog_age).to.equal(22);
-            expect(config.dog_jsonified).to.equal('{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}');
+            expect(config.getString('dog_type')).to.equal('corgi');
+            expect(config.getBoolean('dog_type_enabled')).to.equal(true);
+            expect(config.getNumber('dog_age')).to.equal(22);
           });
       });
 
@@ -1014,15 +993,14 @@ describe('RemoteConfig', () => {
             parameters: {
               is_enabled: {
                 defaultValue: { value: 'false' },
-                conditionalValues: { is_true: { value: 'true' } },
-                valueType: 'BOOLEAN',
+                conditionalValues: { is_true: { value: 'true' } }
               },
             },
             etag: '123'
           }
         });
         const config = template.evaluate();
-        expect(config.is_enabled).to.be.true;
+        expect(config.getBoolean('is_enabled')).to.be.true;
       });
 
       it('honors condition order', () => {
@@ -1076,15 +1054,14 @@ describe('RemoteConfig', () => {
                   // value is selected.
                   is_true_too: { value: 'dachshund' },
                   is_true: { value: 'corgi' }
-                },
-                valueType: 'STRING',
+                }
               },
             },
             etag: '123'
           }
         });
         const config = template.evaluate();
-        expect(config.dog_type).to.eq('corgi');
+        expect(config.getString('dog_type')).to.eq('corgi');
       });
 
       it('uses local default if parameter not in template', () => {
@@ -1103,7 +1080,7 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
             const config = template.evaluate();
-            expect(config.dog_coat).to.equal(defaultConfig.dog_coat);
+            expect(config.getString('dog_coat')).to.equal(defaultConfig.dog_coat);
           });
       });
 
@@ -1125,7 +1102,8 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
             const config = template.evaluate!();
-            expect(config.dog_no_remote_default_value).to.equal(defaultConfig.dog_no_remote_default_value);
+            expect(config.getString('dog_no_remote_default_value')).to.equal(
+              defaultConfig.dog_no_remote_default_value);
           });
       });
 
@@ -1147,7 +1125,8 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate({ defaultConfig })
           .then((template: ServerTemplate) => {
             const config = template.evaluate!();
-            expect(config.dog_use_inapp_default).to.equal(defaultConfig.dog_use_inapp_default);
+            expect(config.getString('dog_use_inapp_default')).to.equal(
+              defaultConfig.dog_use_inapp_default);
           });
       });
 
@@ -1168,8 +1147,7 @@ describe('RemoteConfig', () => {
           dog_type: {
             defaultValue: {
               value: 'pug'
-            },
-            valueType: 'STRING'
+            }
           },
         }
 
@@ -1177,14 +1155,13 @@ describe('RemoteConfig', () => {
 
         let config = template.evaluate();
 
-        expect(config.dog_type).to.equal('pug');
+        expect(config.getString('dog_type')).to.equal('pug');
 
         response.parameters = {
           dog_type: {
             defaultValue: {
               useInAppDefault: true
-            },
-            valueType: 'STRING'
+            }
           },
         }
 
@@ -1192,7 +1169,7 @@ describe('RemoteConfig', () => {
 
         config = template.evaluate();
 
-        expect(config.dog_type).to.equal('corgi');
+        expect(config.getString('dog_type')).to.equal('corgi');
       });
 
       it('overrides local default when remote value exists', () => {
@@ -1202,8 +1179,7 @@ describe('RemoteConfig', () => {
             defaultValue: {
               // Defines remote value
               value: 'true'
-            },
-            valueType: 'BOOLEAN'
+            }
           },
         }
 
@@ -1221,8 +1197,110 @@ describe('RemoteConfig', () => {
           .then((template: ServerTemplate) => {
             const config = template.evaluate();
             // Asserts remote value overrides local default.
-            expect(config.dog_type_enabled).to.be.true;
+            expect(config.getBoolean('dog_type_enabled')).to.be.true;
           });
+      });
+    });
+  });
+
+  // Note the static source is set in the getValue() method, but the other sources
+  // are set in the evaluate() method, so these tests span a couple layers.
+  describe('ServerConfig', () => {
+    describe('getValue', () => {
+      it('should return static when default and remote are not defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        // Omits in-app default values.
+        const template = remoteConfig.initServerTemplate({ template: templateData });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('');
+        expect(value.getSource()).to.equal('static');
+      });
+  
+      it('should return default value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('shiba');
+        expect(value.getSource()).to.equal('default');
+      });
+  
+      it('should return remote value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Defines remote parameter values.
+        templateData.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          }
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('pug');
+        expect(value.getSource()).to.equal('remote');
+      });
+    });
+
+    describe('getString', () => {
+      it('returns a string value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getString('dog_type')).to.equal('shiba');
+      });
+    });
+
+    describe('getNumber', () => {
+      it('returns a numeric value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_age: 12
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getNumber('dog_age')).to.equal(12);
+      });
+    });
+
+    describe('getBoolean', () => {
+      it('returns a boolean value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_is_cute: true
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getBoolean('dog_is_cute')).to.be.true;
       });
     });
   });
