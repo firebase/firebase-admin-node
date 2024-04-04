@@ -385,22 +385,27 @@ export interface InitServerTemplateOptions extends GetServerTemplateOptions {
  * Represents a stateful abstraction for a Remote Config server template.
  */
 export interface ServerTemplate {
-
-  /**
-   * Cached {@link ServerTemplateData}.
-   */
-  cache: ServerTemplateData;
-
   /**
    * Evaluates the current template to produce a {@link ServerConfig}.
    */
   evaluate(context?: EvaluationContext): ServerConfig;
 
   /**
+   * Sets and caches a {@link ServerTemplateData} or a JSON string representing
+   * the server template
+   */
+  set(template: ServerTemplateData | string): void;
+
+  /**
    * Fetches and caches the current active version of the
    * project's {@link ServerTemplate}.
    */
   load(): Promise<void>;
+
+  /**
+   * @returns JSON representation of {@link ServerTemplateData}
+   */
+  toJSON(): ServerTemplateData;
 }
 
 /**

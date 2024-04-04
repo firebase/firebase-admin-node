@@ -196,21 +196,25 @@ export class RemoteConfig {
    * Synchronously instantiates {@link ServerTemplate}.
    */
   public initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate {
-    const template = new ServerTemplateImpl(
+    let template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
+
     if (options?.template) {
-      // Check and instantiates the template via a json string
-      if (isString(options?.template)) {
+      if (isString(options.template)) {
+        // Check and instantiates the template via a json string
         try {
-          template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
+          template = new ServerTemplateImpl(
+            this.client, new ConditionEvaluator(), options?.defaultConfig,
+            new ServerTemplateDataImpl(JSON.parse(options?.template)));
         } catch (e) {
           throw new FirebaseRemoteConfigError(
             'invalid-argument',
-            `Failed to parse the JSON string: ${options?.template}. ` + e
+            `Failed to parse the JSON string: ${template}. ` + e
           );
         }
       } else {
-        template.cache = options?.template;
+        template = new ServerTemplateImpl(
+          this.client, new ConditionEvaluator(), options?.defaultConfig, new ServerTemplateDataImpl(options?.template));
       }
     }
     return template;
@@ -305,13 +309,35 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  * Remote Config dataplane template data implementation.
  */
 class ServerTemplateImpl implements ServerTemplate {
-  public cache: ServerTemplateData;
+  private cache: ServerTemplateData;
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    private readonly defaultConfig: ServerConfig = {}
-  ) { }
+    private readonly defaultConfig: ServerConfig = {},
+    template?: ServerTemplateData
+  ) {
+    if (template) { this.cache = template; }
+  }
+
+  /**
+   * Takes in either a {@link ServerTemplateData} or a JSON string
+   * representing the template, parses it, and caches it.
+   */
+  public set(template: ServerTemplateData | string): void {
+    if (isString(template)) {
+      try {
+        this.cache = new ServerTemplateDataImpl(JSON.parse(template));
+      } catch (e) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Failed to parse the JSON string: ${template}. ` + e
+        );
+      }
+    } else {
+      this.cache = template;
+    }
+  }
 
   /**
    * Fetches and caches the current active version of the project's {@link ServerTemplate}.
@@ -398,6 +424,13 @@ class ServerTemplateImpl implements ServerTemplate {
     };
 
     return new Proxy(mergedConfig, proxyHandler);
+  }
+
+  /**
+   * @returns JSON representation of the server template
+   */
+  public toJSON(): ServerTemplateData {
+    return this.cache;
   }
 
   /**

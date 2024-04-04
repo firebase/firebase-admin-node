@@ -175,9 +175,11 @@ export type ServerConfig = {
 
 // @public
 export interface ServerTemplate {
-    cache: ServerTemplateData;
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
+    set(template: ServerTemplateData | string): void;
+    // (undocumented)
+    toJSON(): ServerTemplateData;
 }
 
 // @public
