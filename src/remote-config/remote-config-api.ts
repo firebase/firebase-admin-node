@@ -375,8 +375,10 @@ export interface InitServerTemplateOptions extends GetServerTemplateOptions {
    * example, customers can reduce initialization latency by pre-fetching and
    * caching template data and then using this option to initialize the SDK with
    * that data.
+   * The template can be initialized with either a {@link ServerTemplateData}
+   * object or a JSON string.
    */
-  template?: ServerTemplateData,
+  template?: ServerTemplateData|string,
 }
 
 /**

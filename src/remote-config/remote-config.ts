@@ -39,6 +39,7 @@ import {
   GetServerTemplateOptions,
   InitServerTemplateOptions,
 } from './remote-config-api';
+import { isString } from 'lodash';
 
 /**
  * The Firebase `RemoteConfig` service interface.
@@ -198,7 +199,19 @@ export class RemoteConfig {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
-      template.cache = options?.template;
+      // Check and instantiates the template via a json string
+      if (isString(options?.template)) {
+        try {
+          template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
+        } catch (e) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            `Failed to parse the JSON string: ${options?.template}. ` + e
+          );
+        }
+      } else {
+        template.cache = options?.template;
+      }
     }
     return template;
   }
@@ -430,7 +443,6 @@ class ServerTemplateDataImpl implements ServerTemplateData {
     }
 
     this.etag = template.etag;
-
     if (typeof template.parameters !== 'undefined') {
       if (!validator.isNonNullObject(template.parameters)) {
         throw new FirebaseRemoteConfigError(

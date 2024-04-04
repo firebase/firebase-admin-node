@@ -40,7 +40,7 @@ export interface InAppDefaultValue {
 
 // @public
 export interface InitServerTemplateOptions extends GetServerTemplateOptions {
-    template?: ServerTemplateData;
+    template?: ServerTemplateData | string;
 }
 
 // @public

@@ -35,7 +35,7 @@ import {
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  NamedCondition, ServerTemplate, ServerTemplateData
+  NamedCondition, ServerTemplate, ServerTemplateData, Version
 } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
@@ -648,9 +648,60 @@ describe('RemoteConfig', () => {
           valueType: 'STRING'
         }
       };
-      const initializedTemplate = remoteConfig.initServerTemplate({ template }).cache;
-      const parsed = JSON.parse(JSON.stringify(initializedTemplate));
+      const initializedTemplate = remoteConfig.initServerTemplate({ template });
+      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
       expect(parsed).deep.equals(deepCopy(template));
+    });
+
+    it('should set and instantiates template when json string is passed', () => {
+      const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      template.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'shiba'
+          },
+          description: 'Type of dog breed',
+          valueType: 'STRING'
+        }
+      };
+      const templateJson = JSON.stringify(template);
+      const initializedTemplate = remoteConfig.initServerTemplate({ template: templateJson });
+      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
+      const expectedVersion = deepCopy(VERSION_INFO);
+      expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+      template.version = expectedVersion as Version;
+      expect(parsed).deep.equals(deepCopy(template));
+    });
+
+    describe('should throw error if invalid template JSON is passed', () => {
+      const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+      const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+
+      let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+      const jsonString = '{invalidJson: null}';
+      it('should throw if template is an invalid JSON', () => {
+        expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+          .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+      });
+
+      INVALID_PARAMETERS.forEach((invalidParameter) => {
+        sourceTemplate.parameters = invalidParameter;
+        const jsonString = JSON.stringify(sourceTemplate);
+        it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw('Remote Config parameters must be a non-null object');
+        });
+      });
+
+      sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+      INVALID_CONDITIONS.forEach((invalidConditions) => {
+        sourceTemplate.conditions = invalidConditions;
+        const jsonString = JSON.stringify(sourceTemplate);
+        it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw('Remote Config conditions must be an array');
+        });
+      });
     });
   });
 
@@ -1039,12 +1090,12 @@ describe('RemoteConfig', () => {
       it('uses local default if parameter not in template', () => {
         const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         template.parameters = {};
-  
+
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(template);
         stubs.push(stub);
-  
+
         const defaultConfig = {
           dog_coat: 'blue merle',
         };
@@ -1061,12 +1112,12 @@ describe('RemoteConfig', () => {
         template.parameters = {
           dog_no_remote_default_value: {}
         };
-  
+
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(template);
         stubs.push(stub);
-  
+
         const defaultConfig = {
           dog_no_remote_default_value: 'local default'
         };
@@ -1083,7 +1134,7 @@ describe('RemoteConfig', () => {
         template.parameters = {
           dog_no_remote_default_value: {}
         };
-  
+
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
           .resolves(template);
