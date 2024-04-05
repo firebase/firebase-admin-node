@@ -572,11 +572,11 @@ describe('RemoteConfig', () => {
 
       return remoteConfig.getServerTemplate()
         .then((template) => {
-          expect(template.cache.conditions.length).to.equal(1);
-          expect(template.cache.conditions[0].name).to.equal('ios');
-          expect(template.cache.etag).to.equal('etag-123456789012-5');
+          expect(template.toJSON().conditions.length).to.equal(1);
+          expect(template.toJSON().conditions[0].name).to.equal('ios');
+          expect(template.toJSON().etag).to.equal('etag-123456789012-5');
 
-          const version = template.cache.version!;
+          const version = template.toJSON().version!;
           expect(version.versionNumber).to.equal('86');
           expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
           expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
@@ -587,16 +587,16 @@ describe('RemoteConfig', () => {
           expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
 
           const key = 'holiday_promo_enabled';
-          const p1 = template.cache.parameters[key];
+          const p1 = template.toJSON().parameters[key];
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
 
-          const c = template.cache.conditions.find((c) => c.name === 'ios');
+          const c = template.toJSON().conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
           const cond = c as NamedCondition;
           expect(cond.name).to.equal('ios');
 
-          const parsed = JSON.parse(JSON.stringify(template.cache));
+          const parsed = JSON.parse(JSON.stringify(template.toJSON()));
           const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
           const expectedVersion = deepCopy(VERSION_INFO);
           expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
@@ -643,7 +643,10 @@ describe('RemoteConfig', () => {
         }
       };
       const initializedTemplate = remoteConfig.initServerTemplate({ template });
-      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
+      const parsed = initializedTemplate.toJSON();
+      const expectedVersion = deepCopy(VERSION_INFO);
+      expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+      template.version = expectedVersion as Version;
       expect(parsed).deep.equals(deepCopy(template));
     });
 
@@ -660,7 +663,7 @@ describe('RemoteConfig', () => {
       };
       const templateJson = JSON.stringify(template);
       const initializedTemplate = remoteConfig.initServerTemplate({ template: templateJson });
-      const parsed = JSON.parse(JSON.stringify(initializedTemplate.cache));
+      const parsed = initializedTemplate.toJSON();
       const expectedVersion = deepCopy(VERSION_INFO);
       expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
       template.version = expectedVersion as Version;
@@ -798,7 +801,7 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate()
           .then((template) => {
             // If parameters are not present in the response, we set it to an empty object.
-            expect(template.cache.parameters).deep.equals({});
+            expect(template.toJSON().parameters).deep.equals({});
           });
       });
 
@@ -812,7 +815,7 @@ describe('RemoteConfig', () => {
         return remoteConfig.getServerTemplate()
           .then((template) => {
             // If conditions are not present in the response, we set it to an empty array.
-            expect(template.cache.conditions).deep.equals([]);
+            expect(template.toJSON().conditions).deep.equals([]);
           });
       });
 
@@ -824,11 +827,11 @@ describe('RemoteConfig', () => {
 
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            expect(template.cache.conditions.length).to.equal(1);
-            expect(template.cache.conditions[0].name).to.equal('ios');
-            expect(template.cache.etag).to.equal('etag-123456789012-5');
+            expect(template.toJSON().conditions.length).to.equal(1);
+            expect(template.toJSON().conditions[0].name).to.equal('ios');
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
 
-            const version = template.cache.version!;
+            const version = template.toJSON().version!;
             expect(version.versionNumber).to.equal('86');
             expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
             expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
@@ -839,11 +842,11 @@ describe('RemoteConfig', () => {
             expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
 
             const key = 'holiday_promo_enabled';
-            const p1 = template.cache.parameters[key];
+            const p1 = template.toJSON().parameters[key];
             expect(p1.defaultValue).deep.equals({ value: 'true' });
             expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
 
-            const c = template.cache.conditions.find((c) => c.name === 'ios');
+            const c = template.toJSON().conditions.find((c) => c.name === 'ios');
             expect(c).to.be.not.undefined;
             const cond = c as NamedCondition;
             expect(cond.name).to.equal('ios');
@@ -863,7 +866,7 @@ describe('RemoteConfig', () => {
               }
             });
 
-            const parsed = JSON.parse(JSON.stringify(template.cache));
+            const parsed = JSON.parse(JSON.stringify(template.toJSON()));
             const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
             const expectedVersion = deepCopy(VERSION_INFO);
             expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
@@ -884,9 +887,9 @@ describe('RemoteConfig', () => {
 
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            expect(template.cache.etag).to.equal('etag-123456789012-5');
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
 
-            const version = template.cache.version!;
+            const version = template.toJSON().version!;
             expect(version.versionNumber).to.equal('86');
             expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
             expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
@@ -910,9 +913,9 @@ describe('RemoteConfig', () => {
 
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            expect(template.cache.etag).to.equal('etag-123456789012-5');
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
 
-            const version = template.cache.version!;
+            const version = template.toJSON().version!;
             expect(version.versionNumber).to.equal('86');
             expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
             expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
@@ -936,9 +939,9 @@ describe('RemoteConfig', () => {
 
         return remoteConfig.getServerTemplate()
           .then((template) => {
-            expect(template.cache.etag).to.equal('etag-123456789012-5');
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
 
-            const version = template.cache.version!;
+            const version = template.toJSON().version!;
             expect(version.versionNumber).to.equal('86');
             expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
             expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
@@ -949,6 +952,82 @@ describe('RemoteConfig', () => {
             expect(version.updateTime).to.equal('Sun, 15 Nov 2020 06:57:26 GMT');
           });
       });
+    });
+
+    describe('set', () => {
+      const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+      const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+      let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+
+      it('should set template when passed', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'shiba'
+            },
+            description: 'Type of dog breed',
+            valueType: 'STRING'
+          }
+        };
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        initializedTemplate.set(template);
+        const parsed = initializedTemplate.toJSON();
+        const expectedVersion = deepCopy(VERSION_INFO);
+        expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+        template.version = expectedVersion as Version;
+        expect(parsed).deep.equals(deepCopy(template));
+      });
+
+      it('should set and instantiates template when json string is passed', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'shiba'
+            },
+            description: 'Type of dog breed',
+            valueType: 'STRING'
+          }
+        };
+        const templateJson = JSON.stringify(template);
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        initializedTemplate.set(templateJson);
+        const parsed = initializedTemplate.toJSON();
+        const expectedVersion = deepCopy(VERSION_INFO);
+        expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+        template.version = expectedVersion as Version;
+        expect(parsed).deep.equals(deepCopy(template));
+      });
+
+      it('should throw if template is an invalid JSON', () => {
+        const jsonString = '{invalidJson: null}';
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        expect(() => initializedTemplate.set(jsonString))
+          .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+      });
+
+      INVALID_PARAMETERS.forEach((invalidParameter) => {
+        sourceTemplate.parameters = invalidParameter;
+        it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
+          const jsonString = JSON.stringify(sourceTemplate);
+          const initializedTemplate = remoteConfig.initServerTemplate();
+          expect(() => initializedTemplate.set(jsonString))
+            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+        });
+      });
+
+      sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+      INVALID_CONDITIONS.forEach((invalidConditions) => {
+        sourceTemplate.conditions = invalidConditions;
+        it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
+          const jsonString = JSON.stringify(sourceTemplate);
+          const initializedTemplate = remoteConfig.initServerTemplate();
+          expect(() => initializedTemplate.set(jsonString))
+            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+        });
+      });
+
     });
 
     describe('evaluate', () => {
@@ -1151,7 +1230,7 @@ describe('RemoteConfig', () => {
           },
         }
 
-        template.cache = response as ServerTemplateData;
+        template.set(response as ServerTemplateData);
 
         let config = template.evaluate();
 
@@ -1165,7 +1244,7 @@ describe('RemoteConfig', () => {
           },
         }
 
-        template.cache = response as ServerTemplateData;
+        template.set(response as ServerTemplateData);
 
         config = template.evaluate();
 
