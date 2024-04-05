@@ -324,8 +324,7 @@ class ServerTemplateImpl implements ServerTemplate {
   }
 
   /**
-   * Takes in either a {@link ServerTemplateData} or a JSON string
-   * representing the template, parses it, and caches it.
+   * Parses a {@link ServerTemplateDataType} and caches it.
    */
   public set(template: ServerTemplateDataType): void {
     let parsed;
