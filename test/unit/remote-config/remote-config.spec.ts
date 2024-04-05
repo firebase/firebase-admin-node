@@ -596,7 +596,7 @@ describe('RemoteConfig', () => {
           const cond = c as NamedCondition;
           expect(cond.name).to.equal('ios');
 
-          const parsed = JSON.parse(JSON.stringify(template.toJSON()));
+          const parsed = template.toJSON();
           const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
           const expectedVersion = deepCopy(VERSION_INFO);
           expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
@@ -866,7 +866,7 @@ describe('RemoteConfig', () => {
               }
             });
 
-            const parsed = JSON.parse(JSON.stringify(template.toJSON()));
+            const parsed = template.toJSON();
             const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
             const expectedVersion = deepCopy(VERSION_INFO);
             expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
