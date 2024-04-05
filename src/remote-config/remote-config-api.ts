@@ -365,6 +365,13 @@ export interface GetServerTemplateOptions {
 }
 
 /**
+ * Represents the type of a Remote Config server template that can be set on
+ * {@link ServerTemplate}. This can either be a {@link ServerTemplateData} object
+ * or a template JSON string.
+ */
+export type ServerTemplateDataType = ServerTemplateData | string;
+
+/**
  * Represents optional arguments that can be used when instantiating
  * {@link ServerTemplate} synchonously.
  */
@@ -378,13 +385,6 @@ export interface InitServerTemplateOptions extends GetServerTemplateOptions {
    */
   template?: ServerTemplateDataType,
 }
-
-/**
- * Represents the type of a Remote Config server template that can be set on
- * {@link ServerTemplate}. This can either be a {@link ServerTemplateData} object
- * or a template JSON string.
- */
-export type ServerTemplateDataType = ServerTemplateData | string;
 
 /**
  * Represents a stateful abstraction for a Remote Config server template.

@@ -45,7 +45,6 @@ export interface InAppDefaultValue {
 
 // @public
 export interface InitServerTemplateOptions extends GetServerTemplateOptions {
-    // Warning: (ae-forgotten-export) The symbol "ServerTemplateDataType" needs to be exported by the entry point index.d.ts
     template?: ServerTemplateDataType;
 }
 
@@ -199,6 +198,9 @@ export interface ServerTemplateData {
     };
     version?: Version;
 }
+
+// @public
+export type ServerTemplateDataType = ServerTemplateData | string;
 
 // @public
 export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
