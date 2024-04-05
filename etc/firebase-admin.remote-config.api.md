@@ -45,7 +45,8 @@ export interface InAppDefaultValue {
 
 // @public
 export interface InitServerTemplateOptions extends GetServerTemplateOptions {
-    template?: ServerTemplateData | string;
+    // Warning: (ae-forgotten-export) The symbol "ServerTemplateDataType" needs to be exported by the entry point index.d.ts
+    template?: ServerTemplateDataType;
 }
 
 // @public
@@ -185,7 +186,7 @@ export interface ServerConfig {
 export interface ServerTemplate {
     evaluate(context?: EvaluationContext): ServerConfig;
     load(): Promise<void>;
-    set(template: ServerTemplateData | string): void;
+    set(template: ServerTemplateDataType): void;
     toJSON(): ServerTemplateData;
 }
 
