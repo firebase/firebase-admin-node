@@ -198,26 +198,11 @@ export class RemoteConfig {
    * Synchronously instantiates {@link ServerTemplate}.
    */
   public initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate {
-    let template = new ServerTemplateImpl(
+    const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
 
     if (options?.template) {
-      if (isString(options.template)) {
-        // Check and instantiates the template via a json string
-        try {
-          template = new ServerTemplateImpl(
-            this.client, new ConditionEvaluator(), options?.defaultConfig,
-            new ServerTemplateDataImpl(JSON.parse(options?.template)));
-        } catch (e) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            `Failed to parse the JSON string: ${template}. ` + e
-          );
-        }
-      } else {
-        template = new ServerTemplateImpl(
-          this.client, new ConditionEvaluator(), options?.defaultConfig, new ServerTemplateDataImpl(options?.template));
-      }
+      template.set(options?.template);
     }
     return template;
   }
@@ -317,11 +302,8 @@ class ServerTemplateImpl implements ServerTemplate {
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
     private readonly conditionEvaluator: ConditionEvaluator,
-    public readonly defaultConfig: DefaultConfig = {},
-    template?: ServerTemplateData
+    public readonly defaultConfig: DefaultConfig = {}
   ) {
-    if (template) { this.cache = template; }
-
     // RC stores all remote values as string, but it's more intuitive
     // to declare default values with specific types, so this converts
     // the external declaration to an internal string representation.
