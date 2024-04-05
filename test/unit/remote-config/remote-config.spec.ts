@@ -955,10 +955,6 @@ describe('RemoteConfig', () => {
     });
 
     describe('set', () => {
-      const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
-      const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
-      let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
-
       it('should set template when passed', () => {
         const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         template.parameters = {
@@ -970,13 +966,14 @@ describe('RemoteConfig', () => {
             valueType: 'STRING'
           }
         };
+        template.version = {
+          ...deepCopy(VERSION_INFO),
+          updateTime: new Date(VERSION_INFO.updateTime).toUTCString()
+        } as Version;
         const initializedTemplate = remoteConfig.initServerTemplate();
         initializedTemplate.set(template);
         const parsed = initializedTemplate.toJSON();
-        const expectedVersion = deepCopy(VERSION_INFO);
-        expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
-        template.version = expectedVersion as Version;
-        expect(parsed).deep.equals(deepCopy(template));
+        expect(parsed).deep.equals(template);
       });
 
       it('should set and instantiates template when json string is passed', () => {
@@ -990,14 +987,46 @@ describe('RemoteConfig', () => {
             valueType: 'STRING'
           }
         };
+        template.version = {
+          ...deepCopy(VERSION_INFO),
+          updateTime: new Date(VERSION_INFO.updateTime).toUTCString()
+        } as Version;
         const templateJson = JSON.stringify(template);
         const initializedTemplate = remoteConfig.initServerTemplate();
         initializedTemplate.set(templateJson);
         const parsed = initializedTemplate.toJSON();
-        const expectedVersion = deepCopy(VERSION_INFO);
-        expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
-        template.version = expectedVersion as Version;
-        expect(parsed).deep.equals(deepCopy(template));
+        expect(parsed).deep.equals(template);
+      });
+
+      describe('should throw error if there are any JSON or tempalte parsing errors', () => {
+        const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+        const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+  
+        let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        const jsonString = '{invalidJson: null}';
+        it('should throw if template is an invalid JSON', () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+        });
+  
+        INVALID_PARAMETERS.forEach((invalidParameter) => {
+          sourceTemplate.parameters = invalidParameter;
+          const jsonString = JSON.stringify(sourceTemplate);
+          it(`should throw if the template is invalid - parameters is ${JSON.stringify(invalidParameter)}`, () => {
+            expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+              .to.throw('Remote Config parameters must be a non-null object');
+          });
+        });
+  
+        sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        INVALID_CONDITIONS.forEach((invalidConditions) => {
+          sourceTemplate.conditions = invalidConditions;
+          const jsonString = JSON.stringify(sourceTemplate);
+          it(`should throw if the template is invalid - conditions is ${JSON.stringify(invalidConditions)}`, () => {
+            expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+              .to.throw('Remote Config conditions must be an array');
+          });
+        });
       });
 
       it('should throw if template is an invalid JSON', () => {
@@ -1006,28 +1035,6 @@ describe('RemoteConfig', () => {
         expect(() => initializedTemplate.set(jsonString))
           .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
       });
-
-      INVALID_PARAMETERS.forEach((invalidParameter) => {
-        sourceTemplate.parameters = invalidParameter;
-        it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
-          const jsonString = JSON.stringify(sourceTemplate);
-          const initializedTemplate = remoteConfig.initServerTemplate();
-          expect(() => initializedTemplate.set(jsonString))
-            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
-        });
-      });
-
-      sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
-      INVALID_CONDITIONS.forEach((invalidConditions) => {
-        sourceTemplate.conditions = invalidConditions;
-        it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
-          const jsonString = JSON.stringify(sourceTemplate);
-          const initializedTemplate = remoteConfig.initServerTemplate();
-          expect(() => initializedTemplate.set(jsonString))
-            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
-        });
-      });
-
     });
 
     describe('evaluate', () => {

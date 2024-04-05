@@ -375,11 +375,16 @@ export interface InitServerTemplateOptions extends GetServerTemplateOptions {
    * example, customers can reduce initialization latency by pre-fetching and
    * caching template data and then using this option to initialize the SDK with
    * that data.
-   * The template can be initialized with either a {@link ServerTemplateData}
-   * object or a JSON string.
    */
-  template?: ServerTemplateData|string,
+  template?: ServerTemplateDataType,
 }
+
+/**
+ * Represents the type of a Remote Config server template that can be set on
+ * {@link ServerTemplate}. This can either be a {@link ServerTemplateData} object
+ * or a template JSON string.
+ */
+export type ServerTemplateDataType = ServerTemplateData | string;
 
 /**
  * Represents a stateful abstraction for a Remote Config server template.
@@ -400,7 +405,7 @@ export interface ServerTemplate {
    * Sets and caches a {@link ServerTemplateData} or a JSON string representing
    * the server template
    */
-  set(template: ServerTemplateData | string): void;
+  set(template: ServerTemplateDataType): void;
 
   /**
    * Returns a JSON representation of {@link ServerTemplateData}

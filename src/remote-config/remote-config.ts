@@ -40,6 +40,7 @@ import {
   DefaultConfig,
   GetServerTemplateOptions,
   InitServerTemplateOptions,
+  ServerTemplateDataType,
 } from './remote-config-api';
 import { isString } from 'lodash';
 
@@ -326,19 +327,22 @@ class ServerTemplateImpl implements ServerTemplate {
    * Takes in either a {@link ServerTemplateData} or a JSON string
    * representing the template, parses it, and caches it.
    */
-  public set(template: ServerTemplateData | string): void {
+  public set(template: ServerTemplateDataType): void {
+    let parsed;
     if (isString(template)) {
       try {
-        this.cache = new ServerTemplateDataImpl(JSON.parse(template));
+        parsed = JSON.parse(template);
       } catch (e) {
+        // Transforms JSON parse errors to Firebase error.
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
-          `Failed to parse the JSON string: ${template}. ` + e
-        );
+          `Failed to parse the JSON string: ${template}. ` + e);
       }
     } else {
-      this.cache = template;
+      parsed = template;
     }
+    // Throws template parse errors.
+    this.cache = new ServerTemplateDataImpl(parsed);
   }
 
   /**
