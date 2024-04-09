@@ -40,6 +40,7 @@ import {
   DefaultConfig,
   GetServerTemplateOptions,
   InitServerTemplateOptions,
+  ServerTemplateDataType,
 } from './remote-config-api';
 
 /**
@@ -199,21 +200,11 @@ export class RemoteConfig {
   public initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate {
     const template = new ServerTemplateImpl(
       this.client, new ConditionEvaluator(), options?.defaultConfig);
+
     if (options?.template) {
-      // Check and instantiates the template via a json string
-      if (validator.isString(options?.template)) {
-        try {
-          template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
-        } catch (e) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            `Failed to parse the JSON string: ${options?.template}. ` + e
-          );
-        }
-      } else {
-        template.cache = options?.template;
-      }
+      template.set(options?.template);
     }
+
     return template;
   }
 }
@@ -306,7 +297,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  * Remote Config dataplane template data implementation.
  */
 class ServerTemplateImpl implements ServerTemplate {
-  public cache: ServerTemplateData;
+  private cache: ServerTemplateData;
   private stringifiedDefaultConfig: {[key: string]: string} = {};
 
   constructor(
@@ -330,6 +321,27 @@ class ServerTemplateImpl implements ServerTemplate {
       .then((template) => {
         this.cache = new ServerTemplateDataImpl(template);
       });
+  }
+
+  /**
+   * Parses a {@link ServerTemplateDataType} and caches it.
+   */
+  public set(template: ServerTemplateDataType): void {
+    let parsed;
+    if (validator.isString(template)) {
+      try {
+        parsed = JSON.parse(template);
+      } catch (e) {
+        // Transforms JSON parse errors to Firebase error.
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Failed to parse the JSON string: ${template}. ` + e);
+      }
+    } else {
+      parsed = template;
+    }
+    // Throws template parse errors.
+    this.cache = new ServerTemplateDataImpl(parsed);
   }
 
   /**
@@ -400,6 +412,13 @@ class ServerTemplateImpl implements ServerTemplate {
     }
 
     return new ServerConfigImpl(configValues);
+  }
+
+  /**
+   * @returns JSON representation of the server template
+   */
+  public toJSON(): ServerTemplateData {
+    return this.cache;
   }
 }
 

@@ -50,6 +50,7 @@ export {
   ServerConfig,
   ServerTemplate,
   ServerTemplateData,
+  ServerTemplateDataType,
   TagColor,
   Value,
   ValueSource,
