@@ -41,7 +41,6 @@ import {
   GetServerTemplateOptions,
   InitServerTemplateOptions,
 } from './remote-config-api';
-import { isString } from 'lodash';
 
 /**
  * The Firebase `RemoteConfig` service interface.
@@ -202,7 +201,7 @@ export class RemoteConfig {
       this.client, new ConditionEvaluator(), options?.defaultConfig);
     if (options?.template) {
       // Check and instantiates the template via a json string
-      if (isString(options?.template)) {
+      if (validator.isString(options?.template)) {
         try {
           template.cache = new ServerTemplateDataImpl(JSON.parse(options?.template));
         } catch (e) {
