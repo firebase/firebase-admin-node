@@ -43,14 +43,14 @@ export {
 // TODO: Remove the following any-cast once the typins in @firebase/database-types are fixed.
 
 /**
- * {@link https://firebase.google.com/docs/reference/js/firebase.database#enablelogging | enableLogging}
- * function from the `@firebase/database` package.
+ * {@link https://firebase.google.com/docs/reference/js/v8/firebase.database#enablelogging | enableLogging}
+ * function from the `@firebase/database-compat` package.
  */
 export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc as any;
 
 /**
- * {@link https://firebase.google.com/docs/reference/js/firebase.database.ServerValue | ServerValue}
- * constant from the `@firebase/database` package.
+ * {@link https://firebase.google.com/docs/reference/js/v8/firebase.database.ServerValue | ServerValue}
+ * constant from the `@firebase/database-compat` package.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ServerValue: rtdb.ServerValue = serverValueConst;
