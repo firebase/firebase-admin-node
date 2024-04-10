@@ -21,10 +21,12 @@ import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
+import http2 = require('http2');
 import url = require('url');
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
+import { Http2SessionHandler } from '../messaging/messaging';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
@@ -43,6 +45,7 @@ export interface HttpRequestConfig {
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
   httpAgent?: http.Agent;
+  http2SessionHandler?: Http2SessionHandler;
 }
 
 /**
@@ -64,10 +67,12 @@ export interface HttpResponse {
   isJson(): boolean;
 }
 
+type IncomingHttp2Headers = http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader
+
 interface LowLevelResponse {
   status: number;
-  headers: http.IncomingHttpHeaders;
-  request: http.ClientRequest | null;
+  headers: http.IncomingHttpHeaders | IncomingHttp2Headers ;
+  request: http.ClientRequest | http2.ClientHttp2Stream | null;
   data?: string;
   multipart?: Buffer[];
   config: HttpRequestConfig;
@@ -76,7 +81,7 @@ interface LowLevelResponse {
 interface LowLevelError extends Error {
   config: HttpRequestConfig;
   code?: string;
-  request?: http.ClientRequest;
+  request?: http.ClientRequest | http2.ClientHttp2Stream;
   response?: LowLevelResponse;
 }
 
@@ -282,6 +287,7 @@ export class HttpClient {
       })
       .catch((err: LowLevelError) => {
         const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+        // console.log(`can retry: ${canRetry} count: ${retryAttempts}`)
         if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
           return this.waitForRetry(delayMillis).then(() => {
             return this.sendWithRetry(config, retryAttempts + 1);
@@ -360,6 +366,7 @@ export class HttpClient {
 
     if (err.code) {
       const retryCodes = this.retry.ioErrorCodes || [];
+      // console.log(err.code, retryCodes.indexOf(err.code) !== -1)
       return retryCodes.indexOf(err.code) !== -1;
     }
 
@@ -483,34 +490,101 @@ class AsyncHttpCall {
   }
 
   private execute(): void {
-    const transport: any = this.options.protocol === 'https:' ? https : http;
-    const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
-      this.handleResponse(res, req);
-    });
+    if (this.config.http2SessionHandler) {
+      const req = this.config.http2SessionHandler.session.request({
+        ':method': this.options.method,
+        ':scheme': this.options.protocol!,
+        ':path': this.options.path!,
+        ...this.config.headers
+      });
+      req.on('response', (headers: IncomingHttp2Headers) => {
+        this.handleHttp2Response(req, headers);
+      });
 
-    // Handle errors
-    req.on('error', (err) => {
-      if (req.aborted) {
-        return;
+      // Handle errors
+      req.on('error', (err: any) => {
+        // console.log(`stream error ${err} ${"response" in err}`)
+        if (req.aborted) {
+          return;
+        }
+        this.enhanceAndReject(err, null, req);
+      });
+      req.on('aborted', () => {
+        // console.log("aborted")
+      })
+      // req.on('close', () => {
+      //   console.log("close", req.rstCode)
+      // })
+      req.on('frameError', (type: number , code: number, id: number) => {
+        // console.log("frameError", type, code, id)
+      })
+      // req.write();
+      req.end(this.entity);
+    }
+    else {
+      const transport: any = this.options.protocol === 'https:' ? https : http;
+      const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
+        this.handleHttpResponse(res, req);
+      });
+
+      // Handle errors
+      req.on('error', (err) => {
+        if (req.aborted) {
+          return;
+        }
+        this.enhanceAndReject(err, null, req);
+      });
+
+      const timeout: number | undefined = this.config.timeout;
+      const timeoutCallback: () => void = () => {
+        req.destroy();
+        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+      };
+      if (timeout) {
+        // Listen to timeouts and throw an error.
+        req.setTimeout(timeout, timeoutCallback);
       }
-      this.enhanceAndReject(err, null, req);
-    });
 
-    const timeout: number | undefined = this.config.timeout;
-    const timeoutCallback: () => void = () => {
-      req.abort();
-      this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
-    };
-    if (timeout) {
-      // Listen to timeouts and throw an error.
-      req.setTimeout(timeout, timeoutCallback);
+      // Send the request
+      req.end(this.entity);
     }
 
-    // Send the request
-    req.end(this.entity);
   }
 
-  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest): void {
+  private handleHttp2Response(req: http2.ClientHttp2Stream, headers: IncomingHttp2Headers) {
+    if (req.aborted) {
+      return;
+    }
+
+    const  res = req
+
+    if (!headers[':status']) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INTERNAL_ERROR,
+        'Expected a statusCode on the response from a ClientRequest');
+    }
+
+    const  response: LowLevelResponse = {
+      status: headers[':status']!,
+      headers: headers,
+      request: req,
+      data: undefined,
+      config: this.config
+
+    };
+    const boundary = this.getMultipartBoundary(headers);
+    const respStream: Readable = this.uncompressHttp2Response(res, headers);
+
+    if (boundary) {
+      this.handleMultipartResponse(response, respStream, boundary);
+    } else {
+      this.handleRegularResponse(response, respStream);
+    }
+
+  }
+
+
+  private handleHttpResponse(res: http.IncomingMessage, req: http.ClientRequest): void {
     if (req.aborted) {
       return;
     }
@@ -529,7 +603,7 @@ class AsyncHttpCall {
       config: this.config,
     };
     const boundary = this.getMultipartBoundary(res.headers);
-    const respStream: Readable = this.uncompressResponse(res);
+    const respStream: Readable = this.uncompressHttpResponse(res);
 
     if (boundary) {
       this.handleMultipartResponse(response, respStream, boundary);
@@ -568,7 +642,7 @@ class AsyncHttpCall {
     return headerParams.boundary;
   }
 
-  private uncompressResponse(res: http.IncomingMessage): Readable {
+  private uncompressHttpResponse(res: http.IncomingMessage): Readable {
     // Uncompress the response body transparently if required.
     let respStream: Readable = res;
     const encodings = ['gzip', 'compress', 'deflate'];
@@ -578,6 +652,20 @@ class AsyncHttpCall {
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete res.headers['content-encoding'];
+    }
+    return respStream;
+  }
+
+  private uncompressHttp2Response(res: http2.Http2Stream, headers: IncomingHttp2Headers): Readable {
+    // Uncompress the response body transparently if required.
+    let respStream: Readable = res;
+    const encodings = ['gzip', 'compress', 'deflate'];
+    if (headers['content-encoding'] && encodings.indexOf(headers['content-encoding']) !== -1) {
+      // Add the unzipper to the body stream processing pipeline.
+      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
+      respStream = respStream.pipe(zlib.createUnzip());
+      // Remove the content-encoding in order to not confuse downstream operations.
+      delete headers['content-encoding'];
     }
     return respStream;
   }
@@ -616,7 +704,7 @@ class AsyncHttpCall {
     });
 
     respStream.on('error', (err) => {
-      const req: http.ClientRequest | null = response.request;
+      const req: http.ClientRequest | http2.ClientHttp2Stream | null = response.request;
       if (req && req.aborted) {
         return;
       }
@@ -653,7 +741,7 @@ class AsyncHttpCall {
   private rejectWithError(
     message: string,
     code?: string | null,
-    request?: http.ClientRequest | null,
+    request?: http.ClientRequest | http2.ClientHttp2Stream | null,
     response?: LowLevelResponse): void {
 
     const error = new Error(message);
@@ -663,7 +751,7 @@ class AsyncHttpCall {
   private enhanceAndReject(
     error: any,
     code?: string | null,
-    request?: http.ClientRequest | null,
+    request?: http.ClientRequest | http2.ClientHttp2Stream | null,
     response?: LowLevelResponse): void {
 
     this.reject(this.enhanceError(error, code, request, response));
@@ -676,7 +764,7 @@ class AsyncHttpCall {
   private enhanceError(
     error: any,
     code?: string | null,
-    request?: http.ClientRequest | null,
+    request?: http.ClientRequest | http2.ClientHttp2Stream | null,
     response?: LowLevelResponse): LowLevelError {
 
     error.config = this.config;
@@ -720,6 +808,10 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
 
   get httpAgent(): http.Agent | undefined {
     return this.config.httpAgent;
+  }
+
+  get http2SessionHandler(): Http2SessionHandler | undefined {
+    return this.config.http2SessionHandler;
   }
 
   public buildRequestOptions(): https.RequestOptions {
@@ -832,6 +924,33 @@ export class AuthorizedHttpClient extends HttpClient {
       });
   }
 }
+
+// export class HTTP2AuthorizedHttpClient extends HttpClient {
+//   constructor(private readonly app: FirebaseApp) {
+//     super();
+//   }
+
+//   public send(request: HttpRequestConfig): Promise<HttpResponse> {
+//     return this.getToken().then((token) => {
+//       const requestCopy = Object.assign({}, request);
+//       requestCopy.headers = Object.assign({}, request.headers);
+//       const authHeader = 'Authorization';
+//       requestCopy.headers[authHeader] = `Bearer ${token}`;
+
+//       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
+//         requestCopy.httpAgent = this.app.options.httpAgent;
+//       }
+//       return super.send(requestCopy);
+//     });
+//   }
+
+//   protected getToken(): Promise<string> {
+//     return this.app.INTERNAL.getToken()
+//       .then((accessTokenObj) => {
+//         return accessTokenObj.accessToken;
+//       });
+//   }
+// }
 
 /**
  * Class that defines all the settings for the backend API endpoint.

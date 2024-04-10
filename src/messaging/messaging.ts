@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import http2 = require('http2')
 import { App } from '../app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
@@ -183,6 +184,59 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
   return result;
 }
 
+export class Http2SessionHandler {
+  private http2Session: http2.ClientHttp2Session
+  constructor(){
+    this.http2Session = this.createSession()
+  }
+
+  public createSession(): http2.ClientHttp2Session {
+    if (!this.http2Session || this.isClosed ) {
+      const settings: http2.Settings = {
+        maxConcurrentStreams: 500,
+      }
+      const opts: http2.SecureClientSessionOptions = {
+        peerMaxConcurrentStreams: 100,
+        timeout: 5000,
+        sessionTimeout: 5000,
+        settings: settings,
+        ALPNProtocols: ['h2']
+      }
+      const http2Session = http2.connect(`https://${FCM_SEND_HOST}`, opts)
+      http2Session.on('goaway', (errorCode, lastStreamID, opaqueData) => {
+        // console.log("goaway", errorCode, lastStreamID, opaqueData.toString())
+      })
+      http2Session.on('timeout', (error) => {
+        // console.log("timeout", error)
+      })
+      http2Session.on('connect', (session, socket) => {
+        // console.log("connect")
+      })
+      http2Session.on('remoteSettings', (settings) => {
+        // console.log("remote settings", settings)
+      })
+      http2Session.on('localSettings', (settings) => {
+        // console.log("local settings", settings)
+      })
+      return http2Session
+    }
+    return this.http2Session
+  }
+
+  get session(): http2.ClientHttp2Session {
+    return this.http2Session
+  }
+
+  get isClosed(): boolean {
+    return this.http2Session.closed
+  }
+
+  public close() {
+    this.http2Session.destroy()
+    // this.http2Session.close()
+  }
+}
+
 
 /**
  * Messaging service bound to the provided app.
@@ -304,6 +358,137 @@ export class Messaging {
         });
         return Promise.allSettled(requests);
       }).then((results) => {
+        const responses: SendResponse[] = [];
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            responses.push(result.value);
+          } else { // rejected
+            responses.push({ success: false, error: result.reason })
+          }
+        })
+        const successCount: number = responses.filter((resp) => resp.success).length;
+        return {
+          responses,
+          successCount,
+          failureCount: responses.length - successCount,
+        };
+      });
+  }
+
+
+
+  public sendEachHttp2(messages: Message[], dryRun?: boolean, enableHttp2?: boolean): Promise<BatchResponse> {
+    if (validator.isArray(messages) && messages.constructor !== Array) {
+      // In more recent JS specs, an array-like object might have a constructor that is not of
+      // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
+      // a regular array here before calling deepCopy(). See issue #566 for details.
+      messages = Array.from(messages);
+    }
+
+    const copy: Message[] = deepCopy(messages);
+    if (!validator.isNonEmptyArray(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+    }
+    if (copy.length > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+    }
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
+
+    if (typeof enableHttp2 !== 'undefined' && !validator.isBoolean(enableHttp2)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'enableHttp2 must be a boolean');
+    }
+
+    const http2SessionHandler: Http2SessionHandler | undefined = enableHttp2 ? new Http2SessionHandler() : undefined
+    return this.getUrlPath()
+      .then((urlPath) => {
+        const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+          validateMessage(message);
+          const request: { message: Message; validate_only?: boolean } = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          // return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+        });
+        return Promise.allSettled(requests);
+      }).then((results) => {
+        if (http2SessionHandler){
+          http2SessionHandler.close()
+        }
+        const responses: SendResponse[] = [];
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            responses.push(result.value);
+          } else { // rejected
+            responses.push({ success: false, error: result.reason })
+          }
+        })
+        const successCount: number = responses.filter((resp) => resp.success).length;
+        return {
+          responses,
+          successCount,
+          failureCount: responses.length - successCount,
+        };
+      });
+  }
+
+  public sendEachBatchHttp2(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
+    if (validator.isArray(messages) && messages.constructor !== Array) {
+      // In more recent JS specs, an array-like object might have a constructor that is not of
+      // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
+      // a regular array here before calling deepCopy(). See issue #566 for details.
+      messages = Array.from(messages);
+    }
+
+    const copy: Message[] = deepCopy(messages);
+    if (!validator.isNonEmptyArray(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+    }
+    if (copy.length > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+    }
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
+
+    let chunkSize = 100
+    const http2SessionHandlers: Http2SessionHandler[] = []
+    return this.getUrlPath()
+      .then((urlPath) => {
+        const requests: Promise<SendResponse>[] = copy.map(async (message, i) => {
+          validateMessage(message);
+          const request: { message: Message; validate_only?: boolean } = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          // for (let i = 0; i < requests.length; i += chunkSize) {
+          //   (requests.slice(i, i + chunkSize)
+          // }
+          const session_index = Math.floor(i / chunkSize)
+          if (http2SessionHandlers.length <= session_index ){
+            http2SessionHandlers.push(new Http2SessionHandler())
+          }
+
+          // return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request, http2SessionHandlers[session_index]);
+        });
+
+        return Promise.allSettled(requests);
+      }).then((results) => {
+        http2SessionHandlers.map((http2SessionHandler) => {
+          http2SessionHandler.close()
+        })
         const responses: SendResponse[] = [];
         results.forEach(result => {
           if (result.status === 'fulfilled') {

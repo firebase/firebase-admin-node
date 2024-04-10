@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// import http2 = require('http2')
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
@@ -24,6 +25,7 @@ import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
 import { getSdkVersion } from '../utils/index';
 import { SendResponse, BatchResponse } from './messaging-api';
+import { Http2SessionHandler } from './messaging';
 
 
 // FCM backend constants
@@ -104,13 +106,14 @@ export class FirebaseMessagingRequestHandler {
    * @param requestData - The request data.
    * @returns A promise that resolves with the {@link SendResponse}.
    */
-  public invokeRequestHandlerForSendResponse(host: string, path: string, requestData: object): Promise<SendResponse> {
+  public invokeRequestHandlerForSendResponse(host: string, path: string, requestData: object, http2SessionHandler?: Http2SessionHandler): Promise<SendResponse> {
     const request: HttpRequestConfig = {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
       headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
+      http2SessionHandler: http2SessionHandler
     };
     return this.httpClient.send(request).then((response) => {
       return this.buildSendResponse(response);
@@ -123,6 +126,27 @@ export class FirebaseMessagingRequestHandler {
         throw err;
       });
   }
+
+  // public HTTP2invokeRequestHandlerForSendResponse(http2Client: Http2SessionHandler, host: string, path: string, requestData: object): Promise<SendResponse> {
+  //   const request: HttpRequestConfig = {
+  //     method: FIREBASE_MESSAGING_HTTP_METHOD,
+  //     url: `https://${host}${path}`,
+  //     data: requestData,
+  //     headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+  //     timeout: FIREBASE_MESSAGING_TIMEOUT,
+  //     http2Client: http2Client
+  //   };
+  //   return this.httpClient.send(request).then((response) => {
+  //     return this.buildSendResponse(response);
+  //   })
+  //     .catch((err) => {
+  //       if (err instanceof HttpError) {
+  //         return this.buildSendResponseFromError(err);
+  //       }
+  //       // Re-throw the error if it already has the proper format.
+  //       throw err;
+  //     });
+  // }
 
   /**
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
