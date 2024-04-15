@@ -55,6 +55,165 @@ export interface RemoteConfigCondition {
 }
 
 /**
+ * Represents a Remote Config condition in the dataplane.
+ * A condition targets a specific group of users. A list of these conditions
+ * comprise part of a Remote Config template.
+ */
+export interface NamedCondition {
+
+  /**
+   * A non-empty and unique name of this condition.
+   */
+  name: string;
+
+  /**
+   * The logic of this condition.
+   * See the documentation on
+   * {@link https://firebase.google.com/docs/remote-config/condition-reference | condition expressions}
+   * for the expected syntax of this field.
+   */
+  condition: OneOfCondition;
+}
+
+/**
+ * Represents a condition that may be one of several types.
+ * Only the first defined field will be processed.
+ */
+export interface OneOfCondition {
+
+  /**
+   * Makes this condition an OR condition.
+   */
+  orCondition?: OrCondition;
+
+  /**
+   * Makes this condition an AND condition.
+   */
+  andCondition?: AndCondition;
+
+  /**
+   * Makes this condition a constant true.
+   */
+  true?: Record<string, never>;
+
+  /**
+   * Makes this condition a constant false.
+   */
+  false?: Record<string, never>;
+
+  /**
+   * Makes this condition a percent condition.
+   */
+  percent?: PercentCondition;
+}
+
+/**
+ * Represents a collection of conditions that evaluate to true if all are true.
+ */
+export interface AndCondition {
+
+  /**
+   * The collection of conditions.
+   */
+  conditions?: Array<OneOfCondition>;
+}
+
+/**
+ * Represents a collection of conditions that evaluate to true if any are true.
+ */
+export interface OrCondition {
+
+  /**
+   * The collection of conditions.
+   */
+  conditions?: Array<OneOfCondition>;
+}
+
+/**
+ * Defines supported operators for percent conditions.
+ */
+export enum PercentConditionOperator {
+
+  /**
+   * A catchall error case.
+   */
+  UNKNOWN = 'UNKNOWN',
+
+  /**
+   * Target percentiles less than or equal to the target percent.
+   * A condition using this operator must specify microPercent.
+   */
+  LESS_OR_EQUAL = 'LESS_OR_EQUAL',
+
+  /**
+   * Target percentiles greater than the target percent.
+   * A condition using this operator must specify microPercent.
+   */
+  GREATER_THAN = 'GREATER_THAN',
+
+  /**
+   * Target percentiles within an interval defined by a lower bound and an
+   * upper bound. The lower bound is an exclusive (open) bound and the
+   * micro_percent_range_upper_bound is an inclusive (closed) bound.
+   * A condition using this operator must specify microPercentRange.
+   */
+  BETWEEN = 'BETWEEN'
+}
+
+/**
+ * Represents the limit of percentiles to target in micro-percents.
+ * The value must be in the range [0 and 100000000]
+ */
+export interface MicroPercentRange {
+
+  /**
+   * The lower limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
+  microPercentLowerBound?: number;
+
+  /**
+   * The upper limit of percentiles to target in micro-percents.
+   * The value must be in the range [0 and 100000000].
+   */
+  microPercentUpperBound?: number;
+}
+
+/**
+ * Represents a condition that compares the instance pseudo-random
+ * percentile to a given limit.
+ */
+export interface PercentCondition {
+
+  /**
+   * The choice of percent operator to determine how to compare targets
+   * to percent(s).
+   */
+  percentOperator?: PercentConditionOperator;
+
+  /**
+   * The limit of percentiles to target in micro-percents when
+   * using the LESS_OR_EQUAL and GREATER_THAN operators. The value must
+   * be in the range [0 and 100000000].
+   */
+  microPercent?: number;
+
+  /**
+   * The seed used when evaluating the hash function to map an instance to
+   * a value in the hash space. This is a string which can have 0 - 32
+   * characters and can contain ASCII characters [-_.0-9a-zA-Z].The string
+   * is case-sensitive.
+   */
+  seed?: string;
+
+  /**
+   * The micro-percent interval to be used with the
+   * BETWEEN operator.
+   */
+  microPercentRange?: MicroPercentRange;
+}
+
+/**
  * Interface representing an explicit parameter value.
  */
 export interface ExplicitParameterValue {
@@ -135,7 +294,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 /**
- * Interface representing a Remote Config template.
+ * Represents a Remote Config client template.
  */
 export interface RemoteConfigTemplate {
   /**
@@ -166,6 +325,105 @@ export interface RemoteConfigTemplate {
    */
   version?: Version;
 }
+
+/**
+ * Represents the data in a Remote Config server template.
+ */
+export interface ServerTemplateData {
+  /**
+   * A list of conditions in descending order by priority.
+   */
+  conditions: NamedCondition[];
+
+  /**
+   * Map of parameter keys to their optional default values and optional conditional values.
+   */
+  parameters: { [key: string]: RemoteConfigParameter };
+
+  /**
+   * Current Remote Config template ETag (read-only).
+   */
+  readonly etag: string;
+
+  /**
+   * Version information for the current Remote Config template.
+   */
+  version?: Version;
+}
+
+/**
+ * Represents optional arguments that can be used when instantiating {@link ServerTemplate}.
+ */
+export interface GetServerTemplateOptions {
+
+  /**
+   * Defines in-app default parameter values, so that your app behaves as
+   * intended before it connects to the Remote Config backend, and so that
+   * default values are available if none are set on the backend.
+   */
+  defaultConfig?: DefaultConfig;
+}
+
+/**
+ * Represents the type of a Remote Config server template that can be set on
+ * {@link ServerTemplate}. This can either be a {@link ServerTemplateData} object
+ * or a template JSON string.
+ */
+export type ServerTemplateDataType = ServerTemplateData | string;
+
+/**
+ * Represents optional arguments that can be used when instantiating
+ * {@link ServerTemplate} synchonously.
+ */
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
+
+  /**
+   * Enables integrations to use template data loaded independently. For
+   * example, customers can reduce initialization latency by pre-fetching and
+   * caching template data and then using this option to initialize the SDK with
+   * that data.
+   */
+  template?: ServerTemplateDataType,
+}
+
+/**
+ * Represents a stateful abstraction for a Remote Config server template.
+ */
+export interface ServerTemplate {
+  /**
+   * Evaluates the current template to produce a {@link ServerConfig}.
+   */
+  evaluate(context?: EvaluationContext): ServerConfig;
+
+  /**
+   * Fetches and caches the current active version of the
+   * project's {@link ServerTemplate}.
+   */
+  load(): Promise<void>;
+
+  /**
+   * Sets and caches a {@link ServerTemplateData} or a JSON string representing
+   * the server template
+   */
+  set(template: ServerTemplateDataType): void;
+
+  /**
+   * Returns a JSON representation of {@link ServerTemplateData}
+   */
+  toJSON(): ServerTemplateData;
+}
+
+/**
+ * Represents template evaluation input signals.
+ */
+export type EvaluationContext = {
+
+  /**
+   * Defines the identifier to use when splitting a group. For example,
+   * this is used by the percent condition.
+   */
+  randomizationId?: string
+};
 
 /**
  * Interface representing a Remote Config user.
@@ -289,3 +547,102 @@ export interface ListVersionsOptions {
    */
   endTime?: Date | string;
 }
+
+/**
+ * Represents the configuration produced by evaluating a server template.
+ */
+export interface ServerConfig {
+
+  /**
+   * Gets the value for the given key as a boolean.
+   *
+   * Convenience method for calling <code>serverConfig.getValue(key).asBoolean()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a boolean.
+   */
+  getBoolean(key: string): boolean;
+
+  /**
+   * Gets the value for the given key as a number.
+   *
+   * Convenience method for calling <code>serverConfig.getValue(key).asNumber()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a number.
+   */
+  getNumber(key: string): number;
+
+  /**
+   * Gets the value for the given key as a string.
+   * Convenience method for calling <code>serverConfig.getValue(key).asString()</code>.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key as a string.
+   */
+  getString(key: string): string;
+
+  /**
+   * Gets the {@link Value} for the given key.
+   *
+   * Ensures application logic will always have a type-safe reference,
+   * even if the parameter is removed remotely.
+   *
+   * @param key - The name of the parameter.
+   *
+   * @returns The value for the given key.
+   */
+  getValue(key: string): Value;
+}
+
+/**
+ * Wraps a parameter value with metadata and type-safe getters.
+ *
+ * Type-safe getters insulate application logic from remote
+ * changes to parameter names and types.
+ */
+export interface Value {
+
+  /**
+   * Gets the value as a boolean.
+   *
+   * The following values (case insensitive) are interpreted as true:
+   * "1", "true", "t", "yes", "y", "on". Other values are interpreted as false.
+   */
+  asBoolean(): boolean;
+
+  /**
+   * Gets the value as a number. Comparable to calling <code>Number(value) || 0</code>.
+   */
+  asNumber(): number;
+
+  /**
+   * Gets the value as a string.
+   */
+  asString(): string;
+
+  /**
+   * Gets the {@link ValueSource} for the given key.
+   */
+  getSource(): ValueSource;
+}
+
+/**
+ * Indicates the source of a value.
+ *
+ * <ul>
+ *   <li>"static" indicates the value was defined by a static constant.</li>
+ *   <li>"default" indicates the value was defined by default config.</li>
+ *   <li>"remote" indicates the value was defined by config produced by
+ *   evaluating a template.</li>
+ * </ul>
+ */
+export type ValueSource = 'static' | 'default' | 'remote';
+
+/**
+ * Defines the format for in-app default parameter values.
+ */
+export type DefaultConfig = { [key: string]: string | number | boolean };

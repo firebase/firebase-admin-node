@@ -34,6 +34,9 @@ import {
   RemoteConfigApiClient
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import {
+  NamedCondition, ServerTemplate, ServerTemplateData, Version
+} from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
 
@@ -94,6 +97,44 @@ describe('RemoteConfig', () => {
       },
     },
     parameterGroups: PARAMETER_GROUPS,
+    etag: 'etag-123456789012-5',
+    version: VERSION_INFO,
+  };
+
+  const SERVER_REMOTE_CONFIG_RESPONSE: {
+    // This type is effectively a RemoteConfigServerTemplate, but with mutable fields
+    // to allow easier use from within the tests. An improvement would be to
+    // alter this into a helper that creates customized RemoteConfigTemplateContent based
+    // on the needs of the test, as that would ensure type-safety.
+    conditions?: Array<NamedCondition>;
+    parameters?: object | null;
+    etag: string;
+    version?: object;
+  } = {
+    conditions: [
+      {
+        name: 'ios',
+        condition: {
+          orCondition: {
+            conditions: [
+              {
+                andCondition: {
+                  conditions: [
+                    { true: {} }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+    ],
+    parameters: {
+      holiday_promo_enabled: {
+        defaultValue: { value: 'true' },
+        conditionalValues: { ios: { useInAppDefault: true } }
+      },
+    },
     etag: 'etag-123456789012-5',
     version: VERSION_INFO,
   };
@@ -508,6 +549,845 @@ describe('RemoteConfig', () => {
       expect(cond.name).to.equal('ios');
       expect(cond.expression).to.equal('device.os == \'ios\'');
       expect(cond.tagColor).to.equal('BLUE');
+    });
+  });
+
+  describe('getServerTemplate', () => {
+    const operationName = 'getServerTemplate';
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+
+      return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should resolve a server template on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(SERVER_REMOTE_CONFIG_RESPONSE as ServerTemplateData);
+      stubs.push(stub);
+
+      return remoteConfig.getServerTemplate()
+        .then((template) => {
+          expect(template.toJSON().conditions.length).to.equal(1);
+          expect(template.toJSON().conditions[0].name).to.equal('ios');
+          expect(template.toJSON().etag).to.equal('etag-123456789012-5');
+
+          const version = template.toJSON().version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
+
+          const key = 'holiday_promo_enabled';
+          const p1 = template.toJSON().parameters[key];
+          expect(p1.defaultValue).deep.equals({ value: 'true' });
+          expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+
+          const c = template.toJSON().conditions.find((c) => c.name === 'ios');
+          expect(c).to.be.not.undefined;
+          const cond = c as NamedCondition;
+          expect(cond.name).to.equal('ios');
+
+          const parsed = template.toJSON();
+          const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+          const expectedVersion = deepCopy(VERSION_INFO);
+          expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+          expectedTemplate.version = expectedVersion;
+          expect(parsed).deep.equals(expectedTemplate);
+        });
+    });
+
+    it('should set defaultConfig when passed', () => {
+      // Defines template with no parameters to demonstrate
+      // default config will be used instead,
+      const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      template.parameters = {};
+
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(template);
+      stubs.push(stub);
+
+      const defaultConfig = {
+        holiday_promo_enabled: false,
+        holiday_promo_discount: 20,
+      };
+
+      return remoteConfig.getServerTemplate({ defaultConfig })
+        .then((template) => {
+          const config = template.evaluate();
+          expect(config.getBoolean('holiday_promo_enabled')).to.equal(
+            defaultConfig.holiday_promo_enabled);
+          expect(config.getNumber('holiday_promo_discount')).to.equal(
+            defaultConfig.holiday_promo_discount);
+        });
+    });
+  });
+
+  describe('initServerTemplate', () => {
+    it('should set and instantiates template when passed', () => {
+      const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      template.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'shiba'
+          }
+        }
+      };
+      const initializedTemplate = remoteConfig.initServerTemplate({ template });
+      const parsed = initializedTemplate.toJSON();
+      const expectedVersion = deepCopy(VERSION_INFO);
+      expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+      template.version = expectedVersion as Version;
+      expect(parsed).deep.equals(deepCopy(template));
+    });
+
+    it('should set and instantiates template when json string is passed', () => {
+      const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      template.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'shiba'
+          },
+          description: 'Type of dog breed',
+          valueType: 'STRING'
+        }
+      };
+      const templateJson = JSON.stringify(template);
+      const initializedTemplate = remoteConfig.initServerTemplate({ template: templateJson });
+      const parsed = initializedTemplate.toJSON();
+      const expectedVersion = deepCopy(VERSION_INFO);
+      expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+      template.version = expectedVersion as Version;
+      expect(parsed).deep.equals(deepCopy(template));
+    });
+
+    describe('should throw error if invalid template JSON is passed', () => {
+      const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+      const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+
+      let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+      const jsonString = '{invalidJson: null}';
+      it('should throw if template is an invalid JSON', () => {
+        expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+          .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+      });
+
+      INVALID_PARAMETERS.forEach((invalidParameter) => {
+        sourceTemplate.parameters = invalidParameter;
+        const jsonString = JSON.stringify(sourceTemplate);
+        it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw('Remote Config parameters must be a non-null object');
+        });
+      });
+
+      sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+      INVALID_CONDITIONS.forEach((invalidConditions) => {
+        sourceTemplate.conditions = invalidConditions;
+        const jsonString = JSON.stringify(sourceTemplate);
+        it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw('Remote Config conditions must be an array');
+        });
+      });
+    });
+  });
+
+  describe('RemoteConfigServerTemplate', () => {
+    const SERVER_REMOTE_CONFIG_RESPONSE_2 = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+    SERVER_REMOTE_CONFIG_RESPONSE_2.parameters = {
+      dog_type: {
+        defaultValue: {
+          value: 'corgi'
+        }
+      },
+      dog_type_enabled: {
+        defaultValue: {
+          value: 'true'
+        }
+      },
+      dog_age: {
+        defaultValue: {
+          value: '22'
+        }
+      },
+      dog_jsonified: {
+        defaultValue: {
+          value: '{"name":"Taro","breed":"Corgi","age":1,"fluffiness":100}'
+        }
+      },
+      dog_use_inapp_default: {
+        defaultValue: {
+          useInAppDefault: true
+        }
+      },
+      dog_no_remote_default_value: {
+      }
+    };
+
+    describe('load', () => {
+      const operationName = 'getServerTemplate';
+
+      it('should propagate API errors', () => {
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .rejects(INTERNAL_ERROR);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+      });
+
+      it('should reject when API response is invalid', () => {
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(undefined);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate().should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid Remote Config template: undefined');
+      });
+
+      it('should reject when API response does not contain an ETag', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.etag = '';
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .should.eventually.be.rejected.and.have.property(
+            'message', `Invalid Remote Config template: ${JSON.stringify(response)}`);
+      });
+
+      it('should reject when API response does not contain valid parameters', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.parameters = null;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Remote Config parameters must be a non-null object');
+      });
+
+      it('should reject when API response does not contain valid conditions', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.conditions = Object();
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Remote Config conditions must be an array');
+      });
+
+      it('should resolve with parameters:{} when no parameters present in the response', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.parameters = undefined;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            // If parameters are not present in the response, we set it to an empty object.
+            expect(template.toJSON().parameters).deep.equals({});
+          });
+      });
+
+      it('should resolve with conditions:[] when no conditions present in the response', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.conditions = undefined;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            // If conditions are not present in the response, we set it to an empty array.
+            expect(template.toJSON().conditions).deep.equals([]);
+          });
+      });
+
+      it('should resolve a server template on success', () => {
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(SERVER_REMOTE_CONFIG_RESPONSE as ServerTemplateData);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            expect(template.toJSON().conditions.length).to.equal(1);
+            expect(template.toJSON().conditions[0].name).to.equal('ios');
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
+
+            const version = template.toJSON().version!;
+            expect(version.versionNumber).to.equal('86');
+            expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+            expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+            expect(version.updateUser).to.deep.equal({
+              email: 'firebase-adminsdk@gserviceaccount.com'
+            });
+            expect(version.description).to.equal('production version');
+            expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
+
+            const key = 'holiday_promo_enabled';
+            const p1 = template.toJSON().parameters[key];
+            expect(p1.defaultValue).deep.equals({ value: 'true' });
+            expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+
+            const c = template.toJSON().conditions.find((c) => c.name === 'ios');
+            expect(c).to.be.not.undefined;
+            const cond = c as NamedCondition;
+            expect(cond.name).to.equal('ios');
+            expect(cond.condition).deep.equals({
+              'orCondition': {
+                'conditions': [
+                  {
+                    'andCondition': {
+                      'conditions': [
+                        {
+                          'true': {}
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            });
+
+            const parsed = template.toJSON();
+            const expectedTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+            const expectedVersion = deepCopy(VERSION_INFO);
+            expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+            expectedTemplate.version = expectedVersion;
+            expect(parsed).deep.equals(expectedTemplate);
+          });
+      });
+
+      it('should resolve with template when Version updateTime contains 3 digits in fractional seconds', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        const versionInfo = deepCopy(VERSION_INFO);
+        versionInfo.updateTime = '2020-10-03T17:14:10.203Z';
+        response.version = versionInfo;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
+
+            const version = template.toJSON().version!;
+            expect(version.versionNumber).to.equal('86');
+            expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+            expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+            expect(version.updateUser).to.deep.equal({
+              email: 'firebase-adminsdk@gserviceaccount.com'
+            });
+            expect(version.description).to.equal('production version');
+            expect(version.updateTime).to.equal('Sat, 03 Oct 2020 17:14:10 GMT');
+          });
+      });
+
+      it('should resolve with template when Version updateTime contains 6 digits in fractional seconds', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        const versionInfo = deepCopy(VERSION_INFO);
+        versionInfo.updateTime = '2020-08-14T17:01:36.541527Z';
+        response.version = versionInfo;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
+
+            const version = template.toJSON().version!;
+            expect(version.versionNumber).to.equal('86');
+            expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+            expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+            expect(version.updateUser).to.deep.equal({
+              email: 'firebase-adminsdk@gserviceaccount.com'
+            });
+            expect(version.description).to.equal('production version');
+            expect(version.updateTime).to.equal('Fri, 14 Aug 2020 17:01:36 GMT');
+          });
+      });
+
+      it('should resolve with template when Version updateTime contains 9 digits in fractional seconds', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        const versionInfo = deepCopy(VERSION_INFO);
+        versionInfo.updateTime = '2020-11-15T06:57:26.342763941Z';
+        response.version = versionInfo;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, operationName)
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate()
+          .then((template) => {
+            expect(template.toJSON().etag).to.equal('etag-123456789012-5');
+
+            const version = template.toJSON().version!;
+            expect(version.versionNumber).to.equal('86');
+            expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+            expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+            expect(version.updateUser).to.deep.equal({
+              email: 'firebase-adminsdk@gserviceaccount.com'
+            });
+            expect(version.description).to.equal('production version');
+            expect(version.updateTime).to.equal('Sun, 15 Nov 2020 06:57:26 GMT');
+          });
+      });
+    });
+
+    describe('set', () => {
+      it('should set template when passed', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'shiba'
+            },
+            description: 'Type of dog breed',
+            valueType: 'STRING'
+          }
+        };
+        template.version = {
+          ...deepCopy(VERSION_INFO),
+          updateTime: new Date(VERSION_INFO.updateTime).toUTCString()
+        } as Version;
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        initializedTemplate.set(template);
+        const parsed = initializedTemplate.toJSON();
+        expect(parsed).deep.equals(template);
+      });
+
+      it('should set and instantiates template when json string is passed', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'shiba'
+            },
+            description: 'Type of dog breed',
+            valueType: 'STRING'
+          }
+        };
+        template.version = {
+          ...deepCopy(VERSION_INFO),
+          updateTime: new Date(VERSION_INFO.updateTime).toUTCString()
+        } as Version;
+        const templateJson = JSON.stringify(template);
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        initializedTemplate.set(templateJson);
+        const parsed = initializedTemplate.toJSON();
+        expect(parsed).deep.equals(template);
+      });
+
+      describe('should throw error if there are any JSON or tempalte parsing errors', () => {
+        const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+        const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+  
+        let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        const jsonString = '{invalidJson: null}';
+        it('should throw if template is an invalid JSON', () => {
+          expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+            .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+        });
+  
+        INVALID_PARAMETERS.forEach((invalidParameter) => {
+          sourceTemplate.parameters = invalidParameter;
+          const jsonString = JSON.stringify(sourceTemplate);
+          it(`should throw if the template is invalid - parameters is ${JSON.stringify(invalidParameter)}`, () => {
+            expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+              .to.throw('Remote Config parameters must be a non-null object');
+          });
+        });
+  
+        sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        INVALID_CONDITIONS.forEach((invalidConditions) => {
+          sourceTemplate.conditions = invalidConditions;
+          const jsonString = JSON.stringify(sourceTemplate);
+          it(`should throw if the template is invalid - conditions is ${JSON.stringify(invalidConditions)}`, () => {
+            expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
+              .to.throw('Remote Config conditions must be an array');
+          });
+        });
+      });
+
+      it('should throw if template is an invalid JSON', () => {
+        const jsonString = '{invalidJson: null}';
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        expect(() => initializedTemplate.set(jsonString))
+          .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
+      });
+    });
+
+    describe('evaluate', () => {
+      it('returns a config when template is present in cache', () => {
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
+          .resolves(SERVER_REMOTE_CONFIG_RESPONSE_2 as ServerTemplateData);
+        stubs.push(stub);
+        return remoteConfig.getServerTemplate()
+          .then((template: ServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.getString('dog_type')).to.equal('corgi');
+            expect(config.getBoolean('dog_type_enabled')).to.equal(true);
+            expect(config.getNumber('dog_age')).to.equal(22);
+          });
+      });
+
+      it('returns conditional value', () => {
+        const condition = {
+          name: 'is_true',
+          condition: {
+            orCondition: {
+              conditions: [
+                {
+                  andCondition: {
+                    conditions: [
+                      {
+                        name: '',
+                        true: {
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: {
+            conditions: [condition],
+            parameters: {
+              is_enabled: {
+                defaultValue: { value: 'false' },
+                conditionalValues: { is_true: { value: 'true' } }
+              },
+            },
+            etag: '123'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getBoolean('is_enabled')).to.be.true;
+      });
+
+      it('honors condition order', () => {
+        const template = remoteConfig.initServerTemplate({
+          template: {
+            conditions: [
+              {
+                name: 'is_true',
+                condition: {
+                  orCondition: {
+                    conditions: [
+                      {
+                        andCondition: {
+                          conditions: [
+                            {
+                              true: {
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                name: 'is_true_too',
+                condition: {
+                  orCondition: {
+                    conditions: [
+                      {
+                        andCondition: {
+                          conditions: [
+                            {
+                              true: {
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }],
+            parameters: {
+              dog_type: {
+                defaultValue: { value: 'chihuahua' },
+                conditionalValues: {
+                  // The is_true and is_true_too conditions both return true,
+                  // but is_true is first in the list, so the corresponding
+                  // value is selected.
+                  is_true_too: { value: 'dachshund' },
+                  is_true: { value: 'corgi' }
+                }
+              },
+            },
+            etag: '123'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getString('dog_type')).to.eq('corgi');
+      });
+
+      it('uses local default if parameter not in template', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {};
+
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
+          .resolves(template);
+        stubs.push(stub);
+
+        const defaultConfig = {
+          dog_coat: 'blue merle',
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
+          .then((template: ServerTemplate) => {
+            const config = template.evaluate();
+            expect(config.getString('dog_coat')).to.equal(defaultConfig.dog_coat);
+          });
+      });
+
+      it('uses local default when parameter is in template but default value is undefined', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_no_remote_default_value: {}
+        };
+
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
+          .resolves(template);
+        stubs.push(stub);
+
+        const defaultConfig = {
+          dog_no_remote_default_value: 'local default'
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
+          .then((template: ServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.getString('dog_no_remote_default_value')).to.equal(
+              defaultConfig.dog_no_remote_default_value);
+          });
+      });
+
+      it('uses local default when in-app default value specified', () => {
+        const template = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        template.parameters = {
+          dog_no_remote_default_value: {}
+        };
+
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
+          .resolves(template);
+        stubs.push(stub);
+
+        const defaultConfig = {
+          dog_use_inapp_default: '🐕'
+        };
+
+        return remoteConfig.getServerTemplate({ defaultConfig })
+          .then((template: ServerTemplate) => {
+            const config = template.evaluate!();
+            expect(config.getString('dog_use_inapp_default')).to.equal(
+              defaultConfig.dog_use_inapp_default);
+          });
+      });
+
+      it('uses local default when in-app default value specified after loading remote values', async () => {
+        // We had a bug caused by forgetting the first argument to
+        // Object.assign. This resulted in defaultConfig being overwritten
+        // by the remote values. So this test asserts we can use in-app
+        // default after loading remote values.
+        const template = remoteConfig.initServerTemplate({
+          defaultConfig: {
+            dog_type: 'corgi'
+          }
+        });
+
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+
+        response.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          },
+        }
+
+        template.set(response as ServerTemplateData);
+
+        let config = template.evaluate();
+
+        expect(config.getString('dog_type')).to.equal('pug');
+
+        response.parameters = {
+          dog_type: {
+            defaultValue: {
+              useInAppDefault: true
+            }
+          },
+        }
+
+        template.set(response as ServerTemplateData);
+
+        config = template.evaluate();
+
+        expect(config.getString('dog_type')).to.equal('corgi');
+      });
+
+      it('overrides local default when remote value exists', () => {
+        const response = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
+        response.parameters = {
+          dog_type_enabled: {
+            defaultValue: {
+              // Defines remote value
+              value: 'true'
+            }
+          },
+        }
+
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
+          .resolves(response as ServerTemplateData);
+        stubs.push(stub);
+
+        return remoteConfig.getServerTemplate({
+          defaultConfig: {
+            // Defines local default
+            dog_type_enabled: false
+          }
+        })
+          .then((template: ServerTemplate) => {
+            const config = template.evaluate();
+            // Asserts remote value overrides local default.
+            expect(config.getBoolean('dog_type_enabled')).to.be.true;
+          });
+      });
+    });
+  });
+
+  // Note the static source is set in the getValue() method, but the other sources
+  // are set in the evaluate() method, so these tests span a couple layers.
+  describe('ServerConfig', () => {
+    describe('getValue', () => {
+      it('should return static when default and remote are not defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        // Omits in-app default values.
+        const template = remoteConfig.initServerTemplate({ template: templateData });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('');
+        expect(value.getSource()).to.equal('static');
+      });
+  
+      it('should return default value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Omits remote parameter values.
+        templateData.parameters = {
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('shiba');
+        expect(value.getSource()).to.equal('default');
+      });
+  
+      it('should return remote value when it is defined', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        // Defines remote parameter values.
+        templateData.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          }
+        };
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          // Defines in-app default values.
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        const value = config.getValue('dog_type');
+        expect(value.asString()).to.equal('pug');
+        expect(value.getSource()).to.equal('remote');
+      });
+    });
+
+    describe('getString', () => {
+      it('returns a string value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_type: 'shiba'
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getString('dog_type')).to.equal('shiba');
+      });
+    });
+
+    describe('getNumber', () => {
+      it('returns a numeric value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_age: 12
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getNumber('dog_age')).to.equal(12);
+      });
+    });
+
+    describe('getBoolean', () => {
+      it('returns a boolean value', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        const template = remoteConfig.initServerTemplate({
+          template: templateData,
+          defaultConfig: {
+            dog_is_cute: true
+          }
+        });
+        const config = template.evaluate();
+        expect(config.getBoolean('dog_is_cute')).to.be.true;
+      });
     });
   });
 
