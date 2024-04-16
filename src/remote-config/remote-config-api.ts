@@ -373,7 +373,7 @@ export type ServerTemplateDataType = ServerTemplateData | string;
 
 /**
  * Represents optional arguments that can be used when instantiating
- * {@link ServerTemplate} synchonously.
+ * {@link ServerTemplate} synchronously.
  */
 export interface InitServerTemplateOptions extends GetServerTemplateOptions {
 
