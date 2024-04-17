@@ -20,7 +20,7 @@ import * as sinon from 'sinon';
 import * as mocks from '../resources/mocks';
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/app/firebase-app';
-import { HttpError, HttpResponse } from '../../src/utils/api-request';
+import { HttpError, RequestResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
@@ -67,9 +67,9 @@ export function stubGetAccessToken(accessToken?: string, app?: FirebaseApp): sin
  * @param {object | string} data Data to be included in the response body.
  * @param {number=} status HTTP status code (defaults to 200).
  * @param {*=} headers HTTP headers to be included in the ersponse.
- * @return {HttpResponse} An HTTP response object.
+ * @return {RequestResponse} An HTTP response object.
  */
-export function responseFrom(data: object | string, status = 200, headers: any = {}): HttpResponse {
+export function responseFrom(data: object | string, status = 200, headers: any = {}): RequestResponse {
   let responseData: any;
   let responseText: string;
   if (typeof data === 'object') {

@@ -16,7 +16,7 @@
 
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
+import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, RequestResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -166,7 +166,7 @@ export class RemoteConfigApiClient {
       });
   }
 
-  private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<HttpResponse> {
+  private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<RequestResponse> {
     let path = 'remoteConfig';
     if (validateOnly) {
       path += '?validate_only=true';
@@ -240,10 +240,10 @@ export class RemoteConfigApiClient {
    * Creates a RemoteConfigTemplate from the API response.
    * If provided, customEtag is used instead of the etag returned in the API response.
    *
-   * @param {HttpResponse} resp API response object.
+   * @param {RequestResponse} resp API response object.
    * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
    */
-  private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
+  private toRemoteConfigTemplate(resp: RequestResponse, customEtag?: string): RemoteConfigTemplate {
     const etag = (typeof customEtag === 'undefined') ? resp.headers['etag'] : customEtag;
     this.validateEtag(etag);
     return {

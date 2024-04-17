@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse
+  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
@@ -184,7 +184,7 @@ export class AppCheckApiClient {
    * @param resp - API response object.
    * @returns An AppCheckToken instance.
    */
-  private toAppCheckToken(resp: HttpResponse): AppCheckToken {
+  private toAppCheckToken(resp: RequestResponse): AppCheckToken {
     const token = resp.data.token;
     // `ttl` is a string with the suffix "s" preceded by the number of seconds,
     // with nanoseconds expressed as fractional seconds.

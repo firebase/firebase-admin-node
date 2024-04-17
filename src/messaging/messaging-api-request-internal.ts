@@ -18,12 +18,14 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, Http2RequestConfig, HttpError, RequestResponse,
+  AuthorizedHttp2Client,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
 import { getSdkVersion } from '../utils/index';
 import { SendResponse, BatchResponse } from './messaging-api';
+import { Http2SessionHandler } from './messaging';
 
 
 // FCM backend constants
@@ -44,6 +46,7 @@ const LEGACY_FIREBASE_MESSAGING_HEADERS = {
  */
 export class FirebaseMessagingRequestHandler {
   private readonly httpClient: AuthorizedHttpClient;
+  private readonly http2Client: AuthorizedHttp2Client;
   private readonly batchClient: BatchRequestClient;
 
   /**
@@ -52,6 +55,7 @@ export class FirebaseMessagingRequestHandler {
    */
   constructor(app: App) {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.http2Client = new AuthorizedHttp2Client(app as FirebaseApp);
     this.batchClient = new BatchRequestClient(
       this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
@@ -104,7 +108,7 @@ export class FirebaseMessagingRequestHandler {
    * @param requestData - The request data.
    * @returns A promise that resolves with the {@link SendResponse}.
    */
-  public invokeRequestHandlerForSendResponse(host: string, path: string, requestData: object): Promise<SendResponse> {
+  public invokeHttpRequestHandlerForSendResponse(host: string, path: string, requestData: object): Promise<SendResponse> {
     const request: HttpRequestConfig = {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
@@ -124,6 +128,28 @@ export class FirebaseMessagingRequestHandler {
       });
   }
 
+  public invokeHttp2RequestHandlerForSendResponse(host: string, path: string, requestData: object, http2SessionHandler: Http2SessionHandler): Promise<SendResponse> {
+    const request: Http2RequestConfig = {
+      method: FIREBASE_MESSAGING_HTTP_METHOD,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+      http2SessionHandler: http2SessionHandler
+    };
+    return this.http2Client.send(request).then((response) => {
+      return this.buildSendResponse(response);
+    })
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          return this.buildSendResponseFromError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
+      });
+  }
+
+
   /**
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
    * a BatchResponse object.
@@ -133,8 +159,8 @@ export class FirebaseMessagingRequestHandler {
    */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
     return this.batchClient.send(requests)
-      .then((responses: HttpResponse[]) => {
-        return responses.map((part: HttpResponse) => {
+      .then((responses: RequestResponse[]) => {
+        return responses.map((part: RequestResponse) => {
           return this.buildSendResponse(part);
         });
       }).then((responses: SendResponse[]) => {
@@ -153,7 +179,7 @@ export class FirebaseMessagingRequestHandler {
       });
   }
 
-  private buildSendResponse(response: HttpResponse): SendResponse {
+  private buildSendResponse(response: RequestResponse): SendResponse {
     const result: SendResponse = {
       success: response.status === 200,
     };

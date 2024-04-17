@@ -15,7 +15,7 @@
  */
 
 import {
-  HttpClient, HttpRequestConfig, HttpResponse, parseHttpResponse,
+  HttpClient, HttpRequestConfig, RequestResponse, parseHttpResponse,
 } from '../utils/api-request';
 import { FirebaseAppError, AppErrorCodes } from '../utils/error';
 
@@ -59,7 +59,7 @@ export class BatchRequestClient {
    * @param requests - An array of sub requests to send.
    * @returns A promise that resolves when the send operation is complete.
    */
-  public send(requests: SubRequest[]): Promise<HttpResponse[]> {
+  public send(requests: SubRequest[]): Promise<RequestResponse[]> {
     requests = requests.map((req) => {
       req.headers = Object.assign({}, this.commonHeaders, req.headers);
       return req;

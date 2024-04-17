@@ -23,6 +23,7 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
+import http2 = require('http2')
 
 import {
   BatchResponse,
@@ -183,6 +184,58 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
   return result;
 }
 
+export class Http2SessionHandler {
+  private http2Session: http2.ClientHttp2Session
+  constructor(){
+    this.http2Session = this.createSession()
+  }
+
+  public createSession(): http2.ClientHttp2Session {
+    if (!this.http2Session || this.isClosed ) {
+      const settings: http2.Settings = {
+        maxConcurrentStreams: 500,
+      }
+      const opts: http2.SecureClientSessionOptions = {
+        peerMaxConcurrentStreams: 100,
+        timeout: 5000,
+        sessionTimeout: 5000,
+        settings: settings,
+        ALPNProtocols: ['h2']
+      }
+      const http2Session = http2.connect(`https://${FCM_SEND_HOST}`, opts)
+      http2Session.on('goaway', (errorCode, lastStreamID, opaqueData) => {
+        // console.log("goaway", errorCode, lastStreamID, opaqueData.toString())
+      })
+      http2Session.on('timeout', (error) => {
+        // console.log("timeout", error)
+      })
+      http2Session.on('connect', (session, socket) => {
+        // console.log("connect")
+      })
+      http2Session.on('remoteSettings', (settings) => {
+        // console.log("remote settings", settings)
+      })
+      http2Session.on('localSettings', (settings) => {
+        // console.log("local settings", settings)
+      })
+      return http2Session
+    }
+    return this.http2Session
+  }
+
+  get session(): http2.ClientHttp2Session {
+    return this.http2Session
+  }
+
+  get isClosed(): boolean {
+    return this.http2Session.closed
+  }
+
+  public close() {
+    // this.http2Session.destroy()
+    this.http2Session.close()
+  }
+}
 
 /**
  * Messaging service bound to the provided app.
@@ -269,7 +322,7 @@ export class Messaging {
   * @returns A Promise fulfilled with an object representing the result of the
   *   send operation.
   */
-  public sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
+  public sendEach(messages: Message[], dryRun?: boolean, enableHttp2?: boolean): Promise<BatchResponse> {
     if (validator.isArray(messages) && messages.constructor !== Array) {
       // In more recent JS specs, an array-like object might have a constructor that is not of
       // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
@@ -291,7 +344,12 @@ export class Messaging {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
+    if (typeof enableHttp2 !== 'undefined' && !validator.isBoolean(enableHttp2)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'enableHttp2 must be a boolean');
+    }
 
+    const http2SessionHandler: Http2SessionHandler | undefined = enableHttp2 ? new Http2SessionHandler() : undefined
     return this.getUrlPath()
       .then((urlPath) => {
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
@@ -300,7 +358,11 @@ export class Messaging {
           if (dryRun) {
             request.validate_only = true;
           }
-          return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          if (http2SessionHandler){
+            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+          } else {
+            return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          }
         });
         return Promise.allSettled(requests);
       }).then((results) => {
@@ -318,7 +380,11 @@ export class Messaging {
           successCount,
           failureCount: responses.length - successCount,
         };
-      });
+      }).finally(() => {
+        if (http2SessionHandler){
+          http2SessionHandler.close()
+        }
+      })
   }
 
   /**

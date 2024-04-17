@@ -22,7 +22,7 @@ import path = require('path');
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
+import { HttpClient, HttpRequestConfig, HttpError, RequestResponse } from '../utils/api-request';
 import * as util from '../utils/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
@@ -562,7 +562,7 @@ function getErrorMessage(err: Error): string {
  * the response is JSON-formatted, looks up the error and error_description fields sent by the
  * Google Auth servers. Otherwise returns the entire response payload as the error detail.
  */
-function getDetailFromResponse(response: HttpResponse): string {
+function getDetailFromResponse(response: RequestResponse): string {
   if (response.isJson() && response.data.error) {
     const json = response.data;
     let detail = json.error;
