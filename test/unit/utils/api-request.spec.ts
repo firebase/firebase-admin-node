@@ -28,8 +28,8 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
-  HttpResponse, parseHttpResponse, RetryConfig, defaultRetryConfig,
+  ApiSettings, HttpClient, RequestResponseError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
+  RequestResponse, parseHttpResponse, RetryConfig, defaultRetryConfig,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
@@ -625,7 +625,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 400.');
       const resp = err.response;
       expect(resp.status).to.equal(400);
@@ -642,7 +642,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 500.');
       const resp = err.response;
       expect(resp.status).to.equal(500);
@@ -663,7 +663,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 500.');
       const resp = err.response;
       expect(resp.status).to.equal(500);
@@ -757,7 +757,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -889,7 +889,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -915,7 +915,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -939,7 +939,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -970,7 +970,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -1000,7 +1000,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).catch((err: HttpError) => {
+    }).catch((err: RequestResponseError) => {
       expect(err.message).to.equal('Server responded with status 503.');
       const resp = err.response;
       expect(resp.status).to.equal(503);
@@ -1035,7 +1035,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).then((resp: HttpResponse) => {
+    }).then((resp: RequestResponse) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
@@ -1071,7 +1071,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).then((resp: HttpResponse) => {
+    }).then((resp: RequestResponse) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
@@ -1105,7 +1105,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).then((resp: HttpResponse) => {
+    }).then((resp: RequestResponse) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
@@ -1137,7 +1137,7 @@ describe('HttpClient', () => {
     return client.send({
       method: 'GET',
       url: mockUrl,
-    }).then((resp: HttpResponse) => {
+    }).then((resp: RequestResponse) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);

@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError, RequestResponse,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
@@ -75,20 +75,20 @@ export class FirebaseMessagingRequestHandler {
     return this.httpClient.send(request).then((response) => {
       // Send non-JSON responses to the catch() below where they will be treated as errors.
       if (!response.isJson()) {
-        throw new HttpError(response);
+        throw new RequestResponseError(response);
       }
 
       // Check for backend errors in the response.
       const errorCode = getErrorCode(response.data);
       if (errorCode) {
-        throw new HttpError(response);
+        throw new RequestResponseError(response);
       }
 
       // Return entire response.
       return response.data;
     })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           throw createFirebaseError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -116,7 +116,7 @@ export class FirebaseMessagingRequestHandler {
       return this.buildSendResponse(response);
     })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           return this.buildSendResponseFromError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -133,8 +133,8 @@ export class FirebaseMessagingRequestHandler {
    */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
     return this.batchClient.send(requests)
-      .then((responses: HttpResponse[]) => {
-        return responses.map((part: HttpResponse) => {
+      .then((responses: RequestResponse[]) => {
+        return responses.map((part: RequestResponse) => {
           return this.buildSendResponse(part);
         });
       }).then((responses: SendResponse[]) => {
@@ -145,7 +145,7 @@ export class FirebaseMessagingRequestHandler {
           failureCount: responses.length - successCount,
         };
       }).catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           throw createFirebaseError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -153,19 +153,19 @@ export class FirebaseMessagingRequestHandler {
       });
   }
 
-  private buildSendResponse(response: HttpResponse): SendResponse {
+  private buildSendResponse(response: RequestResponse): SendResponse {
     const result: SendResponse = {
       success: response.status === 200,
     };
     if (result.success) {
       result.messageId = response.data.name;
     } else {
-      result.error = createFirebaseError(new HttpError(response));
+      result.error = createFirebaseError(new RequestResponseError(response));
     }
     return result;
   }
 
-  private buildSendResponseFromError(err: HttpError): SendResponse {
+  private buildSendResponseFromError(err: RequestResponseError): SendResponse {
     return {
       success: false,
       error: createFirebaseError(err)

@@ -22,7 +22,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
 } from '../utils/api-request';
 import * as utils from '../utils/index';
 
@@ -1933,7 +1933,7 @@ export abstract class AbstractAuthRequestHandler {
         return response.data;
       })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           const error = err.response.data;
           const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
           if (!errorCode) {

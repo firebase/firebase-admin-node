@@ -32,9 +32,9 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 export type ApiCallbackFunction = (data: object) => void;
 
 /**
- * Configuration for constructing a new HTTP request.
+ * Base configuration for constructing a new request.
  */
-export interface HttpRequestConfig {
+export interface BaseRequestConfig {
   method: HttpMethod;
   /** Target URL of the request. Should be a well-formed URL including protocol, hostname, port and path. */
   url: string;
@@ -42,13 +42,21 @@ export interface HttpRequestConfig {
   data?: string | object | Buffer | null;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
-  httpAgent?: http.Agent;
 }
 
 /**
- * Represents an HTTP response received from a remote server.
+ * Configuration for constructing a new HTTP request.
  */
-export interface HttpResponse {
+export interface HttpRequestConfig extends BaseRequestConfig {
+  httpAgent?: http.Agent;
+}
+
+type RequestConfig = HttpRequestConfig
+
+/**
+ * Represents an HTTP or HTTP/2 response received from a remote server.
+ */
+export interface RequestResponse {
   readonly status: number;
   readonly headers: any;
   /** Response data as a raw string. */
@@ -64,23 +72,33 @@ export interface HttpResponse {
   isJson(): boolean;
 }
 
-interface LowLevelResponse {
+interface BaseLowLevelResponse {
   status: number;
-  headers: http.IncomingHttpHeaders;
-  request: http.ClientRequest | null;
   data?: string;
   multipart?: Buffer[];
+}
+
+interface LowLevelHttpResponse extends BaseLowLevelResponse {
+  headers: http.IncomingHttpHeaders;
+  request: http.ClientRequest | null;
   config: HttpRequestConfig;
 }
 
-interface LowLevelError extends Error {
-  config: HttpRequestConfig;
+type LowLevelResponse = LowLevelHttpResponse
+
+interface BaseLowLevelError extends Error {
   code?: string;
+}
+
+interface LowLevelHttpError extends BaseLowLevelError {
+  config: HttpRequestConfig;
   request?: http.ClientRequest;
   response?: LowLevelResponse;
 }
 
-class DefaultHttpResponse implements HttpResponse {
+type LowLevelError = LowLevelHttpError
+
+class DefaultRequestResponse implements RequestResponse {
 
   public readonly status: number;
   public readonly headers: any;
@@ -91,7 +109,7 @@ class DefaultHttpResponse implements HttpResponse {
   private readonly request: string;
 
   /**
-   * Constructs a new HttpResponse from the given LowLevelResponse.
+   * Constructs a new RequestResponse from the given LowLevelResponse.
    */
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
@@ -127,10 +145,10 @@ class DefaultHttpResponse implements HttpResponse {
 }
 
 /**
- * Represents a multipart HTTP response. Parts that constitute the response body can be accessed
+ * Represents a multipart HTTP or HTTP/2 response. Parts that constitute the response body can be accessed
  * via the multipart getter. Getters for text and data throw errors.
  */
-class MultipartHttpResponse implements HttpResponse {
+class MultipartRequestResponse implements RequestResponse {
 
   public readonly status: number;
   public readonly headers: any;
@@ -161,23 +179,23 @@ class MultipartHttpResponse implements HttpResponse {
   }
 }
 
-export class HttpError extends Error {
-  constructor(public readonly response: HttpResponse) {
+export class RequestResponseError extends Error {
+  constructor(public readonly response: RequestResponse) {
     super(`Server responded with status ${response.status}.`);
     // Set the prototype so that instanceof checks will work correctly.
     // See: https://github.com/Microsoft/TypeScript/issues/13965
-    Object.setPrototypeOf(this, HttpError.prototype);
+    Object.setPrototypeOf(this, RequestResponseError.prototype);
   }
 }
 
 /**
- * Specifies how failing HTTP requests should be retried.
+ * Specifies how failing HTTP and HTTP/2 requests should be retried.
  */
 export interface RetryConfig {
   /** Maximum number of times to retry a given request. */
   maxRetries: number;
 
-  /** HTTP status codes that should be retried. */
+  /** Response status codes that should be retried. */
   statusCodes?: number[];
 
   /** Low-level I/O error codes that should be retried. */
@@ -195,8 +213,8 @@ export interface RetryConfig {
 }
 
 /**
- * Default retry configuration for HTTP requests. Retries up to 4 times on connection reset and timeout errors
- * as well as HTTP 503 errors. Exposed as a function to ensure that every HttpClient gets its own RetryConfig
+ * Default retry configuration for HTTP and HTTP/2 requests. Retries up to 4 times on connection reset and timeout errors
+ * as well as 503 errors. Exposed as a function to ensure that every RequestClient gets its own RetryConfig
  * instance.
  */
 export function defaultRetryConfig(): RetryConfig {
@@ -241,76 +259,24 @@ function validateRetryConfig(retry: RetryConfig): void {
   }
 }
 
-export class HttpClient {
+class RequestClient {
+  protected readonly retry: RetryConfig;
 
-  constructor(private readonly retry: RetryConfig | null = defaultRetryConfig()) {
-    if (this.retry) {
+  constructor(retry: RetryConfig | null = defaultRetryConfig()) {
+    if (retry) {
+      this.retry = retry
       validateRetryConfig(this.retry);
     }
   }
 
-  /**
-   * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
-   * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
-   * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError. If a request fails
-   * due to a low-level network error, transparently retries the request once before rejecting the promise.
-   *
-   * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
-   * content-type header will also be automatically set in this case. For all other payload types, the content-type
-   * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
-   * and pass as a string or a Buffer along with the appropriate content-type header.
-   *
-   * @param config - HTTP request to be sent.
-   * @returns A promise that resolves with the response details.
-   */
-  public send(config: HttpRequestConfig): Promise<HttpResponse> {
-    return this.sendWithRetry(config);
-  }
-
-  /**
-   * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
-   * RetryConfig set on the HttpClient.
-   *
-   * @param config - HTTP request to be sent.
-   * @param retryAttempts - Number of retries performed up to now.
-   * @returns A promise that resolves with the response details.
-   */
-  private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
-    return AsyncHttpCall.invoke(config)
-      .then((resp) => {
-        return this.createHttpResponse(resp);
-      })
-      .catch((err: LowLevelError) => {
-        const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
-        if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
-          return this.waitForRetry(delayMillis).then(() => {
-            return this.sendWithRetry(config, retryAttempts + 1);
-          });
-        }
-
-        if (err.response) {
-          throw new HttpError(this.createHttpResponse(err.response));
-        }
-
-        if (err.code === 'ETIMEDOUT') {
-          throw new FirebaseAppError(
-            AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
-        }
-        throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
-      });
-  }
-
-  private createHttpResponse(resp: LowLevelResponse): HttpResponse {
+  protected createRequestResponse(resp: LowLevelResponse): RequestResponse {
     if (resp.multipart) {
-      return new MultipartHttpResponse(resp);
+      return new MultipartRequestResponse(resp);
     }
-    return new DefaultHttpResponse(resp);
+    return new DefaultRequestResponse(resp);
   }
 
-  private waitForRetry(delayMillis: number): Promise<void> {
+  protected waitForRetry(delayMillis: number): Promise<void> {
     if (delayMillis > 0) {
       return new Promise((resolve) => {
         setTimeout(resolve, delayMillis);
@@ -328,7 +294,7 @@ export class HttpClient {
    * @returns A 2-tuple where the 1st element is the duration to wait before another retry, and the
    *     2nd element is a boolean indicating whether the request is eligible for a retry or not.
    */
-  private getRetryDelayMillis(retryAttempts: number, err: LowLevelError): [number, boolean] {
+  protected getRetryDelayMillis(retryAttempts: number, err: LowLevelError): [number, boolean] {
     if (!this.isRetryEligible(retryAttempts, err)) {
       return [0, false];
     }
@@ -344,7 +310,7 @@ export class HttpClient {
     return [this.backOffDelayMillis(retryAttempts), true];
   }
 
-  private isRetryEligible(retryAttempts: number, err: LowLevelError): boolean {
+  protected isRetryEligible(retryAttempts: number, err: LowLevelError): boolean {
     if (!this.retry) {
       return false;
     }
@@ -367,10 +333,10 @@ export class HttpClient {
   }
 
   /**
-   * Parses the Retry-After HTTP header as a milliseconds value. Return value is negative if the Retry-After header
+   * Parses the Retry-After header as a milliseconds value. Return value is negative if the Retry-After header
    * contains an expired timestamp or otherwise malformed.
    */
-  private parseRetryAfterIntoMillis(retryAfter: string): number {
+  protected parseRetryAfterIntoMillis(retryAfter: string): number {
     const delaySeconds: number = parseInt(retryAfter, 10);
     if (!isNaN(delaySeconds)) {
       return delaySeconds * 1000;
@@ -383,7 +349,7 @@ export class HttpClient {
     return -1;
   }
 
-  private backOffDelayMillis(retryAttempts: number): number {
+  protected backOffDelayMillis(retryAttempts: number): number {
     if (retryAttempts === 0) {
       return 0;
     }
@@ -398,15 +364,76 @@ export class HttpClient {
   }
 }
 
+export class HttpClient extends RequestClient {
+
+  constructor(retry?: RetryConfig | null) {
+    super(retry)
+  }
+
+  /**
+   * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
+   * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
+   * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError. If a request fails
+   * due to a low-level network error, transparently retries the request once before rejecting the promise.
+   *
+   * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
+   * content-type header will also be automatically set in this case. For all other payload types, the content-type
+   * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
+   * and pass as a string or a Buffer along with the appropriate content-type header.
+   *
+   * @param config - HTTP request to be sent.
+   * @returns A promise that resolves with the response details.
+   */
+  public send(config: HttpRequestConfig): Promise<RequestResponse> {
+    return this.sendWithRetry(config);
+  }
+
+  /**
+   * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
+   * RetryConfig set on the HttpClient.
+   *
+   * @param config - HTTP request to be sent.
+   * @param retryAttempts - Number of retries performed up to now.
+   * @returns A promise that resolves with the response details.
+   */
+  private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<RequestResponse> {
+    return AsyncHttpCall.invoke(config)
+      .then((resp) => {
+        return this.createRequestResponse(resp);
+      })
+      .catch((err: LowLevelError) => {
+        const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+        if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
+          return this.waitForRetry(delayMillis).then(() => {
+            return this.sendWithRetry(config, retryAttempts + 1);
+          });
+        }
+
+        if (err.response) {
+          throw new RequestResponseError(this.createRequestResponse(err.response));
+        }
+
+        if (err.code === 'ETIMEDOUT') {
+          throw new FirebaseAppError(
+            AppErrorCodes.NETWORK_TIMEOUT,
+            `Error while making request: ${err.message}.`);
+        }
+        throw new FirebaseAppError(
+          AppErrorCodes.NETWORK_ERROR,
+          `Error while making request: ${err.message}. Error code: ${err.code}`);
+      });
+  }
+}
+
 /**
- * Parses a full HTTP response message containing both a header and a body.
+ * Parses a full HTTP or HTTP/2 response message containing both a header and a body.
  *
- * @param response - The HTTP response to be parsed.
- * @param config - The request configuration that resulted in the HTTP response.
- * @returns An object containing the parsed HTTP status, headers and the body.
+ * @param response - The HTTP or HTTP/2 response to be parsed.
+ * @param config - The request configuration that resulted in the HTTP or HTTP/2 response.
+ * @returns An object containing the response's parsed status, headers and the body.
  */
 export function parseHttpResponse(
-  response: string | Buffer, config: HttpRequestConfig): HttpResponse {
+  response: string | Buffer, config: RequestConfig): RequestResponse {
 
   const responseText: string = validator.isBuffer(response) ?
     response.toString('utf-8') : response as string;
@@ -442,7 +469,126 @@ export function parseHttpResponse(
   if (!validator.isNumber(lowLevelResponse.status)) {
     throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Malformed HTTP status line.');
   }
-  return new DefaultHttpResponse(lowLevelResponse);
+  return new DefaultRequestResponse(lowLevelResponse);
+}
+
+/**
+ * A helper class for common functionality needed to send requests over the wire.
+ * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
+ */
+class AsyncRequestCall {
+  protected config: HttpRequestConfigImpl;
+  protected resolve: (_: any) => void;
+  protected reject: (_: any) => void;
+  protected options: https.RequestOptions;
+  protected entity: Buffer | undefined;
+  protected promise: Promise<LowLevelResponse>;
+
+  protected handleMultipartResponse(
+    response: LowLevelResponse, respStream: Readable, boundary: string): void {
+
+    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const multipartParser = new busboy.Dicer({ boundary });
+    const responseBuffer: Buffer[] = [];
+    multipartParser.on('part', (part: any) => {
+      const tempBuffers: Buffer[] = [];
+
+      part.on('data', (partData: Buffer) => {
+        tempBuffers.push(partData);
+      });
+
+      part.on('end', () => {
+        responseBuffer.push(Buffer.concat(tempBuffers));
+      });
+    });
+
+    multipartParser.on('finish', () => {
+      response.data = undefined;
+      response.multipart = responseBuffer;
+      this.finalizeResponse(response);
+    });
+
+    respStream.pipe(multipartParser);
+  }
+
+  protected handleRegularResponse(response: LowLevelResponse, respStream: Readable): void {
+    const responseBuffer: Buffer[] = [];
+    respStream.on('data', (chunk: Buffer) => {
+      responseBuffer.push(chunk);
+    });
+
+    respStream.on('error', (err) => {
+      const req = response.request;
+      if (req && req.destroyed) {
+        return;
+      }
+      this.enhanceAndReject(err, null, req);
+    });
+
+    respStream.on('end', () => {
+      response.data = Buffer.concat(responseBuffer).toString();
+      this.finalizeResponse(response);
+    });
+  }
+
+  /**
+   * Finalizes the current request call in-flight by either resolving or rejecting the associated
+   * promise. In the event of an error, adds additional useful information to the returned error.
+   */
+  protected finalizeResponse(response: LowLevelResponse): void {
+    if (response.status >= 200 && response.status < 300) {
+      this.resolve(response);
+    } else {
+      this.rejectWithError(
+        'Request failed with status code ' + response.status,
+        null,
+        response.request,
+        response,
+      );
+    }
+  }
+
+  /**
+   * Creates a new error from the given message, and enhances it with other information available.
+   * Then the promise associated with this request call is rejected with the resulting error.
+   */
+  protected rejectWithError(
+    message: string,
+    code?: string | null,
+    request?: http.ClientRequest | null,
+    response?: LowLevelResponse): void {
+
+    const error = new Error(message);
+    this.enhanceAndReject(error, code, request, response);
+  }
+
+  protected enhanceAndReject(
+    error: any,
+    code?: string | null,
+    request?: http.ClientRequest | null,
+    response?: LowLevelResponse): void {
+
+    this.reject(this.enhanceError(error, code, request, response));
+  }
+
+  /**
+   * Enhances the given error by adding more information to it. Specifically, the request config,
+   * the underlying request and response will be attached to the error.
+   */
+  protected enhanceError(
+    error: any,
+    code?: string | null,
+    request?: http.ClientRequest | null,
+    response?: LowLevelResponse): LowLevelError {
+
+    error.config = this.config;
+    if (code) {
+      error.code = code;
+    }
+    error.request = request;
+    error.response = response;
+    return error;
+  }
 }
 
 /**
@@ -450,16 +596,7 @@ export function parseHttpResponse(
  * http and https packages of Node.js, providing content processing, timeouts and error handling.
  * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
-class AsyncHttpCall {
-
-  private readonly config: HttpRequestConfigImpl;
-  private readonly options: https.RequestOptions;
-  private readonly entity: Buffer | undefined;
-  private readonly promise: Promise<LowLevelResponse>;
-
-  private resolve: (_: any) => void;
-  private reject: (_: any) => void;
-
+class AsyncHttpCall extends AsyncRequestCall {
   /**
    * Sends an HTTP request based on the provided configuration.
    */
@@ -468,6 +605,7 @@ class AsyncHttpCall {
   }
 
   private constructor(config: HttpRequestConfig) {
+    super()
     try {
       this.config = new HttpRequestConfigImpl(config);
       this.options = this.config.buildRequestOptions();
@@ -581,121 +719,16 @@ class AsyncHttpCall {
     }
     return respStream;
   }
-
-  private handleMultipartResponse(
-    response: LowLevelResponse, respStream: Readable, boundary: string): void {
-
-    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new busboy.Dicer({ boundary });
-    const responseBuffer: Buffer[] = [];
-    multipartParser.on('part', (part: any) => {
-      const tempBuffers: Buffer[] = [];
-
-      part.on('data', (partData: Buffer) => {
-        tempBuffers.push(partData);
-      });
-
-      part.on('end', () => {
-        responseBuffer.push(Buffer.concat(tempBuffers));
-      });
-    });
-
-    multipartParser.on('finish', () => {
-      response.data = undefined;
-      response.multipart = responseBuffer;
-      this.finalizeResponse(response);
-    });
-
-    respStream.pipe(multipartParser);
-  }
-
-  private handleRegularResponse(response: LowLevelResponse, respStream: Readable): void {
-    const responseBuffer: Buffer[] = [];
-    respStream.on('data', (chunk: Buffer) => {
-      responseBuffer.push(chunk);
-    });
-
-    respStream.on('error', (err) => {
-      const req: http.ClientRequest | null = response.request;
-      if (req && req.aborted) {
-        return;
-      }
-      this.enhanceAndReject(err, null, req);
-    });
-
-    respStream.on('end', () => {
-      response.data = Buffer.concat(responseBuffer).toString();
-      this.finalizeResponse(response);
-    });
-  }
-
-  /**
-   * Finalizes the current HTTP call in-flight by either resolving or rejecting the associated
-   * promise. In the event of an error, adds additional useful information to the returned error.
-   */
-  private finalizeResponse(response: LowLevelResponse): void {
-    if (response.status >= 200 && response.status < 300) {
-      this.resolve(response);
-    } else {
-      this.rejectWithError(
-        'Request failed with status code ' + response.status,
-        null,
-        response.request,
-        response,
-      );
-    }
-  }
-
-  /**
-   * Creates a new error from the given message, and enhances it with other information available.
-   * Then the promise associated with this HTTP call is rejected with the resulting error.
-   */
-  private rejectWithError(
-    message: string,
-    code?: string | null,
-    request?: http.ClientRequest | null,
-    response?: LowLevelResponse): void {
-
-    const error = new Error(message);
-    this.enhanceAndReject(error, code, request, response);
-  }
-
-  private enhanceAndReject(
-    error: any,
-    code?: string | null,
-    request?: http.ClientRequest | null,
-    response?: LowLevelResponse): void {
-
-    this.reject(this.enhanceError(error, code, request, response));
-  }
-
-  /**
-   * Enhances the given error by adding more information to it. Specifically, the HttpRequestConfig,
-   * the underlying request and response will be attached to the error.
-   */
-  private enhanceError(
-    error: any,
-    code?: string | null,
-    request?: http.ClientRequest | null,
-    response?: LowLevelResponse): LowLevelError {
-
-    error.config = this.config;
-    if (code) {
-      error.code = code;
-    }
-    error.request = request;
-    error.response = response;
-    return error;
-  }
 }
 
 /**
- * An adapter class for extracting options and entity data from an HttpRequestConfig.
+ * An adapter class with common functionality needed to extract options and entity data from a RequestConfig.
  */
-class HttpRequestConfigImpl implements HttpRequestConfig {
+class BaseRequestConfigImpl implements BaseRequestConfig {
+  protected readonly config: RequestConfig
 
-  constructor(private readonly config: HttpRequestConfig) {
-
+  constructor(config: RequestConfig) {
+    this.config = config
   }
 
   get method(): HttpMethod {
@@ -716,6 +749,74 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
 
   get timeout(): number | undefined {
     return this.config.timeout;
+  }
+
+  public buildEntity(headers: http.OutgoingHttpHeaders): Buffer | undefined {
+    let data: Buffer | undefined;
+    if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
+      return data;
+    }
+    if (validator.isBuffer(this.data)) {
+      data = this.data as Buffer;
+    } else if (validator.isObject(this.data)) {
+      data = Buffer.from(JSON.stringify(this.data), 'utf-8');
+      if (typeof headers['content-type'] === 'undefined') {
+        headers['content-type'] = 'application/json;charset=utf-8';
+      }
+    } else if (validator.isString(this.data)) {
+      data = Buffer.from(this.data as string, 'utf-8');
+    } else {
+      throw new Error('Request data must be a string, a Buffer or a json serializable object');
+    }
+    // Add Content-Length header if data exists.
+    headers['Content-Length'] = data.length.toString();
+    return data;
+  }
+
+  protected buildUrl(): url.UrlWithStringQuery {
+    const fullUrl: string = this.urlWithProtocol();
+    if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
+      return url.parse(fullUrl);
+    }
+    if (!validator.isObject(this.data)) {
+      throw new Error(`${this.method} requests cannot have a body`);
+    }
+    // Parse URL and append data to query string.
+    const parsedUrl = new url.URL(fullUrl);
+    const dataObj = this.data as {[key: string]: string};
+    for (const key in dataObj) {
+      if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
+        parsedUrl.searchParams.append(key, dataObj[key]);
+      }
+    }
+    return url.parse(parsedUrl.toString());
+  }
+
+  protected urlWithProtocol(): string {
+    const fullUrl: string = this.url;
+    if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
+      return fullUrl;
+    }
+    return `https://${fullUrl}`;
+  }
+
+  protected hasEntity(): boolean {
+    return !!this.data;
+  }
+
+  protected isEntityEnclosingRequest(): boolean {
+    // GET and HEAD requests do not support entity (body) in request.
+    return this.method !== 'GET' && this.method !== 'HEAD';
+  }
+}
+
+/**
+ * An adapter class for extracting options and entity data from an HttpRequestConfig.
+ */
+class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequestConfig {
+
+  constructor(config: HttpRequestConfig) {
+    super(config)
   }
 
   get httpAgent(): http.Agent | undefined {
@@ -741,69 +842,6 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
       headers: Object.assign({}, this.headers),
     };
   }
-
-  public buildEntity(headers: http.OutgoingHttpHeaders): Buffer | undefined {
-    let data: Buffer | undefined;
-    if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
-      return data;
-    }
-
-    if (validator.isBuffer(this.data)) {
-      data = this.data as Buffer;
-    } else if (validator.isObject(this.data)) {
-      data = Buffer.from(JSON.stringify(this.data), 'utf-8');
-      if (typeof headers['content-type'] === 'undefined') {
-        headers['content-type'] = 'application/json;charset=utf-8';
-      }
-    } else if (validator.isString(this.data)) {
-      data = Buffer.from(this.data as string, 'utf-8');
-    } else {
-      throw new Error('Request data must be a string, a Buffer or a json serializable object');
-    }
-
-    // Add Content-Length header if data exists.
-    headers['Content-Length'] = data.length.toString();
-    return data;
-  }
-
-  private buildUrl(): url.UrlWithStringQuery {
-    const fullUrl: string = this.urlWithProtocol();
-    if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
-      return url.parse(fullUrl);
-    }
-
-    if (!validator.isObject(this.data)) {
-      throw new Error(`${this.method} requests cannot have a body`);
-    }
-
-    // Parse URL and append data to query string.
-    const parsedUrl = new url.URL(fullUrl);
-    const dataObj = this.data as {[key: string]: string};
-    for (const key in dataObj) {
-      if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
-        parsedUrl.searchParams.append(key, dataObj[key]);
-      }
-    }
-
-    return url.parse(parsedUrl.toString());
-  }
-
-  private urlWithProtocol(): string {
-    const fullUrl: string = this.url;
-    if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
-      return fullUrl;
-    }
-    return `https://${fullUrl}`;
-  }
-
-  private hasEntity(): boolean {
-    return !!this.data;
-  }
-
-  private isEntityEnclosingRequest(): boolean {
-    // GET and HEAD requests do not support entity (body) in request.
-    return this.method !== 'GET' && this.method !== 'HEAD';
-  }
 }
 
 export class AuthorizedHttpClient extends HttpClient {
@@ -811,7 +849,7 @@ export class AuthorizedHttpClient extends HttpClient {
     super();
   }
 
-  public send(request: HttpRequestConfig): Promise<HttpResponse> {
+  public send(request: HttpRequestConfig): Promise<RequestResponse> {
     return this.getToken().then((token) => {
       const requestCopy = Object.assign({}, request);
       requestCopy.headers = Object.assign({}, request.headers);
@@ -827,9 +865,7 @@ export class AuthorizedHttpClient extends HttpClient {
 
   protected getToken(): Promise<string> {
     return this.app.INTERNAL.getToken()
-      .then((accessTokenObj) => {
-        return accessTokenObj.accessToken;
-      });
+      .then((accessTokenObj) => accessTokenObj.accessToken);
   }
 }
 
