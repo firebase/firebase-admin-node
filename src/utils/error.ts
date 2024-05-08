@@ -35,11 +35,13 @@ interface ServerToClientCode {
 
 /**
  * Firebase error code structure. This extends Error.
- *
- * @param errorInfo - The error information (code and message).
- * @constructor
  */
 export class FirebaseError extends Error implements FirebaseErrorInterface {
+  /**
+   * @param errorInfo - The error information (code and message).
+   * @constructor
+   * @internal
+   */
   constructor(private errorInfo: ErrorInfo) {
     super(errorInfo.message);
 
@@ -71,13 +73,15 @@ export class FirebaseError extends Error implements FirebaseErrorInterface {
 
 /**
  * A FirebaseError with a prefix in front of the error code.
- *
- * @param codePrefix - The prefix to apply to the error code.
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class PrefixedFirebaseError extends FirebaseError {
+  /**
+   * @param codePrefix - The prefix to apply to the error code.
+   * @param code - The error code.
+   * @param message - The error message.
+   * @constructor
+   * @internal
+   */
   constructor(private codePrefix: string, code: string, message: string) {
     super({
       code: `${codePrefix}/${code}`,
@@ -105,12 +109,14 @@ export class PrefixedFirebaseError extends FirebaseError {
 
 /**
  * Firebase App error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseAppError extends PrefixedFirebaseError {
+  /**
+   * @param code - The error code.
+   * @param message - The error message.
+   * @constructor
+   * @internal
+   */
   constructor(code: string, message: string) {
     super('app', code, message);
 
@@ -124,11 +130,6 @@ export class FirebaseAppError extends PrefixedFirebaseError {
 
 /**
  * Firebase Auth error code structure. This extends PrefixedFirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 export class FirebaseAuthError extends PrefixedFirebaseError {
   /**
@@ -139,6 +140,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    *     if not provided.
    * @param [rawServerResponse] The error's raw server response.
    * @returns The corresponding developer-facing error.
+   * @internal
    */
   public static fromServerError(
     serverErrorCode: string,
@@ -161,7 +163,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -170,6 +172,12 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     return new FirebaseAuthError(error);
   }
 
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('auth', info.code, message || info.message);
@@ -184,13 +192,15 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
 
 /**
  * Firebase Database error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 export class FirebaseDatabaseError extends FirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default
+   *     message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({ code: 'database/' + info.code, message: message || info.message });
@@ -199,13 +209,15 @@ export class FirebaseDatabaseError extends FirebaseError {
 
 /**
  * Firebase Firestore error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 export class FirebaseFirestoreError extends FirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default
+   *     message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({ code: 'firestore/' + info.code, message: message || info.message });
@@ -214,13 +226,16 @@ export class FirebaseFirestoreError extends FirebaseError {
 
 /**
  * Firebase instance ID error code structure. This extends FirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 export class FirebaseInstanceIdError extends FirebaseError {
+  /**
+   * 
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default
+   *     message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({ code: 'instance-id/' + info.code, message: message || info.message });
@@ -230,13 +245,16 @@ export class FirebaseInstanceIdError extends FirebaseError {
 
 /**
  * Firebase Installations service error code structure. This extends `FirebaseError`.
- *
- * @param info - The error code info.
- * @param message - The error message. This will override the default
- *     message if provided.
- * @constructor
  */
 export class FirebaseInstallationsError extends FirebaseError {
+  /**
+   * 
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default
+   *     message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({ code: 'installations/' + info.code, message: message || info.message });
@@ -247,10 +265,6 @@ export class FirebaseInstallationsError extends FirebaseError {
 
 /**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
- *
- * @param info - The error code info.
- * @param [message] The error message. This will override the default message if provided.
- * @constructor
  */
 export class FirebaseMessagingError extends PrefixedFirebaseError {
   /**
@@ -261,6 +275,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    *     if not provided.
    * @param [rawServerResponse] The error's raw server response.
    * @returns The corresponding developer-facing error.
+   * @internal
    */
   public static fromServerError(
     serverErrorCode: string | null,
@@ -277,7 +292,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -286,6 +301,9 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     return new FirebaseMessagingError(error);
   }
 
+  /**
+   * @internal
+   */
   public static fromTopicManagementServerError(
     serverErrorCode: string,
     message?: string,
@@ -298,7 +316,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
@@ -307,6 +325,13 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     return new FirebaseMessagingError(error);
   }
 
+  /**
+   * 
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default message if provided.
+   * @constructor
+   * @internal
+   */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('messaging', info.code, message || info.message);
@@ -321,12 +346,14 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
 
 /**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseProjectManagementError extends PrefixedFirebaseError {
+  /**
+   * @param code - The error code.
+   * @param message - The error message.
+   * @constructor
+   * @internal
+   */
   constructor(code: ProjectManagementErrorCode, message: string) {
     super('project-management', code, message);
 
@@ -442,7 +469,7 @@ export class AuthClientErrorCode {
   public static INVALID_DYNAMIC_LINK_DOMAIN = {
     code: 'invalid-dynamic-link-domain',
     message: 'The provided dynamic link domain is not configured or authorized ' +
-             'for the current project.',
+      'for the current project.',
   };
   public static INVALID_EMAIL_VERIFIED = {
     code: 'invalid-email-verified',
@@ -467,7 +494,7 @@ export class AuthClientErrorCode {
   public static INVALID_HASH_ALGORITHM = {
     code: 'invalid-hash-algorithm',
     message: 'The hash algorithm must match one of the strings in the list of ' +
-             'supported algorithms.',
+      'supported algorithms.',
   };
   public static INVALID_HASH_BLOCK_SIZE = {
     code: 'invalid-hash-block-size',
@@ -590,7 +617,7 @@ export class AuthClientErrorCode {
   public static MISSING_ANDROID_PACKAGE_NAME = {
     code: 'missing-android-pkg-name',
     message: 'An Android Package Name must be provided if the Android App is ' +
-             'required to be installed.',
+      'required to be installed.',
   };
   public static MISSING_CONFIG = {
     code: 'missing-config',
@@ -607,7 +634,7 @@ export class AuthClientErrorCode {
   public static MISSING_EMAIL = {
     code: 'missing-email',
     message: 'The email is required for the specified action. For example, a multi-factor user ' +
-             'requires a verified email.',
+      'requires a verified email.',
   };
   public static MISSING_IOS_BUNDLE_ID = {
     code: 'missing-ios-bundle-id',
@@ -620,7 +647,7 @@ export class AuthClientErrorCode {
   public static MISSING_HASH_ALGORITHM = {
     code: 'missing-hash-algorithm',
     message: 'Importing users with password hashes requires that the hashing ' +
-             'algorithm and its parameters be provided.',
+      'algorithm and its parameters be provided.',
   };
   public static MISSING_OAUTH_CLIENT_ID = {
     code: 'missing-oauth-client-id',
@@ -653,8 +680,8 @@ export class AuthClientErrorCode {
   public static OPERATION_NOT_ALLOWED = {
     code: 'operation-not-allowed',
     message: 'The given sign-in provider is disabled for this Firebase project. ' +
-        'Enable it in the Firebase console, under the sign-in method tab of the ' +
-        'Auth section.',
+      'Enable it in the Firebase console, under the sign-in method tab of the ' +
+      'Auth section.',
   };
   public static PHONE_NUMBER_ALREADY_EXISTS = {
     code: 'phone-number-already-exists',
@@ -702,7 +729,7 @@ export class AuthClientErrorCode {
   public static UNAUTHORIZED_DOMAIN = {
     code: 'unauthorized-continue-uri',
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
-             'Firebase console.',
+      'Firebase console.',
   };
   public static UNSUPPORTED_FIRST_FACTOR = {
     code: 'unsupported-first-factor',
@@ -719,7 +746,7 @@ export class AuthClientErrorCode {
   public static UNVERIFIED_EMAIL = {
     code: 'unverified-email',
     message: 'A verified email is required for the specified action. For example, a multi-factor user ' +
-             'requires a verified email.',
+      'requires a verified email.',
   };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
@@ -876,15 +903,15 @@ export class InstanceIdClientErrorCode extends InstallationsClientErrorCode {
 }
 
 export type ProjectManagementErrorCode =
-    'already-exists'
-    | 'authentication-error'
-    | 'internal-error'
-    | 'invalid-argument'
-    | 'invalid-project-id'
-    | 'invalid-server-response'
-    | 'not-found'
-    | 'service-unavailable'
-    | 'unknown-error';
+  'already-exists'
+  | 'authentication-error'
+  | 'internal-error'
+  | 'invalid-argument'
+  | 'invalid-project-id'
+  | 'invalid-server-response'
+  | 'not-found'
+  | 'service-unavailable'
+  | 'unknown-error';
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
