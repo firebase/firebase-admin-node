@@ -26,6 +26,8 @@ import {
   OIDCConfigServerResponse,
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
+  PasswordPolicyAuthConfig,
+  CustomStrengthOptionsConfig,
 } from '../../../src/auth/auth-config';
 import {
   SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
@@ -1234,6 +1236,88 @@ describe('OIDCConfig', () => {
         invalidClientRequest.responseType.code = invalidOAuthResponseCodeBoolean;
         expect(() => OIDCConfig.validate(invalidClientRequest))
           .to.throw('"OIDCAuthProviderConfig.responseType.code" must be a boolean.');
+      });
+    });
+  });
+});
+
+describe('PasswordPolicyAuthConfig',() => {
+  describe('constructor',() => {
+    const validConfig = new PasswordPolicyAuthConfig({
+      passwordPolicyEnforcementState: 'ENFORCE',
+      passwordPolicyVersions: [
+        {
+          customStrengthOptions: {
+            containsNumericCharacter: true,
+            containsLowercaseCharacter: true,
+            containsNonAlphanumericCharacter: true,
+            containsUppercaseCharacter: true,
+            minPasswordLength: 8,
+            maxPasswordLength: 30,
+          },
+        },
+      ],
+      forceUpgradeOnSignin: true,
+    });
+
+    it('should throw an error on missing state',() => {
+      expect(() => new PasswordPolicyAuthConfig({
+        passwordPolicyVersions: [
+          {
+            customStrengthOptions: {},
+          }
+        ],
+      } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid password policy configuration response');
+    });
+
+    it('should set readonly property "enforcementState" to ENFORCE on state enforced',() => {
+      expect(validConfig.enforcementState).to.equal('ENFORCE');
+    });
+
+    it('should set readonly property "enforcementState" to OFF on state disabling',() => {
+      const offStateConfig=new PasswordPolicyAuthConfig({
+        passwordPolicyEnforcementState: 'OFF',
+      });
+      expect(offStateConfig.enforcementState).to.equal('OFF');
+    });
+
+    it('should set readonly property "constraints"',() => {
+      const expectedConstraints: CustomStrengthOptionsConfig = {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30,
+      }
+      expect(validConfig.constraints).to.deep.equal(expectedConstraints);
+    });
+
+    it('should set readonly property "forceUpgradeOnSignin"',() => {
+      expect(validConfig.forceUpgradeOnSignin).to.deep.equal(true);
+    });
+  });
+
+  describe('buildServerRequest()', () => {
+    it('should return server request with default constraints', () => {
+      expect(PasswordPolicyAuthConfig.buildServerRequest({
+        enforcementState: 'ENFORCE',
+        constraints: {},
+      })).to.deep.equal({
+        passwordPolicyEnforcementState: 'ENFORCE',
+        forceUpgradeOnSignin: false,
+        passwordPolicyVersions: [
+          {
+            customStrengthOptions: {
+              containsLowercaseCharacter: false,
+              containsUppercaseCharacter: false,
+              containsNumericCharacter: false,
+              containsNonAlphanumericCharacter: false,
+              minPasswordLength: 6,
+              maxPasswordLength: 4096,
+            }
+          }
+        ]
       });
     });
   });

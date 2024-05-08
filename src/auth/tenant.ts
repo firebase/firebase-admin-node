@@ -21,7 +21,9 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig,
+  PasswordPolicyConfig,
+  PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig,
 } from './auth-config';
 
 /**
@@ -67,6 +69,14 @@ export interface UpdateTenantRequest {
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
+  /**
+   * The password policy configuration for the tenant
+   */
+  passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration for the tenant
+   */
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -83,6 +93,8 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
   recaptchaConfig?: RecaptchaConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /** The tenant server response interface. */
@@ -96,6 +108,8 @@ export interface TenantServerResponse {
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
   recaptchaConfig? : RecaptchaConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -153,6 +167,14 @@ export class Tenant {
    * This is based on the calling code of the destination phone number.
    */
   public readonly smsRegionConfig?: SmsRegionConfig;
+  /**
+   * The password policy configuration for the tenant
+   */
+  public readonly passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration for the tenant
+   */
+  public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -189,6 +211,12 @@ export class Tenant {
     if (typeof tenantOptions.recaptchaConfig !== 'undefined') {
       request.recaptchaConfig = tenantOptions.recaptchaConfig;
     }
+    if (typeof tenantOptions.passwordPolicyConfig !== 'undefined') {
+      request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(tenantOptions.passwordPolicyConfig);
+    }
+    if (typeof tenantOptions.emailPrivacyConfig !== 'undefined') {
+      request.emailPrivacyConfig = tenantOptions.emailPrivacyConfig;
+    }
     return request;
   }
 
@@ -224,6 +252,8 @@ export class Tenant {
       testPhoneNumbers: true,
       smsRegionConfig: true,
       recaptchaConfig: true,
+      passwordPolicyConfig: true,
+      emailPrivacyConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -271,12 +301,21 @@ export class Tenant {
       MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
     }
     // Validate SMS Regions Config if provided.
-    if (typeof request.smsRegionConfig != 'undefined') {
+    if (typeof request.smsRegionConfig !== 'undefined') {
       SmsRegionsAuthConfig.validate(request.smsRegionConfig);
     }
     // Validate reCAPTCHAConfig type if provided.
     if (typeof request.recaptchaConfig !== 'undefined') {
       RecaptchaAuthConfig.validate(request.recaptchaConfig);
+    }
+    // Validate passwordPolicyConfig type if provided.
+    if (typeof request.passwordPolicyConfig !== 'undefined') {
+      // This will throw an error if invalid.
+      PasswordPolicyAuthConfig.buildServerRequest(request.passwordPolicyConfig);
+    }
+    // Validate Email Privacy Config if provided.
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
+      EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
   }
 
@@ -318,6 +357,12 @@ export class Tenant {
     if (typeof response.recaptchaConfig !== 'undefined') {
       this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
     }
+    if (typeof response.passwordPolicyConfig !== 'undefined') {
+      this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
+    }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -356,6 +401,8 @@ export class Tenant {
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
+      emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -368,6 +415,12 @@ export class Tenant {
     }
     if (typeof json.recaptchaConfig === 'undefined') {
       delete json.recaptchaConfig;
+    }
+    if (typeof json.passwordPolicyConfig === 'undefined') {
+      delete json.passwordPolicyConfig;
+    }
+    if (typeof json.emailPrivacyConfig === 'undefined') {
+      delete json.emailPrivacyConfig;
     }
     return json;
   }

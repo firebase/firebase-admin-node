@@ -466,7 +466,7 @@ export class FirebaseTokenVerifier {
   private safeDecode(jwtToken: string): Promise<DecodedToken> {
     return decodeJwt(jwtToken)
       .catch((err: JwtError) => {
-        if (err.code == JwtErrorCode.INVALID_ARGUMENT) {
+        if (err.code === JwtErrorCode.INVALID_ARGUMENT) {
           const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
             `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
           const errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed ` +
@@ -529,13 +529,19 @@ export class FirebaseTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
         `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
-    } else if (typeof payload.sub !== 'string') {
-      errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
-    } else if (payload.sub === '') {
-      errorMessage = `${this.tokenInfo.jwtName} has an empty string "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
-    } else if (payload.sub.length > 128) {
-      errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
-        verifyJwtTokenDocsMessage;
+    } else if (!(payload.event_type !== undefined &&
+      (payload.event_type === 'beforeSendSms' || payload.event_type === 'beforeSendEmail'))) {
+      // excluding `beforeSendSms` and `beforeSendEmail` from processing `sub` as there is no user record available.
+      // `sub` is the same as `uid` which is part of the user record.
+      if (typeof payload.sub !== 'string') {
+        errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
+      } else if (payload.sub === '') {
+        errorMessage = `${this.tokenInfo.jwtName} has an empty "sub" (subject) claim.` +
+          verifyJwtTokenDocsMessage;
+      } else if (payload.sub.length > 128) {
+        errorMessage = `${this.tokenInfo.jwtName} has a "sub" (subject) claim longer than 128 characters.` +
+          verifyJwtTokenDocsMessage;
+      }
     }
     if (errorMessage) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);

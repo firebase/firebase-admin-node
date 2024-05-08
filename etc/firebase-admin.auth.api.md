@@ -138,6 +138,16 @@ export interface CreateRequest extends UpdateRequest {
 // @public
 export type CreateTenantRequest = UpdateTenantRequest;
 
+// @public
+export interface CustomStrengthOptionsConfig {
+    maxLength?: number;
+    minLength?: number;
+    requireLowercase?: boolean;
+    requireNonAlphanumeric?: boolean;
+    requireNumeric?: boolean;
+    requireUppercase?: boolean;
+}
+
 // @alpha (undocumented)
 export interface DecodedAuthBlockingToken {
     // (undocumented)
@@ -226,6 +236,11 @@ export interface DeleteUsersResult {
 export interface EmailIdentifier {
     // (undocumented)
     email: string;
+}
+
+// @public
+export interface EmailPrivacyConfig {
+    enableImprovedEmailPrivacy?: boolean;
 }
 
 // @public
@@ -330,6 +345,16 @@ export interface OIDCUpdateAuthProviderRequest {
 }
 
 // @public
+export interface PasswordPolicyConfig {
+    constraints?: CustomStrengthOptionsConfig;
+    enforcementState?: PasswordPolicyEnforcementState;
+    forceUpgradeOnSignin?: boolean;
+}
+
+// @public
+export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';
+
+// @public
 export interface PhoneIdentifier {
     // (undocumented)
     phoneNumber: string;
@@ -343,7 +368,9 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 // @public
 export class ProjectConfig {
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     toJSON(): object;
@@ -425,8 +452,10 @@ export class Tenant {
     // (undocumented)
     readonly anonymousSignInEnabled: boolean;
     readonly displayName?: string;
+    readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
     get multiFactorConfig(): MultiFactorConfig | undefined;
+    readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
     readonly smsRegionConfig?: SmsRegionConfig;
     readonly tenantId: string;
@@ -478,7 +507,9 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 
 // @public
 export interface UpdateProjectConfigRequest {
+    emailPrivacyConfig?: EmailPrivacyConfig;
     multiFactorConfig?: MultiFactorConfig;
+    passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
 }
@@ -501,8 +532,10 @@ export interface UpdateRequest {
 export interface UpdateTenantRequest {
     anonymousSignInEnabled?: boolean;
     displayName?: string;
+    emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
     multiFactorConfig?: MultiFactorConfig;
+    passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;
     smsRegionConfig?: SmsRegionConfig;
     testPhoneNumbers?: {

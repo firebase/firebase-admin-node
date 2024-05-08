@@ -29,6 +29,7 @@ export {
   AppCheckToken,
   AppCheckTokenOptions,
   DecodedAppCheckToken,
+  VerifyAppCheckTokenOptions,
   VerifyAppCheckTokenResponse,
 } from './app-check-api';
 export { AppCheck } from './app-check';

@@ -58,6 +58,40 @@ export type TaskOptions = DeliverySchedule & TaskOptionsExperimental & {
    * The default is 10 minutes. The deadline must be in the range of 15 seconds and 30 minutes.
    */
   dispatchDeadlineSeconds?: number;
+
+  /**
+   * The ID to use for the enqueued event.
+   * If not provided, one will be automatically generated.
+   * If provided, an explicitly specified task ID enables task de-duplication. If a task's ID is
+   * identical to that of an existing task or a task that was deleted or executed recently then
+   * the call will throw an error with code "functions/task-already-exists". Another task with 
+   * the same ID can't be created for ~1hour after the original task was deleted or executed.
+   * 
+   * Because there is an extra lookup cost to identify duplicate task IDs, setting ID
+   * significantly increases latency. Using hashed strings for the task ID or for the prefix of
+   * the task ID is recommended. Choosing task IDs that are sequential or have sequential
+   * prefixes, for example using a timestamp, causes an increase in latency and error rates in
+   * all task commands. The infrastructure relies on an approximately uniform distribution of
+   * task IDs to store and serve tasks efficiently.
+   *
+   * "Push IDs" from the Firebase Realtime Database make poor IDs because they are based on
+   * timestamps and will cause contention (slowdowns) in your task queue. Reversed push IDs
+   * however form a perfect distribution and are an ideal key. To reverse a string in
+   * javascript use `someString.split("").reverse().join("")`
+   */
+  id?: string;
+  
+  /**
+   * HTTP request headers to include in the request to the task queue function.
+   * These headers represent a subset of the headers that will accompany the task's HTTP
+   * request. Some HTTP request headers will be ignored or replaced, e.g. Authorization, Host, Content-Length,
+   * User-Agent etc. cannot be overridden.
+   *
+   * By default, Content-Type is set to 'application/json'.
+   *
+   * The size of the headers must be less than 80KB.
+   */
+  headers?: Record<string, string>;
 }
 
 /**

@@ -23,6 +23,11 @@ import {
   MultiFactorAuthServerConfig,
   RecaptchaConfig,
   RecaptchaAuthConfig,
+  PasswordPolicyAuthConfig,
+  PasswordPolicyAuthServerConfig,
+  PasswordPolicyConfig,
+  EmailPrivacyConfig,
+  EmailPrivacyAuthConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -46,6 +51,14 @@ export interface UpdateProjectConfigRequest {
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   recaptchaConfig?: RecaptchaConfig;
+  /**
+   * The password policy configuration to update on the project
+   */
+  passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration to update on the project
+   */
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -55,6 +68,8 @@ export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
   recaptchaConfig?: RecaptchaConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -64,6 +79,8 @@ export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
   recaptchaConfig?: RecaptchaConfig;
+  passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
+  emailPrivacyConfig?: EmailPrivacyConfig;
 }
 
 /**
@@ -82,7 +99,12 @@ export class ProjectConfig {
    * Supports only phone and TOTP.
    */  
   private readonly multiFactorConfig_?: MultiFactorConfig;
-
+  /**
+   * The multi-factor auth configuration.
+   */
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
+  }
   /**
    * The reCAPTCHA configuration to update on the project.
    * By enabling reCAPTCHA Enterprise integration, you are
@@ -92,11 +114,13 @@ export class ProjectConfig {
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
   
   /**
-   * The multi-factor auth configuration.
+   * The password policy configuration for the project
    */
-  get multiFactorConfig(): MultiFactorConfig | undefined {
-    return this.multiFactorConfig_;
-  }
+  public readonly passwordPolicyConfig?: PasswordPolicyConfig;
+  /**
+   * The email privacy configuration for the project
+   */
+  public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
    * Validates a project config options object. Throws an error on failure.
@@ -114,6 +138,8 @@ export class ProjectConfig {
       smsRegionConfig: true,
       multiFactorConfig: true,
       recaptchaConfig: true,
+      passwordPolicyConfig: true,
+      emailPrivacyConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -137,6 +163,16 @@ export class ProjectConfig {
     if (typeof request.recaptchaConfig !== 'undefined') {
       RecaptchaAuthConfig.validate(request.recaptchaConfig);
     }
+
+    // Validate Password policy Config if provided
+    if (typeof request.passwordPolicyConfig !== 'undefined') {
+      PasswordPolicyAuthConfig.validate(request.passwordPolicyConfig);
+    }
+
+    // Validate Email Privacy Config if provided.
+    if (typeof request.emailPrivacyConfig !== 'undefined') {
+      EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
+    }
   }
 
   /**
@@ -148,16 +184,23 @@ export class ProjectConfig {
    */
   public static buildServerRequest(configOptions: UpdateProjectConfigRequest): ProjectConfigClientRequest {
     ProjectConfig.validate(configOptions);
-    const request = configOptions as any;
-    if (configOptions.multiFactorConfig !== undefined) {
+    const request: ProjectConfigClientRequest = {};
+    if (typeof configOptions.smsRegionConfig !== 'undefined') {
+      request.smsRegionConfig = configOptions.smsRegionConfig;
+    }
+    if (typeof configOptions.multiFactorConfig !== 'undefined') {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
-    // Backend API returns "mfa" in case of project config and "mfaConfig" in case of tenant config.
-    // The SDK exposes it as multiFactorConfig always. 
-    // See https://cloud.google.com/identity-platform/docs/reference/rest/v2/projects.tenants#resource:-tenant 
-    // and https://cloud.google.com/identity-platform/docs/reference/rest/v2/Config
-    delete request.multiFactorConfig;
-    return request as ProjectConfigClientRequest;
+    if (typeof configOptions.recaptchaConfig !== 'undefined') {
+      request.recaptchaConfig = configOptions.recaptchaConfig;
+    }
+    if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
+      request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);
+    }
+    if (typeof configOptions.emailPrivacyConfig !== 'undefined') {
+      request.emailPrivacyConfig = configOptions.emailPrivacyConfig;
+    }
+    return request;
   }
  
   /**
@@ -185,6 +228,12 @@ export class ProjectConfig {
     if (typeof response.recaptchaConfig !== 'undefined') {
       this.recaptchaConfig_ = new RecaptchaAuthConfig(response.recaptchaConfig);
     }
+    if (typeof response.passwordPolicyConfig !== 'undefined') {
+      this.passwordPolicyConfig = new PasswordPolicyAuthConfig(response.passwordPolicyConfig);
+    }
+    if (typeof response.emailPrivacyConfig !== 'undefined') {
+      this.emailPrivacyConfig = response.emailPrivacyConfig;
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -197,6 +246,8 @@ export class ProjectConfig {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       multiFactorConfig: deepCopy(this.multiFactorConfig),
       recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
+      emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
@@ -206,6 +257,12 @@ export class ProjectConfig {
     }
     if (typeof json.recaptchaConfig === 'undefined') {
       delete json.recaptchaConfig;
+    }
+    if (typeof json.passwordPolicyConfig === 'undefined') {
+      delete json.passwordPolicyConfig;
+    }
+    if (typeof json.emailPrivacyConfig === 'undefined') {
+      delete json.emailPrivacyConfig;
     }
     return json;
   }
