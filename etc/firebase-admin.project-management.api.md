@@ -43,6 +43,12 @@ export enum AppPlatform {
     PLATFORM_UNKNOWN = "PLATFORM_UNKNOWN"
 }
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseProjectManagementError extends PrefixedFirebaseError {
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -78,6 +84,9 @@ export class ProjectManagement {
     setDisplayName(newDisplayName: string): Promise<void>;
     shaCertificate(shaHash: string): ShaCertificate;
 }
+
+// @public (undocumented)
+export type ProjectManagementErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-project-id' | 'invalid-server-response' | 'not-found' | 'service-unavailable' | 'unknown-error';
 
 // @public
 export class ShaCertificate {

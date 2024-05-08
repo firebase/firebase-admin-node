@@ -8,6 +8,12 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseInstallationsError extends FirebaseError {
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -17,6 +23,30 @@ export function getInstallations(app?: App): Installations;
 export class Installations {
     get app(): App;
     deleteInstallation(fid: string): Promise<void>;
+}
+
+// @public (undocumented)
+export class InstallationsClientErrorCode {
+    // (undocumented)
+    static API_ERROR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_ARGUMENT: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_INSTALLATION_ID: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_PROJECT_ID: {
+        code: string;
+        message: string;
+    };
 }
 
 ```
