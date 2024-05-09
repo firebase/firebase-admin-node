@@ -16,7 +16,9 @@
 
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse } from '../utils/api-request';
+import { 
+  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient,RequestResponse
+} from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -193,7 +195,11 @@ export class RemoteConfigApiClient {
       });
   }
 
-  private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<RequestResponse> {
+  private sendPutRequest(
+    template: RemoteConfigTemplate,
+    etag: string,
+    validateOnly?: boolean
+  ): Promise<RequestResponse> {
     let path = 'remoteConfig';
     if (validateOnly) {
       path += '?validate_only=true';

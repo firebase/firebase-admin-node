@@ -232,7 +232,8 @@ export class ComputeEngineCredential implements Credential {
         return this.projectId;
       })
       .catch((err) => {
-        const detail: string = (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
+        const detail: string =
+        (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine project ID: ${detail}`);
@@ -251,7 +252,8 @@ export class ComputeEngineCredential implements Credential {
         return this.accountId;
       })
       .catch((err) => {
-        const detail: string = (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
+        const detail: string =
+        (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine service account email: ${detail}`);

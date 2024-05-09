@@ -568,7 +568,7 @@ class AsyncRequestCall {
   protected entity: Buffer | undefined;
   protected promise: Promise<LowLevelResponse>;
 
-  constructor(private readonly config: HttpRequestConfigImpl | Http2RequestConfigImpl) {}
+  constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) {}
 
   /**
    * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
@@ -697,7 +697,7 @@ class AsyncRequestCall {
     request?: http.ClientRequest | http2.ClientHttp2Stream | null,
     response?: LowLevelResponse): LowLevelError {
 
-    error.config = this.config;
+    error.config = this.configImpl;
     if (code) {
       error.code = code;
     }
@@ -713,7 +713,7 @@ class AsyncRequestCall {
  * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
 class AsyncHttpCall extends AsyncRequestCall {
-  private readonly config_: HttpRequestConfigImpl;
+  private readonly httpConfigImpl: HttpRequestConfigImpl;
 
   /**
    * Sends an HTTP request based on the provided configuration.
@@ -723,12 +723,12 @@ class AsyncHttpCall extends AsyncRequestCall {
   }
 
   private constructor(config: HttpRequestConfig) {
-    const config_ = new HttpRequestConfigImpl(config);
-    super(config_)
+    const httpConfigImpl = new HttpRequestConfigImpl(config);
+    super(httpConfigImpl)
     try {
-      this.config_ = config_;
-      this.options = this.config_.buildRequestOptions();
-      this.entity = this.config_.buildEntity(this.options.headers!);
+      this.httpConfigImpl = httpConfigImpl;
+      this.options = this.httpConfigImpl.buildRequestOptions();
+      this.entity = this.httpConfigImpl.buildEntity(this.options.headers!);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -753,7 +753,7 @@ class AsyncHttpCall extends AsyncRequestCall {
       this.enhanceAndReject(err, null, req);
     });
 
-    const timeout: number | undefined = this.config_.timeout;
+    const timeout: number | undefined = this.httpConfigImpl.timeout;
     const timeoutCallback: () => void = () => {
       req.destroy();
       this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
@@ -783,7 +783,7 @@ class AsyncHttpCall extends AsyncRequestCall {
       headers: res.headers,
       request: req,
       data: undefined,
-      config: this.config_,
+      config: this.httpConfigImpl,
     };
     const boundary = this.getMultipartBoundary(res.headers);
     const respStream: Readable = this.uncompressResponse(res);
@@ -811,7 +811,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 }
 
 class AsyncHttp2Call extends AsyncRequestCall {
-  private readonly config_: Http2RequestConfigImpl
+  private readonly http2ConfigImpl: Http2RequestConfigImpl
 
   /**
    * Sends an HTTP2 request based on the provided configuration.
@@ -821,12 +821,12 @@ class AsyncHttp2Call extends AsyncRequestCall {
   }
 
   private constructor(config: Http2RequestConfig) {
-    const config_ = new Http2RequestConfigImpl(config);
-    super(config_)
+    const http2ConfigImpl = new Http2RequestConfigImpl(config);
+    super(http2ConfigImpl)
     try {
-      this.config_ = config_;
-      this.options = this.config_.buildRequestOptions();
-      this.entity = this.config_.buildEntity(this.options.headers!);
+      this.http2ConfigImpl = http2ConfigImpl;
+      this.options = this.http2ConfigImpl.buildRequestOptions();
+      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers!);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -838,11 +838,11 @@ class AsyncHttp2Call extends AsyncRequestCall {
   }
 
   private execute(): void {
-    const req = this.config_.http2SessionHandler.session.request({
+    const req = this.http2ConfigImpl.http2SessionHandler.session.request({
       ':method': this.options.method,
       ':scheme': this.options.protocol!,
       ':path': this.options.path!,
-      ...this.config_.headers
+      ...this.http2ConfigImpl.headers
     });
 
     req.on('response', (headers: IncomingHttp2Headers) => {
@@ -857,7 +857,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
       this.enhanceAndReject(err, null, req);
     });
 
-    const timeout: number | undefined = this.config_.timeout;
+    const timeout: number | undefined = this.http2ConfigImpl.timeout;
     const timeoutCallback: () => void = () => {
       req.destroy();
       this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
@@ -887,7 +887,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
       headers: headers,
       request: stream,
       data: undefined,
-      config: this.config_,
+      config: this.http2ConfigImpl,
     };
 
     const boundary = this.getMultipartBoundary(headers);
@@ -1008,12 +1008,12 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
  */
 class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequestConfig {
 
-  constructor(private readonly config_: HttpRequestConfig) {
-    super(config_)
+  constructor(private readonly httpConfig: HttpRequestConfig) {
+    super(httpConfig)
   }
 
   get httpAgent(): http.Agent | undefined {
-    return this.config_.httpAgent;
+    return this.httpConfig.httpAgent;
   }
 
   public buildRequestOptions(): https.RequestOptions {
@@ -1042,12 +1042,12 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
  */
 class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2RequestConfig {
 
-  constructor(private readonly config_: Http2RequestConfig) {
-    super(config_)
+  constructor(private readonly http2Config: Http2RequestConfig) {
+    super(http2Config)
   }
 
   get http2SessionHandler(): Http2SessionHandler {
-    return this.config_.http2SessionHandler;
+    return this.http2Config.http2SessionHandler;
   }
 
   public buildRequestOptions(): https.RequestOptions {
