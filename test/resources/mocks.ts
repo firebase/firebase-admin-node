@@ -21,14 +21,18 @@
 import path = require('path');
 import events = require('events');
 import stream = require('stream');
+import http2 = require('http2');
 
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
+import * as proxyquire from 'proxyquire';
+import * as sinon from 'sinon';
 
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 import { ComputeEngineCredential } from '../../src/app/credential-internal';
+import { Messaging } from '../../src/messaging';
 
 const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -308,6 +312,58 @@ export class MockSocketEmitter extends events.EventEmitter {
 /** Mock stream passthrough class with dummy abort method. */
 export class MockStream extends stream.PassThrough {
   public abort: () => void = () => undefined;
+}
+
+export class Http2Mocker {
+  public requests: {
+    headers: http2.OutgoingHttpHeaders,
+    data: Buffer
+  }[];
+
+  constructor() {
+    this.requests = []
+  }
+
+  public http2Stub(mockResponses: any[]): object {
+    return {
+      http2: {
+        connect: (
+          target: string,
+          connectionOptions: http2.ClientSessionOptions | http2.SecureClientSessionOptions
+        ) => {
+          const session = http2.connect(target, connectionOptions);
+          session.request = (requestHeaders: http2.OutgoingHttpHeaders & http2.IncomingHttpHeaders) => {
+            
+            // Create a mock ClientHttp2Stream to return
+            const mockStream = new stream.Readable() as http2.ClientHttp2Stream;
+
+            mockStream.end = (data: any) => {
+              this.requests.push({ headers: requestHeaders, data: data })
+              return mockStream
+            };
+
+            mockStream.setTimeout = sinon.stub()
+
+            process.nextTick(() => {
+              const mockRes = mockResponses.shift()
+              if (mockRes) {
+                mockStream.emit('response', mockRes.headers);
+                mockStream.emit('data', Buffer.from(mockRes.data));
+                mockStream.emit('end');
+              }
+            });
+            return mockStream;
+          };
+          return session;
+        },
+        '@global': false,
+      },
+    };
+  }
+
+  public mockMessaging(messagingStub = {}): any {
+    return proxyquire<{ Messaging: typeof Messaging }>('../../src/messaging', messagingStub).Messaging;
+  }
 }
 
 /**

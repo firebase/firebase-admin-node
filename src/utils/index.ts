@@ -83,8 +83,13 @@ export function getExplicitProjectId(app: App): string | null {
     return options.projectId;
   }
 
+  // Use type guard to check if credential is ServiceAccountCredential
+  function isServiceAccountCredential(credential: any): credential is ServiceAccountCredential {
+    return (credential as ServiceAccountCredential).projectId !== undefined;
+  }
+  
   const credential = app.options.credential;
-  if (credential instanceof ServiceAccountCredential) {
+  if (isServiceAccountCredential(credential)) {
     return credential.projectId;
   }
 
