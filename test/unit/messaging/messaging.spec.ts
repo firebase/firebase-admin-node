@@ -80,6 +80,15 @@ function mockSendRequest(messageId = 'projects/projec_id/messages/message_id'): 
     });
 }
 
+function mockHttp2SendRequestResponse(messageId = 'projects/projec_id/messages/message_id'): mocks.MockHttp2Response {
+  return {
+    headers: {
+      ':status': 200, 
+    },
+    data: Buffer.from(JSON.stringify({ name: `${messageId}` })),
+  } as mocks.MockHttp2Response
+}
+
 function mockBatchRequest(ids: string[]): nock.Scope {
   return mockBatchRequestWithErrors(ids);
 }
@@ -125,6 +134,31 @@ function mockSendError(
 ): nock.Scope {
   return mockErrorResponse(
     '/v1/projects/project_id/messages:send', statusCode, errorFormat, responseOverride);
+}
+
+function mockHttp2SendRequestError(
+  statusCode: number,
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
+): mocks.MockHttp2Response {
+
+  let response;
+  let contentType: string;
+  if (errorFormat === 'json') {
+    response = Buffer.from(JSON.stringify(responseOverride || mockServerErrorResponse.json));
+    contentType = 'application/json; charset=UTF-8';
+  } else {
+    response = responseOverride || mockServerErrorResponse.text;
+    contentType = 'text/html; charset=UTF-8';
+  }
+
+  return {
+    headers: {
+      ':status': statusCode,
+      'content-type': contentType
+    },
+    data: Buffer.from(response)
+  } as mocks.MockHttp2Response
 }
 
 function mockBatchError(
@@ -309,6 +343,8 @@ describe('Messaging', () => {
   let mockApp: FirebaseApp;
   let messaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
+  let mockedHttp2Responses: mocks.MockHttp2Response[] = []
+  const http2Mocker: mocks.Http2Mocker = new mocks.Http2Mocker();
   let httpsRequestStub: sinon.SinonStub;
   let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
@@ -343,6 +379,8 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
+    http2Mocker.restore()
+    mockedHttp2Responses = [];
     getTokenStub.restore();
     return mockApp.delete();
   });
@@ -726,7 +764,7 @@ describe('Messaging', () => {
         });
     });
 
-    it('should be fulfilled with a BatchResponse for all failures given an app which' +
+    it('should be fulfilled with a BatchResponse for all failures given an app which ' +
        'returns null access tokens', () => {
       return nullAccessTokenMessaging.sendEach(
         [validMessage, validMessage],
@@ -816,6 +854,221 @@ describe('Messaging', () => {
           });
         });
     });
+
+    it('should be fulfilled with a BatchResponse given valid messages using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach([validMessage, validMessage, validMessage], false, true)
+        .then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(3);
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          expect(response.responses.length).to.equal(3);
+          response.responses.forEach((resp, idx) => {
+            checkSendResponseSuccess(resp, messageIds[idx]);
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse given array-like (issue #566) using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      const message = {
+        token: 'a',
+        android: {
+          ttl: 3600,
+        },
+      };
+      const arrayLike = new CustomArray();
+      arrayLike.push(message);
+      arrayLike.push(message);
+      arrayLike.push(message);
+      // Explicitly patch the constructor so that down compiling to ES5 doesn't affect the test.
+      // See https://github.com/firebase/firebase-admin-node/issues/566#issuecomment-501974238
+      // for more context.
+      arrayLike.constructor = CustomArray;
+
+      return messaging.sendEach(arrayLike, false, true)
+        .then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(3);
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse given valid messages in dryRun mode using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach([validMessage, validMessage, validMessage], true, true)
+        .then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(3);
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          expect(response.responses.length).to.equal(3);
+          response.responses.forEach((resp, idx) => {
+            checkSendResponseSuccess(resp, messageIds[idx]);
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse for partial failures using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+      ];
+      const errors = [
+        {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+          },
+        },
+      ];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach([validMessage, validMessage, validMessage], true, true)
+        .then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(3);
+          expect(response.successCount).to.equal(2);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(3);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseSuccess(responses[1], messageIds[1]);
+          checkSendResponseFailure(
+            responses[2], 'messaging/invalid-argument', 'test error message');
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse for all failures given an app which ' +
+       'returns null access tokens using HTTP/2', () => {
+      return nullAccessTokenMessaging.sendEach(
+        [validMessage, validMessage], false, true
+      ).then((response: BatchResponse) => {
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach(resp => checkSendResponseFailure(
+          resp, 'app/invalid-credential'));
+      });
+    });
+
+    it('should expose the FCM error code in a detailed error via BatchResponse using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+      ];
+      const errors = [
+        {
+          error: {
+            ':status': 'INVALID_ARGUMENT',
+            message: 'test error message',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                'errorCode': 'UNREGISTERED',
+              },
+            ],
+          },
+        },
+      ];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach([validMessage, validMessage], true, true)
+        .then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(2);
+          expect(response.successCount).to.equal(1);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(2);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseFailure(
+            responses[1], 'messaging/registration-token-not-registered');
+        });
+    });
+
+    it('should map server error code to client-side error using HTTP/2', () => {
+      const error = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message1',
+        }
+      };
+      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach(
+        [validMessage, validMessage, validMessage], false, true
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(3);
+        expect(response.failureCount).to.equal(3);
+        const responses = response.responses;
+        checkSendResponseFailure(responses[0], 'messaging/registration-token-not-registered');
+        checkSendResponseFailure(responses[1], 'messaging/unknown-error');
+        checkSendResponseFailure(responses[2], 'messaging/invalid-argument');
+      });
+    });
+
+    // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
+    it('should be fulfilled when called with different message types using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      const tokenMessage: TokenMessage = { token: 'test' };
+      const topicMessage: TopicMessage = { topic: 'test' };
+      const conditionMessage: ConditionMessage = { condition: 'test' };
+      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
+
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach(messages, false, true)
+        .then ((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(3);
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });
   });
 
   describe('sendEachForMulticast()', () => {
@@ -830,6 +1083,21 @@ describe('Messaging', () => {
     };
 
     let stub: sinon.SinonStub | null;
+
+    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
+      expect(response.success).to.be.true;
+      expect(response.messageId).to.equal(messageId);
+      expect(response.error).to.be.undefined;
+    }
+
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
+      expect(response.success).to.be.false;
+      expect(response.messageId).to.be.undefined;
+      expect(response.error).to.have.property('code', code);
+      if (msg) {
+        expect(response.error!.toString()).to.contain(msg);
+      }
+    }
 
     afterEach(() => {
       if (stub) {
@@ -869,6 +1137,10 @@ describe('Messaging', () => {
       });
     });
 
+
+
+
+
     it('should create multiple messages using the empty multicast payload', () => {
       stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
       const tokens = ['a', 'b', 'c'];
@@ -879,6 +1151,7 @@ describe('Messaging', () => {
           const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.be.undefined;
@@ -909,6 +1182,7 @@ describe('Messaging', () => {
           const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.deep.equal(multicast.android);
@@ -929,9 +1203,23 @@ describe('Messaging', () => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
           expect(stub!.args[0][1]).to.be.true;
+          expect(stub!.args[0][2]).to.be.undefined;
         });
     });
 
+    it('should pass useHttp2 argument through', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const tokens = ['a', 'b', 'c'];
+      return messaging.sendEachForMulticast({ tokens }, false, true)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          expect(stub!.args[0][1]).to.be.false;
+          expect(stub!.args[0][2]).to.be.true;
+        });
+    });
+
+    // TODO(jedey): copy
     it('should be fulfilled with a BatchResponse given valid message', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
@@ -1075,20 +1363,153 @@ describe('Messaging', () => {
       });
     });
 
-    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
-      expect(response.success).to.be.true;
-      expect(response.messageId).to.equal(messageId);
-      expect(response.error).to.be.undefined;
-    }
+    it('should be fulfilled with a BatchResponse given valid message using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+      return messaging.sendEachForMulticast({
+        tokens: ['a', 'b', 'c'],
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+      }, false, true).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp, idx) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).to.equal(messageIds[idx]);
+          expect(resp.error).to.be.undefined;
+        });
+      });
+    });
 
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
-      expect(response.success).to.be.false;
-      expect(response.messageId).to.be.undefined;
-      expect(response.error).to.have.property('code', code);
-      if (msg) {
-        expect(response.error!.toString()).to.contain(msg);
-      }
-    }
+    it('should be fulfilled with a BatchResponse given valid message in dryRun mode using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+      return messaging.sendEachForMulticast({
+        tokens: ['a', 'b', 'c'],
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+      }, true, true).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        expect(response.responses.length).to.equal(3);
+        response.responses.forEach((resp, idx) => {
+          checkSendResponseSuccess(resp, messageIds[idx]);
+        });
+      });
+    });
+
+    it('should be fulfilled with a BatchResponse for partial failures using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+      ];
+      const errors = [
+        {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+          },
+        },
+      ];
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+      return messaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] }, false, true)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(2);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(3);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseSuccess(responses[1], messageIds[1]);
+          checkSendResponseFailure(
+            responses[2], 'messaging/invalid-argument', 'test error message');
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse for all failures given an app which ' +
+       'returns null access tokens using HTTP/2', () => {
+      return nullAccessTokenMessaging.sendEachForMulticast(
+        { tokens: ['a', 'a'] }, false, true
+      ).then((response: BatchResponse) => {
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach(resp => checkSendResponseFailure(
+          resp, 'app/invalid-credential'));
+      });
+    });
+
+    it('should expose the FCM error code in a detailed error via BatchResponse using HTTP/2', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+      ];
+      const errors = [
+        {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                'errorCode': 'UNREGISTERED',
+              },
+            ],
+          },
+        },
+      ];
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
+      http2Mocker.http2Stub(mockedHttp2Responses)
+      return messaging.sendEachForMulticast({ tokens: ['a', 'b'] }, false, true)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(1);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(2);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseFailure(
+            responses[1], 'messaging/registration-token-not-registered');
+        });
+    });
+
+    it('should map server error code to client-side error using HTTP/2', () => {
+      const error = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message',
+        }
+      };
+      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
+      http2Mocker.http2Stub(mockedHttp2Responses)
+      return messaging.sendEachForMulticast(
+        { tokens: ['a', 'a', 'a'] }, false, true
+      ).then((response: BatchResponse) => {
+        expect(response.failureCount).to.equal(3);
+        const responses = response.responses;
+        checkSendResponseFailure(responses[0], 'messaging/registration-token-not-registered');
+        checkSendResponseFailure(responses[1], 'messaging/unknown-error');
+        checkSendResponseFailure(responses[2], 'messaging/invalid-argument');
+      });
+    });
   });
 
   describe('sendAll()', () => {

@@ -21,9 +21,11 @@
 import path = require('path');
 import events = require('events');
 import stream = require('stream');
+import http2 = require('http2');
 
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
+import * as sinon from 'sinon';
 
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp } from '../../src/app/firebase-app';
@@ -308,6 +310,65 @@ export class MockSocketEmitter extends events.EventEmitter {
 /** Mock stream passthrough class with dummy abort method. */
 export class MockStream extends stream.PassThrough {
   public abort: () => void = () => undefined;
+}
+
+export interface MockHttp2Request {
+  headers: http2.OutgoingHttpHeaders,
+  data: any
+}
+
+export interface MockHttp2Response {
+  headers: http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader,
+  data: Buffer
+}
+
+export class Http2Mocker {
+  private connectStub: sinon.SinonStub;
+  private originalConnect = http2.connect;
+  public requests: MockHttp2Request[] = [];
+
+  public http2Stub(mockResponses: MockHttp2Response[]): void {
+    this.connectStub = sinon.stub(http2, 'connect');
+    this.connectStub.callsFake((target: any, options: any) => {
+      const session = this.originalConnect(target, options);
+      session.request = this.createMockRequest(mockResponses)
+      return session;
+    })
+  }
+
+  private createMockRequest(mockResponses: MockHttp2Response[]) {
+    return (requestHeaders: http2.OutgoingHttpHeaders) => {
+      // Create a mock ClientHttp2Stream to return
+      const mockStream = new stream.Readable({
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        read() {} 
+      }) as http2.ClientHttp2Stream;
+  
+      mockStream.end = (data: any) => {
+        this.requests.push({ headers: requestHeaders, data: data })
+        return mockStream
+      };
+  
+      mockStream.setTimeout = sinon.stub()
+  
+      process.nextTick(() => {
+        const mockRes = mockResponses.shift()
+        if (mockRes) {
+          mockStream.emit('response', mockRes.headers);
+          mockStream.emit('data', mockRes.data);
+          mockStream.emit('end');
+        }
+      });
+      return mockStream;
+    }
+  }
+
+  public restore(): void {
+    if (this.connectStub) {
+      this.connectStub.restore();
+    }
+    this.requests = []
+  }
 }
 
 /**
