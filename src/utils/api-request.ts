@@ -842,7 +842,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
       ':method': this.options.method,
       ':scheme': this.options.protocol!,
       ':path': this.options.path!,
-      ...this.http2ConfigImpl.headers
+      ...this.options.headers
     });
 
     req.on('response', (headers: IncomingHttp2Headers) => {

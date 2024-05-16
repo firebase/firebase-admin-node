@@ -379,7 +379,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-    http2Mocker.restore()
+    http2Mocker.done()
     mockedHttp2Responses = [];
     getTokenStub.restore();
     return mockApp.delete();
@@ -1219,7 +1219,6 @@ describe('Messaging', () => {
         });
     });
 
-    // TODO(jedey): copy
     it('should be fulfilled with a BatchResponse given valid message', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
