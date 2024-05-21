@@ -257,7 +257,7 @@
     "request": "^2.75.0",
     "request-promise": "^4.1.1",
     "run-sequence": "^2.2.1",
-    "sinon": "^17.0.1",
+    "sinon": "^18.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
     "typescript": "5.1.6",
