@@ -59,7 +59,7 @@ requests, code review feedback, and also pull requests.
 
 ## Supported Environments
 
-We support Node.js 14 and higher. However, Node.js 14, and 16 support is deprecated. We strongly encourage
+We support Node.js 14 and higher. However, Node.js 14 and 16 support is deprecated. We strongly encourage
 you to use Node.js 18 or higher as we will drop support for Node.js 14 and 16 in the next major version.
 
 Please also note that the Admin SDK should only
