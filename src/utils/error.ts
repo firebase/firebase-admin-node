@@ -54,12 +54,12 @@ export class FirebaseError extends Error implements FirebaseErrorInterface {
 
   /** @returns The error code. */
   public get code(): string {
-    return this.errorInfo.code;
+    return this.errorInfo?.code;
   }
 
   /** @returns The error message. */
   public get message(): string {
-    return this.errorInfo.message;
+    return this.errorInfo?.message;
   }
 
   /** @returns The object representation of the error. */
