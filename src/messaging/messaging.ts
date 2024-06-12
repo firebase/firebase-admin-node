@@ -193,6 +193,7 @@ export class Messaging {
   private urlPath: string;
   private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private useLegacyTransport = false;
 
   /**
    * @internal
@@ -220,6 +221,22 @@ export class Messaging {
    */
   get app(): App {
     return this.appInternal;
+  }
+
+  /**
+   * Enables the use of the legacy HTTP/1.1 transport for sendEach() and sendEachForMulticast().
+   * 
+   * @example
+   * ```javascript
+   * const messaging = getMessaging(app);
+   * messaging.enableLegacyTransport();
+   * messaging.sendEach(messages);
+   * ```
+   * 
+   * @deprecated This is to be removed once the HTTP/2 transport is universally safe.
+   */
+  public enableLegacyHttpTransport(): void {
+    this.useLegacyTransport = true;
   }
 
   /**
@@ -270,7 +287,7 @@ export class Messaging {
   * @returns A Promise fulfilled with an object representing the result of the
   *   send operation.
   */
-  public sendEach(messages: Message[], dryRun?: boolean, useHttp2?: boolean): Promise<BatchResponse> {
+  public sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
     if (validator.isArray(messages) && messages.constructor !== Array) {
       // In more recent JS specs, an array-like object might have a constructor that is not of
       // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
@@ -292,12 +309,8 @@ export class Messaging {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    if (typeof useHttp2 !== 'undefined' && !validator.isBoolean(useHttp2)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'enableHttp2 must be a boolean');
-    }
 
-    const http2SessionHandler = useHttp2 ? new Http2SessionHandler(`https://${FCM_SEND_HOST}`) : undefined
+    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
 
     return this.getUrlPath()
       .then((urlPath) => {
@@ -357,7 +370,7 @@ export class Messaging {
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
-  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean, useHttp2?: boolean): Promise<BatchResponse> {
+  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
     const copy: MulticastMessage = deepCopy(message);
     if (!validator.isNonNullObject(copy)) {
       throw new FirebaseMessagingError(
@@ -372,10 +385,6 @@ export class Messaging {
         MessagingClientErrorCode.INVALID_ARGUMENT,
         `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
     }
-    if (typeof useHttp2 !== 'undefined' && !validator.isBoolean(useHttp2)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'enableHttp2 must be a boolean');
-    }
 
     const messages: Message[] = copy.tokens.map((token) => {
       return {
@@ -388,7 +397,7 @@ export class Messaging {
         fcmOptions: copy.fcmOptions,
       };
     });
-    return this.sendEach(messages, dryRun, useHttp2);
+    return this.sendEach(messages, dryRun);
   }
 
   /**

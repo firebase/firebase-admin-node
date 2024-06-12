@@ -17,6 +17,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
+import { legacyTransportApp } from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -101,6 +102,11 @@ const options = {
 };
 
 describe('admin.messaging', () => {
+
+  before(() => {
+    getMessaging(legacyTransportApp).enableLegacyHttpTransport()
+  })
+
   it('send(message, dryRun) returns a message ID', () => {
     return getMessaging().send(message, true)
       .then((name) => {
@@ -110,7 +116,7 @@ describe('admin.messaging', () => {
 
   it('sendEach()', () => {
     const messages: Message[] = [message, message, message];
-    return getMessaging().sendEach(messages, true)
+    return getMessaging(legacyTransportApp).sendEach(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -127,7 +133,7 @@ describe('admin.messaging', () => {
     for (let i = 0; i < 500; i++) {
       messages.push({ topic: `foo-bar-${i % 10}` });
     }
-    return getMessaging().sendEach(messages, true)
+    return getMessaging(legacyTransportApp).sendEach(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -141,7 +147,7 @@ describe('admin.messaging', () => {
 
   it('sendEach() using HTTP2', () => {
     const messages: Message[] = [message, message, message];
-    return getMessaging().sendEach(messages, true, true)
+    return getMessaging().sendEach(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -158,7 +164,7 @@ describe('admin.messaging', () => {
     for (let i = 0; i < 500; i++) {
       messages.push({ topic: `foo-bar-${i % 10}` });
     }
-    return getMessaging().sendEach(messages, true, true)
+    return getMessaging().sendEach(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
@@ -207,7 +213,7 @@ describe('admin.messaging', () => {
       android: message.android,
       tokens: ['not-a-token', 'also-not-a-token'],
     };
-    return getMessaging().sendEachForMulticast(multicastMessage, true)
+    return getMessaging(legacyTransportApp).sendEachForMulticast(multicastMessage, true)
       .then((response) => {
         expect(response.responses.length).to.equal(2);
         expect(response.successCount).to.equal(0);
@@ -226,7 +232,7 @@ describe('admin.messaging', () => {
       android: message.android,
       tokens: ['not-a-token', 'also-not-a-token'],
     };
-    return getMessaging().sendEachForMulticast(multicastMessage, true, true)
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
       .then((response) => {
         expect(response.responses.length).to.equal(2);
         expect(response.successCount).to.equal(0);

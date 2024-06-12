@@ -1307,14 +1307,14 @@ export class Http2SessionHandler {
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
         throw new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`
+          `Error while making requests: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`
         );
       })
 
       http2Session.on('error', (error) => {
         throw new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${error}`
+          `Error while making requests: ${error}`
         );
       })
       return http2Session
