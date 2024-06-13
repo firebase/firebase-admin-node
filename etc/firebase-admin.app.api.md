@@ -15,6 +15,32 @@ export interface App {
 }
 
 // @public
+export class AppErrorCodes {
+    // (undocumented)
+    static APP_DELETED: string;
+    // (undocumented)
+    static DUPLICATE_APP: string;
+    // (undocumented)
+    static INTERNAL_ERROR: string;
+    // (undocumented)
+    static INVALID_APP_NAME: string;
+    // (undocumented)
+    static INVALID_APP_OPTIONS: string;
+    // (undocumented)
+    static INVALID_ARGUMENT: string;
+    // (undocumented)
+    static INVALID_CREDENTIAL: string;
+    // (undocumented)
+    static NETWORK_ERROR: string;
+    // (undocumented)
+    static NETWORK_TIMEOUT: string;
+    // (undocumented)
+    static NO_APP: string;
+    // (undocumented)
+    static UNABLE_TO_PARSE_RESPONSE: string;
+}
+
+// @public
 export function applicationDefault(httpAgent?: Agent): Credential;
 
 // @public
@@ -38,6 +64,12 @@ export interface Credential {
 
 // @public
 export function deleteApp(app: App): Promise<void>;
+
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseAppError extends PrefixedFirebaseError {
+}
 
 // @public
 export interface FirebaseArrayIndexError {
