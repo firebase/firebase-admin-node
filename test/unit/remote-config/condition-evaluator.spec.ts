@@ -25,7 +25,7 @@ import {
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
-import * as farmhash from 'farmhash';
+import * as farmhash from 'farmhash-modern';
 
 const expect = chai.expect;
 
@@ -223,7 +223,7 @@ describe('ConditionEvaluator', () => {
         // Stubs ID hasher to return a number larger than zero.
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('1');
+          .returns(1n);
         stubs.push(stub);
 
         const condition = {
@@ -256,7 +256,7 @@ describe('ConditionEvaluator', () => {
         // Stubs ID hasher to return a number in range.
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('1');
+          .returns(1n);
         stubs.push(stub);
 
         const condition = {
@@ -289,7 +289,7 @@ describe('ConditionEvaluator', () => {
         // Stubs ID hasher to return a number outside range.
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('1');
+          .returns(1n);
         stubs.push(stub);
 
         const condition = {
@@ -325,7 +325,7 @@ describe('ConditionEvaluator', () => {
         // Stubs ID hasher to return a number in range.
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('1');
+          .returns(1n);
         stubs.push(stub);
 
         const condition = {
@@ -360,7 +360,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 9 as less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('9');
+          .returns(9n);
 
         stubs.push(stub);
         const condition = {
@@ -391,7 +391,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 10 as less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('10');
+          .returns(10n);
 
         stubs.push(stub);
         const condition = {
@@ -422,7 +422,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 11 as not less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('11');
+          .returns(11n);
 
         stubs.push(stub);
         const condition = {
@@ -453,7 +453,7 @@ describe('ConditionEvaluator', () => {
       it('should negate -11 to 11 and evaluate as not less or equal to 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('-11');
+          .returns(-11n);
 
         stubs.push(stub);
         const condition = {
@@ -509,7 +509,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 11M as greater than 10M', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('11');
+          .returns(11n);
 
         stubs.push(stub);
         const condition = {
@@ -540,7 +540,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 9 as not greater than 10', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('9');
+          .returns(9n);
         stubs.push(stub);
 
         const condition = {
@@ -624,7 +624,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 10 as between 9 and 11', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('10');
+          .returns(10n);
         stubs.push(stub);
 
         const condition = {
@@ -686,7 +686,7 @@ describe('ConditionEvaluator', () => {
       it('should evaluate 12 as not between 9 and 11', () => {
         const stub = sinon
           .stub(farmhash, 'fingerprint64')
-          .returns('12');
+          .returns(12n);
         stubs.push(stub);
 
         const condition = {
