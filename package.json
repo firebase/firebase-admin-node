@@ -205,7 +205,7 @@
     "jwks-rsa": "^3.1.0",
     "long": "^5.2.3",
     "node-forge": "^1.3.1",
-    "uuid": "^9.0.0"
+    "uuid": "^10.0.0"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^7.7.0",
