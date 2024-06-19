@@ -818,6 +818,12 @@ export class AuthorizedHttpClient extends HttpClient {
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
 
+      // Fix issue where firebase-admin does not specify quota project that is
+      // necessary for use when utilizing human account with ADC (RSDF)
+      if (!requestCopy.headers['x-goog-user-project'] && this.app.options.projectId) {
+        requestCopy.headers['x-goog-user-project'] = this.app.options.projectId
+      }
+
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
