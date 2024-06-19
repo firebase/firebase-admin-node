@@ -44,6 +44,7 @@ describe('SecurityRulesApiClient', () => {
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'x-goog-user-project': 'test-project',
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
