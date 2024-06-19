@@ -200,7 +200,7 @@
     "@firebase/database-compat": "^1.0.2",
     "@firebase/database-types": "^1.0.0",
     "@types/node": "^20.10.3",
-    "farmhash": "^3.3.1",
+    "farmhash-modern": "^1.1.0",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.1.0",
     "long": "^5.2.3",
