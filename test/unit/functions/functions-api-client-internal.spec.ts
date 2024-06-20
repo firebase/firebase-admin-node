@@ -44,7 +44,8 @@ describe('FunctionsApiClient', () => {
 
   const EXPECTED_HEADERS = {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
-    'Authorization': 'Bearer mock-token'
+    'Authorization': 'Bearer mock-token',
+    'x-goog-user-project': 'test-project',
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '

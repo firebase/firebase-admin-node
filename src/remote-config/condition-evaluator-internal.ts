@@ -25,7 +25,7 @@ import {
   PercentCondition,
   PercentConditionOperator
 } from './remote-config-api';
-import * as farmhash from 'farmhash';
+import * as farmhash from 'farmhash-modern';
 import long = require('long');
 
 /**
@@ -149,7 +149,7 @@ export class ConditionEvaluator {
 
 
     // Using a 64-bit long for consistency with the Remote Config fetch endpoint.
-    let hash64 = long.fromString(farmhash.fingerprint64(stringToHash));
+    let hash64 = long.fromString(farmhash.fingerprint64(stringToHash).toString());
 
     // Negate the hash if its value is less than 0. We handle this manually because the
     // Long library doesn't provided an absolute value method.
