@@ -230,7 +230,7 @@
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "bcrypt": "^5.0.0",
