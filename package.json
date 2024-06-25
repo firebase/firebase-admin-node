@@ -235,7 +235,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
-    "chai-as-promised": "^7.0.0",
+    "chai-as-promised": "^8.0.0",
     "chai-exclude": "^2.1.0",
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
