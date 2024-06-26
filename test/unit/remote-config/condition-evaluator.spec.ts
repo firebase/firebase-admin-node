@@ -145,7 +145,7 @@ describe('ConditionEvaluator', () => {
     });
 
     describe('percentCondition', () => {
-      it('should evaluate an unknown operator to false', function () {
+      it('should evaluate an unknown operator to false', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -172,7 +172,7 @@ describe('ConditionEvaluator', () => {
           new Map([['is_enabled', false]]));
       });
 
-      it('should evaluate less or equal to max to true', function () {
+      it('should evaluate less or equal to max to true', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -200,7 +200,7 @@ describe('ConditionEvaluator', () => {
           new Map([['is_enabled', true]]));
       });
 
-      it('should evaluate less or equal to min to false', function () {
+      it('should evaluate less or equal to min to false', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -490,7 +490,7 @@ describe('ConditionEvaluator', () => {
         expect(actual).to.be.false;
       });
 
-      it('should evaluate greater than min to true', function () {
+      it('should evaluate greater than min to true', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -580,7 +580,7 @@ describe('ConditionEvaluator', () => {
         expect(actual).to.be.false;
       });
 
-      it('should evaluate greater than max to false', function () {
+      it('should evaluate greater than max to false', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -608,7 +608,7 @@ describe('ConditionEvaluator', () => {
           new Map([['is_enabled', false]]));
       });
 
-      it('should evaluate between min and max to true', function () {
+      it('should evaluate between min and max to true', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -673,7 +673,7 @@ describe('ConditionEvaluator', () => {
         expect(actual).to.be.true;
       });
 
-      it('should evaluate between equal bounds to false', function () {
+      it('should evaluate between equal bounds to false', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -746,7 +746,7 @@ describe('ConditionEvaluator', () => {
       // trials with 50% probability:
       //   from scipy.stats import binom
       //   print(binom.std(100_000, 0.5) * 3)
-      it('should evaluate less or equal to 10% to approx 10%', function () {
+      it('should evaluate less or equal to 10% to approx 10%', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -762,7 +762,7 @@ describe('ConditionEvaluator', () => {
         expect(truthyAssignments).to.be.lessThanOrEqual(10000 + tolerance);
       });
 
-      it('should evaluate between 0 to 10% to approx 10%', function () {
+      it('should evaluate between 0 to 10% to approx 10%', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -781,7 +781,7 @@ describe('ConditionEvaluator', () => {
         expect(truthyAssignments).to.be.lessThanOrEqual(10000 + tolerance);
       });
 
-      it('should evaluate greater than 10% to approx 90%', function () {
+      it('should evaluate greater than 10% to approx 90%', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -797,7 +797,7 @@ describe('ConditionEvaluator', () => {
         expect(truthyAssignments).to.be.lessThanOrEqual(90000 + tolerance);
       });
 
-      it('should evaluate between 40% to 60% to approx 20%', function () {
+      it('should evaluate between 40% to 60% to approx 20%', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
@@ -816,7 +816,7 @@ describe('ConditionEvaluator', () => {
         expect(truthyAssignments).to.be.lessThanOrEqual(20000 + tolerance);
       });
 
-      it('should evaluate between interquartile range to approx 50%', function () {
+      it('should evaluate between interquartile range to approx 50%', function() {
         if (nodeVersion.startsWith('14')) {
           this.skip();
         }
