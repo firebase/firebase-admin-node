@@ -16,7 +16,7 @@
  */
 
 import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
-import { HttpError } from '../utils/api-request';
+import { RequestResponseError } from '../utils/api-request';
 import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
 
 import * as validator from '../utils/validator';
@@ -213,7 +213,7 @@ export function handleCryptoSignerError(err: Error): Error {
   }
   if (err.code === CryptoSignerErrorCode.SERVER_ERROR && validator.isNonNullObject(err.cause)) {
     const httpError = err.cause;
-    const errorResponse = (httpError as HttpError).response.data;
+    const errorResponse = (httpError as RequestResponseError).response.data;
     if (validator.isNonNullObject(errorResponse) && errorResponse.error) {
       const errorCode = errorResponse.error.status;
       const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +

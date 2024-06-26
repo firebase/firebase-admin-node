@@ -19,7 +19,7 @@ import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
 } from '../utils/api-request';
 
 import * as utils from '../utils/index';
@@ -93,7 +93,7 @@ export class FirebaseInstallationsRequestHandler {
         // return nothing on success
       })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           const response = err.response;
           const errorMessage: string = (response.isJson() && 'error' in response.data) ?
             response.data.error : response.text;

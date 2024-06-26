@@ -41,6 +41,7 @@ import {
   NotificationMessagePayload,
   SendResponse,
 } from './messaging-api';
+import { Http2SessionHandler } from '../utils/api-request';
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -192,6 +193,7 @@ export class Messaging {
   private urlPath: string;
   private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private useLegacyTransport = false;
 
   /**
    * @internal
@@ -219,6 +221,22 @@ export class Messaging {
    */
   get app(): App {
     return this.appInternal;
+  }
+
+  /**
+   * Enables the use of the legacy HTTP/1.1 transport for sendEach() and sendEachForMulticast().
+   * 
+   * @example
+   * ```javascript
+   * const messaging = getMessaging(app);
+   * messaging.enableLegacyTransport();
+   * messaging.sendEach(messages);
+   * ```
+   * 
+   * @deprecated This is to be removed once the HTTP/2 transport is universally safe.
+   */
+  public enableLegacyHttpTransport(): void {
+    this.useLegacyTransport = true;
   }
 
   /**
@@ -292,6 +310,8 @@ export class Messaging {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
+    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
+
     return this.getUrlPath()
       .then((urlPath) => {
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
@@ -300,10 +320,16 @@ export class Messaging {
           if (dryRun) {
             request.validate_only = true;
           }
-          return this.messagingRequestHandler.invokeRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          
+          if (http2SessionHandler){
+            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
+              FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+          }
+          return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
         });
         return Promise.allSettled(requests);
-      }).then((results) => {
+      })
+      .then((results) => {
         const responses: SendResponse[] = [];
         results.forEach(result => {
           if (result.status === 'fulfilled') {
@@ -318,6 +344,11 @@ export class Messaging {
           successCount,
           failureCount: responses.length - successCount,
         };
+      })
+      .finally(() => {
+        if (http2SessionHandler){
+          http2SessionHandler.close()
+        }
       });
   }
 

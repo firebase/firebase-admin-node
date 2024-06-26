@@ -24,7 +24,7 @@ import {
   APP_CHECK_ERROR_CODE_MAPPING,
 } from './app-check-api-client-internal';
 import { AppCheckTokenOptions } from './app-check-api';
-import { HttpError } from '../utils/api-request';
+import { RequestResponseError } from '../utils/api-request';
 
 const ONE_MINUTE_IN_SECONDS = 60;
 const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
@@ -147,7 +147,7 @@ export function appCheckErrorFromCryptoSignerError(err: Error): Error {
     return err;
   }
   if (err.code === CryptoSignerErrorCode.SERVER_ERROR && validator.isNonNullObject(err.cause)) {
-    const httpError = err.cause as HttpError
+    const httpError = err.cause as RequestResponseError
     const errorResponse = httpError.response.data;
     if (errorResponse?.error) {
       const status = errorResponse.error.status;

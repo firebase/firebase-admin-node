@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { ServiceAccountCredential } from '../app/credential-internal';
-import { AuthorizedHttpClient, HttpRequestConfig, HttpClient, HttpError } from './api-request';
+import { AuthorizedHttpClient, HttpRequestConfig, HttpClient, RequestResponseError } from './api-request';
 
 import { Algorithm } from 'jsonwebtoken';
 import { ErrorInfo } from '../utils/error';
@@ -138,7 +138,7 @@ export class IAMSigner implements CryptoSigner {
       // Response from IAM is base64 encoded. Decode it into a buffer and return.
       return Buffer.from(response.data.signedBlob, 'base64');
     }).catch((err) => {
-      if (err instanceof HttpError) {
+      if (err instanceof RequestResponseError) {
         throw new CryptoSignerError({
           code: CryptoSignerErrorCode.SERVER_ERROR,
           message: err.message,

@@ -189,6 +189,8 @@ export type Message = TokenMessage | TopicMessage | ConditionMessage;
 // @public
 export class Messaging {
     get app(): App;
+    // @deprecated
+    enableLegacyHttpTransport(): void;
     send(message: Message, dryRun?: boolean): Promise<string>;
     // @deprecated
     sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;

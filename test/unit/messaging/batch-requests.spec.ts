@@ -23,7 +23,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as utils from '../utils';
 
-import { HttpClient, HttpResponse, HttpRequestConfig, HttpError } from '../../../src/utils/api-request';
+import { HttpClient, RequestResponse, HttpRequestConfig, RequestResponseError } from '../../../src/utils/api-request';
 import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request-internal';
 
 chai.should();
@@ -47,7 +47,7 @@ function getParsedPartData(obj: object): string {
     + `${json}`;
 }
 
-function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
+function createMultipartResponse(success: object[], failures: object[] = []): RequestResponse {
   const multipart: Buffer[] = [];
   success.forEach((part) => {
     let payload = '';
@@ -97,7 +97,7 @@ describe('BatchRequestClient', () => {
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(1);
     expect(responses[0].status).to.equal(200);
@@ -116,7 +116,7 @@ describe('BatchRequestClient', () => {
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(3);
     responses.forEach((response) => {
@@ -137,7 +137,7 @@ describe('BatchRequestClient', () => {
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(3);
     responses.forEach((response, idx) => {
@@ -163,8 +163,8 @@ describe('BatchRequestClient', () => {
       await batch.send(requests);
       sinon.assert.fail('No error thrown for HTTP error');
     } catch (err) {
-      expect(err).to.be.instanceOf(HttpError);
-      expect((err as HttpError).response.status).to.equal(500);
+      expect(err).to.be.instanceOf(RequestResponseError);
+      expect((err as RequestResponseError).response.status).to.equal(500);
       checkOutgoingRequest(stub, requests);
     }
   });
@@ -180,7 +180,7 @@ describe('BatchRequestClient', () => {
     const commonHeaders = { 'X-Custom-Header': 'value' };
     const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(1);
     expect(stub).to.have.been.calledOnce;
@@ -205,7 +205,7 @@ describe('BatchRequestClient', () => {
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(1);
     expect(stub).to.have.been.calledOnce;
@@ -229,7 +229,7 @@ describe('BatchRequestClient', () => {
     const commonHeaders = { 'X-Custom-Header': 'value' };
     const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
 
-    const responses: HttpResponse[] = await batch.send(requests);
+    const responses: RequestResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(1);
     expect(stub).to.have.been.calledOnce;

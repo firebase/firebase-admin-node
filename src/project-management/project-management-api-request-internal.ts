@@ -17,7 +17,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  AuthorizedHttpClient, HttpError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
+  AuthorizedHttpClient, RequestResponseError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
 import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
 import { getSdkVersion } from '../utils/index';
@@ -322,13 +322,13 @@ export class ProjectManagementRequestHandler {
       .then((response) => {
         // Send non-JSON responses to the catch() below, where they will be treated as errors.
         if (!response.isJson()) {
-          throw new HttpError(response);
+          throw new RequestResponseError(response);
         }
 
         return response.data;
       })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           ProjectManagementRequestHandler.wrapAndRethrowHttpError(
             err.response.status, err.response.text);
         }

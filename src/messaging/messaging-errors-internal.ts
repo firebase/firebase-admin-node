@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { HttpError } from '../utils/api-request';
+import { RequestResponseError } from '../utils/api-request';
 import { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
 import * as validator from '../utils/validator';
 
@@ -25,7 +25,7 @@ import * as validator from '../utils/validator';
  * @param err - The HttpError to convert into a Firebase error
  * @returns A Firebase error that can be returned to the user.
  */
-export function createFirebaseError(err: HttpError): FirebaseMessagingError {
+export function createFirebaseError(err: RequestResponseError): FirebaseMessagingError {
   if (err.response.isJson()) {
     // For JSON responses, map the server response to a client-side error.
     const json = err.response.data;

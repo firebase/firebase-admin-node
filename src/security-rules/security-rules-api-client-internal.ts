@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
+import { HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
@@ -283,7 +283,7 @@ export class SecurityRulesApiClient {
       });
   }
 
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
+  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
     if (err instanceof PrefixedFirebaseError) {
       return err;
     }

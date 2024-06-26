@@ -17,6 +17,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
+import { legacyTransportApp } from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -101,6 +102,11 @@ const options = {
 };
 
 describe('admin.messaging', () => {
+
+  before(() => {
+    getMessaging(legacyTransportApp).enableLegacyHttpTransport()
+  })
+
   it('send(message, dryRun) returns a message ID', () => {
     return getMessaging().send(message, true)
       .then((name) => {
@@ -109,6 +115,37 @@ describe('admin.messaging', () => {
   });
 
   it('sendEach()', () => {
+    const messages: Message[] = [message, message, message];
+    return getMessaging(legacyTransportApp).sendEach(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendEach(500)', () => {
+    const messages: Message[] = [];
+    for (let i = 0; i < 500; i++) {
+      messages.push({ topic: `foo-bar-${i % 10}` });
+    }
+    return getMessaging(legacyTransportApp).sendEach(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendEach() using HTTP2', () => {
     const messages: Message[] = [message, message, message];
     return getMessaging().sendEach(messages, true)
       .then((response) => {
@@ -122,7 +159,7 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('sendEach(500)', () => {
+  it('sendEach(500) using HTTP2', () => {
     const messages: Message[] = [];
     for (let i = 0; i < 500; i++) {
       messages.push({ topic: `foo-bar-${i % 10}` });
@@ -171,6 +208,25 @@ describe('admin.messaging', () => {
   });
 
   it('sendEachForMulticast()', () => {
+    const multicastMessage: MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      tokens: ['not-a-token', 'also-not-a-token'],
+    };
+    return getMessaging(legacyTransportApp).sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
+        });
+      });
+  });
+
+  it('sendEachForMulticast() using HTTP2', () => {
     const multicastMessage: MulticastMessage = {
       data: message.data,
       android: message.android,
