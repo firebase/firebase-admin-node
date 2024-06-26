@@ -63,12 +63,6 @@ describe('PasskeyConfig', () => {
     });
 
     describe('for update request', () => {
-      // it('should throw error if rpId is defined', () => {
-      //   expect(() => {
-      //     PasskeyConfig.buildServerRequest(false, passkeyConfigRequest);
-      //   }).to.throw('\'rpId\' cannot be changed once created.');
-      // });
-
       it('should create a client request with valid params', () => {
         const expectedRequest: PasskeyConfigClientRequest = {
           rpId: passkeyConfigRequest.rpId,
