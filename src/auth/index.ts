@@ -174,3 +174,8 @@ export {
   UserRecord,
   PasskeyInfo,
 } from './user-record';
+
+export {
+  FirebaseAuthError,
+  AuthClientErrorCode,
+} from '../utils/error';

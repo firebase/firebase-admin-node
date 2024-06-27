@@ -165,6 +165,12 @@ export interface FcmOptions {
     analyticsLabel?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseMessagingError extends PrefixedFirebaseError {
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -198,6 +204,105 @@ export class Messaging {
     sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
+}
+
+// @public
+export class MessagingClientErrorCode {
+    // (undocumented)
+    static AUTHENTICATION_ERROR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static DEVICE_MESSAGE_RATE_EXCEEDED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INTERNAL_ERROR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_ARGUMENT: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_DATA_PAYLOAD_KEY: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_OPTIONS: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_PACKAGE_NAME: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_PAYLOAD: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_RECIPIENT: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_REGISTRATION_TOKEN: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static MESSAGE_RATE_EXCEEDED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static MISMATCHED_CREDENTIAL: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static PAYLOAD_SIZE_LIMIT_EXCEEDED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static REGISTRATION_TOKEN_NOT_REGISTERED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static SERVER_UNAVAILABLE: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static THIRD_PARTY_AUTH_ERROR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static TOO_MANY_TOPICS: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static TOPICS_MESSAGE_RATE_EXCEEDED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static UNKNOWN_ERROR: {
+        code: string;
+        message: string;
+    };
 }
 
 // @public

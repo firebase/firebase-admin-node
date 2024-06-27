@@ -102,6 +102,12 @@ export { FieldValue }
 
 export { Filter }
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseFirestoreError extends FirebaseError {
+}
+
 export { Firestore }
 
 export { FirestoreDataConverter }

@@ -33,6 +33,7 @@ import { getSdkVersion } from '../../../src/utils/index';
 import {
   RemoteConfigTemplate, Version, ListVersionsResult,
 } from '../../../src/remote-config/index';
+import { ServerTemplateData } from '../../../src/remote-config/remote-config-api';
 
 const expect = chai.expect;
 
@@ -56,6 +57,7 @@ describe('RemoteConfigApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
+    'x-goog-user-project': 'test-project',
   };
 
   const VERSION_INFO: Version = {
@@ -661,6 +663,36 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
+  describe('getServerTemplate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.getServerTemplate()
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.getServerTemplate());
+    runErrorResponseTests(() => apiClient.getServerTemplate());
+
+    it('should resolve with the latest template on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-1' }));
+      stubs.push(stub);
+      return apiClient.getServerTemplate()
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
+          expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.etag).to.equal('etag-123456789012-1');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/serverRemoteConfig',
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+  });
+
   function runTemplateVersionNumberTests(rcOperation: (v: string | number) => any): void {
     ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
@@ -677,7 +709,7 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  function runEtagHeaderTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
+  function runEtagHeaderTests(rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData>): void {
     it('should reject when the etag is not present in the response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -690,7 +722,8 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  function runErrorResponseTests(rcOperation: () => Promise<RemoteConfigTemplate | ListVersionsResult>): void {
+  function runErrorResponseTests(
+    rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData | ListVersionsResult>): void {
     it('should reject when a full platform error response is received', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')

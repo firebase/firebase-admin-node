@@ -97,6 +97,8 @@ import './security-rules/security-rules-api-client.spec';
 import './remote-config/index.spec';
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';
+import './remote-config/condition-evaluator.spec';
+import './remote-config/internal/value-impl.spec';
 
 // AppCheck
 import './app-check/app-check.spec';

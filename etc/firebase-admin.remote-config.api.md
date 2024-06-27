@@ -9,6 +9,21 @@
 import { Agent } from 'http';
 
 // @public
+export interface AndCondition {
+    conditions?: Array<OneOfCondition>;
+}
+
+// @public
+export type DefaultConfig = {
+    [key: string]: string | number | boolean;
+};
+
+// @public
+export type EvaluationContext = {
+    randomizationId?: string;
+};
+
+// @public
 export interface ExplicitParameterValue {
     value: string;
 }
@@ -19,8 +34,18 @@ export interface ExplicitParameterValue {
 export function getRemoteConfig(app?: App): RemoteConfig;
 
 // @public
+export interface GetServerTemplateOptions {
+    defaultConfig?: DefaultConfig;
+}
+
+// @public
 export interface InAppDefaultValue {
     useInAppDefault: boolean;
+}
+
+// @public
+export interface InitServerTemplateOptions extends GetServerTemplateOptions {
+    template?: ServerTemplateDataType;
 }
 
 // @public
@@ -39,15 +64,59 @@ export interface ListVersionsResult {
 }
 
 // @public
+export interface MicroPercentRange {
+    microPercentLowerBound?: number;
+    microPercentUpperBound?: number;
+}
+
+// @public
+export interface NamedCondition {
+    condition: OneOfCondition;
+    name: string;
+}
+
+// @public
+export interface OneOfCondition {
+    andCondition?: AndCondition;
+    false?: Record<string, never>;
+    orCondition?: OrCondition;
+    percent?: PercentCondition;
+    true?: Record<string, never>;
+}
+
+// @public
+export interface OrCondition {
+    conditions?: Array<OneOfCondition>;
+}
+
+// @public
 export type ParameterValueType = 'STRING' | 'BOOLEAN' | 'NUMBER' | 'JSON';
+
+// @public
+export interface PercentCondition {
+    microPercent?: number;
+    microPercentRange?: MicroPercentRange;
+    percentOperator?: PercentConditionOperator;
+    seed?: string;
+}
+
+// @public
+export enum PercentConditionOperator {
+    BETWEEN = "BETWEEN",
+    GREATER_THAN = "GREATER_THAN",
+    LESS_OR_EQUAL = "LESS_OR_EQUAL",
+    UNKNOWN = "UNKNOWN"
+}
 
 // @public
 export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
+    getServerTemplate(options?: GetServerTemplateOptions): Promise<ServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
+    initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate;
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
     publishTemplate(template: RemoteConfigTemplate, options?: {
         force: boolean;
@@ -105,7 +174,47 @@ export interface RemoteConfigUser {
 }
 
 // @public
+export interface ServerConfig {
+    getBoolean(key: string): boolean;
+    getNumber(key: string): number;
+    getString(key: string): string;
+    getValue(key: string): Value;
+}
+
+// @public
+export interface ServerTemplate {
+    evaluate(context?: EvaluationContext): ServerConfig;
+    load(): Promise<void>;
+    set(template: ServerTemplateDataType): void;
+    toJSON(): ServerTemplateData;
+}
+
+// @public
+export interface ServerTemplateData {
+    conditions: NamedCondition[];
+    readonly etag: string;
+    parameters: {
+        [key: string]: RemoteConfigParameter;
+    };
+    version?: Version;
+}
+
+// @public
+export type ServerTemplateDataType = ServerTemplateData | string;
+
+// @public
 export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
+
+// @public
+export interface Value {
+    asBoolean(): boolean;
+    asNumber(): number;
+    asString(): string;
+    getSource(): ValueSource;
+}
+
+// @public
+export type ValueSource = 'static' | 'default' | 'remote';
 
 // @public
 export interface Version {

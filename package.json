@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "12.0.0",
+  "version": "12.2.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -200,13 +200,15 @@
     "@firebase/database-compat": "^1.0.2",
     "@firebase/database-types": "^1.0.0",
     "@types/node": "^20.10.3",
+    "farmhash-modern": "^1.1.0",
     "jsonwebtoken": "^9.0.0",
-    "jwks-rsa": "^3.0.1",
+    "jwks-rsa": "^3.1.0",
+    "long": "^5.2.3",
     "node-forge": "^1.3.1",
-    "uuid": "^9.0.0"
+    "uuid": "^10.0.0"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^7.1.0",
+    "@google-cloud/firestore": "^7.7.0",
     "@google-cloud/storage": "^7.7.0"
   },
   "devDependencies": {
@@ -228,7 +230,7 @@
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "bcrypt": "^5.0.0",
@@ -240,7 +242,7 @@
     "del": "^6.0.0",
     "eslint": "^8.12.0",
     "firebase-token-generator": "^2.0.0",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "gulp-filter": "^7.0.0",
     "gulp-header": "^2.0.9",
     "gulp-typescript": "^5.0.1",
@@ -255,7 +257,7 @@
     "request": "^2.75.0",
     "request-promise": "^4.1.1",
     "run-sequence": "^2.2.1",
-    "sinon": "^17.0.1",
+    "sinon": "^18.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
     "typescript": "5.1.6",
