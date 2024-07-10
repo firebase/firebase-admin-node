@@ -877,6 +877,7 @@ export type RecaptchaAction = 'BLOCK';
 export interface RecaptchaConfig {
     emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
     managedRules?: RecaptchaManagedRule[];
+    phoneEnforcementState?: RecaptchaProviderEnforcementState;
     recaptchaKeys?: RecaptchaKey[];
     useAccountDefender?: boolean;
 }

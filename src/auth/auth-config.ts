@@ -509,14 +509,14 @@ export interface MultiFactorConfig {
   factorIds?: AuthFactorType[];
 
   /**
-   * A list of multi-factor provider configurations. 
+   * A list of multi-factor provider configurations.
    * MFA providers (except phone) indicate whether they're enabled through this field.   */
   providerConfigs?: MultiFactorProviderConfig[];
 }
 
 /**
- * Interface representing a multi-factor auth provider configuration. 
- * This interface is used for second factor auth providers other than SMS. 
+ * Interface representing a multi-factor auth provider configuration.
+ * This interface is used for second factor auth providers other than SMS.
  * Currently, only TOTP is supported.
  */export interface MultiFactorProviderConfig {
   /**
@@ -528,7 +528,7 @@ export interface MultiFactorConfig {
 }
 
 /**
- * Interface representing configuration settings for TOTP second factor auth. 
+ * Interface representing configuration settings for TOTP second factor auth.
  */
 export interface TotpMultiFactorProviderConfig {
   /**
@@ -540,7 +540,7 @@ export interface TotpMultiFactorProviderConfig {
 /**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
- * 
+ *
  * @internal
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
@@ -555,7 +555,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
    */
   public readonly factorIds: AuthFactorType[];
   /**
-   * A list of multi-factor provider specific config. 
+   * A list of multi-factor provider specific config.
    * New MFA providers (except phone) will indicate enablement/disablement through this field.
    */
   public readonly providerConfigs: MultiFactorProviderConfig[];
@@ -1781,6 +1781,10 @@ export interface RecaptchaConfig {
   * The enforcement state of the email password provider.
   */
   emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+   /**
+  * The enforcement state of the phone provider.
+  */
+   phoneEnforcementState?: RecaptchaProviderEnforcementState;
   /**
    *  The reCAPTCHA managed rules.
    */
@@ -1800,12 +1804,14 @@ export interface RecaptchaConfig {
 
 export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  public readonly phoneEnforcementState?: RecaptchaProviderEnforcementState;
   public readonly managedRules?: RecaptchaManagedRule[];
   public readonly recaptchaKeys?: RecaptchaKey[];
   public readonly useAccountDefender?: boolean;
 
   constructor(recaptchaConfig: RecaptchaConfig) {
     this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
+    this.phoneEnforcementState = recaptchaConfig.phoneEnforcementState;
     this.managedRules = recaptchaConfig.managedRules;
     this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
     this.useAccountDefender = recaptchaConfig.useAccountDefender;
@@ -1818,6 +1824,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   public static validate(options: RecaptchaConfig): void {
     const validKeys = {
       emailPasswordEnforcementState: true,
+      phoneEnforcementState: true,
       managedRules: true,
       recaptchaKeys: true,
       useAccountDefender: true,
@@ -1854,6 +1861,24 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
+        );
+      }
+    }
+
+    if (typeof options.phoneEnforcementState !== undefined) {
+      if (!validator.isNonEmptyString(options.phoneEnforcementState)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"RecaptchaConfig.phoneEnforcementState" must be a valid non-empty string.',
+        );
+      }
+
+      if (options.phoneEnforcementState !== 'OFF' &&
+        options.phoneEnforcementState !== 'AUDIT' &&
+        options.phoneEnforcementState !== 'ENFORCE') {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"RecaptchaConfig.phoneEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
         );
       }
     }
@@ -1924,6 +1949,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   public toJSON(): object {
     const json: any = {
       emailPasswordEnforcementState: this.emailPasswordEnforcementState,
+      phoneEnforcementState: this.phoneEnforcementState,
       managedRules: deepCopy(this.managedRules),
       recaptchaKeys: deepCopy(this.recaptchaKeys),
       useAccountDefender: this.useAccountDefender,
@@ -1931,6 +1957,9 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
 
     if (typeof json.emailPasswordEnforcementState === 'undefined') {
       delete json.emailPasswordEnforcementState;
+    }
+    if (typeof json.phoneEnforcementState === 'undefined') {
+      delete json.phoneEnforcementState;
     }
     if (typeof json.managedRules === 'undefined') {
       delete json.managedRules;
@@ -1947,8 +1976,8 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   }
 }
 
-/** 
- * A password policy configuration for a project or tenant 
+/**
+ * A password policy configuration for a project or tenant
 */
 export interface PasswordPolicyConfig {
   /**
@@ -2003,7 +2032,7 @@ export interface CustomStrengthOptionsConfig {
 /**
  * Defines the password policy config class used to convert client side PasswordPolicyConfig
  * to a format that is understood by the Auth server.
- * 
+ *
  * @internal
  */
 export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
@@ -2110,7 +2139,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
       );
     }
-    
+
     if (typeof options.forceUpgradeOnSignin !== 'undefined') {
       if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
         throw new FirebaseAuthError(
@@ -2252,7 +2281,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
   }
 }
 
-/** 
+/**
  * Server side password policy configuration.
  */
 export interface PasswordPolicyAuthServerConfig {
@@ -2262,14 +2291,14 @@ export interface PasswordPolicyAuthServerConfig {
 }
 
 /**
- * Server side password policy versions configuration. 
+ * Server side password policy versions configuration.
  */
 export interface PasswordPolicyVersionsAuthServerConfig {
   customStrengthOptions?: CustomStrengthOptionsAuthServerConfig;
 }
 
 /**
- * Server side password policy constraints configuration. 
+ * Server side password policy constraints configuration.
  */
 export interface CustomStrengthOptionsAuthServerConfig {
   containsLowercaseCharacter?: boolean;
