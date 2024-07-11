@@ -105,6 +105,11 @@ export interface OneOfCondition {
    * Makes this condition a percent condition.
    */
   percent?: PercentCondition;
+
+  /**
+   * Makes this a custom signal condition.
+   */
+  customSignal?: CustomSignalCondition;
 }
 
 /**
@@ -211,6 +216,123 @@ export interface PercentCondition {
    * BETWEEN operator.
    */
   microPercentRange?: MicroPercentRange;
+}
+
+/**
+ * Defines supported operators for custom signal conditions.
+ */
+export enum CustomSignalOperator {
+
+  /**
+   * A catchall error case.
+   */
+  UNKNOWN = 'UNKNOWN',
+
+  /**
+   * The actual value is less than the target value.
+   */
+  NUMERIC_LESS_THAN = 'NUMERIC_LESS_THAN',
+
+  /**
+   * The actual value is less than or equal to the target value.
+   */
+  NUMERIC_LESS_EQUAL ='NUMERIC_LESS_EQUAL',
+
+  /**
+   * The actual value is equal to the target value.
+   */
+  NUMERIC_EQUAL = 'NUMERIC_EQUAL',
+
+  /**
+   * The actual value is not equal to the target value.
+   */
+  NUMERIC_NOT_EQUAL = 'NUMERIC_NOT_EQUAL',
+
+  /**
+   * The actual value is greater than the target value.
+   */
+  NUMERIC_GREATER_THAN = 'NUMERIC_GREATER_THAN',
+
+  /**
+   * The actual value is greater than or equal to the target value.
+   */
+  NUMERIC_GREATER_EQUAL = 'NUMERIC_GREATER_EQUAL',
+
+  /**
+   * AT LEAST ONE of the target values is a substring of the actual custom
+   * signal value. Eg: "abc" contains the string "a", "bc".
+   */
+  STRING_CONTAINS = 'STRING_CONTAINS',
+
+  /**
+   * NONE of the target values is a substring of the actual custom signal value.
+   */
+  STRING_DOES_NOT_CONTAIN = 'STRING_DOES_NOT_CONTAIN',
+
+  /**
+   * The actual value exactly matches AT LEAST ONE of the target values.
+   */
+  STRING_EXACTLY_MATCHES = 'STRING_EXACTLY_MATCHES',
+
+  /**
+   * The target regular expression matches a portion of AT LEAST ONE of the
+   * actual values (or the entire string). The regex conforms to RE2 format.
+   * See https://github.com/google/re2/wiki/Syntax
+   */
+  STRING_CONTAINS_REGEX = 'STRING_CONTAINS_REGEX',
+
+  /**
+   * The actual value is less than the target value.
+   */
+  SEMANTIC_VERSION_LESS_THAN = 'SEMANTIC_VERSION_LESS_THAN',
+
+  /**
+   * The actual value is less than or equal to the target value.
+   */
+  SEMANTIC_VERSION_LESS_EQUAL = 'SEMANTIC_VERSION_LESS_EQUAL',
+
+  /**
+   * The actual value is equal to the target value.
+   */
+  SEMANTIC_VERSION_EQUAL = 'SEMANTIC_VERSION_EQUAL',
+
+  /**
+   * The actual value is not equal to the target value.
+   */
+  SEMANTIC_VERSION_NOT_EQUAL = 'SEMANTIC_VERSION_NOT_EQUAL',
+
+  /**
+   * The actual value is greater than the target value.
+   */
+  SEMANTIC_VERSION_GREATER_THAN = 'SEMANTIC_VERSION_GREATER_THAN',
+
+  /**
+   * The actual value is greater than or equal to the target value.
+   */
+  SEMANTIC_VERSION_GREATER_EQUAL = 'SEMANTIC_VERSION_GREATER_EQUAL',
+}
+
+/**
+ * Represents a condition that compares provided signals against a target value.
+ */
+export interface CustomSignalCondition {
+
+  /**
+   * The choice of custom signal operator to determine how to compare targets
+   * to value(s).
+   */
+  customSignalOperator?: CustomSignalOperator;
+
+  /**
+   * The key of the signal set in the EvaluationContext
+   */
+  customSignalKey?: string;
+
+  /**
+   * A list of at most 100 target custom signal values. For numeric operators,
+   * this will have exactly ONE target value.
+   */
+  targetCustomSignalValues?: string[];
 }
 
 /**
@@ -416,7 +538,7 @@ export interface ServerTemplate {
 /**
  * Represents template evaluation input signals.
  */
-export type EvaluationContext = {
+export type EvaluationContext = {[key: string]: string|number}&{
 
   /**
    * Defines the identifier to use when splitting a group. For example,
