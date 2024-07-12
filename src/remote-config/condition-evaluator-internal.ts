@@ -215,7 +215,7 @@ export class ConditionEvaluator {
          targetCustomSignalValues,
          actualCustomSignalValue,
          (target, actual) => actual.includes(target),
-       });
+       );
      case CustomSignalOperator.STRING_EXACTLY_MATCHES:
        return compareStrings(
          targetCustomSignalValues,
