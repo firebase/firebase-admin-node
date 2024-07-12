@@ -185,7 +185,11 @@ export class ConditionEvaluator {
     customSignalCondition: CustomSignalCondition,
     context: EvaluationContext
   ): boolean {
-   const {customSignalOperator, customSignalKey, targetCustomSignalValues} = customSignalCondition;
+   const {
+     customSignalOperator,
+     customSignalKey,
+     targetCustomSignalValues,
+   } = customSignalCondition;
 
    if (!customSignalOperator || !customSignalKey || !targetCustomSignalValues) {
      // TODO: add logging once we have a wrapped logger.
@@ -201,21 +205,30 @@ export class ConditionEvaluator {
 
    switch (customSignalOperator) {
      case CustomSignalOperator.STRING_CONTAINS:
-       return forEveryString(targetCustomSignalValues, actualCustomSignalValue, (target, actual) => {
-         return actual.includes(target);
-       });
+       return compareStrings(
+         targetCustomSignalValues,
+         actualCustomSignalValue,
+         (target, actual) => actual.includes(target),
+       );
      case CustomSignalOperator.STRING_DOES_NOT_CONTAIN:
-       return !forEveryString(targetCustomSignalValues, actualCustomSignalValue, (target, actual) => {
-         return actual.includes(target);
+       return !compareStrings(
+         targetCustomSignalValues,
+         actualCustomSignalValue,
+         (target, actual) => actual.includes(target),
        });
      case CustomSignalOperator.STRING_EXACTLY_MATCHES:
-       return forEveryString(targetCustomSignalValues, actualCustomSignalValue, (target, actual) => {
-         return actual === target;
-       });
+       return compareStrings(
+         targetCustomSignalValues,
+         actualCustomSignalValue,
+         (target, actual) => actual === target,
+       );
      case CustomSignalOperator.STRING_CONTAINS_REGEX:
-       return forEveryString(targetCustomSignalValues, actualCustomSignalValue, (target, actual) => {
-         return new RegExp(target).test(actual);
-       });
+       return compareStrings(
+         targetCustomSignalValues,
+         actualCustomSignalValue,
+         (target, actual) => new RegExp(target).test(actual),
+       );
+     // TODO: add comparison logic for additional operators here.
    }
 
    // TODO: add logging once we have a wrapped logger.
@@ -223,7 +236,9 @@ export class ConditionEvaluator {
  }
 }
 
-function forEveryString(
+// Compares the actual string value of a signal against a list of target
+// values. If any of the target values are a match, returns true.
+function compareStrings(
   targetValues: Array<string>,
   actualValue: string|number,
   predicateFn: (target: string, actual: string) => boolean
