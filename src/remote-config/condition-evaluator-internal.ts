@@ -185,55 +185,55 @@ export class ConditionEvaluator {
     customSignalCondition: CustomSignalCondition,
     context: EvaluationContext
   ): boolean {
-   const {
-     customSignalOperator,
-     customSignalKey,
-     targetCustomSignalValues,
-   } = customSignalCondition;
+    const {
+      customSignalOperator,
+      customSignalKey,
+      targetCustomSignalValues,
+    } = customSignalCondition;
 
-   if (!customSignalOperator || !customSignalKey || !targetCustomSignalValues) {
-     // TODO: add logging once we have a wrapped logger.
-     return false;
-   }
+    if (!customSignalOperator || !customSignalKey || !targetCustomSignalValues) {
+      // TODO: add logging once we have a wrapped logger.
+      return false;
+    }
 
-   if (!targetCustomSignalValues.length) {
-     return false;
-   }
+    if (!targetCustomSignalValues.length) {
+      return false;
+    }
 
-   // Extract the value of the signal from the evaluation context.
-   const actualCustomSignalValue = context[customSignalKey];
+    // Extract the value of the signal from the evaluation context.
+    const actualCustomSignalValue = context[customSignalKey];
 
-   switch (customSignalOperator) {
-     case CustomSignalOperator.STRING_CONTAINS:
-       return compareStrings(
-         targetCustomSignalValues,
-         actualCustomSignalValue,
-         (target, actual) => actual.includes(target),
-       );
-     case CustomSignalOperator.STRING_DOES_NOT_CONTAIN:
-       return !compareStrings(
-         targetCustomSignalValues,
-         actualCustomSignalValue,
-         (target, actual) => actual.includes(target),
-       );
-     case CustomSignalOperator.STRING_EXACTLY_MATCHES:
-       return compareStrings(
-         targetCustomSignalValues,
-         actualCustomSignalValue,
-         (target, actual) => actual === target,
-       );
-     case CustomSignalOperator.STRING_CONTAINS_REGEX:
-       return compareStrings(
-         targetCustomSignalValues,
-         actualCustomSignalValue,
-         (target, actual) => new RegExp(target).test(actual),
-       );
+    switch (customSignalOperator) {
+    case CustomSignalOperator.STRING_CONTAINS:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_DOES_NOT_CONTAIN:
+      return !compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_EXACTLY_MATCHES:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual === target,
+      );
+    case CustomSignalOperator.STRING_CONTAINS_REGEX:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => new RegExp(target).test(actual),
+      );
      // TODO: add comparison logic for additional operators here.
-   }
+    }
 
-   // TODO: add logging once we have a wrapped logger.
-   return false;
- }
+    // TODO: add logging once we have a wrapped logger.
+    return false;
+  }
 }
 
 // Compares the actual string value of a signal against a list of target

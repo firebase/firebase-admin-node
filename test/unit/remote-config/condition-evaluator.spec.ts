@@ -902,7 +902,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'foobar'};
+          const context = { 'user_prop': 'foobar' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', true]]));
         });
@@ -916,7 +916,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'baz'};
+          const context = { 'user_prop': 'baz' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', false]]));
         });
@@ -932,7 +932,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'foobar'};
+          const context = { 'user_prop': 'foobar' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', false]]));
         });
@@ -946,7 +946,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'biz'};
+          const context = { 'user_prop': 'biz' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', true]]));
         });
@@ -962,7 +962,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'bar'};
+          const context = { 'user_prop': 'bar' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', true]]));
         });
@@ -976,7 +976,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'biz'};
+          const context = { 'user_prop': 'biz' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', false]]));
         });
@@ -992,7 +992,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'bar'};
+          const context = { 'user_prop': 'bar' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', true]]));
         });
@@ -1006,7 +1006,7 @@ describe('ConditionEvaluator', () => {
             }
           });
           const evaluator = new ConditionEvaluator();
-          const context = {'user_prop': 'biz'};
+          const context = { 'user_prop': 'biz' };
           expect(evaluator.evaluateConditions([condition], context)).deep.equals(
             new Map([['is_enabled', false]]));
         });
