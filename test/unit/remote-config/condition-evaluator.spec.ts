@@ -23,7 +23,6 @@ import {
   PercentConditionOperator,
   PercentCondition,
   CustomSignalOperator,
-  // CustomSignalCondition,
   NamedCondition,
   OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
@@ -879,7 +878,7 @@ describe('ConditionEvaluator', () => {
         return evalTrueCount;
       }
     });
-    
+
     describe('customSignalCondition', () => {
       it('should evaluate an unknown operator to false', () => {
         const condition = createNamedCondition('is_enabled', {

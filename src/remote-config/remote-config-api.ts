@@ -536,9 +536,14 @@ export interface ServerTemplate {
 }
 
 /**
- * Represents template evaluation input signals.
+ * Generic map of developer-defined signals used as evaluation input signals.
  */
-export type EvaluationContext = {[key: string]: string|number}&{
+export type UserProvidedSignals = {[key: string]: string|number};
+
+/**
+ * Predefined template evaluation input signals.
+ */
+export type PredefinedSignals = {
 
   /**
    * Defines the identifier to use when splitting a group. For example,
@@ -546,6 +551,11 @@ export type EvaluationContext = {[key: string]: string|number}&{
    */
   randomizationId?: string
 };
+
+/**
+ * Represents template evaluation input signals.
+ */
+export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 /**
  * Interface representing a Remote Config user.
