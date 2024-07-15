@@ -46,12 +46,11 @@ export type DefaultConfig = {
     [key: string]: string | number | boolean;
 };
 
+// Warning: (ae-forgotten-export) The symbol "UserProvidedSignals" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PredefinedSignals" needs to be exported by the entry point index.d.ts
+//
 // @public
-export type EvaluationContext = {
-    [key: string]: string | number;
-} & {
-    randomizationId?: string;
-};
+export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 // @public
 export interface ExplicitParameterValue {
