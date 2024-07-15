@@ -14,12 +14,42 @@ export interface AndCondition {
 }
 
 // @public
+export interface CustomSignalCondition {
+    customSignalKey?: string;
+    customSignalOperator?: CustomSignalOperator;
+    targetCustomSignalValues?: string[];
+}
+
+// @public
+export enum CustomSignalOperator {
+    NUMERIC_EQUAL = "NUMERIC_EQUAL",
+    NUMERIC_GREATER_EQUAL = "NUMERIC_GREATER_EQUAL",
+    NUMERIC_GREATER_THAN = "NUMERIC_GREATER_THAN",
+    NUMERIC_LESS_EQUAL = "NUMERIC_LESS_EQUAL",
+    NUMERIC_LESS_THAN = "NUMERIC_LESS_THAN",
+    NUMERIC_NOT_EQUAL = "NUMERIC_NOT_EQUAL",
+    SEMANTIC_VERSION_EQUAL = "SEMANTIC_VERSION_EQUAL",
+    SEMANTIC_VERSION_GREATER_EQUAL = "SEMANTIC_VERSION_GREATER_EQUAL",
+    SEMANTIC_VERSION_GREATER_THAN = "SEMANTIC_VERSION_GREATER_THAN",
+    SEMANTIC_VERSION_LESS_EQUAL = "SEMANTIC_VERSION_LESS_EQUAL",
+    SEMANTIC_VERSION_LESS_THAN = "SEMANTIC_VERSION_LESS_THAN",
+    SEMANTIC_VERSION_NOT_EQUAL = "SEMANTIC_VERSION_NOT_EQUAL",
+    STRING_CONTAINS = "STRING_CONTAINS",
+    STRING_CONTAINS_REGEX = "STRING_CONTAINS_REGEX",
+    STRING_DOES_NOT_CONTAIN = "STRING_DOES_NOT_CONTAIN",
+    STRING_EXACTLY_MATCHES = "STRING_EXACTLY_MATCHES",
+    UNKNOWN = "UNKNOWN"
+}
+
+// @public
 export type DefaultConfig = {
     [key: string]: string | number | boolean;
 };
 
 // @public
 export type EvaluationContext = {
+    [key: string]: string | number;
+} & {
     randomizationId?: string;
 };
 
@@ -78,6 +108,7 @@ export interface NamedCondition {
 // @public
 export interface OneOfCondition {
     andCondition?: AndCondition;
+    customSignal?: CustomSignalCondition;
     false?: Record<string, never>;
     orCondition?: OrCondition;
     percent?: PercentCondition;
