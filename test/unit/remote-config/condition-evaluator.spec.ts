@@ -21,7 +21,10 @@ import * as sinon from 'sinon';
 import { ConditionEvaluator } from '../../../src/remote-config/condition-evaluator-internal';
 import {
   PercentConditionOperator,
-  PercentCondition
+  PercentCondition,
+  CustomSignalOperator,
+  NamedCondition,
+  OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
@@ -40,6 +43,24 @@ describe('ConditionEvaluator', () => {
     }
     stubs = [];
   });
+
+  function createNamedCondition(
+    name: string,
+    condition: OneOfCondition
+  ): NamedCondition {
+    return {
+      name,
+      condition: {
+        orCondition: {
+          conditions: [{
+            andCondition: {
+              conditions: [condition],
+            }
+          }]
+        }
+      }
+    };
+  }
 
   describe('evaluateConditions', () => {
     it('should evaluate empty OR condition to false', () => {
@@ -857,78 +878,211 @@ describe('ConditionEvaluator', () => {
         return evalTrueCount;
       }
     });
-  });
 
-  describe('hashSeededRandomizationId', () => {
-    // The Farmhash algorithm produces a 64 bit unsigned integer,
-    // which we convert to a signed integer for legacy compatibility.
-    // This has caused confusion in the past, so we explicitly
-    // test here.
-    it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-      
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63-1 = 9223372036854775807.
-        .returns(BigInt('9223372036854775807'));
-      stubs.push(stub);
+    describe('hashSeededRandomizationId', () => {
+      // The Farmhash algorithm produces a 64 bit unsigned integer,
+      // which we convert to a signed integer for legacy compatibility.
+      // This has caused confusion in the past, so we explicitly
+      // test here.
+      it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
+        if (nodeVersion.startsWith('14')) {
+          this.skip();
+        }
 
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-      
-      expect(actual).to.equal(BigInt('9223372036854775807'))
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          // 2^63-1 = 9223372036854775807.
+          .returns(BigInt('9223372036854775807'));
+        stubs.push(stub);
+
+        const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+        expect(actual).to.equal(BigInt('9223372036854775807'))
+      });
+
+      it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
+        if (nodeVersion.startsWith('14')) {
+          this.skip();
+        }
+
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          // 2^63 = 9223372036854775808.
+          .returns(BigInt('9223372036854775808'));
+        stubs.push(stub);
+
+        const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+        // 2^63 is the negation of 2^63-1
+        expect(actual).to.equal(BigInt('9223372036854775808'))
+      });
+
+      it('should convert 2^63+1 to negative and then find the absolute value', function () {
+        if (nodeVersion.startsWith('14')) {
+          this.skip();
+        }
+
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          // 2^63+1 9223372036854775809.
+          .returns(BigInt('9223372036854775809'));
+        stubs.push(stub);
+
+        const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+        // 2^63+1 is larger than 2^63, so the absolute value is smaller
+        expect(actual).to.equal(BigInt('9223372036854775807'))
+      });
+
+      it('should handle the value that initially caused confusion', function () {
+        if (nodeVersion.startsWith('14')) {
+          this.skip();
+        }
+
+        const stub = sinon
+          .stub(farmhash, 'fingerprint64')
+          // We were initially confused about the nature of this value ...
+          .returns(BigInt('16081085603393958147'));
+        stubs.push(stub);
+
+        const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+        // ... Now we know it's the unsigned equivalent of this absolute value.
+        expect(actual).to.equal(BigInt('2365658470315593469'))
+      });
     });
 
-    it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-      
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63 = 9223372036854775808.
-        .returns(BigInt('9223372036854775808'));
-      stubs.push(stub);
+    describe('customSignalCondition', () => {
+      it('should evaluate an unknown operator to false', () => {
+        const condition = createNamedCondition('is_enabled', {
+          customSignal: {
+            customSignalOperator: CustomSignalOperator.UNKNOWN
+          }
+        });
+        const evaluator = new ConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition], {})).deep.equals(
+          new Map([['is_enabled', false]]));
+      });
 
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-      
-      // 2^63 is the negation of 2^63-1
-      expect(actual).to.equal(BigInt('9223372036854775808'))
-    });
+      describe('STRING_CONTAINS', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'foobar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
 
-    it('should convert 2^63+1 to negative and then find the absolute value', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-      
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63+1 9223372036854775809.
-        .returns(BigInt('9223372036854775809'));
-      stubs.push(stub);
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'baz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
 
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-      
-      // 2^63+1 is larger than 2^63, so the absolute value is smaller
-      expect(actual).to.equal(BigInt('9223372036854775807'))
-    });
+      describe('STRING_DOES_NOT_CONTAIN', () => {
+        it('should evaluate STRING_DOES_NOT_CONTAIN to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'foobar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
 
-    it('should handle the value that initially caused confusion', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-      
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // We were initially confused about the nature of this value ...
-        .returns(BigInt('16081085603393958147'));
-      stubs.push(stub);
+        it('should evaluate STRING_DOES_NOT_CONTAIN to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+      });
 
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-      
-      // ... Now we know it's the unsigned equivalent of this absolute value.
-      expect(actual).to.equal(BigInt('2365658470315593469'))
+      describe('STRING_EXACTLY_MATCHES', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'bar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('STRING_CONTAINS_REGEX', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', '^ba.*$']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'bar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', '^ba.*$']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
     });
   });
 });
