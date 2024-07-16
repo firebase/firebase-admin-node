@@ -220,7 +220,7 @@ export class ConditionEvaluator {
       return compareStrings(
         targetCustomSignalValues,
         actualCustomSignalValue,
-        (target, actual) => actual === target,
+        (target, actual) => actual.trim() === target.trim(),
       );
     case CustomSignalOperator.STRING_CONTAINS_REGEX:
       return compareStrings(
