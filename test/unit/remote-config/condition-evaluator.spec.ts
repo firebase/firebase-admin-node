@@ -1018,6 +1018,221 @@ describe('ConditionEvaluator', () => {
         });
       });
 
+      describe('NUMERIC_LESS_THAN', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_THAN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 4 };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_THAN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 6 };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('NUMERIC_LESS_EQUAL', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const condition2 = createNamedCondition('is_active', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['6']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 5 };
+          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
+            new Map([['is_enabled', true], ['is_active', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 6 };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('NUMERIC_EQUAL', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const condition2 = createNamedCondition('is_active', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['  5    ']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 5 };
+          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
+            new Map([['is_enabled', true], ['is_active', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const condition2 = createNamedCondition('is_active', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5.11.9-beta']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 4 };
+          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
+            new Map([['is_enabled', false], ['is_active', false]]));
+        });
+      });
+
+      describe('NUMERIC_NOT_EQUAL', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_NOT_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 4 };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_NOT_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 5 };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('NUMERIC_GREATER_THAN', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': '6' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5.12.4']
+            }
+          });
+          const condition2 = createNamedCondition('is_active', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 5 };
+          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
+            new Map([['is_enabled', false], ['is_active', false]]));
+        });
+      });
+
+      describe('NUMERIC_GREATER_EQUAL', () => {
+        it('should evaluate to true', () => {
+          const condition: NamedCondition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const condition2 = createNamedCondition('is_active', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['4']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 5 };
+          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
+            new Map([['is_enabled', true], ['is_active', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['5']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': '5.12.2' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
       describe('SEMANTIC_VERSION_LESS_THAN', () => {
         it('should evaluate to true', () => {
           const condition = createNamedCondition('is_enabled', {
