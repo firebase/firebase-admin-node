@@ -228,7 +228,32 @@ export class ConditionEvaluator {
         actualCustomSignalValue,
         (target, actual) => new RegExp(target).test(actual),
       );
-     // TODO: add comparison logic for additional operators here.
+
+    case CustomSignalOperator.NUMERIC_LESS_THAN:
+      return Number(actualCustomSignalValue) < Number(targetCustomSignalValues[0]);
+    case CustomSignalOperator.NUMERIC_LESS_EQUAL:
+      return Number(actualCustomSignalValue) <= Number(targetCustomSignalValues[0]);
+    case CustomSignalOperator.NUMERIC_EQUAL:
+      return Number(actualCustomSignalValue) === Number(targetCustomSignalValues[0]);
+    case CustomSignalOperator.NUMERIC_NOT_EQUAL:
+      return Number(actualCustomSignalValue) !==  Number(targetCustomSignalValues[0]);
+    case CustomSignalOperator.NUMERIC_GREATER_THAN:
+      return Number(actualCustomSignalValue) > Number(targetCustomSignalValues[0]);
+    case CustomSignalOperator.NUMERIC_GREATER_EQUAL:
+      return Number(actualCustomSignalValue) >= Number(targetCustomSignalValues[0]);
+
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) < 0;
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) <= 0;
+    case CustomSignalOperator.SEMANTIC_VERSION_EQUAL:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) === 0;
+    case CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) !== 0;
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) > 0;
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL:
+      return compareNumericVersions(actualCustomSignalValue, targetCustomSignalValues[0]) >= 0;
     }
 
     // TODO: add logging once we have a wrapped logger.
@@ -245,4 +270,24 @@ function compareStrings(
 ): boolean {
   const actual = String(actualValue);
   return targetValues.some((target) => predicateFn(target, actual));
+}
+
+// Compares numeric version strings against each other.
+function compareNumericVersions(version1String: string|number, version2String: string): number {
+  const version1 = String(version1String).split('.').map(Number);
+  const version2 = version2String.split('.').map(Number);
+
+  for (let i = 0;; i++) {
+    const version1HasSegment = !isNaN(version1[i]);
+    const version2HasSegment = !isNaN(version2[i]);
+    if (!version1HasSegment) {
+      return version2HasSegment ? -1 : 0;
+    } else if (!version2HasSegment) {
+      return 1;
+    }
+
+    if (version1[i] !== version2[i]) {
+      return version1[i] < version2[i] ? -1 : 1;
+    }
+  }
 }
