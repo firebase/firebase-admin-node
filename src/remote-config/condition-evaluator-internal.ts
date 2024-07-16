@@ -23,7 +23,9 @@ import {
   NamedCondition,
   OrCondition,
   PercentCondition,
-  PercentConditionOperator
+  PercentConditionOperator,
+  CustomSignalCondition,
+  CustomSignalOperator,
 } from './remote-config-api';
 import * as farmhash from 'farmhash-modern';
 import long = require('long');
@@ -76,6 +78,9 @@ export class ConditionEvaluator {
     }
     if (condition.percent) {
       return this.evaluatePercentCondition(condition.percent, context);
+    }
+    if (condition.customSignal) {
+      return this.evaluateCustomSignalCondition(condition.customSignal, context);
     }
     // TODO: add logging once we have a wrapped logger.
     return false;
@@ -158,7 +163,7 @@ export class ConditionEvaluator {
     }
 
     const instanceMicroPercentile = hash64.mod(100 * 1_000_000);
-    
+
     switch (percentOperator) {
     case PercentConditionOperator.LESS_OR_EQUAL:
       return instanceMicroPercentile.lte(normalizedMicroPercent);
@@ -175,4 +180,69 @@ export class ConditionEvaluator {
     // TODO: add logging once we have a wrapped logger.
     return false;
   }
+
+  private evaluateCustomSignalCondition(
+    customSignalCondition: CustomSignalCondition,
+    context: EvaluationContext
+  ): boolean {
+    const {
+      customSignalOperator,
+      customSignalKey,
+      targetCustomSignalValues,
+    } = customSignalCondition;
+
+    if (!customSignalOperator || !customSignalKey || !targetCustomSignalValues) {
+      // TODO: add logging once we have a wrapped logger.
+      return false;
+    }
+
+    if (!targetCustomSignalValues.length) {
+      return false;
+    }
+
+    // Extract the value of the signal from the evaluation context.
+    const actualCustomSignalValue = context[customSignalKey];
+
+    switch (customSignalOperator) {
+    case CustomSignalOperator.STRING_CONTAINS:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_DOES_NOT_CONTAIN:
+      return !compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_EXACTLY_MATCHES:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual === target,
+      );
+    case CustomSignalOperator.STRING_CONTAINS_REGEX:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => new RegExp(target).test(actual),
+      );
+     // TODO: add comparison logic for additional operators here.
+    }
+
+    // TODO: add logging once we have a wrapped logger.
+    return false;
+  }
+}
+
+// Compares the actual string value of a signal against a list of target
+// values. If any of the target values are a match, returns true.
+function compareStrings(
+  targetValues: Array<string>,
+  actualValue: string|number,
+  predicateFn: (target: string, actual: string) => boolean
+): boolean {
+  const actual = String(actualValue);
+  return targetValues.some((target) => predicateFn(target, actual));
 }

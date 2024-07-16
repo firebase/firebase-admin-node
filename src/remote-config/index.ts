@@ -26,6 +26,8 @@ import { RemoteConfig } from './remote-config';
 
 export {
   AndCondition,
+  CustomSignalCondition,
+  CustomSignalOperator,
   DefaultConfig,
   EvaluationContext,
   ExplicitParameterValue,

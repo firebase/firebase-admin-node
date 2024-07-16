@@ -21,7 +21,10 @@ import * as sinon from 'sinon';
 import { ConditionEvaluator } from '../../../src/remote-config/condition-evaluator-internal';
 import {
   PercentConditionOperator,
-  PercentCondition
+  PercentCondition,
+  CustomSignalOperator,
+  NamedCondition,
+  OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
@@ -40,6 +43,24 @@ describe('ConditionEvaluator', () => {
     }
     stubs = [];
   });
+
+  function createNamedCondition(
+    name: string,
+    condition: OneOfCondition
+  ): NamedCondition {
+    return {
+      name,
+      condition: {
+        orCondition: {
+          conditions: [{
+            andCondition: {
+              conditions: [condition],
+            }
+          }]
+        }
+      }
+    };
+  }
 
   describe('evaluateConditions', () => {
     it('should evaluate empty OR condition to false', () => {
@@ -856,6 +877,139 @@ describe('ConditionEvaluator', () => {
         }
         return evalTrueCount;
       }
+    });
+
+    describe('customSignalCondition', () => {
+      it('should evaluate an unknown operator to false', () => {
+        const condition = createNamedCondition('is_enabled', {
+          customSignal: {
+            customSignalOperator: CustomSignalOperator.UNKNOWN
+          }
+        });
+        const evaluator = new ConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition], {})).deep.equals(
+          new Map([['is_enabled', false]]));
+      });
+
+      describe('STRING_CONTAINS', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'foobar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'baz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('STRING_DOES_NOT_CONTAIN', () => {
+        it('should evaluate STRING_DOES_NOT_CONTAIN to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'biz']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'foobar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+
+        it('should evaluate STRING_DOES_NOT_CONTAIN to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+      });
+
+      describe('STRING_EXACTLY_MATCHES', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'bar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', 'bar']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
+
+      describe('STRING_CONTAINS_REGEX', () => {
+        it('should evaluate to true', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', '^ba.*$']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'bar' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', true]]));
+        });
+
+        it('should evaluate to false', () => {
+          const condition = createNamedCondition('is_enabled', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['foo', '^ba.*$']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'biz' };
+          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+            new Map([['is_enabled', false]]));
+        });
+      });
     });
   });
 });
