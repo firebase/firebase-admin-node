@@ -54,7 +54,7 @@ export class BatchRequestClient {
 
   /**
    * Sends the given array of sub requests as a single batch, and parses the results into an array
-   * of HttpResponse objects.
+   * of `RequestResponse` objects.
    *
    * @param requests - An array of sub requests to send.
    * @returns A promise that resolves when the send operation is complete.

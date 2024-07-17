@@ -131,7 +131,7 @@ class DefaultRequestResponse implements RequestResponse {
   private readonly request: string;
 
   /**
-   * Constructs a new RequestResponse from the given LowLevelResponse.
+   * Constructs a new `RequestResponse` from the given `LowLevelResponse`.
    */
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
@@ -225,8 +225,8 @@ export interface RetryConfig {
 
   /**
    * The multiplier for exponential back off. The retry delay is calculated in seconds using the formula
-   * `(2^n) * backOffFactor`, where n is the number of retries performed so far. When the backOffFactor is set
-   * to 0, retries are not delayed. When the backOffFactor is 1, retry duration is doubled each iteration.
+   * `(2^n) * backOffFactor`, where n is the number of retries performed so far. When the `backOffFactor` is set
+   * to 0, retries are not delayed. When the `backOffFactor` is 1, retry duration is doubled each iteration.
    */
   backOffFactor?: number;
 
@@ -236,7 +236,7 @@ export interface RetryConfig {
 
 /**
  * Default retry configuration for HTTP and HTTP/2 requests. Retries up to 4 times on connection reset and timeout
- * errors as well as 503 errors. Exposed as a function to ensure that every RequestClient gets its own RetryConfig
+ * errors as well as 503 errors. Exposed as a function to ensure that every `RequestClient` gets its own `RetryConfig`
  * instance.
  */
 export function defaultRetryConfig(): RetryConfig {
@@ -250,7 +250,7 @@ export function defaultRetryConfig(): RetryConfig {
 }
 
 /**
- * Ensures that the given RetryConfig object is valid.
+ * Ensures that the given `RetryConfig` object is valid.
  *
  * @param retry - The configuration to be validated.
  */
@@ -354,7 +354,7 @@ export class RequestClient {
     return false;
   }
 
-  /**
+  /**???
    * Parses the Retry-After header as a milliseconds value. Return value is negative if the Retry-After header
    * contains an expired timestamp or otherwise malformed.
    */
@@ -394,10 +394,10 @@ export class HttpClient extends RequestClient {
 
   /**
    * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
-   * promise resolves with an RequestResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
-   * with an RequestResponseError. In case of all other errors, the promise rejects with a FirebaseAppError. If a
-   * request fails due to a low-level network error, transparently retries the request once before rejecting the
-   * promise.
+   * promise resolves with an `RequestResponse`. If the server responds with an error (3xx, 4xx, 5xx), the promise
+   * rejects with an `RequestResponseError`. In case of all other errors, the promise rejects with a `FirebaseAppError`.
+   * If a request fails due to a low-level network error, the client transparently retries the request once before
+   * rejecting the promise.
    *
    * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
    * content-type header will also be automatically set in this case. For all other payload types, the content-type
@@ -413,7 +413,7 @@ export class HttpClient extends RequestClient {
 
   /**
    * Sends an HTTP request. In the event of an error, retries the HTTP request according to the
-   * RetryConfig set on the HttpClient.
+   * `RetryConfig` set on the `HttpClient`.
    *
    * @param config - HTTP request to be sent.
    * @param retryAttempts - Number of retries performed up to now.
@@ -456,10 +456,10 @@ export class Http2Client extends RequestClient {
 
   /**
    * Sends an HTTP/2 request to a remote server. If the server responds with a successful response (2xx), the returned
-   * promise resolves with an RequestResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
-   * with an RequestResponseError. In case of all other errors, the promise rejects with a FirebaseAppError. If a
-   * request fails due to a low-level network error, transparently retries the request once before rejecting the
-   * promise.
+   * promise resolves with an `RequestResponse`. If the server responds with an error (3xx, 4xx, 5xx), the promise
+   * rejects with an `RequestResponseError`. In case of all other errors, the promise rejects with a `FirebaseAppError`.
+   * If a request fails due to a low-level network error, the client transparently retries the request once before
+   * rejecting the promise.
    *
    * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
    * content-type header will also be automatically set in this case. For all other payload types, the content-type
@@ -475,7 +475,7 @@ export class Http2Client extends RequestClient {
 
   /**
    * Sends an HTTP/2 request. In the event of an error, retries the HTTP/2 request according to the
-   * RetryConfig set on the Http2Client.
+   * `RetryConfig` set on the `Http2Client`.
    *
    * @param config - HTTP/2 request to be sent.
    * @param retryAttempts - Number of retries performed up to now.
@@ -916,7 +916,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 }
 
 /**
- * An adapter class with common functionality needed to extract options and entity data from a RequestConfig.
+ * An adapter class with common functionality needed to extract options and entity data from a `RequestConfig`.
  */
 class BaseRequestConfigImpl implements BaseRequestConfig {
 
@@ -1004,7 +1004,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
 }
 
 /**
- * An adapter class for extracting options and entity data from an HttpRequestConfig.
+ * An adapter class for extracting options and entity data from an `HttpRequestConfig`.
  */
 class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequestConfig {
 
@@ -1038,7 +1038,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
 }
 
 /**
- * An adapter class for extracting options and entity data from an Http2RequestConfig.
+ * An adapter class for extracting options and entity data from an `Http2RequestConfig`.
  */
 class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2RequestConfig {
 
@@ -1116,7 +1116,7 @@ export class AuthorizedHttp2Client extends Http2Client {
  * Class that defines all the settings for the backend API endpoint.
  *
  * @param endpoint - The Firebase Auth backend endpoint.
- * @param httpMethod - The http method for that endpoint.
+ * @param httpMethod - The HTTP method for that endpoint.
  * @constructor
  */
 export class ApiSettings {

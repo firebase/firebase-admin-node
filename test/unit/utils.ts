@@ -23,10 +23,10 @@ import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../sr
 import { RequestResponseError, RequestResponse } from '../../src/utils/api-request';
 
 /**
- * Returns a new FirebaseApp instance with the provided options.
+ * Returns a new `FirebaseApp` instance with the provided options.
  *
- * @param options The options for the FirebaseApp instance to create.
- * @return A new FirebaseApp instance with the provided options.
+ * @param options The options for the `FirebaseApp` instance to create.
+ * @return A new `FirebaseApp` instance with the provided options.
  */
 export function createAppWithOptions(options: object): FirebaseApp {
   return new FirebaseApp(options as AppOptions, mocks.appName);
@@ -39,7 +39,7 @@ export function generateRandomAccessToken(): string {
 }
 
 /**
- * Creates a stub for retrieving an access token from a FirebaseApp. All services should use this
+ * Creates a stub for retrieving an access token from a `FirebaseApp`. All services should use this
  * method for stubbing the OAuth2 flow during unit tests.
  *
  * @param {string} accessToken The access token string to return.

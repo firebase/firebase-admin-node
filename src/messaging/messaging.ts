@@ -104,11 +104,11 @@ const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
 };
 
 /**
- * Maps a raw FCM server response to a MessagingDevicesResponse object.
+ * Maps a raw FCM server response to a `MessagingDevicesResponse` object.
  *
  * @param response - The raw FCM server response to map.
  *
- * @returns The mapped MessagingDevicesResponse object.
+ * @returns The mapped `MessagingDevicesResponse` object.
  */
 function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResponse {
   // Rename properties on the server response
@@ -131,11 +131,11 @@ function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResp
 }
 
 /**
- * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
+ * Maps a raw FCM server response to a `MessagingDeviceGroupResponse` object.
  *
  * @param response - The raw FCM server response to map.
  *
- * @returns The mapped MessagingDeviceGroupResponse object.
+ * @returns The mapped `MessagingDeviceGroupResponse` object.
  */
 function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceGroupResponse {
   // Rename properties on the server response
@@ -149,11 +149,11 @@ function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceG
 }
 
 /**
- * Maps a raw FCM server response to a MessagingTopicManagementResponse object.
+ * Maps a raw FCM server response to a `MessagingTopicManagementResponse` object.
  *
  * @param {object} response The raw FCM server response to map.
  *
- * @returns {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
+ * @returns {MessagingTopicManagementResponse} The mapped `MessagingTopicManagementResponse` object.
  */
 function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
@@ -224,7 +224,7 @@ export class Messaging {
   }
 
   /**
-   * Enables the use of the legacy HTTP/1.1 transport for sendEach() and sendEachForMulticast().
+   * Enables the use of legacy HTTP/1.1 transport for `sendEach()` and `sendEachForMulticast()`.
    * 
    * @example
    * ```javascript
