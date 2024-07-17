@@ -233,7 +233,8 @@ export class Messaging {
    * messaging.sendEach(messages);
    * ```
    * 
-   * @deprecated This is to be removed once the HTTP/2 transport is universally safe.
+   * @deprecated This is to be removed once the HTTP/2 transport implementation reaches the same
+   * stability as the legacy HTTP/1.1 implementation.
    */
   public enableLegacyHttpTransport(): void {
     this.useLegacyTransport = true;
