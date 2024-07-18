@@ -278,6 +278,8 @@ function compareStrings(
   return targetValues.some((target) => predicateFn(target, actual));
 }
 
+// Compares two numbers against each other.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
 function compareNumbers(
   actualValue: string|number,
   targetValue: string,
@@ -292,7 +294,7 @@ function compareNumbers(
 }
 
 // Compares semantic version strings against each other.
-// Returns -1, 0, 1 if version1 is less than, equal to, or greater than version2.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
 function compareSemanticVersions(
   actualValue: string|number,
   targetValue: string,
