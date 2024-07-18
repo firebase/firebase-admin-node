@@ -891,561 +891,238 @@ describe('ConditionEvaluator', () => {
           new Map([['is_enabled', false]]));
       });
 
-      describe('STRING_CONTAINS', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'biz']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'foobar' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
+      it('should handle case when EvaluationContext does not have signal', () => {
+        const condition = createNamedCondition('is_enabled', {
+          customSignal: {
+            customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+            customSignalKey: 'user_prop',
+            targetCustomSignalValues: ['def']  // would be contained in 'undefined'
+          }
         });
+        const evaluator = new ConditionEvaluator();
+        const context = { };
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+          new Map([
+            ['is_enabled', false]
+          ]));
+      });
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'biz']
-            }
+      interface CustomSignalTestCase {
+        targets: string[];
+        actual: string;
+        outcome: boolean;
+      }
+
+      function runCustomSignalTestCase(
+        operator: CustomSignalOperator
+      ): (c: CustomSignalTestCase) => void {
+        return ({ targets, actual, outcome }: CustomSignalTestCase) => {
+          const targetsStr = JSON.stringify(targets);
+          it(`Evalutes ${operator} with targets=${targetsStr} and actual="${actual}" to ${outcome}`, () => {
+            const condition = createNamedCondition('is_enabled', {
+              customSignal: {
+                customSignalOperator: operator,
+                customSignalKey: 'user_prop',
+                targetCustomSignalValues: targets
+              }
+            });
+            const evaluator = new ConditionEvaluator();
+            const context = { 'user_prop': actual };
+            expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+              new Map([
+                ['is_enabled', outcome],
+              ]));
           });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'baz' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        }
+      }
+
+      function runCustomSignalTestCaseWithWhitespace(
+        operator: CustomSignalOperator
+      ): (c: CustomSignalTestCase) => void {
+        return (testCase: CustomSignalTestCase) => {
+          runCustomSignalTestCase(operator)(testCase);
+          runCustomSignalTestCase(operator)({
+            ...testCase,
+            targets: testCase.targets.map(t => `   ${t} `),
+            actual: ` ${testCase.actual}  `
+          });
+        }
+      }
+
+      const invalidNumericSignalTestCase: CustomSignalTestCase = {
+        targets: ['5'],
+        actual: 'not a number',
+        outcome: false
+      };
+
+      describe('STRING_CONTAINS', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: true },
+          { targets: ['foo', 'biz'],actual: 'bar',outcome: false },
+        ];
+
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS));
       });
 
       describe('STRING_DOES_NOT_CONTAIN', () => {
-        it('should evaluate STRING_DOES_NOT_CONTAIN to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'biz']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'foobar' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'biz'],actual: 'bar',outcome: true },
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
+        ];
 
-        it('should evaluate STRING_DOES_NOT_CONTAIN to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_DOES_NOT_CONTAIN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'bar']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'biz' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_DOES_NOT_CONTAIN));
       });
 
       describe('STRING_EXACTLY_MATCHES', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'bar']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['   bar  ']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'bar' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'bar'], actual: 'bar', outcome: true },
+          { targets: [''], actual: '', outcome: true },
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_EXACTLY_MATCHES,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', 'bar']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'biz' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.STRING_EXACTLY_MATCHES));
       });
 
       describe('STRING_CONTAINS_REGEX', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', '^ba.*$']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'bar' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', '^ba.*$'], actual: 'bar', outcome: true },
+          { targets: ['  bar   '], actual: 'biz', outcome: false },
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['foo', '^ba.*$']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 'biz' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS_REGEX));
       });
 
       describe('NUMERIC_LESS_THAN', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 4 };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '4', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          { targets: ['5'], actual: '6', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 6 };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_LESS_THAN));
       });
 
       describe('NUMERIC_LESS_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['6']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 5 };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '4', outcome: true },
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: '6', outcome: false },
+          { targets: ['5'], actual: '  4  ', outcome: true },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 6 };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_LESS_EQUAL));
       });
 
       describe('NUMERIC_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['  5    ']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 5 };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: '6', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.11.9-beta']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 4 };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', false], ['is_active', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_EQUAL));
       });
 
       describe('NUMERIC_NOT_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_NOT_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 4 };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_NOT_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 5 };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_NOT_EQUAL));
       });
 
       describe('NUMERIC_GREATER_THAN', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '6' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          { targets: ['5'], actual: '4', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.4']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 5 };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', false], ['is_active', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_GREATER_THAN));
       });
 
       describe('NUMERIC_GREATER_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition: NamedCondition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['4']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': 5 };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: '4', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.NUMERIC_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.2' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_GREATER_EQUAL));
       });
 
       describe('SEMANTIC_VERSION_LESS_THAN', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.11.9' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12', outcome: true },
+          { targets: ['5.12.3'], actual: '5', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.11.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.11.9' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN));
       });
 
       describe('SEMANTIC_VERSION_LESS_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.13']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.3' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.11.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.11.9' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL));
       });
 
       describe('SEMANTIC_VERSION_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['  5.12.3    ']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.3' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.11.9-beta']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.11.9' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', false], ['is_active', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_EQUAL));
       });
 
       describe('SEMANTIC_VERSION_NOT_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.11.9' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.3' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL));
       });
 
       describe('SEMANTIC_VERSION_GREATER_THAN', () => {
-        it('should evaluate to true', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.4' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.13.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.13', outcome: true },
+          { targets: ['5.12.3'], actual: '6', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.4']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.3' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', false], ['is_active', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN));
       });
 
       describe('SEMANTIC_VERSION_GREATER_EQUAL', () => {
-        it('should evaluate to true', () => {
-          const condition: NamedCondition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const condition2 = createNamedCondition('is_active', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.2']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.3' };
-          expect(evaluator.evaluateConditions([condition, condition2], context)).deep.equals(
-            new Map([['is_enabled', true], ['is_active', true]]));
-        });
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.13.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: false },
+          invalidNumericSignalTestCase
+        ];
 
-        it('should evaluate to false', () => {
-          const condition = createNamedCondition('is_enabled', {
-            customSignal: {
-              customSignalOperator: CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL,
-              customSignalKey: 'user_prop',
-              targetCustomSignalValues: ['5.12.3']
-            }
-          });
-          const evaluator = new ConditionEvaluator();
-          const context = { 'user_prop': '5.12.2' };
-          expect(evaluator.evaluateConditions([condition], context)).deep.equals(
-            new Map([['is_enabled', false]]));
-        });
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL));
       });
     });
   });
