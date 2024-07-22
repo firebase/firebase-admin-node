@@ -209,6 +209,10 @@ export class ConditionEvaluator {
     // Extract the value of the signal from the evaluation context.
     const actualCustomSignalValue = context[customSignalKey];
 
+    if (actualCustomSignalValue == undefined) {
+      return false
+    }
+
     switch (customSignalOperator) {
     case CustomSignalOperator.STRING_CONTAINS:
       return compareStrings(
@@ -226,7 +230,7 @@ export class ConditionEvaluator {
       return compareStrings(
         targetCustomSignalValues,
         actualCustomSignalValue,
-        (target, actual) => actual === target,
+        (target, actual) => actual.trim() === target.trim(),
       );
     case CustomSignalOperator.STRING_CONTAINS_REGEX:
       return compareStrings(
@@ -234,7 +238,34 @@ export class ConditionEvaluator {
         actualCustomSignalValue,
         (target, actual) => new RegExp(target).test(actual),
       );
-     // TODO: add comparison logic for additional operators here.
+
+    // For numeric operators only one target value is allowed.
+    case CustomSignalOperator.NUMERIC_LESS_THAN:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r < 0);
+    case CustomSignalOperator.NUMERIC_LESS_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r <= 0);
+    case CustomSignalOperator.NUMERIC_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r === 0);
+    case CustomSignalOperator.NUMERIC_NOT_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r !== 0);
+    case CustomSignalOperator.NUMERIC_GREATER_THAN:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r > 0);
+    case CustomSignalOperator.NUMERIC_GREATER_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r >= 0);
+
+    // For semantic operators only one target value is allowed.
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r < 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r <= 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r === 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r !== 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r > 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r >= 0);
     }
 
     // TODO: add logging once we have a wrapped logger.
@@ -251,4 +282,48 @@ function compareStrings(
 ): boolean {
   const actual = String(actualValue);
   return targetValues.some((target) => predicateFn(target, actual));
+}
+
+// Compares two numbers against each other.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
+function compareNumbers(
+  actualValue: string|number,
+  targetValue: string,
+  predicateFn: (result: number) => boolean
+): boolean {
+  const target = Number(targetValue);
+  const actual = Number(actualValue);
+  if (isNaN(target) || isNaN(actual)) {
+    return false;
+  }
+  return predicateFn(actual < target ? -1 : actual > target ? 1 : 0);
+}
+
+// Compares semantic version strings against each other.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
+function compareSemanticVersions(
+  actualValue: string|number,
+  targetValue: string,
+  predicateFn: (result: number) => boolean
+): boolean {
+  const version1 = String(actualValue).split('.').map(Number);
+  const version2 = targetValue.split('.').map(Number);
+
+  if (version1.some(isNaN) || version2.some(isNaN)) {
+    return false;
+  }
+
+  for (let i = 0;; i++) {
+    const version1HasSegment = version1[i] !== undefined;
+    const version2HasSegment = version2[i] !== undefined;
+    if (!version1HasSegment) {
+      return predicateFn(version2HasSegment ? -1 : 0);
+    } else if (!version2HasSegment) {
+      return predicateFn(1);
+    }
+
+    if (version1[i] !== version2[i]) {
+      return predicateFn(version1[i] < version2[i] ? -1 : 1);
+    }
+  }
 }
