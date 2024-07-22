@@ -26,7 +26,6 @@ import {
   PercentConditionOperator
 } from './remote-config-api';
 import * as farmhash from 'farmhash-modern';
-import long = require('long');
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -147,26 +146,18 @@ export class ConditionEvaluator {
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.randomizationId}`;
 
+    const hash64 = ConditionEvaluator.hashSeededRandomizationId(stringToHash)
 
-    // Using a 64-bit long for consistency with the Remote Config fetch endpoint.
-    let hash64 = long.fromString(farmhash.fingerprint64(stringToHash).toString());
+    const instanceMicroPercentile = hash64 % BigInt(100 * 1_000_000);
 
-    // Negate the hash if its value is less than 0. We handle this manually because the
-    // Long library doesn't provided an absolute value method.
-    if (hash64.lt(0)) {
-      hash64 = hash64.negate();
-    }
-
-    const instanceMicroPercentile = hash64.mod(100 * 1_000_000);
-    
     switch (percentOperator) {
     case PercentConditionOperator.LESS_OR_EQUAL:
-      return instanceMicroPercentile.lte(normalizedMicroPercent);
+      return instanceMicroPercentile <= normalizedMicroPercent;
     case PercentConditionOperator.GREATER_THAN:
-      return instanceMicroPercentile.gt(normalizedMicroPercent);
+      return instanceMicroPercentile > normalizedMicroPercent;
     case PercentConditionOperator.BETWEEN:
-      return instanceMicroPercentile.gt(normalizedMicroPercentLowerBound)
-        && instanceMicroPercentile.lte(normalizedMicroPercentUpperBound);
+      return instanceMicroPercentile > normalizedMicroPercentLowerBound
+          && instanceMicroPercentile <= normalizedMicroPercentUpperBound;
     case PercentConditionOperator.UNKNOWN:
     default:
       break;
@@ -174,5 +165,21 @@ export class ConditionEvaluator {
 
     // TODO: add logging once we have a wrapped logger.
     return false;
+  }
+
+  // Visible for testing
+  static hashSeededRandomizationId(seededRandomizationId: string): bigint {
+    // For consistency with the Remote Config fetch endpoint's percent condition behavior
+    // we use Farmhash's fingerprint64 algorithm and interpret the resulting unsigned value
+    // as a signed value.
+    let hash64 = BigInt.asIntN(64, farmhash.fingerprint64(seededRandomizationId));
+
+    // Manually negate the hash if its value is less than 0, since Math.abs doesn't
+    // support BigInt.
+    if (hash64 < 0) {
+      hash64 = -hash64;
+    }
+
+    return hash64;
   }
 }
