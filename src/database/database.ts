@@ -24,7 +24,7 @@ import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import * as validator from '../utils/validator';
-import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
+import { AuthorizedHttpClient, HttpRequestConfig, RequestResponseError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
 
 /**
@@ -292,7 +292,7 @@ class DatabaseRulesClient {
   }
 
   private handleError(err: Error): Error {
-    if (err instanceof HttpError) {
+    if (err instanceof RequestResponseError) {
       return new FirebaseDatabaseError({
         code: AppErrorCodes.INTERNAL_ERROR,
         message: this.getErrorMessage(err),
@@ -301,7 +301,7 @@ class DatabaseRulesClient {
     return err;
   }
 
-  private getErrorMessage(err: HttpError): string {
+  private getErrorMessage(err: RequestResponseError): string {
     const intro = 'Error while accessing security rules';
     try {
       const body: { error?: string } = err.response.data;

@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient
+  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
@@ -99,7 +99,7 @@ export class FunctionsApiClient {
       };
       await this.httpClient.send(request);
     } catch (err: unknown) {
-      if (err instanceof HttpError) {
+      if (err instanceof RequestResponseError) {
         if (err.response.status === 404) {
           // if no task with the provided ID exists, then ignore the delete.
           return;
@@ -156,7 +156,7 @@ export class FunctionsApiClient {
       };
       await this.httpClient.send(request);
     } catch (err: unknown) {
-      if (err instanceof HttpError) {
+      if (err instanceof RequestResponseError) {
         if (err.response.status === 409) {
           throw new FirebaseFunctionsError('task-already-exists', `A task with ID ${opts?.id} already exists`);
         } else {
@@ -321,7 +321,7 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
+  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
     if (err instanceof PrefixedFirebaseError) {
       return err;
     }
