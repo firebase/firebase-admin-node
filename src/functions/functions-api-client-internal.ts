@@ -144,7 +144,10 @@ export class FunctionsApiClient {
 
     const task = this.validateTaskOptions(data, resources, opts);
     try {
-      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+      const serviceUrl = 
+        tasksEmulatorUrl(resources, functionName) ?? 
+        await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+
       const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
       const request: HttpRequestConfig = {
         method: 'POST',
@@ -416,4 +419,11 @@ export class FirebaseFunctionsError extends PrefixedFirebaseError {
     /* tslint:enable:max-line-length */
     (this as any).__proto__ = FirebaseFunctionsError.prototype;
   }
+}
+
+function tasksEmulatorUrl(resources: utils.ParsedResource, functionName: string): string | undefined {
+  if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${functionName}/tasks`;
+  }
+  return undefined;
 }
