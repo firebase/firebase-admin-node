@@ -314,13 +314,23 @@ export class Messaging {
 
     const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
 
+    let accessTokenError: ErrorInfo | undefined;
+
     return this.getUrlPath()
       .then((urlPath) => {
         return (this.app as FirebaseApp).INTERNAL.getToken()
           .then(({ accessToken }) => ({ urlPath, accessToken }))
+          .catch(error => {
+            accessTokenError = error;
+            return { urlPath, accessToken: '' };
+          })
       })
       .then(({ urlPath, accessToken }) => {
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+          if (accessTokenError) {
+            throw accessTokenError;
+          }
+          
           validateMessage(message);
           const request: { message: Message; validate_only?: boolean } = { message };
           if (dryRun) {
