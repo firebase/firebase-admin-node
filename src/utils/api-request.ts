@@ -60,7 +60,7 @@ export interface Http2RequestConfig extends BaseRequestConfig {
 }
 
 /**
- * Configuration for constructing a new HTTP/2 request.
+ * Configuration for constructing a new HTTP/2 request with accessToken.
  */
 export interface Http2AuthorizedRequestConfig extends Http2RequestConfig {
   accessToken: string;
