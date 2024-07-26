@@ -19,7 +19,8 @@ import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError, RequestResponse,
-  AuthorizedHttp2Client, Http2SessionHandler, Http2RequestConfig,
+  AuthorizedHttp2Client, Http2SessionHandler,
+  Http2AuthorizedRequestConfig,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
@@ -54,7 +55,7 @@ export class FirebaseMessagingRequestHandler {
    */
   constructor(app: App) {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
-    this.http2Client = new AuthorizedHttp2Client(app as FirebaseApp);
+    this.http2Client = new AuthorizedHttp2Client();
     this.batchClient = new BatchRequestClient(
       this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
@@ -138,14 +139,15 @@ export class FirebaseMessagingRequestHandler {
    * @returns A promise that resolves with the {@link SendResponse}.
    */
   public invokeHttp2RequestHandlerForSendResponse(
-    host: string, path: string, requestData: object, http2SessionHandler: Http2SessionHandler
+    host: string, path: string, requestData: object, accessToken: string, http2SessionHandler: Http2SessionHandler
   ): Promise<SendResponse> {
-    const request: Http2RequestConfig = {
+    const request: Http2AuthorizedRequestConfig = {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
       headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
+      accessToken: accessToken,
       http2SessionHandler: http2SessionHandler
     };
     return this.http2Client.send(request).then((response) => {

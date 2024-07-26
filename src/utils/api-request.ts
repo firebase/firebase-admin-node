@@ -59,6 +59,13 @@ export interface Http2RequestConfig extends BaseRequestConfig {
   http2SessionHandler: Http2SessionHandler;
 }
 
+/**
+ * Configuration for constructing a new HTTP/2 request.
+ */
+export interface Http2AuthorizedRequestConfig extends Http2RequestConfig {
+  accessToken: string;
+}
+
 type RequestConfig = HttpRequestConfig | Http2RequestConfig
 
 /**
@@ -1097,25 +1104,19 @@ export class AuthorizedHttpClient extends HttpClient {
 
 export class AuthorizedHttp2Client extends Http2Client {
 
-  constructor(private readonly app: FirebaseApp) {
+  constructor() {
     super();
   }
 
-  public send(request: Http2RequestConfig): Promise<RequestResponse> {
-    return this.getToken().then((token) => {
-      const requestCopy = Object.assign({}, request);
-      requestCopy.headers = Object.assign({}, request.headers);
-      const authHeader = 'Authorization';
-      requestCopy.headers[authHeader] = `Bearer ${token}`;
+  public send(request: Http2AuthorizedRequestConfig): Promise<RequestResponse> {
+    const requestCopy = Object.assign({}, request);
+    requestCopy.headers = Object.assign({}, request.headers);
+    const authHeader = 'Authorization';
+    requestCopy.headers[authHeader] = `Bearer ${request.accessToken}`;
 
-      return super.send(requestCopy);
-    });
+    return super.send(requestCopy);
   } 
 
-  protected getToken(): Promise<string> {
-    return this.app.INTERNAL.getToken()
-      .then((accessTokenObj) => accessTokenObj.accessToken);
-  }
 }
 
 /**

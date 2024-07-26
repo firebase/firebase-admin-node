@@ -42,6 +42,7 @@ import {
   SendResponse,
 } from './messaging-api';
 import { Http2SessionHandler } from '../utils/api-request';
+import { FirebaseApp } from '../app/firebase-app';
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -315,6 +316,10 @@ export class Messaging {
 
     return this.getUrlPath()
       .then((urlPath) => {
+        return (this.app as FirebaseApp).INTERNAL.getToken()
+          .then(({ accessToken }) => ({ urlPath, accessToken }))
+      })
+      .then(({ urlPath, accessToken }) => {
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
           validateMessage(message);
           const request: { message: Message; validate_only?: boolean } = { message };
@@ -324,7 +329,7 @@ export class Messaging {
           
           if (http2SessionHandler){
             return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
-              FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+              FCM_SEND_HOST, urlPath, request, accessToken, http2SessionHandler);
           }
           return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
         });
