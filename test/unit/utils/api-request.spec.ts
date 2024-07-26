@@ -31,6 +31,7 @@ import {
   ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
   parseHttpResponse, RetryConfig, defaultRetryConfig, Http2SessionHandler, Http2RequestConfig,
   RequestResponseError, RequestResponse, AuthorizedHttp2Client,
+  Http2AuthorizedRequestConfig,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
@@ -2719,12 +2720,13 @@ describe('AuthorizedHttp2Client', () => {
     mockedHttp2Responses.push(mockHttp2SendRequestResponse(200, headers, respData));
     http2Mocker.http2Stub(mockedHttp2Responses);
 
-    const client = new AuthorizedHttp2Client(mockApp);
+    const client = new AuthorizedHttp2Client();
     http2SessionHandler = new Http2SessionHandler(mockHostUrl);
 
     return client.send({
       method: 'GET',
       url: mockUrl,
+      accessToken: mockAccessToken,
       http2SessionHandler: http2SessionHandler,
     }).then((resp) => {
       expect(http2Mocker.requests.length).to.equal(1);
@@ -2746,7 +2748,7 @@ describe('AuthorizedHttp2Client', () => {
     mockedHttp2Responses.push(mockHttp2SendRequestResponse(200, headers, respData));
     http2Mocker.http2Stub(mockedHttp2Responses);
 
-    const client = new AuthorizedHttp2Client(mockApp);
+    const client = new AuthorizedHttp2Client();
     http2SessionHandler = new Http2SessionHandler(mockHostUrl);
 
     return client.send({
@@ -2756,6 +2758,7 @@ describe('AuthorizedHttp2Client', () => {
         'My-Custom-Header': 'CustomValue',
       },
       data: reqData,
+      accessToken: mockAccessToken,
       http2SessionHandler: http2SessionHandler,
     }).then((resp) => {
       expect(http2Mocker.requests.length).to.equal(1);
@@ -2782,16 +2785,17 @@ describe('AuthorizedHttp2Client', () => {
     ));
     http2Mocker.http2Stub(mockedHttp2Responses);
 
-    const client = new AuthorizedHttp2Client(mockApp);
+    const client = new AuthorizedHttp2Client();
     http2SessionHandler = new Http2SessionHandler(mockHostUrl);
 
-    const request: Http2RequestConfig = {
+    const request: Http2AuthorizedRequestConfig = {
       method: 'POST',
       url: mockUrl,
       headers: {
         'My-Custom-Header': 'CustomValue',
       },
       data: reqData,
+      accessToken: mockAccessToken,
       http2SessionHandler: http2SessionHandler,
     };
     const requestCopy = deepCopy(request);
