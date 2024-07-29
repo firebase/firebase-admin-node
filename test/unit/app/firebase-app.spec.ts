@@ -808,6 +808,16 @@ describe('FirebaseApp', () => {
       });
     });
 
+    it('only refreshes the token once for concurrent calls', () => {
+      const promise1 = mockApp.INTERNAL.getToken();
+      const promise2 = mockApp.INTERNAL.getToken();
+      expect(getTokenStub).to.have.been.calledOnce;
+      return Promise.all([promise1, promise2]).then((tokens) => {
+        expect(tokens[0]).to.equal(tokens[1]);
+        expect(getTokenStub).to.have.been.calledOnce;
+      })
+    });
+
     it('Includes the original error in exception', () => {
       getTokenStub.restore();
       const mockError = new FirebaseAppError(
