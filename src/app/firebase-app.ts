@@ -118,7 +118,8 @@ export class FirebaseAppInternals {
   }
 
   private shouldRefresh(): boolean {
-    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS) && !this.isRefreshing;
+    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS) 
+      && !this.isRefreshing;
   }
 
   /**
