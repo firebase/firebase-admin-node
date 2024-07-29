@@ -29,6 +29,7 @@ import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/f
 import { HttpClient } from '../../../src/utils/api-request';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import { EMULATED_SERVICE_ACCOUNT_DEFAULT } from '../../../src/functions/functions-api-client-internal';
 
 const expect = chai.expect;
 
@@ -486,6 +487,8 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', () => {
+      const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
+      expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
@@ -498,7 +501,7 @@ describe('FunctionsApiClient', () => {
             url: CLOUD_TASKS_URL_EMULATOR,
             headers: EXPECTED_HEADERS,
             data: {
-              task: TEST_TASK_PAYLOAD
+              task: expectedPayload
             }
           });
         });
@@ -507,6 +510,7 @@ describe('FunctionsApiClient', () => {
     it('should leave empty urls alone when CLOUD_TASKS_EMULATOR_HOST is set', () => {
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
       expectedPayload.httpRequest.url = '';
+      expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));

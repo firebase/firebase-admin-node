@@ -29,6 +29,7 @@ import { ComputeEngineCredential } from '../app/credential-internal';
 const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
 const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/' + CLOUD_TASKS_API_RESOURCE_PATH;
 const FIREBASE_FUNCTION_URL_FORMAT = 'https://{locationId}-{projectId}.cloudfunctions.net/{resourceId}';
+export const EMULATED_SERVICE_ACCOUNT_DEFAULT = 'emulated-service-acct@email.com';
 
 const FIREBASE_FUNCTIONS_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -325,8 +326,12 @@ export class FunctionsApiClient {
       // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.
       delete task.httpRequest.oidcToken;
     } else {
-      const account =  await this.getServiceAccount();
-      task.httpRequest.oidcToken = { serviceAccountEmail: account };
+      if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+        task.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
+      } else {
+        const account =  await this.getServiceAccount();
+        task.httpRequest.oidcToken = { serviceAccountEmail: account };
+      }
     }
     return task;
   }
