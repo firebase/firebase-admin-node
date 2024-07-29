@@ -90,6 +90,10 @@ describe('FunctionsApiClient', () => {
   const CLOUD_TASKS_URL_FULL_RESOURCE = `https://cloudtasks.googleapis.com/v2/projects/${CUSTOM_PROJECT_ID}/locations/${CUSTOM_REGION}/queues/${FUNCTION_NAME}/tasks`;
 
   const CLOUD_TASKS_URL_PARTIAL_RESOURCE = `https://cloudtasks.googleapis.com/v2/projects/${mockOptions.projectId}/locations/${CUSTOM_REGION}/queues/${FUNCTION_NAME}/tasks`;
+  
+  const CLOUD_TASKS_EMULATOR_HOST = '127.0.0.1:9499';
+
+  const CLOUD_TASKS_URL_EMULATOR = `http://${CLOUD_TASKS_EMULATOR_HOST}/projects/${mockOptions.projectId}/locations/${DEFAULT_REGION}/queues/${FUNCTION_NAME}/tasks`;
 
   const clientWithoutProjectId = new FunctionsApiClient(mocks.mockCredentialApp());
 
@@ -106,6 +110,9 @@ describe('FunctionsApiClient', () => {
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
     stubs = [];
+    if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+    }
     return app.delete();
   });
 
@@ -477,7 +484,49 @@ describe('FunctionsApiClient', () => {
           });
         });
     });
+
+    it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: CLOUD_TASKS_URL_EMULATOR,
+            headers: EXPECTED_HEADERS,
+            data: {
+              task: TEST_TASK_PAYLOAD
+            }
+          });
+        });
+    });
+
+    it('should leave empty urls alone when CLOUD_TASKS_EMULATOR_HOST is set', () => {
+      const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
+      expectedPayload.httpRequest.url = '';
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      return apiClient.enqueue({}, FUNCTION_NAME)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: CLOUD_TASKS_URL_EMULATOR,
+            headers: EXPECTED_HEADERS,
+            data: {
+              task: expectedPayload
+            }
+          });
+        });
+    });
+
   });
+
 
   describe('delete', () => {
     for (const invalidTaskId of [1234, 'task!', 'id:0', '[1234]', '(1234)']) {
@@ -512,6 +561,20 @@ describe('FunctionsApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       expect(apiClient.delete('nonexistent-task', FUNCTION_NAME)).to.eventually.not.throw(utils.errorFrom({}, 404));
+    });
+
+    it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', async () => {
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      await apiClient.delete('mock-task', FUNCTION_NAME);
+      expect(stub).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL_EMULATOR.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS,
+      });
     });
 
     it('should throw on non-404 HTTP errors', () => {
