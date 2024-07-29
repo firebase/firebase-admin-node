@@ -311,7 +311,8 @@ describe('ProjectConfig', () => {
       
       const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
-        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter: ' + 
+          '${JSON.stringify(useSmsTollFraudProtection)}`, () => {
           const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
           configOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
           expect(() => {
@@ -351,7 +352,8 @@ describe('ProjectConfig', () => {
         configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid ' + 
+          '"RecaptchaTollFraudManagedRule".');
       });
 
       it('should throw on invalid tollFraudManagedRules attribute', () => {

@@ -352,7 +352,8 @@ describe('Tenant', () => {
       
       const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
-        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter:' +
+          '${JSON.stringify(useSmsTollFraudProtection)}`, () => {
           const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
           tenantOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
           expect(() => {
@@ -391,7 +392,8 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid '+ 
+        '"RecaptchaTollFraudManagedRule".');
       });
       
       it('should throw on invalid tollFraudManagedRules attribute', () => {
@@ -808,7 +810,8 @@ describe('Tenant', () => {
       
       const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
-        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter:' + 
+          ' ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
           const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
           tenantOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
           expect(() => {
@@ -847,7 +850,8 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid' +
+          ' "RecaptchaTollFraudManagedRule".');
       });
       
       it('should throw on invalid tollFraudManagedRules attribute', () => {
