@@ -172,12 +172,19 @@ describe('Tenant', () => {
       '+16505550676': '985235',
     },
     recaptchaConfig: {
-      managedRules: [{
+      emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
+      managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
-      }],
-      emailPasswordEnforcementState: 'AUDIT',
+      } ],
+      tollFraudManagedRules: [ {
+        startScore: 0.1,
+        action: 'BLOCK'
+      } ],
       useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
     },
   };
 
@@ -204,8 +211,13 @@ describe('Tenant', () => {
     },
     recaptchaConfig: {
       emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
       managedRules: [ {
         endScore: 0.2,
+        action: 'BLOCK'
+      } ],
+      tollFraudManagedRules: [ {
+        startScore: 0.1,
         action: 'BLOCK'
       } ],
       recaptchaKeys: [ {
@@ -213,6 +225,8 @@ describe('Tenant', () => {
         key: 'test-key-1' }
       ],
       useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
     },
     smsRegionConfig: smsAllowByDefault,
     passwordPolicyConfig: passwordPolicyServerConfig,
@@ -313,6 +327,40 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"RecaptchaConfig.phoneEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
       });
+      
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it(`should throw given invalid useAccountDefender parameter: ${JSON.stringify(useAccountDefender)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
+      });
+      
+      const invalidUseSmsBotScore = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsBotScore.forEach((useSmsBotScore) => {
+        it(`should throw given invalid useSmsBotScore parameter: ${JSON.stringify(useSmsBotScore)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useSmsBotScore = useSmsBotScore;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          }).to.throw('"RecaptchaConfig.useSmsBotScore" must be a boolean value".');
+        });
+      });
+      
+      const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          }).to.throw('"RecaptchaConfig.useSmsTollFraudProtection" must be a boolean value".');
+        });
+      });
+
 
       it('should throw on non-array managedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
@@ -321,32 +369,46 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
       });
-
-      it('should throw on non-boolean useAccountDefender attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = 'yes';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
-      });
-
+      
       it('should throw on invalid managedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.managedRules =
-        [{ 'score': 0.1, 'action': 'BLOCK' }];
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"score" is not a valid RecaptchaManagedRule parameter.');
       });
-
+      
       it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.managedRules =
-        [{ 'endScore': 0.1, 'action': 'ALLOW' }];
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = [{ 'endScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
+      
+      it('should throw on non-array tollFraudManagedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+      });
+      
+      it('should throw on invalid tollFraudManagedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"score" is not a valid RecaptchaTollFraudManagedRule parameter.');
+      });
+      
+      it('should throw on invalid RecaptchaTollFraudManagedRule.action attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'startScore': 0.1, 'action': 'ALLOW' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"RecaptchaTollFraudManagedRule.action" must be "BLOCK".');
+      });      
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
@@ -721,6 +783,40 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"RecaptchaConfig.phoneEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
       });
+      
+      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseAccountDefender.forEach((useAccountDefender) => {
+        it(`should throw given invalid useAccountDefender parameter: ${JSON.stringify(useAccountDefender)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
+        });
+      });
+      
+      const invalidUseSmsBotScore = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsBotScore.forEach((useSmsBotScore) => {
+        it(`should throw given invalid useSmsBotScore parameter: ${JSON.stringify(useSmsBotScore)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useSmsBotScore = useSmsBotScore;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useSmsBotScore" must be a boolean value".');
+        });
+      });
+      
+      const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+          tenantOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          }).to.throw('"RecaptchaConfig.useSmsTollFraudProtection" must be a boolean value".');
+        });
+      });
+
 
       it('should throw on non-array managedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
@@ -729,34 +825,45 @@ describe('Tenant', () => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".');
       });
-
-      const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
-      invalidUseAccountDefender.forEach((useAccountDefender) => {
-        it('should throw on non-boolean useAccountDefender attribute', () => {
-          const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-          tenantOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
-          expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-          }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
-        });
-      });
-
+      
       it('should throw on invalid managedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.managedRules =
-        [{ 'score': 0.1, 'action': 'BLOCK' }];
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"score" is not a valid RecaptchaManagedRule parameter.');
       });
-
+      
       it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.managedRules =
-        [{ 'endScore': 0.1, 'action': 'ALLOW' }];
+        tenantOptionsClientRequest.recaptchaConfig.managedRules = [{ 'endScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
+      });
+      
+      it('should throw on non-array tollFraudManagedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+      });
+      
+      it('should throw on invalid tollFraudManagedRules attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"score" is not a valid RecaptchaTollFraudManagedRule parameter.');
+      });
+      
+      it('should throw on invalid RecaptchaTollFraudManagedRule.action attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
+        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'startScore': 0.1, 'action': 'ALLOW' }];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"RecaptchaTollFraudManagedRule.action" must be "BLOCK".');
       });
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
@@ -1104,15 +1211,22 @@ describe('Tenant', () => {
       const tenantWithRecaptcha = new Tenant(serverRequestWithRecaptchaCopy);
       const expectedRecaptchaConfig = new RecaptchaAuthConfig({
         emailPasswordEnforcementState: 'AUDIT',
+        phoneEnforcementState: 'AUDIT',
         managedRules: [{
           endScore: 0.2,
           action: 'BLOCK'
+        }],
+        tollFraudManagedRules: [{
+          startScore: 0.1,
+          action: 'BLOCK',
         }],
         recaptchaKeys: [ {
           type: 'WEB',
           key: 'test-key-1' }
         ],
         useAccountDefender: true,
+        useSmsBotScore: true,
+        useSmsTollFraudProtection: true,
       });
       expect(tenantWithRecaptcha.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
     });

@@ -32,7 +32,7 @@ import {
   AuthProviderConfig, CreateTenantRequest, DeleteUsersResult, PhoneMultiFactorInfo,
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
   UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
-  PasswordPolicyConfig, SmsRegionConfig,
+  PasswordPolicyConfig, SmsRegionConfig, RecaptchaConfig,
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -1269,30 +1269,44 @@ describe('admin.auth', () => {
         allowedRegions: ['AC', 'AD'],
       }
     };
+    const recaptchaStateAuditConfig: RecaptchaConfig = {
+      emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
+      managedRules: [
+        {
+          endScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+      useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
+      tollFraudManagedRules: [
+        {
+          startScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+    };
+    const recaptchaStateOffConfig: RecaptchaConfig = {
+      emailPasswordEnforcementState: 'OFF',
+      phoneEnforcementState: 'OFF',
+      useAccountDefender: false,
+      useSmsBotScore: false,
+      useSmsTollFraudProtection: false,
+    };
     const projectConfigOption1: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowByDefaultConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [
-          {
-            endScore: 0.1,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: true,
-      },
+      recaptchaConfig: recaptchaStateAuditConfig,
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
       }
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        useAccountDefender: false,
-      },
+      recaptchaConfig: recaptchaStateOffConfig,
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: false,
       }
@@ -1305,16 +1319,7 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowByDefaultConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [
-          {
-            endScore: 0.1,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: true,
-      },
+      recaptchaConfig: recaptchaStateAuditConfig,
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
       },
@@ -1331,6 +1336,9 @@ describe('admin.auth', () => {
             action: 'BLOCK',
           },
         ],
+        useAccountDefender: false,
+        useSmsBotScore: false,
+        useSmsTollFraudProtection: false,
       },
       emailPrivacyConfig: {},
     };
@@ -1338,15 +1346,7 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        managedRules: [
-          {
-            endScore: 0.1,
-            action: 'BLOCK',
-          },
-        ],
-      },
+      recaptchaConfig: recaptchaStateOffConfig,
       emailPrivacyConfig: {},
     };
 
@@ -1416,6 +1416,32 @@ describe('admin.auth', () => {
         disallowedRegions: ['AC', 'AD'],
       }
     }
+    const recaptchaStateAuditConfig: RecaptchaConfig = {
+      emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
+      managedRules: [
+        {
+          endScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+      useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
+      tollFraudManagedRules: [
+        {
+          startScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+    }
+    const recaptchaStateOffConfig: RecaptchaConfig = {
+      emailPasswordEnforcementState: 'OFF',
+      phoneEnforcementState: 'OFF',
+      useAccountDefender: false,
+      useSmsBotScore: false,
+      useSmsTollFraudProtection: false,
+    }
     const tenantOptions: CreateTenantRequest = {
       displayName: 'testTenant1',
       emailSignInConfig: {
@@ -1466,16 +1492,7 @@ describe('admin.auth', () => {
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'AUDIT',
-        managedRules: [
-          {
-            endScore: 0.3,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: true,
-      },
+      recaptchaConfig: recaptchaStateAuditConfig,
       emailPrivacyConfig: {},
     };
     const expectedUpdatedTenant2: any = {
@@ -1487,16 +1504,7 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        managedRules: [
-          {
-            endScore: 0.3,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: false,
-      },
+      recaptchaConfig: recaptchaStateOffConfig,
       emailPrivacyConfig: {},
     };
     const expectedUpdatedTenantSmsEnabledTotpDisabled: any = {
@@ -1508,16 +1516,7 @@ describe('admin.auth', () => {
       anonymousSignInEnabled: false,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       smsRegionConfig: smsRegionAllowByDefaultConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        managedRules: [
-          {
-            endScore: 0.3,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: false,
-      },
+      recaptchaConfig: recaptchaStateOffConfig,
       emailPrivacyConfig: {},
     };
 

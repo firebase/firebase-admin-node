@@ -112,7 +112,12 @@ export class ProjectConfig {
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
-  
+  /**
+   * The reCAPTCHA configuration.
+   */
+  get recaptchaConfig(): RecaptchaConfig | undefined {
+    return this.recaptchaConfig_;
+  }
   /**
    * The password policy configuration for the project
    */
@@ -204,12 +209,6 @@ export class ProjectConfig {
   }
  
   /**
-   * The reCAPTCHA configuration.
-   */
-  get recaptchaConfig(): RecaptchaConfig | undefined {
-    return this.recaptchaConfig_;
-  }
-  /**
    * The Project Config object constructor.
    *
    * @param response - The server side response used to initialize the Project Config object.
@@ -245,7 +244,7 @@ export class ProjectConfig {
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       multiFactorConfig: deepCopy(this.multiFactorConfig),
-      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      recaptchaConfig: deepCopy(this.recaptchaConfig),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };

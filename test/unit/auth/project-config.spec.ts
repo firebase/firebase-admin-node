@@ -20,7 +20,6 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { RecaptchaAuthConfig } from '../../../src/auth/auth-config';
 import {
   ProjectConfig,
   ProjectConfigServerResponse,
@@ -70,6 +69,25 @@ describe('ProjectConfig', () => {
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
     },
+    recaptchaConfig: {
+      emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
+      managedRules: [ {
+        endScore: 0.2,
+        action: 'BLOCK'
+      } ],
+      tollFraudManagedRules: [ {
+        startScore: 0.1,
+        action: 'BLOCK'
+      } ],
+      recaptchaKeys: [ {
+        type: 'WEB',
+        key: 'test-key-1' }
+      ],
+      useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
+    }
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -114,8 +132,13 @@ describe('ProjectConfig', () => {
     },
     recaptchaConfig: {
       emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
       managedRules: [ {
         endScore: 0.2,
+        action: 'BLOCK'
+      } ],
+      tollFraudManagedRules: [ {
+        startScore: 0.1,
         action: 'BLOCK'
       } ],
       recaptchaKeys: [ {
@@ -123,17 +146,26 @@ describe('ProjectConfig', () => {
         key: 'test-key-1' }
       ],
       useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
     }
   };
 
-  const updateProjectConfigRequest: UpdateProjectConfigRequest = {
+  const updateProjectConfigRequest4: UpdateProjectConfigRequest = {
     recaptchaConfig: {
       emailPasswordEnforcementState: 'AUDIT',
+      phoneEnforcementState: 'AUDIT',
       managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
       } ],
+      tollFraudManagedRules: [ {
+        startScore: 0.1,
+        action: 'BLOCK'
+      } ],
       useAccountDefender: true,
+      useSmsBotScore: true,
+      useSmsTollFraudProtection: true,
     }
   };
 
@@ -206,7 +238,7 @@ describe('ProjectConfig', () => {
         }).not.to.throw;
       });
       it('should throw on null RecaptchaConfig attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig = null;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -214,15 +246,32 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on invalid RecaptchaConfig attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig.invalidParameter = 'invalid';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"invalidParameter" is not a valid RecaptchaConfig parameter.');
       });
 
+      it('should throw on null phoneEnforcementState attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+        configOptionsClientRequest.recaptchaConfig.phoneEnforcementState = null;
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"RecaptchaConfig.phoneEnforcementState" must be a valid non-empty string.');
+      });
+
+      it('should throw on invalid phoneEnforcementState attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+        configOptionsClientRequest.recaptchaConfig
+          .phoneEnforcementState = 'INVALID';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"RecaptchaConfig.phoneEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".');
+      });
+      
       it('should throw on null emailPasswordEnforcementState attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig.emailPasswordEnforcementState = null;
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -230,7 +279,7 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on invalid emailPasswordEnforcementState attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig
           .emailPasswordEnforcementState = 'INVALID';
         expect(() => {
@@ -241,16 +290,38 @@ describe('ProjectConfig', () => {
       const invalidUseAccountDefender = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidUseAccountDefender.forEach((useAccountDefender) => {
         it(`should throw given invalid useAccountDefender parameter: ${JSON.stringify(useAccountDefender)}`, () => {
-          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
           configOptionsClientRequest.recaptchaConfig.useAccountDefender = useAccountDefender;
           expect(() => {
             ProjectConfig.buildServerRequest(configOptionsClientRequest);
           }).to.throw('"RecaptchaConfig.useAccountDefender" must be a boolean value".');
         });
       });
+      
+      const invalidUseSmsBotScore = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsBotScore.forEach((useSmsBotScore) => {
+        it(`should throw given invalid useSmsBotScore parameter: ${JSON.stringify(useSmsBotScore)}`, () => {
+          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+          configOptionsClientRequest.recaptchaConfig.useSmsBotScore = useSmsBotScore;
+          expect(() => {
+            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          }).to.throw('"RecaptchaConfig.useSmsBotScore" must be a boolean value".');
+        });
+      });
+      
+      const invalidUseSmsTollFraudProtection = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidUseSmsTollFraudProtection.forEach((useSmsTollFraudProtection) => {
+        it(`should throw given invalid useSmsTollFraudProtection parameter: ${JSON.stringify(useSmsTollFraudProtection)}`, () => {
+          const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+          configOptionsClientRequest.recaptchaConfig.useSmsTollFraudProtection = useSmsTollFraudProtection;
+          expect(() => {
+            ProjectConfig.buildServerRequest(configOptionsClientRequest);
+          }).to.throw('"RecaptchaConfig.useSmsTollFraudProtection" must be a boolean value".');
+        });
+      });
 
       it('should throw on non-array managedRules attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig.managedRules = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -258,7 +329,7 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on invalid managedRules attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig.managedRules =
         [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
@@ -267,12 +338,38 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.recaptchaConfig.managedRules =
         [{ 'endScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
+      });
+      
+      it('should throw on non-array tollFraudManagedRules attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".');
+      });
+
+      it('should throw on invalid tollFraudManagedRules attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules =
+        [{ 'score': 0.1, 'action': 'BLOCK' }];
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"score" is not a valid RecaptchaTollFraudManagedRule parameter.');
+      });
+
+      it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
+        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules =
+        [{ 'startScore': 0.1, 'action': 'ALLOW' }];
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"RecaptchaTollFraudManagedRule.action" must be "BLOCK".');
       });
 
       it('should throw on null PasswordPolicyConfig attribute', () => {
@@ -284,145 +381,145 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on invalid PasswordPolicyConfig attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.invalidParameter = 'invalid',
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.invalidParameter = 'invalid',
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig parameter.');
       });
 
       it('should throw on missing enforcementState', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        delete tenantOptionsClientRequest.passwordPolicyConfig.enforcementState;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        delete configOptionsClientRequest.passwordPolicyConfig.enforcementState;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
       });
 
       it('should throw on invalid enforcementState', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.enforcementState = 'INVALID_STATE';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.enforcementState = 'INVALID_STATE';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".');
       });
 
       it('should throw on invalid forceUpgradeOnSignin', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.forceUpgradeOnSignin = 'INVALID';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.forceUpgradeOnSignin = 'INVALID';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.');
       });
 
       it('should throw on undefined constraints when state is enforced', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        delete tenantOptionsClientRequest.passwordPolicyConfig.constraints;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        delete configOptionsClientRequest.passwordPolicyConfig.constraints;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be defined.');
       });
       
       it('should throw on invalid constraints attribute', ()=> {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.invalidParameter = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"invalidParameter" is not a valid PasswordPolicyConfig.constraints parameter.');
       });
 
       it('should throw on null constraints object', ()=> {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints = null;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints = null;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
       });
 
       it('should throw on invalid constraints object', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints" must be a non-empty object.');
       });
 
       it('should throw on invalid uppercase type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireUppercase = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.requireUppercase = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requireUppercase"' +
          ' must be a boolean.');
       });
 
       it('should throw on invalid lowercase type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireLowercase = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.requireLowercase = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requireLowercase"' +
         ' must be a boolean.');
       });
 
       it('should throw on invalid numeric type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNumeric = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.requireNumeric = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requireNumeric"' +
         ' must be a boolean.');
       });
 
       it('should throw on invalid non-alphanumeric type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.requireNonAlphanumeric = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.requireNonAlphanumeric = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
         ' must be a boolean.');
       });
 
       it('should throw on invalid minLength type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.minLength" must be a number.');
       });
 
       it('should throw on invalid maxLength type', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 'invalid';
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 'invalid';
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength" must be a number.');
       });
 
       it('should throw on invalid minLength range', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 45;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.minLength"' + 
         ' must be an integer between 6 and 30, inclusive.');
       });
 
       it('should throw on invalid maxLength range', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 5000;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 5000;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
         ' must be greater than or equal to minLength and at max 4096.');
       });
 
       it('should throw if minLength is greater than maxLength', () => {
-        const tenantOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 20;
-        tenantOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 7;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.minLength = 20;
+        configOptionsClientRequest.passwordPolicyConfig.constraints.maxLength = 7;
         expect(() => {
-          ProjectConfig.buildServerRequest(tenantOptionsClientRequest);
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
         }).to.throw('"PasswordPolicyConfig.constraints.maxLength"' +
         ' must be greater than or equal to minLength and at max 4096.');
       });
@@ -461,7 +558,7 @@ describe('ProjectConfig', () => {
       });
 
       it('should throw on unsupported attribute for update request', () => {
-        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest) as any;
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
         configOptionsClientRequest.unsupported = 'value';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -490,6 +587,7 @@ describe('ProjectConfig', () => {
     it('should set readonly property multiFactorConfig', () => {
       const expectedMultiFactorConfig = {
         state: 'DISABLED',
+        factorIds: [],
         providerConfigs: [
           {
             state: 'ENABLED',
@@ -503,20 +601,25 @@ describe('ProjectConfig', () => {
     });
 
     it('should set readonly property recaptchaConfig', () => {
-      const expectedRecaptchaConfig = new RecaptchaAuthConfig(
-        {
-          emailPasswordEnforcementState: 'AUDIT',
-          managedRules: [ {
-            endScore: 0.2,
-            action: 'BLOCK'
-          } ],
-          recaptchaKeys: [ {
-            type: 'WEB',
-            key: 'test-key-1' }
-          ],
-          useAccountDefender: true,
-        }
-      );
+      const expectedRecaptchaConfig = {
+        emailPasswordEnforcementState: 'AUDIT',
+        phoneEnforcementState: 'AUDIT',
+        managedRules: [ {
+          endScore: 0.2,
+          action: 'BLOCK'
+        } ],
+        tollFraudManagedRules: [ {
+          startScore: 0.1,
+          action: 'BLOCK'
+        } ],
+        recaptchaKeys: [ {
+          type: 'WEB',
+          key: 'test-key-1' }
+        ],
+        useAccountDefender: true,
+        useSmsBotScore: true,
+        useSmsTollFraudProtection: true,
+      };
       expect(projectConfig.recaptchaConfig).to.deep.equal(expectedRecaptchaConfig);
     });
 
@@ -548,11 +651,57 @@ describe('ProjectConfig', () => {
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
-        smsRegionConfig: deepCopy(serverResponse.smsRegionConfig),
-        multiFactorConfig: deepCopy(serverResponse.mfa),
-        recaptchaConfig: deepCopy(serverResponse.recaptchaConfig),
-        passwordPolicyConfig: deepCopy(serverResponse.passwordPolicyConfig),
-        emailPrivacyConfig: deepCopy(serverResponse.emailPrivacyConfig),
+        smsRegionConfig: {
+          allowByDefault: {
+            disallowedRegions: [ 'AC', 'AD' ],
+          },
+        },
+        multiFactorConfig: {
+          state: 'DISABLED',
+          factorIds: [],
+          providerConfigs: [
+            {
+              state: 'ENABLED',
+              totpProviderConfig: {
+                adjacentIntervals: 5,
+              },
+            },
+          ],
+        },
+        recaptchaConfig: {
+          emailPasswordEnforcementState: 'AUDIT',
+          phoneEnforcementState: 'AUDIT',
+          managedRules: [ {
+            endScore: 0.2,
+            action: 'BLOCK'
+          } ],
+          tollFraudManagedRules: [ {
+            startScore: 0.1,
+            action: 'BLOCK'
+          } ],
+          recaptchaKeys: [ {
+            type: 'WEB',
+            key: 'test-key-1' }
+          ],
+          useAccountDefender: true,
+          useSmsBotScore: true,
+          useSmsTollFraudProtection: true,
+        },
+        passwordPolicyConfig: {
+          enforcementState: 'ENFORCE',
+          forceUpgradeOnSignin: true,
+          constraints: {
+            requireLowercase: true,
+            requireNonAlphanumeric: true,
+            requireNumeric: true,
+            requireUppercase: true,
+            minLength: 8,
+            maxLength: 30,
+          },
+        },
+        emailPrivacyConfig: {
+          enableImprovedEmailPrivacy: true,
+        },
       });
     });
 
@@ -563,7 +712,10 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.recaptchaConfig?.emailPasswordEnforcementState;
       delete serverResponseOptionalCopy.recaptchaConfig?.managedRules;
       delete serverResponseOptionalCopy.recaptchaConfig?.useAccountDefender;
-      delete serverResponseOptionalCopy.passwordPolicyConfig;
+      delete serverResponseOptionalCopy.recaptchaConfig?.useSmsBotScore;
+      delete serverResponseOptionalCopy.recaptchaConfig?.phoneEnforcementState;
+      delete serverResponseOptionalCopy.recaptchaConfig?.tollFraudManagedRules;
+      delete serverResponseOptionalCopy.recaptchaConfig?.useSmsTollFraudProtection
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       delete serverResponseOptionalCopy.emailPrivacyConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({
