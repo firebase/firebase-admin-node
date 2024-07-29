@@ -91,7 +91,9 @@ export class FunctionsApiClient {
     }
 
     try {
-      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
+      const serviceUrl = tasksEmulatorUrl(resources, functionName)?.concat('/', id) 
+        ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
+      console.log(serviceUrl);
       const request: HttpRequestConfig = {
         method: 'DELETE',
         url: serviceUrl,
@@ -307,9 +309,14 @@ export class FunctionsApiClient {
   }
 
   private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
+    const defaultUrl = process.env.CLOUD_TASKS_EMULATOR_HOST ? 
+      ''
+      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+
     const functionUrl = validator.isNonEmptyString(task.httpRequest.url)
       ? task.httpRequest.url 
-      : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+      : defaultUrl;
+
     task.httpRequest.url = functionUrl;
     // When run from a deployed extension, we should be using ComputeEngineCredentials
     if (validator.isNonEmptyString(extensionId) && this.app.options.credential instanceof ComputeEngineCredential) {
