@@ -909,7 +909,7 @@ describe('ConditionEvaluator', () => {
 
       interface CustomSignalTestCase {
         targets: string[];
-        actual: string;
+        actual: string|number;
         outcome: boolean;
       }
 
