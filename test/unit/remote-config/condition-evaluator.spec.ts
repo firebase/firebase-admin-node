@@ -1088,6 +1088,7 @@ describe('ConditionEvaluator', () => {
           { targets: ['5'], actual: 5.0, outcome: true },
           { targets: ['5.0'], actual: 5.0, outcome: true },
           { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false},
           invalidNumericSignalTestCase,
         ];
 
@@ -1100,6 +1101,7 @@ describe('ConditionEvaluator', () => {
           { targets: ['5'], actual: 5.0, outcome: false },
           { targets: ['5.0'], actual: 5.0, outcome: false },
           { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false},
           invalidNumericSignalTestCase,
         ];
 

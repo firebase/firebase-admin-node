@@ -293,6 +293,7 @@ function compareNumbers(
   return predicateFn(actual < target ? -1 : actual > target ? 1 : 0);
 }
 
+// Max number of segments a numeric version can have. This is enforced by the server as well.
 const MAX_LENGTH = 5;
 
 // Compares semantic version strings against each other.
