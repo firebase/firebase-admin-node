@@ -199,7 +199,7 @@
     "@fastify/busboy": "^3.0.0",
     "@firebase/database-compat": "^1.0.2",
     "@firebase/database-types": "^1.0.0",
-    "@types/node": "^20.10.3",
+    "@types/node": "^22.0.1",
     "farmhash-modern": "^1.1.0",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.1.0",
