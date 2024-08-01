@@ -293,6 +293,9 @@ function compareNumbers(
   return predicateFn(actual < target ? -1 : actual > target ? 1 : 0);
 }
 
+// Max number of segments a numeric version can have. This is enforced by the server as well.
+const MAX_LENGTH = 5;
+
 // Compares semantic version strings against each other.
 // Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
 function compareSemanticVersions(
@@ -303,21 +306,24 @@ function compareSemanticVersions(
   const version1 = String(actualValue).split('.').map(Number);
   const version2 = targetValue.split('.').map(Number);
 
-  if (version1.some(isNaN) || version2.some(isNaN)) {
-    return false;
-  }
-
-  for (let i = 0;; i++) {
+  for (let i = 0; i < MAX_LENGTH; i++) {
+    // Check to see if segments are present. Note that these may be present and be NaN.
     const version1HasSegment = version1[i] !== undefined;
     const version2HasSegment = version2[i] !== undefined;
-    if (!version1HasSegment) {
-      return predicateFn(version2HasSegment ? -1 : 0);
-    } else if (!version2HasSegment) {
-      return predicateFn(1);
-    }
 
-    if (version1[i] !== version2[i]) {
-      return predicateFn(version1[i] < version2[i] ? -1 : 1);
-    }
+    // If both are undefined, we've consumed everything and they're equal.
+    if (!version1HasSegment && !version2HasSegment) return predicateFn(0)
+
+    // Insert zeros if undefined for easier comparison.
+    if (!version1HasSegment) version1[i] = 0;
+    if (!version2HasSegment) version2[i] = 0;
+
+    // At this point, if either segment is NaN, we return false directly.
+    if (isNaN(version1[i]) || isNaN(version2[i])) return false;
+
+    // Check if we have a difference in segments. Otherwise continue to next segment.
+    if (version1[i] < version2[i]) return predicateFn(-1);
+    if (version1[i] > version2[i]) return predicateFn(1);
   }
+  return false;
 }

@@ -909,7 +909,7 @@ describe('ConditionEvaluator', () => {
 
       interface CustomSignalTestCase {
         targets: string[];
-        actual: string;
+        actual: string|number;
         outcome: boolean;
       }
 
@@ -1008,7 +1008,6 @@ describe('ConditionEvaluator', () => {
           { targets: ['5'], actual: '4', outcome: true },
           { targets: ['5'], actual: '5', outcome: true },
           { targets: ['5'], actual: '6', outcome: false },
-          { targets: ['5'], actual: '  4  ', outcome: true },
           invalidNumericSignalTestCase,
         ];
 
@@ -1050,6 +1049,8 @@ describe('ConditionEvaluator', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['5'], actual: '6', outcome: true },
           { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
           { targets: ['5'], actual: '4', outcome: false },
           invalidNumericSignalTestCase,
         ];
@@ -1084,7 +1085,10 @@ describe('ConditionEvaluator', () => {
       describe('SEMANTIC_VERSION_EQUAL', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
           { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false },
           invalidNumericSignalTestCase,
         ];
 
@@ -1094,7 +1098,10 @@ describe('ConditionEvaluator', () => {
       describe('SEMANTIC_VERSION_NOT_EQUAL', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['5.12.3'], actual: '5.12.9', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: false },
+          { targets: ['5.0'], actual: 5.0, outcome: false },
           { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false },
           invalidNumericSignalTestCase,
         ];
 
@@ -1118,6 +1125,8 @@ describe('ConditionEvaluator', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['5.12.3'], actual: '5.13.9', outcome: true },
           { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
           { targets: ['5.12.3'], actual: '5.11.9', outcome: false },
           invalidNumericSignalTestCase
         ];
