@@ -28,6 +28,8 @@ import {
   PasswordPolicyConfig,
   EmailPrivacyConfig,
   EmailPrivacyAuthConfig,
+  MobileLinksConfig,
+  MobileLinksAuthConfig,
 } from './auth-config';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -59,6 +61,11 @@ export interface UpdateProjectConfigRequest {
    * The email privacy configuration to update on the project
    */
   emailPrivacyConfig?: EmailPrivacyConfig;
+
+  /**
+   * The mobile links configuration for the project
+   */
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /**
@@ -70,6 +77,7 @@ export interface ProjectConfigServerResponse {
   recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /**
@@ -81,6 +89,7 @@ export interface ProjectConfigClientRequest {
   recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /**
@@ -123,6 +132,11 @@ export class ProjectConfig {
   public readonly emailPrivacyConfig?: EmailPrivacyConfig;
 
   /**
+   * The mobile links configuration for the project
+   */
+  public readonly mobileLinksConfig?: MobileLinksConfig
+  
+  /**
    * Validates a project config options object. Throws an error on failure.
    *
    * @param request - The project config options object to validate.
@@ -140,6 +154,7 @@ export class ProjectConfig {
       recaptchaConfig: true,
       passwordPolicyConfig: true,
       emailPrivacyConfig: true,
+      mobileLinksConfig: true,
     }
     // Check for unsupported top level attributes.
     for (const key in request) {
@@ -173,6 +188,11 @@ export class ProjectConfig {
     if (typeof request.emailPrivacyConfig !== 'undefined') {
       EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
+
+    // Validate Mobile Links Config if provided.
+    if (typeof request.mobileLinksConfig !== 'undefined') {
+      MobileLinksAuthConfig.validate(request.mobileLinksConfig);
+    }
   }
 
   /**
@@ -199,6 +219,9 @@ export class ProjectConfig {
     }
     if (typeof configOptions.emailPrivacyConfig !== 'undefined') {
       request.emailPrivacyConfig = configOptions.emailPrivacyConfig;
+    }
+    if (typeof configOptions.mobileLinksConfig !== 'undefined') {
+      request.mobileLinksConfig = configOptions.mobileLinksConfig;
     }
     return request;
   }
@@ -234,6 +257,9 @@ export class ProjectConfig {
     if (typeof response.emailPrivacyConfig !== 'undefined') {
       this.emailPrivacyConfig = response.emailPrivacyConfig;
     }
+    if (typeof response.mobileLinksConfig !== 'undefined') {
+      this.mobileLinksConfig = response.mobileLinksConfig;
+    }
   }
   /**
    * Returns a JSON-serializable representation of this object.
@@ -248,6 +274,7 @@ export class ProjectConfig {
       recaptchaConfig: this.recaptchaConfig_?.toJSON(),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
+      mobileLinksConfig: deepCopy(this.mobileLinksConfig),
     };
     if (typeof json.smsRegionConfig === 'undefined') {
       delete json.smsRegionConfig;
@@ -263,6 +290,9 @@ export class ProjectConfig {
     }
     if (typeof json.emailPrivacyConfig === 'undefined') {
       delete json.emailPrivacyConfig;
+    }
+    if (typeof json.mobileLinksConfig === 'undefined') {
+      delete json.mobileLinksConfig;
     }
     return json;
   }
