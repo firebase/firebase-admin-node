@@ -760,6 +760,14 @@ export interface ListUsersResult {
 }
 
 // @public
+export interface MobileLinksConfig {
+    domain?: MobileLinksDomain;
+}
+
+// @public
+export type MobileLinksDomain = 'HOSTING_DOMAIN' | 'FIREBASE_DYNAMIC_LINK_DOMAIN';
+
+// @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
     providerConfigs?: MultiFactorProviderConfig[];
@@ -849,6 +857,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 // @public
 export class ProjectConfig {
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
+    readonly mobileLinksConfig?: MobileLinksConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
@@ -934,6 +943,7 @@ export class Tenant {
     readonly displayName?: string;
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
+    readonly mobileLinksConfig?: MobileLinksConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
@@ -988,6 +998,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 // @public
 export interface UpdateProjectConfigRequest {
     emailPrivacyConfig?: EmailPrivacyConfig;
+    mobileLinksConfig?: MobileLinksConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;
@@ -1014,6 +1025,7 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
+    mobileLinksConfig?: MobileLinksConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;

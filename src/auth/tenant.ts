@@ -24,6 +24,7 @@ import {
   MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig,
   PasswordPolicyConfig,
   PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig,
+  MobileLinksConfig, MobileLinksAuthConfig
 } from './auth-config';
 
 /**
@@ -77,6 +78,11 @@ export interface UpdateTenantRequest {
    * The email privacy configuration for the tenant
    */
   emailPrivacyConfig?: EmailPrivacyConfig;
+
+  /**
+   * The mobile links configuration for the project
+   */
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /**
@@ -95,6 +101,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   recaptchaConfig?: RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /** The tenant server response interface. */
@@ -110,6 +117,7 @@ export interface TenantServerResponse {
   recaptchaConfig? : RecaptchaConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
+  mobileLinksConfig?: MobileLinksConfig;
 }
 
 /**
@@ -175,6 +183,11 @@ export class Tenant {
    * The email privacy configuration for the tenant
    */
   public readonly emailPrivacyConfig?: EmailPrivacyConfig;
+  /**
+   * The mobile links configuration for the tenant
+   */
+  public readonly mobileLinksConfig?: MobileLinksConfig
+  
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -217,6 +230,9 @@ export class Tenant {
     if (typeof tenantOptions.emailPrivacyConfig !== 'undefined') {
       request.emailPrivacyConfig = tenantOptions.emailPrivacyConfig;
     }
+    if (typeof tenantOptions.mobileLinksConfig !== 'undefined') {
+      request.mobileLinksConfig = tenantOptions.mobileLinksConfig;
+    }
     return request;
   }
 
@@ -254,6 +270,7 @@ export class Tenant {
       recaptchaConfig: true,
       passwordPolicyConfig: true,
       emailPrivacyConfig: true,
+      mobileLinksConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -317,6 +334,10 @@ export class Tenant {
     if (typeof request.emailPrivacyConfig !== 'undefined') {
       EmailPrivacyAuthConfig.validate(request.emailPrivacyConfig);
     }
+    // Validate Mobile Links Config if provided.
+    if (typeof request.mobileLinksConfig !== 'undefined') {
+      MobileLinksAuthConfig.validate(request.mobileLinksConfig);
+    }
   }
 
   /**
@@ -363,6 +384,9 @@ export class Tenant {
     if (typeof response.emailPrivacyConfig !== 'undefined') {
       this.emailPrivacyConfig = deepCopy(response.emailPrivacyConfig);
     }
+    if (typeof response.mobileLinksConfig !== 'undefined') {
+      this.mobileLinksConfig = deepCopy(response.mobileLinksConfig);
+    }
   }
 
   /**
@@ -403,6 +427,7 @@ export class Tenant {
       recaptchaConfig: this.recaptchaConfig_?.toJSON(),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
+      mobileLinksConfig: deepCopy(this.mobileLinksConfig),
     };
     if (typeof json.multiFactorConfig === 'undefined') {
       delete json.multiFactorConfig;
@@ -421,6 +446,9 @@ export class Tenant {
     }
     if (typeof json.emailPrivacyConfig === 'undefined') {
       delete json.emailPrivacyConfig;
+    }
+    if (typeof json.mobileLinksConfig === 'undefined') {
+      delete json.mobileLinksConfig;
     }
     return json;
   }
