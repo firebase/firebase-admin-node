@@ -488,7 +488,6 @@ describe('FunctionsApiClient', () => {
 
     it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', () => {
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
-      expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
@@ -510,7 +509,6 @@ describe('FunctionsApiClient', () => {
     it('should leave empty urls alone when CLOUD_TASKS_EMULATOR_HOST is set', () => {
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
       expectedPayload.httpRequest.url = '';
-      expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
@@ -528,6 +526,34 @@ describe('FunctionsApiClient', () => {
           });
         });
     });
+
+    it('should use a fake service account if the emulator is running and no service account is defined', () => {
+      app = mocks.appWithOptions({
+        credential: new mocks.MockCredential(),
+        projectId: 'test-project',
+        serviceAccountId: ''
+      });
+      apiClient = new FunctionsApiClient(app);
+
+      const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
+      expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: CLOUD_TASKS_URL_EMULATOR,
+            headers: EXPECTED_HEADERS,
+            data: {
+              task: expectedPayload
+            }
+          });
+        });
+    })
 
   });
 
