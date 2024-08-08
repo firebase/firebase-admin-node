@@ -29,6 +29,7 @@ import { ComputeEngineCredential } from '../app/credential-internal';
 const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
 const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/' + CLOUD_TASKS_API_RESOURCE_PATH;
 const FIREBASE_FUNCTION_URL_FORMAT = 'https://{locationId}-{projectId}.cloudfunctions.net/{resourceId}';
+export const EMULATED_SERVICE_ACCOUNT_DEFAULT = 'emulated-service-acct@email.com';
 
 const FIREBASE_FUNCTIONS_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -69,8 +70,8 @@ export class FunctionsApiClient {
     }
     if (!validator.isTaskId(id)) {
       throw new FirebaseFunctionsError(
-        'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), ' 
-        + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+        'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+      + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
     }
 
     let resources: utils.ParsedResource;
@@ -91,7 +92,8 @@ export class FunctionsApiClient {
     }
 
     try {
-      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
+      const serviceUrl = tasksEmulatorUrl(resources, functionName)?.concat('/', id)
+        ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
       const request: HttpRequestConfig = {
         method: 'DELETE',
         url: serviceUrl,
@@ -144,7 +146,10 @@ export class FunctionsApiClient {
 
     const task = this.validateTaskOptions(data, resources, opts);
     try {
-      const serviceUrl = await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+      const serviceUrl =
+        tasksEmulatorUrl(resources, functionName) ??
+        await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+
       const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
       const request: HttpRequestConfig = {
         method: 'POST',
@@ -237,7 +242,7 @@ export class FunctionsApiClient {
           serviceAccountEmail: '',
         },
         body: Buffer.from(JSON.stringify({ data })).toString('base64'),
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...opts?.headers,
         }
@@ -252,7 +257,7 @@ export class FunctionsApiClient {
       if ('scheduleTime' in opts && 'scheduleDelaySeconds' in opts) {
         throw new FirebaseFunctionsError(
           'invalid-argument', 'Both scheduleTime and scheduleDelaySeconds are provided. '
-          + 'Only one value should be set.');
+        + 'Only one value should be set.');
       }
       if ('scheduleTime' in opts && typeof opts.scheduleTime !== 'undefined') {
         if (!(opts.scheduleTime instanceof Date)) {
@@ -275,7 +280,7 @@ export class FunctionsApiClient {
           || opts.dispatchDeadlineSeconds > 1800) {
           throw new FirebaseFunctionsError(
             'invalid-argument', 'dispatchDeadlineSeconds must be a non-negative duration in seconds '
-            + 'and must be in the range of 15s to 30 mins.');
+          + 'and must be in the range of 15s to 30 mins.');
         }
         task.dispatchDeadline = `${opts.dispatchDeadlineSeconds}s`;
       }
@@ -283,7 +288,7 @@ export class FunctionsApiClient {
         if (!validator.isTaskId(opts.id)) {
           throw new FirebaseFunctionsError(
             'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
-            + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
         }
         const resourcePath = utils.formatString(CLOUD_TASKS_API_RESOURCE_PATH, {
           projectId: resources.projectId,
@@ -304,9 +309,14 @@ export class FunctionsApiClient {
   }
 
   private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
-    const functionUrl = validator.isNonEmptyString(task.httpRequest.url)
-      ? task.httpRequest.url 
+    const defaultUrl = process.env.CLOUD_TASKS_EMULATOR_HOST ?
+      ''
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
+
+    const functionUrl = validator.isNonEmptyString(task.httpRequest.url)
+      ? task.httpRequest.url
+      : defaultUrl;
+
     task.httpRequest.url = functionUrl;
     // When run from a deployed extension, we should be using ComputeEngineCredentials
     if (validator.isNonEmptyString(extensionId) && this.app.options.credential instanceof ComputeEngineCredential) {
@@ -315,8 +325,16 @@ export class FunctionsApiClient {
       // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.
       delete task.httpRequest.oidcToken;
     } else {
-      const account =  await this.getServiceAccount();
-      task.httpRequest.oidcToken = { serviceAccountEmail: account };
+      try {
+        const account = await this.getServiceAccount();
+        task.httpRequest.oidcToken = { serviceAccountEmail: account };
+      } catch (e) {
+        if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+          task.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
+        } else {
+          throw e;
+        }
+      }
     }
     return task;
   }
@@ -416,4 +434,11 @@ export class FirebaseFunctionsError extends PrefixedFirebaseError {
     /* tslint:enable:max-line-length */
     (this as any).__proto__ = FirebaseFunctionsError.prototype;
   }
+}
+
+function tasksEmulatorUrl(resources: utils.ParsedResource, functionName: string): string | undefined {
+  if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${functionName}/tasks`;
+  }
+  return undefined;
 }
