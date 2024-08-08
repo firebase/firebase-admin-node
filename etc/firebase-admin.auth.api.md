@@ -877,8 +877,13 @@ export type RecaptchaAction = 'BLOCK';
 export interface RecaptchaConfig {
     emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
     managedRules?: RecaptchaManagedRule[];
+    phoneEnforcementState?: RecaptchaProviderEnforcementState;
     recaptchaKeys?: RecaptchaKey[];
+    tollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
     useAccountDefender?: boolean;
+    useSmsBotScore?: boolean;
+    // (undocumented)
+    useSmsTollFraudProtection?: boolean;
 }
 
 // @public
@@ -898,6 +903,12 @@ export interface RecaptchaManagedRule {
 
 // @public
 export type RecaptchaProviderEnforcementState = 'OFF' | 'AUDIT' | 'ENFORCE';
+
+// @public
+export interface RecaptchaTollFraudManagedRule {
+    action?: RecaptchaAction;
+    startScore: number;
+}
 
 // @public
 export interface SAMLAuthProviderConfig extends BaseAuthProviderConfig {
