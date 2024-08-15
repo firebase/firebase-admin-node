@@ -15,11 +15,13 @@ export interface ActionCodeSettings {
         installApp?: boolean;
         minimumVersion?: string;
     };
+    // @deprecated
     dynamicLinkDomain?: string;
     handleCodeInApp?: boolean;
     iOS?: {
         bundleId: string;
     };
+    linkDomain?: string;
     url: string;
 }
 
@@ -219,6 +221,11 @@ export class AuthClientErrorCode {
     };
     // (undocumented)
     static INVALID_HASH_SALT_SEPARATOR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_HOSTING_LINK_DOMAIN: {
         code: string;
         message: string;
     };

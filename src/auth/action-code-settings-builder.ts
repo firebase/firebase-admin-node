@@ -94,8 +94,19 @@ export interface ActionCodeSettings {
    * configured per project. This field provides the ability to explicitly choose
    * configured per project. This fields provides the ability explicitly choose
    * one. If none is provided, the oldest domain is used by default.
+   * @deprecated use linkDomain instead
    */
   dynamicLinkDomain?: string;
+
+  /**
+   * Defines the custom Firebase Hosting domain to use when the link is to be opened
+   * via a specified mobile app,
+   * This is a replacement of Firebase Dynamic Link.
+   * If none is provided, 
+   * a default hosting domain will be used (for example, `example.firebaseapp.com`)
+   */
+
+  linkDomain?: string;
 }
 
 /** Defines the email action code server request. */
@@ -103,6 +114,7 @@ interface EmailActionCodeRequest {
   continueUrl?: string;
   canHandleCodeInApp?: boolean;
   dynamicLinkDomain?: string;
+  linkDomain?: string;
   androidPackageName?: string;
   androidMinimumVersion: string;
   androidInstallApp?: boolean;
@@ -123,6 +135,7 @@ export class ActionCodeSettingsBuilder {
   private ibi?: string;
   private canHandleCodeInApp?: boolean;
   private dynamicLinkDomain?: string;
+  private linkDomain?: string;
 
   /**
    * ActionCodeSettingsBuilder constructor.
@@ -165,6 +178,14 @@ export class ActionCodeSettingsBuilder {
       );
     }
     this.dynamicLinkDomain = actionCodeSettings.dynamicLinkDomain;
+
+    if (typeof actionCodeSettings.linkDomain !== 'undefined' &&
+      !validator.isNonEmptyString(actionCodeSettings.linkDomain)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_HOSTING_LINK_DOMAIN,
+      );
+    }
+    this.linkDomain = actionCodeSettings.linkDomain;
 
     if (typeof actionCodeSettings.iOS !== 'undefined') {
       if (!validator.isNonNullObject(actionCodeSettings.iOS)) {
@@ -230,6 +251,7 @@ export class ActionCodeSettingsBuilder {
       continueUrl: this.continueUrl,
       canHandleCodeInApp: this.canHandleCodeInApp,
       dynamicLinkDomain: this.dynamicLinkDomain,
+      linkDomain: this.linkDomain,
       androidPackageName: this.apn,
       androidMinimumVersion: this.amv,
       androidInstallApp: this.installApp,
