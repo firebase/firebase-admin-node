@@ -31,6 +31,7 @@ export let projectId: string;
 export let apiKey: string;
 
 export let defaultApp: App;
+export let legacyTransportApp: App;
 export let nullApp: App;
 export let nonNullApp: App;
 export let noServiceAccountApp: App;
@@ -92,6 +93,13 @@ before(() => {
     storageBucket,
   });
 
+  legacyTransportApp = initializeApp({
+    ...getCredential(),
+    projectId,
+    databaseURL: databaseUrl,
+    storageBucket,
+  }, 'legacyTransport');
+
   nullApp = initializeApp({
     ...getCredential(),
     projectId,
@@ -127,6 +135,7 @@ before(() => {
 after(() => {
   return Promise.all([
     deleteApp(defaultApp),
+    deleteApp(legacyTransportApp),
     deleteApp(nullApp),
     deleteApp(nonNullApp),
     deleteApp(noServiceAccountApp),

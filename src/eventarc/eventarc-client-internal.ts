@@ -20,7 +20,7 @@ import { FirebaseEventarcError, toCloudEventProtoFormat } from './eventarc-utils
 import { App } from '../app';
 import { Channel } from './eventarc';
 import {
-  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient
+  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
 import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils';
@@ -117,7 +117,7 @@ export class EventarcApiClient {
       });
   }
 
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
+  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
     if (err instanceof PrefixedFirebaseError) {
       return err;
     }

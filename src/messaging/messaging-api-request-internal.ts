@@ -18,7 +18,8 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError, RequestResponse,
+  AuthorizedHttp2Client, Http2SessionHandler, Http2RequestConfig,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
@@ -44,6 +45,7 @@ const LEGACY_FIREBASE_MESSAGING_HEADERS = {
  */
 export class FirebaseMessagingRequestHandler {
   private readonly httpClient: AuthorizedHttpClient;
+  private readonly http2Client: AuthorizedHttp2Client;
   private readonly batchClient: BatchRequestClient;
 
   /**
@@ -52,6 +54,7 @@ export class FirebaseMessagingRequestHandler {
    */
   constructor(app: App) {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.http2Client = new AuthorizedHttp2Client(app as FirebaseApp);
     this.batchClient = new BatchRequestClient(
       this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
@@ -75,20 +78,20 @@ export class FirebaseMessagingRequestHandler {
     return this.httpClient.send(request).then((response) => {
       // Send non-JSON responses to the catch() below where they will be treated as errors.
       if (!response.isJson()) {
-        throw new HttpError(response);
+        throw new RequestResponseError(response);
       }
 
       // Check for backend errors in the response.
       const errorCode = getErrorCode(response.data);
       if (errorCode) {
-        throw new HttpError(response);
+        throw new RequestResponseError(response);
       }
 
       // Return entire response.
       return response.data;
     })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           throw createFirebaseError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -97,14 +100,16 @@ export class FirebaseMessagingRequestHandler {
   }
 
   /**
-   * Invokes the request handler with the provided request data.
+   * Invokes the HTTP/1.1 request handler with the provided request data.
    *
    * @param host - The host to which to send the request.
    * @param path - The path to which to send the request.
    * @param requestData - The request data.
    * @returns A promise that resolves with the {@link SendResponse}.
    */
-  public invokeRequestHandlerForSendResponse(host: string, path: string, requestData: object): Promise<SendResponse> {
+  public invokeHttpRequestHandlerForSendResponse(
+    host: string, path: string, requestData: object
+  ): Promise<SendResponse> {
     const request: HttpRequestConfig = {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
@@ -116,7 +121,38 @@ export class FirebaseMessagingRequestHandler {
       return this.buildSendResponse(response);
     })
       .catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
+          return this.buildSendResponseFromError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
+      });
+  }
+
+  /**
+   * Invokes the HTTP/2 request handler with the provided request data.
+   *
+   * @param host - The host to which to send the request.
+   * @param path - The path to which to send the request.
+   * @param requestData - The request data.
+   * @returns A promise that resolves with the {@link SendResponse}.
+   */
+  public invokeHttp2RequestHandlerForSendResponse(
+    host: string, path: string, requestData: object, http2SessionHandler: Http2SessionHandler
+  ): Promise<SendResponse> {
+    const request: Http2RequestConfig = {
+      method: FIREBASE_MESSAGING_HTTP_METHOD,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+      http2SessionHandler: http2SessionHandler
+    };
+    return this.http2Client.send(request).then((response) => {
+      return this.buildSendResponse(response);
+    })
+      .catch((err) => {
+        if (err instanceof RequestResponseError) {
           return this.buildSendResponseFromError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -126,15 +162,15 @@ export class FirebaseMessagingRequestHandler {
 
   /**
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
-   * a BatchResponse object.
+   * a `BatchResponse` object.
    *
    * @param requests - An array of sub requests to send.
    * @returns A promise that resolves when the send operation is complete.
    */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
     return this.batchClient.send(requests)
-      .then((responses: HttpResponse[]) => {
-        return responses.map((part: HttpResponse) => {
+      .then((responses: RequestResponse[]) => {
+        return responses.map((part: RequestResponse) => {
           return this.buildSendResponse(part);
         });
       }).then((responses: SendResponse[]) => {
@@ -145,7 +181,7 @@ export class FirebaseMessagingRequestHandler {
           failureCount: responses.length - successCount,
         };
       }).catch((err) => {
-        if (err instanceof HttpError) {
+        if (err instanceof RequestResponseError) {
           throw createFirebaseError(err);
         }
         // Re-throw the error if it already has the proper format.
@@ -153,19 +189,19 @@ export class FirebaseMessagingRequestHandler {
       });
   }
 
-  private buildSendResponse(response: HttpResponse): SendResponse {
+  private buildSendResponse(response: RequestResponse): SendResponse {
     const result: SendResponse = {
       success: response.status === 200,
     };
     if (result.success) {
       result.messageId = response.data.name;
     } else {
-      result.error = createFirebaseError(new HttpError(response));
+      result.error = createFirebaseError(new RequestResponseError(response));
     }
     return result;
   }
 
-  private buildSendResponseFromError(err: HttpError): SendResponse {
+  private buildSendResponseFromError(err: RequestResponseError): SendResponse {
     return {
       success: false,
       error: createFirebaseError(err)

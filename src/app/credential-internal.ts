@@ -22,7 +22,7 @@ import path = require('path');
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
+import { HttpClient, HttpRequestConfig, RequestResponseError, RequestResponse } from '../utils/api-request';
 import * as util from '../utils/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
@@ -232,7 +232,8 @@ export class ComputeEngineCredential implements Credential {
         return this.projectId;
       })
       .catch((err) => {
-        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        const detail: string =
+        (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine project ID: ${detail}`);
@@ -251,7 +252,8 @@ export class ComputeEngineCredential implements Credential {
         return this.accountId;
       })
       .catch((err) => {
-        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        const detail: string =
+        (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_CREDENTIAL,
           `Failed to determine service account email: ${detail}`);
@@ -553,7 +555,7 @@ function requestIDToken(client: HttpClient, request: HttpRequestConfig): Promise
  * Constructs a human-readable error message from the given Error.
  */
 function getErrorMessage(err: Error): string {
-  const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+  const detail: string = (err instanceof RequestResponseError) ? getDetailFromResponse(err.response) : err.message;
   return `Error fetching access token: ${detail}`;
 }
 
@@ -562,7 +564,7 @@ function getErrorMessage(err: Error): string {
  * the response is JSON-formatted, looks up the error and error_description fields sent by the
  * Google Auth servers. Otherwise returns the entire response payload as the error detail.
  */
-function getDetailFromResponse(response: HttpResponse): string {
+function getDetailFromResponse(response: RequestResponse): string {
   if (response.isJson() && response.data.error) {
     const json = response.data;
     let detail = json.error;

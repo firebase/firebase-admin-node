@@ -17,7 +17,7 @@
 
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { AuthorizedHttpClient, HttpClient, HttpError, HttpRequestConfig } from '../utils/api-request';
+import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
 import { FirebaseAppError, PrefixedFirebaseError } from '../utils/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
@@ -76,7 +76,7 @@ export class ExtensionsApiClient {
     }/${EXTENSIONS_API_VERSION}/projects/${projectId}/instances/${instanceId}/runtimeData`;
   }
 
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
+  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
     if (err instanceof PrefixedFirebaseError) {
       return err;
     }
