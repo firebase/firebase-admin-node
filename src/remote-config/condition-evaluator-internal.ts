@@ -28,7 +28,6 @@ import {
   CustomSignalOperator,
 } from './remote-config-api';
 import * as farmhash from 'farmhash-modern';
-import long = require('long');
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
