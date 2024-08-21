@@ -46,9 +46,6 @@ export type DefaultConfig = {
     [key: string]: string | number | boolean;
 };
 
-// Warning: (ae-forgotten-export) The symbol "UserProvidedSignals" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "PredefinedSignals" needs to be exported by the entry point index.d.ts
-//
 // @public
 export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
@@ -137,6 +134,11 @@ export enum PercentConditionOperator {
     LESS_OR_EQUAL = "LESS_OR_EQUAL",
     UNKNOWN = "UNKNOWN"
 }
+
+// @public
+export type PredefinedSignals = {
+    randomizationId?: string;
+};
 
 // @public
 export class RemoteConfig {
@@ -234,6 +236,11 @@ export type ServerTemplateDataType = ServerTemplateData | string;
 
 // @public
 export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
+
+// @public
+export type UserProvidedSignals = {
+    [key: string]: string | number;
+};
 
 // @public
 export interface Value {
