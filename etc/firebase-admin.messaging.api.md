@@ -198,11 +198,13 @@ export class Messaging {
     sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     // @deprecated
     sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+    // @deprecated
     sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
     // @deprecated
     sendToDevice(registrationTokenOrTokens: string | string[], payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDevicesResponse>;
     // @deprecated
     sendToDeviceGroup(notificationKey: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDeviceGroupResponse>;
+    // @deprecated
     sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
