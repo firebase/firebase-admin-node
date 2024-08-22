@@ -16,7 +16,7 @@
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
     "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
-    "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
+    "test:integration": "mocha test/integration/setup.ts test/integration/data-connect.ts --slow 5000 --timeout 20000 --require ts-node/register",
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
@@ -80,6 +80,9 @@
       "database": [
         "lib/database"
       ],
+      "data-connect": [
+        "lib/data-connect"
+      ],
       "firestore": [
         "lib/firestore"
       ],
@@ -133,6 +136,11 @@
       "types": "./lib/database/index.d.ts",
       "require": "./lib/database/index.js",
       "import": "./lib/esm/database/index.js"
+    },
+    "./data-connect": {
+      "types": "./lib/data-connect/index.d.ts",
+      "require": "./lib/data-connect/index.js",
+      "import": "./lib/esm/data-connect/index.js"
     },
     "./eventarc": {
       "types": "./lib/eventarc/index.d.ts",
