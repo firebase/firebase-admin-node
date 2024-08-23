@@ -21,9 +21,11 @@
 import path = require('path');
 import events = require('events');
 import stream = require('stream');
+import http2 = require('http2');
 
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
+import * as sinon from 'sinon';
 
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp } from '../../src/app/firebase-app';
@@ -308,6 +310,93 @@ export class MockSocketEmitter extends events.EventEmitter {
 /** Mock stream passthrough class with dummy abort method. */
 export class MockStream extends stream.PassThrough {
   public abort: () => void = () => undefined;
+}
+
+export interface MockHttp2Request {
+  headers: http2.OutgoingHttpHeaders,
+  data: any
+}
+
+export interface MockHttp2Response {
+  headers: http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader,
+  data: Buffer,
+  delay?: number,
+  error?: any
+}
+
+export class Http2Mocker {
+  private connectStub: sinon.SinonStub | null;
+  private originalConnect = http2.connect;
+  private timeouts: NodeJS.Timeout[] = [];
+  private mockResponses: MockHttp2Response[] = [];
+  public requests: MockHttp2Request[] = [];
+
+  public http2Stub(mockResponses: MockHttp2Response[]): void {
+    this.mockResponses = mockResponses
+    this.connectStub = sinon.stub(http2, 'connect');
+    this.connectStub.callsFake((_target: any, options: any) => {
+      const session = this.originalConnect('https://www.example.com', options);
+      session.request = this.createMockRequest()
+      return session;
+    })
+  }
+
+  private createMockRequest() {
+    return (requestHeaders: http2.OutgoingHttpHeaders) => {
+      // Create a mock ClientHttp2Stream to return
+      const mockStream = new stream.Readable({
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        read() {} 
+      }) as http2.ClientHttp2Stream;
+
+      mockStream.end = (data: any) => {
+        this.requests.push({ headers: requestHeaders, data: data })
+        return mockStream
+      };
+  
+      mockStream.setTimeout = (timeout, callback: () => void) => {
+        this.timeouts.push(setTimeout(callback, timeout))
+      }
+
+      const mockRes = this.mockResponses.shift();
+      if (mockRes) {
+        this.timeouts.push(setTimeout(() => {
+          if (mockRes.error) {
+            mockStream.emit('error', mockRes.error)
+          }
+          else {
+            mockStream.emit('response', mockRes.headers);
+            mockStream.emit('data', mockRes.data);
+            mockStream.emit('end');
+          }
+        }, mockRes.delay))
+      }
+      else {
+        throw Error('A mock request response was expected but not found.')
+      }
+      return mockStream;
+    }
+  }
+
+  public done(): void {
+    // Clear timeouts
+    this.timeouts.forEach((timeout) => {
+      clearTimeout(timeout)
+    })
+
+    // Remove stub
+    if (this.connectStub) {
+      this.connectStub.restore();
+      this.connectStub = null;
+    }
+
+    // Check if all mock requests responces were used
+    if (this.mockResponses.length > 0) {
+      throw Error('A extra mock request was provided but not used.')
+    }
+
+    this.requests = []
+  }
 }
 
 /**

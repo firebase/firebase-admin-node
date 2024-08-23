@@ -858,4 +858,77 @@ describe('ConditionEvaluator', () => {
       }
     });
   });
+
+  describe('hashSeededRandomizationId', () => {
+    // The Farmhash algorithm produces a 64 bit unsigned integer,
+    // which we convert to a signed integer for legacy compatibility.
+    // This has caused confusion in the past, so we explicitly
+    // test here.
+    it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+      
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63-1 = 9223372036854775807.
+        .returns(BigInt('9223372036854775807'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+      
+      expect(actual).to.equal(BigInt('9223372036854775807'))
+    });
+
+    it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+      
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63 = 9223372036854775808.
+        .returns(BigInt('9223372036854775808'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+      
+      // 2^63 is the negation of 2^63-1
+      expect(actual).to.equal(BigInt('9223372036854775808'))
+    });
+
+    it('should convert 2^63+1 to negative and then find the absolute value', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+      
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63+1 9223372036854775809.
+        .returns(BigInt('9223372036854775809'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+      
+      // 2^63+1 is larger than 2^63, so the absolute value is smaller
+      expect(actual).to.equal(BigInt('9223372036854775807'))
+    });
+
+    it('should handle the value that initially caused confusion', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+      
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // We were initially confused about the nature of this value ...
+        .returns(BigInt('16081085603393958147'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+      
+      // ... Now we know it's the unsigned equivalent of this absolute value.
+      expect(actual).to.equal(BigInt('2365658470315593469'))
+    });
+  });
 });
