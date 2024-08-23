@@ -107,7 +107,7 @@ export interface OneOfCondition {
   percent?: PercentCondition;
 
   /**
-   * Makes this a custom signal condition.
+   * Makes this condition a custom signal condition.
    */
   customSignal?: CustomSignalCondition;
 }
@@ -229,85 +229,84 @@ export enum CustomSignalOperator {
   UNKNOWN = 'UNKNOWN',
 
   /**
-   * The actual value is less than the target value.
+   * Matches a numeric value less than the target value.
    */
   NUMERIC_LESS_THAN = 'NUMERIC_LESS_THAN',
 
   /**
-   * The actual value is less than or equal to the target value.
+   * Matches a numeric value less than or equal to the target value.
    */
   NUMERIC_LESS_EQUAL ='NUMERIC_LESS_EQUAL',
 
   /**
-   * The actual value is equal to the target value.
+   * Matches a numeric value equal to the target value.
    */
   NUMERIC_EQUAL = 'NUMERIC_EQUAL',
 
   /**
-   * The actual value is not equal to the target value.
+   * Matches a numeric value not equal to the target value.
    */
   NUMERIC_NOT_EQUAL = 'NUMERIC_NOT_EQUAL',
 
   /**
-   * The actual value is greater than the target value.
+   * Matches a numeric value greater than the target value.
    */
   NUMERIC_GREATER_THAN = 'NUMERIC_GREATER_THAN',
 
   /**
-   * The actual value is greater than or equal to the target value.
+   * Matches a numeric value greater than or equal to the target value.
    */
   NUMERIC_GREATER_EQUAL = 'NUMERIC_GREATER_EQUAL',
 
   /**
-   * AT LEAST ONE of the target values is a substring of the actual custom
+   * Matches if at least one of the target values is a substring of the actual custom
    * signal value. Eg: "abc" contains the string "a", "bc".
    */
   STRING_CONTAINS = 'STRING_CONTAINS',
 
   /**
-   * NONE of the target values is a substring of the actual custom signal value.
+   * Matches if none of the target values is a substring of the actual custom signal value.
    */
   STRING_DOES_NOT_CONTAIN = 'STRING_DOES_NOT_CONTAIN',
 
   /**
-   * The actual value exactly matches AT LEAST ONE of the target values.
+   * Matches if the actual value exactly matches at least one of the target values.
    */
   STRING_EXACTLY_MATCHES = 'STRING_EXACTLY_MATCHES',
 
   /**
-   * The target regular expression matches a portion of AT LEAST ONE of the
-   * actual values (or the entire string). The regex conforms to RE2 format.
-   * See https://github.com/google/re2/wiki/Syntax
+   * The target regular expression matches at least one of the actual values.
+   * The regex conforms to RE2 format. See https://github.com/google/re2/wiki/Syntax
    */
   STRING_CONTAINS_REGEX = 'STRING_CONTAINS_REGEX',
 
   /**
-   * The actual value is less than the target value.
+   * Matches if the actual version value is less than the target value.
    */
   SEMANTIC_VERSION_LESS_THAN = 'SEMANTIC_VERSION_LESS_THAN',
 
   /**
-   * The actual value is less than or equal to the target value.
+   * Matches if the actual version value is less than or equal to the target value.
    */
   SEMANTIC_VERSION_LESS_EQUAL = 'SEMANTIC_VERSION_LESS_EQUAL',
 
   /**
-   * The actual value is equal to the target value.
+   * Matches if the actual version value is equal to the target value.
    */
   SEMANTIC_VERSION_EQUAL = 'SEMANTIC_VERSION_EQUAL',
 
   /**
-   * The actual value is not equal to the target value.
+   * Matches if the actual version value is not equal to the target value.
    */
   SEMANTIC_VERSION_NOT_EQUAL = 'SEMANTIC_VERSION_NOT_EQUAL',
 
   /**
-   * The actual value is greater than the target value.
+   * Matches if the actual version value is greater than the target value.
    */
   SEMANTIC_VERSION_GREATER_THAN = 'SEMANTIC_VERSION_GREATER_THAN',
 
   /**
-   * The actual value is greater than or equal to the target value.
+   * Matches if the actual version value is greater than or equal to the target value.
    */
   SEMANTIC_VERSION_GREATER_EQUAL = 'SEMANTIC_VERSION_GREATER_EQUAL',
 }
