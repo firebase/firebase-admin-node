@@ -260,7 +260,7 @@ export enum CustomSignalOperator {
 
   /**
    * Matches if at least one of the target values is a substring of the actual custom
-   * signal value. Eg: "abc" contains the string "a", "bc".
+   * signal value (e.g. "abc" contains the string "a", "bc").
    */
   STRING_CONTAINS = 'STRING_CONTAINS',
 
