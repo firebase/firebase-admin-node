@@ -686,6 +686,8 @@ export class Messaging {
    *
    * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
+   * 
+   * @deprecated Use {@link Messaging.send} instead.
    */
   public sendToTopic(
     topic: string,
@@ -737,6 +739,8 @@ export class Messaging {
    *
    * @returns A promise fulfilled with the server's response after the message
    *   has been sent.
+   * 
+   * @deprecated Use {@link Messaging.send} instead.
    */
   public sendToCondition(
     condition: string,
