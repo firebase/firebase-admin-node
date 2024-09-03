@@ -56,24 +56,41 @@ export class DataConnectApiClient {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
+  /**
+   * Execute arbitrary GraphQL, including both read and write queries
+   * 
+   * @param query - The GraphQL string to be executed.
+   * @param options - Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   */
   public async executeGraphql<GraphqlResponse, Variables>(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     query: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.getUrl(DATA_CONNECT_HOST, 'us-west2', 'my-service', EXECUTE_GRAPH_QL_ENDPOINT)
+    if (!validator.isNonEmptyString(query)) {
+      throw new FirebaseDataConnectError(
+        'invalid-argument',
+        '`query` must be a non-empty string.');
+    }
+    if (typeof options !== 'undefined') {
+      if (!validator.isNonNullObject(options)) {
+        throw new FirebaseDataConnectError(
+          'invalid-argument', 'GraphqlOptions must be a non-null object');
+      }
+    }
+    const host = (process.env.DATA_CONNECT_EMULATOR_HOST || DATA_CONNECT_HOST);
+    return this.getUrl(host, 'us-west2', 'my-service', EXECUTE_GRAPH_QL_ENDPOINT)
       .then(async (url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
           url,
           headers: DATA_CONNECT_CONFIG_HEADERS,
           data: {
-            query: 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }',
+            query,
+            ...(options?.variables && { variables: options?.variables }),
           }
         };
         const resp = await this.httpClient.send(request);
-        console.log(resp);
         return Promise.resolve({
           data: resp.data.data as GraphqlResponse,
         });
