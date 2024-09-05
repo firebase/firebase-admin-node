@@ -37,7 +37,7 @@ export class AppCheckTokenVerifier {
   private readonly signatureVerifier: SignatureVerifier;
 
   constructor(private readonly app: App) {
-    this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(JWKS_URL);
+    this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(JWKS_URL, app.options.httpAgent);
   }
 
   /**

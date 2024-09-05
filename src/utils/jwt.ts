@@ -53,7 +53,7 @@ export class JwksFetcher implements KeyFetcher {
   private publicKeysExpireAt = 0;
   private client: jwks.JwksClient;
 
-  constructor(jwksUrl: string) {
+  constructor(jwksUrl: string, httpAgent?: Agent) {
     if (!validator.isURL(jwksUrl)) {
       throw new Error('The provided JWKS URL is not a valid URL.');
     }
@@ -61,6 +61,7 @@ export class JwksFetcher implements KeyFetcher {
     this.client = jwks({
       jwksUri: jwksUrl,
       cache: false, // disable jwks-rsa LRU cache as the keys are always cached for 6 hours.
+      requestAgent: httpAgent,
     });
   }
 
@@ -190,8 +191,8 @@ export class PublicKeySignatureVerifier implements SignatureVerifier {
     return new PublicKeySignatureVerifier(new UrlKeyFetcher(clientCertUrl, httpAgent));
   }
 
-  public static withJwksUrl(jwksUrl: string): PublicKeySignatureVerifier {
-    return new PublicKeySignatureVerifier(new JwksFetcher(jwksUrl));
+  public static withJwksUrl(jwksUrl: string, httpAgent?: Agent): PublicKeySignatureVerifier {
+    return new PublicKeySignatureVerifier(new JwksFetcher(jwksUrl, httpAgent));
   }
 
   public verify(token: string): Promise<void> {

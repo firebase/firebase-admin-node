@@ -17,6 +17,7 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins
+import http = require('http');
 import https = require('https');
 
 import * as _ from 'lodash';
@@ -379,6 +380,16 @@ describe('PublicKeySignatureVerifier', () => {
       const verifier = PublicKeySignatureVerifier.withJwksUrl('https://www.example.com/publicKeys');
       expect(verifier).to.be.an.instanceOf(PublicKeySignatureVerifier);
       expect((verifier as any).keyFetcher).to.be.an.instanceOf(JwksFetcher);
+    });
+
+    it('should return a PublicKeySignatureVerifier instance with a JwksFetcher when a ' +
+      'valid jwks url and httpAgent is provided', () => {
+      const mockHttpAgent = sinon.createStubInstance(http.Agent);
+      const verifier = PublicKeySignatureVerifier.withJwksUrl('https://www.example.com/publicKeys', mockHttpAgent);
+      expect(verifier).to.be.an.instanceOf(PublicKeySignatureVerifier);
+      expect((verifier as any).keyFetcher).to.be.an.instanceOf(JwksFetcher);
+      expect((verifier as any).keyFetcher.client.options.requestAgent).to.be.an.instanceOf(http.Agent);
+      expect((verifier as any).keyFetcher.client.options.requestAgent).to.eq(mockHttpAgent);
     });
   });
 
