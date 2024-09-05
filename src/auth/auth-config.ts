@@ -1818,7 +1818,7 @@ export interface RecaptchaConfig {
    * Can only be true when the phone_enforcement_state is AUDIT or ENFORCE.
    */
   useSmsBotScore?: boolean;
-  /*
+  /**
    * Whether to use the rCE sms toll fraud protection risk score for reCAPTCHA phone provider. 
    * Can only be true when the phone_enforcement_state is AUDIT or ENFORCE.
    */
@@ -1870,31 +1870,19 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
    * @internal
    */
   constructor(response: RecaptchaAuthServerConfig) {
-    if (typeof response.emailPasswordEnforcementState !== 'undefined') {
-      this.emailPasswordEnforcementState = response.emailPasswordEnforcementState;
+    const filteredResponse = Object.fromEntries(
+      Object.entries(response).filter(([, value]) => value !== undefined)
+    );
+  
+    // Explicitly map the 'tollFraudManagedRules' to 'smsTollFraudManagedRules'
+    if (filteredResponse.tollFraudManagedRules !== undefined) {
+      this.smsTollFraudManagedRules = filteredResponse.tollFraudManagedRules;
+      delete filteredResponse.tollFraudManagedRules; // Remove it if necessary
     }
-    if (typeof response.phoneEnforcementState !== 'undefined') {
-      this.phoneEnforcementState = response.phoneEnforcementState;
-    }
-    if (typeof response.managedRules !== 'undefined') {
-      this.managedRules = response.managedRules;
-    } 
-    if (typeof response.recaptchaKeys !== 'undefined') {
-      this.recaptchaKeys = response.recaptchaKeys;
-    }
-    if (typeof response.useAccountDefender !== 'undefined') {
-      this.useAccountDefender = response.useAccountDefender;
-    }
-    if (typeof response.useSmsBotScore !== 'undefined') {
-      this.useSmsBotScore = response.useSmsBotScore;
-    }
-    if (typeof response.useSmsTollFraudProtection !== 'undefined') {
-      this.useSmsTollFraudProtection = response.useSmsTollFraudProtection;
-    }
-    if (typeof response.tollFraudManagedRules !== 'undefined') {
-      this.smsTollFraudManagedRules = response.tollFraudManagedRules;
-    }
-  }
+  
+    // Assign the remaining properties directly
+    Object.assign(this, filteredResponse);
+  }  
   
   /**
    * Builds a server request object from the client-side RecaptchaConfig.

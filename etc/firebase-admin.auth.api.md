@@ -882,7 +882,6 @@ export interface RecaptchaConfig {
     smsTollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
     useAccountDefender?: boolean;
     useSmsBotScore?: boolean;
-    // (undocumented)
     useSmsTollFraudProtection?: boolean;
 }
 
