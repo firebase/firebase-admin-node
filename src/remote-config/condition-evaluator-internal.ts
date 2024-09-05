@@ -23,7 +23,9 @@ import {
   NamedCondition,
   OrCondition,
   PercentCondition,
-  PercentConditionOperator
+  PercentConditionOperator,
+  CustomSignalCondition,
+  CustomSignalOperator,
 } from './remote-config-api';
 import * as farmhash from 'farmhash-modern';
 
@@ -75,6 +77,9 @@ export class ConditionEvaluator {
     }
     if (condition.percent) {
       return this.evaluatePercentCondition(condition.percent, context);
+    }
+    if (condition.customSignal) {
+      return this.evaluateCustomSignalCondition(condition.customSignal, context);
     }
     // TODO: add logging once we have a wrapped logger.
     return false;
@@ -167,7 +172,6 @@ export class ConditionEvaluator {
     return false;
   }
 
-  // Visible for testing
   static hashSeededRandomizationId(seededRandomizationId: string): bigint {
     // For consistency with the Remote Config fetch endpoint's percent condition behavior
     // we use Farmhash's fingerprint64 algorithm and interpret the resulting unsigned value
@@ -182,4 +186,150 @@ export class ConditionEvaluator {
 
     return hash64;
   }
+
+  private evaluateCustomSignalCondition(
+    customSignalCondition: CustomSignalCondition,
+    context: EvaluationContext
+  ): boolean {
+    const {
+      customSignalOperator,
+      customSignalKey,
+      targetCustomSignalValues,
+    } = customSignalCondition;
+
+    if (!customSignalOperator || !customSignalKey || !targetCustomSignalValues) {
+      // TODO: add logging once we have a wrapped logger.
+      return false;
+    }
+
+    if (!targetCustomSignalValues.length) {
+      return false;
+    }
+
+    // Extract the value of the signal from the evaluation context.
+    const actualCustomSignalValue = context[customSignalKey];
+
+    if (actualCustomSignalValue == undefined) {
+      return false
+    }
+
+    switch (customSignalOperator) {
+    case CustomSignalOperator.STRING_CONTAINS:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_DOES_NOT_CONTAIN:
+      return !compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.includes(target),
+      );
+    case CustomSignalOperator.STRING_EXACTLY_MATCHES:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => actual.trim() === target.trim(),
+      );
+    case CustomSignalOperator.STRING_CONTAINS_REGEX:
+      return compareStrings(
+        targetCustomSignalValues,
+        actualCustomSignalValue,
+        (target, actual) => new RegExp(target).test(actual),
+      );
+
+    // For numeric operators only one target value is allowed.
+    case CustomSignalOperator.NUMERIC_LESS_THAN:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r < 0);
+    case CustomSignalOperator.NUMERIC_LESS_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r <= 0);
+    case CustomSignalOperator.NUMERIC_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r === 0);
+    case CustomSignalOperator.NUMERIC_NOT_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r !== 0);
+    case CustomSignalOperator.NUMERIC_GREATER_THAN:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r > 0);
+    case CustomSignalOperator.NUMERIC_GREATER_EQUAL:
+      return compareNumbers(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r >= 0);
+
+    // For semantic operators only one target value is allowed.
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r < 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r <= 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r === 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r !== 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r > 0);
+    case CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL:
+      return compareSemanticVersions(actualCustomSignalValue, targetCustomSignalValues[0], (r) => r >= 0);
+    }
+
+    // TODO: add logging once we have a wrapped logger.
+    return false;
+  }
+}
+
+// Compares the actual string value of a signal against a list of target
+// values. If any of the target values are a match, returns true.
+function compareStrings(
+  targetValues: Array<string>,
+  actualValue: string|number,
+  predicateFn: (target: string, actual: string) => boolean
+): boolean {
+  const actual = String(actualValue);
+  return targetValues.some((target) => predicateFn(target, actual));
+}
+
+// Compares two numbers against each other.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
+function compareNumbers(
+  actualValue: string|number,
+  targetValue: string,
+  predicateFn: (result: number) => boolean
+): boolean {
+  const target = Number(targetValue);
+  const actual = Number(actualValue);
+  if (isNaN(target) || isNaN(actual)) {
+    return false;
+  }
+  return predicateFn(actual < target ? -1 : actual > target ? 1 : 0);
+}
+
+// Max number of segments a numeric version can have. This is enforced by the server as well.
+const MAX_LENGTH = 5;
+
+// Compares semantic version strings against each other.
+// Calls the predicate function with  -1, 0, 1 if actual is less than, equal to, or greater than target.
+function compareSemanticVersions(
+  actualValue: string|number,
+  targetValue: string,
+  predicateFn: (result: number) => boolean
+): boolean {
+  const version1 = String(actualValue).split('.').map(Number);
+  const version2 = targetValue.split('.').map(Number);
+
+  for (let i = 0; i < MAX_LENGTH; i++) {
+    // Check to see if segments are present. Note that these may be present and be NaN.
+    const version1HasSegment = version1[i] !== undefined;
+    const version2HasSegment = version2[i] !== undefined;
+
+    // If both are undefined, we've consumed everything and they're equal.
+    if (!version1HasSegment && !version2HasSegment) return predicateFn(0)
+
+    // Insert zeros if undefined for easier comparison.
+    if (!version1HasSegment) version1[i] = 0;
+    if (!version2HasSegment) version2[i] = 0;
+
+    // At this point, if either segment is NaN, we return false directly.
+    if (isNaN(version1[i]) || isNaN(version2[i])) return false;
+
+    // Check if we have a difference in segments. Otherwise continue to next segment.
+    if (version1[i] < version2[i]) return predicateFn(-1);
+    if (version1[i] > version2[i]) return predicateFn(1);
+  }
+  return false;
 }
