@@ -610,7 +610,7 @@ describe('ProjectConfig', () => {
           endScore: 0.2,
           action: 'BLOCK'
         } ],
-        tollFraudManagedRules: [ {
+        smsTollFraudManagedRules: [ {
           startScore: 0.1,
           action: 'BLOCK'
         } ],
@@ -677,7 +677,7 @@ describe('ProjectConfig', () => {
             endScore: 0.2,
             action: 'BLOCK'
           } ],
-          tollFraudManagedRules: [ {
+          smsTollFraudManagedRules: [ {
             startScore: 0.1,
             action: 'BLOCK'
           } ],
@@ -716,7 +716,7 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.recaptchaConfig?.useAccountDefender;
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsBotScore;
       delete serverResponseOptionalCopy.recaptchaConfig?.phoneEnforcementState;
-      delete serverResponseOptionalCopy.recaptchaConfig?.smsTollFraudManagedRules;
+      delete serverResponseOptionalCopy.recaptchaConfig?.tollFraudManagedRules;
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsTollFraudProtection
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       delete serverResponseOptionalCopy.emailPrivacyConfig;
