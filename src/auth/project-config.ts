@@ -23,6 +23,7 @@ import {
   MultiFactorAuthServerConfig,
   RecaptchaConfig,
   RecaptchaAuthConfig,
+  RecaptchaAuthServerConfig,
   PasswordPolicyAuthConfig,
   PasswordPolicyAuthServerConfig,
   PasswordPolicyConfig,
@@ -67,7 +68,7 @@ export interface UpdateProjectConfigRequest {
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
-  recaptchaConfig?: RecaptchaConfig;
+  recaptchaConfig?: RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -78,7 +79,7 @@ export interface ProjectConfigServerResponse {
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
-  recaptchaConfig?: RecaptchaConfig;
+  recaptchaConfig?: RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -197,7 +198,7 @@ export class ProjectConfig {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
     if (typeof configOptions.recaptchaConfig !== 'undefined') {
-      request.recaptchaConfig = configOptions.recaptchaConfig;
+      request.recaptchaConfig = RecaptchaAuthConfig.buildServerRequest(configOptions.recaptchaConfig);
     }
     if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);

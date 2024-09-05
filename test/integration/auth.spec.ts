@@ -1281,7 +1281,7 @@ describe('admin.auth', () => {
       useAccountDefender: true,
       useSmsBotScore: true,
       useSmsTollFraudProtection: true,
-      tollFraudManagedRules: [
+      smsTollFraudManagedRules: [
         {
           startScore: 0.1,
           action: 'BLOCK',
@@ -1428,7 +1428,7 @@ describe('admin.auth', () => {
       useAccountDefender: true,
       useSmsBotScore: true,
       useSmsTollFraudProtection: true,
-      tollFraudManagedRules: [
+      smsTollFraudManagedRules: [
         {
           startScore: 0.1,
           action: 'BLOCK',

@@ -1756,7 +1756,7 @@ export interface RecaptchaManagedRule {
  */
 export interface RecaptchaTollFraudManagedRule {
   /**
-  * The action will be enforced if the reCAPTCHA score of a request is larger than endScore.
+  * The action will be enforced if the reCAPTCHA score of a request is larger than startScore.
   */
   startScore: number;
   /**
@@ -1827,9 +1827,29 @@ export interface RecaptchaConfig {
    * The managed rules for toll fraud provider, containing the enforcement status. 
    * The toll fraud provider contains all SMS related user flows.
    */
+  smsTollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
+}
+
+/** 
+ * Server side recaptcha configuration.
+ */
+export interface RecaptchaAuthServerConfig {
+  emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
+  phoneEnforcementState?: RecaptchaProviderEnforcementState;
+  managedRules?: RecaptchaManagedRule[];
+  recaptchaKeys?: RecaptchaKey[];
+  useAccountDefender?: boolean;
+  useSmsBotScore?: boolean;
+  useSmsTollFraudProtection?: boolean;
   tollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
 }
 
+/**
+ * Defines the recaptcha config class used to convert client side RecaptchaConfig
+ * to a format that is understood by the Auth server.
+ * 
+ * @internal
+ */
 export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly emailPasswordEnforcementState?: RecaptchaProviderEnforcementState;
   public readonly phoneEnforcementState?: RecaptchaProviderEnforcementState;
@@ -1838,33 +1858,81 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
   public readonly useAccountDefender?: boolean;
   public readonly useSmsBotScore?: boolean;
   public readonly useSmsTollFraudProtection?: boolean;
-  public readonly tollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
+  public readonly smsTollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
 
-  constructor(recaptchaConfig: RecaptchaConfig) {
-    if (typeof recaptchaConfig.emailPasswordEnforcementState !== 'undefined') {
-      this.emailPasswordEnforcementState = recaptchaConfig.emailPasswordEnforcementState;
+  
+  /**
+   * The RecaptchaAuthConfig constructor.
+   *
+   * @param response - The server side response used to initialize the
+   *     RecaptchaAuthConfig object.
+   * @constructor
+   * @internal
+   */
+  constructor(response: RecaptchaAuthServerConfig) {
+    if (typeof response.emailPasswordEnforcementState !== 'undefined') {
+      this.emailPasswordEnforcementState = response.emailPasswordEnforcementState;
     }
-    if (typeof recaptchaConfig.phoneEnforcementState !== 'undefined') {
-      this.phoneEnforcementState = recaptchaConfig.phoneEnforcementState;
+    if (typeof response.phoneEnforcementState !== 'undefined') {
+      this.phoneEnforcementState = response.phoneEnforcementState;
     }
-    if (typeof recaptchaConfig.managedRules !== 'undefined') {
-      this.managedRules = recaptchaConfig.managedRules;
+    if (typeof response.managedRules !== 'undefined') {
+      this.managedRules = response.managedRules;
     } 
-    if (typeof recaptchaConfig.recaptchaKeys !== 'undefined') {
-      this.recaptchaKeys = recaptchaConfig.recaptchaKeys;
+    if (typeof response.recaptchaKeys !== 'undefined') {
+      this.recaptchaKeys = response.recaptchaKeys;
     }
-    if (typeof recaptchaConfig.useAccountDefender !== 'undefined') {
-      this.useAccountDefender = recaptchaConfig.useAccountDefender;
+    if (typeof response.useAccountDefender !== 'undefined') {
+      this.useAccountDefender = response.useAccountDefender;
     }
-    if (typeof recaptchaConfig.useSmsBotScore !== 'undefined') {
-      this.useSmsBotScore = recaptchaConfig.useSmsBotScore;
+    if (typeof response.useSmsBotScore !== 'undefined') {
+      this.useSmsBotScore = response.useSmsBotScore;
     }
-    if (typeof recaptchaConfig.useSmsTollFraudProtection !== 'undefined') {
-      this.useSmsTollFraudProtection = recaptchaConfig.useSmsTollFraudProtection;
+    if (typeof response.useSmsTollFraudProtection !== 'undefined') {
+      this.useSmsTollFraudProtection = response.useSmsTollFraudProtection;
     }
-    if (typeof recaptchaConfig.tollFraudManagedRules !== 'undefined') {
-      this.tollFraudManagedRules = recaptchaConfig.tollFraudManagedRules;
+    if (typeof response.tollFraudManagedRules !== 'undefined') {
+      this.smsTollFraudManagedRules = response.tollFraudManagedRules;
     }
+  }
+  
+  /**
+   * Builds a server request object from the client-side RecaptchaConfig.
+   * Converts client-side fields to their server-side equivalents.
+   *
+   * @param options - The client-side RecaptchaConfig object.
+   * @returns The server-side RecaptchaAuthServerConfig object.
+   */
+  public static buildServerRequest(options: RecaptchaConfig): RecaptchaAuthServerConfig {
+    RecaptchaAuthConfig.validate(options); // Validate options before building request
+
+    const request: RecaptchaAuthServerConfig = {};
+
+    if (typeof options.emailPasswordEnforcementState !== 'undefined') {
+      request.emailPasswordEnforcementState = options.emailPasswordEnforcementState;
+    }
+    if (typeof options.phoneEnforcementState !== 'undefined') {
+      request.phoneEnforcementState = options.phoneEnforcementState;
+    }
+    if (typeof options.managedRules !== 'undefined') {
+      request.managedRules = options.managedRules;
+    }
+    if (typeof options.recaptchaKeys !== 'undefined') {
+      request.recaptchaKeys = options.recaptchaKeys;
+    }
+    if (typeof options.useAccountDefender !== 'undefined') {
+      request.useAccountDefender = options.useAccountDefender;
+    }
+    if (typeof options.useSmsBotScore !== 'undefined') {
+      request.useSmsBotScore = options.useSmsBotScore;
+    }
+    if (typeof options.useSmsTollFraudProtection !== 'undefined') {
+      request.useSmsTollFraudProtection = options.useSmsTollFraudProtection;
+    }
+    if (typeof options.smsTollFraudManagedRules !== 'undefined') {
+      request.tollFraudManagedRules = options.smsTollFraudManagedRules; // Map client-side field to server-side
+    }
+    return request;
   }
 
   /**
@@ -1880,7 +1948,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       useAccountDefender: true,
       useSmsBotScore: true,
       useSmsTollFraudProtection: true,
-      tollFraudManagedRules: true,
+      smsTollFraudManagedRules: true,
     };
 
     if (!validator.isNonNullObject(options)) {
@@ -1977,16 +2045,16 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       }
     }
 
-    if (typeof options.tollFraudManagedRules !== 'undefined') {
+    if (typeof options.smsTollFraudManagedRules !== 'undefined') {
       // Validate array
-      if (!validator.isArray(options.tollFraudManagedRules)) {
+      if (!validator.isArray(options.smsTollFraudManagedRules)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
-          '"RecaptchaConfig.tollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".',
+          '"RecaptchaConfig.smsTollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".',
         );
       }
       // Validate each rule of the array
-      options.tollFraudManagedRules.forEach((tollFraudManagedRule) => {
+      options.smsTollFraudManagedRules.forEach((tollFraudManagedRule) => {
         RecaptchaAuthConfig.validateTollFraudManagedRule(tollFraudManagedRule);
       });
     }
@@ -2060,49 +2128,6 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
         '"RecaptchaTollFraudManagedRule.action" must be "BLOCK".',
       );
     }
-  }
-
-  /**
-   * Returns a JSON-serializable representation of this object.
-   * @returns The JSON-serializable object representation of the ReCaptcha config instance
-   */
-  public toJSON(): object {
-    const json: any = {
-      emailPasswordEnforcementState: this.emailPasswordEnforcementState,
-      phoneEnforcementState: this.phoneEnforcementState,
-      managedRules: deepCopy(this.managedRules),
-      recaptchaKeys: deepCopy(this.recaptchaKeys),
-      useAccountDefender: this.useAccountDefender,
-      useSmsBotScore: this.useSmsBotScore,
-      useSmsTollFraudProtection: this.useSmsTollFraudProtection,
-      tollFraudManagedRules: deepCopy(this.tollFraudManagedRules),
-    }
-
-    if (typeof json.emailPasswordEnforcementState === 'undefined') {
-      delete json.emailPasswordEnforcementState;
-    }
-    if (typeof json.phoneEnforcementState === 'undefined') {
-      delete json.phoneEnforcementState;
-    }
-    if (typeof json.managedRules === 'undefined') {
-      delete json.managedRules;
-    }
-    if (typeof json.recaptchaKeys === 'undefined') {
-      delete json.recaptchaKeys;
-    }
-    if (typeof json.useAccountDefender === 'undefined') {
-      delete json.useAccountDefender;
-    }
-    if (typeof json.useSmsBotScore === 'undefined') {
-      delete json.useSmsBotScore;
-    }
-    if (typeof json.useSmsTollFraudProtection === 'undefined') {
-      delete json.useSmsTollFraudProtection;
-    }
-    if (typeof json.tollFraudManagedRules === 'undefined') {
-      delete json.tollFraudManagedRules;
-    }
-    return json;
   }
 }
 

@@ -174,11 +174,16 @@ describe('Tenant', () => {
     recaptchaConfig: {
       emailPasswordEnforcementState: 'AUDIT',
       phoneEnforcementState: 'AUDIT',
+      recaptchaKeys: [ {
+        key: 'test-key-1',
+        type: 'WEB'
+      }
+      ],
       managedRules: [ {
         endScore: 0.2,
         action: 'BLOCK'
       } ],
-      tollFraudManagedRules: [ {
+      smsTollFraudManagedRules: [ {
         startScore: 0.1,
         action: 'BLOCK'
       } ],
@@ -387,18 +392,18 @@ describe('Tenant', () => {
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
       
-      it('should throw on non-array tollFraudManagedRules attribute', () => {
+      it('should throw on non-array smsTollFraudManagedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid '+ 
+        }).to.throw('"RecaptchaConfig.smsTollFraudManagedRules" must be an array of valid '+ 
         '"RecaptchaTollFraudManagedRule".');
       });
       
       it('should throw on invalid tollFraudManagedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"score" is not a valid RecaptchaTollFraudManagedRule parameter.');
@@ -406,7 +411,8 @@ describe('Tenant', () => {
       
       it('should throw on invalid RecaptchaTollFraudManagedRule.action attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'startScore': 0.1, 'action': 'ALLOW' }];
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = 
+        [{ 'startScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"RecaptchaTollFraudManagedRule.action" must be "BLOCK".');
@@ -845,18 +851,18 @@ describe('Tenant', () => {
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
       
-      it('should throw on non-array tollFraudManagedRules attribute', () => {
+      it('should throw on non-array smsTollFraudManagedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = 'non-array';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid' +
+        }).to.throw('"RecaptchaConfig.smsTollFraudManagedRules" must be an array of valid' +
           ' "RecaptchaTollFraudManagedRule".');
       });
       
-      it('should throw on invalid tollFraudManagedRules attribute', () => {
+      it('should throw on invalid smsTollFraudManagedRules attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"score" is not a valid RecaptchaTollFraudManagedRule parameter.');
@@ -864,7 +870,8 @@ describe('Tenant', () => {
       
       it('should throw on invalid RecaptchaTollFraudManagedRule.action attribute', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithRecaptcha) as any;
-        tenantOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = [{ 'startScore': 0.1, 'action': 'ALLOW' }];
+        tenantOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = 
+        [{ 'startScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw('"RecaptchaTollFraudManagedRule.action" must be "BLOCK".');
@@ -1296,7 +1303,7 @@ describe('Tenant', () => {
         multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
         smsRegionConfig: deepCopy(clientRequest.smsRegionConfig),
-        recaptchaConfig: deepCopy(serverResponseWithRecaptcha.recaptchaConfig),
+        recaptchaConfig: deepCopy(clientRequestWithRecaptcha.recaptchaConfig),
         passwordPolicyConfig: deepCopy(clientRequest.passwordPolicyConfig),
         emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
       });

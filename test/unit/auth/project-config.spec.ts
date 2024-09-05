@@ -159,7 +159,7 @@ describe('ProjectConfig', () => {
         endScore: 0.2,
         action: 'BLOCK'
       } ],
-      tollFraudManagedRules: [ {
+      smsTollFraudManagedRules: [ {
         startScore: 0.1,
         action: 'BLOCK'
       } ],
@@ -347,18 +347,18 @@ describe('ProjectConfig', () => {
         }).to.throw('"RecaptchaManagedRule.action" must be "BLOCK".');
       });
       
-      it('should throw on non-array tollFraudManagedRules attribute', () => {
+      it('should throw on non-array smsTollFraudManagedRules attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
-        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules = 'non-array';
+        configOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules = 'non-array';
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
-        }).to.throw('"RecaptchaConfig.tollFraudManagedRules" must be an array of valid ' + 
+        }).to.throw('"RecaptchaConfig.smsTollFraudManagedRules" must be an array of valid ' + 
           '"RecaptchaTollFraudManagedRule".');
       });
 
-      it('should throw on invalid tollFraudManagedRules attribute', () => {
+      it('should throw on invalid smsTollFraudManagedRules attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
-        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules =
+        configOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules =
         [{ 'score': 0.1, 'action': 'BLOCK' }];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -367,7 +367,7 @@ describe('ProjectConfig', () => {
 
       it('should throw on invalid RecaptchaManagedRule.action attribute', () => {
         const configOptionsClientRequest = deepCopy(updateProjectConfigRequest4) as any;
-        configOptionsClientRequest.recaptchaConfig.tollFraudManagedRules =
+        configOptionsClientRequest.recaptchaConfig.smsTollFraudManagedRules =
         [{ 'startScore': 0.1, 'action': 'ALLOW' }];
         expect(() => {
           ProjectConfig.buildServerRequest(configOptionsClientRequest);
@@ -716,7 +716,7 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.recaptchaConfig?.useAccountDefender;
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsBotScore;
       delete serverResponseOptionalCopy.recaptchaConfig?.phoneEnforcementState;
-      delete serverResponseOptionalCopy.recaptchaConfig?.tollFraudManagedRules;
+      delete serverResponseOptionalCopy.recaptchaConfig?.smsTollFraudManagedRules;
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsTollFraudProtection
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       delete serverResponseOptionalCopy.emailPrivacyConfig;

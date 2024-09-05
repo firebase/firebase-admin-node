@@ -21,8 +21,8 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig,
-  PasswordPolicyConfig,
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig, 
+  RecaptchaAuthServerConfig, PasswordPolicyConfig,
   PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig,
 } from './auth-config';
 
@@ -92,7 +92,7 @@ export interface TenantOptionsServerRequest extends EmailSignInConfigServerReque
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
-  recaptchaConfig?: RecaptchaConfig;
+  recaptchaConfig?: RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -107,7 +107,7 @@ export interface TenantServerResponse {
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
   smsRegionConfig?: SmsRegionConfig;
-  recaptchaConfig? : RecaptchaConfig;
+  recaptchaConfig? : RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -209,7 +209,7 @@ export class Tenant {
       request.smsRegionConfig = tenantOptions.smsRegionConfig;
     }
     if (typeof tenantOptions.recaptchaConfig !== 'undefined') {
-      request.recaptchaConfig = tenantOptions.recaptchaConfig;
+      request.recaptchaConfig = RecaptchaAuthConfig.buildServerRequest(tenantOptions.recaptchaConfig);
     }
     if (typeof tenantOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(tenantOptions.passwordPolicyConfig);
@@ -306,7 +306,7 @@ export class Tenant {
     }
     // Validate reCAPTCHAConfig type if provided.
     if (typeof request.recaptchaConfig !== 'undefined') {
-      RecaptchaAuthConfig.validate(request.recaptchaConfig);
+      RecaptchaAuthConfig.buildServerRequest(request.recaptchaConfig);
     }
     // Validate passwordPolicyConfig type if provided.
     if (typeof request.passwordPolicyConfig !== 'undefined') {
@@ -400,7 +400,7 @@ export class Tenant {
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
-      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      recaptchaConfig: deepCopy(this.recaptchaConfig),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };

@@ -879,7 +879,7 @@ export interface RecaptchaConfig {
     managedRules?: RecaptchaManagedRule[];
     phoneEnforcementState?: RecaptchaProviderEnforcementState;
     recaptchaKeys?: RecaptchaKey[];
-    tollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
+    smsTollFraudManagedRules?: RecaptchaTollFraudManagedRule[];
     useAccountDefender?: boolean;
     useSmsBotScore?: boolean;
     // (undocumented)
