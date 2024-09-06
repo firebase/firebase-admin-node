@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
+import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
 // Data Connect backend constants
 const DATA_CONNECT_HOST = 'https://firebasedataconnect.googleapis.com';
@@ -47,7 +47,7 @@ export class DataConnectApiClient {
   private readonly httpClient: HttpClient;
   private projectId?: string;
 
-  constructor(private readonly app: App) {
+  constructor(private readonly connectorConfig: ConnectorConfig, private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseDataConnectError(
         'invalid-argument',
@@ -79,7 +79,7 @@ export class DataConnectApiClient {
       }
     }
     const host = (process.env.DATA_CONNECT_EMULATOR_HOST || DATA_CONNECT_HOST);
-    return this.getUrl(host, 'us-west2', 'my-service', EXECUTE_GRAPH_QL_ENDPOINT)
+    return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, EXECUTE_GRAPH_QL_ENDPOINT)
       .then(async (url) => {
         const request: HttpRequestConfig = {
           method: 'POST',

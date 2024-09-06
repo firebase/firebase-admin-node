@@ -24,14 +24,6 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
   data: GraphqlResponse;
 }
 
-export interface BaseGraphqlOptions<Variables> {
-  variables?: Variables;
-}
-
-export interface GraphqlReadOptions<Variables> extends BaseGraphqlOptions<Variables> {
-  variables?: Variables;
-}
-
-export interface GraphqlOptions<Variables> extends BaseGraphqlOptions<Variables> {
+export interface GraphqlOptions<Variables> {
   variables?: Variables;
 }

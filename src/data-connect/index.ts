@@ -23,12 +23,13 @@
 
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { DataConnect } from './data-connect';
+import { DataConnect, DataConnectService } from './data-connect';
+import { ConnectorConfig } from './data-connect-api';
 
 export {
   GraphqlOptions,
   ExecuteGraphqlResponse,
-  GraphqlReadOptions,
+  ConnectorConfig,
 } from './data-connect-api'
 export {
   DataConnect,
@@ -53,6 +54,8 @@ export {
  * // Get the `DataConnect` service for a given app
  * const otherDataConnect = getDataConnect(otherApp);
  * ```
+ * 
+ * @param connectorConfig - Connector Config
  *
  * @param app - Optional app for which to return the `DataConnect` service.
  *   If not provided, the default `DataConnect` service is returned.
@@ -60,11 +63,12 @@ export {
  * @returns The default `DataConnect` service if no app is provided, or the `DataConnect`
  *   service associated with the provided app.
  */
-export function getDataConnect(app?: App): DataConnect {
+export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect {
   if (typeof app === 'undefined') {
     app = getApp();
   }
 
   const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('dataConnect', (app) => new DataConnect(app));
+  const dataConnectService = firebaseApp.getOrInitService('dataConnect', (app) => new DataConnectService(app));
+  return dataConnectService.getDataConnect(connectorConfig);
 }

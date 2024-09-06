@@ -16,12 +16,12 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { getDataConnect } from '../../lib/data-connect/index';
+import { getDataConnect, ConnectorConfig } from '../../lib/data-connect/index';
 
 chai.should();
 chai.use(chaiAsPromised);
 
-//const expect = chai.expect;
+const expect = chai.expect;
 
 interface UserResponse {
   users: [
@@ -37,16 +37,24 @@ interface UserVariables {
   id: string;
 }
 
+const connectorConfig: ConnectorConfig = {
+  location: 'us-west2',
+  serviceId: 'my-service',
+};
+
 describe('getDataConnect()', () => {
 
   const query = 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }';
 
+  //const mutation = 'mutation user { user_insert(data: {uid: "QVBJcy5ndXJ2", address: "Address", name: "Name"}) }'
+
   describe('executeGraphql()', () => {
     it('successfully executes a GraphQL', async () => {
-      const resp = await getDataConnect().executeGraphql<UserResponse, UserVariables>(query, {});
-      console.dir(resp.data.users);
-      //expect(resp.data.user.id).to.be.not.undefined;
-      //expect(resp.data.user.name).to.be.not.undefined;
+      const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(query, {});
+      //console.dir(resp.data.users);
+      expect(resp.data.users).to.be.not.empty;
+      expect(resp.data.users[0].name).to.be.not.undefined;
+      expect(resp.data.users[0].address).to.be.not.undefined;
     });
   });
 });

@@ -8,12 +8,22 @@
 
 import { Agent } from 'http';
 
+// @public (undocumented)
+export interface ConnectorConfig {
+    // (undocumented)
+    location: string;
+    // (undocumented)
+    serviceId: string;
+}
+
 // @public
 export class DataConnect {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     readonly app: App;
+    // (undocumented)
+    readonly connectorConfig: ConnectorConfig;
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
 }
 
@@ -24,18 +34,10 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 }
 
 // @public
-export function getDataConnect(app?: App): DataConnect;
-
-// Warning: (ae-forgotten-export) The symbol "BaseGraphqlOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export interface GraphqlOptions<Variables> extends BaseGraphqlOptions<Variables> {
-    // (undocumented)
-    variables?: Variables;
-}
+export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect;
 
 // @public (undocumented)
-export interface GraphqlReadOptions<Variables> extends BaseGraphqlOptions<Variables> {
+export interface GraphqlOptions<Variables> {
     // (undocumented)
     variables?: Variables;
 }

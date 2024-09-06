@@ -20,10 +20,42 @@ import { DataConnectApiClient } from './data-connect-api-client-internal';
 //import * as validator from '../utils/validator';
 
 import {
+  ConnectorConfig,
   ExecuteGraphqlResponse,
   GraphqlOptions,
   //GraphqlReadOptions,
 } from './data-connect-api';
+
+export class DataConnectService {
+
+  private readonly appInternal: App;
+  private dataConnectInstances: Map<string, DataConnect> = new Map();
+
+  constructor(app: App) {
+    this.appInternal = app;
+  }
+
+  getDataConnect(connectorConfig: ConnectorConfig): DataConnect {
+    const id = `${connectorConfig.location}-${connectorConfig.serviceId}`;
+    const dc = this.dataConnectInstances.get(id);
+    if (typeof dc !== 'undefined') {
+      return dc;
+    }
+
+    const newInstance = new DataConnect(connectorConfig, this.appInternal);
+    this.dataConnectInstances.set(id, newInstance);
+    return newInstance;
+  }
+
+  /**
+ * Returns the app associated with this `DataConnect` instance.
+ *
+ * @returns The app associated with this `DataConnect` instance.
+ */
+  get app(): App {
+    return this.appInternal;
+  }
+}
 
 /**
  * The Firebase `DataConnect` service interface.
@@ -33,12 +65,13 @@ export class DataConnect {
   private readonly client: DataConnectApiClient;
 
   /**
+ * @param connectorConfig - Connector Config
  * @param app - The app for this `DataConnect` service.
  * @constructor
  * @internal
  */
-  constructor(readonly app: App) {
-    this.client = new DataConnectApiClient(app);
+  constructor(readonly connectorConfig: ConnectorConfig, readonly app: App) {
+    this.client = new DataConnectApiClient(connectorConfig, app);
   }
 
   /**
