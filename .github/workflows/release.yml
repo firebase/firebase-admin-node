@@ -77,7 +77,7 @@ jobs:
     # Attach the packaged artifacts to the workflow output. These can be manually
     # downloaded for later inspection if necessary.
     - name: Archive artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: dist
         path: dist
