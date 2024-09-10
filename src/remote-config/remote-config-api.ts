@@ -105,6 +105,11 @@ export interface OneOfCondition {
    * Makes this condition a percent condition.
    */
   percent?: PercentCondition;
+
+  /**
+   * Makes this condition a custom signal condition.
+   */
+  customSignal?: CustomSignalCondition;
 }
 
 /**
@@ -211,6 +216,122 @@ export interface PercentCondition {
    * BETWEEN operator.
    */
   microPercentRange?: MicroPercentRange;
+}
+
+/**
+ * Defines supported operators for custom signal conditions.
+ */
+export enum CustomSignalOperator {
+
+  /**
+   * A catchall error case.
+   */
+  UNKNOWN = 'UNKNOWN',
+
+  /**
+   * Matches a numeric value less than the target value.
+   */
+  NUMERIC_LESS_THAN = 'NUMERIC_LESS_THAN',
+
+  /**
+   * Matches a numeric value less than or equal to the target value.
+   */
+  NUMERIC_LESS_EQUAL ='NUMERIC_LESS_EQUAL',
+
+  /**
+   * Matches a numeric value equal to the target value.
+   */
+  NUMERIC_EQUAL = 'NUMERIC_EQUAL',
+
+  /**
+   * Matches a numeric value not equal to the target value.
+   */
+  NUMERIC_NOT_EQUAL = 'NUMERIC_NOT_EQUAL',
+
+  /**
+   * Matches a numeric value greater than the target value.
+   */
+  NUMERIC_GREATER_THAN = 'NUMERIC_GREATER_THAN',
+
+  /**
+   * Matches a numeric value greater than or equal to the target value.
+   */
+  NUMERIC_GREATER_EQUAL = 'NUMERIC_GREATER_EQUAL',
+
+  /**
+   * Matches if at least one of the target values is a substring of the actual custom
+   * signal value (e.g. "abc" contains the string "a", "bc").
+   */
+  STRING_CONTAINS = 'STRING_CONTAINS',
+
+  /**
+   * Matches if none of the target values is a substring of the actual custom signal value.
+   */
+  STRING_DOES_NOT_CONTAIN = 'STRING_DOES_NOT_CONTAIN',
+
+  /**
+   * Matches if the actual value exactly matches at least one of the target values.
+   */
+  STRING_EXACTLY_MATCHES = 'STRING_EXACTLY_MATCHES',
+
+  /**
+   * The target regular expression matches at least one of the actual values.
+   * The regex conforms to RE2 format. See https://github.com/google/re2/wiki/Syntax
+   */
+  STRING_CONTAINS_REGEX = 'STRING_CONTAINS_REGEX',
+
+  /**
+   * Matches if the actual version value is less than the target value.
+   */
+  SEMANTIC_VERSION_LESS_THAN = 'SEMANTIC_VERSION_LESS_THAN',
+
+  /**
+   * Matches if the actual version value is less than or equal to the target value.
+   */
+  SEMANTIC_VERSION_LESS_EQUAL = 'SEMANTIC_VERSION_LESS_EQUAL',
+
+  /**
+   * Matches if the actual version value is equal to the target value.
+   */
+  SEMANTIC_VERSION_EQUAL = 'SEMANTIC_VERSION_EQUAL',
+
+  /**
+   * Matches if the actual version value is not equal to the target value.
+   */
+  SEMANTIC_VERSION_NOT_EQUAL = 'SEMANTIC_VERSION_NOT_EQUAL',
+
+  /**
+   * Matches if the actual version value is greater than the target value.
+   */
+  SEMANTIC_VERSION_GREATER_THAN = 'SEMANTIC_VERSION_GREATER_THAN',
+
+  /**
+   * Matches if the actual version value is greater than or equal to the target value.
+   */
+  SEMANTIC_VERSION_GREATER_EQUAL = 'SEMANTIC_VERSION_GREATER_EQUAL',
+}
+
+/**
+ * Represents a condition that compares provided signals against a target value.
+ */
+export interface CustomSignalCondition {
+
+  /**
+   * The choice of custom signal operator to determine how to compare targets
+   * to value(s).
+   */
+  customSignalOperator?: CustomSignalOperator;
+
+  /**
+   * The key of the signal set in the EvaluationContext
+   */
+  customSignalKey?: string;
+
+  /**
+   * A list of at most 100 target custom signal values. For numeric operators,
+   * this will have exactly ONE target value.
+   */
+  targetCustomSignalValues?: string[];
 }
 
 /**
@@ -414,9 +535,14 @@ export interface ServerTemplate {
 }
 
 /**
- * Represents template evaluation input signals.
+ * Generic map of developer-defined signals used as evaluation input signals.
  */
-export type EvaluationContext = {
+export type UserProvidedSignals = {[key: string]: string|number};
+
+/**
+ * Predefined template evaluation input signals.
+ */
+export type PredefinedSignals = {
 
   /**
    * Defines the identifier to use when splitting a group. For example,
@@ -424,6 +550,11 @@ export type EvaluationContext = {
    */
   randomizationId?: string
 };
+
+/**
+ * Represents template evaluation input signals.
+ */
+export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 /**
  * Interface representing a Remote Config user.
