@@ -26,6 +26,8 @@ import { RemoteConfig } from './remote-config';
 
 export {
   AndCondition,
+  CustomSignalCondition,
+  CustomSignalOperator,
   DefaultConfig,
   EvaluationContext,
   ExplicitParameterValue,
@@ -41,6 +43,7 @@ export {
   ParameterValueType,
   PercentConditionOperator,
   PercentCondition,
+  PredefinedSignals,
   RemoteConfigCondition,
   RemoteConfigParameter,
   RemoteConfigParameterGroup,
@@ -52,6 +55,7 @@ export {
   ServerTemplateData,
   ServerTemplateDataType,
   TagColor,
+  UserProvidedSignals,
   Value,
   ValueSource,
   Version,

@@ -22,6 +22,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 import * as nock from 'nock';
+import { Agent } from 'http';
 
 import { AppCheckTokenVerifier } from '../../../src/app-check/token-verifier';
 import { JwtError, JwtErrorCode, PublicKeySignatureVerifier } from '../../../src/utils/jwt';
@@ -53,6 +54,25 @@ describe('AppCheckTokenVerifier', () => {
       clock.restore();
       clock = undefined;
     }
+  });
+
+  describe('Constructor', () => {
+    it('AppOptions.httpAgent should be passed to PublicKeySignatureVerifier.withJwksUrl', () => {
+      const mockAppWithAgent = mocks.appWithOptions({
+        httpAgent: new Agent()
+      });
+      const agentForApp = mockAppWithAgent.options.httpAgent;
+      const verifierSpy = sinon.spy(PublicKeySignatureVerifier, 'withJwksUrl');
+
+      expect(verifierSpy.args).to.be.empty;
+
+      new AppCheckTokenVerifier(
+        mockAppWithAgent
+      );
+      
+      expect(verifierSpy.args[0][1]).to.equal(agentForApp);
+      verifierSpy.restore();
+    });
   });
 
   describe('verifyJWT()', () => {

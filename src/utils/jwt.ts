@@ -17,7 +17,7 @@
 import * as validator from './validator';
 import * as jwt from 'jsonwebtoken';
 import * as jwks from 'jwks-rsa';
-import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
+import { HttpClient, HttpRequestConfig, RequestResponseError } from '../utils/api-request';
 import { Agent } from 'http';
 
 export const ALGORITHM_RS256: jwt.Algorithm = 'RS256' as const;
@@ -53,7 +53,7 @@ export class JwksFetcher implements KeyFetcher {
   private publicKeysExpireAt = 0;
   private client: jwks.JwksClient;
 
-  constructor(jwksUrl: string) {
+  constructor(jwksUrl: string, httpAgent?: Agent) {
     if (!validator.isURL(jwksUrl)) {
       throw new Error('The provided JWKS URL is not a valid URL.');
     }
@@ -61,6 +61,7 @@ export class JwksFetcher implements KeyFetcher {
     this.client = jwks({
       jwksUri: jwksUrl,
       cache: false, // disable jwks-rsa LRU cache as the keys are always cached for 6 hours.
+      requestAgent: httpAgent,
     });
   }
 
@@ -140,7 +141,7 @@ export class UrlKeyFetcher implements KeyFetcher {
       if (!resp.isJson() || resp.data.error) {
         // Treat all non-json messages and messages with an 'error' field as
         // error responses.
-        throw new HttpError(resp);
+        throw new RequestResponseError(resp);
       }
       // reset expire at from previous set of keys.
       this.publicKeysExpireAt = 0;
@@ -158,7 +159,7 @@ export class UrlKeyFetcher implements KeyFetcher {
       this.publicKeys = resp.data;
       return resp.data;
     }).catch((err) => {
-      if (err instanceof HttpError) {
+      if (err instanceof RequestResponseError) {
         let errorMessage = 'Error fetching public keys for Google certs: ';
         const resp = err.response;
         if (resp.isJson() && resp.data.error) {
@@ -190,8 +191,8 @@ export class PublicKeySignatureVerifier implements SignatureVerifier {
     return new PublicKeySignatureVerifier(new UrlKeyFetcher(clientCertUrl, httpAgent));
   }
 
-  public static withJwksUrl(jwksUrl: string): PublicKeySignatureVerifier {
-    return new PublicKeySignatureVerifier(new JwksFetcher(jwksUrl));
+  public static withJwksUrl(jwksUrl: string, httpAgent?: Agent): PublicKeySignatureVerifier {
+    return new PublicKeySignatureVerifier(new JwksFetcher(jwksUrl, httpAgent));
   }
 
   public verify(token: string): Promise<void> {

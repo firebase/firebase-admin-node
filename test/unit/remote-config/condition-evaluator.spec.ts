@@ -21,7 +21,10 @@ import * as sinon from 'sinon';
 import { ConditionEvaluator } from '../../../src/remote-config/condition-evaluator-internal';
 import {
   PercentConditionOperator,
-  PercentCondition
+  PercentCondition,
+  CustomSignalOperator,
+  NamedCondition,
+  OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
@@ -40,6 +43,24 @@ describe('ConditionEvaluator', () => {
     }
     stubs = [];
   });
+
+  function createNamedCondition(
+    name: string,
+    condition: OneOfCondition
+  ): NamedCondition {
+    return {
+      name,
+      condition: {
+        orCondition: {
+          conditions: [{
+            andCondition: {
+              conditions: [condition],
+            }
+          }]
+        }
+      }
+    };
+  }
 
   describe('evaluateConditions', () => {
     it('should evaluate empty OR condition to false', () => {
@@ -856,6 +877,335 @@ describe('ConditionEvaluator', () => {
         }
         return evalTrueCount;
       }
+    });
+
+    describe('customSignalCondition', () => {
+      it('should evaluate an unknown operator to false', () => {
+        const condition = createNamedCondition('is_enabled', {
+          customSignal: {
+            customSignalOperator: CustomSignalOperator.UNKNOWN
+          }
+        });
+        const evaluator = new ConditionEvaluator();
+        expect(evaluator.evaluateConditions([condition], {})).deep.equals(
+          new Map([['is_enabled', false]]));
+      });
+
+      it('should handle case when EvaluationContext does not have signal', () => {
+        const condition = createNamedCondition('is_enabled', {
+          customSignal: {
+            customSignalOperator: CustomSignalOperator.STRING_CONTAINS,
+            customSignalKey: 'user_prop',
+            targetCustomSignalValues: ['def']  // would be contained in 'undefined'
+          }
+        });
+        const evaluator = new ConditionEvaluator();
+        const context = { };
+        expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+          new Map([
+            ['is_enabled', false]
+          ]));
+      });
+
+      interface CustomSignalTestCase {
+        targets: string[];
+        actual: string|number;
+        outcome: boolean;
+      }
+
+      function runCustomSignalTestCase(
+        operator: CustomSignalOperator
+      ): (c: CustomSignalTestCase) => void {
+        return ({ targets, actual, outcome }: CustomSignalTestCase) => {
+          const targetsStr = JSON.stringify(targets);
+          it(`Evalutes ${operator} with targets=${targetsStr} and actual="${actual}" to ${outcome}`, () => {
+            const condition = createNamedCondition('is_enabled', {
+              customSignal: {
+                customSignalOperator: operator,
+                customSignalKey: 'user_prop',
+                targetCustomSignalValues: targets
+              }
+            });
+            const evaluator = new ConditionEvaluator();
+            const context = { 'user_prop': actual };
+            expect(evaluator.evaluateConditions([condition], context)).deep.equals(
+              new Map([
+                ['is_enabled', outcome],
+              ]));
+          });
+        }
+      }
+
+      function runCustomSignalTestCaseWithWhitespace(
+        operator: CustomSignalOperator
+      ): (c: CustomSignalTestCase) => void {
+        return (testCase: CustomSignalTestCase) => {
+          runCustomSignalTestCase(operator)(testCase);
+          runCustomSignalTestCase(operator)({
+            ...testCase,
+            targets: testCase.targets.map(t => `   ${t} `),
+            actual: ` ${testCase.actual}  `
+          });
+        }
+      }
+
+      const invalidNumericSignalTestCase: CustomSignalTestCase = {
+        targets: ['5'],
+        actual: 'not a number',
+        outcome: false
+      };
+
+      describe('STRING_CONTAINS', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: true },
+          { targets: ['foo', 'biz'],actual: 'bar',outcome: false },
+        ];
+
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS));
+      });
+
+      describe('STRING_DOES_NOT_CONTAIN', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'biz'],actual: 'bar',outcome: true },
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
+        ];
+
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_DOES_NOT_CONTAIN));
+      });
+
+      describe('STRING_EXACTLY_MATCHES', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', 'bar'], actual: 'bar', outcome: true },
+          { targets: [''], actual: '', outcome: true },
+          { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.STRING_EXACTLY_MATCHES));
+      });
+
+      describe('STRING_CONTAINS_REGEX', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['foo', '^ba.*$'], actual: 'bar', outcome: true },
+          { targets: ['  bar   '], actual: 'biz', outcome: false },
+        ];
+
+        testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS_REGEX));
+      });
+
+      describe('NUMERIC_LESS_THAN', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '4', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          { targets: ['5'], actual: '6', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_LESS_THAN));
+      });
+
+      describe('NUMERIC_LESS_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '4', outcome: true },
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: '6', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_LESS_EQUAL));
+      });
+
+      describe('NUMERIC_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: '6', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_EQUAL));
+      });
+
+      describe('NUMERIC_NOT_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_NOT_EQUAL));
+      });
+
+      describe('NUMERIC_GREATER_THAN', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: false },
+          { targets: ['5'], actual: '4', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_GREATER_THAN));
+      });
+
+      describe('NUMERIC_GREATER_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5'], actual: '6', outcome: true },
+          { targets: ['5'], actual: '5', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
+          { targets: ['5'], actual: '4', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.NUMERIC_GREATER_EQUAL));
+      });
+
+      describe('SEMANTIC_VERSION_LESS_THAN', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12', outcome: true },
+          { targets: ['5.12.3'], actual: '5', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_LESS_THAN));
+      });
+
+      describe('SEMANTIC_VERSION_LESS_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_LESS_EQUAL));
+      });
+
+      describe('SEMANTIC_VERSION_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_EQUAL));
+      });
+
+      describe('SEMANTIC_VERSION_NOT_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.12.9', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: false },
+          { targets: ['5.0'], actual: 5.0, outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_NOT_EQUAL));
+      });
+
+      describe('SEMANTIC_VERSION_GREATER_THAN', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.13.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.13', outcome: true },
+          { targets: ['5.12.3'], actual: '6', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: false },
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: false },
+          invalidNumericSignalTestCase,
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_GREATER_THAN));
+      });
+
+      describe('SEMANTIC_VERSION_GREATER_EQUAL', () => {
+        const testCases: CustomSignalTestCase[] = [
+          { targets: ['5.12.3'], actual: '5.13.9', outcome: true },
+          { targets: ['5.12.3'], actual: '5.12.3', outcome: true },
+          { targets: ['5'], actual: 5.0, outcome: true },
+          { targets: ['5.0'], actual: 5.0, outcome: true },
+          { targets: ['5.12.3'], actual: '5.11.9', outcome: false },
+          invalidNumericSignalTestCase
+        ];
+
+        testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL));
+      });
+    });
+  });
+
+  describe('hashSeededRandomizationId', () => {
+    // The Farmhash algorithm produces a 64 bit unsigned integer,
+    // which we convert to a signed integer for legacy compatibility.
+    // This has caused confusion in the past, so we explicitly
+    // test here.
+    it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63-1 = 9223372036854775807.
+        .returns(BigInt('9223372036854775807'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+      expect(actual).to.equal(BigInt('9223372036854775807'))
+    });
+
+    it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63 = 9223372036854775808.
+        .returns(BigInt('9223372036854775808'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+      // 2^63 is the negation of 2^63-1
+      expect(actual).to.equal(BigInt('9223372036854775808'))
+    });
+
+    it('should convert 2^63+1 to negative and then find the absolute value', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // 2^63+1 9223372036854775809.
+        .returns(BigInt('9223372036854775809'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+      // 2^63+1 is larger than 2^63, so the absolute value is smaller
+      expect(actual).to.equal(BigInt('9223372036854775807'))
+    });
+
+    it('should handle the value that initially caused confusion', function () {
+      if (nodeVersion.startsWith('14')) {
+        this.skip();
+      }
+
+      const stub = sinon
+        .stub(farmhash, 'fingerprint64')
+        // We were initially confused about the nature of this value ...
+        .returns(BigInt('16081085603393958147'));
+      stubs.push(stub);
+
+      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
+
+      // ... Now we know it's the unsigned equivalent of this absolute value.
+      expect(actual).to.equal(BigInt('2365658470315593469'))
     });
   });
 });
