@@ -45,16 +45,29 @@ const connectorConfig: ConnectorConfig = {
 describe('getDataConnect()', () => {
 
   const query = 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }';
-
-  //const mutation = 'mutation user { user_insert(data: {uid: "QVBJcy5ndXJ2", address: "Address", name: "Name"}) }'
+  const mutation = 'mutation user { user_insert(data: {uid: "QVBJcy5ndXJ2", address: "Address", name: "Name"}) }'
 
   describe('executeGraphql()', () => {
-    it('successfully executes a GraphQL', async () => {
+    it('executeGraphql() successfully executes a GraphQL', async () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(query, {});
       //console.dir(resp.data.users);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users[0].name).to.be.not.undefined;
       expect(resp.data.users[0].address).to.be.not.undefined;
+    });
+  });
+
+  describe('executeGraphqlRead()', () => {
+    it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
+      const resp = await getDataConnect(connectorConfig).executeGraphqlRead<UserResponse, UserVariables>(query, {});
+      expect(resp.data.users).to.be.not.empty;
+      expect(resp.data.users[0].name).to.be.not.undefined;
+      expect(resp.data.users[0].address).to.be.not.undefined;
+    });
+
+    it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
+      return getDataConnect(connectorConfig).executeGraphqlRead<UserResponse, UserVariables>(mutation, {})
+        .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
     });
   });
 });

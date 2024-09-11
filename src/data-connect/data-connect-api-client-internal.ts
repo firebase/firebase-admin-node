@@ -32,7 +32,7 @@ const DATA_CONNECT_API_URL_FORMAT =
   '{host}/v1alpha/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
-//const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
+const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -67,6 +67,29 @@ export class DataConnectApiClient {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_ENDPOINT, options);
+  }
+
+  /**
+   * Execute arbitrary read-only GraphQL queries
+   * 
+   * @param query - The GraphQL (read-only) string to be executed.
+   * @param options - Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @throws FirebaseDataConnectError
+   */
+  public async executeGraphqlRead<GraphqlResponse, Variables>(
+    query: string,
+    options?: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
+  }
+
+  private async executeGraphqlHelper<GraphqlResponse, Variables>(
+    query: string,
+    endpoint: string,
+    options?: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (!validator.isNonEmptyString(query)) {
       throw new FirebaseDataConnectError(
         'invalid-argument',
@@ -79,16 +102,17 @@ export class DataConnectApiClient {
       }
     }
     const host = (process.env.DATA_CONNECT_EMULATOR_HOST || DATA_CONNECT_HOST);
-    return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, EXECUTE_GRAPH_QL_ENDPOINT)
+    const data = {
+      query,
+      ...(options?.variables && { variables: options?.variables }),
+    };
+    return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
       .then(async (url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
           url,
           headers: DATA_CONNECT_CONFIG_HEADERS,
-          data: {
-            query,
-            ...(options?.variables && { variables: options?.variables }),
-          }
+          data,
         };
         const resp = await this.httpClient.send(request);
         return Promise.resolve({
@@ -103,7 +127,7 @@ export class DataConnectApiClient {
       });
   }
 
-  private getUrl(host: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
+  private async getUrl(host: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
     return this.getProjectId()
       .then((projectId) => {
         const urlParams = {

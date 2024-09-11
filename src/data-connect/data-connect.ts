@@ -88,4 +88,19 @@ export class DataConnect {
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.client.executeGraphql(query, options);
   }
+
+  /**
+ * Execute an arbitrary read-only GraphQL query
+ *
+ * @param query - The GraphQL read-only query.
+ * @param options - Optional options object when creating a new App Check Token.
+ *
+ * @returns A promise that fulfills with a `Something`.
+ */
+  public executeGraphqlRead<GraphqlResponse, Variables>(
+    query: string,
+    options?: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.client.executeGraphqlRead(query, options);
+  }
 }

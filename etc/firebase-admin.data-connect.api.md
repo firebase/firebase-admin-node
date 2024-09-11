@@ -25,6 +25,7 @@ export class DataConnect {
     // (undocumented)
     readonly connectorConfig: ConnectorConfig;
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
 }
 
 // @public (undocumented)
