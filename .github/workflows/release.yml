@@ -111,6 +111,7 @@ jobs:
       uses: actions/download-artifact@v4.1.7
       with:
         name: dist
+        path: dist
 
     # Node.js and NPM are needed to complete the publish.
     - name: Set up Node.js
