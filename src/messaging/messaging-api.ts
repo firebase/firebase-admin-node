@@ -550,16 +550,16 @@ export interface AndroidNotification {
    * turn the vibrator on or off. The first value indicates the duration to wait before
    * turning the vibrator on. The next value indicates the duration to keep the
    * vibrator on. Subsequent values alternate between duration to turn the vibrator
-   * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings`
-   * is set to `true`, the default value is used instead of the user-specified `vibrate_timings`.
+   * off and to turn the vibrator on. If `vibrateTimingsMillis` is set and `defaultVibrateTimings`
+   * is set to `true`, the default value is used instead of the user-specified `vibrateTimingsMillis`.
    */
   vibrateTimingsMillis?: number[];
 
   /**
    * If set to `true`, use the Android framework's default vibrate pattern for the
    * notification. Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
-   * config.xml}. If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set,
-   * the default value is used instead of the user-specified `vibrate_timings`.
+   * config.xml}. If `defaultVibrateTimings` is set to `true` and `vibrateTimingsMillis` is also set,
+   * the default value is used instead of the user-specified `vibrateTimingsMillis`.
    */
   defaultVibrateTimings?: boolean;
 
