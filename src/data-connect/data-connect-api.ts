@@ -16,8 +16,8 @@
  */
 
 export interface ConnectorConfig {
-	location: string;
-	serviceId: string;
+  location: string;
+  serviceId: string;
 }
 
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
@@ -26,4 +26,5 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 
 export interface GraphqlOptions<Variables> {
   variables?: Variables;
+  operationName?: string;
 }

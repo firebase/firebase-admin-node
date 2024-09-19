@@ -40,6 +40,8 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
 // @public (undocumented)
 export interface GraphqlOptions<Variables> {
     // (undocumented)
+    operationName?: string;
+    // (undocumented)
     variables?: Variables;
 }
 

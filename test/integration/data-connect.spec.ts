@@ -44,29 +44,73 @@ const connectorConfig: ConnectorConfig = {
 
 describe('getDataConnect()', () => {
 
-  const query = 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }';
-  const mutation = 'mutation user { user_insert(data: {uid: "QVBJcy5ndXJ2", address: "Address", name: "Name"}) }'
+  const query1 = 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }';
+  const query2 = 'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { name } } }';
+  const getUserQuery = 'query GetUser($id: User_Key!) { user(key: $id) { uid name } }';
+  const multipleQueries = `
+  ${query1}
+  ${query2}
+  `;
+  const mutation = 'mutation user { user_insert(data: {uid: "QVBJcy5ndXJ3", address: "Address", name: "Name"}) }'
+  const mutationUpdate = 'mutation UpdateUser($id: User_Key!) { user_update(key: $id, data: { name: "Name" }) }';
 
   describe('executeGraphql()', () => {
     it('executeGraphql() successfully executes a GraphQL', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(query, {});
+      const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(query1);
       //console.dir(resp.data.users);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users[0].name).to.be.not.undefined;
       expect(resp.data.users[0].address).to.be.not.undefined;
     });
+
+    it('executeGraphql() use the operationName when multiple queries are provided', async () => {
+      const resp = await getDataConnect(connectorConfig).executeGraphql(
+        multipleQueries, 
+        { operationName: 'ListEmails' }
+      );
+      console.dir(resp.data);
+      // expect(resp.data.users).to.be.not.empty;
+      // expect(resp.data.users[0].name).to.be.not.undefined;
+      // expect(resp.data.users[0].address).to.be.not.undefined;
+    });
+
+    it('executeGraphql() successfully executes a GraphQL mutation', async () => {
+      const resp = await getDataConnect(connectorConfig).executeGraphql(
+        mutationUpdate, { variables: { id: 'QVBJcy5ndXJ3' } }
+      );
+      console.dir(resp); //{ data: { user_insert: { uid: 'QVBJcy5ndXJ3' } } }
+      //expect(resp.data.users).to.be.not.empty;
+      // expect(resp.data.users[0].name).to.be.not.undefined;
+      // expect(resp.data.users[0].address).to.be.not.undefined;
+    });
+
+    it('executeGraphql() should throw for a duplicate key GraphQL mutation', async () => {
+      return getDataConnect(connectorConfig).executeGraphql(mutation)
+        .should.eventually.be.rejected.and.have.property('code', 'data-connect/query-error');
+    });
+
+    it('executeGraphql() successfully executes a GraphQL query with variables', async () => {
+      const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(
+        getUserQuery,
+        { variables: { id: 'QVBJcy5ndXJ3' } }
+      );
+      console.dir(resp);
+      // expect(resp.data.users).to.be.not.empty;
+      // expect(resp.data.users[0].name).to.be.not.undefined;
+      // expect(resp.data.users[0].address).to.be.not.undefined;
+    });
   });
 
   describe('executeGraphqlRead()', () => {
     it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphqlRead<UserResponse, UserVariables>(query, {});
+      const resp = await getDataConnect(connectorConfig).executeGraphqlRead<UserResponse, UserVariables>(query1);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users[0].name).to.be.not.undefined;
       expect(resp.data.users[0].address).to.be.not.undefined;
     });
 
     it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
-      return getDataConnect(connectorConfig).executeGraphqlRead<UserResponse, UserVariables>(mutation, {})
+      return getDataConnect(connectorConfig).executeGraphqlRead(mutation)
         .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
     });
   });

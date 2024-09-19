@@ -50,7 +50,7 @@ export class DataConnectApiClient {
   constructor(private readonly connectorConfig: ConnectorConfig, private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseDataConnectError(
-        'invalid-argument',
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'First argument passed to getDataConnect() must be a valid Firebase app instance.');
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
@@ -92,19 +92,21 @@ export class DataConnectApiClient {
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (!validator.isNonEmptyString(query)) {
       throw new FirebaseDataConnectError(
-        'invalid-argument',
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         '`query` must be a non-empty string.');
     }
     if (typeof options !== 'undefined') {
       if (!validator.isNonNullObject(options)) {
         throw new FirebaseDataConnectError(
-          'invalid-argument', 'GraphqlOptions must be a non-null object');
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          'GraphqlOptions must be a non-null object');
       }
     }
     const host = (process.env.DATA_CONNECT_EMULATOR_HOST || DATA_CONNECT_HOST);
     const data = {
       query,
       ...(options?.variables && { variables: options?.variables }),
+      ...(options?.operationName && { operationName: options?.operationName }),
     };
     return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
       .then(async (url) => {
@@ -115,6 +117,12 @@ export class DataConnectApiClient {
           data,
         };
         const resp = await this.httpClient.send(request);
+        //console.dir(resp, { depth: null });
+        if (resp.data.errors && validator.isArray(resp.data.errors)) {
+          const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+          throw new FirebaseDataConnectError(
+            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+        }
         return Promise.resolve({
           data: resp.data.data as GraphqlResponse,
         });
@@ -150,7 +158,7 @@ export class DataConnectApiClient {
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
           throw new FirebaseDataConnectError(
-            'unknown-error',
+            DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
             'Failed to determine project ID. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
@@ -168,12 +176,12 @@ export class DataConnectApiClient {
     const response = err.response;
     if (!response.isJson()) {
       return new FirebaseDataConnectError(
-        'unknown-error',
+        DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
         `Unexpected response with status: ${response.status} and body: ${response.text}`);
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
-    let code: DataConnectErrorCode = 'unknown-error';
+    const error: ServerError = (response.data as ErrorResponse).error || {};
+    let code: DataConnectErrorCode = DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN;
     if (error.status && error.status in DATA_CONNECT_ERROR_CODE_MAPPING) {
       code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
     }
@@ -183,10 +191,10 @@ export class DataConnectApiClient {
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: ServerError;
 }
 
-interface Error {
+interface ServerError {
   code?: number;
   message?: string;
   status?: string;
@@ -201,6 +209,7 @@ export const DATA_CONNECT_ERROR_CODE_MAPPING: { [key: string]: DataConnectErrorC
   UNAUTHENTICATED: 'unauthenticated',
   NOT_FOUND: 'not-found',
   UNKNOWN: 'unknown-error',
+  QUERY_ERROR: 'query-error',
 };
 
 export type DataConnectErrorCode =
@@ -211,7 +220,8 @@ export type DataConnectErrorCode =
   | 'permission-denied'
   | 'unauthenticated'
   | 'not-found'
-  | 'unknown-error';
+  | 'unknown-error'
+  | 'query-error';
 
 /**
  * Firebase Data Connect error code structure. This extends PrefixedFirebaseError.
