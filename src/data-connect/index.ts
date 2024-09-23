@@ -36,32 +36,37 @@ export {
 } from './data-connect'
 
 /**
- * Gets the {@link DataConnect} service for the default app
- * or a given app.
+ * Gets the {@link DataConnect} service with the provided connector configuration
+ * for the default app or a given app.
  *
- * `getDataConnect()` can be called with no arguments to access the default
- * app's `DataConnect` service or as `getDataConnect(app)` to access the
+ * `getDataConnect(connectorConfig)` can be called with no app argument to access the default
+ * app's `DataConnect` service or as `getDataConnect(connectorConfig, app)` to access the
  * `DataConnect` service associated with a specific app.
  *
  * @example
  * ```javascript
+ * const connectorConfig: ConnectorConfig = {
+ *  location: 'us-west2',
+ *  serviceId: 'my-service',
+ * };
+ * 
  * // Get the `DataConnect` service for the default app
- * const defaultDataConnect = getDataConnect();
+ * const defaultDataConnect = getDataConnect(connectorConfig);
  * ```
  *
  * @example
  * ```javascript
  * // Get the `DataConnect` service for a given app
- * const otherDataConnect = getDataConnect(otherApp);
+ * const otherDataConnect = getDataConnect(connectorConfig, otherApp);
  * ```
  * 
- * @param connectorConfig - Connector Config
+ * @param connectorConfig - Connector configuration for the `DataConnect` service.
  *
  * @param app - Optional app for which to return the `DataConnect` service.
  *   If not provided, the default `DataConnect` service is returned.
  *
- * @returns The default `DataConnect` service if no app is provided, or the `DataConnect`
- *   service associated with the provided app.
+ * @returns The default `DataConnect` service with the provided connector configuration
+ *  if no app is provided, or the `DataConnect` service associated with the provided app.
  */
 export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect {
   if (typeof app === 'undefined') {

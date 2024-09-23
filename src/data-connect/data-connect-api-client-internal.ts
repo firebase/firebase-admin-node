@@ -27,7 +27,6 @@ import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-
 
 // Data Connect backend constants
 const DATA_CONNECT_HOST = 'https://firebasedataconnect.googleapis.com';
-//const DATA_CONNECT_EMULATOR_HOST = 'http://127.0.0.1:9399';
 const DATA_CONNECT_API_URL_FORMAT =
   '{host}/v1alpha/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
@@ -117,8 +116,7 @@ export class DataConnectApiClient {
           data,
         };
         const resp = await this.httpClient.send(request);
-        //console.dir(resp, { depth: null });
-        if (resp.data.errors && validator.isArray(resp.data.errors)) {
+        if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
           const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
           throw new FirebaseDataConnectError(
             DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);

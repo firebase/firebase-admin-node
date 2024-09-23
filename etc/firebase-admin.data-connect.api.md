@@ -8,11 +8,9 @@
 
 import { Agent } from 'http';
 
-// @public (undocumented)
+// @public
 export interface ConnectorConfig {
-    // (undocumented)
     location: string;
-    // (undocumented)
     serviceId: string;
 }
 
@@ -24,24 +22,23 @@ export class DataConnect {
     readonly app: App;
     // (undocumented)
     readonly connectorConfig: ConnectorConfig;
+    // @beta
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    // @beta
     executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
 }
 
-// @public (undocumented)
+// @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
-    // (undocumented)
     data: GraphqlResponse;
 }
 
 // @public
 export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect;
 
-// @public (undocumented)
+// @public
 export interface GraphqlOptions<Variables> {
-    // (undocumented)
     operationName?: string;
-    // (undocumented)
     variables?: Variables;
 }
 

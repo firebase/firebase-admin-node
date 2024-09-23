@@ -17,13 +17,11 @@
 
 import { App } from '../app';
 import { DataConnectApiClient } from './data-connect-api-client-internal';
-//import * as validator from '../utils/validator';
 
 import {
   ConnectorConfig,
   ExecuteGraphqlResponse,
   GraphqlOptions,
-  //GraphqlReadOptions,
 } from './data-connect-api';
 
 export class DataConnectService {
@@ -48,9 +46,9 @@ export class DataConnectService {
   }
 
   /**
- * Returns the app associated with this `DataConnect` instance.
+ * Returns the app associated with this `DataConnectService` instance.
  *
- * @returns The app associated with this `DataConnect` instance.
+ * @returns The app associated with this `DataConnectService` instance.
  */
   get app(): App {
     return this.appInternal;
@@ -65,7 +63,7 @@ export class DataConnect {
   private readonly client: DataConnectApiClient;
 
   /**
- * @param connectorConfig - Connector Config
+ * @param connectorConfig - The connector configuration.
  * @param app - The app for this `DataConnect` service.
  * @constructor
  * @internal
@@ -78,9 +76,10 @@ export class DataConnect {
  * Execute an arbitrary GraphQL query or mutation
  *
  * @param query - The GraphQL query or mutation.
- * @param options - Optional options object when creating a new App Check Token.
+ * @param options - Optional {@link GraphqlOptions} when executing a GraphQL query or mutation.
  *
- * @returns A promise that fulfills with a `Something`.
+ * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+ * @beta
  */
   public executeGraphql<GraphqlResponse, Variables>(
     query: string,
@@ -93,9 +92,10 @@ export class DataConnect {
  * Execute an arbitrary read-only GraphQL query
  *
  * @param query - The GraphQL read-only query.
- * @param options - Optional options object when creating a new App Check Token.
+ * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
  *
- * @returns A promise that fulfills with a `Something`.
+ * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+ * @beta
  */
   public executeGraphqlRead<GraphqlResponse, Variables>(
     query: string,

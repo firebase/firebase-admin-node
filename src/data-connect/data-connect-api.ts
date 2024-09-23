@@ -15,16 +15,42 @@
  * limitations under the License.
  */
 
+/**
+ * Interface representing a Data Connect connector configuration.
+ */
 export interface ConnectorConfig {
+  /**
+   * Location ID of the Data Connect service.
+   */
   location: string;
+
+  /**
+   * Service ID of the Data Connect service.
+   */
   serviceId: string;
 }
 
+/**
+ * Interface representing GraphQL response.
+ */
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
+  /**
+   * Data payload of the GraphQL response.
+   */
   data: GraphqlResponse;
 }
 
+/**
+ * Interface representing GraphQL options.
+ */
 export interface GraphqlOptions<Variables> {
+  /**
+   * Values for GraphQL variables provided in this query or mutation.
+   */
   variables?: Variables;
+
+  /**
+   * The name of the GraphQL operation. Required only if `query` contains multiple operations.
+   */
   operationName?: string;
 }
