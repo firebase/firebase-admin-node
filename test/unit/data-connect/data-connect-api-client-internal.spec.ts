@@ -87,6 +87,9 @@ describe('DataConnectApiClient', () => {
 
   afterEach(() => {
     sandbox.restore();
+    if (process.env.DATA_CONNECT_EMULATOR_HOST) {
+      delete process.env.DATA_CONNECT_EMULATOR_HOST;
+    }
     return app.delete();
   });
 
@@ -199,6 +202,22 @@ describe('DataConnectApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            headers: EXPECTED_HEADERS,
+            data: { query: 'query' }
+          });
+        });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'http://localhost:9000';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient.executeGraphql('query', {})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `http://localhost:9000/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EXPECTED_HEADERS,
             data: { query: 'query' }
           });
