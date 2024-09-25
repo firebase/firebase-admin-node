@@ -59,7 +59,7 @@ export class DataConnectApiClient {
    * Execute arbitrary GraphQL, including both read and write queries
    * 
    * @param query - The GraphQL string to be executed.
-   * @param options - Options
+   * @param options - GraphQL Options
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    */
   public async executeGraphql<GraphqlResponse, Variables>(
@@ -73,7 +73,7 @@ export class DataConnectApiClient {
    * Execute arbitrary read-only GraphQL queries
    * 
    * @param query - The GraphQL (read-only) string to be executed.
-   * @param options - Options
+   * @param options - GraphQL Options
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @throws FirebaseDataConnectError
    */
