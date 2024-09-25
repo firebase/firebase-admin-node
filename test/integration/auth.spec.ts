@@ -2563,7 +2563,7 @@ describe('admin.auth', () => {
   describe('createSessionCookie()', () => {
     let expectedExp: number;
     let expectedIat: number;
-    const expiresIn = 24 * 60 * 60 * 1000;
+    const expiresIn = (24 * 60 * 60 * 1000) + 234;
     let payloadClaims: any;
     let currentIdToken: string;
     const uid = sessionCookieUids[0];

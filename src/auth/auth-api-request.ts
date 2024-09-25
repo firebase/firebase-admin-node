@@ -1094,7 +1094,7 @@ export abstract class AbstractAuthRequestHandler {
     const request = {
       idToken,
       // Convert to seconds.
-      validDuration: expiresIn / 1000,
+      validDuration: Math.floor(expiresIn / 1000),
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
       .then((response: any) => response.sessionCookie);

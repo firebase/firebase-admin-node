@@ -1055,7 +1055,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
         );
-        const outOfBoundDuration = 60 * 60 * 1000 * 24 * 14 + 1;
+        // Add more than a second since this value is Math.floor()'ed
+        const outOfBoundDuration = 60 * 60 * 1000 * 24 * 14 + 1001;
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('ID_TOKEN', outOfBoundDuration)
