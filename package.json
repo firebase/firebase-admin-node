@@ -80,6 +80,9 @@
       "database": [
         "lib/database"
       ],
+      "data-connect": [
+        "lib/data-connect"
+      ],
       "firestore": [
         "lib/firestore"
       ],
@@ -133,6 +136,11 @@
       "types": "./lib/database/index.d.ts",
       "require": "./lib/database/index.js",
       "import": "./lib/esm/database/index.js"
+    },
+    "./data-connect": {
+      "types": "./lib/data-connect/index.d.ts",
+      "require": "./lib/data-connect/index.js",
+      "import": "./lib/esm/data-connect/index.js"
     },
     "./eventarc": {
       "types": "./lib/eventarc/index.d.ts",
