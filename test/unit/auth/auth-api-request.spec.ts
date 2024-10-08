@@ -2045,6 +2045,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
+        customUserClaims: {
+          admin: true,
+          groupId: '123',
+        },
         multiFactor: {
           enrolledFactors: [
             {
@@ -2077,6 +2081,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
+        customAttributes: JSON.stringify({ admin: true, groupId: '123' }),
         mfa: {
           enrollments: [
             {
@@ -2107,6 +2112,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         disableUser: false,
         password: 'password',
         phoneNumber: '+11234567890',
+        customAttributes: JSON.stringify({ admin: true, groupId: '123' }),
         deleteAttribute: ['DISPLAY_NAME', 'PHOTO_URL'],
       };
       // Valid request to delete phoneNumber.
@@ -2121,7 +2127,37 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         disableUser: false,
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
+        customAttributes: JSON.stringify({ admin: true, groupId: '123' }),
         deleteProvider: ['phone'],
+      };
+      // Valid request to delete custom claims.
+      const validDeleteCustomClaimsData = deepCopy(validData);
+      validDeleteCustomClaimsData.customUserClaims = null;
+      delete validDeleteCustomClaimsData.multiFactor;
+      const expectedValidDeleteCustomClaimsData = {
+        localId: uid,
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        emailVerified: true,
+        disableUser: false,
+        photoUrl: 'http://localhost/1234/photo.png',
+        password: 'password',
+        phoneNumber: '+11234567890',
+        customAttributes: JSON.stringify({}),
+      };
+      // Valid request to leave custom claims unchanged.
+      const validUnchangedCustomClaimsData = deepCopy(validData);
+      delete validUnchangedCustomClaimsData.customUserClaims;
+      delete validUnchangedCustomClaimsData.multiFactor;
+      const expectedValidUnchangedCustomClaimsData = {
+        localId: uid,
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        emailVerified: true,
+        disableUser: false,
+        photoUrl: 'http://localhost/1234/photo.png',
+        password: 'password',
+        phoneNumber: '+11234567890',
       };
       // Valid request to delete all second factors.
       const expectedValidDeleteMfaData = {
@@ -2221,6 +2257,50 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             // removed from request and deleteProvider added.
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, expectedValidDeletePhoneNumberData));
+          });
+      });
+      
+      it('should be fulfilled given null custom claims', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          kind: 'identitytoolkit#SetAccountInfoResponse',
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to delete custom claims.
+        return requestHandler.updateExistingAccount(uid, validDeleteCustomClaimsData)
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, customAttributes added.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidDeleteCustomClaimsData));
+          });
+      });
+      
+      it('should be fulfilled given undefined custom claims', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          kind: 'identitytoolkit#SetAccountInfoResponse',
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to update account excluding custom claims.
+        return requestHandler.updateExistingAccount(uid, validUnchangedCustomClaimsData)
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, customAttributes removed.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidUnchangedCustomClaimsData));
           });
       });
 
