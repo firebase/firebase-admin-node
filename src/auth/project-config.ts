@@ -23,6 +23,7 @@ import {
   MultiFactorAuthServerConfig,
   RecaptchaConfig,
   RecaptchaAuthConfig,
+  RecaptchaAuthServerConfig,
   PasswordPolicyAuthConfig,
   PasswordPolicyAuthServerConfig,
   PasswordPolicyConfig,
@@ -67,7 +68,7 @@ export interface UpdateProjectConfigRequest {
 export interface ProjectConfigServerResponse {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
-  recaptchaConfig?: RecaptchaConfig;
+  recaptchaConfig?: RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -78,7 +79,7 @@ export interface ProjectConfigServerResponse {
 export interface ProjectConfigClientRequest {
   smsRegionConfig?: SmsRegionConfig;
   mfa?: MultiFactorAuthServerConfig;
-  recaptchaConfig?: RecaptchaConfig;
+  recaptchaConfig?: RecaptchaAuthServerConfig;
   passwordPolicyConfig?: PasswordPolicyAuthServerConfig;
   emailPrivacyConfig?: EmailPrivacyConfig;
 }
@@ -112,7 +113,12 @@ export class ProjectConfig {
    * {@link https://cloud.google.com/terms/service-terms | Term of Service}.
    */
   private readonly recaptchaConfig_?: RecaptchaAuthConfig;
-  
+  /**
+   * The reCAPTCHA configuration.
+   */
+  get recaptchaConfig(): RecaptchaConfig | undefined {
+    return this.recaptchaConfig_;
+  }
   /**
    * The password policy configuration for the project
    */
@@ -192,7 +198,7 @@ export class ProjectConfig {
       request.mfa = MultiFactorAuthConfig.buildServerRequest(configOptions.multiFactorConfig);
     }
     if (typeof configOptions.recaptchaConfig !== 'undefined') {
-      request.recaptchaConfig = configOptions.recaptchaConfig;
+      request.recaptchaConfig = RecaptchaAuthConfig.buildServerRequest(configOptions.recaptchaConfig);
     }
     if (typeof configOptions.passwordPolicyConfig !== 'undefined') {
       request.passwordPolicyConfig = PasswordPolicyAuthConfig.buildServerRequest(configOptions.passwordPolicyConfig);
@@ -203,12 +209,6 @@ export class ProjectConfig {
     return request;
   }
  
-  /**
-   * The reCAPTCHA configuration.
-   */
-  get recaptchaConfig(): RecaptchaConfig | undefined {
-    return this.recaptchaConfig_;
-  }
   /**
    * The Project Config object constructor.
    *
@@ -245,7 +245,7 @@ export class ProjectConfig {
     const json = {
       smsRegionConfig: deepCopy(this.smsRegionConfig),
       multiFactorConfig: deepCopy(this.multiFactorConfig),
-      recaptchaConfig: this.recaptchaConfig_?.toJSON(),
+      recaptchaConfig: deepCopy(this.recaptchaConfig),
       passwordPolicyConfig: deepCopy(this.passwordPolicyConfig),
       emailPrivacyConfig: deepCopy(this.emailPrivacyConfig),
     };
