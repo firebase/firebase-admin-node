@@ -1819,7 +1819,7 @@ export interface RecaptchaConfig {
    */
   useSmsBotScore?: boolean;
   /**
-   * Whether to use the rCE sms toll fraud protection risk score for reCAPTCHA phone provider. 
+   * Whether to use the rCE SMS toll fraud protection risk score for reCAPTCHA phone provider. 
    * Can only be true when the phone_enforcement_state is AUDIT or ENFORCE.
    */
   useSmsTollFraudProtection?: boolean;
