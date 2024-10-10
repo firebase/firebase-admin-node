@@ -28,6 +28,8 @@ import {
   MAXIMUM_TEST_PHONE_NUMBERS,
   PasswordPolicyAuthConfig,
   CustomStrengthOptionsConfig,
+  MobileLinksAuthConfig,
+  MobileLinksConfig,
 } from '../../../src/auth/auth-config';
 import {
   SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
@@ -1319,6 +1321,33 @@ describe('PasswordPolicyAuthConfig',() => {
           }
         ]
       });
+    });
+  });
+});
+
+describe('MobileLinksAuthConfig',() => {
+  describe('validate',() => {
+    it('should throw an error on invalid MobileLinksConfig key',() => {
+      const config: any = {
+        link: 'HOSTING_DOMAIN'
+      };
+      expect(() =>
+        MobileLinksAuthConfig.validate(config)
+      ).to.throw('"link" is not a valid "MobileLinksConfig" parameter.');
+    });
+
+    it('should throw an error on invalid MobileLinksDomain',() => {
+      const config: any = {
+        domain: 'WRONG_DOMAIN'
+      };
+      expect(() => MobileLinksAuthConfig.validate(config))
+        .to.throw('"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".');
+    });//
+    it('should now throw an error on valid MobileLinksConfig',() => {
+      const config: MobileLinksConfig = {
+        domain: 'HOSTING_DOMAIN'
+      };
+      expect(() => MobileLinksAuthConfig.validate(config)).not.to.throw();
     });
   });
 });
