@@ -92,7 +92,7 @@ export class FunctionsApiClient {
     }
 
     try {
-      const serviceUrl = tasksEmulatorUrl(resources, functionName)?.concat('/', id)
+      const serviceUrl = tasksEmulatorUrl(resources)?.concat('/', id)
         ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
       const request: HttpRequestConfig = {
         method: 'DELETE',
@@ -147,7 +147,7 @@ export class FunctionsApiClient {
     const task = this.validateTaskOptions(data, resources, opts);
     try {
       const serviceUrl =
-        tasksEmulatorUrl(resources, functionName) ??
+        tasksEmulatorUrl(resources) ??
         await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
 
       const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
@@ -436,9 +436,9 @@ export class FirebaseFunctionsError extends PrefixedFirebaseError {
   }
 }
 
-function tasksEmulatorUrl(resources: utils.ParsedResource, functionName: string): string | undefined {
+function tasksEmulatorUrl(resources: utils.ParsedResource): string | undefined {
   if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
-    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${functionName}/tasks`;
+    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${resources.resourceId}/tasks`;
   }
   return undefined;
 }
