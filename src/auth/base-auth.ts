@@ -413,15 +413,24 @@ export abstract class BaseAuth {
    *
    * @param properties - The properties to set on the
    *   new user record to be created.
+   * 
+   * @param noFetchUserRecord - Defaults to `false` so that the updated
+   *   user record will be fetched from the backend as a separate operation and returned. 
+   *   If `true`, then the updated user will not be fetched and will return `undefined`.
    *
    * @returns A promise fulfilled with the user
-   *   data corresponding to the newly created user.
+   *   data corresponding to the newly created user, 
+   *   or fulfilled with`undefined` if `noFetchUserRecord` was true.
    */
-  public createUser(properties: CreateRequest): Promise<UserRecord> {
+  public createUser(properties: CreateRequest, noFetchUserRecord?: boolean): Promise<UserRecord>
+  public createUser(properties: CreateRequest, noFetchUserRecord: true): Promise<void>
+  public createUser(properties: CreateRequest, noFetchUserRecord = false): Promise<UserRecord | void> {
     return this.authRequestHandler.createNewAccount(properties)
       .then((uid) => {
-        // Return the corresponding user record.
-        return this.getUser(uid);
+        if (!noFetchUserRecord) {
+          // Return the corresponding user record.
+          return this.getUser(uid);
+        }
       })
       .catch((error) => {
         if (error.code === 'auth/user-not-found') {
@@ -527,11 +536,17 @@ export abstract class BaseAuth {
    * @param uid - The `uid` corresponding to the user to update.
    * @param properties - The properties to update on
    *   the provided user.
+   * @param noFetchUserRecord - Defaults to `false` so that the updated
+   *   user record will be fetched from the backend as a separate operation and returned. 
+   *   If `true`, then the updated user will not be fetched and will return `undefined`.
    *
    * @returns A promise fulfilled with the
-   *   updated user data.
+   *   updated user data, 
+   *   or fulfilled with`undefined` if `noFetchUserRecord` was true.
    */
-  public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
+  public updateUser(uid: string, properties: UpdateRequest, noFetchUserRecord?: boolean): Promise<UserRecord>
+  public updateUser(uid: string, properties: UpdateRequest, noFetchUserRecord: true): Promise<void>
+  public updateUser(uid: string, properties: UpdateRequest, noFetchUserRecord = false): Promise<UserRecord | void> {
     // Although we don't really advertise it, we want to also handle linking of
     // non-federated idps with this call. So if we detect one of them, we'll
     // adjust the properties parameter appropriately. This *does* imply that a
@@ -578,8 +593,10 @@ export abstract class BaseAuth {
 
     return this.authRequestHandler.updateExistingAccount(uid, properties)
       .then((existingUid) => {
-        // Return the corresponding user record.
-        return this.getUser(existingUid);
+        if (!noFetchUserRecord) {
+          // Return the corresponding user record.
+          return this.getUser(existingUid);
+        }
       });
   }
 
