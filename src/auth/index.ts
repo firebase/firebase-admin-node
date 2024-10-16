@@ -89,6 +89,7 @@ export {
   RecaptchaKey,
   RecaptchaKeyClientType,
   RecaptchaManagedRule,
+  RecaptchaTollFraudManagedRule,
   RecaptchaProviderEnforcementState,
   SAMLAuthProviderConfig,
   SAMLUpdateAuthProviderRequest,
