@@ -19,12 +19,16 @@ import { Agent } from 'http';
 
 import { Credential, ServiceAccount } from './credential';
 import {
-  ServiceAccountCredential, RefreshTokenCredential, getApplicationDefault
+  ServiceAccountCredential,
+  RefreshTokenCredential,
+  ImpersonatedServiceAccountCredential,
+  getApplicationDefault
 } from './credential-internal';
 
 let globalAppDefaultCred: Credential | undefined;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
+const globalImpersonatedServiceAccountCreds: { [key: string]: ImpersonatedServiceAccountCredential } = {};
 
 /**
  * Returns a credential created from the
@@ -148,8 +152,47 @@ export function refreshToken(refreshTokenPathOrObject: string | object, httpAgen
 }
 
 /**
+ * Returns a credential created from the provided impersonated service account that grants
+ * admin access to Firebase services. This credential can be used in the call
+ * to {@link firebase-admin.app#initializeApp}.
+ *
+ * See
+ * {@link https://firebase.google.com/docs/admin/setup#initialize_the_sdk | Initialize the SDK}
+ * for more details.
+ *
+ * @example
+ * ```javascript
+ * // Providing a path to impersonated service account JSON file
+ * const serviceAccount = require("path/to/impersonated-sa.json");
+ * initializeApp({
+ *   credential: impersonatedServiceAccount(serviceAccount),
+ *   databaseURL: "https://<DATABASE_NAME>.firebaseio.com"
+ * });
+ * ```
+ *
+ * @param impersonatedServiceAccountPathOrObject - The path to impersonated service
+ *   account JSON file or an object representing impersonated service account.
+ * @param httpAgent - Optional {@link https://nodejs.org/api/http.html#http_class_http_agent | HTTP Agent}
+ *   to be used when retrieving access tokens from Google token servers.
+ *
+ * @returns A credential authenticated via the
+ *   provided impersonated service account that can be used to initialize an app.
+ */
+export function impersonatedServiceAccount(impersonatedServiceAccountPathOrObject: string | object, httpAgent?: Agent): Credential {
+  const stringifiedImpersonatedServiceAccount = JSON.stringify(impersonatedServiceAccountPathOrObject);
+  if (!(stringifiedImpersonatedServiceAccount in globalImpersonatedServiceAccountCreds)) {
+    globalImpersonatedServiceAccountCreds[stringifiedImpersonatedServiceAccount] = new ImpersonatedServiceAccountCredential(
+      impersonatedServiceAccountPathOrObject, httpAgent);
+  }
+  return globalImpersonatedServiceAccountCreds[stringifiedImpersonatedServiceAccount];
+}
+
+
+/**
  * Clears the global ADC cache. Exported for testing.
  */
 export function clearGlobalAppDefaultCred(): void {
   globalAppDefaultCred = undefined;
+  globalImpersonatedServiceAccountCreds = {};
+
 }
