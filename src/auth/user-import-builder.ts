@@ -20,7 +20,8 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings
+  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings, 
+  UpdateTotpMultiFactorInfoRequest
 } from './auth-config';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
@@ -262,9 +263,14 @@ export interface AuthFactorInfo {
   displayName?: string;
   phoneInfo?: string;
   enrolledAt?: string;
+  totpInfo?: TotpInfoResponse;
   [key: string]: any;
 }
 
+export interface TotpInfoResponse {
+  sharedSecretKey?: string;
+  [key: string]: any;
+}
 
 /** UploadAccount endpoint request user interface. */
 interface UploadAccountUser {
@@ -321,7 +327,8 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
  * @param multiFactorInfo - The client format second factor.
  * @returns The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest, 
+  isUploadRequest = false): AuthFactorInfo {
   let enrolledAt;
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
@@ -350,6 +357,23 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       }
     }
     return authFactorInfo;
+  } else if (isUploadRequest && isTotpFactor(multiFactorInfo)) {
+    // If any required field is missing or invalid, validation will still fail later.
+    const authFactorInfo: AuthFactorInfo = {
+      mfaEnrollmentId: multiFactorInfo.uid,
+      displayName: multiFactorInfo.displayName,
+      // Required for all phone second factors.
+      totpInfo: {
+        sharedSecretKey: multiFactorInfo.totpInfo.sharedSecretKey,
+      },
+      enrolledAt,
+    };
+    for (const objKey in authFactorInfo) {
+      if (typeof authFactorInfo[objKey] === 'undefined') {
+        delete authFactorInfo[objKey];
+      }
+    }
+    return authFactorInfo;
   } else {
     // Unsupported second factor.
     throw new FirebaseAuthError(
@@ -361,6 +385,11 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
 function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
   multiFactorInfo is UpdatePhoneMultiFactorInfoRequest {
   return multiFactorInfo.factorId === 'phone';
+}
+
+function isTotpFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
+  multiFactorInfo is UpdateTotpMultiFactorInfoRequest {
+  return multiFactorInfo.factorId === 'totp';
 }
 
 /**
@@ -385,6 +414,7 @@ function getNumberField(obj: any, key: string): number {
  */
 function populateUploadAccountUser(
   user: UserImportRecord, userValidator?: ValidatorFunction): UploadAccountUser {
+  console.log('USER_IN_PROGRESS= ', user.uid);
   const result: UploadAccountUser = {
     localId: user.uid,
     email: user.email,
@@ -433,12 +463,11 @@ function populateUploadAccountUser(
       });
     });
   }
-
   // Convert user.multiFactor.enrolledFactors to server format.
   if (validator.isNonNullObject(user.multiFactor) &&
       validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
     user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
-      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo, true));
     });
   }
 
@@ -460,7 +489,9 @@ function populateUploadAccountUser(
   if (typeof userValidator === 'function') {
     userValidator(result);
   }
+  console.log('RESULT=$=', JSON.stringify(result))
   return result;
+  
 }
 
 
@@ -490,7 +521,7 @@ export class UserImportBuilder {
     this.validatedUsers = [];
     this.userImportResultErrors = [];
     this.indexMap = {};
-
+    console.log('USERS_ppl = ', JSON.stringify(users));
     this.validatedUsers = this.populateUsers(users, userRequestValidator);
     this.validatedOptions = this.populateOptions(options, this.requiresHashOptions);
   }
