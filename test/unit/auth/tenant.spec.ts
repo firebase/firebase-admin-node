@@ -103,9 +103,6 @@ describe('Tenant', () => {
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
     },
-    mobileLinksConfig: {
-      domain: 'HOSTING_DOMAIN'
-    },
   };
 
   const clientRequest: UpdateTenantRequest = {
@@ -135,9 +132,6 @@ describe('Tenant', () => {
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
     },
-    mobileLinksConfig: {
-      domain: 'HOSTING_DOMAIN'
-    },
   };
 
   const serverRequestWithoutMfa: TenantServerResponse = {
@@ -148,9 +142,6 @@ describe('Tenant', () => {
     passwordPolicyConfig: passwordPolicyServerConfig,
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
-    },
-    mobileLinksConfig: {
-      domain: 'HOSTING_DOMAIN'
     },
   };
 
@@ -163,9 +154,6 @@ describe('Tenant', () => {
     passwordPolicyConfig: passwordPolicyClientConfig,
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
-    },
-    mobileLinksConfig: {
-      domain: 'HOSTING_DOMAIN'
     },
   };
 
@@ -230,9 +218,6 @@ describe('Tenant', () => {
     passwordPolicyConfig: passwordPolicyServerConfig,
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: true,
-    },
-    mobileLinksConfig: {
-      domain: 'HOSTING_DOMAIN'
     },
   };
 
@@ -597,22 +582,6 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
-      });
-
-      it('should throw on invalid MobileLinksConfig attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.mobileLinksConfig.invalidParameter = 'invalid';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"invalidParameter" is not a valid "MobileLinksConfig" parameter.');
-      });
-
-      it('should throw on invalid domain attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.mobileLinksConfig.domain = 'random domain';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw('"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".');
       });
 
       it('should not throw on valid client request object', () => {
@@ -1010,22 +979,6 @@ describe('Tenant', () => {
         }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
-      it('should throw on invalid MobileLinksConfig attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.mobileLinksConfig.invalidParameter = 'invalid';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"invalidParameter" is not a valid "MobileLinksConfig" parameter.');
-      });
-
-      it('should throw on invalid domain attribute', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.mobileLinksConfig.domain = 'random domain';
-        expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw('"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".');
-      });
-
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
@@ -1145,13 +1098,6 @@ describe('Tenant', () => {
         deepCopy(clientRequest.passwordPolicyConfig));
     });
 
-    it('should set readonly property mobileLinksConfig', () => {
-      const expectedMobileLinksConfig = {
-        domain: 'HOSTING_DOMAIN',
-      };
-      expect(clientRequest.mobileLinksConfig).to.deep.equal(expectedMobileLinksConfig);
-    });
-
     it('should set readonly property emailPrivacyConfig', () => {
       const expectedEmailPrivacyConfig = {
         enableImprovedEmailPrivacy: true,
@@ -1201,7 +1147,6 @@ describe('Tenant', () => {
         recaptchaConfig: deepCopy(serverResponseWithRecaptcha.recaptchaConfig),
         passwordPolicyConfig: deepCopy(clientRequest.passwordPolicyConfig),
         emailPrivacyConfig: deepCopy(clientRequest.emailPrivacyConfig),
-        mobileLinksConfig: deepCopy(clientRequest.mobileLinksConfig),
       });
     });
 
@@ -1213,7 +1158,6 @@ describe('Tenant', () => {
       delete serverRequestCopyWithoutMfa.recaptchaConfig;
       delete serverRequestCopyWithoutMfa.passwordPolicyConfig;
       delete serverRequestCopyWithoutMfa.emailPrivacyConfig;
-      delete serverRequestCopyWithoutMfa.mobileLinksConfig;
       expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
         displayName: 'TENANT-DISPLAY-NAME',
