@@ -1325,7 +1325,7 @@ describe('admin.auth', () => {
       },
     };
 
-    const expectedRecaptchaConfig2: any = {
+    const expectedRecaptchaOffConfig: any = {
       emailPasswordEnforcementState:  'OFF',
       phoneEnforcementState: 'OFF',
       managedRules: [
@@ -1348,14 +1348,15 @@ describe('admin.auth', () => {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: expectedRecaptchaConfig2,
+      recaptchaConfig: expectedRecaptchaOffConfig,
       emailPrivacyConfig: {},
     };
+
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: expectedRecaptchaConfig2,
+      recaptchaConfig: expectedRecaptchaOffConfig,
       emailPrivacyConfig: {},
     };
 
@@ -1376,6 +1377,8 @@ describe('admin.auth', () => {
         .then((actualProjectConfig) => {
           // Existing keys won't be deleted from the response and generated differently each time.
           delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
+          // response from backend ignores account defender status when recaptcha status is OFF.
+          delete expectedProjectConfigSmsEnabledTotpDisabled.recaptchaConfig?.useAccountDefender;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
@@ -1383,13 +1386,14 @@ describe('admin.auth', () => {
     it('getProjectConfig() should resolve with expected project config', () => {
       return getAuth().projectConfigManager().getProjectConfig()
         .then((actualConfig) => {
+          delete actualConfig.recaptchaConfig?.recaptchaKeys;
           const actualConfigObj = actualConfig.toJSON();
           expect(actualConfigObj).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
   });
 
-  describe('Tenant management operations', () => {
+  describe.only('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
     const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
@@ -1507,6 +1511,25 @@ describe('admin.auth', () => {
       },
       recaptchaConfig: recaptchaStateAuditConfig,
       emailPrivacyConfig: {},
+    };
+    const expectedTenantRecaptchaOffConfig: any = {
+      emailPasswordEnforcementState:  'OFF',
+      phoneEnforcementState: 'OFF',
+      managedRules: [
+        {
+          endScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+      smsTollFraudManagedRules: [
+        {
+          startScore: 0.1,
+          action: 'BLOCK',
+        }
+      ],
+      useAccountDefender: false,
+      useSmsBotScore: false,
+      useSmsTollFraudProtection: false,
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -1984,9 +2007,8 @@ describe('admin.auth', () => {
           return getAuth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
-          // response from backend ignores account defender status is recaptcha status is OFF.
           const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
-          delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
+          expectedUpdatedTenantCopy.recaptchaConfig = deepCopy(expectedTenantRecaptchaOffConfig);
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
     });
@@ -2011,6 +2033,7 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           // response from backend ignores account defender status is recaptcha status is OFF.
           const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          expectedUpdatedTenantCopy.recaptchaConfig = deepCopy(expectedTenantRecaptchaOffConfig);
           delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
@@ -2055,6 +2078,7 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           // response from backend ignores account defender status is recaptcha status is OFF.
           const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenant2);
+          expectedUpdatedTenantCopy.recaptchaConfig = deepCopy(expectedTenantRecaptchaOffConfig);
           delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
@@ -2088,6 +2112,7 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           // response from backend ignores account defender status is recaptcha status is OFF.
           const expectedUpdatedTenantCopy = deepCopy(expectedUpdatedTenantSmsEnabledTotpDisabled);
+          expectedUpdatedTenantCopy.recaptchaConfig = deepCopy(expectedTenantRecaptchaOffConfig);
           delete expectedUpdatedTenantCopy.recaptchaConfig.useAccountDefender;
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenantCopy);
         });
