@@ -1324,29 +1324,38 @@ describe('admin.auth', () => {
         enableImprovedEmailPrivacy: true,
       },
     };
+
+    const expectedRecaptchaConfig2: any = {
+      emailPasswordEnforcementState:  'OFF',
+      phoneEnforcementState: 'OFF',
+      managedRules: [
+        {
+          endScore: 0.1,
+          action: 'BLOCK',
+        },
+      ],
+      smsTollFraudManagedRules: [
+        {
+          startScore: 0.1,
+          action: 'BLOCK',
+        }
+      ],
+      useAccountDefender: false,
+      useSmsBotScore: false,
+      useSmsTollFraudProtection: false,
+    };
     const expectedProjectConfig2: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpEnabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: {
-        emailPasswordEnforcementState:  'OFF',
-        managedRules: [
-          {
-            endScore: 0.1,
-            action: 'BLOCK',
-          },
-        ],
-        useAccountDefender: false,
-        useSmsBotScore: false,
-        useSmsTollFraudProtection: false,
-      },
+      recaptchaConfig: expectedRecaptchaConfig2,
       emailPrivacyConfig: {},
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
       multiFactorConfig: mfaSmsEnabledTotpDisabledConfig,
       passwordPolicyConfig: passwordConfig,
-      recaptchaConfig: recaptchaStateOffConfig,
+      recaptchaConfig: expectedRecaptchaConfig2,
       emailPrivacyConfig: {},
     };
 
@@ -1359,10 +1368,14 @@ describe('admin.auth', () => {
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOption2);
         })
         .then((actualProjectConfig) => {
+          // Existing keys won't be deleted from the response and generated differently each time.
+          delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfig2);
           return getAuth().projectConfigManager().updateProjectConfig(projectConfigOptionSmsEnabledTotpDisabled);
         })
         .then((actualProjectConfig) => {
+          // Existing keys won't be deleted from the response and generated differently each time.
+          delete actualProjectConfig.recaptchaConfig?.recaptchaKeys;
           expect(actualProjectConfig.toJSON()).to.deep.equal(expectedProjectConfigSmsEnabledTotpDisabled);
         });
     });
