@@ -950,7 +950,6 @@ export class Tenant {
     readonly displayName?: string;
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
-    readonly mobileLinksConfig?: MobileLinksConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
@@ -1032,7 +1031,6 @@ export interface UpdateTenantRequest {
     displayName?: string;
     emailPrivacyConfig?: EmailPrivacyConfig;
     emailSignInConfig?: EmailSignInProviderConfig;
-    mobileLinksConfig?: MobileLinksConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;
