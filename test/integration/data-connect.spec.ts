@@ -23,6 +23,22 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+/*
+// Schema
+type User @table(key: "uid") {
+	uid: String!
+	name: String!
+	address: String!
+}
+
+type Email @table {
+	subject: String!
+	date: Date!
+	text: String!
+	from: User!
+}
+*/
+
 interface UserResponse {
   user: {
     name: string;
@@ -59,7 +75,7 @@ interface EmailsResponse {
 }
 
 interface UserVariables {
-  id: string;
+  id: { uid: string };
 }
 
 const connectorConfig: ConnectorConfig = {
@@ -117,7 +133,7 @@ describe('getDataConnect()', () => {
     it('executeGraphql() successfully executes a GraphQL query with variables', async () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(
         queryGetUserById,
-        { variables: { id: userId } }
+        { variables: { id: { uid: userId } } }
       );
       expect(resp.data.user.name).to.be.not.undefined;
       expect(resp.data.user.uid).equals(userId);
