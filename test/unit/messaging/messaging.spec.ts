@@ -357,6 +357,7 @@ describe('Messaging', () => {
   const expectedHeaders = {
     'Authorization': 'Bearer ' + mockAccessToken,
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
     'access_token_auth': 'true',
   };
   const emptyResponse = utils.responseFrom({});
