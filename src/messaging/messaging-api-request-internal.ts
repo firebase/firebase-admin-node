@@ -33,9 +33,11 @@ const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+  'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`
 };
 const LEGACY_FIREBASE_MESSAGING_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+  'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
   'access_token_auth': 'true',
 };
 
