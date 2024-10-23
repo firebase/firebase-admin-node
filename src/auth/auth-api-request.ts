@@ -45,8 +45,9 @@ import {
 import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest } from './project-config';
 
 /** Firebase Auth request header. */
-const FIREBASE_AUTH_HEADER = {
+const FIREBASE_AUTH_HEADERS = {
   'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
+  'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${utils.getSdkVersion()}`
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;
@@ -1919,7 +1920,7 @@ export abstract class AbstractAuthRequestHandler {
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
           url,
-          headers: FIREBASE_AUTH_HEADER,
+          headers: FIREBASE_AUTH_HEADERS,
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
         };

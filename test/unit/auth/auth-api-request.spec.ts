@@ -863,10 +863,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     const mockAccessToken: string = utils.generateRandomAccessToken();
     const expectedHeaders: {[key: string]: string} = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
+      'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
     const expectedHeadersEmulator: {[key: string]: string} = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
+      'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
       'Authorization': 'Bearer owner',
     };
     const callParams = (path: string, method: any, data: any): HttpRequestConfig => {
