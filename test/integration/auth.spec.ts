@@ -1393,7 +1393,7 @@ describe('admin.auth', () => {
     });
   });
 
-  describe.only('Tenant management operations', () => {
+  describe('Tenant management operations', () => {
     let createdTenantId: string;
     const createdTenants: string[] = [];
     const mfaSmsEnabledTotpEnabledConfig: MultiFactorConfig = {
