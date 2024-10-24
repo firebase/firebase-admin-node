@@ -800,6 +800,56 @@ describe('admin.auth', () => {
         });
     });
 
+    it('sets claims that are accessible via user\'s ID token', () => {
+      // Set custom claims on the user.
+      return getAuth().updateUser(updateUser.uid, { customUserClaims: customClaims })
+        .then((userRecord) => {
+          // Confirm custom claims set on the UserRecord.
+          expect(userRecord.customClaims).to.deep.equal(customClaims);
+          expect(userRecord.email).to.exist;
+          return clientAuth().signInWithEmailAndPassword(
+            userRecord.email!, mockUserData.password);
+        })
+        .then(({ user }) => {
+          // Get the user's ID token.
+          expect(user).to.exist;
+          return user!.getIdToken();
+        })
+        .then((idToken) => {
+          // Verify ID token contents.
+          return getAuth().verifyIdToken(idToken);
+        })
+        .then((decodedIdToken: { [key: string]: any }) => {
+          // Confirm expected claims set on the user's ID token.
+          for (const key in customClaims) {
+            if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
+              expect(decodedIdToken[key]).to.equal(customClaims[key]);
+            }
+          }
+          // Test clearing of custom claims.
+          return getAuth().updateUser(newUserUid, { customUserClaims: null });
+        })
+        .then((userRecord) => {
+          // Custom claims should be cleared.
+          expect(userRecord.customClaims).to.deep.equal({});
+          // Force token refresh. All claims should be cleared.
+          expect(clientAuth().currentUser).to.exist;
+          return clientAuth().currentUser!.getIdToken(true);
+        })
+        .then((idToken) => {
+          // Verify ID token contents.
+          return getAuth().verifyIdToken(idToken);
+        })
+        .then((decodedIdToken: { [key: string]: any }) => {
+          // Confirm all custom claims are cleared.
+          for (const key in customClaims) {
+            if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
+              expect(decodedIdToken[key]).to.be.undefined;
+            }
+          }
+        });
+    });
+
     it('creates, updates, and removes second factors', function () {
       if (authEmulatorHost) {
         return this.skip(); // Not yet supported in Auth Emulator.
