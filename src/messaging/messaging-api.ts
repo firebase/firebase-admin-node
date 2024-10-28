@@ -418,6 +418,12 @@ export interface AndroidConfig {
    * Options for features provided by the FCM SDK for Android.
    */
   fcmOptions?: AndroidFcmOptions;
+
+  /**
+  * A boolean indicating whether messages will be allowed to be delivered to
+  * the app while the device is in direct boot mode.
+  */
+  directBootOk?: boolean;
 }
 
 /**

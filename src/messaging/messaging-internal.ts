@@ -398,6 +398,7 @@ function validateAndroidConfig(config: AndroidConfig | undefined): void {
   const propertyMappings = {
     collapseKey: 'collapse_key',
     restrictedPackageName: 'restricted_package_name',
+    directBootOk: 'direct_boot_ok',
   };
   renameProperties(config, propertyMappings);
 }
