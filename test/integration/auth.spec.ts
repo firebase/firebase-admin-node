@@ -36,6 +36,7 @@ import {
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
+import { ActionCodeSettings } from '../../src/auth/action-code-settings-builder';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -75,10 +76,18 @@ const mockUserData = {
   photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
   disabled: false,
 };
-const actionCodeSettings = {
+const actionCodeSettings : ActionCodeSettings = {
   url: 'http://localhost/?a=1&b=2#c=3',
   handleCodeInApp: false,
 };
+const actionCodeSettingsWithCustomDomain: ActionCodeSettings = {
+  url: 'http://localhost/?a=1&b=2#c=3',
+  handleCodeInApp: true,
+  linkDomain: 'liubin-dev2.testdomaindonotuse.com',
+  iOS: {
+    bundleId: 'com.google.experimental1.dev.extension0',
+  },
+}
 let deleteQueue = Promise.resolve();
 
 interface UserImportTest {
@@ -1199,6 +1208,114 @@ describe('admin.auth', () => {
           expect(result.user!.emailVerified).to.be.true;
         });
     });
+
+    it('generateSignInWithEmailLink() with custom linkDomain should return error in case of invalid hosting domain', 
+      function () {
+        if (authEmulatorHost) {
+          return this.skip(); // Not yet supported in Auth Emulator.
+        }
+        const actionCodeSettingsWithInvalidLinkDomain = deepCopy(actionCodeSettings);
+        actionCodeSettingsWithInvalidLinkDomain.linkDomain = 'invaliddomain.firebaseapp.com';
+        return getAuth().generateSignInWithEmailLink(email, actionCodeSettingsWithInvalidLinkDomain)
+          .catch((error) => {
+            expect(error.code).to.equal('auth/invalid-hosting-link-domain');
+          });
+      });
+
+    it('generatePasswordResetLink() should return a password reset link with custom domain', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      // Ensure old password set on created user.
+      return getAuth().updateUser(uid, { password: 'password' })
+        .then(() => {
+          return getAuth().generatePasswordResetLink(email, actionCodeSettingsWithCustomDomain);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
+          expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
+          return clientAuth().confirmPasswordReset(code, newPassword);
+        })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(email, newPassword);
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(email);
+          // Password reset also verifies the user's email.
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateEmailVerificationLink() should return a verification link with custom domain', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      // Ensure the user's email is unverified.
+      return getAuth().updateUser(uid, { password: '123456', emailVerified: false })
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.false;
+          return getAuth().generateEmailVerificationLink(email, actionCodeSettingsWithCustomDomain);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
+          expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
+          return clientAuth().applyActionCode(code);
+        })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(email, userData.password);
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(email);
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateSignInWithEmailLink() should return a sign-in link with custom domain', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      return getAuth().generateSignInWithEmailLink(email, actionCodeSettingsWithCustomDomain)
+        .then((link) => {
+          expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettingsWithCustomDomain.url);
+          expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
+          return clientAuth().signInWithEmailLink(email, link);
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(email);
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateVerifyAndChangeEmailLink() should return a verification link with custom domain', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+      // Ensure the user's email is verified.
+      return getAuth().updateUser(uid, { password: '123456', emailVerified: true })
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.true;
+          return getAuth().generateVerifyAndChangeEmailLink(email, newEmail, actionCodeSettingsWithCustomDomain);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
+          expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
+          return clientAuth().applyActionCode(code);
+        })
+        .then(() => {
+          return clientAuth().signInWithEmailAndPassword(newEmail, 'password');
+        })
+        .then((result) => {
+          expect(result.user).to.exist;
+          expect(result.user!.email).to.equal(newEmail);
+          expect(result.user!.emailVerified).to.be.true;
+        });
+    });
   });
 
   describe('Project config management operations', () => {
@@ -1285,6 +1402,9 @@ describe('admin.auth', () => {
       },
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
+      },
+      mobileLinksConfig: {
+        domain: 'HOSTING_DOMAIN',
       }
     };
     const projectConfigOption2: UpdateProjectConfigRequest = {
@@ -1318,6 +1438,9 @@ describe('admin.auth', () => {
       emailPrivacyConfig: {
         enableImprovedEmailPrivacy: true,
       },
+      mobileLinksConfig: {
+        domain: 'HOSTING_DOMAIN',
+      },
     };
     const expectedProjectConfig2: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1333,6 +1456,9 @@ describe('admin.auth', () => {
         ],
       },
       emailPrivacyConfig: {},
+      mobileLinksConfig: {
+        domain: 'HOSTING_DOMAIN',
+      },
     };
     const expectedProjectConfigSmsEnabledTotpDisabled: any = {
       smsRegionConfig: smsRegionAllowlistOnlyConfig,
@@ -1348,6 +1474,9 @@ describe('admin.auth', () => {
         ],
       },
       emailPrivacyConfig: {},
+      mobileLinksConfig: {
+        domain: 'HOSTING_DOMAIN',
+      },
     };
 
     it('updateProjectConfig() should resolve with the updated project config', () => {
@@ -3190,6 +3319,38 @@ function getActionCode(link: string): string {
 function getContinueUrl(link: string): string {
   const parsedUrl = new url.URL(link);
   const continueUrl = parsedUrl.searchParams.get('continueUrl');
+  expect(continueUrl).to.exist;
+  return continueUrl!;
+}
+
+/**
+ * Returns the host name corresponding to the link.
+ * 
+ * @param link The link to parse for hostname
+ * @returns Hostname in the link
+ */
+function getHostName(link: string): string {
+  const parsedUrl = new url.URL(link);
+  return parsedUrl.hostname;
+}
+
+/**
+ * Returns continue URL for handling in app requests.
+ * URL will be of the form, http://abc/__/auth/link?link=<action link url>
+ * Coninue URL will be part of action link url
+ * 
+ * @param link 
+ * @returns 
+ */
+function getContinueUrlForInAppRequest(link: string): string {
+  // Extract action url from link param
+  const parsedUrl = new url.URL(link);
+  const linkParam = parsedUrl.searchParams.get('link') ?? '';
+  expect(linkParam).is.not.empty;
+  
+  // Extract continueUrl param from action url
+  const actionUrl = new url.URL(linkParam);
+  const continueUrl = actionUrl.searchParams.get('continueUrl');
   expect(continueUrl).to.exist;
   return continueUrl!;
 }
