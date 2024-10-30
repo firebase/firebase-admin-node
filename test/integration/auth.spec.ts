@@ -85,14 +85,14 @@ const actionCodeSettingsWithCustomDomain: ActionCodeSettings = {
   handleCodeInApp: true,
   linkDomain: 'liubin-dev2.testdomaindonotuse.com',
   iOS: {
-    bundleId: 'com.google.experimental1.dev.extension0',
+    bundleId: 'testBundleId',
   },
 }
 const actionCodeSettingsForFdlLinks: ActionCodeSettings = {
   url: 'http://localhost/?a=1&b=2#c=3',
   handleCodeInApp: true,
   iOS: {
-    bundleId: 'com.google.experimental1.dev.extension0',
+    bundleId: 'testBundleId',
   },
 }
 let deleteQueue = Promise.resolve();
@@ -1336,7 +1336,7 @@ describe('admin.auth', () => {
       if (authEmulatorHost) {
         return this.skip(); // Not yet supported in Auth Emulator.
       }
-      
+
       const updateMobileLinksRequest: UpdateProjectConfigRequest = {
         mobileLinksConfig: {
           domain: 'FIREBASE_DYNAMIC_LINK_DOMAIN',
