@@ -50,18 +50,6 @@ describe('ProjectConfig', () => {
         },
       ],
     },
-    recaptchaConfig: {
-      emailPasswordEnforcementState: 'AUDIT',
-      managedRules: [ {
-        endScore: 0.2,
-        action: 'BLOCK'
-      } ],
-      recaptchaKeys: [ {
-        type: 'WEB',
-        key: 'test-key-1' }
-      ],
-      useAccountDefender: true,
-    },
     passwordPolicyConfig: {
       passwordPolicyEnforcementState: 'ENFORCE',
       forceUpgradeOnSignin: true,
