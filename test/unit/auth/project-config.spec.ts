@@ -50,6 +50,18 @@ describe('ProjectConfig', () => {
         },
       ],
     },
+    recaptchaConfig: {
+      emailPasswordEnforcementState: 'AUDIT',
+      managedRules: [ {
+        endScore: 0.2,
+        action: 'BLOCK'
+      } ],
+      recaptchaKeys: [ {
+        type: 'WEB',
+        key: 'test-key-1' }
+      ],
+      useAccountDefender: true,
+    },
     passwordPolicyConfig: {
       passwordPolicyEnforcementState: 'ENFORCE',
       forceUpgradeOnSignin: true,
@@ -87,7 +99,10 @@ describe('ProjectConfig', () => {
       useAccountDefender: true,
       useSmsBotScore: true,
       useSmsTollFraudProtection: true,
-    }
+    },
+    mobileLinksConfig: {
+      domain: 'FIREBASE_DYNAMIC_LINK_DOMAIN',
+    },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -110,6 +125,9 @@ describe('ProjectConfig', () => {
     },
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: false,
+    },
+    mobileLinksConfig: {
+      domain: 'HOSTING_DOMAIN'
     },
   };
 
@@ -550,6 +568,22 @@ describe('ProjectConfig', () => {
         }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
+      it('should throw on invalid MobileLinksConfig attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.mobileLinksConfig.invalidParameter = 'invalid';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"invalidParameter" is not a valid "MobileLinksConfig" parameter.');
+      });
+
+      it('should throw on invalid domain attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.mobileLinksConfig.domain = 'random domain';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".');
+      });
+
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid UpdateProjectConfigRequest:' + JSON.stringify(request), () => {
@@ -647,9 +681,32 @@ describe('ProjectConfig', () => {
       };
       expect(projectConfig.emailPrivacyConfig).to.deep.equal(expectedEmailPrivacyConfig);
     });
+
+    it('should set readonly property mobileLinksConfig', () => {
+      const expectedMobileLinksConfig = {
+        domain: 'FIREBASE_DYNAMIC_LINK_DOMAIN',
+      };
+      expect(projectConfig.mobileLinksConfig).to.deep.equal(expectedMobileLinksConfig);
+    });
   });
 
   describe('toJSON()', () => {
+    // server output and toJson does not have the same format
+    const passwordPolicyJson: any = {
+      enforcementState: 'ENFORCE',
+      constraints: {
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNonAlphanumeric: true,
+        requireNumeric: true,
+        minLength: 8,
+        maxLength: 30
+      },
+      forceUpgradeOnSignin: true
+    };
+    const multiFactorJson: any = deepCopy(serverResponse.mfa);
+    // factorIDs were added by default.
+    multiFactorJson['factorIds'] = [];
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
@@ -704,6 +761,7 @@ describe('ProjectConfig', () => {
         emailPrivacyConfig: {
           enableImprovedEmailPrivacy: true,
         },
+        mobileLinksConfig: deepCopy(serverResponse.mobileLinksConfig),
       });
     });
 
@@ -720,6 +778,7 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsTollFraudProtection
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       delete serverResponseOptionalCopy.emailPrivacyConfig;
+      delete serverResponseOptionalCopy.mobileLinksConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({
         recaptchaConfig: {
           recaptchaKeys: deepCopy(serverResponse.recaptchaConfig?.recaptchaKeys),
