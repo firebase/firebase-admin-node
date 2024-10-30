@@ -2887,6 +2887,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             minimumVersion: '6',
           },
           dynamicLinkDomain: 'custom.page.link',
+          linkDomain: 'project-id.firebaseapp.com',
         };
         const expectedLink = 'https://custom.page.link?link=' +
             encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +

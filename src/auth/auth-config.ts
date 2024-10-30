@@ -2138,6 +2138,60 @@ export interface PasswordPolicyConfig {
 }
 
 /**
+ * Configuration for settings related to univeral links (iOS)
+ * and app links (Android).
+ */
+export interface MobileLinksConfig {
+  /**
+   * Use firebase Hosting or dynamic link domain as the out-of-band code domain.
+   */
+  domain?: MobileLinksDomain;
+}
+
+/**
+ * Open code in app domain to use for app links and universal links.
+ */
+export type MobileLinksDomain = 'HOSTING_DOMAIN' | 'FIREBASE_DYNAMIC_LINK_DOMAIN';
+
+/**
+ * Defines the MobileLinksAuthConfig class used for validation.
+ *
+ * @internal
+ */
+export class MobileLinksAuthConfig {
+  public static validate(options: MobileLinksConfig): void {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"MobileLinksConfig" must be a non-null object.',
+      );
+    }
+
+    const validKeys = {
+      domain: true,
+    };
+
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid "MobileLinksConfig" parameter.`,
+        );
+      }
+    }
+
+    if (typeof options.domain !== 'undefined'
+      && options.domain !== 'HOSTING_DOMAIN'
+      && options.domain !== 'FIREBASE_DYNAMIC_LINK_DOMAIN') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".',
+      );
+    }
+  }
+}
+
+/**
  * A password policy's enforcement state.
  */
 export type PasswordPolicyEnforcementState = 'ENFORCE' | 'OFF';

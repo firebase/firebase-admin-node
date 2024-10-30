@@ -15,11 +15,13 @@ export interface ActionCodeSettings {
         installApp?: boolean;
         minimumVersion?: string;
     };
+    // @deprecated
     dynamicLinkDomain?: string;
     handleCodeInApp?: boolean;
     iOS?: {
         bundleId: string;
     };
+    linkDomain?: string;
     url: string;
 }
 
@@ -219,6 +221,11 @@ export class AuthClientErrorCode {
     };
     // (undocumented)
     static INVALID_HASH_SALT_SEPARATOR: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
+    static INVALID_HOSTING_LINK_DOMAIN: {
         code: string;
         message: string;
     };
@@ -760,6 +767,14 @@ export interface ListUsersResult {
 }
 
 // @public
+export interface MobileLinksConfig {
+    domain?: MobileLinksDomain;
+}
+
+// @public
+export type MobileLinksDomain = 'HOSTING_DOMAIN' | 'FIREBASE_DYNAMIC_LINK_DOMAIN';
+
+// @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
     providerConfigs?: MultiFactorProviderConfig[];
@@ -849,6 +864,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 // @public
 export class ProjectConfig {
     readonly emailPrivacyConfig?: EmailPrivacyConfig;
+    readonly mobileLinksConfig?: MobileLinksConfig;
     get multiFactorConfig(): MultiFactorConfig | undefined;
     readonly passwordPolicyConfig?: PasswordPolicyConfig;
     get recaptchaConfig(): RecaptchaConfig | undefined;
@@ -998,6 +1014,7 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 // @public
 export interface UpdateProjectConfigRequest {
     emailPrivacyConfig?: EmailPrivacyConfig;
+    mobileLinksConfig?: MobileLinksConfig;
     multiFactorConfig?: MultiFactorConfig;
     passwordPolicyConfig?: PasswordPolicyConfig;
     recaptchaConfig?: RecaptchaConfig;

@@ -3081,6 +3081,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           minimumVersion: '6',
         },
         dynamicLinkDomain: 'custom.page.link',
+        linkDomain: 'project-id.firebaseapp.com',
       };
       const expectedActionCodeSettingsRequest = new ActionCodeSettingsBuilder(actionCodeSettings).buildRequest();
       const expectedLink = 'https://custom.page.link?link=' +
