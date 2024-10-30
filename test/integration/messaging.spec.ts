@@ -45,6 +45,7 @@ const message: Message = {
   },
   android: {
     restrictedPackageName: 'com.google.firebase.testing',
+    directBootOk: true,
     notification: {
       title: 'test.title',
       ticker: 'test.ticker',
