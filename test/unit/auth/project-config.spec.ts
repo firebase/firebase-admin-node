@@ -691,22 +691,6 @@ describe('ProjectConfig', () => {
   });
 
   describe('toJSON()', () => {
-    // server output and toJson does not have the same format
-    const passwordPolicyJson: any = {
-      enforcementState: 'ENFORCE',
-      constraints: {
-        requireLowercase: true,
-        requireUppercase: true,
-        requireNonAlphanumeric: true,
-        requireNumeric: true,
-        minLength: 8,
-        maxLength: 30
-      },
-      forceUpgradeOnSignin: true
-    };
-    const multiFactorJson: any = deepCopy(serverResponse.mfa);
-    // factorIDs were added by default.
-    multiFactorJson['factorIds'] = [];
     const serverResponseCopy: ProjectConfigServerResponse = deepCopy(serverResponse);
     it('should return the expected object representation of project config', () => {
       expect(new ProjectConfig(serverResponseCopy).toJSON()).to.deep.equal({
