@@ -14,6 +14,7 @@ export interface AndroidConfig {
     data?: {
         [key: string]: string;
     };
+    directBootOk?: boolean;
     fcmOptions?: AndroidFcmOptions;
     notification?: AndroidNotification;
     priority?: ('high' | 'normal');

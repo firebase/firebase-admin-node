@@ -3961,6 +3961,7 @@ describe('Messaging', () => {
           android: {
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
+            directBootOk: true,
             notification: {
               clickAction: 'test.click.action',
               titleLocKey: 'title.loc.key',
@@ -3988,6 +3989,7 @@ describe('Messaging', () => {
           android: {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
+            direct_boot_ok: true,
             notification: {
               click_action: 'test.click.action',
               title_loc_key: 'title.loc.key',
@@ -4043,6 +4045,7 @@ describe('Messaging', () => {
             priority: 'high',
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
+            directBootOk: true,
             ttl: 5,
             data: {
               k1: 'v1',
@@ -4089,6 +4092,7 @@ describe('Messaging', () => {
             priority: 'high',
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
+            direct_boot_ok: true,
             ttl: '0.005000000s', // 5 ms = 5,000,000 ns
             data: {
               k1: 'v1',
