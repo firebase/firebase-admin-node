@@ -83,7 +83,7 @@ const actionCodeSettings : ActionCodeSettings = {
 const actionCodeSettingsWithCustomDomain: ActionCodeSettings = {
   url: 'http://localhost/?a=1&b=2#c=3',
   handleCodeInApp: true,
-  linkDomain: 'liubin-dev2.testdomaindonotuse.com',
+  linkDomain: 'kobayashimaru.testdomaindonotuse.com',
   iOS: {
     bundleId: 'testBundleId',
   },
