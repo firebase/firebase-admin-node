@@ -27,7 +27,8 @@ import {
   CustomSignalCondition,
   CustomSignalOperator,
 } from './remote-config-api';
-import * as farmhash from 'farmhash-modern';
+import { createHash } from 'crypto';
+
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -151,9 +152,8 @@ export class ConditionEvaluator {
     const seedPrefix = seed && seed.length > 0 ? `${seed}.` : '';
     const stringToHash = `${seedPrefix}${context.randomizationId}`;
 
-    const hash64 = ConditionEvaluator.hashSeededRandomizationId(stringToHash)
-
-    const instanceMicroPercentile = hash64 % BigInt(100 * 1_000_000);
+    const hash = ConditionEvaluator.hashSeededRandomizationId(stringToHash)
+    const instanceMicroPercentile = hash % BigInt(100 * 1_000_000);
 
     switch (percentOperator) {
     case PercentConditionOperator.LESS_OR_EQUAL:
@@ -173,18 +173,8 @@ export class ConditionEvaluator {
   }
 
   static hashSeededRandomizationId(seededRandomizationId: string): bigint {
-    // For consistency with the Remote Config fetch endpoint's percent condition behavior
-    // we use Farmhash's fingerprint64 algorithm and interpret the resulting unsigned value
-    // as a signed value.
-    let hash64 = BigInt.asIntN(64, farmhash.fingerprint64(seededRandomizationId));
-
-    // Manually negate the hash if its value is less than 0, since Math.abs doesn't
-    // support BigInt.
-    if (hash64 < 0) {
-      hash64 = -hash64;
-    }
-
-    return hash64;
+    const hex = createHash('sha256').update(seededRandomizationId).digest('hex');
+    return BigInt(`0x${hex}`);
   }
 
   private evaluateCustomSignalCondition(
