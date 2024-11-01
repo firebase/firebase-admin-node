@@ -30,6 +30,7 @@ import * as mocks from '../resources/mocks';
 import * as firebaseAdmin from '../../src/index';
 import { FirebaseApp, FirebaseAppInternals } from '../../src/app/firebase-app';
 import {
+  ApplicationDefaultCredential,
   RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
 } from '../../src/app/credential-internal';
 import { defaultAppStore, initializeApp } from '../../src/app/lifecycle';
@@ -129,12 +130,16 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given an application default credential', () => {
+      getTokenStub.restore();
+      getTokenStub = sinon.stub(ApplicationDefaultCredential.prototype, 'getAccessToken').resolves({
+        access_token: 'mock-access-token',
+        expires_in: 3600,
+      });
       const credPath: string | undefined = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.applicationDefault(),
       });
-
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
       return getAppInternals().getToken().then((token) => {
         if (typeof credPath === 'undefined') {

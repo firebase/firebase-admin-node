@@ -17,13 +17,11 @@
 
 import fs = require('fs');
 
-import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute } from 'google-auth-library'
+import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute, AnyAuthClient } from 'google-auth-library'
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { HttpClient, HttpRequestConfig, RequestResponseError, RequestResponse } from '../utils/api-request';
 import * as util from '../utils/validator';
-import { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/cloud-platform',
@@ -39,7 +37,7 @@ const SCOPES = [
 export class ApplicationDefaultCredential implements Credential {
 
   private readonly googleAuth: GoogleAuth;
-  private authClient: JSONClient | Compute;
+  private authClient: AnyAuthClient;
   private projectId?: string;
   private accountId?: string;
 

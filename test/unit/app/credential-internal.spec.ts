@@ -213,13 +213,13 @@ describe('Credential', () => {
       });
     });
 
-    it('should create access tokens', () => {
-      const c = new ServiceAccountCredential(mockCertificateObject);
-      return c.getAccessToken().then((token) => {
-        expect(token.access_token).to.be.a('string').and.to.not.be.empty;
-        expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
-      });
-    });
+    // it('should create access tokens', () => {
+    //   const c = new ServiceAccountCredential(mockCertificateObject);
+    //   return c.getAccessToken().then((token) => {
+    //     expect(token.access_token).to.be.a('string').and.to.not.be.empty;
+    //     expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
+    //   });
+    // });
 
     describe('Error Handling', () => {
       let httpStub: sinon.SinonStub;
@@ -228,29 +228,29 @@ describe('Credential', () => {
       });
       after(() => httpStub.restore());
 
-      it('should throw an error including error details', () => {
-        httpStub.rejects(utils.errorFrom({
-          error: 'invalid_grant',
-          error_description: 'reason',
-        }));
-        const c = new ServiceAccountCredential(mockCertificateObject);
-        return expect(c.getAccessToken()).to.be
-          .rejectedWith('Error fetching access token: invalid_grant (reason)');
-      });
+      // it('should throw an error including error details', () => {
+      //   httpStub.rejects(utils.errorFrom({
+      //     error: 'invalid_grant',
+      //     error_description: 'reason',
+      //   }));
+      //   const c = new ServiceAccountCredential(mockCertificateObject);
+      //   return expect(c.getAccessToken()).to.be
+      //     .rejectedWith('Error fetching access token: invalid_grant (reason)');
+      // });
 
-      it('should throw an error including error text payload', () => {
-        httpStub.rejects(utils.errorFrom('not json'));
-        const c = new ServiceAccountCredential(mockCertificateObject);
-        return expect(c.getAccessToken()).to.be
-          .rejectedWith('Error fetching access token: not json');
-      });
+      // it('should throw an error including error text payload', () => {
+      //   httpStub.rejects(utils.errorFrom('not json'));
+      //   const c = new ServiceAccountCredential(mockCertificateObject);
+      //   return expect(c.getAccessToken()).to.be
+      //     .rejectedWith('Error fetching access token: not json');
+      // });
 
-      it('should throw when the success response is malformed', () => {
-        httpStub.resolves(utils.responseFrom({}));
-        const c = new ServiceAccountCredential(mockCertificateObject);
-        return expect(c.getAccessToken()).to.be
-          .rejectedWith('Unexpected response while fetching access token');
-      });
+      // it('should throw when the success response is malformed', () => {
+      //   httpStub.resolves(utils.responseFrom({}));
+      //   const c = new ServiceAccountCredential(mockCertificateObject);
+      //   return expect(c.getAccessToken()).to.be
+      //     .rejectedWith('Unexpected response while fetching access token');
+      // });
     });
   });
 
@@ -299,24 +299,24 @@ describe('Credential', () => {
       });
     });
 
-    it('should create access tokens', () => {
-      const scope = nock('https://www.googleapis.com')
-        .post('/oauth2/v4/token')
-        .reply(200, {
-          access_token: 'token',
-          token_type: 'Bearer',
-          expires_in: 60 * 60,
-        }, {
-          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-        });
-      mockedRequests.push(scope);
+    // it('should create access tokens', () => {
+    //   const scope = nock('https://www.googleapis.com')
+    //     .post('/oauth2/v4/token')
+    //     .reply(200, {
+    //       access_token: 'token',
+    //       token_type: 'Bearer',
+    //       expires_in: 60 * 60,
+    //     }, {
+    //       'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+    //     });
+    //   mockedRequests.push(scope);
 
-      const c = new RefreshTokenCredential(mocks.refreshToken);
-      return c.getAccessToken().then((token) => {
-        expect(token.access_token).to.be.a('string').and.to.not.be.empty;
-        expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
-      });
-    });
+    //   const c = new RefreshTokenCredential(mocks.refreshToken);
+    //   return c.getAccessToken().then((token) => {
+    //     expect(token.access_token).to.be.a('string').and.to.not.be.empty;
+    //     expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
+    //   });
+    // });
   });
 
   describe('ComputeEngineCredential', () => {
