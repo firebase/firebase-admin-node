@@ -767,26 +767,26 @@ describe('ConditionEvaluator', () => {
         };
 
         const testCases = [
-          {seed: '', randomizationId: 'zero', result: true},
-          {seed: '1', randomizationId: 'one', result: false},
-          {seed: '2', randomizationId: 'two', result: false},
-          {seed: '3', randomizationId: 'three', result: true},
-          {seed: '4', randomizationId: 'four', result: false},
-          {seed: '5', randomizationId: 'five', result: true},
-          {seed: '6', randomizationId: 'six', result: true},
-          {seed: '7', randomizationId: 'seven', result: true},
-          {seed: '8', randomizationId: 'eight', result: true},
-          {seed: '9', randomizationId: 'nine', result: false},
+          { seed: '', randomizationId: 'zero', result: true },
+          { seed: '1', randomizationId: 'one', result: false },
+          { seed: '2', randomizationId: 'two', result: false },
+          { seed: '3', randomizationId: 'three', result: true },
+          { seed: '4', randomizationId: 'four', result: false },
+          { seed: '5', randomizationId: 'five', result: true },
+          { seed: '6', randomizationId: 'six', result: true },
+          { seed: '7', randomizationId: 'seven', result: true },
+          { seed: '8', randomizationId: 'eight', result: true },
+          { seed: '9', randomizationId: 'nine', result: false },
         ]
 
-        testCases.map(({randomizationId, seed, result}) => {
+        testCases.map(({ randomizationId, seed, result }) => {
           it(`should evaluate "${randomizationId}" with seed "${seed}" to ${result}`, () => {
-            const context = { randomizationId}
-          const evalResult = conditionEvaluator.evaluateConditions([{
-            name: 'is_enabled',
-            condition: { percent: {...percentCondition, seed} }
-          }], context);
-          expect(evalResult.get('is_enabled')).to.equal(result);
+            const context = { randomizationId };
+            const evalResult = conditionEvaluator.evaluateConditions([{
+              name: 'is_enabled',
+              condition: { percent: { ...percentCondition, seed } }
+            }], context);
+            expect(evalResult.get('is_enabled')).to.equal(result);
           });
         });
       });
