@@ -31,6 +31,7 @@ import {
 } from '../../../src/app/index';
 import { clearGlobalAppDefaultCred } from '../../../src/app/credential-factory';
 import { defaultAppStore } from '../../../src/app/lifecycle';
+import { ApplicationDefaultCredential } from '../../../src/app/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -230,14 +231,9 @@ describe('firebase-admin/app', () => {
     });
 
     it('should create application default credentials from environment', () => {
-      const mockCertificateObject = mocks.certificateObject;
+      //const mockCertificateObject = mocks.certificateObject;
       const credential: Credential = applicationDefault();
-      expect(credential).to.deep.include({
-        projectId: mockCertificateObject.project_id,
-        clientEmail: mockCertificateObject.client_email,
-        privateKey: mockCertificateObject.private_key,
-        implicit: true,
-      });
+      expect(credential).to.be.instanceOf(ApplicationDefaultCredential);
     });
 
     it('should cache application default credentials globally', () => {

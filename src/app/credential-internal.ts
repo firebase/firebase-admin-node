@@ -400,11 +400,11 @@ class ImpersonatedServiceAccount {
  * @param credential - The credential instance to check.
  */
 export function isApplicationDefault(credential?: Credential): boolean {
-  return credential instanceof ApplicationDefaultCredential;
+  return credential instanceof ApplicationDefaultCredential ||
+    (credential instanceof RefreshTokenCredential && credential.implicit);
 }
 
 export function getApplicationDefault(httpAgent?: Agent): Credential {
-
   return new ApplicationDefaultCredential(httpAgent);
 }
 
