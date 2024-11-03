@@ -23,12 +23,10 @@ import path = require('path');
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-//import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-//import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
@@ -38,8 +36,6 @@ import {
   RefreshTokenCredential, ServiceAccountCredential,
   getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential, ApplicationDefaultCredential
 } from '../../../src/app/credential-internal';
-//import { HttpClient } from '../../../src/utils/api-request';
-//import { Agent } from 'https';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 chai.should();
@@ -53,12 +49,6 @@ if (!process.env.HOME) {
   throw new Error('$HOME environment variable must be set to run the tests.');
 }
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME!, '.config', GCLOUD_CREDENTIAL_SUFFIX);
-// const MOCK_REFRESH_TOKEN_CONFIG = {
-//   client_id: 'test_client_id',
-//   client_secret: 'test_client_secret',
-//   type: 'authorized_user',
-//   refresh_token: 'test_token',
-// };
 const MOCK_IMPERSONATED_TOKEN_CONFIG = {
   delegates: [],
   service_account_impersonation_url: '',
@@ -71,28 +61,9 @@ const MOCK_IMPERSONATED_TOKEN_CONFIG = {
   type: 'impersonated_service_account'
 }
 
-//const ONE_HOUR_IN_SECONDS = 60 * 60;
-
 describe('Credential', () => {
   let mockCertificateObject: any;
   let oldProcessEnv: NodeJS.ProcessEnv;
-  //let getTokenScope: nock.Scope;
-  //let mockedRequests: nock.Scope[] = [];
-
-  // before(() => {
-  //   getTokenScope = nock('https://accounts.google.com')
-  //     .persist()
-  //     .post('/o/oauth2/token')
-  //     .reply(200, {
-  //       access_token: utils.generateRandomAccessToken(),
-  //       token_type: 'Bearer',
-  //       expires_in: 3600,
-  //     }, {
-  //       'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-  //     });
-  // });
-
-  // after(() => getTokenScope.done());
 
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
@@ -100,8 +71,6 @@ describe('Credential', () => {
   });
 
   afterEach(() => {
-    //_.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    //mockedRequests = [];
     process.env = oldProcessEnv;
   });
 
