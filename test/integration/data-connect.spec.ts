@@ -99,7 +99,7 @@ describe('getDataConnect()', () => {
   user_upsert(data: { uid: $id, address: "32 St.", name: "Fred" }) }`;
 
   describe('executeGraphql()', () => {
-    it.only('executeGraphql() successfully executes a GraphQL mutation', async () => {
+    it('executeGraphql() successfully executes a GraphQL mutation', async () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, unknown>(
         upsertUser, { variables: { id: userId } }
       );
