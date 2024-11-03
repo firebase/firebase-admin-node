@@ -147,7 +147,8 @@ export class ServiceAccountCredential implements Credential {
 
   public async getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const googleAuth = this.getGoogleAuth();
-    const client = await googleAuth.getClient();
+    const client = googleAuth.fromJSON(this.serviceAccountPathOrObject as object);
+    //const client = await googleAuth.getClient();
     await client.getAccessToken();
     const credentials = client.credentials;
     return populateCredential(credentials);
