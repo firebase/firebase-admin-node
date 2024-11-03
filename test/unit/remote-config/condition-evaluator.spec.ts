@@ -777,6 +777,8 @@ describe('ConditionEvaluator', () => {
           { seed: '7', randomizationId: 'seven', result: true },
           { seed: '8', randomizationId: 'eight', result: true },
           { seed: '9', randomizationId: 'nine', result: false },
+          { seed: '', randomizationId: '😊', result: true },
+          { seed: '', randomizationId: '😀', result: false },
         ]
 
         testCases.map(({ randomizationId, seed, result }) => {
