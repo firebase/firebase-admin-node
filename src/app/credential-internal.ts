@@ -113,6 +113,7 @@ export class ServiceAccountCredential implements Credential {
   public readonly clientEmail: string;
 
   private googleAuth: GoogleAuth;
+  private authClient: AnyAuthClient | undefined;
 
   /**
    * Creates a new ServiceAccountCredential from the given parameters.
@@ -141,16 +142,19 @@ export class ServiceAccountCredential implements Credential {
     if (this.googleAuth) {
       return this.googleAuth;
     }
-    this.googleAuth = populateGoogleAuth(this.serviceAccountPathOrObject, this.httpAgent);
+    const { auth, client } = populateGoogleAuth(this.serviceAccountPathOrObject, this.httpAgent);
+    this.googleAuth = auth;
+    this.authClient = client;
     return this.googleAuth;
   }
 
   public async getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const googleAuth = this.getGoogleAuth();
-    const client = googleAuth.fromJSON(this.serviceAccountPathOrObject as object);
-    //const client = await googleAuth.getClient();
-    await client.getAccessToken();
-    const credentials = client.credentials;
+    if (this.authClient === undefined) {
+      this.authClient = await googleAuth.getClient();
+    }
+    await this.authClient.getAccessToken();
+    const credentials = this.authClient.credentials;
     return populateCredential(credentials);
   }
 }
@@ -219,6 +223,7 @@ class ServiceAccount {
 export class RefreshTokenCredential implements Credential {
 
   private googleAuth: GoogleAuth;
+  private authClient: AnyAuthClient | undefined;
 
   /**
    * Creates a new RefreshTokenCredential from the given parameters.
@@ -245,15 +250,19 @@ export class RefreshTokenCredential implements Credential {
     if (this.googleAuth) {
       return this.googleAuth;
     }
-    this.googleAuth = populateGoogleAuth(this.refreshTokenPathOrObject, this.httpAgent);
+    const { auth, client } = populateGoogleAuth(this.refreshTokenPathOrObject, this.httpAgent);
+    this.googleAuth = auth;
+    this.authClient = client;
     return this.googleAuth;
   }
 
   public async getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const googleAuth = this.getGoogleAuth();
-    const client = await googleAuth.getClient();
-    await client.getAccessToken();
-    const credentials = client.credentials;
+    if (this.authClient === undefined) {
+      this.authClient = await googleAuth.getClient();
+    }
+    await this.authClient.getAccessToken();
+    const credentials = this.authClient.credentials;
     return populateCredential(credentials);
   }
 }
@@ -313,6 +322,7 @@ class RefreshToken {
 export class ImpersonatedServiceAccountCredential implements Credential {
 
   private googleAuth: GoogleAuth;
+  private authClient: AnyAuthClient | undefined;
 
   /**
    * Creates a new ImpersonatedServiceAccountCredential from the given parameters.
@@ -339,15 +349,19 @@ export class ImpersonatedServiceAccountCredential implements Credential {
     if (this.googleAuth) {
       return this.googleAuth;
     }
-    this.googleAuth = populateGoogleAuth(this.impersonatedServiceAccountPathOrObject, this.httpAgent);
+    const { auth, client } = populateGoogleAuth(this.impersonatedServiceAccountPathOrObject, this.httpAgent);
+    this.googleAuth = auth;
+    this.authClient = client;
     return this.googleAuth;
   }
 
   public async getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const googleAuth = this.getGoogleAuth();
-    const client = await googleAuth.getClient();
-    await client.getAccessToken();
-    const credentials = client.credentials;
+    if (this.authClient === undefined) {
+      this.authClient = await googleAuth.getClient();
+    }
+    await this.authClient.getAccessToken();
+    const credentials = this.authClient.credentials;
     return populateCredential(credentials);
   }
 }
@@ -430,8 +444,10 @@ function copyAttr(to: { [key: string]: any }, from: { [key: string]: any }, key:
 /**
  * Populate google-auth-library GoogleAuth credentials type.
  */
-function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent): GoogleAuth {
-  const googleAuth = new GoogleAuth({
+function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent)
+  : { auth: GoogleAuth, client: AnyAuthClient | undefined } {
+  let client: AnyAuthClient | undefined;
+  const auth = new GoogleAuth({
     scopes: SCOPES,
     clientOptions: {
       transporterOptions: {
@@ -448,9 +464,9 @@ function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent): Google
         'Service account must be an object.',
       );
     }
-    googleAuth.fromJSON(keyFile);
+    client = auth.fromJSON(keyFile);
   }
-  return googleAuth;
+  return { auth, client };
 }
 
 /**
