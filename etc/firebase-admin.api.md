@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="node" />
-
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { FirebaseDatabase } from '@firebase/database-types';

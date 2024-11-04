@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="node" />
-
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { File as File_2 } from '@google-cloud/storage';
