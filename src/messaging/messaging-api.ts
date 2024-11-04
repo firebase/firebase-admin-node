@@ -45,7 +45,7 @@ export interface ConditionMessage extends BaseMessage {
 export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the {@link Messaging.sendMulticast} method. The payload contains all the fields
+ * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields
  * in the BaseMessage type, and a list of tokens.
  */
 export interface MulticastMessage extends BaseMessage {
@@ -947,107 +947,6 @@ export interface MessagingOptions {
 }
 
 /**
- * Individual status response payload from single devices
- *
- * @deprecated Returned by {@link Messaging#sendToDevice}, which is also deprecated.
- */
-export interface MessagingDeviceResult {
-  /**
-   * The error that occurred when processing the message for the recipient.
-   */
-  error?: FirebaseError;
-
-  /**
-   * A unique ID for the successfully processed message.
-   */
-  messageId?: string;
-
-  /**
-   * The canonical registration token for the client app that the message was
-   * processed and sent to. You should use this value as the registration token
-   * for future requests. Otherwise, future messages might be rejected.
-   */
-  canonicalRegistrationToken?: string;
-}
-
-/**
- * Interface representing the status of a message sent to an individual device
- * via the FCM legacy APIs.
- *
- * See
- * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_individual_devices |
- * Send to individual devices} for code samples and detailed documentation.
- *
- * @deprecated Returned by {@link Messaging.sendToDevice}, which is also deprecated.
- */
-export interface MessagingDevicesResponse {
-  canonicalRegistrationTokenCount: number;
-  failureCount: number;
-  multicastId: number;
-  results: MessagingDeviceResult[];
-  successCount: number;
-}
-
-/**
- * Interface representing the server response from the {@link Messaging.sendToDeviceGroup}
- * method.
- *
- * See
- * {@link https://firebase.google.com/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups |
- * Send messages to device groups} for code samples and detailed documentation.
- *
- * @deprecated Returned by {@link Messaging.sendToDeviceGroup}, which is also deprecated.
- */
-export interface MessagingDeviceGroupResponse {
-
-  /**
-   * The number of messages that could not be processed and resulted in an error.
-   */
-  successCount: number;
-
-  /**
-   * The number of messages that could not be processed and resulted in an error.
-   */
-  failureCount: number;
-
-  /**
-  * An array of registration tokens that failed to receive the message.
-  */
-  failedRegistrationTokens: string[];
-}
-
-/**
- * Interface representing the server response from the legacy {@link Messaging.sendToTopic} method.
- *
- * See
- * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_topic |
- * Send to a topic} for code samples and detailed documentation.
- */
-export interface MessagingTopicResponse {
-  /**
-   * The message ID for a successfully received request which FCM will attempt to
-   * deliver to all subscribed devices.
-   */
-  messageId: number;
-}
-
-/**
- * Interface representing the server response from the legacy
- * {@link Messaging.sendToCondition} method.
- *
- * See
- * {@link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_condition |
- * Send to a condition} for code samples and detailed documentation.
- */
-export interface MessagingConditionResponse {
-  /**
-   * The message ID for a successfully received request which FCM will attempt to
-   * deliver to all subscribed devices.
-   */
-  messageId: number;
-}
-
-/**
  * Interface representing the server response from the
  * {@link Messaging.subscribeToTopic} and {@link Messaging.unsubscribeFromTopic}
  * methods.
@@ -1078,7 +977,7 @@ export interface MessagingTopicManagementResponse {
 
 /**
  * Interface representing the server response from the
- * {@link Messaging.sendAll} and {@link Messaging.sendMulticast} methods.
+ * {@link Messaging.sendEach} and {@link Messaging.sendEachForMulticast} methods.
  */
 export interface BatchResponse {
 

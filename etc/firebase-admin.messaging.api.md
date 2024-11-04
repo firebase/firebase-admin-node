@@ -191,20 +191,8 @@ export class Messaging {
     // @deprecated
     enableLegacyHttpTransport(): void;
     send(message: Message, dryRun?: boolean): Promise<string>;
-    // @deprecated
-    sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
     sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
     sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
-    // @deprecated
-    sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
-    // @deprecated
-    sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
-    // @deprecated
-    sendToDevice(registrationTokenOrTokens: string | string[], payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDevicesResponse>;
-    // @deprecated
-    sendToDeviceGroup(notificationKey: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDeviceGroupResponse>;
-    // @deprecated
-    sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
 }
@@ -309,40 +297,6 @@ export class MessagingClientErrorCode {
 }
 
 // @public
-export interface MessagingConditionResponse {
-    messageId: number;
-}
-
-// @public @deprecated
-export interface MessagingDeviceGroupResponse {
-    failedRegistrationTokens: string[];
-    failureCount: number;
-    successCount: number;
-}
-
-// @public @deprecated
-export interface MessagingDeviceResult {
-    canonicalRegistrationToken?: string;
-    // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
-    error?: FirebaseError;
-    messageId?: string;
-}
-
-// @public @deprecated
-export interface MessagingDevicesResponse {
-    // (undocumented)
-    canonicalRegistrationTokenCount: number;
-    // (undocumented)
-    failureCount: number;
-    // (undocumented)
-    multicastId: number;
-    // (undocumented)
-    results: MessagingDeviceResult[];
-    // (undocumented)
-    successCount: number;
-}
-
-// @public
 export interface MessagingOptions {
     // (undocumented)
     [key: string]: any | undefined;
@@ -367,11 +321,6 @@ export interface MessagingTopicManagementResponse {
     errors: FirebaseArrayIndexError[];
     failureCount: number;
     successCount: number;
-}
-
-// @public
-export interface MessagingTopicResponse {
-    messageId: number;
 }
 
 // @public
@@ -407,6 +356,7 @@ export interface NotificationMessagePayload {
 
 // @public
 export interface SendResponse {
+    // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
     error?: FirebaseError;
     messageId?: string;
     success: boolean;
