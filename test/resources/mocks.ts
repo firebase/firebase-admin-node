@@ -30,7 +30,7 @@ import * as sinon from 'sinon';
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
-import { ComputeEngineCredential } from '../../src/app/credential-internal';
+import { ApplicationDefaultCredential } from '../../src/app/credential-internal';
 
 const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -93,7 +93,7 @@ export class MockCredential implements Credential {
   }
 }
 
-export class MockComputeEngineCredential extends ComputeEngineCredential {
+export class MockComputeEngineCredential extends ApplicationDefaultCredential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
       access_token: 'mock-token',
@@ -103,6 +103,10 @@ export class MockComputeEngineCredential extends ComputeEngineCredential {
   
   public getIDToken(): Promise<string> {
     return Promise.resolve('mockIdToken');
+  }
+
+  public isComputeEngineCredential(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 }
 
