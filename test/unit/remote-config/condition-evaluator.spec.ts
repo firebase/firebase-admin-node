@@ -757,7 +757,7 @@ describe('ConditionEvaluator', () => {
         // evaluate percent conditions. It creates a set of 10 conditions targeting 50% 
         // with randomizationIds 0-9 and a constant `seed` value.
         const conditionEvaluator = new ConditionEvaluator();
-        
+
         const percentCondition = {
           percentOperator: PercentConditionOperator.BETWEEN,
           microPercentRange: {
@@ -767,23 +767,26 @@ describe('ConditionEvaluator', () => {
         };
 
         const testCases = [
-          { seed: '', randomizationId: 'zero', result: true },
           { seed: '1', randomizationId: 'one', result: false },
           { seed: '2', randomizationId: 'two', result: false },
           { seed: '3', randomizationId: 'three', result: true },
           { seed: '4', randomizationId: 'four', result: false },
           { seed: '5', randomizationId: 'five', result: true },
-          { seed: '6', randomizationId: 'six', result: true },
-          { seed: '7', randomizationId: 'seven', result: true },
-          { seed: '8', randomizationId: 'eight', result: true },
-          { seed: '9', randomizationId: 'nine', result: false },
           { seed: '', randomizationId: '😊', result: true },
           { seed: '', randomizationId: '😀', result: false },
-          { seed: 'hêl£o', randomizationId: 'wørlÐ', result: false }
+          { seed: 'hêl£o', randomizationId: 'wørlÐ', result: false },
+          { seed: 'řemøťe', randomizationId: 'çōnfįġ', result: true },
+          { seed: 'long', randomizationId: Array.from({ length: 100 }).map(() => '.').join(''), result: true },
+          { seed: 'very-long', randomizationId: Array.from({ length: 1000 }).map(() => '.').join(''), result: false },
         ]
 
         testCases.map(({ randomizationId, seed, result }) => {
-          it(`should evaluate "${randomizationId}" with seed "${seed}" to ${result}`, () => {
+
+          const idSummary = randomizationId.length > 25 
+            ? `a ${randomizationId.length} character randomizationID` 
+            : `"${randomizationId}"`;
+
+          it(`should evaluate ${idSummary} with seed "${seed}" to ${result}`, () => {
             const context = { randomizationId };
             const evalResult = conditionEvaluator.evaluateConditions([{
               name: 'is_enabled',
@@ -993,7 +996,7 @@ describe('ConditionEvaluator', () => {
       describe('STRING_CONTAINS', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['foo', 'biz'], actual: 'foobar', outcome: true },
-          { targets: ['foo', 'biz'],actual: 'bar',outcome: false },
+          { targets: ['foo', 'biz'], actual: 'bar', outcome: false },
         ];
 
         testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS));
@@ -1001,7 +1004,7 @@ describe('ConditionEvaluator', () => {
 
       describe('STRING_DOES_NOT_CONTAIN', () => {
         const testCases: CustomSignalTestCase[] = [
-          { targets: ['foo', 'biz'],actual: 'bar',outcome: true },
+          { targets: ['foo', 'biz'], actual: 'bar', outcome: true },
           { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
         ];
 
@@ -1170,72 +1173,4 @@ describe('ConditionEvaluator', () => {
       });
     });
   });
-
-  // describe('hashSeededRandomizationId', () => {
-  //   // We convert to a signed integer for legacy compatibility.
-  //   // This has caused confusion in the past, so we explicitly
-  //   // test here.
-  //   it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
-  //     if (nodeVersion.startsWith('14')) {
-  //       this.skip();
-  //     }
-
-  //     const stub = sinon.stub(crypto.Hash.prototype, 'digest');
-  //     // 2^63-1 = 9223372036854775807
-  //     stub.withArgs('hex').returns(BigInt('9223372036854775807').toString(16));
-  //     stubs.push(stub);
-
-  //     const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-  //     expect(actual).to.equal(BigInt('9223372036854775807'))
-  //   });
-
-  //   it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
-  //     if (nodeVersion.startsWith('14')) {
-  //       this.skip();
-  //     }
-
-  //     const stub = sinon.stub(crypto.Hash.prototype, 'digest');
-  //     // 2^63 = 9223372036854775808 
-  //     stub.withArgs('hex').returns(BigInt('9223372036854775808').toString(16));
-  //     stubs.push(stub);
-
-  //     const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-  //     // 2^63 is the negation of 2^63-1
-  //     expect(actual).to.equal(BigInt('9223372036854775808'))
-  //   });
-
-  //   it('should convert 2^63+1 to negative and then find the absolute value', function () {
-  //     if (nodeVersion.startsWith('14')) {
-  //       this.skip();
-  //     }
-
-  //     const stub = sinon.stub(crypto.Hash.prototype, 'digest');
-  //     // 2^63+1 = 9223372036854775809
-  //     stub.withArgs('hex').returns(BigInt('9223372036854775809').toString(16));
-  //     stubs.push(stub);
-
-  //     const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-  //     // 2^63+1 is larger than 2^63, so the absolute value is smaller
-  //     expect(actual).to.equal(BigInt('9223372036854775809'))
-  //   });
-
-  //   it('should handle the value that initially caused confusion', function () {
-  //     if (nodeVersion.startsWith('14')) {
-  //       this.skip();
-  //     }
-
-  //     const stub = sinon.stub(crypto.Hash.prototype, 'digest');
-  //     // We were initially confused about the nature of this value ...
-  //     stub.withArgs('hex').returns(BigInt('16081085603393958147').toString(16));
-  //     stubs.push(stub);
-
-  //     const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-  //     // ... Now we know it's the unsigned equivalent of this absolute value.
-  //     expect(actual).to.equal(BigInt('2365658470315593469'))
-  //   });
-  // });
 });
