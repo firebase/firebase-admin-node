@@ -47,7 +47,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 14.x
+        node-version: 18.x
 
     - name: Install and build
       run: |
@@ -117,7 +117,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 14.x
+        node-version: 18.x
 
     - name: Publish preflight check
       id: preflight
