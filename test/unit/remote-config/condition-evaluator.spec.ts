@@ -776,9 +776,9 @@ describe('ConditionEvaluator', () => {
           { seed: '', randomizationId: '😀', result: false },
           { seed: 'hêl£o', randomizationId: 'wørlÐ', result: false },
           { seed: 'řemøťe', randomizationId: 'çōnfįġ', result: true },
-          { seed: 'long', randomizationId: Array.from({ length: 100 }).map(() => '.').join(''), result: true },
-          { seed: 'very-long', randomizationId: Array.from({ length: 1000 }).map(() => '.').join(''), result: false },
-        ]
+          { seed: 'long', randomizationId: '.'.repeat(100), result: true },
+          { seed: 'very-long', randomizationId: '.'.repeat(1000), result: false },
+        ];
 
         testCases.map(({ randomizationId, seed, result }) => {
 
