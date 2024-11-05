@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="node" />
-
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { FirebaseDatabase } from '@firebase/database-types';
@@ -511,8 +509,8 @@ export function storage(app?: App): storage.Storage;
 
 // @public (undocumented)
 export namespace storage {
-    // Warning: (ae-forgotten-export) The symbol "Storage" needs to be exported by the entry point default-namespace.d.ts
-    export type Storage = Storage;
+    // Warning: (ae-forgotten-export) The symbol "Storage_2" needs to be exported by the entry point default-namespace.d.ts
+    export type Storage = Storage_2;
 }
 
 ```
