@@ -24,7 +24,7 @@ import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
-import { ComputeEngineCredential } from '../app/credential-internal';
+import { ApplicationDefaultCredential } from '../app/credential-internal';
 
 const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
 const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/' + CLOUD_TASKS_API_RESOURCE_PATH;
@@ -319,7 +319,8 @@ export class FunctionsApiClient {
 
     task.httpRequest.url = functionUrl;
     // When run from a deployed extension, we should be using ComputeEngineCredentials
-    if (validator.isNonEmptyString(extensionId) && this.app.options.credential instanceof ComputeEngineCredential) {
+    if (validator.isNonEmptyString(extensionId) && this.app.options.credential
+    instanceof ApplicationDefaultCredential && await this.app.options.credential.isComputeEngineCredential()) {
       const idToken = await this.app.options.credential.getIDToken(functionUrl);
       task.httpRequest.headers = { ...task.httpRequest.headers, 'Authorization': `Bearer ${idToken}` };
       // Don't send httpRequest.oidcToken if we set Authorization header, or Cloud Tasks will overwrite it.

@@ -23,7 +23,8 @@ import { expect } from 'chai';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  ComputeEngineCredential, RefreshTokenCredential
+  ApplicationDefaultCredential,
+  RefreshTokenCredential
 } from '../../../src/app/credential-internal';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
 import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
@@ -48,7 +49,7 @@ describe('Firestore', () => {
     {
       name: 'ComputeEngineCredentials',
       app: mocks.appWithOptions({
-        credential: new ComputeEngineCredential(),
+        credential: new ApplicationDefaultCredential(),
       }),
     },
     {

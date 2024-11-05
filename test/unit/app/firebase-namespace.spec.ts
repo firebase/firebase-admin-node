@@ -77,6 +77,7 @@ import ProjectManagement = projectManagement.ProjectManagement;
 import RemoteConfig = remoteConfig.RemoteConfig;
 import SecurityRules = securityRules.SecurityRules;
 import Storage = storage.Storage;
+import { ApplicationDefaultCredential } from '../../../src/app/credential-internal';
 
 chai.should();
 chai.use(sinonChai);
@@ -760,16 +761,14 @@ describe('FirebaseNamespace', () => {
       });
     });
 
-    it('should create application default credentials from environment', () => {
+    it('should create application default credentials from environment', async () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const mockCertificateObject = mocks.certificateObject;
       const credential = firebaseNamespace.credential.applicationDefault();
-      expect(credential).to.deep.include({
-        projectId: mockCertificateObject.project_id,
-        clientEmail: mockCertificateObject.client_email,
-        privateKey: mockCertificateObject.private_key,
-        implicit: true,
-      });
+      const projectId = await (credential as ApplicationDefaultCredential).getProjectId();
+      const clientEmail = await (credential as ApplicationDefaultCredential).getServiceAccountEmail();
+      expect(projectId).to.eq(mockCertificateObject.project_id);
+      expect(clientEmail).to.eq(mockCertificateObject.client_email);
     });
 
     after(clearGlobalAppDefaultCred);
