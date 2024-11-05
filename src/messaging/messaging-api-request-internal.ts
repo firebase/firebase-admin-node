@@ -22,20 +22,14 @@ import {
   AuthorizedHttp2Client, Http2SessionHandler, Http2RequestConfig,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
-import { SubRequest, BatchRequestClient } from './batch-request-internal';
 import { getSdkVersion } from '../utils/index';
-import { SendResponse, BatchResponse } from './messaging-api';
+import { SendResponse } from './messaging-api';
 
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 15000;
-const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
-  'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
-  'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`
-};
-const LEGACY_FIREBASE_MESSAGING_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
   'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
   'access_token_auth': 'true',
@@ -48,7 +42,6 @@ const LEGACY_FIREBASE_MESSAGING_HEADERS = {
 export class FirebaseMessagingRequestHandler {
   private readonly httpClient: AuthorizedHttpClient;
   private readonly http2Client: AuthorizedHttp2Client;
-  private readonly batchClient: BatchRequestClient;
 
   /**
    * @param app - The app used to fetch access tokens to sign API requests.
@@ -57,8 +50,6 @@ export class FirebaseMessagingRequestHandler {
   constructor(app: App) {
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
     this.http2Client = new AuthorizedHttp2Client(app as FirebaseApp);
-    this.batchClient = new BatchRequestClient(
-      this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
 
   /**
@@ -74,7 +65,7 @@ export class FirebaseMessagingRequestHandler {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
-      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      headers: FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
     };
     return this.httpClient.send(request).then((response) => {
@@ -116,7 +107,7 @@ export class FirebaseMessagingRequestHandler {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
-      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      headers: FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
     };
     return this.httpClient.send(request).then((response) => {
@@ -146,7 +137,7 @@ export class FirebaseMessagingRequestHandler {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
-      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
+      headers: FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
       http2SessionHandler: http2SessionHandler
     };
@@ -156,35 +147,6 @@ export class FirebaseMessagingRequestHandler {
       .catch((err) => {
         if (err instanceof RequestResponseError) {
           return this.buildSendResponseFromError(err);
-        }
-        // Re-throw the error if it already has the proper format.
-        throw err;
-      });
-  }
-
-  /**
-   * Sends the given array of sub requests as a single batch to FCM, and parses the result into
-   * a `BatchResponse` object.
-   *
-   * @param requests - An array of sub requests to send.
-   * @returns A promise that resolves when the send operation is complete.
-   */
-  public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
-    return this.batchClient.send(requests)
-      .then((responses: RequestResponse[]) => {
-        return responses.map((part: RequestResponse) => {
-          return this.buildSendResponse(part);
-        });
-      }).then((responses: SendResponse[]) => {
-        const successCount: number = responses.filter((resp) => resp.success).length;
-        return {
-          responses,
-          successCount,
-          failureCount: responses.length - successCount,
-        };
-      }).catch((err) => {
-        if (err instanceof RequestResponseError) {
-          throw createFirebaseError(err);
         }
         // Re-throw the error if it already has the proper format.
         throw err;

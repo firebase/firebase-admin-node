@@ -56,13 +56,8 @@ export {
 
   // Legacy APIs
   DataMessagePayload,
-  MessagingConditionResponse,
-  MessagingDeviceGroupResponse,
-  MessagingDeviceResult,
-  MessagingDevicesResponse,
   MessagingOptions,
   MessagingPayload,
-  MessagingTopicResponse,
   NotificationMessagePayload,
 } from './messaging-api';
 

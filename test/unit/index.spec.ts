@@ -50,7 +50,6 @@ import './database/index.spec';
 // Messaging
 import './messaging/index.spec';
 import './messaging/messaging.spec';
-import './messaging/batch-requests.spec';
 
 // Machine Learning
 import './machine-learning/index.spec';
