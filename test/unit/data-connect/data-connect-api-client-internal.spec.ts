@@ -43,7 +43,6 @@ describe('DataConnectApiClient', () => {
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
-    'x-goog-user-project': 'test-project',
     'X-Goog-Api-Client': getMetricsHeader(),
   };
 

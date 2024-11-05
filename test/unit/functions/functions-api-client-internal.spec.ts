@@ -46,7 +46,6 @@ describe('FunctionsApiClient', () => {
   const EXPECTED_HEADERS = {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Authorization': 'Bearer mock-token',
-    'x-goog-user-project': 'test-project',
     'X-Goog-Api-Client': getMetricsHeader(),
   };
 
