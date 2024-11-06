@@ -1110,6 +1110,7 @@ describe('admin.auth', () => {
     const uid = generateRandomString(20).toLowerCase();
     const email = uid + '@example.com';
     const newEmail = uid + 'new@example.com';
+    const newEmail2 = uid + 'new2@example.com';
     const newPassword = 'newPassword';
     const userData = {
       uid,
@@ -1242,20 +1243,20 @@ describe('admin.auth', () => {
       // Ensure old password set on created user.
       return getAuth().updateUser(uid, { password: 'password' })
         .then(() => {
-          return getAuth().generatePasswordResetLink(email, actionCodeSettingsWithCustomDomain);
+          return getAuth().generatePasswordResetLink(newEmail, actionCodeSettingsWithCustomDomain);
         })
         .then((link) => {
-          const code = getActionCode(link);
+          const code = getActionCodeForInAppRequest(link);
           expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
           expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
           return clientAuth().confirmPasswordReset(code, newPassword);
         })
         .then(() => {
-          return clientAuth().signInWithEmailAndPassword(email, newPassword);
+          return clientAuth().signInWithEmailAndPassword(newEmail, newPassword);
         })
         .then((result) => {
           expect(result.user).to.exist;
-          expect(result.user!.email).to.equal(email);
+          expect(result.user!.email).to.equal(newEmail);
           // Password reset also verifies the user's email.
           expect(result.user!.emailVerified).to.be.true;
         });
@@ -1266,23 +1267,23 @@ describe('admin.auth', () => {
         return this.skip(); // Not yet supported in Auth Emulator.
       }
       // Ensure the user's email is unverified.
-      return getAuth().updateUser(uid, { password: '123456', emailVerified: false })
+      return getAuth().updateUser(uid, { password: 'password', emailVerified: false })
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.false;
-          return getAuth().generateEmailVerificationLink(email, actionCodeSettingsWithCustomDomain);
+          return getAuth().generateEmailVerificationLink(newEmail, actionCodeSettingsWithCustomDomain);
         })
         .then((link) => {
-          const code = getActionCode(link);
+          const code = getActionCodeForInAppRequest(link);
           expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
           expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
           return clientAuth().applyActionCode(code);
         })
         .then(() => {
-          return clientAuth().signInWithEmailAndPassword(email, userData.password);
+          return clientAuth().signInWithEmailAndPassword(newEmail, userData.password);
         })
         .then((result) => {
           expect(result.user).to.exist;
-          expect(result.user!.email).to.equal(email);
+          expect(result.user!.email).to.equal(newEmail);
           expect(result.user!.emailVerified).to.be.true;
         });
     });
@@ -1309,23 +1310,23 @@ describe('admin.auth', () => {
         return this.skip(); // Not yet supported in Auth Emulator.
       }
       // Ensure the user's email is verified.
-      return getAuth().updateUser(uid, { password: '123456', emailVerified: true })
+      return getAuth().updateUser(uid, { password: 'password', emailVerified: true })
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.true;
-          return getAuth().generateVerifyAndChangeEmailLink(email, newEmail, actionCodeSettingsWithCustomDomain);
+          return getAuth().generateVerifyAndChangeEmailLink(newEmail, newEmail2, actionCodeSettingsWithCustomDomain);
         })
         .then((link) => {
-          const code = getActionCode(link);
+          const code = getActionCodeForInAppRequest(link);
           expect(getContinueUrlForInAppRequest(link)).equal(actionCodeSettings.url);
           expect(getHostName(link)).equal(actionCodeSettingsWithCustomDomain.linkDomain);
           return clientAuth().applyActionCode(code);
         })
         .then(() => {
-          return clientAuth().signInWithEmailAndPassword(newEmail, 'password');
+          return clientAuth().signInWithEmailAndPassword(newEmail2, 'password');
         })
         .then((result) => {
           expect(result.user).to.exist;
-          expect(result.user!.email).to.equal(newEmail);
+          expect(result.user!.email).to.equal(newEmail2);
           expect(result.user!.emailVerified).to.be.true;
         });
     });
@@ -3438,19 +3439,44 @@ function getHostName(link: string): string {
  * Coninue URL will be part of action link url
  * 
  * @param link The link to parse for continue url
- * @returns 
+ * @returns Link's corresponding continueUrl
  */
 function getContinueUrlForInAppRequest(link: string): string {
+  const actionUrl = extractLinkUrl(link);
+  const continueUrl = actionUrl.searchParams.get('continueUrl');
+  expect(continueUrl).to.exist;
+  return continueUrl!;
+}
+
+/**
+ * Returns the action code corresponding to the link for in app requests.
+ * URL will be of the form, http://abc/__/auth/link?link=<action link url>
+ * oobCode will be part of action link url
+ *
+ * @param link The link to parse for the action code.
+ * @return The link's corresponding action code.
+ */
+function getActionCodeForInAppRequest(link: string): string {
+  const actionUrl = extractLinkUrl(link);
+  const oobCode = actionUrl.searchParams.get('oobCode');
+  expect(oobCode).to.exist;
+  return oobCode!;
+}
+
+/**
+ * Extract URL in link parameter from the full link
+ * URL will be of the form, http://abc/__/auth/link?link=<action link url>
+ * 
+ * @param link The link to parse for the param
+ * @returns URL inside link param
+ */
+function extractLinkUrl(link: string): url.URL {
   // Extract action url from link param
   const parsedUrl = new url.URL(link);
   const linkParam = parsedUrl.searchParams.get('link') ?? '';
   expect(linkParam).is.not.empty;
-  
-  // Extract continueUrl param from action url
-  const actionUrl = new url.URL(linkParam);
-  const continueUrl = actionUrl.searchParams.get('continueUrl');
-  expect(continueUrl).to.exist;
-  return continueUrl!;
+
+  return new url.URL(linkParam);
 }
 
 /**
