@@ -28,7 +28,7 @@ import {
 } from '../../../src/remote-config/remote-config-api';
 import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
-import * as farmhash from 'farmhash-modern';
+import * as crypto from 'crypto';
 
 const expect = chai.expect;
 
@@ -251,9 +251,8 @@ describe('ConditionEvaluator', () => {
 
       it('should use zero for undefined microPercent', () => {
         // Stubs ID hasher to return a number larger than zero.
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(1n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('1');
         stubs.push(stub);
 
         const condition = {
@@ -284,9 +283,8 @@ describe('ConditionEvaluator', () => {
 
       it('should use zeros for undefined microPercentRange', () => {
         // Stubs ID hasher to return a number in range.
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(1n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('1');
         stubs.push(stub);
 
         const condition = {
@@ -317,9 +315,8 @@ describe('ConditionEvaluator', () => {
 
       it('should use zero for undefined microPercentUpperBound', () => {
         // Stubs ID hasher to return a number outside range.
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(1n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('1');
         stubs.push(stub);
 
         const condition = {
@@ -353,9 +350,8 @@ describe('ConditionEvaluator', () => {
 
       it('should use zero for undefined microPercentLowerBound', () => {
         // Stubs ID hasher to return a number in range.
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(1n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('1');
         stubs.push(stub);
 
         const condition = {
@@ -388,9 +384,9 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 9 as less or equal to 10', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(9n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('9');
+        stubs.push(stub);
 
         stubs.push(stub);
         const condition = {
@@ -419,9 +415,9 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 10 as less or equal to 10', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(10n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((10).toString(16));
+        stubs.push(stub);
 
         stubs.push(stub);
         const condition = {
@@ -450,9 +446,9 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 11 as not less or equal to 10', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(11n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((11).toString(16));
+        stubs.push(stub);
 
         stubs.push(stub);
         const condition = {
@@ -481,9 +477,9 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should negate -11 to 11 and evaluate as not less or equal to 10', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(-11n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((11).toString(16));
+        stubs.push(stub);
 
         stubs.push(stub);
         const condition = {
@@ -540,9 +536,9 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 11M as greater than 10M', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(11n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((11).toString(16));
+        stubs.push(stub);
 
         stubs.push(stub);
         const condition = {
@@ -571,9 +567,8 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 9 as not greater than 10', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(9n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns('9');
         stubs.push(stub);
 
         const condition = {
@@ -661,9 +656,8 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 10 as between 9 and 11', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(10n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((10).toString(16));
         stubs.push(stub);
 
         const condition = {
@@ -726,9 +720,8 @@ describe('ConditionEvaluator', () => {
       });
 
       it('should evaluate 12 as not between 9 and 11', () => {
-        const stub = sinon
-          .stub(farmhash, 'fingerprint64')
-          .returns(12n);
+        const stub = sinon.stub(crypto.Hash.prototype, 'digest');
+        stub.withArgs('hex').returns((12).toString(16));
         stubs.push(stub);
 
         const condition = {
@@ -757,6 +750,51 @@ describe('ConditionEvaluator', () => {
         const actual = evaluator.evaluateConditions([condition], context)
           .get('is_enabled');
         expect(actual).to.be.false;
+      });
+
+      describe('known percent condition values', () => {
+        // This test is useful for ensuring consistency across all places we
+        // evaluate percent conditions. It creates a set of 10 conditions targeting 50% 
+        // with randomizationIds 0-9 and a constant `seed` value.
+        const conditionEvaluator = new ConditionEvaluator();
+
+        const percentCondition = {
+          percentOperator: PercentConditionOperator.BETWEEN,
+          microPercentRange: {
+            microPercentLowerBound: 0,
+            microPercentUpperBound: 50_000_000 // 50%
+          },
+        };
+
+        const testCases = [
+          { seed: '1', randomizationId: 'one', result: false },
+          { seed: '2', randomizationId: 'two', result: false },
+          { seed: '3', randomizationId: 'three', result: true },
+          { seed: '4', randomizationId: 'four', result: false },
+          { seed: '5', randomizationId: 'five', result: true },
+          { seed: '', randomizationId: '😊', result: true },
+          { seed: '', randomizationId: '😀', result: false },
+          { seed: 'hêl£o', randomizationId: 'wørlÐ', result: false },
+          { seed: 'řemøťe', randomizationId: 'çōnfįġ', result: true },
+          { seed: 'long', randomizationId: '.'.repeat(100), result: true },
+          { seed: 'very-long', randomizationId: '.'.repeat(1000), result: false },
+        ];
+
+        testCases.map(({ randomizationId, seed, result }) => {
+
+          const idSummary = randomizationId.length > 25 
+            ? `a ${randomizationId.length} character randomizationID` 
+            : `"${randomizationId}"`;
+
+          it(`should evaluate ${idSummary} with seed "${seed}" to ${result}`, () => {
+            const context = { randomizationId };
+            const evalResult = conditionEvaluator.evaluateConditions([{
+              name: 'is_enabled',
+              condition: { percent: { ...percentCondition, seed } }
+            }], context);
+            expect(evalResult.get('is_enabled')).to.equal(result);
+          });
+        });
       });
 
       // The following tests are probabilistic. They use tolerances based on
@@ -958,7 +996,7 @@ describe('ConditionEvaluator', () => {
       describe('STRING_CONTAINS', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['foo', 'biz'], actual: 'foobar', outcome: true },
-          { targets: ['foo', 'biz'],actual: 'bar',outcome: false },
+          { targets: ['foo', 'biz'], actual: 'bar', outcome: false },
         ];
 
         testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS));
@@ -966,7 +1004,7 @@ describe('ConditionEvaluator', () => {
 
       describe('STRING_DOES_NOT_CONTAIN', () => {
         const testCases: CustomSignalTestCase[] = [
-          { targets: ['foo', 'biz'],actual: 'bar',outcome: true },
+          { targets: ['foo', 'biz'], actual: 'bar', outcome: true },
           { targets: ['foo', 'biz'], actual: 'foobar', outcome: false },
         ];
 
@@ -1133,79 +1171,6 @@ describe('ConditionEvaluator', () => {
 
         testCases.forEach(runCustomSignalTestCaseWithWhitespace(CustomSignalOperator.SEMANTIC_VERSION_GREATER_EQUAL));
       });
-    });
-  });
-
-  describe('hashSeededRandomizationId', () => {
-    // The Farmhash algorithm produces a 64 bit unsigned integer,
-    // which we convert to a signed integer for legacy compatibility.
-    // This has caused confusion in the past, so we explicitly
-    // test here.
-    it('should leave numbers <= 2^63-1 (max signed long) as is', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63-1 = 9223372036854775807.
-        .returns(BigInt('9223372036854775807'));
-      stubs.push(stub);
-
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-      expect(actual).to.equal(BigInt('9223372036854775807'))
-    });
-
-    it('should convert 2^63 to negative (min signed long) and then find the absolute value', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63 = 9223372036854775808.
-        .returns(BigInt('9223372036854775808'));
-      stubs.push(stub);
-
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-      // 2^63 is the negation of 2^63-1
-      expect(actual).to.equal(BigInt('9223372036854775808'))
-    });
-
-    it('should convert 2^63+1 to negative and then find the absolute value', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // 2^63+1 9223372036854775809.
-        .returns(BigInt('9223372036854775809'));
-      stubs.push(stub);
-
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-      // 2^63+1 is larger than 2^63, so the absolute value is smaller
-      expect(actual).to.equal(BigInt('9223372036854775807'))
-    });
-
-    it('should handle the value that initially caused confusion', function () {
-      if (nodeVersion.startsWith('14')) {
-        this.skip();
-      }
-
-      const stub = sinon
-        .stub(farmhash, 'fingerprint64')
-        // We were initially confused about the nature of this value ...
-        .returns(BigInt('16081085603393958147'));
-      stubs.push(stub);
-
-      const actual = ConditionEvaluator.hashSeededRandomizationId('anything');
-
-      // ... Now we know it's the unsigned equivalent of this absolute value.
-      expect(actual).to.equal(BigInt('2365658470315593469'))
     });
   });
 });
