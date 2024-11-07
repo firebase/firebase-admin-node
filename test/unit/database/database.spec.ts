@@ -27,6 +27,7 @@ import { Database, DatabaseService } from '../../../src/database/database';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
+import { getMetricsHeader } from '../../../src/utils';
 
 describe('Database', () => {
   let mockApp: FirebaseApp;
@@ -332,6 +333,7 @@ describe('Database', () => {
         url,
         headers: {
           Authorization: 'Bearer ' + mockAccessToken,
+          'X-Goog-Api-Client': getMetricsHeader(),
         },
       };
 
@@ -485,6 +487,7 @@ describe('Database', () => {
         headers: {
           'Authorization': 'Bearer ' + mockAccessToken,
           'content-type': 'application/json; charset=utf-8',
+          'X-Goog-Api-Client': getMetricsHeader(),
         },
         data,
       };

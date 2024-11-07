@@ -28,7 +28,7 @@ import { DataConnectApiClient, FirebaseDataConnectError }
   from '../../../src/data-connect/data-connect-api-client-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
-import { getSdkVersion } from '../../../src/utils';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 describe('DataConnectApiClient', () => {
 
@@ -44,6 +44,7 @@ describe('DataConnectApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
