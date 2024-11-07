@@ -1079,10 +1079,13 @@ export class AuthorizedHttpClient extends HttpClient {
       requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       let quotaProjectId: string | undefined;
-      if (this.app.options.credential instanceof ApplicationDefaultCredential){
+      if (process.env.GOOGLE_CLOUD_QUOTA_PROJECT) {
+        quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT;
+      }
+      else if (this.app.options.credential instanceof ApplicationDefaultCredential){
         quotaProjectId = this.app.options.credential.getQuotaProjectId();
       }
-      quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || undefined;
+
       if (!requestCopy.headers['x-goog-user-project'] && validator.isNonEmptyString(quotaProjectId)) {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }

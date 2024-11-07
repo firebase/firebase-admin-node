@@ -72,7 +72,7 @@ export class ApplicationDefaultCredential implements Credential {
 
   public getQuotaProjectId(): string | undefined {
     if (!this.quotaProjectId) {
-      this.quotaProjectId = this.authClient.quotaProjectId;
+      this.quotaProjectId = this.authClient?.quotaProjectId;
     }
     return this.quotaProjectId;
   }

@@ -2569,6 +2569,9 @@ describe('AuthorizedHttpClient', () => {
     afterEach(() => {
       transportSpy!.restore();
       transportSpy = null;
+      if (process.env.GOOGLE_CLOUD_QUOTA_PROJECT) {
+        delete process.env.GOOGLE_CLOUD_QUOTA_PROJECT;
+      }
       return mockAppWithAgent.delete();
     });
 
