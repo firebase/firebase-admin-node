@@ -56,7 +56,7 @@ describe('eventarc', () => {
   let mockApp: FirebaseApp;
   let eventarc: Eventarc;
 
-  const getExpectedHeaders = (mockAccessToken: string) => {
+  const getExpectedHeaders = (mockAccessToken: string): object => {
     return {
       'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
       Authorization: 'Bearer ' + mockAccessToken,
