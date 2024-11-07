@@ -22,7 +22,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { getSdkVersion } from '../../../src/utils';
+import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
@@ -47,6 +47,7 @@ describe('FunctionsApiClient', () => {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Authorization': 'Bearer mock-token',
     'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '

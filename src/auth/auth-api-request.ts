@@ -47,7 +47,6 @@ import { ProjectConfig, ProjectConfigServerResponse, UpdateProjectConfigRequest 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADERS = {
   'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
-  'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${utils.getSdkVersion()}`
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;

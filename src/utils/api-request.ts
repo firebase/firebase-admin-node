@@ -26,6 +26,7 @@ import url = require('url');
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
+import { getMetricsHeader } from '../utils/index';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
@@ -1085,6 +1086,9 @@ export class AuthorizedHttpClient extends HttpClient {
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
+
+      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+
       return super.send(requestCopy);
     });
   }
@@ -1107,6 +1111,8 @@ export class AuthorizedHttp2Client extends Http2Client {
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
+
+      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
 
       return super.send(requestCopy);
     });

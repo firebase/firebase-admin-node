@@ -25,7 +25,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import { MachineLearningApiClient } from '../../../src/machine-learning/machine-learning-api-client';
 import { ListModelsOptions, ModelOptions } from '../../../src/machine-learning/index';
 
@@ -118,6 +118,7 @@ describe('MachineLearningApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '

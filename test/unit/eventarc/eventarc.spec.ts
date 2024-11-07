@@ -27,7 +27,7 @@ import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import * as chai from 'chai';
 import chaiExclude from 'chai-exclude';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
 chai.use(chaiExclude);
@@ -55,6 +55,14 @@ const TEST_EVENT2_SERIALIZED = JSON.stringify(toCloudEventProtoFormat(TEST_EVENT
 describe('eventarc', () => {
   let mockApp: FirebaseApp;
   let eventarc: Eventarc;
+
+  const getExpectedHeaders = (mockAccessToken: string): object => {
+    return {
+      'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
+      Authorization: 'Bearer ' + mockAccessToken,
+      'X-Goog-Api-Client': getMetricsHeader(),
+    }
+  }
 
   before(() => {
     mockApp = mocks.app();
@@ -133,10 +141,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -151,10 +156,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED},${TEST_EVENT2_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });
@@ -196,10 +198,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/other-project-id/locations/us-west1/channels/my-channel2:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -214,10 +213,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/other-project-id/locations/us-west1/channels/my-channel2:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED},${TEST_EVENT2_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });
@@ -259,10 +255,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-west1/channels/my-channel:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -277,10 +270,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-west1/channels/my-channel:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED},${TEST_EVENT2_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });
@@ -322,10 +312,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/my-channel:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -340,10 +327,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/my-channel:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED},${TEST_EVENT2_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });
@@ -478,10 +462,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -498,10 +479,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });
@@ -542,10 +520,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
 
@@ -562,10 +537,7 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
-        headers: {
-          'X-Firebase-Client': 'fire-admin-node/' + getSdkVersion(),
-          Authorization: 'Bearer ' + mockAccessToken
-        }
+        headers: getExpectedHeaders(mockAccessToken)
       });
     });
   });

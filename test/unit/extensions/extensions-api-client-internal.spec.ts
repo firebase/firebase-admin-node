@@ -22,8 +22,9 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ExtensionsApiClient, FirebaseExtensionsError } from '../../../src/extensions/extensions-api-client-internal';
-import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
+import { HttpClient } from '../../../src/utils/api-request';
 import { SettableProcessingState } from '../../../src/extensions/extensions-api';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 const testProjectId = 'test-project';
 const testInstanceId = 'test-instance';
@@ -38,6 +39,13 @@ describe('Extension API client', () => {
     projectId: 'test-project',
     serviceAccountId: 'service-acct@email.com'
   };
+
+  const EXPECTED_HEADERS = {
+    'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
+  }
   
   before(() => {
     app = mocks.appWithOptions(mockOptions);
@@ -71,14 +79,19 @@ describe('Extension API client', () => {
           detailMessage: 'done processing',
         },
       }
-      const expected =  sinon.match((req: HttpRequestConfig) => { 
-        const url = 'https://firebaseextensions.googleapis.com/' +
-        'v1beta/projects/test-project/instances/test-instance/runtimeData';
-        return req.method == 'PATCH' && req.url == url && req.data == testRuntimeData;
-      }, 'Incorrect URL or Method');
-      httpClientStub.withArgs(expected).resolves(utils.responseFrom(testRuntimeData, 200));
-      await expect(apiClient.updateRuntimeData(testProjectId, testInstanceId, testRuntimeData))
-        .to.eventually.deep.equal(testRuntimeData);
+      const url = 'https://firebaseextensions.googleapis.com/' +
+      'v1beta/projects/test-project/instances/test-instance/runtimeData';
+      httpClientStub = httpClientStub.resolves(utils.responseFrom(testRuntimeData, 200));
+      return apiClient.updateRuntimeData(testProjectId, testInstanceId, testRuntimeData)
+        .then((runtimeData) => {
+          expect(runtimeData).to.deep.equal(testRuntimeData)
+          expect(httpClientStub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            url: url,
+            headers: EXPECTED_HEADERS,
+            data: testRuntimeData
+          })
+        })
     });
 
     it('should convert errors in FirebaseErrors', async () => {

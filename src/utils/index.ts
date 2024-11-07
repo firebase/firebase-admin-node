@@ -32,6 +32,10 @@ export function getSdkVersion(): string {
   return sdkVersion;
 }
 
+export function getMetricsHeader(): string {
+  return `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`
+}
+
 /**
  * Renames properties on an object given a mapping from old to new property names.
  *

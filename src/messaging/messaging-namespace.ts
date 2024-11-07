@@ -43,13 +43,8 @@ import {
 
   // Legacy APIs
   DataMessagePayload as TDataMessagePayload,
-  MessagingConditionResponse as TMessagingConditionResponse,
-  MessagingDeviceGroupResponse as TMessagingDeviceGroupResponse,
-  MessagingDeviceResult as TMessagingDeviceResult,
-  MessagingDevicesResponse as TMessagingDevicesResponse,
   MessagingOptions as TMessagingOptions,
   MessagingPayload as TMessagingPayload,
-  MessagingTopicResponse as TMessagingTopicResponse,
   NotificationMessagePayload as TNotificationMessagePayload,
 } from './messaging-api';
 
@@ -212,26 +207,6 @@ export namespace messaging {
   export type DataMessagePayload = TDataMessagePayload;
 
   /**
-   * Type alias to {@link firebase-admin.messaging#MessagingConditionResponse}.
-   */
-  export type MessagingConditionResponse = TMessagingConditionResponse;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingDeviceGroupResponse}.
-   */
-  export type MessagingDeviceGroupResponse = TMessagingDeviceGroupResponse;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingDeviceResult}.
-   */
-  export type MessagingDeviceResult = TMessagingDeviceResult;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingDevicesResponse}.
-   */
-  export type MessagingDevicesResponse = TMessagingDevicesResponse;
-
-  /**
    * Type alias to {@link firebase-admin.messaging#MessagingOptions}.
    */
   export type MessagingOptions = TMessagingOptions;
@@ -240,11 +215,6 @@ export namespace messaging {
    * Type alias to {@link firebase-admin.messaging#MessagingPayload}.
    */
   export type MessagingPayload = TMessagingPayload;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingTopicResponse}.
-   */
-  export type MessagingTopicResponse = TMessagingTopicResponse;
 
   /**
    * Type alias to {@link firebase-admin.messaging#NotificationMessagePayload}.

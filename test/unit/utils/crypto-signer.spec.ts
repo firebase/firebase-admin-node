@@ -29,6 +29,7 @@ import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as utils from '../utils';
+import { getMetricsHeader } from '../../../src/utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -103,7 +104,10 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob',
-        headers: { Authorization: `Bearer ${mockAccessToken}` },
+        headers: { 
+          Authorization: `Bearer ${mockAccessToken}`, 
+          'X-Goog-Api-Client': getMetricsHeader()
+        },
         data: { payload: input.toString('base64') },
       };
       let stub: sinon.SinonStub;
@@ -158,7 +162,10 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
-        headers: { Authorization: `Bearer ${mockAccessToken}` },
+        headers: { 
+          Authorization: `Bearer ${mockAccessToken}`,
+          'X-Goog-Api-Client': getMetricsHeader()
+        },
         data: { payload: input.toString('base64') },
       };
       let stub: sinon.SinonStub;

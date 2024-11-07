@@ -28,7 +28,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import { AppPlatform, ShaCertificate } from '../../../src/project-management/index';
 
 chai.should();
@@ -76,6 +76,7 @@ describe('ProjectManagementRequestHandler', () => {
     expectedHeaders = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
+      'X-Goog-Api-Client': getMetricsHeader(),
     };
     requestHandler = new ProjectManagementRequestHandler(mockApp);
     return mockApp.INTERNAL.getToken();

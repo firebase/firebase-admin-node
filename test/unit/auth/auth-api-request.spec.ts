@@ -42,7 +42,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
 import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
 import { expectUserImportResult } from './user-import-builder.spec';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import {
   UserImportRecord, OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest, UserIdentifier, UpdateRequest, UpdateMultiFactorInfoRequest,
@@ -863,12 +863,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     const mockAccessToken: string = utils.generateRandomAccessToken();
     const expectedHeaders: {[key: string]: string} = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
-      'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
+      'X-Goog-Api-Client': getMetricsHeader(),
       'Authorization': 'Bearer ' + mockAccessToken,
     };
     const expectedHeadersEmulator: {[key: string]: string} = {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
-      'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
+      'X-Goog-Api-Client': getMetricsHeader(),
       'Authorization': 'Bearer owner',
     };
     const callParams = (path: string, method: any, data: any): HttpRequestConfig => {
