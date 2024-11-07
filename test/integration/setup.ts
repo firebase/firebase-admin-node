@@ -19,7 +19,7 @@ import minimist = require('minimist');
 import path = require('path');
 import { random } from 'lodash';
 import {
-  App, Credential, GoogleOAuthAccessToken, applicationDefault, cert, deleteApp, initializeApp,
+  App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
 } from '../../lib/app/index'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -87,8 +87,7 @@ before(() => {
   storageBucket = projectId + '.appspot.com';
 
   defaultApp = initializeApp({
-    //...getCredential(),
-    credential: applicationDefault(),
+    ...getCredential(),
     projectId,
     databaseURL: databaseUrl,
     storageBucket,

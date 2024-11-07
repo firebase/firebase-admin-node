@@ -1079,13 +1079,10 @@ export class AuthorizedHttpClient extends HttpClient {
       requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       let quotaProjectId: string | undefined;
-      if (process.env.GOOGLE_CLOUD_QUOTA_PROJECT) {
-        quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT;
-      }
-      else if (this.app.options.credential instanceof ApplicationDefaultCredential){
+      if (this.app.options.credential instanceof ApplicationDefaultCredential) {
         quotaProjectId = this.app.options.credential.getQuotaProjectId();
       }
-
+      quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
       if (!requestCopy.headers['x-goog-user-project'] && validator.isNonEmptyString(quotaProjectId)) {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
@@ -1118,6 +1115,15 @@ export class AuthorizedHttp2Client extends Http2Client {
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
+
+      let quotaProjectId: string | undefined;
+      if (this.app.options.credential instanceof ApplicationDefaultCredential) {
+        quotaProjectId = this.app.options.credential.getQuotaProjectId();
+      }
+      quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
+      if (!requestCopy.headers['x-goog-user-project'] && validator.isNonEmptyString(quotaProjectId)) {
+        requestCopy.headers['x-goog-user-project'] = quotaProjectId;
+      }
 
       requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
 
