@@ -29,6 +29,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { HttpClient } from '../../../src/utils/api-request';
 import { FirebaseInstallationsRequestHandler } from '../../../src/installations/installations-request-handler';
+import { getMetricsHeader } from '../../../src/utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -57,6 +58,7 @@ describe('FirebaseInstallationsRequestHandler', () => {
     mockApp = mocks.app();
     expectedHeaders = {
       Authorization: 'Bearer ' + mockAccessToken,
+      'X-Goog-Api-Client': getMetricsHeader(),
     };
     return mockApp.INTERNAL.getToken();
   });

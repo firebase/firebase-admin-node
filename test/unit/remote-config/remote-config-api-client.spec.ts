@@ -29,7 +29,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import {
   RemoteConfigTemplate, Version, ListVersionsResult,
 } from '../../../src/remote-config/index';
@@ -58,6 +58,7 @@ describe('RemoteConfigApiClient', () => {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
     'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
   };
 
   const VERSION_INFO: Version = {

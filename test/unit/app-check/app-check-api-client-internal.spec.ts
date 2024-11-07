@@ -23,7 +23,7 @@ import * as sinon from 'sinon';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { getSdkVersion } from '../../../src/utils';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
@@ -46,6 +46,7 @@ describe('AppCheckApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'x-goog-user-project': 'test-project',
+    'X-Goog-Api-Client': getMetricsHeader(),
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '

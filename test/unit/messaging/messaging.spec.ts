@@ -32,7 +32,7 @@ import {
   SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage,
 } from '../../../src/messaging/index';
 import { HttpClient } from '../../../src/utils/api-request';
-import { getSdkVersion } from '../../../src/utils/index';
+import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
 
 chai.should();
@@ -218,7 +218,7 @@ describe('Messaging', () => {
   const expectedHeaders = {
     'Authorization': 'Bearer ' + mockAccessToken,
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
-    'X-Goog-Api-Client': `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`,
+    'X-Goog-Api-Client': getMetricsHeader(),
     'access_token_auth': 'true',
   };
   const emptyResponse = utils.responseFrom({});
