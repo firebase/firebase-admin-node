@@ -26,6 +26,7 @@ import url = require('url');
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
+import { ApplicationDefaultCredential } from '../app/credential-internal';
 import { getMetricsHeader } from '../utils/index';
 
 /** Http method type definition. */
@@ -1077,10 +1078,13 @@ export class AuthorizedHttpClient extends HttpClient {
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
 
-      // Fix issue where firebase-admin does not specify quota project that is
-      // necessary for use when utilizing human account with ADC (RSDF)
-      if (!requestCopy.headers['x-goog-user-project'] && this.app.options.projectId) {
-        requestCopy.headers['x-goog-user-project'] = this.app.options.projectId
+      let quotaProjectId: string | undefined;
+      if (this.app.options.credential instanceof ApplicationDefaultCredential) {
+        quotaProjectId = this.app.options.credential.getQuotaProjectId();
+      }
+      quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
+      if (!requestCopy.headers['x-goog-user-project'] && validator.isNonEmptyString(quotaProjectId)) {
+        requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
 
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
@@ -1111,6 +1115,15 @@ export class AuthorizedHttp2Client extends Http2Client {
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
+
+      let quotaProjectId: string | undefined;
+      if (this.app.options.credential instanceof ApplicationDefaultCredential) {
+        quotaProjectId = this.app.options.credential.getQuotaProjectId();
+      }
+      quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
+      if (!requestCopy.headers['x-goog-user-project'] && validator.isNonEmptyString(quotaProjectId)) {
+        requestCopy.headers['x-goog-user-project'] = quotaProjectId;
+      }
 
       requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
 

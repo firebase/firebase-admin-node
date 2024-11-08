@@ -39,6 +39,7 @@ export class ApplicationDefaultCredential implements Credential {
   private readonly googleAuth: GoogleAuth;
   private authClient: AnyAuthClient;
   private projectId?: string;
+  private quotaProjectId?: string;
   private accountId?: string;
 
   constructor(httpAgent?: Agent) {
@@ -58,6 +59,7 @@ export class ApplicationDefaultCredential implements Credential {
     }
     await this.authClient.getAccessToken();
     const credentials = this.authClient.credentials;
+    this.quotaProjectId = this.authClient.quotaProjectId;
     return populateCredential(credentials);
   }
 
@@ -66,6 +68,13 @@ export class ApplicationDefaultCredential implements Credential {
       this.projectId = await this.googleAuth.getProjectId();
     }
     return Promise.resolve(this.projectId);
+  }
+
+  public getQuotaProjectId(): string | undefined {
+    if (!this.quotaProjectId) {
+      this.quotaProjectId = this.authClient?.quotaProjectId;
+    }
+    return this.quotaProjectId;
   }
 
   public async isComputeEngineCredential(): Promise<boolean> {

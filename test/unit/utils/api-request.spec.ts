@@ -17,6 +17,7 @@
 
 'use strict';
 
+import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -35,6 +36,7 @@ import {
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
 import * as zlib from 'zlib';
+import { getMetricsHeader } from '../../../src/utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -2645,6 +2647,45 @@ describe('AuthorizedHttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  describe('Quota Project', () => {
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+      if (process.env.GOOGLE_CLOUD_QUOTA_PROJECT) {
+        delete process.env.GOOGLE_CLOUD_QUOTA_PROJECT;
+      }
+    });
+
+    it('should include quota project id in headers when GOOGLE_CLOUD_QUOTA_PROJECT is set', () => {
+      const reqData = { request: 'data' };
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      process.env.GOOGLE_CLOUD_QUOTA_PROJECT = 'test-project-id';
+      const client = new AuthorizedHttpClient(mockApp);
+      return client.send({
+        method: 'POST',
+        url: mockUrl,
+        data: reqData,
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: mockUrl,
+            headers: {
+              ...requestHeaders.reqheaders,
+              'x-goog-user-project': 'test-project-id',
+              'X-Goog-Api-Client': getMetricsHeader(),
+            },
+            data: reqData
+          });
+        });
     });
   });
 

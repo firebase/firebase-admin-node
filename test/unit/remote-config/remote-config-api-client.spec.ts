@@ -57,7 +57,6 @@ describe('RemoteConfigApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
-    'x-goog-user-project': 'test-project',
     'X-Goog-Api-Client': getMetricsHeader(),
   };
 
