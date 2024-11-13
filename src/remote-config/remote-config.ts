@@ -41,6 +41,7 @@ import {
   GetServerTemplateOptions,
   InitServerTemplateOptions,
   ServerTemplateDataType,
+  FetchResponse,
 } from './remote-config-api';
 
 /**
@@ -437,6 +438,17 @@ class ServerConfigImpl implements ServerConfig {
   }
   getValue(key: string): Value {
     return this.configValues[key] || new ValueImpl('static');
+  }
+  serializeForClient(): FetchResponse {
+    const config: {[key:string]:string} = {};
+    for (const [param, value] of Object.entries(this.configValues)) {
+      config[param] = value.asString();
+    }
+    return  {
+      status: 200,
+      eTag: `etag-${Math.floor(Math.random() * 100000)}`,
+      config,
+    };
   }
 }
 
