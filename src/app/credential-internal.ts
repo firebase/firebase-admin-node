@@ -473,6 +473,10 @@ function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent)
         'Service account must be an object.',
       );
     }
+    copyAttr(keyFile, keyFile, 'project_id', 'projectId');
+    copyAttr(keyFile, keyFile, 'private_key', 'privateKey');
+    copyAttr(keyFile, keyFile, 'client_email', 'clientEmail');
+    
     client = auth.fromJSON(keyFile);
   }
   return { auth, client };
