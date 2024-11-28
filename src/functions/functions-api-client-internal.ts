@@ -163,7 +163,7 @@ export class FunctionsApiClient {
           task: taskPayload,
         }
       };
-      return this.httpClient.send(request);
+      return await this.httpClient.send(request);
     } catch (err: unknown) {
       if (err instanceof RequestResponseError) {
         if (err.response.status === 409) {
