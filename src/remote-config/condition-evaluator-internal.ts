@@ -322,6 +322,6 @@ function compareSemanticVersions(
     if (version1[i] < version2[i]) return predicateFn(-1);
     if (version1[i] > version2[i]) return predicateFn(1);
   }
-  // If this point is reached, the semantic versions equal.
+  // If this point is reached, the semantic versions are equal.
   return predicateFn(0);
 }
