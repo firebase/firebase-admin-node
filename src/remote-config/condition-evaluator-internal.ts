@@ -311,9 +311,6 @@ function compareSemanticVersions(
     const version1HasSegment = version1[i] !== undefined;
     const version2HasSegment = version2[i] !== undefined;
 
-    // If both are undefined, we've consumed everything and they're equal.
-    if (!version1HasSegment && !version2HasSegment) return predicateFn(0)
-
     // Insert zeros if undefined for easier comparison.
     if (!version1HasSegment) version1[i] = 0;
     if (!version2HasSegment) version2[i] = 0;
@@ -325,5 +322,6 @@ function compareSemanticVersions(
     if (version1[i] < version2[i]) return predicateFn(-1);
     if (version1[i] > version2[i]) return predicateFn(1);
   }
+  // If this point is reached, the semantic versions equal.
   return predicateFn(0);
 }
