@@ -729,12 +729,11 @@ export interface ServerConfig {
   getValue(key: string): Value;
 
   /**
-   * Returns a JSON-serializable representation of the current config values, including an eTag
-   * that can be utilized by the Remote Config web client SDK.
+   * Returns all config values.
    * 
-   * @returns JSON-serializable config object.
+   * @returns A map of all config keys to their values.
    */
-  serializeForClient(): FetchResponse;
+  getAll(): {[key:string]: Value}
 }
 
 /**

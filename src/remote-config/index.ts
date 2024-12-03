@@ -23,6 +23,7 @@
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { RemoteConfig } from './remote-config';
+import { ServerConfig, FetchResponse } from './remote-config-api';
 
 export {
   AndCondition,
@@ -31,6 +32,7 @@ export {
   DefaultConfig,
   EvaluationContext,
   ExplicitParameterValue,
+  FetchResponse,
   GetServerTemplateOptions,
   InAppDefaultValue,
   InitServerTemplateOptions,
@@ -95,4 +97,23 @@ export function getRemoteConfig(app?: App): RemoteConfig {
 
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('remoteConfig', (app) => new RemoteConfig(app));
+}
+
+/**
+   * Returns a JSON-serializable representation of the current config values, including an eTag
+   * that can be utilized by the Remote Config web client SDK.
+   * 
+   * @returns JSON-serializable config object.
+   */
+export function buildFetchResponse(serverConfig: ServerConfig, etag?: string): FetchResponse {
+  const config: {[key:string]: string} = {};
+  for (const [param, value] of Object.entries(serverConfig.getAll())) {
+    config[param] = value.asString();
+  }
+  // TODO - compute etag
+  return  {
+    status: 200,
+    eTag: `etag-${Math.floor(Math.random() * 100000)}`,
+    config,
+  };
 }
