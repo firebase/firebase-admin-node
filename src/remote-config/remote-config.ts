@@ -15,6 +15,7 @@
  */
 
 import { App } from '../app';
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import { ConditionEvaluator } from './condition-evaluator-internal';
@@ -41,6 +42,7 @@ import {
   GetServerTemplateOptions,
   InitServerTemplateOptions,
   ServerTemplateDataType,
+  FetchResponseData,
 } from './remote-config-api';
 
 /**
@@ -439,7 +441,7 @@ class ServerConfigImpl implements ServerConfig {
     return this.configValues[key] || new ValueImpl('static');
   }
   getAll(): {[key: string]: Value} {
-    return {...this.configValues};
+    return { ...this.configValues };
   }
 }
 
@@ -614,5 +616,51 @@ class VersionImpl implements Version {
     // This validation fails for timestamps earlier than January 1, 1970 and considers strings
     // such as "1.2" as valid timestamps.
     return validator.isNonEmptyString(timestamp) && (new Date(timestamp)).getTime() > 0;
+  }
+}
+
+/**
+ * Represents a fetch response that can be used to interact with RC's client SDK.
+ */
+export class RemoteConfigFetchResponse {
+  private response: FetchResponseData;
+
+  constructor(app: App, serverConfig: ServerConfig, eTag?: string) {
+    const config: {[key:string]: string} = {};
+    for (const [param, value] of Object.entries(serverConfig.getAll())) {
+      config[param] = value.asString();
+    }
+
+    const currentEtag = this.processEtag(config, app);
+
+    if (currentEtag === eTag) {
+      this.response = {
+        status: 304,
+        eTag,
+      };
+    } else {
+      this.response = {
+        status: 200,
+        eTag: currentEtag,
+        config,
+      }
+    }
+  }
+
+  toJSON(): FetchResponseData {
+    return this.response;
+  }
+
+  private processEtag(config: {[key:string]: string}, app: App): string {
+    const configJson = JSON.stringify(config);
+    let hash = 0;
+    for (let i = 0; i < configJson.length; i++) {
+      const char = configJson.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    const projectId = utils.getExplicitProjectId(app);
+    const parts = ['etag', projectId, 'firebase-server', 'fetch', hash];
+    return parts.filter(a => !!a).join('-');
   }
 }

@@ -26,6 +26,7 @@ import {
   RemoteConfigCondition,
   TagColor,
   ListVersionsResult,
+  RemoteConfigFetchResponse,
 } from '../../../src/remote-config/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
@@ -1387,6 +1388,65 @@ describe('RemoteConfig', () => {
         });
         const config = template.evaluate();
         expect(config.getBoolean('dog_is_cute')).to.be.true;
+      });
+    });
+  });
+
+  describe('RemoteConfigFetchResponse', () => {
+    it('should return a 200 response with no etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(mockApp, template.evaluate());
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 200,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429',
+        config: { 'dog_type': 'beagle' }
+      });
+    });
+  
+    it('should return a 200 response with a stale etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(mockApp, template.evaluate(), 'fake-etag');
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 200,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429',
+        config: { 'dog_type': 'beagle' }
+      });
+    });
+  
+    it('should return a 304 repsonse with matching etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(
+        mockApp, template.evaluate(), 'etag-project_id-firebase-server-fetch--2039110429');
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 304,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429'
       });
     });
   });

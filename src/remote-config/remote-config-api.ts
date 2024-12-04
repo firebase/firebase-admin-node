@@ -740,9 +740,9 @@ export interface ServerConfig {
  * JSON-serializable representation of evaluated config values. This can be consumed by 
  * Remote Config web client SDKs.
  */
-export interface FetchResponse {
+export interface FetchResponseData {
   status: number;
-  eTag?: string;
+  eTag: string;
   config?: {[key: string]: string};
 }
 
