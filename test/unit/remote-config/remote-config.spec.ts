@@ -1293,13 +1293,46 @@ describe('RemoteConfig', () => {
   // Note the static source is set in the getValue() method, but the other sources
   // are set in the evaluate() method, so these tests span a couple layers.
   describe('ServerConfig', () => {
+    describe('getAll', () => {
+      it('should return all values', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        templateData.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          },
+          dog_type_enabled: {
+            defaultValue: {
+              value: 'true'
+            }
+          },
+          dog_age: {
+            defaultValue: {
+              value: '22'
+            }
+          },
+          dog_use_inapp_default: {
+            defaultValue: {
+              useInAppDefault: true
+            }
+          },
+        };
+        const template = remoteConfig.initServerTemplate({ template: templateData });
+        const config = template.evaluate().getAll();
+        expect(Object.keys(config)).deep.equal(['dog_type', 'dog_type_enabled', 'dog_age']);
+        expect(config['dog_type'].asString()).to.equal('pug');
+        expect(config['dog_type_enabled'].asBoolean()).to.equal(true);
+        expect(config['dog_age'].asNumber()).to.equal(22);
+      });
+    });
+
     describe('getValue', () => {
       it('should return static when default and remote are not defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Omits remote parameter values.
         templateData.parameters = {
-        };
-        // Omits in-app default values.
+        }
         const template = remoteConfig.initServerTemplate({ template: templateData });
         const config = template.evaluate();
         const value = config.getValue('dog_type');
