@@ -239,7 +239,7 @@
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^7.16.1",
     "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
