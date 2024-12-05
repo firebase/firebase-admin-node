@@ -22,6 +22,7 @@ import { AuthorizedHttpClient, HttpRequestConfig, HttpClient, RequestResponseErr
 
 import { Algorithm } from 'jsonwebtoken';
 import { ErrorInfo } from '../utils/error';
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 const ALGORITHM_RS256: Algorithm = 'RS256' as const;
@@ -105,22 +106,23 @@ export class IAMSigner implements CryptoSigner {
 
   private readonly httpClient: AuthorizedHttpClient;
   private serviceAccountId?: string;
+  private app?: App;
 
-  constructor(httpClient: AuthorizedHttpClient, serviceAccountId?: string) {
+  constructor(httpClient: AuthorizedHttpClient, app: App) {
     if (!httpClient) {
       throw new CryptoSignerError({
         code: CryptoSignerErrorCode.INVALID_ARGUMENT,
         message: 'INTERNAL ASSERT: Must provide a HTTP client to initialize IAMSigner.',
       });
     }
-    if (typeof serviceAccountId !== 'undefined' && !validator.isNonEmptyString(serviceAccountId)) {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new CryptoSignerError({
         code: CryptoSignerErrorCode.INVALID_ARGUMENT,
-        message: 'INTERNAL ASSERT: Service account ID must be undefined or a non-empty string.',
+        message: 'INTERNAL ASSERT: Must provide a valid Firebase app instance.',
       });
     }
     this.httpClient = httpClient;
-    this.serviceAccountId = serviceAccountId;
+    this.app = app;
   }
 
   /**
@@ -152,9 +154,14 @@ export class IAMSigner implements CryptoSigner {
   /**
    * @inheritDoc
    */
-  public getAccountId(): Promise<string> {
+  public async getAccountId(): Promise<string> {
     if (validator.isNonEmptyString(this.serviceAccountId)) {
       return Promise.resolve(this.serviceAccountId);
+    }
+    const accountId = await utils.findServiceAccountEmail(this.app!)
+    if (accountId) {
+      this.serviceAccountId = accountId;
+      return Promise.resolve(accountId);
     }
     const request: HttpRequestConfig = {
       method: 'GET',
@@ -197,7 +204,7 @@ export function cryptoSignerFromApp(app: App): CryptoSigner {
     return new ServiceAccountSigner(credential);
   }
 
-  return new IAMSigner(new AuthorizedHttpClient(app as FirebaseApp), app.options.serviceAccountId);
+  return new IAMSigner(new AuthorizedHttpClient(app as FirebaseApp), app);
 }
 
 /**
