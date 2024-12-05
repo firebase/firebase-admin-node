@@ -268,7 +268,7 @@
     "sinon": "^18.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typescript": "5.5.4",
+    "typescript": "5.7.2",
     "yargs": "^17.0.1"
   }
 }
