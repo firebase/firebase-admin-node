@@ -113,7 +113,7 @@ export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSetti
   const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version: firebaseVersion } = require('../../package.json');
+  const sdkVersion = utils.getSdkVersion();
   const preferRest = firestoreSettings?.preferRest;
   if (credential instanceof ServiceAccountCredential) {
     return {
@@ -124,7 +124,8 @@ export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSetti
       // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
       // guaranteed to be available.
       projectId: projectId!,
-      firebaseVersion,
+      firebaseVersion: sdkVersion,
+      firebaseAdminVersion: sdkVersion,
       preferRest,
     };
   } else if (isApplicationDefault(app.options.credential)) {
@@ -132,8 +133,17 @@ export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSetti
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
     return validator.isNonEmptyString(projectId)
-      ? { projectId, firebaseVersion, preferRest }
-      : { firebaseVersion, preferRest };
+      ? {
+        projectId,
+        firebaseVersion: sdkVersion,
+        firebaseAdminVersion: sdkVersion,
+        preferRest
+      }
+      : {
+        firebaseVersion: sdkVersion,
+        firebaseAdminVersion: sdkVersion,
+        preferRest
+      };
   }
 
   throw new FirebaseFirestoreError({
@@ -155,8 +165,8 @@ function initFirestore(app: App, databaseId: string, firestoreSettings?: Firesto
     throw new FirebaseFirestoreError({
       code: 'missing-dependencies',
       message: 'Failed to import the Cloud Firestore client library for Node.js. '
-          + 'Make sure to install the "@google-cloud/firestore" npm package. '
-          + `Original error: ${err}`,
+        + 'Make sure to install the "@google-cloud/firestore" npm package. '
+        + `Original error: ${err}`,
     });
   }
 
