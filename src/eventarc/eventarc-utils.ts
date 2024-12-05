@@ -17,12 +17,11 @@
 
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
-import { v4 as uuid } from 'uuid';
 import * as validator from '../utils/validator';
 
 // List of CloudEvent properties that are handled "by hand" and should be skipped by
 // automatic attribute copy.
-const TOP_LEVEL_CE_ATTRS: string[] = 
+const TOP_LEVEL_CE_ATTRS: string[] =
     ['id', 'type', 'specversion', 'source', 'data', 'time', 'datacontenttype', 'subject'];
 
 export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
@@ -50,7 +49,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   }
   const out: Record<string, any> = {
     '@type': 'type.googleapis.com/io.cloudevents.v1.CloudEvent',
-    'id': ce.id ?? uuid(),
+    'id': ce.id ?? crypto.randomUUID(),
     'type': ce.type,
     'specVersion': ce.specversion ?? '1.0',
     'source': source
@@ -72,7 +71,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   if (typeof ce.datacontenttype !== 'undefined') {
     if (!validator.isNonEmptyString(ce.datacontenttype)) {
       throw new FirebaseEventarcError(
-        'invalid-argument', 
+        'invalid-argument',
         "CloudEvent 'datacontenttype' if specified must be non-empty string.");
     }
     setAttribute(out, 'datacontenttype', {
@@ -82,7 +81,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   if (ce.subject) {
     if (!validator.isNonEmptyString(ce.subject)) {
       throw new FirebaseEventarcError(
-        'invalid-argument', 
+        'invalid-argument',
         "CloudEvent 'subject' if specified must be non-empty string.");
     }
     setAttribute(out, 'subject', {
@@ -109,7 +108,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
     }
   } else {
     throw new FirebaseEventarcError(
-      'invalid-argument', 
+      'invalid-argument',
       `CloudEvent 'data' must be string or an object (which are converted to JSON), got '${typeof ce.data}'.`);
   }
 
