@@ -104,6 +104,7 @@ export {
   PasswordPolicyEnforcementState,
   CustomStrengthOptionsConfig,
   EmailPrivacyConfig,
+  UpdateTotpMultiFactorInfoRequest,
 } from './auth-config';
 
 export {
