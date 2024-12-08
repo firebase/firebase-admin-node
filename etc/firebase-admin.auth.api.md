@@ -49,6 +49,7 @@ export interface AllowlistOnlyWrap {
 export class Auth extends BaseAuth {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
+    passkeyConfigManager(): PasskeyConfigManager;
     projectConfigManager(): ProjectConfigManager;
     tenantManager(): TenantManager;
 }
@@ -823,6 +824,36 @@ export interface OIDCUpdateAuthProviderRequest {
 }
 
 // @public
+export class PasskeyConfig {
+    readonly expectedOrigins?: string[];
+    readonly name?: string;
+    readonly rpId?: string;
+    toJSON(): object;
+}
+
+// @public
+export class PasskeyConfigManager {
+    createPasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+    getPasskeyConfig(tenantId?: string): Promise<PasskeyConfig>;
+    updatePasskeyConfig(passkeyConfigRequest: PasskeyConfigRequest, tenantId?: string): Promise<PasskeyConfig>;
+}
+
+// @public
+export interface PasskeyConfigRequest {
+    expectedOrigins?: string[];
+    // (undocumented)
+    rpId?: string;
+}
+
+// @public
+export class PasskeyInfo {
+    readonly credentialId: string;
+    readonly displayName?: string;
+    readonly name: string;
+    toJSON(): object;
+}
+
+// @public
 export interface PasswordPolicyConfig {
     constraints?: CustomStrengthOptionsConfig;
     enforcementState?: PasswordPolicyEnforcementState;
@@ -1131,6 +1162,7 @@ export class UserRecord {
     readonly emailVerified: boolean;
     readonly metadata: UserMetadata;
     readonly multiFactor?: MultiFactorSettings;
+    readonly passkeyInfo?: PasskeyInfo[];
     readonly passwordHash?: string;
     readonly passwordSalt?: string;
     readonly phoneNumber?: string;
