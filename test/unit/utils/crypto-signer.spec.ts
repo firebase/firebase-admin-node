@@ -103,7 +103,7 @@ describe('CryptoSigner', () => {
       const input = Buffer.from('input');
       const signRequest = {
         method: 'POST',
-        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob',
+        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/foo@project_id.iam.gserviceaccount.com:signBlob',
         headers: { 
           Authorization: `Bearer ${mockAccessToken}`, 
           'X-Goog-Api-Client': getMetricsHeader()
@@ -120,7 +120,7 @@ describe('CryptoSigner', () => {
         const expectedResult = utils.responseFrom(response);
         stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler, 'test-service-account');
+        const signer = new IAMSigner(requestHandler, mockApp);
         return signer.sign(input).then((signature) => {
           expect(signature.toString('base64')).to.equal(response.signedBlob);
           expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
@@ -136,7 +136,7 @@ describe('CryptoSigner', () => {
         });
         stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         const requestHandler = new AuthorizedHttpClient(mockApp);
-        const signer = new IAMSigner(requestHandler, 'test-service-account');
+        const signer = new IAMSigner(requestHandler, mockApp);
         return signer.sign(input).catch((err) => {
           expect(err).to.be.instanceOf(CryptoSignerError);
           expect(err.message).to.equal('Server responded with status 500.');
@@ -145,9 +145,9 @@ describe('CryptoSigner', () => {
         });
       });
 
-      it('should return the explicitly specified service account', () => {
-        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp), 'test-service-account');
-        return signer.getAccountId().should.eventually.equal('test-service-account');
+      it('should return the service account from the app', () => {
+        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp), mockApp);
+        return signer.getAccountId().should.eventually.equal('foo@project_id.iam.gserviceaccount.com');
       });
     });
 
