@@ -1129,6 +1129,7 @@ describe('ConditionEvaluator', () => {
           { targets: ['5.12.3'], actual: '5.12.9', outcome: false },
           { targets: ['5.12.3'], actual: '5.12.3.0.0.0.0', outcome: false },
           { targets: ['5.6.7.8.9'], actual: '5.6.7.8.9', outcome: true },
+          { targets: ['5.6.7.8.9'], actual: '4.5.6.7.8', outcome: false },
           { targets: ['5.6.7.8.9.0'], actual: '5.6.7.8.9.0', outcome: false },
           invalidNumericSignalTestCase,
         ];
