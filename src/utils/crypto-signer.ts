@@ -108,14 +108,14 @@ export class IAMSigner implements CryptoSigner {
   private serviceAccountId?: string;
   private app?: App;
 
-  constructor(httpClient: AuthorizedHttpClient, app: App) {
+  constructor(httpClient: AuthorizedHttpClient, app?: App) {
     if (!httpClient) {
       throw new CryptoSignerError({
         code: CryptoSignerErrorCode.INVALID_ARGUMENT,
         message: 'INTERNAL ASSERT: Must provide a HTTP client to initialize IAMSigner.',
       });
     }
-    if (typeof app !== 'object' || app === null || !('options' in app)) {
+    if (app && (typeof app !== 'object' || app === null || !('options' in app))) {
       throw new CryptoSignerError({
         code: CryptoSignerErrorCode.INVALID_ARGUMENT,
         message: 'INTERNAL ASSERT: Must provide a valid Firebase app instance.',
@@ -158,10 +158,12 @@ export class IAMSigner implements CryptoSigner {
     if (validator.isNonEmptyString(this.serviceAccountId)) {
       return Promise.resolve(this.serviceAccountId);
     }
-    const accountId = await utils.findServiceAccountEmail(this.app!)
-    if (accountId) {
-      this.serviceAccountId = accountId;
-      return Promise.resolve(accountId);
+    if (this.app) {
+      const accountId = await utils.findServiceAccountEmail(this.app!)
+      if (accountId) {
+        this.serviceAccountId = accountId;
+        return Promise.resolve(accountId);
+      }
     }
     const request: HttpRequestConfig = {
       method: 'GET',
