@@ -1845,6 +1845,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         emailVerified: expectedUserRecord.emailVerified,
         password: 'password',
         phoneNumber: expectedUserRecord.phoneNumber,
+        customUserClaims: {
+          admin: true,
+          groupId: '123',
+        },
         providerToLink: {
           providerId: 'google.com',
           uid: 'google_uid',
@@ -1855,10 +1859,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
       beforeEach(() => {
         sinon.spy(validator, 'isUid');
         sinon.spy(validator, 'isNonNullObject');
+        sinon.spy(validator, 'isObject');
       });
       afterEach(() => {
         (validator.isUid as any).restore();
         (validator.isNonNullObject as any).restore();
+        (validator.isObject as any).restore();
         _.forEach(stubs, (stub) => stub.restore());
         stubs = [];
       });
@@ -1977,6 +1983,18 @@ AUTH_CONFIGS.forEach((testConfig) => {
             deleteProvider: [ 'phone', 'google.com' ],
           });
       });
+
+      it('should be rejected given invalid custom user claims', () => {
+        return auth.updateUser(uid, { customUserClaims: 'invalid' as any })
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/argument-error');
+            expect(validator.isObject).to.have.been.calledOnce.and.calledWith('invalid');
+          });
+      });
+
 
       describe('non-federated providers', () => {
         let invokeRequestHandlerStub: sinon.SinonStub;
