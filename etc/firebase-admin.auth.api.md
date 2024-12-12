@@ -545,7 +545,9 @@ export abstract class BaseAuth {
     createCustomToken(uid: string, developerClaims?: object): Promise<string>;
     createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
     createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-    createUser(properties: CreateRequest): Promise<UserRecord>;
+    createUser(properties: CreateRequest, noFetchUserRecord?: boolean): Promise<UserRecord>;
+    // (undocumented)
+    createUser(properties: CreateRequest, noFetchUserRecord: true): Promise<void>;
     deleteProviderConfig(providerId: string): Promise<void>;
     deleteUser(uid: string): Promise<void>;
     deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
@@ -565,7 +567,9 @@ export abstract class BaseAuth {
     revokeRefreshTokens(uid: string): Promise<void>;
     setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
     updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
-    updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
+    updateUser(uid: string, properties: UpdateRequest, noFetchUserRecord?: boolean): Promise<UserRecord>;
+    // (undocumented)
+    updateUser(uid: string, properties: UpdateRequest, noFetchUserRecord: true): Promise<void>;
     // @alpha (undocumented)
     _verifyAuthBlockingToken(token: string, audience?: string): Promise<DecodedAuthBlockingToken>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
