@@ -749,7 +749,7 @@ export abstract class BaseAuth {
    *     minimumVersion: '12'
    *   },
    *   handleCodeInApp: true,
-   *   dynamicLinkDomain: 'custom.page.link'
+   *   linkDomain: 'project-id.firebaseapp.com'
    * };
    * admin.auth()
    *     .generatePasswordResetLink('user@example.com', actionCodeSettings)
@@ -802,7 +802,7 @@ export abstract class BaseAuth {
    *     minimumVersion: '12'
    *   },
    *   handleCodeInApp: true,
-   *   dynamicLinkDomain: 'custom.page.link'
+   *   linkDomain: 'project-id.firebaseapp.com'
    * };
    * admin.auth()
    *     .generateEmailVerificationLink('user@example.com', actionCodeSettings)
@@ -883,7 +883,7 @@ export abstract class BaseAuth {
    *     minimumVersion: '12'
    *   },
    *   handleCodeInApp: true,
-   *   dynamicLinkDomain: 'custom.page.link'
+   *   linkDomain: 'project-id.firebaseapp.com'
    * };
    * admin.auth()
    *     .generateEmailVerificationLink('user@example.com', actionCodeSettings)

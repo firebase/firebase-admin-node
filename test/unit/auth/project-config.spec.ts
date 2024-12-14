@@ -87,7 +87,10 @@ describe('ProjectConfig', () => {
       useAccountDefender: true,
       useSmsBotScore: true,
       useSmsTollFraudProtection: true,
-    }
+    },
+    mobileLinksConfig: {
+      domain: 'FIREBASE_DYNAMIC_LINK_DOMAIN',
+    },
   };
 
   const updateProjectConfigRequest1: UpdateProjectConfigRequest = {
@@ -110,6 +113,9 @@ describe('ProjectConfig', () => {
     },
     emailPrivacyConfig: {
       enableImprovedEmailPrivacy: false,
+    },
+    mobileLinksConfig: {
+      domain: 'HOSTING_DOMAIN'
     },
   };
 
@@ -550,6 +556,22 @@ describe('ProjectConfig', () => {
         }).to.throw('"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.');
       });
 
+      it('should throw on invalid MobileLinksConfig attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.mobileLinksConfig.invalidParameter = 'invalid';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"invalidParameter" is not a valid "MobileLinksConfig" parameter.');
+      });
+
+      it('should throw on invalid domain attribute', () => {
+        const configOptionsClientRequest = deepCopy(updateProjectConfigRequest1) as any;
+        configOptionsClientRequest.mobileLinksConfig.domain = 'random domain';
+        expect(() => {
+          ProjectConfig.buildServerRequest(configOptionsClientRequest);
+        }).to.throw('"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".');
+      });
+
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
       nonObjects.forEach((request) => {
         it('should throw on invalid UpdateProjectConfigRequest:' + JSON.stringify(request), () => {
@@ -647,6 +669,13 @@ describe('ProjectConfig', () => {
       };
       expect(projectConfig.emailPrivacyConfig).to.deep.equal(expectedEmailPrivacyConfig);
     });
+
+    it('should set readonly property mobileLinksConfig', () => {
+      const expectedMobileLinksConfig = {
+        domain: 'FIREBASE_DYNAMIC_LINK_DOMAIN',
+      };
+      expect(projectConfig.mobileLinksConfig).to.deep.equal(expectedMobileLinksConfig);
+    });
   });
 
   describe('toJSON()', () => {
@@ -704,6 +733,7 @@ describe('ProjectConfig', () => {
         emailPrivacyConfig: {
           enableImprovedEmailPrivacy: true,
         },
+        mobileLinksConfig: deepCopy(serverResponse.mobileLinksConfig),
       });
     });
 
@@ -720,6 +750,7 @@ describe('ProjectConfig', () => {
       delete serverResponseOptionalCopy.recaptchaConfig?.useSmsTollFraudProtection
       delete serverResponseOptionalCopy.passwordPolicyConfig;
       delete serverResponseOptionalCopy.emailPrivacyConfig;
+      delete serverResponseOptionalCopy.mobileLinksConfig;
       expect(new ProjectConfig(serverResponseOptionalCopy).toJSON()).to.deep.equal({
         recaptchaConfig: {
           recaptchaKeys: deepCopy(serverResponse.recaptchaConfig?.recaptchaKeys),

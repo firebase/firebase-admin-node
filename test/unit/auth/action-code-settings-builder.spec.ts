@@ -28,6 +28,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+const TEST_LINK_DOMAIN = 'project-id.firebaseapp.com';
 
 describe('ActionCodeSettingsBuilder', () => {
   describe('constructor', () => {
@@ -43,7 +44,10 @@ describe('ActionCodeSettingsBuilder', () => {
           installApp: true,
           minimumVersion: '6',
         },
+        // not removing this test since we are going to accept both dynamicLinkDomain 
+        // and linkDomain for the onboarding phase.
         dynamicLinkDomain: 'custom.page.link',
+        linkDomain: TEST_LINK_DOMAIN,
       })).not.to.throw;
     });
 
@@ -69,6 +73,7 @@ describe('ActionCodeSettingsBuilder', () => {
             minimumVersion: '6',
           },
           dynamicLinkDomain: 'custom.page.link',
+          linkDomain: TEST_LINK_DOMAIN,
         } as any);
       }).to.throw(AuthClientErrorCode.MISSING_CONTINUE_URI.message);
     });
@@ -106,6 +111,20 @@ describe('ActionCodeSettingsBuilder', () => {
             dynamicLinkDomain: domain,
           } as any);
         }).to.throw(AuthClientErrorCode.INVALID_DYNAMIC_LINK_DOMAIN.message);
+      });
+    });
+
+    const invalidHostingDomains = [null, NaN, 0, 1, true, false, '', 
+      [TEST_LINK_DOMAIN], [], {}, { a: 1 }, _.noop];
+    invalidHostingDomains.forEach((domain) => {
+      it('should throw on invalid linkDomain:' + JSON.stringify(domain), () => {
+        expect(() => {
+          return new ActionCodeSettingsBuilder({
+            url: 'https://www.example.com/path/file?a=1&b=2',
+            handleCodeInApp: true,
+            linkDomain: domain,
+          } as any);
+        }).to.throw(AuthClientErrorCode.INVALID_HOSTING_LINK_DOMAIN.message);
       });
     });
 
@@ -228,11 +247,13 @@ describe('ActionCodeSettingsBuilder', () => {
           minimumVersion: '6',
         },
         dynamicLinkDomain: 'custom.page.link',
+        linkDomain: TEST_LINK_DOMAIN,
       });
       const expectedRequest = {
         continueUrl: 'https://www.example.com/path/file?a=1&b=2',
         canHandleCodeInApp: true,
         dynamicLinkDomain: 'custom.page.link',
+        linkDomain: TEST_LINK_DOMAIN,
         androidPackageName: 'com.example.android',
         androidMinimumVersion: '6',
         androidInstallApp: true,
