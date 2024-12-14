@@ -26,7 +26,6 @@ import {
   NamedCondition,
   OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
-import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
 import * as crypto from 'crypto';
 
@@ -754,7 +753,7 @@ describe('ConditionEvaluator', () => {
 
       describe('known percent condition values', () => {
         // This test is useful for ensuring consistency across all places we
-        // evaluate percent conditions. It creates a set of 10 conditions targeting 50% 
+        // evaluate percent conditions. It creates a set of 10 conditions targeting 50%
         // with randomizationIds 0-9 and a constant `seed` value.
         const conditionEvaluator = new ConditionEvaluator();
 
@@ -782,8 +781,8 @@ describe('ConditionEvaluator', () => {
 
         testCases.map(({ randomizationId, seed, result }) => {
 
-          const idSummary = randomizationId.length > 25 
-            ? `a ${randomizationId.length} character randomizationID` 
+          const idSummary = randomizationId.length > 25
+            ? `a ${randomizationId.length} character randomizationID`
             : `"${randomizationId}"`;
 
           it(`should evaluate ${idSummary} with seed "${seed}" to ${result}`, () => {
@@ -907,7 +906,7 @@ describe('ConditionEvaluator', () => {
             ...clone(condition),
             seed: 'seed'
           };
-          const context = { randomizationId: uuidv4() }
+          const context = { randomizationId: crypto.randomUUID() }
           if (conditionEvaluator.evaluateConditions([{
             name: 'is_enabled',
             condition: { percent: clonedCondition }
