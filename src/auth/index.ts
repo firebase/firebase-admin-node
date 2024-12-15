@@ -144,6 +144,15 @@ export {
 } from './project-config-manager';
 
 export {
+  PasskeyConfigRequest,
+  PasskeyConfig,
+} from './passkey-config';
+
+export {
+  PasskeyConfigManager,
+} from './passkey-config-manager';
+
+export {
   DecodedIdToken,
   DecodedAuthBlockingToken
 } from './token-verifier';
@@ -164,6 +173,7 @@ export {
   UserInfo,
   UserMetadata,
   UserRecord,
+  PasskeyInfo,
 } from './user-record';
 
 export {
