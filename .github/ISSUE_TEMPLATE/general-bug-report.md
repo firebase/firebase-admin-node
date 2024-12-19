@@ -7,6 +7,11 @@ assignees: ''
 
 ---
 
+---
+**Thank you for submitting your issue. We are operating at reduced capacity from Dec 23 2024 to Jan 6 2022. Please expect delayed responses. For more urgent requests please reach us via our support channels https://firebase.google.com/support**
+
+---
+
 ### [READ] Step 1: Are you in the right place?
 
   * For issues related to __the code in this repository__ file a Github issue.
