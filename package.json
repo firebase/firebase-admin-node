@@ -245,7 +245,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
     "chai-exclude": "^2.1.0",
-    "chalk": "^4.1.1",
+    "chalk": "^5.4.1",
     "child-process-promise": "^2.2.1",
     "del": "^6.0.0",
     "eslint": "^8.56.0",
