@@ -54,13 +54,10 @@ export interface ExplicitParameterValue {
 
 // @public
 export interface FetchResponseData {
-    // (undocumented)
     config?: {
         [key: string]: string;
     };
-    // (undocumented)
     eTag: string;
-    // (undocumented)
     status: number;
 }
 
@@ -176,7 +173,7 @@ export interface RemoteConfigCondition {
 
 // @public
 export class RemoteConfigFetchResponse {
-    constructor(app: App, serverConfig: ServerConfig, eTag?: string);
+    constructor(app: App, serverConfig: ServerConfig, requestEtag?: string);
     // (undocumented)
     toJSON(): FetchResponseData;
 }

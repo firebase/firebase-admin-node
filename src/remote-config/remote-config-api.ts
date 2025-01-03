@@ -236,7 +236,7 @@ export enum CustomSignalOperator {
   /**
    * Matches a numeric value less than or equal to the target value.
    */
-  NUMERIC_LESS_EQUAL ='NUMERIC_LESS_EQUAL',
+  NUMERIC_LESS_EQUAL = 'NUMERIC_LESS_EQUAL',
 
   /**
    * Matches a numeric value equal to the target value.
@@ -537,7 +537,7 @@ export interface ServerTemplate {
 /**
  * Generic map of developer-defined signals used as evaluation input signals.
  */
-export type UserProvidedSignals = {[key: string]: string|number};
+export type UserProvidedSignals = { [key: string]: string | number };
 
 /**
  * Predefined template evaluation input signals.
@@ -733,7 +733,7 @@ export interface ServerConfig {
    * 
    * @returns A map of all config keys to their values.
    */
-  getAll(): {[key:string]: Value}
+  getAll(): { [key: string]: Value }
 }
 
 /**
@@ -741,9 +741,26 @@ export interface ServerConfig {
  * Remote Config web client SDKs.
  */
 export interface FetchResponseData {
+  /**
+   * The HTTP status, which is useful for differentiating success responses with data from
+   * those without.
+   * 
+   * This use of 200 and 304 response codes is consistent with Remote Config's server 
+   * implementation.
+   */
   status: number;
+
+  /**
+   * Defines the ETag response header value.
+   * 
+   * This is consistent with Remote Config's server eTag implementation.
+   */
   eTag: string;
-  config?: {[key: string]: string};
+
+  /**
+   * Defines the map of parameters returned as "entries" in the fetch response body.
+   */
+  config?: { [key: string]: string };
 }
 
 /**

@@ -300,7 +300,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  */
 class ServerTemplateImpl implements ServerTemplate {
   private cache: ServerTemplateData;
-  private stringifiedDefaultConfig: {[key: string]: string} = {};
+  private stringifiedDefaultConfig: { [key: string]: string } = {};
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
@@ -427,7 +427,7 @@ class ServerTemplateImpl implements ServerTemplate {
 class ServerConfigImpl implements ServerConfig {
   constructor(
     private readonly configValues: { [key: string]: Value },
-  ){}
+  ) { }
   getBoolean(key: string): boolean {
     return this.getValue(key).asBoolean();
   }
@@ -440,7 +440,7 @@ class ServerConfigImpl implements ServerConfig {
   getValue(key: string): Value {
     return this.configValues[key] || new ValueImpl('static');
   }
-  getAll(): {[key: string]: Value} {
+  getAll(): { [key: string]: Value } {
     return { ...this.configValues };
   }
 }
@@ -625,18 +625,23 @@ class VersionImpl implements Version {
 export class RemoteConfigFetchResponse {
   private response: FetchResponseData;
 
-  constructor(app: App, serverConfig: ServerConfig, eTag?: string) {
-    const config: {[key:string]: string} = {};
+  /**
+   * @param app - The app for this RemoteConfig service.
+   * @param serverConfig - The server config for which to generate a fetch response.
+   * @param requestEtag - A request eTag with which to compare the current response.
+   */
+  constructor(app: App, serverConfig: ServerConfig, requestEtag?: string) {
+    const config: { [key: string]: string } = {};
     for (const [param, value] of Object.entries(serverConfig.getAll())) {
       config[param] = value.asString();
     }
 
     const currentEtag = this.processEtag(config, app);
 
-    if (currentEtag === eTag) {
+    if (currentEtag === requestEtag) {
       this.response = {
         status: 304,
-        eTag,
+        eTag: currentEtag,
       };
     } else {
       this.response = {
@@ -647,11 +652,15 @@ export class RemoteConfigFetchResponse {
     }
   }
 
-  toJSON(): FetchResponseData {
+  /** 
+   * @returns JSON representation of the fetch response that can be consumed
+   * by the RC client SDK.
+   */
+  public toJSON(): FetchResponseData {
     return this.response;
   }
 
-  private processEtag(config: {[key:string]: string}, app: App): string {
+  private processEtag(config: { [key: string]: string }, app: App): string {
     const configJson = JSON.stringify(config);
     let hash = 0;
     for (let i = 0; i < configJson.length; i++) {
