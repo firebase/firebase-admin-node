@@ -1002,14 +1002,14 @@ describe('RemoteConfig', () => {
       describe('should throw error if there are any JSON or tempalte parsing errors', () => {
         const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
         const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
-  
+
         let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
         const jsonString = '{invalidJson: null}';
         it('should throw if template is an invalid JSON', () => {
           expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
             .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
         });
-  
+
         INVALID_PARAMETERS.forEach((invalidParameter) => {
           sourceTemplate.parameters = invalidParameter;
           const jsonString = JSON.stringify(sourceTemplate);
@@ -1018,7 +1018,7 @@ describe('RemoteConfig', () => {
               .to.throw('Remote Config parameters must be a non-null object');
           });
         });
-  
+
         sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
         INVALID_CONDITIONS.forEach((invalidConditions) => {
           sourceTemplate.conditions = invalidConditions;
@@ -1339,7 +1339,7 @@ describe('RemoteConfig', () => {
         expect(value.asString()).to.equal('');
         expect(value.getSource()).to.equal('static');
       });
-  
+
       it('should return default value when it is defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Omits remote parameter values.
@@ -1357,7 +1357,7 @@ describe('RemoteConfig', () => {
         expect(value.asString()).to.equal('shiba');
         expect(value.getSource()).to.equal('default');
       });
-  
+
       it('should return remote value when it is defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Defines remote parameter values.
@@ -1426,7 +1426,7 @@ describe('RemoteConfig', () => {
   });
 
   describe('RemoteConfigFetchResponse', () => {
-    it('should return a 200 response with no etag', () => {
+    it('should return a 200 response when supplied with no etag', () => {
       const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
       // Defines remote parameter values.
       templateData.parameters = {
@@ -1444,8 +1444,8 @@ describe('RemoteConfig', () => {
         config: { 'dog_type': 'beagle' }
       });
     });
-  
-    it('should return a 200 response with a stale etag', () => {
+
+    it('should return a 200 response when supplied with a stale etag', () => {
       const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
       // Defines remote parameter values.
       templateData.parameters = {
@@ -1463,7 +1463,7 @@ describe('RemoteConfig', () => {
         config: { 'dog_type': 'beagle' }
       });
     });
-  
+
     it('should return a 304 repsonse with matching etag', () => {
       const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
       // Defines remote parameter values.

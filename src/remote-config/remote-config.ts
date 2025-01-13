@@ -619,6 +619,9 @@ class VersionImpl implements Version {
   }
 }
 
+const HTTP_NOT_MODIFIED = 304;
+const HTTP_OK = 200;
+
 /**
  * Represents a fetch response that can be used to interact with RC's client SDK.
  */
@@ -640,12 +643,12 @@ export class RemoteConfigFetchResponse {
 
     if (currentEtag === requestEtag) {
       this.response = {
-        status: 304,
+        status: HTTP_NOT_MODIFIED,
         eTag: currentEtag,
       };
     } else {
       this.response = {
-        status: 200,
+        status: HTTP_OK,
         eTag: currentEtag,
         config,
       }
@@ -663,6 +666,7 @@ export class RemoteConfigFetchResponse {
   private processEtag(config: { [key: string]: string }, app: App): string {
     const configJson = JSON.stringify(config);
     let hash = 0;
+    // Mimics Java's `String.hashCode()` which is used in RC's servers.
     for (let i = 0; i < configJson.length; i++) {
       const char = configJson.charCodeAt(i);
       hash = (hash << 5) - hash + char;
