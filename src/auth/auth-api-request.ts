@@ -28,7 +28,7 @@ import * as utils from '../utils/index';
 
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
-  UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+  UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat, TotpInfoResponse,
 } from './user-import-builder';
 import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
 import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
@@ -251,6 +251,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
     displayName: true,
     phoneInfo: true,
     enrolledAt: true,
+    totpInfo: true,
   };
   // Remove unsupported keys from the original request.
   for (const key in request) {
@@ -260,7 +261,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
   }
   // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
-      request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
+      request.mfaEnrollmentId || request.phoneInfo || request.totpInfo || JSON.stringify(request);
   // Enrollment uid may or may not be specified for update operations.
   if (typeof request.mfaEnrollmentId !== 'undefined' &&
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
@@ -293,12 +294,40 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
         `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
         'E.164 standard compliant identifier string.');
     }
+  } else if (typeof request.totpInfo !== 'undefined') {
+    validateTotpInfo(request.totpInfo);
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
     // a phone number. A TOTP based second factor may require a secret key, etc.
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
       'MFAInfo object provided is invalid.');
+  }
+}
+
+/**
+ * Validates an TotpInfoResponse object. All unsupported parameters
+ * are removed from the original request. If an invalid field is passed
+ * an error is thrown.
+ *
+ * @param request - The TotpInfoResponse request object.
+ */
+function validateTotpInfo(request: TotpInfoResponse): void {
+  const validKeys = {
+    sharedSecretKey: true,
+  };
+  // Remove unsupported keys from the original request.
+  for (const key in request) {
+    if (!(key in validKeys)) {
+      delete request[key];
+    }
+  }
+  if (typeof request.sharedSecretKey !== 'undefined' &&
+      !validator.isString(request.sharedSecretKey)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_SHARED_SECRET_KEY,
+      '"totpInfo.sharedSecretKey" must be a valid string.',
+    );
   }
 }
 

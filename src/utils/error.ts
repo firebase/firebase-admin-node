@@ -466,6 +466,10 @@ export class AuthClientErrorCode {
     code: 'invalid-display-name',
     message: 'The displayName field must be a valid string.',
   };
+  public static INVALID_SHARED_SECRET_KEY = {
+    code: 'invalid-shared-secret-key',
+    message: 'The sharedSecretKey field must be a valid string.',
+  };
   public static INVALID_DYNAMIC_LINK_DOMAIN = {
     code: 'invalid-dynamic-link-domain',
     message: 'The provided dynamic link domain is not configured or authorized ' +

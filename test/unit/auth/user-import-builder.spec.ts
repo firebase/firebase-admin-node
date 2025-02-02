@@ -110,6 +110,22 @@ describe('UserImportBuilder', () => {
             phoneNumber: '+16505551000',
             factorId: 'phone',
           },
+          {
+            uid: 'enrolledSecondFactor3',
+            enrollmentTime: now.toUTCString(),
+            displayName: 'displayNameTotp',
+            totpInfo: {
+              sharedSecretKey: 'VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4'
+            },
+            factorId: 'totp',
+          },
+          {
+            uid: 'enrolledSecondFactor4',
+            totpInfo: {
+              sharedSecretKey: 'WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF'
+            },
+            factorId: 'totp',
+          },
         ],
       },
     },
@@ -162,6 +178,20 @@ describe('UserImportBuilder', () => {
         {
           mfaEnrollmentId: 'enrolledSecondFactor2',
           phoneInfo: '+16505551000',
+        },
+        {
+          mfaEnrollmentId: 'enrolledSecondFactor3',
+          enrolledAt: now.toISOString(),
+          displayName: 'displayNameTotp',
+          totpInfo: {
+            sharedSecretKey: 'VIAAQYSO37EKAWB2KAXEQ7EGUMLWI3P4'
+          }
+        },
+        {
+          mfaEnrollmentId: 'enrolledSecondFactor4',
+          totpInfo: {
+            sharedSecretKey: 'WSUKMEVTQ62EUBF37F2R466ZVLNFL3IF'
+          }
         },
       ],
     },
@@ -825,7 +855,7 @@ describe('UserImportBuilder', () => {
                 uid: 'enrollmentId2',
                 secret: 'SECRET',
                 displayName: 'Google Authenticator on personal phone',
-                factorId: 'totp',
+                factorId: 'unsupportedFactorId',
               } as any,
             ],
           },
