@@ -94,7 +94,7 @@ export interface ActionCodeSettings {
    * configured per project. This field provides the ability to explicitly choose
    * configured per project. This fields provides the ability explicitly choose
    * one. If none is provided, the oldest domain is used by default.
-   * @deprecated use linkDomain instead
+   * @deprecated use `linkDomain` instead
    */
   dynamicLinkDomain?: string;
 
