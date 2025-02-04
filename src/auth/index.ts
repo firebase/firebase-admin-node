@@ -104,6 +104,8 @@ export {
   PasswordPolicyEnforcementState,
   CustomStrengthOptionsConfig,
   EmailPrivacyConfig,
+  MobileLinksConfig,
+  MobileLinksDomain,
 } from './auth-config';
 
 export {

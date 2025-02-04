@@ -471,6 +471,11 @@ export class AuthClientErrorCode {
     message: 'The provided dynamic link domain is not configured or authorized ' +
       'for the current project.',
   };
+  public static INVALID_HOSTING_LINK_DOMAIN = {
+    code: 'invalid-hosting-link-domain',
+    message: 'The provided hosting link domain is not configured in Firebase ' +
+      'Hosting or is not owned by the current project.',
+  };
   public static INVALID_EMAIL_VERIFIED = {
     code: 'invalid-email-verified',
     message: 'The emailVerified field must be a boolean.',
@@ -933,6 +938,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_CONTINUE_URI: 'INVALID_CONTINUE_URI',
   // Dynamic link domain in provided ActionCodeSettings is not authorized.
   INVALID_DYNAMIC_LINK_DOMAIN: 'INVALID_DYNAMIC_LINK_DOMAIN',
+  // Hosting link domain in provided ActionCodeSettings is not owned by the current project.
+  INVALID_HOSTING_LINK_DOMAIN: 'INVALID_HOSTING_LINK_DOMAIN',
   // uploadAccount provides an email that already exists.
   DUPLICATE_EMAIL: 'EMAIL_ALREADY_EXISTS',
   // uploadAccount provides a localId that already exists.
