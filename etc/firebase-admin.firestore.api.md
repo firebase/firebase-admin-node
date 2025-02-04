@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { AddPrefixToKeys } from '@google-cloud/firestore';
 import { Agent } from 'http';
 import { AggregateField } from '@google-cloud/firestore';

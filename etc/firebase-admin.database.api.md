@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 import { DataSnapshot } from '@firebase/database-types';
 import { EventType } from '@firebase/database-types';

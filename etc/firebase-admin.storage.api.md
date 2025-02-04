@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="node" />
+
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { File as File_2 } from '@google-cloud/storage';
@@ -14,13 +16,12 @@ export function getDownloadURL(file: File_2): Promise<string>;
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
-export function getStorage(app?: App): Storage_2;
+export function getStorage(app?: App): Storage;
 
 // @public
-class Storage_2 {
+export class Storage {
     get app(): App;
     bucket(name?: string): Bucket;
 }
-export { Storage_2 as Storage }
 
 ```

@@ -2143,7 +2143,7 @@ export interface PasswordPolicyConfig {
  */
 export interface MobileLinksConfig {
   /**
-   * Use firebase Hosting or dynamic link domain as the out-of-band code domain.
+   * Use Firebase Hosting or dynamic link domain as the out-of-band code domain.
    */
   domain?: MobileLinksDomain;
 }
