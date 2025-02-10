@@ -71,9 +71,6 @@ export interface ImpersonateAuthenticated {
    * Evaluate the auth policy with a customized JWT auth token. Should follow the Firebase Auth token format.
    * https://firebase.google.com/docs/rules/rules-and-auth
    * 
-   * 
-   * {@link DecodedIdToken}
-   * 
    * @example A verified user may have the following `authClaims`:
    * ```json
    * { "sub": "uid", "email_verified": true }
