@@ -84,7 +84,6 @@ interface UserVariables {
 const connectorConfig: ConnectorConfig = {
   location: 'us-west2',
   serviceId: 'my-service',
-  // serviceId: 'je-test-fdc',
 };
 
 const userId = 'QVBJcy5ndXJ3';
