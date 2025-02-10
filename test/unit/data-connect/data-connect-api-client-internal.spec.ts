@@ -24,7 +24,7 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DataConnectApiClient, FirebaseDataConnectError }
+import { DataConnectApiClient, FirebaseDataConnectError, DataConnectEmulatorHttpClient }
   from '../../../src/data-connect/data-connect-api-client-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
@@ -156,7 +156,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseDataConnectError('unknown-error', 'Error returned from server:  + . Additionally, an internal error occurred while attempting to extract the errorcode from the error.');
       return apiClient.executeGraphql('query', {})
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -208,20 +208,25 @@ describe('DataConnectApiClient', () => {
         });
     });
 
-    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+    it('should use DataConnectEmulatorHttpClient when emulator host is defined', () => {
       process.env.DATA_CONNECT_EMULATOR_HOST = 'http://localhost:9000';
-      const stub = sandbox
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      const stub = sandbox.stub(DataConnectEmulatorHttpClient.prototype, 'getToken').resolves('owner');
+      const sendStub = sandbox.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom(TEST_RESPONSE, 200))
       return apiClient.executeGraphql('query', {})
         .then(() => {
-          expect(stub).to.have.been.calledOnce.and.calledWith({
+          expect(DataConnectEmulatorHttpClient.prototype.getToken).to.have.been.called;
+          expect(sendStub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `http://localhost:9000/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EXPECTED_HEADERS,
+            headers: {
+                'Authorization': 'Bearer owner',
+                'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+                'X-Goog-Api-Client': getMetricsHeader(),
+            },
             data: { query: 'query' }
           });
         });
     });
+
   });
 });

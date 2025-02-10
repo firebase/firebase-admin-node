@@ -25,6 +25,21 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
+function useDataConnectEmulator(): boolean {
+  return !!process.env.DATA_CONNECT_EMULATOR_HOST;
+}
+
+export class DataConnectEmulatorHttpClient extends AuthorizedHttpClient {
+
+  protected getToken(): Promise<string> {
+    if (useDataConnectEmulator()) {
+      return Promise.resolve('owner');
+    }
+
+    return super.getToken();
+  }
+}
+
 // Data Connect backend constants
 const DATA_CONNECT_HOST = 'https://firebasedataconnect.googleapis.com';
 const DATA_CONNECT_API_URL_FORMAT =
@@ -52,7 +67,7 @@ export class DataConnectApiClient {
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'First argument passed to getDataConnect() must be a valid Firebase app instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.httpClient = new DataConnectEmulatorHttpClient(app as FirebaseApp);
   }
 
   /**
