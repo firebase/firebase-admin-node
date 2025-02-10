@@ -302,13 +302,14 @@ function compareSemanticVersions(
   const version1 = String(actualValue).split('.').map(Number);
   const version2 = targetValue.split('.').map(Number);
 
+  if (version1.length > MAX_LENGTH || version2.length > MAX_LENGTH) {
+    return false;
+  }
+
   for (let i = 0; i < MAX_LENGTH; i++) {
     // Check to see if segments are present. Note that these may be present and be NaN.
     const version1HasSegment = version1[i] !== undefined;
     const version2HasSegment = version2[i] !== undefined;
-
-    // If both are undefined, we've consumed everything and they're equal.
-    if (!version1HasSegment && !version2HasSegment) return predicateFn(0)
 
     // Insert zeros if undefined for easier comparison.
     if (!version1HasSegment) version1[i] = 0;
@@ -321,5 +322,6 @@ function compareSemanticVersions(
     if (version1[i] < version2[i]) return predicateFn(-1);
     if (version1[i] > version2[i]) return predicateFn(1);
   }
-  return false;
+  // If this point is reached, the semantic versions are equal.
+  return predicateFn(0);
 }
