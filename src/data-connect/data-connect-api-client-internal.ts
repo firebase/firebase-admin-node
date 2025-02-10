@@ -106,6 +106,7 @@ export class DataConnectApiClient {
       query,
       ...(options?.variables && { variables: options?.variables }),
       ...(options?.operationName && { operationName: options?.operationName }),
+      ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
     return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
       .then(async (url) => {
