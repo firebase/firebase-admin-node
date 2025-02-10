@@ -27,6 +27,7 @@ import {
   RefreshTokenCredential
 } from '../../../src/app/credential-internal';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
+import { getSdkVersion } from '../../../src/utils/index';
 import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 describe('Firestore', () => {
@@ -44,7 +45,7 @@ describe('Firestore', () => {
     + 'credentials to use Cloud Firestore API.';
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version: firebaseVersion } = require('../../../package.json');
+  const sdkVersion = getSdkVersion();
   const defaultCredentialApps = [
     {
       name: 'ComputeEngineCredentials',
@@ -191,13 +192,27 @@ describe('Firestore', () => {
   describe('options.firebaseVersion', () => {
     it('should return firebaseVersion when using credential with service account certificate', () => {
       const options = getFirestoreOptions(mockApp);
-      expect(options.firebaseVersion).to.equal(firebaseVersion);
+      expect(options.firebaseVersion).to.equal(sdkVersion);
     });
 
     defaultCredentialApps.forEach((config) => {
       it(`should return firebaseVersion when using default ${config.name}`, () => {
         const options = getFirestoreOptions(config.app);
-        expect(options.firebaseVersion).to.equal(firebaseVersion);
+        expect(options.firebaseVersion).to.equal(sdkVersion);
+      });
+    });
+  });
+
+  describe('options.firebaseAdminVersion', () => {
+    it('should return firebaseAdminVersion when using credential with service account certificate', () => {
+      const options = getFirestoreOptions(mockApp);
+      expect(options.firebaseAdminVersion).to.equal(sdkVersion);
+    });
+
+    defaultCredentialApps.forEach((config) => {
+      it(`should return firebaseAdminVersion when using default ${config.name}`, () => {
+        const options = getFirestoreOptions(config.app);
+        expect(options.firebaseAdminVersion).to.equal(sdkVersion);
       });
     });
   });
