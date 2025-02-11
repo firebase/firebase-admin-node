@@ -36,8 +36,22 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
 
 // @public
 export interface GraphqlOptions<Variables> {
+    impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
     operationName?: string;
     variables?: Variables;
+}
+
+// @public
+export interface ImpersonateAuthenticated {
+    // Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point index.d.ts
+    authClaims: Partial<DecodedIdToken>;
+    unauthenticated?: never;
+}
+
+// @public
+export interface ImpersonateUnauthenticated {
+    authClaims?: never;
+    unauthenticated: true;
 }
 
 ```
