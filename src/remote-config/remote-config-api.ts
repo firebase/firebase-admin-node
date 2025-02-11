@@ -751,11 +751,11 @@ export interface FetchResponseData {
   status: number;
 
   /**
-   * Defines the ETag response header value.
+   * Defines the ETag response header value. Only defined for 200 and 304 responses.
    * 
    * This is consistent with Remote Config's server eTag implementation.
    */
-  eTag: string;
+  eTag?: string;
 
   /**
    * Defines the map of parameters returned as "entries" in the fetch response body.
