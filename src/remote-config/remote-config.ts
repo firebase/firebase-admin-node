@@ -15,6 +15,7 @@
  */
 
 import { App } from '../app';
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 import { ConditionEvaluator } from './condition-evaluator-internal';
@@ -41,6 +42,7 @@ import {
   GetServerTemplateOptions,
   InitServerTemplateOptions,
   ServerTemplateDataType,
+  FetchResponseData,
 } from './remote-config-api';
 
 /**
@@ -298,7 +300,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  */
 class ServerTemplateImpl implements ServerTemplate {
   private cache: ServerTemplateData;
-  private stringifiedDefaultConfig: {[key: string]: string} = {};
+  private stringifiedDefaultConfig: { [key: string]: string } = {};
 
   constructor(
     private readonly apiClient: RemoteConfigApiClient,
@@ -425,7 +427,7 @@ class ServerTemplateImpl implements ServerTemplate {
 class ServerConfigImpl implements ServerConfig {
   constructor(
     private readonly configValues: { [key: string]: Value },
-  ){}
+  ) { }
   getBoolean(key: string): boolean {
     return this.getValue(key).asBoolean();
   }
@@ -437,6 +439,9 @@ class ServerConfigImpl implements ServerConfig {
   }
   getValue(key: string): Value {
     return this.configValues[key] || new ValueImpl('static');
+  }
+  getAll(): { [key: string]: Value } {
+    return { ...this.configValues };
   }
 }
 
@@ -611,5 +616,64 @@ class VersionImpl implements Version {
     // This validation fails for timestamps earlier than January 1, 1970 and considers strings
     // such as "1.2" as valid timestamps.
     return validator.isNonEmptyString(timestamp) && (new Date(timestamp)).getTime() > 0;
+  }
+}
+
+const HTTP_NOT_MODIFIED = 304;
+const HTTP_OK = 200;
+
+/**
+ * Represents a fetch response that can be used to interact with RC's client SDK.
+ */
+export class RemoteConfigFetchResponse {
+  private response: FetchResponseData;
+
+  /**
+   * @param app - The app for this RemoteConfig service.
+   * @param serverConfig - The server config for which to generate a fetch response.
+   * @param requestEtag - A request eTag with which to compare the current response.
+   */
+  constructor(app: App, serverConfig: ServerConfig, requestEtag?: string) {
+    const config: { [key: string]: string } = {};
+    for (const [param, value] of Object.entries(serverConfig.getAll())) {
+      config[param] = value.asString();
+    }
+
+    const currentEtag = this.processEtag(config, app);
+
+    if (currentEtag === requestEtag) {
+      this.response = {
+        status: HTTP_NOT_MODIFIED,
+        eTag: currentEtag,
+      };
+    } else {
+      this.response = {
+        status: HTTP_OK,
+        eTag: currentEtag,
+        config,
+      }
+    }
+  }
+
+  /** 
+   * @returns JSON representation of the fetch response that can be consumed
+   * by the RC client SDK.
+   */
+  public toJSON(): FetchResponseData {
+    return this.response;
+  }
+
+  private processEtag(config: { [key: string]: string }, app: App): string {
+    const configJson = JSON.stringify(config);
+    let hash = 0;
+    // Mimics Java's `String.hashCode()` which is used in RC's servers.
+    for (let i = 0; i < configJson.length; i++) {
+      const char = configJson.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash |= 0;
+    }
+    const projectId = utils.getExplicitProjectId(app);
+    const parts = ['etag', projectId, 'firebase-server', 'fetch', hash];
+    return parts.filter(a => !!a).join('-');
   }
 }

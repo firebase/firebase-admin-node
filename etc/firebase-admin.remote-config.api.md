@@ -52,6 +52,15 @@ export interface ExplicitParameterValue {
     value: string;
 }
 
+// @public
+export interface FetchResponseData {
+    config?: {
+        [key: string]: string;
+    };
+    eTag?: string;
+    status: number;
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -163,6 +172,13 @@ export interface RemoteConfigCondition {
 }
 
 // @public
+export class RemoteConfigFetchResponse {
+    constructor(app: App, serverConfig: ServerConfig, requestEtag?: string);
+    // (undocumented)
+    toJSON(): FetchResponseData;
+}
+
+// @public
 export interface RemoteConfigParameter {
     conditionalValues?: {
         [key: string]: RemoteConfigParameterValue;
@@ -205,6 +221,9 @@ export interface RemoteConfigUser {
 
 // @public
 export interface ServerConfig {
+    getAll(): {
+        [key: string]: Value;
+    };
     getBoolean(key: string): boolean;
     getNumber(key: string): number;
     getString(key: string): string;
