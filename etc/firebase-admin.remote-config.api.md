@@ -57,7 +57,7 @@ export interface FetchResponseData {
     config?: {
         [key: string]: string;
     };
-    eTag: string;
+    eTag?: string;
     status: number;
 }
 
