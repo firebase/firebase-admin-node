@@ -25,10 +25,15 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
-// Data Connect backend constants
-const DATA_CONNECT_HOST = 'https://firebasedataconnect.googleapis.com';
-const DATA_CONNECT_API_URL_FORMAT =
-  '{host}/v1alpha/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+const API_VERSION = 'v1alpha';
+
+/** The Firebase Data Connect backend base URL format. */
+const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
+    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+
+/** Firebase Data Connect base URl format when using the Data Connect emultor. */
+const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
+  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
@@ -52,7 +57,7 @@ export class DataConnectApiClient {
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'First argument passed to getDataConnect() must be a valid Firebase app instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.httpClient = new DataConnectHttpClient(app as FirebaseApp);
   }
 
   /**
@@ -101,13 +106,12 @@ export class DataConnectApiClient {
           'GraphqlOptions must be a non-null object');
       }
     }
-    const host = (process.env.DATA_CONNECT_EMULATOR_HOST || DATA_CONNECT_HOST);
     const data = {
       query,
       ...(options?.variables && { variables: options?.variables }),
       ...(options?.operationName && { operationName: options?.operationName }),
     };
-    return this.getUrl(host, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
+    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
       .then(async (url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
@@ -133,18 +137,25 @@ export class DataConnectApiClient {
       });
   }
 
-  private async getUrl(host: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
+  private async getUrl(version: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
     return this.getProjectId()
       .then((projectId) => {
         const urlParams = {
-          host,
+          version,
           projectId,
           locationId,
           serviceId,
           endpointId
         };
-        const baseUrl = utils.formatString(DATA_CONNECT_API_URL_FORMAT, urlParams);
-        return utils.formatString(baseUrl);
+        let urlFormat: string;
+        if (useEmulator()) {
+          urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT, {
+            host: emulatorHost()
+          });
+        } else {
+          urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;
+        }
+        return utils.formatString(urlFormat, urlParams);
       });
   }
 
@@ -186,6 +197,34 @@ export class DataConnectApiClient {
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseDataConnectError(code, message);
   }
+}
+
+/**
+ * Data Connect-specific HTTP client which uses the special "owner" token
+ * when communicating with the Data Connect Emulator.
+ */
+class DataConnectHttpClient extends AuthorizedHttpClient {
+
+  protected getToken(): Promise<string> {
+    if (useEmulator()) {
+      return Promise.resolve('owner');
+    }
+
+    return super.getToken();
+  }
+
+}
+
+function emulatorHost(): string | undefined {
+  return process.env.DATA_CONNECT_EMULATOR_HOST
+}
+
+/**
+ * When true the SDK should communicate with the Data Connect Emulator for all API
+ * calls and also produce unsigned tokens.
+ */
+export function useEmulator(): boolean {
+  return !!emulatorHost();
 }
 
 interface ErrorResponse {
