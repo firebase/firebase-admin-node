@@ -64,12 +64,6 @@ export interface GraphqlOptions<Variables> {
 }
 
 /**
- * Type representing the partial claims of a Firebase Auth token used to evaluate the
- * Data Connect auth policy.
- */
-export type AuthClaims = Partial<DecodedIdToken>;
-
-/**
  * Interface representing the impersonation of an authenticated user.
  */
 export interface ImpersonateAuthenticated {
@@ -82,7 +76,7 @@ export interface ImpersonateAuthenticated {
    * { "sub": "uid", "email_verified": true }
    * ```
    */
-  authClaims: AuthClaims;
+  authClaims: Partial<DecodedIdToken>;
 
   /**
    * Both `authClaims` and `unauthenticated` are mutually exclusive fields and should not be both set.

@@ -234,14 +234,13 @@ describe('getDataConnect()', () => {
           .should.eventually.be.rejected.and.has.property('code', 'data-connect/unauthenticated');
       });
 
-      it('executeGraphql() should return an empty list for an impersonated query with non-existing authenticated ' +
-        'claims',
-      async () => {
-        const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
-          queryListUsersImpersonation, optsNonExistingClaims);
-        // Should find no data
-        expect(resp.data.users).to.be.empty;
-      });
+      it('executeGraphql() successfully executes an impersonated query with non-existing authenticated claims',
+        async () => {
+          const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
+            queryListUsersImpersonation, optsNonExistingClaims);
+          // Should find no data
+          expect(resp.data.users).to.be.empty;
+        });
 
       it('executeGraphql() successfully executes an impersonated mutation with authenticated claims',
         async () => {
@@ -255,11 +254,11 @@ describe('getDataConnect()', () => {
           .should.eventually.be.rejected.and.has.property('code', 'data-connect/unauthenticated');
       });
 
-      it('executeGraphql() should return null for an impersonated mutation with non-existing authenticated claims',
+      it('executeGraphql() successfully executes an impersonated mutation with non-existing authenticated claims',
         async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
             updateImpersonatedUser, optsNonExistingClaims);
-          // Should mutate no data
+          // Should find no data
           expect(resp.data.user_update).to.be.null;
         });
     });

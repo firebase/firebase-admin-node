@@ -31,8 +31,7 @@ export {
   ExecuteGraphqlResponse,
   ConnectorConfig,
   ImpersonateAuthenticated,
-  ImpersonateUnauthenticated,
-  AuthClaims
+  ImpersonateUnauthenticated
 } from './data-connect-api'
 export {
   DataConnect,

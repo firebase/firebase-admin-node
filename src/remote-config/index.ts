@@ -31,7 +31,6 @@ export {
   DefaultConfig,
   EvaluationContext,
   ExplicitParameterValue,
-  FetchResponseData,
   GetServerTemplateOptions,
   InAppDefaultValue,
   InitServerTemplateOptions,
@@ -61,7 +60,7 @@ export {
   ValueSource,
   Version,
 } from './remote-config-api';
-export { RemoteConfig, RemoteConfigFetchResponse } from './remote-config';
+export { RemoteConfig } from './remote-config';
 
 /**
  * Gets the {@link RemoteConfig} service for the default app or a given app.
