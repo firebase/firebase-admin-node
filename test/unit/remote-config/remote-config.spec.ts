@@ -26,6 +26,7 @@ import {
   RemoteConfigCondition,
   TagColor,
   ListVersionsResult,
+  RemoteConfigFetchResponse,
 } from '../../../src/remote-config/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
@@ -1001,14 +1002,14 @@ describe('RemoteConfig', () => {
       describe('should throw error if there are any JSON or tempalte parsing errors', () => {
         const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
         const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
-  
+
         let sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
         const jsonString = '{invalidJson: null}';
         it('should throw if template is an invalid JSON', () => {
           expect(() => remoteConfig.initServerTemplate({ template: jsonString }))
             .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
         });
-  
+
         INVALID_PARAMETERS.forEach((invalidParameter) => {
           sourceTemplate.parameters = invalidParameter;
           const jsonString = JSON.stringify(sourceTemplate);
@@ -1017,7 +1018,7 @@ describe('RemoteConfig', () => {
               .to.throw('Remote Config parameters must be a non-null object');
           });
         });
-  
+
         sourceTemplate = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE);
         INVALID_CONDITIONS.forEach((invalidConditions) => {
           sourceTemplate.conditions = invalidConditions;
@@ -1292,20 +1293,53 @@ describe('RemoteConfig', () => {
   // Note the static source is set in the getValue() method, but the other sources
   // are set in the evaluate() method, so these tests span a couple layers.
   describe('ServerConfig', () => {
+    describe('getAll', () => {
+      it('should return all values', () => {
+        const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+        templateData.parameters = {
+          dog_type: {
+            defaultValue: {
+              value: 'pug'
+            }
+          },
+          dog_type_enabled: {
+            defaultValue: {
+              value: 'true'
+            }
+          },
+          dog_age: {
+            defaultValue: {
+              value: '22'
+            }
+          },
+          dog_use_inapp_default: {
+            defaultValue: {
+              useInAppDefault: true
+            }
+          },
+        };
+        const template = remoteConfig.initServerTemplate({ template: templateData });
+        const config = template.evaluate().getAll();
+        expect(Object.keys(config)).deep.equal(['dog_type', 'dog_type_enabled', 'dog_age']);
+        expect(config['dog_type'].asString()).to.equal('pug');
+        expect(config['dog_type_enabled'].asBoolean()).to.equal(true);
+        expect(config['dog_age'].asNumber()).to.equal(22);
+      });
+    });
+
     describe('getValue', () => {
       it('should return static when default and remote are not defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Omits remote parameter values.
         templateData.parameters = {
-        };
-        // Omits in-app default values.
+        }
         const template = remoteConfig.initServerTemplate({ template: templateData });
         const config = template.evaluate();
         const value = config.getValue('dog_type');
         expect(value.asString()).to.equal('');
         expect(value.getSource()).to.equal('static');
       });
-  
+
       it('should return default value when it is defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Omits remote parameter values.
@@ -1323,7 +1357,7 @@ describe('RemoteConfig', () => {
         expect(value.asString()).to.equal('shiba');
         expect(value.getSource()).to.equal('default');
       });
-  
+
       it('should return remote value when it is defined', () => {
         const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
         // Defines remote parameter values.
@@ -1387,6 +1421,65 @@ describe('RemoteConfig', () => {
         });
         const config = template.evaluate();
         expect(config.getBoolean('dog_is_cute')).to.be.true;
+      });
+    });
+  });
+
+  describe('RemoteConfigFetchResponse', () => {
+    it('should return a 200 response when supplied with no etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(mockApp, template.evaluate());
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 200,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429',
+        config: { 'dog_type': 'beagle' }
+      });
+    });
+
+    it('should return a 200 response when supplied with a stale etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(mockApp, template.evaluate(), 'fake-etag');
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 200,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429',
+        config: { 'dog_type': 'beagle' }
+      });
+    });
+
+    it('should return a 304 repsonse with matching etag', () => {
+      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
+      // Defines remote parameter values.
+      templateData.parameters = {
+        dog_type: {
+          defaultValue: {
+            value: 'beagle'
+          }
+        }
+      };
+      const template = remoteConfig.initServerTemplate({ template: templateData });
+      const fetchResponse = new RemoteConfigFetchResponse(
+        mockApp, template.evaluate(), 'etag-project_id-firebase-server-fetch--2039110429');
+      expect(fetchResponse.toJSON()).deep.equals({
+        status: 304,
+        eTag: 'etag-project_id-firebase-server-fetch--2039110429'
       });
     });
   });
