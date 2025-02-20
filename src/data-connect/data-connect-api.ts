@@ -75,7 +75,7 @@ export type AuthClaims = Partial<DecodedIdToken>;
 export interface ImpersonateAuthenticated {
   /**
    * Evaluate the auth policy with a customized JWT auth token. Should follow the Firebase Auth token format.
-   * https://firebase.google.com/docs/rules/rules-and-auth
+   * https://firebase.google.com/docs/data-connect/cel-reference#auth-token-contents
    * 
    * @example A verified user may have the following `authClaims`:
    * ```json
