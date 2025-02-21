@@ -128,9 +128,11 @@ describe('getDataConnect()', () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, UserVariables>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users.length).to.be.greaterThan(1);
-      expect(resp.data.users[0].uid).to.not.be.undefined;
-      expect(resp.data.users[0].name).to.not.be.undefined;
-      expect(resp.data.users[0].address).to.not.be.undefined;
+      resp.data.users.forEach((user) => {
+        expect(user.uid).to.not.be.undefined;
+        expect(user.name).to.not.be.undefined;
+        expect(user.address).to.not.be.undefined;
+      });
     });
 
     it('executeGraphql() use the operationName when multiple queries are provided', async () => {
@@ -165,9 +167,11 @@ describe('getDataConnect()', () => {
         await getDataConnect(connectorConfig).executeGraphqlRead<UsersResponse, UserVariables>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users.length).to.be.greaterThan(1);
-      expect(resp.data.users[0].uid).to.not.be.undefined;
-      expect(resp.data.users[0].name).to.be.not.undefined;
-      expect(resp.data.users[0].address).to.be.not.undefined;
+      resp.data.users.forEach((user) => {
+        expect(user.uid).to.not.be.undefined;
+        expect(user.name).to.not.be.undefined;
+        expect(user.address).to.not.be.undefined;
+      });
     });
 
     it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
@@ -270,9 +274,11 @@ describe('getDataConnect()', () => {
           queryListUsers, optsAuthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).to.be.greaterThan(1);
-        expect(resp.data.users[0].uid).to.not.be.undefined;
-        expect(resp.data.users[0].name).to.not.be.undefined;
-        expect(resp.data.users[0].address).to.not.be.undefined;
+        resp.data.users.forEach((user) => {
+          expect(user.uid).to.not.be.undefined;
+          expect(user.name).to.not.be.undefined;
+          expect(user.address).to.not.be.undefined;
+        });
       });
 
       it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
@@ -280,9 +286,11 @@ describe('getDataConnect()', () => {
           queryListUsers, optsUnauthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).to.be.greaterThan(1);
-        expect(resp.data.users[0].uid).to.not.be.undefined;
-        expect(resp.data.users[0].name).to.not.be.undefined;
-        expect(resp.data.users[0].address).to.not.be.undefined;
+        resp.data.users.forEach((user) => {
+          expect(user.uid).to.not.be.undefined;
+          expect(user.name).to.not.be.undefined;
+          expect(user.address).to.not.be.undefined;
+        });
       });
 
       it('executeGraphql() successfully executes an impersonated query with non-existing authenticated claims',
@@ -291,9 +299,11 @@ describe('getDataConnect()', () => {
             queryListUsers, optsNonExistingClaims);
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users.length).to.be.greaterThan(1);
-          expect(resp.data.users[0].uid).to.not.be.undefined;
-          expect(resp.data.users[0].name).to.not.be.undefined;
-          expect(resp.data.users[0].address).to.not.be.undefined;
+          resp.data.users.forEach((user) => {
+            expect(user.uid).to.not.be.undefined;
+            expect(user.name).to.not.be.undefined;
+            expect(user.address).to.not.be.undefined;
+          });
         });
     });
 
