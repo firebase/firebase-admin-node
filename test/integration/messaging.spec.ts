@@ -101,6 +101,20 @@ describe('admin.messaging', () => {
       });
   });
 
+  it('test uncaught error', () => {
+    const messages: Message[] = [message, message, message];
+    // No longer throws uncatchable error
+    return getMessaging().sendEach(messages, true)
+      .then((response) => {
+        console.log(response.responses)
+      })
+      .catch((error) => {
+        // This error isn't passed here even when thrown
+        console.log("CAUGHT ERROR")
+        console.log(error)
+      })
+  });
+
   it('sendEach(500)', () => {
     const messages: Message[] = [];
     for (let i = 0; i < 500; i++) {

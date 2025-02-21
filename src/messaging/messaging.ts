@@ -206,10 +206,22 @@ export class Messaging {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
+    // const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
+    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://localhost:3001`);
 
     return this.getUrlPath()
       .then((urlPath) => {
+        // Try listening for errors here?
+        if (http2SessionHandler){
+          http2SessionHandler.invoke().catch((error) => {
+            console.log("ERROR TO BE PASSED TO USER:")
+            console.log(error)
+            
+            // Throwing here does nothing since it's still not in the promise that's returned?
+            throw error
+          })
+        }
+
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
           validateMessage(message);
           const request: { message: Message; validate_only?: boolean } = { message };

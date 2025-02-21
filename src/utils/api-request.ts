@@ -847,12 +847,19 @@ class AsyncHttp2Call extends AsyncRequestCall {
       ...this.options.headers
     });
 
+    // console.log("EMIT SESSION ERROR")
+    // this.http2ConfigImpl.http2SessionHandler.session.emit('error', "MOCK_SESSION_ERROR")
+
     req.on('response', (headers: IncomingHttp2Headers) => {
       this.handleHttp2Response(headers, req);
+
+      // console.log("EMIT SESSION ERROR")
+      // this.http2ConfigImpl.http2SessionHandler.session.emit('error', "MOCK_ERROR")
     });
 
     // Handle errors
     req.on('error', (err: any) => {
+      console.log("GOT REQUEST ERROR")
       if (req.aborted) {
         return;
       }
@@ -1315,9 +1322,16 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 export class Http2SessionHandler {
 
   private http2Session: http2.ClientHttp2Session
+  protected promise: Promise<void>
+  protected resolve: () => void;
+  protected reject: (_: any) => void;
 
   constructor(url: string){
-    this.http2Session = this.createSession(url)
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+      this.http2Session = this.createSession(url)
+    });
   }
 
   public createSession(url: string): http2.ClientHttp2Session {
@@ -1330,21 +1344,35 @@ export class Http2SessionHandler {
       const http2Session = http2.connect(url, opts)
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        throw new FirebaseAppError(
+        console.log("GOT SESSION GOAWAY EVENT")
+        this.reject(new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
           `Error while making requests: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`
-        );
+        ));
       })
 
       http2Session.on('error', (error) => {
-        throw new FirebaseAppError(
+        console.log("GOT SESSION ERROR EVENT")
+        this.reject(new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
           `Error while making requests: ${error}`
-        );
+        ));
       })
+
+      // Session close should be where we resolve the promise since we no longer need to listen for errors
+      http2Session.on('close', () => {
+        console.log("GOT SESSION CLOSE EVENT")
+        this.resolve()
+      });
+
       return http2Session
     }
     return this.http2Session
+  }
+
+  // return the promise tracking events
+  public invoke(): Promise<void> {
+    return this.promise
   }
 
   get session(): http2.ClientHttp2Session {
