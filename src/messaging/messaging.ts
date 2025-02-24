@@ -209,33 +209,48 @@ export class Messaging {
     // const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
     const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://localhost:3001`);
 
+
     return this.getUrlPath()
       .then((urlPath) => {
-        // Try listening for errors here?
+          // Try listening for errors here?
         if (http2SessionHandler){
-          http2SessionHandler.invoke().catch((error) => {
-            console.log("ERROR TO BE PASSED TO USER:")
-            console.log(error)
-            
-            // Throwing here does nothing since it's still not in the promise that's returned?
-            throw error
+          let batchResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>
+          return new Promise((resolve: (result: PromiseSettledResult<SendResponse>[]) => void, reject) => {
+            http2SessionHandler.invoke().catch((error) => {
+              console.log("ERROR TO BE PASSED TO USER:")
+              console.log(error)
+              reject({error, batchResponsePromise})
+            })
+
+
+            const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+              validateMessage(message);
+              const request: { message: Message; validate_only?: boolean } = { message };
+              if (dryRun) {
+                request.validate_only = true;
+              }
+              return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
+                  FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+            });
+            batchResponsePromise = Promise.allSettled(requests)
+            batchResponsePromise.then(resolve).catch((error) => {
+              reject({error, batchResponsePromise})
+            })
           })
         }
 
+        //
         const requests: Promise<SendResponse>[] = copy.map(async (message) => {
           validateMessage(message);
           const request: { message: Message; validate_only?: boolean } = { message };
           if (dryRun) {
             request.validate_only = true;
           }
-          
-          if (http2SessionHandler){
-            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
-              FCM_SEND_HOST, urlPath, request, http2SessionHandler);
-          }
           return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
         });
         return Promise.allSettled(requests);
+        //
+
       })
       .then((results) => {
         const responses: SendResponse[] = [];
@@ -253,11 +268,6 @@ export class Messaging {
           failureCount: responses.length - successCount,
         };
       })
-      .finally(() => {
-        if (http2SessionHandler){
-          http2SessionHandler.close()
-        }
-      });
   }
 
   /**
