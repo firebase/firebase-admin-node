@@ -49,6 +49,12 @@ describe('FunctionsApiClient', () => {
     'X-Goog-Api-Client': getMetricsHeader(),
   };
 
+  const EXPECTED_HEADERS_EMULATOR = {
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'Authorization': 'Bearer owner',
+    'X-Goog-Api-Client': getMetricsHeader(),
+  };
+
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials or set project ID as an app option. Alternatively, set the '
     + 'GOOGLE_CLOUD_PROJECT environment variable.';
@@ -498,7 +504,7 @@ describe('FunctionsApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: CLOUD_TASKS_URL_EMULATOR,
-            headers: EXPECTED_HEADERS,
+            headers: EXPECTED_HEADERS_EMULATOR,
             data: {
               task: expectedPayload
             }
@@ -519,7 +525,7 @@ describe('FunctionsApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: CLOUD_TASKS_URL_EMULATOR,
-            headers: EXPECTED_HEADERS,
+            headers: EXPECTED_HEADERS_EMULATOR,
             data: {
               task: expectedPayload
             }
@@ -547,7 +553,7 @@ describe('FunctionsApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: CLOUD_TASKS_URL_EMULATOR,
-            headers: EXPECTED_HEADERS,
+            headers: EXPECTED_HEADERS_EMULATOR,
             data: {
               task: expectedPayload
             }
@@ -603,7 +609,7 @@ describe('FunctionsApiClient', () => {
       expect(stub).to.have.been.calledWith({
         method: 'DELETE',
         url: CLOUD_TASKS_URL_EMULATOR.concat('/', 'mock-task'),
-        headers: EXPECTED_HEADERS,
+        headers: EXPECTED_HEADERS_EMULATOR,
       });
     });
 
