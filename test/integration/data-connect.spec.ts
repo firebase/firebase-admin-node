@@ -213,8 +213,8 @@ describe('getDataConnect()', () => {
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
         expect(resp.data.users[0].uid).equals(userId);
-        expect(resp.data.users[0].name).to.not.be.undefined;
-        expect(resp.data.users[0].address).to.not.be.undefined;
+        expect(resp.data.users[0].name).equals('Fred');
+        expect(resp.data.users[0].address).equals('32 St.');
       });
 
       it('executeGraphqlRead() should throw for impersonated query with unauthenticated claims', async () => {
@@ -229,8 +229,8 @@ describe('getDataConnect()', () => {
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
         expect(resp.data.users[0].uid).equals(userId);
-        expect(resp.data.users[0].name).to.be.not.undefined;
-        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users[0].name).equals('Fred');
+        expect(resp.data.users[0].address).equals('32 St.');
       });
 
       it('executeGraphql() should throw for impersonated query with unauthenticated claims', async () => {
@@ -251,6 +251,7 @@ describe('getDataConnect()', () => {
         async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
             updateImpersonatedUser, optsAuthorizedClaims);
+          // Fred -> Fredrick
           expect(resp.data.user_update.uid).equals(userId);
         });
 
@@ -269,16 +270,27 @@ describe('getDataConnect()', () => {
     });
 
     describe('PUBLIC Auth Policy', () => {
+      const expectedUsers = [
+        {
+          name: 'Fredrick',
+          address: '32 Elm St.',
+          uid: 'QVBJcy5ndXJ3'
+        },
+        {
+          name: 'Jeff',
+          address: '99 Oak St. N',
+          uid: 'QVBJcy5ndXJ1'
+        }
+      ];
+
       it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
         const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
           queryListUsers, optsAuthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).to.be.greaterThan(1);
-        resp.data.users.forEach((user) => {
-          expect(user.uid).to.not.be.undefined;
-          expect(user.name).to.not.be.undefined;
-          expect(user.address).to.not.be.undefined;
-        });
+        expectedUsers.forEach((expectedUser) => {
+          expect(resp.data.users).to.deep.include(expectedUser);
+        })
       });
 
       it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
@@ -286,10 +298,8 @@ describe('getDataConnect()', () => {
           queryListUsers, optsUnauthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).to.be.greaterThan(1);
-        resp.data.users.forEach((user) => {
-          expect(user.uid).to.not.be.undefined;
-          expect(user.name).to.not.be.undefined;
-          expect(user.address).to.not.be.undefined;
+        expectedUsers.forEach((expectedUser) => {
+          expect(resp.data.users).to.deep.include(expectedUser);
         });
       });
 
@@ -299,10 +309,8 @@ describe('getDataConnect()', () => {
             queryListUsers, optsNonExistingClaims);
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users.length).to.be.greaterThan(1);
-          resp.data.users.forEach((user) => {
-            expect(user.uid).to.not.be.undefined;
-            expect(user.name).to.not.be.undefined;
-            expect(user.address).to.not.be.undefined;
+          expectedUsers.forEach((expectedUser) => {
+            expect(resp.data.users).to.deep.include(expectedUser);
           });
         });
     });
