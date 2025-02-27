@@ -54,7 +54,7 @@ export class FunctionsApiClient {
         'invalid-argument',
         'First argument passed to getFunctions() must be a valid Firebase app instance.');
     }
-    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.httpClient = new FunctionsHttpClient(app as FirebaseApp);
   }
   /**
    * Deletes a task from a queue.
@@ -359,6 +359,19 @@ export class FunctionsApiClient {
     }
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseFunctionsError(code, message);
+  }
+}
+
+/**
+ * Functions-specific HTTP client which uses the special "owner" token
+ * when communicating with the Emulator.
+ */
+class FunctionsHttpClient extends AuthorizedHttpClient {
+  protected getToken(): Promise<string> {
+    if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+      return Promise.resolve('owner');
+    }
+    return super.getToken();
   }
 }
 
