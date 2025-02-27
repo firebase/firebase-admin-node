@@ -114,6 +114,21 @@ describe('getDataConnect()', () => {
   const upsertUser = `mutation UpsertUser($id: String) { 
   user_upsert(data: { uid: $id, address: "32 St.", name: "Fred" }) }`;
 
+  const testUser = {
+    name: 'Fred',
+    address: '32 St.',
+    uid: userId
+  }
+
+  const expectedUsers = [
+    testUser,
+    {
+      name: 'Jeff',
+      address: '99 Oak St. N',
+      uid: 'QVBJcy5ndXJ1'
+    }
+  ];
+
   describe('executeGraphql()', () => {
     it('executeGraphql() successfully executes a GraphQL mutation', async () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
@@ -128,10 +143,8 @@ describe('getDataConnect()', () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, UserVariables>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users.length).to.be.greaterThan(1);
-      resp.data.users.forEach((user) => {
-        expect(user.uid).to.not.be.undefined;
-        expect(user.name).to.not.be.undefined;
-        expect(user.address).to.not.be.undefined;
+      expectedUsers.forEach((expectedUser) => {
+        expect(resp.data.users).to.deep.include(expectedUser);
       });
     });
 
@@ -141,8 +154,9 @@ describe('getDataConnect()', () => {
         { operationName: 'ListEmails' }
       );
       expect(resp.data.emails).to.be.not.empty;
+      expect(resp.data.emails.length).equals(1);
       expect(resp.data.emails[0].id).to.be.not.undefined;
-      expect(resp.data.emails[0].from?.name).to.be.not.undefined;
+      expect(resp.data.emails[0].from?.name).to.equal('Jeff');
     });
 
     it('executeGraphql() should throw for a query error', async () => {
@@ -155,8 +169,8 @@ describe('getDataConnect()', () => {
         queryGetUserById,
         { variables: { id: { uid: userId } } }
       );
-      expect(resp.data.user.uid).equals(userId);
-      expect(resp.data.user.name).to.not.be.undefined;
+      expect(resp.data.user.uid).to.equal(testUser.uid);
+      expect(resp.data.user.name).to.equal(testUser.name);
       expect(resp.data.user.address).to.be.undefined;
     });
   });
@@ -167,10 +181,8 @@ describe('getDataConnect()', () => {
         await getDataConnect(connectorConfig).executeGraphqlRead<UsersResponse, UserVariables>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
       expect(resp.data.users.length).to.be.greaterThan(1);
-      resp.data.users.forEach((user) => {
-        expect(user.uid).to.not.be.undefined;
-        expect(user.name).to.not.be.undefined;
-        expect(user.address).to.not.be.undefined;
+      expectedUsers.forEach((expectedUser) => {
+        expect(resp.data.users).to.deep.include(expectedUser);
       });
     });
 
@@ -212,9 +224,7 @@ describe('getDataConnect()', () => {
             queryListUsersImpersonation, optsAuthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
-        expect(resp.data.users[0].uid).equals(userId);
-        expect(resp.data.users[0].name).equals('Fred');
-        expect(resp.data.users[0].address).equals('32 St.');
+        expect(resp.data.users[0]).to.deep.equal(testUser);
       });
 
       it('executeGraphqlRead() should throw for impersonated query with unauthenticated claims', async () => {
@@ -228,9 +238,7 @@ describe('getDataConnect()', () => {
             queryListUsersImpersonation, optsAuthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
-        expect(resp.data.users[0].uid).equals(userId);
-        expect(resp.data.users[0].name).equals('Fred');
-        expect(resp.data.users[0].address).equals('32 St.');
+        expect(resp.data.users[0]).to.deep.equal(testUser);
       });
 
       it('executeGraphql() should throw for impersonated query with unauthenticated claims', async () => {
@@ -274,7 +282,7 @@ describe('getDataConnect()', () => {
         {
           name: 'Fredrick',
           address: '32 Elm St.',
-          uid: 'QVBJcy5ndXJ3'
+          uid: userId
         },
         {
           name: 'Jeff',
