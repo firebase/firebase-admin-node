@@ -6,6 +6,11 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type AuthClaims = Partial<DecodedIdToken>;
+
 // @public
 export interface ConnectorConfig {
     location: string;
@@ -36,8 +41,21 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
 
 // @public
 export interface GraphqlOptions<Variables> {
+    impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
     operationName?: string;
     variables?: Variables;
+}
+
+// @public
+export interface ImpersonateAuthenticated {
+    authClaims: AuthClaims;
+    unauthenticated?: never;
+}
+
+// @public
+export interface ImpersonateUnauthenticated {
+    authClaims?: never;
+    unauthenticated: true;
 }
 
 ```
