@@ -101,6 +101,8 @@ jobs:
       startsWith(github.event.pull_request.title, '[chore] Release ')
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout source for publish
