@@ -19,6 +19,8 @@ export class AppErrorCodes {
     // (undocumented)
     static DUPLICATE_APP: string;
     // (undocumented)
+    static HTTP2_SESSION_ERROR: string;
+    // (undocumented)
     static INTERNAL_ERROR: string;
     // (undocumented)
     static INVALID_APP_NAME: string;
