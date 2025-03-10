@@ -322,10 +322,11 @@ export interface MockHttp2Request {
 }
 
 export interface MockHttp2Response {
-  headers: http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader,
-  data: Buffer,
+  headers?: http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader,
+  data?: Buffer,
   delay?: number,
-  error?: any
+  sessionError?: any
+  streamError?: any,
 }
 
 export class Http2Mocker {
@@ -340,12 +341,12 @@ export class Http2Mocker {
     this.connectStub = sinon.stub(http2, 'connect');
     this.connectStub.callsFake((_target: any, options: any) => {
       const session = this.originalConnect('https://www.example.com', options);
-      session.request = this.createMockRequest()
+      session.request = this.createMockRequest(session)
       return session;
     })
   }
 
-  private createMockRequest() {
+  private createMockRequest(session:http2.ClientHttp2Session) {
     return (requestHeaders: http2.OutgoingHttpHeaders) => {
       // Create a mock ClientHttp2Stream to return
       const mockStream = new stream.Readable({
@@ -365,8 +366,11 @@ export class Http2Mocker {
       const mockRes = this.mockResponses.shift();
       if (mockRes) {
         this.timeouts.push(setTimeout(() => {
-          if (mockRes.error) {
-            mockStream.emit('error', mockRes.error)
+          if (mockRes.sessionError) {
+            session.emit('error', mockRes.sessionError)
+          }
+          if (mockRes.streamError) {
+            mockStream.emit('error', mockRes.streamError)
           }
           else {
             mockStream.emit('response', mockRes.headers);
