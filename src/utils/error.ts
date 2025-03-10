@@ -377,6 +377,7 @@ export class AppErrorCodes {
   public static INVALID_APP_OPTIONS = 'invalid-app-options';
   public static INVALID_CREDENTIAL = 'invalid-credential';
   public static NETWORK_ERROR = 'network-error';
+  public static HTTP2_SESSION_ERROR = 'http2-session-error';
   public static NETWORK_TIMEOUT = 'network-timeout';
   public static NO_APP = 'no-app';
   public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';

@@ -206,68 +206,69 @@ export class Messaging {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    // const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`)
-    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://localhost:3001`);
-
+    const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`);
 
     return this.getUrlPath()
       .then((urlPath) => {
-          // Try listening for errors here?
-        if (http2SessionHandler){
-          let batchResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>
+        if (http2SessionHandler) {
+          let batchResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>;
           return new Promise((resolve: (result: PromiseSettledResult<SendResponse>[]) => void, reject) => {
+            // Start session listeners
             http2SessionHandler.invoke().catch((error) => {
-              console.log("ERROR TO BE PASSED TO USER:")
-              console.log(error)
-              reject({error, batchResponsePromise})
-            })
+              error.pendingBatchResponse =
+                batchResponsePromise ? batchResponsePromise.then(this.parseSendResponses) : undefined;
+              reject(error);
+            });
 
-
+            // Start making requests
             const requests: Promise<SendResponse>[] = copy.map(async (message) => {
               validateMessage(message);
-              const request: { message: Message; validate_only?: boolean } = { message };
+              const request: { message: Message; validate_only?: boolean; } = { message };
               if (dryRun) {
                 request.validate_only = true;
               }
               return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
-                  FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+                FCM_SEND_HOST, urlPath, request, http2SessionHandler);
             });
-            batchResponsePromise = Promise.allSettled(requests)
-            batchResponsePromise.then(resolve).catch((error) => {
-              reject({error, batchResponsePromise})
-            })
-          })
+
+            // Resolve once all requests have completed
+            batchResponsePromise = Promise.allSettled(requests);
+            batchResponsePromise.then(resolve);
+          });
+        } else {
+          const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+            validateMessage(message);
+            const request: { message: Message; validate_only?: boolean; } = { message };
+            if (dryRun) {
+              request.validate_only = true;
+            }
+            return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(
+              FCM_SEND_HOST, urlPath, request);
+          });
+          return Promise.allSettled(requests);
         }
-
-        //
-        const requests: Promise<SendResponse>[] = copy.map(async (message) => {
-          validateMessage(message);
-          const request: { message: Message; validate_only?: boolean } = { message };
-          if (dryRun) {
-            request.validate_only = true;
-          }
-          return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
-        });
-        return Promise.allSettled(requests);
-        //
-
       })
-      .then((results) => {
-        const responses: SendResponse[] = [];
-        results.forEach(result => {
-          if (result.status === 'fulfilled') {
-            responses.push(result.value);
-          } else { // rejected
-            responses.push({ success: false, error: result.reason })
-          }
-        })
-        const successCount: number = responses.filter((resp) => resp.success).length;
-        return {
-          responses,
-          successCount,
-          failureCount: responses.length - successCount,
-        };
-      })
+      .then(this.parseSendResponses)
+      .finally(() => {
+        http2SessionHandler?.close();
+      });
+  }
+
+  private parseSendResponses(results: PromiseSettledResult<SendResponse>[]): BatchResponse {
+    const responses: SendResponse[] = [];
+    results.forEach(result => {
+      if (result.status === 'fulfilled') {
+        responses.push(result.value);
+      } else { // rejected
+        responses.push({ success: false, error: result.reason });
+      }
+    });
+    const successCount: number = responses.filter((resp) => resp.success).length;
+    return {
+      responses,
+      successCount,
+      failureCount: responses.length - successCount,
+    };
   }
 
   /**

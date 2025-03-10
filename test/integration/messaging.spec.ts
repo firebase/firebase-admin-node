@@ -101,29 +101,6 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('test uncaught error', async () => {
-    const messages: Message[] = [message, message, message];
-
-    // No longer throws uncatchable error
-    return getMessaging().sendEach(messages, true)
-      .then((response) => {
-        console.log(response.responses)
-      })
-      .catch(async (error) => {
-        // type err = {
-        //   error: any,
-        //   batchResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>
-        // }
-        // If batchResponsePromise is undefined then no messages were sent
-        // The promise should eventally return with the result of each request
-        console.log("CAUGHT ERROR")
-        console.log(error)
-        await error.batchResponsePromise.then((results: any) => {
-          console.log(results)
-        })
-      })
-  });
-
   it('sendEach(500)', () => {
     const messages: Message[] = [];
     for (let i = 0; i < 500; i++) {

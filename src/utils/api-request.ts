@@ -847,19 +847,12 @@ class AsyncHttp2Call extends AsyncRequestCall {
       ...this.options.headers
     });
 
-    // console.log("EMIT SESSION ERROR")
-    // this.http2ConfigImpl.http2SessionHandler.session.emit('error', "MOCK_SESSION_ERROR")
-
     req.on('response', (headers: IncomingHttp2Headers) => {
       this.handleHttp2Response(headers, req);
-
-      // console.log("EMIT SESSION ERROR")
-      // this.http2ConfigImpl.http2SessionHandler.session.emit('error', "MOCK_ERROR")
     });
 
     // Handle errors
     req.on('error', (err: any) => {
-      console.log("GOT REQUEST ERROR")
       if (req.aborted) {
         return;
       }
@@ -1061,6 +1054,7 @@ class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2Reque
 
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
+    // TODO(b/401051826)
     const protocol = parsed.protocol;
 
     return {
@@ -1344,33 +1338,28 @@ export class Http2SessionHandler {
       const http2Session = http2.connect(url, opts)
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        console.log("GOT SESSION GOAWAY EVENT")
         this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`
+          AppErrorCodes.HTTP2_SESSION_ERROR,
+          `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
         ));
       })
 
       http2Session.on('error', (error) => {
-        console.log("GOT SESSION ERROR EVENT")
         this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: ${error}`
+          AppErrorCodes.HTTP2_SESSION_ERROR,
+          `Session error while making requests: ${error}`
         ));
       })
 
-      // Session close should be where we resolve the promise since we no longer need to listen for errors
       http2Session.on('close', () => {
-        console.log("GOT SESSION CLOSE EVENT")
+        // Resolve current promise
         this.resolve()
       });
-
       return http2Session
     }
     return this.http2Session
   }
 
-  // return the promise tracking events
   public invoke(): Promise<void> {
     return this.promise
   }
