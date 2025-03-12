@@ -17,7 +17,9 @@
 
 import { App } from '../app';
 import { deepCopy } from '../utils/deep-copy';
-import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
+import { 
+  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError, FirebaseMessagingSessionError
+} from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
@@ -211,13 +213,13 @@ export class Messaging {
     return this.getUrlPath()
       .then((urlPath) => {
         if (http2SessionHandler) {
-          let batchResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>;
+          let sendResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>;
           return new Promise((resolve: (result: PromiseSettledResult<SendResponse>[]) => void, reject) => {
             // Start session listeners
             http2SessionHandler.invoke().catch((error) => {
-              error.pendingBatchResponse =
-                batchResponsePromise ? batchResponsePromise.then(this.parseSendResponses) : undefined;
-              reject(error);
+              const pendingBatchResponse = 
+                sendResponsePromise ? sendResponsePromise.then(this.parseSendResponses) : undefined;
+              reject(new FirebaseMessagingSessionError(error, undefined, pendingBatchResponse));
             });
 
             // Start making requests
@@ -232,8 +234,8 @@ export class Messaging {
             });
 
             // Resolve once all requests have completed
-            batchResponsePromise = Promise.allSettled(requests);
-            batchResponsePromise.then(resolve);
+            sendResponsePromise = Promise.allSettled(requests);
+            sendResponsePromise.then(resolve);
           });
         } else {
           const requests: Promise<SendResponse>[] = copy.map(async (message) => {

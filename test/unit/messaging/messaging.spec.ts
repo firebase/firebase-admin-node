@@ -34,6 +34,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
+import { FirebaseMessagingSessionError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -923,9 +924,10 @@ describe('Messaging', () => {
 
       return messaging.sendEach(
         [validMessage, validMessage], true
-      ).catch(async (error) => {
-        expect(error.errorInfo.code).to.equal('app/http2-session-error')
-        await error.pendingBatchResponse.then((response: BatchResponse) => {
+      ).catch(async (error: FirebaseMessagingSessionError) => {
+        expect(error.code).to.equal('messaging/app/network-error');
+        expect(error.pendingBatchResponse).to.not.be.undefined;
+        await error.pendingBatchResponse?.then((response: BatchResponse) => {
           expect(http2Mocker.requests.length).to.equal(2);
           expect(response.failureCount).to.equal(1);
           const responses = response.responses;

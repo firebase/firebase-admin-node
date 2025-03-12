@@ -2538,6 +2538,7 @@ describe('Http2Client', () => {
       });
 
     await http2SessionHandler.invoke().should.eventually.be.rejectedWith(sessionError)
+      .and.have.property('code', 'app/network-error')
   });
 });
 

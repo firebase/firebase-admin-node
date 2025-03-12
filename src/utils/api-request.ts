@@ -1339,14 +1339,14 @@ export class Http2SessionHandler {
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
         this.reject(new FirebaseAppError(
-          AppErrorCodes.HTTP2_SESSION_ERROR,
+          AppErrorCodes.NETWORK_ERROR,
           `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
         ));
       })
 
       http2Session.on('error', (error) => {
         this.reject(new FirebaseAppError(
-          AppErrorCodes.HTTP2_SESSION_ERROR,
+          AppErrorCodes.NETWORK_ERROR,
           `Session error while making requests: ${error}`
         ));
       })
