@@ -610,8 +610,8 @@ export interface AndroidNotification {
   notificationCount?: number;
 
   /**
-   * Sets if this notification should be proxied. Must be either `allow`,
-   * `deny` or `if_priority_lowered`. If unspecified, defaults to
+   * Sets if this notification should attempt to be proxied. Must be either
+   * `allow`, `deny` or `if_priority_lowered`. If unspecified, defaults to
    * `if_priority_lowered`.
    */
   proxy?: ('allow' | 'deny' | 'if_priority_lowered');
