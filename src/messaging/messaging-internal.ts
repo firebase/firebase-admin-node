@@ -475,6 +475,11 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
     (notification as any).priority = priority;
   }
 
+  if (typeof notification.proxy !== 'undefined') {
+    const proxy = notification.proxy.toUpperCase();
+    (notification as any).proxy = proxy;
+  }
+
   if (typeof notification.visibility !== 'undefined') {
     const visibility = notification.visibility.toUpperCase();
     (notification as any).visibility = visibility;

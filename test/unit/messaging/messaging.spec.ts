@@ -1824,6 +1824,7 @@ describe('Messaging', () => {
               ticker: 'test.ticker',
               sticky: true,
               visibility: 'private',
+              proxy: 'deny',
             },
           },
         },
@@ -1840,6 +1841,7 @@ describe('Messaging', () => {
               ticker: 'test.ticker',
               sticky: true,
               visibility: 'PRIVATE',
+              proxy: 'DENY'
             },
           },
         },
@@ -1970,6 +1972,7 @@ describe('Messaging', () => {
               },
               defaultLightSettings: false,
               notificationCount: 1,
+              proxy: 'if_priority_lowered',
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -2022,6 +2025,7 @@ describe('Messaging', () => {
               },
               default_light_settings: false,
               notification_count: 1,
+              proxy: 'IF_PRIORITY_LOWERED',
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',

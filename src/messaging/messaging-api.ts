@@ -608,6 +608,13 @@ export interface AndroidNotification {
    * displayed on the long-press menu each time a new notification arrives.
    */
   notificationCount?: number;
+
+  /**
+   * Sets if this notification should be proxied. Must be either `allow`,
+   * `deny` or `if_priority_lowered`. If unspecified, defaults to
+   * `if_priority_lowered`.
+   */
+  proxy?: ('allow' | 'deny' | 'if_priority_lowered');
 }
 
 /**

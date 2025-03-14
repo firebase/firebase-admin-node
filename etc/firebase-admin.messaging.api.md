@@ -43,6 +43,7 @@ export interface AndroidNotification {
     localOnly?: boolean;
     notificationCount?: number;
     priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+    proxy?: ('allow' | 'deny' | 'if_priority_lowered');
     sound?: string;
     sticky?: boolean;
     tag?: string;
