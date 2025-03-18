@@ -16,6 +16,7 @@
  */
 
 import { FirebaseError as FirebaseErrorInterface } from '../app';
+import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
 
 /**
@@ -341,6 +342,38 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
     /* tslint:enable:max-line-length */
     (this as any).__proto__ = FirebaseMessagingError.prototype;
+  }
+}
+
+export class FirebaseMessagingSessionError extends FirebaseMessagingError {
+  public pendingBatchResponse?: Promise<BatchResponse>;
+  /**
+     * 
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default message if provided.
+     * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
+     * @constructor
+     * @internal
+     */
+  constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
+    // Override default message if custom message provided.
+    super(info, message || info.message);
+    this.pendingBatchResponse = pendingBatchResponse;
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebaseMessagingSessionError.prototype;
+  }
+
+  /** @returns The object representation of the error. */
+  public toJSON(): object {
+    return {
+      code: this.code,
+      message: this.message,
+      pendingBatchResponse: this.pendingBatchResponse,
+    };
   }
 }
 
