@@ -34,6 +34,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
+import { FirebaseMessagingSessionError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -121,6 +122,12 @@ function mockHttp2SendRequestError(
   } as mocks.MockHttp2Response
 }
 
+function mockHttp2Error(streamError?: any, sessionError?:any): mocks.MockHttp2Response {
+  return {
+    streamError: streamError,
+    sessionError: sessionError
+  } as mocks.MockHttp2Response
+}
 
 function mockErrorResponse(
   path: string,
@@ -905,6 +912,30 @@ describe('Messaging', () => {
         checkSendResponseFailure(responses[2], 'messaging/invalid-argument');
       });
     });
+
+    it('should throw error with BatchResponse promise on session error event using HTTP/2', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'))
+      const sessionError = 'MOCK_SESSION_ERROR'
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
+        new Error(sessionError)
+      ));
+      http2Mocker.http2Stub(mockedHttp2Responses)
+
+      return messaging.sendEach(
+        [validMessage, validMessage], true
+      ).catch(async (error: FirebaseMessagingSessionError) => {
+        expect(error.code).to.equal('messaging/app/network-error');
+        expect(error.pendingBatchResponse).to.not.be.undefined;
+        await error.pendingBatchResponse?.then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(2);
+          expect(response.failureCount).to.equal(1);
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
+          checkSendResponseFailure(responses[1], 'app/network-error');
+        })
+      });
+    })
 
     // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types using HTTP/2', () => {

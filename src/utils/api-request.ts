@@ -1054,6 +1054,7 @@ class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2Reque
 
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
+    // TODO(b/401051826)
     const protocol = parsed.protocol;
 
     return {
@@ -1315,9 +1316,16 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 export class Http2SessionHandler {
 
   private http2Session: http2.ClientHttp2Session
+  protected promise: Promise<void>
+  protected resolve: () => void;
+  protected reject: (_: any) => void;
 
   constructor(url: string){
-    this.http2Session = this.createSession(url)
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+      this.http2Session = this.createSession(url)
+    });
   }
 
   public createSession(url: string): http2.ClientHttp2Session {
@@ -1330,21 +1338,30 @@ export class Http2SessionHandler {
       const http2Session = http2.connect(url, opts)
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        throw new FirebaseAppError(
+        this.reject(new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: GOAWAY - ${opaqueData.toString()}, Error code: ${errorCode}`
-        );
+          `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
+        ));
       })
 
       http2Session.on('error', (error) => {
-        throw new FirebaseAppError(
+        this.reject(new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: ${error}`
-        );
+          `Session error while making requests: ${error}`
+        ));
       })
+
+      http2Session.on('close', () => {
+        // Resolve current promise
+        this.resolve()
+      });
       return http2Session
     }
     return this.http2Session
+  }
+
+  public invoke(): Promise<void> {
+    return this.promise
   }
 
   get session(): http2.ClientHttp2Session {

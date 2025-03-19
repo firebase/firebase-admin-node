@@ -140,11 +140,13 @@ function mockHttp2SendRequestError(
   } as mocks.MockHttp2Response
 }
 
-function mockHttp2Error(err: any): mocks.MockHttp2Response {
+function mockHttp2Error(streamError?: any, sessionError?:any): mocks.MockHttp2Response {
   return {
-    error: err
+    streamError: streamError,
+    sessionError: sessionError
   } as mocks.MockHttp2Response
 }
+
 
 /**
  * Returns a new RetryConfig instance for testing. This is same as the default
@@ -2499,6 +2501,44 @@ describe('Http2Client', () => {
       data: 1 as any,
       http2SessionHandler: http2SessionHandler
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should fail on session and stream errors', async () => {
+    const reqData = { request: 'data' };
+    const streamError = 'Error while making request: test stream error. Error code: AWFUL_STREAM_ERROR';
+    const sessionError = 'Session error while making requests: Error: AWFUL_SESSION_ERROR'
+    mockedHttp2Responses.push(mockHttp2Error(
+      { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' },
+      new Error('AWFUL_SESSION_ERROR')
+    ));
+    http2Mocker.http2Stub(mockedHttp2Responses);
+
+    const client = new Http2Client();
+    http2SessionHandler = new Http2SessionHandler(mockHostUrl)
+
+    await client.send({
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+      http2SessionHandler: http2SessionHandler,
+    }).should.eventually.be.rejectedWith(streamError).and.have.property('code', 'app/network-error')
+      .then(() => {
+        expect(http2Mocker.requests.length).to.equal(1);
+        expect(http2Mocker.requests[0].headers[':method']).to.equal('POST');
+        expect(http2Mocker.requests[0].headers[':scheme']).to.equal('https:');
+        expect(http2Mocker.requests[0].headers[':path']).to.equal(mockPath);
+        expect(JSON.parse(http2Mocker.requests[0].data)).to.deep.equal(reqData);
+        expect(http2Mocker.requests[0].headers.authorization).to.equal('Bearer token');
+        expect(http2Mocker.requests[0].headers['content-type']).to.contain('application/json');
+        expect(http2Mocker.requests[0].headers['My-Custom-Header']).to.equal('CustomValue');
+      });
+
+    await http2SessionHandler.invoke().should.eventually.be.rejectedWith(sessionError)
+      .and.have.property('code', 'app/network-error')
   });
 });
 
