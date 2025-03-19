@@ -593,7 +593,8 @@ export interface AndroidNotification {
 
   /**
    * Sets the visibility of the notification. Must be either `private`, `public`,
-   * or `secret`. If unspecified, defaults to `private`.
+   * or `secret`. If unspecified, it remains undefined in the Admin SDK, and
+   * defers to the FCM backend's default mapping.
    */
   visibility?: ('private' | 'public' | 'secret');
 
@@ -611,8 +612,8 @@ export interface AndroidNotification {
 
   /**
    * Sets if this notification should attempt to be proxied. Must be either
-   * `allow`, `deny` or `if_priority_lowered`. If unspecified, defaults to
-   * `if_priority_lowered`.
+   * `allow`, `deny` or `if_priority_lowered`. If unspecified, it remains
+   * undefined in the Admin SDK, and defers to the FCM backend's default mapping.
    */
   proxy?: ('allow' | 'deny' | 'if_priority_lowered');
 }
