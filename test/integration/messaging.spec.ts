@@ -64,6 +64,7 @@ const message: Message = {
       },
       defaultLightSettings: false,
       notificationCount: 1,
+      proxy: 'if_priority_lowered',
     },
   },
   apns: {
