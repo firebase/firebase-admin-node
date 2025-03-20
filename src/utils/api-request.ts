@@ -1345,9 +1345,16 @@ export class Http2SessionHandler {
       })
 
       http2Session.on('error', (error) => {
+        let errorMessage: any;
+        if (error.name == 'AggregateError' && error.errors) {
+          errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
+            `[${error.errors.map((error: any) => error.message).join(', ')}]`
+        } else {
+          errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
+        }
         this.reject(new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Session error while making requests: ${error}`
+          errorMessage
         ));
       })
 
