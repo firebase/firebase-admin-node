@@ -1725,6 +1725,21 @@ describe('Messaging', () => {
       });
     });
 
+    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false]
+    invalidApnsLiveActivityTokens.forEach((arg) => {
+      it(`should throw given invalid apns live activity token: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({ apns: { live_activity_token: arg }, topic: 'test' });
+        }).to.throw('apns.live_activity_token must be a string value');
+      });
+    })
+
+    it('should throw given empty apns live activity token', () => {
+      expect(() => {
+        messaging.send({ apns: { live_activity_token: '' }, topic: 'test' });
+      }).to.throw('apns.live_activity_token must be a non-empty string');
+    });
+
     const invalidApnsPayloads: any[] = [null, '', 'payload', true, 1.23];
     invalidApnsPayloads.forEach((payload) => {
       it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
