@@ -108,6 +108,13 @@ export interface WebpushConfig {
    * Options for features provided by the FCM SDK for Web.
    */
   fcmOptions?: WebpushFcmOptions;
+
+  /**
+   * Support for Declarative Web Push 
+   * https://pr-preview.s3.amazonaws.com/w3c/push-api/pull/385.html#declarative-push-message
+   */
+  web_push?: number,
+
 }
 
 /** Represents options for features provided by the FCM SDK for Web
