@@ -17,6 +17,7 @@
 
 import { App } from '../app';
 import { DataConnectApiClient } from './data-connect-api-client-internal';
+// FirebaseDataConnectError, objectToString, and validator are no longer needed here
 
 import {
   ConnectorConfig,
@@ -102,5 +103,67 @@ export class DataConnect {
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.client.executeGraphqlRead(query, options);
+  }
+
+  /**
+   * Insert a single row into the specified table.
+   *
+   * @param tableName - The name of the table to insert data into.
+   * @param data - The data object to insert. The keys should correspond to the column names.
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @beta
+   */
+  public insert(
+    tableName: string,
+    data: object,
+  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    return this.client.insert(tableName, data);
+  }
+
+  /**
+   * Insert multiple rows into the specified table.
+   *
+   * @param tableName - The name of the table to insert data into.
+   * @param data - An array of data objects to insert. Each object's keys should correspond to the column names.
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @beta
+   */
+  public insertMany(
+    tableName: string,
+    data: object[],
+  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    return this.client.insertMany(tableName, data);
+  }
+
+  /**
+   * Insert a single row into the specified table, or update it if it already exists.
+   * The specific behavior (insert or update) depends on the underlying database and schema configuration.
+   *
+   * @param tableName - The name of the table to upsert data into.
+   * @param data - The data object to upsert. The keys should correspond to the column names.
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @beta
+   */
+  public upsert(
+    tableName: string,
+    data: object,
+  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    return this.client.upsert(tableName, data);
+  }
+
+  /**
+   * Insert multiple rows into the specified table, or update them if they already exist.
+   * The specific behavior (insert or update) depends on the underlying database and schema configuration.
+   *
+   * @param tableName - The name of the table to upsert data into.
+   * @param data - An array of data objects to upsert. Each object's keys should correspond to the column names.
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @beta
+   */
+  public upsertMany(
+    tableName: string,
+    data: object[],
+  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    return this.client.upsertMany(tableName, data);
   }
 }
