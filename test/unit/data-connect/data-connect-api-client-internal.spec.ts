@@ -2,14 +2,14 @@
  * @license
  * Copyright 2024 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -260,15 +260,21 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('insert()', () => {
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { name: 'test', value: 123 };
-      const expectedMutation = `mutation { ${testTableName}_insert(data: { name: "test", value: 123 }) }`;
+      const expectedMutation = `mutation { ${testTableName}_insert(data: { name: 'test', value: 123 }) }`;
       await apiClient.insert(testTableName, simpleData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
 
     it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: "yes/no \"quote\" \\slash\\" } };
-      // Note: Need to match the specific escaping from objectToString: / -> \\, " -> \"
-      const expectedMutation = `mutation { ${testTableName}_insert(data: { id: "abc", active: true, scores: [10, 20], info: { nested: "yes/no \\"quote\\" \\\\slash\\\\" } }) }`;
+      const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
+      // Note: Need to match the specific escaping from objectToString: / -> \\, ' -> \'
+      const expectedMutation = `
+      mutation { 
+      ${testTableName}_insert(data: {
+       id: 'abc', active: true, scores: [10, 20],
+       info: { nested: 'yes/no \\'quote\\' \\\\slash\\\\' } 
+       }) 
+      }`;
       await apiClient.insert(testTableName, complexData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -296,7 +302,9 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('insertMany()', () => {
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
-      const expectedMutation = `mutation { ${testTableName}_insertMany(data: [{ name: "test1" }, { name: "test2", value: 456 }]) }`;
+      const expectedMutation = `
+      mutation { 
+      ${testTableName}_insertMany(data: [{ name: 'test1' }, { name: 'test2', value: 456 }]) }`;
       await apiClient.insertMany(testTableName, simpleDataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -304,10 +312,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for complex data array', async () => {
       const complexDataArray = [
         { id: 'a', active: true, info: { nested: 'n1' } },
-        { id: 'b', scores: [1, 2], info: { nested: "n2/\\" } }
+        { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
       ];
-      // Note: Matching specific escaping: / -> \\, " -> \"
-      const expectedMutation = `mutation { ${testTableName}_insertMany(data: [{ id: "a", active: true, info: { nested: "n1" } }, { id: "b", scores: [1, 2], info: { nested: "n2/\\\\" } }]) }`;
+      // Note: Matching specific escaping: / -> \\, ' -> \'
+      const expectedMutation = `
+      mutation { 
+      ${testTableName}_insertMany(data: 
+      [{ id: 'a', active: true, info: { nested: 'n1' } }, { id: 'b', scores: [1, 2], 
+       info: { nested: 'n2/\\\\' } }]) }`;
       await apiClient.insertMany(testTableName, complexDataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -330,7 +342,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .with.property('code', 'data-connect/invalid-argument');
     });
 
-     it('should throw FirebaseDataConnectError for non-array data', () => {
+    it('should throw FirebaseDataConnectError for non-array data', () => {
       expect(() => apiClient.insertMany(testTableName, { data: 1 } as any))
         .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./)
         .with.property('code', 'data-connect/invalid-argument');
@@ -341,15 +353,17 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('upsert()', () => {
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { id: 'key1', value: 'updated' };
-      const expectedMutation = `mutation { ${testTableName}_upsert(data: { id: "key1", value: "updated" }) }`;
+      const expectedMutation = `mutation { ${testTableName}_upsert(data: { id: 'key1', value: 'updated' }) }`;
       await apiClient.upsert(testTableName, simpleData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
 
     it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: "done/\\" } };
-      // Note: Matching specific escaping: / -> \\, " -> \"
-      const expectedMutation = `mutation { ${testTableName}_upsert(data: { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
+      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
+      // Note: Matching specific escaping: / -> \\, ' -> \'
+      const expectedMutation = `
+      mutation { ${testTableName}_upsert(data: 
+      { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\\\' } }) }`;
       await apiClient.upsert(testTableName, complexData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -377,7 +391,8 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('upsertMany()', () => {
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
-      const expectedMutation = `mutation { ${testTableName}_upsertMany(data: [{ id: "k1" }, { id: "k2", value: 99 }]) }`;
+      const expectedMutation = `
+      mutation { ${testTableName}_upsertMany(data: [{ id: 'k1' }, { id: 'k2', value: 99 }]) }`;
       await apiClient.upsertMany(testTableName, simpleDataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -387,8 +402,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
         { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
         { id: 'y', scores: [null, 2] }
       ];
-      // Note: Matching specific escaping: / -> \\, " -> \"
-      const expectedMutation = `mutation { ${testTableName}_upsertMany(data: [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
+      // Note: Matching specific escaping: / -> \\, ' -> \'
+      const expectedMutation = `
+      mutation { ${testTableName}_upsertMany(data: 
+      [{ id: 'x', active: true, info: { nested: 'n1/\\\\\\'x' } }, { id: 'y', scores: [null, 2] }]) }`;
       await apiClient.upsertMany(testTableName, complexDataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });

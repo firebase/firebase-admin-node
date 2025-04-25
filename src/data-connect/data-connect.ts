@@ -109,30 +109,30 @@ export class DataConnect {
    * Insert a single row into the specified table.
    *
    * @param tableName - The name of the table to insert data into.
-   * @param data - The data object to insert. The keys should correspond to the column names.
+   * @param variables - The data object to insert. The keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @beta
    */
-  public insert(
+  public insert<GraphQlResponse, Variables extends object>(
     tableName: string,
-    data: object,
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
-    return this.client.insert(tableName, data);
+    variables: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.client.insert(tableName, variables);
   }
 
   /**
    * Insert multiple rows into the specified table.
    *
    * @param tableName - The name of the table to insert data into.
-   * @param data - An array of data objects to insert. Each object's keys should correspond to the column names.
+   * @param variables - An array of data objects to insert. Each object's keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @beta
    */
-  public insertMany(
+  public insertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
-    data: object[],
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
-    return this.client.insertMany(tableName, data);
+    variables: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.client.insertMany(tableName, variables);
   }
 
   /**
@@ -140,15 +140,15 @@ export class DataConnect {
    * The specific behavior (insert or update) depends on the underlying database and schema configuration.
    *
    * @param tableName - The name of the table to upsert data into.
-   * @param data - The data object to upsert. The keys should correspond to the column names.
+   * @param variables - The data object to upsert. The keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @beta
    */
-  public upsert(
+  public upsert<GraphQlResponse, Variables extends object>(
     tableName: string,
-    data: object,
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
-    return this.client.upsert(tableName, data);
+    variables: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.client.upsert(tableName, variables);
   }
 
   /**
@@ -156,14 +156,14 @@ export class DataConnect {
    * The specific behavior (insert or update) depends on the underlying database and schema configuration.
    *
    * @param tableName - The name of the table to upsert data into.
-   * @param data - An array of data objects to upsert. Each object's keys should correspond to the column names.
+   * @param variables - An array of data objects to upsert. Each object's keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @beta
    */
-  public upsertMany(
+  public upsertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
-    data: object[],
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
-    return this.client.upsertMany(tableName, data);
+    variables: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.client.upsertMany(tableName, variables);
   }
 }

@@ -34,7 +34,7 @@ function objectToString(data: any): string {
   if (typeof data !== 'object' || data === null) {
     if (typeof data === 'string') {
       // Properly escape double quotes and backslashes within strings
-      const escapedString = data.replace(/\/g, '\\').replace(/"/g, '\"');
+      const escapedString = data.replace(/\//g, '\\').replace(/,"/g, '"');
       return `"${escapedString}"`;
     }
     // Handle numbers, booleans, null directly
@@ -233,10 +233,10 @@ export class DataConnectApiClient {
    * Insert a single row into the specified table.
    * (Implementation moved from DataConnect class)
    */
-  public insert(
+  public async insert<GraphQlResponse, Variables extends object>(
     tableName: string,
-    data: object,
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
@@ -244,14 +244,15 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
     if (Array.isArray(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be an object, not an array, for single insert.');
+      throw new FirebaseDataConnectError(
+        'invalid-argument', '`data` must be an object, not an array, for single insert.');
     }
 
     try {
       const gqlDataString = objectToString(data);
       const mutation = `mutation { ${tableName}_insert(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<unknown, never>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
     } catch (e: any) {
       throw new FirebaseDataConnectError('internal-error', `Failed to construct insert mutation: ${e.message}`);
     }
@@ -261,10 +262,10 @@ export class DataConnectApiClient {
    * Insert multiple rows into the specified table.
    * (Implementation moved from DataConnect class)
    */
-  public insertMany(
+  public async insertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
-    data: object[],
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
@@ -276,7 +277,7 @@ export class DataConnectApiClient {
       const gqlDataString = objectToString(data);
       const mutation = `mutation { ${tableName}_insertMany(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<unknown, never>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
     } catch (e: any) {
       throw new FirebaseDataConnectError('internal-error', `Failed to construct insertMany mutation: ${e.message}`);
     }
@@ -286,10 +287,10 @@ export class DataConnectApiClient {
    * Insert a single row into the specified table, or update it if it already exists.
    * (Implementation moved from DataConnect class)
    */
-  public upsert(
+  public async upsert<GraphQlResponse, Variables extends object>(
     tableName: string,
-    data: object,
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
@@ -297,14 +298,15 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
     if (Array.isArray(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be an object, not an array, for single upsert.');
+      throw new FirebaseDataConnectError(
+        'invalid-argument', '`data` must be an object, not an array, for single upsert.');
     }
 
     try {
       const gqlDataString = objectToString(data);
       const mutation = `mutation { ${tableName}_upsert(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<unknown, never>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
     } catch (e: any) {
       throw new FirebaseDataConnectError('internal-error', `Failed to construct upsert mutation: ${e.message}`);
     }
@@ -314,10 +316,10 @@ export class DataConnectApiClient {
    * Insert multiple rows into the specified table, or update them if they already exist.
    * (Implementation moved from DataConnect class)
    */
-  public upsertMany(
+  public async upsertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
-    data: object[],
-  ): Promise<ExecuteGraphqlResponse<unknown>> {
+    data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
@@ -329,7 +331,7 @@ export class DataConnectApiClient {
       const gqlDataString = objectToString(data);
       const mutation = `mutation { ${tableName}_upsertMany(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<unknown, never>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
     } catch (e: any) {
       throw new FirebaseDataConnectError('internal-error', `Failed to construct upsertMany mutation: ${e.message}`);
     }

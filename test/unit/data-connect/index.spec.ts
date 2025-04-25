@@ -25,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
 import { getDataConnect, DataConnect } from '../../../src/data-connect/index';
-import { DataConnectApiClient, FirebaseDataConnectError } from '../../../src/data-connect/data-connect-api-client-internal';
+import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
 
 chai.should();
 chai.use(sinonChai);
