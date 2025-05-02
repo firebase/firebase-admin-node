@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
   MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
-  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig, 
+  MultiFactorAuthConfig, SmsRegionConfig, SmsRegionsAuthConfig, RecaptchaAuthConfig, RecaptchaConfig,
   RecaptchaAuthServerConfig, PasswordPolicyConfig,
   PasswordPolicyAuthConfig, PasswordPolicyAuthServerConfig, EmailPrivacyConfig, EmailPrivacyAuthConfig,
 } from './auth-config';
@@ -61,7 +61,7 @@ export interface UpdateTenantRequest {
    * The SMS configuration to update on the project.
    */
   smsRegionConfig?: SmsRegionConfig;
-  
+
   /**
    * The reCAPTCHA configuration to update on the tenant.
    * By enabling reCAPTCHA Enterprise integration, you are
@@ -103,6 +103,7 @@ export interface TenantServerResponse {
   displayName?: string;
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
+  disableAuth?: boolean;
   enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
@@ -143,6 +144,13 @@ export class Tenant {
    * The tenant display name.
    */
   public readonly displayName?: string;
+
+  /**
+   * Whether authentication is disabled for the tenant.
+   * If true, the users under the disabled tenant are not allowed to sign-in.
+   * Admins of the disabled tenant are not able to manage its users.
+   */
+  public readonly disableAuth: boolean
 
   public readonly anonymousSignInEnabled: boolean;
 
@@ -344,6 +352,7 @@ export class Tenant {
         allowPasswordSignup: false,
       });
     }
+    this.disableAuth = !!response.disableAuth;
     this.anonymousSignInEnabled = !!response.enableAnonymousUser;
     if (typeof response.mfaConfig !== 'undefined') {
       this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfaConfig);
@@ -397,6 +406,7 @@ export class Tenant {
       displayName: this.displayName,
       emailSignInConfig: this.emailSignInConfig_?.toJSON(),
       multiFactorConfig: this.multiFactorConfig_?.toJSON(),
+      disableAuth: this.disableAuth,
       anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
       smsRegionConfig: deepCopy(this.smsRegionConfig),
