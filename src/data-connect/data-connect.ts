@@ -17,7 +17,6 @@
 
 import { App } from '../app';
 import { DataConnectApiClient } from './data-connect-api-client-internal';
-// FirebaseDataConnectError, objectToString, and validator are no longer needed here
 
 import {
   ConnectorConfig,
@@ -47,10 +46,10 @@ export class DataConnectService {
   }
 
   /**
- * Returns the app associated with this `DataConnectService` instance.
- *
- * @returns The app associated with this `DataConnectService` instance.
- */
+   * Returns the app associated with this `DataConnectService` instance.
+   *
+   * @returns The app associated with this `DataConnectService` instance.
+   */
   get app(): App {
     return this.appInternal;
   }
@@ -64,24 +63,24 @@ export class DataConnect {
   private readonly client: DataConnectApiClient;
 
   /**
- * @param connectorConfig - The connector configuration.
- * @param app - The app for this `DataConnect` service.
- * @constructor
- * @internal
- */
+   * @param connectorConfig - The connector configuration.
+   * @param app - The app for this `DataConnect` service.
+   * @constructor
+   * @internal
+   */
   constructor(readonly connectorConfig: ConnectorConfig, readonly app: App) {
     this.client = new DataConnectApiClient(connectorConfig, app);
   }
 
   /**
- * Execute an arbitrary GraphQL query or mutation
- *
- * @param query - The GraphQL query or mutation.
- * @param options - Optional {@link GraphqlOptions} when executing a GraphQL query or mutation.
- *
- * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
- * @beta
- */
+   * Execute an arbitrary GraphQL query or mutation
+   *
+   * @param query - The GraphQL query or mutation.
+   * @param options - Optional {@link GraphqlOptions} when executing a GraphQL query or mutation.
+   *
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @beta
+   */
   public executeGraphql<GraphqlResponse, Variables>(
     query: string,
     options?: GraphqlOptions<Variables>,
@@ -137,7 +136,6 @@ export class DataConnect {
 
   /**
    * Insert a single row into the specified table, or update it if it already exists.
-   * The specific behavior (insert or update) depends on the underlying database and schema configuration.
    *
    * @param tableName - The name of the table to upsert data into.
    * @param variables - The data object to upsert. The keys should correspond to the column names.
@@ -153,7 +151,6 @@ export class DataConnect {
 
   /**
    * Insert multiple rows into the specified table, or update them if they already exist.
-   * The specific behavior (insert or update) depends on the underlying database and schema configuration.
    *
    * @param tableName - The name of the table to upsert data into.
    * @param variables - An array of data objects to upsert. Each object's keys should correspond to the column names.
