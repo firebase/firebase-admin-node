@@ -87,7 +87,7 @@ describe('DataConnect', () => {
   });
 });
 
-describe('DataConnect CRUD helpers delegation', () => { // Renamed suite for clarity
+describe('DataConnect CRUD helpers delegation', () => {
   let mockApp: App;
   let dataConnect: DataConnect;
   // Stubs for the client methods
@@ -105,7 +105,7 @@ describe('DataConnect CRUD helpers delegation', () => { // Renamed suite for cla
 
   beforeEach(() => {
     mockApp = mocks.app();
-    // Instantiate DataConnect normally
+
     dataConnect = getDataConnect(connectorConfig, mockApp);
 
     // Stub the DataConnectApiClient prototype methods

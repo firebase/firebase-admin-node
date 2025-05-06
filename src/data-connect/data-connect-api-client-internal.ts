@@ -246,6 +246,14 @@ export class DataConnectApiClient {
     return String(data);
   }
 
+  private formatTableName(tableName: string): string {
+    // Format tableName: first character to lowercase
+    if (tableName && tableName.length > 0) {
+      return tableName.charAt(0).toLowerCase() + tableName.slice(1);
+    }
+    return tableName;
+  }
+
   /**
    * Insert a single row into the specified table.
    */
@@ -264,6 +272,7 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
 
+    tableName = this.formatTableName(tableName);
     try {
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_insert(data: ${gqlDataString}) }`;
@@ -288,6 +297,7 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-empty array for insertMany.');
     }
 
+    tableName = this.formatTableName(tableName);
     try {
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_insertMany(data: ${gqlDataString}) }`;
@@ -316,6 +326,7 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
 
+    tableName = this.formatTableName(tableName);
     try {
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_upsert(data: ${gqlDataString}) }`;
@@ -340,6 +351,7 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-empty array for upsertMany.');
     }
 
+    tableName = this.formatTableName(tableName);
     try {
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_upsertMany(data: ${gqlDataString}) }`;
