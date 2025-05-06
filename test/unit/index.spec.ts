@@ -117,3 +117,7 @@ import './functions/functions-api-client-internal.spec';
 // Extensions
 import './extensions/extensions.spec';
 import './extensions/extensions-api-client-internal.spec';
+
+// Data Connect
+import './data-connect/index.spec';
+import './data-connect/data-connect-api-client-internal.spec';

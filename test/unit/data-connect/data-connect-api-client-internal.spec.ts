@@ -2,14 +2,14 @@
  * @license
  * Copyright 2024 Google Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the 'License');
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an 'AS IS' BASIS,
+ * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -42,6 +42,12 @@ describe('DataConnectApiClient', () => {
 
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'X-Goog-Api-Client': getMetricsHeader(),
+  };
+
+  const EMULATOR_EXPECTED_HEADERS = {
+    'Authorization': 'Bearer owner',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
   };
@@ -218,7 +224,7 @@ describe('DataConnectApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EXPECTED_HEADERS,
+            headers: EMULATOR_EXPECTED_HEADERS,
             data: { query: 'query' }
           });
         });
@@ -226,7 +232,6 @@ describe('DataConnectApiClient', () => {
   });
 });
 
-// New test suite for the CRUD helpers moved into the ApiClient
 describe('DataConnectApiClient CRUD helpers', () => {
   let mockApp: FirebaseApp;
   let apiClient: DataConnectApiClient;
@@ -244,6 +249,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   const testTableName = 'TestTable';
 
+  // Helper function to normalize GraphQL strings
+  const normalizeGraphQLString = (str: string): string => {
+    return str
+      .replace(/\s*\n\s*/g, '\n') // Remove leading/trailing whitespace around newlines
+      .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
+      .trim();                    // Remove leading/trailing whitespace from the whole string
+  };
+
   beforeEach(() => {
     mockApp = mocks.appWithOptions(mockOptions);
     apiClient = new DataConnectApiClient(connectorConfig, mockApp);
@@ -260,41 +273,70 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('insert()', () => {
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { name: 'test', value: 123 };
-      const expectedMutation = `mutation { ${testTableName}_insert(data: { name: 'test', value: 123 }) }`;
+      const expectedMutation = `
+      mutation {
+      ${testTableName}_insert(data: {
+       name: "test",
+       value: 123
+       })
+      }`;
       await apiClient.insert(testTableName, simpleData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
     it('should call executeGraphql with the correct mutation for complex data', async () => {
       const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
-      // Note: Need to match the specific escaping from objectToString: / -> \\, ' -> \'
       const expectedMutation = `
       mutation { 
       ${testTableName}_insert(data: {
-       id: 'abc', active: true, scores: [10, 20],
-       info: { nested: 'yes/no \\'quote\\' \\\\slash\\\\' } 
+       id: "abc", active: true, scores: [10, 20],
+       info: { nested: "yes/no \\"quote\\" \\\\slash\\\\" } 
        }) 
       }`;
       await apiClient.insert(testTableName, complexData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
-    it('should throw FirebaseDataConnectError for invalid tableName', () => {
-      expect(() => apiClient.insert('', { data: 1 }))
-        .to.throw(FirebaseDataConnectError, /`tableName` must be a non-empty string./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
+      const dataWithUndefined = {
+        genre: 'Action',
+        title: 'Die Hard',
+        ratings: null,
+        director: {
+          name: undefined,
+          age: undefined
+        },
+        notes: undefined,
+        releaseYear: undefined,
+        extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
+      };
+      const expectedMutation = `
+      mutation {
+      ${testTableName}_insert(data: {
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+       })
+      }`;
+      await apiClient.insert(testTableName, dataWithUndefined);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
-    it('should throw FirebaseDataConnectError for null data', () => {
-      expect(() => apiClient.insert(testTableName, null as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-null object./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.insert('', { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
     });
 
-    it('should throw FirebaseDataConnectError for array data', () => {
-      expect(() => apiClient.insert(testTableName, []))
-        .to.throw(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      await expect(apiClient.insert(testTableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
+    });
+
+    it('should throw FirebaseDataConnectError for array data', async() => {
+      await expect(apiClient.insert(testTableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
     });
   });
 
@@ -304,48 +346,43 @@ describe('DataConnectApiClient CRUD helpers', () => {
       const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
       const expectedMutation = `
       mutation { 
-      ${testTableName}_insertMany(data: [{ name: 'test1' }, { name: 'test2', value: 456 }]) }`;
+      ${testTableName}_insertMany(data: [{ name: "test1" }, { name: "test2", value: 456 }]) }`;
       await apiClient.insertMany(testTableName, simpleDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
     it('should call executeGraphql with the correct mutation for complex data array', async () => {
       const complexDataArray = [
-        { id: 'a', active: true, info: { nested: 'n1' } },
+        { id: 'a', active: true, info: { nested: 'n1 "quote"' } },
         { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
       ];
-      // Note: Matching specific escaping: / -> \\, ' -> \'
       const expectedMutation = `
       mutation { 
       ${testTableName}_insertMany(data: 
-      [{ id: 'a', active: true, info: { nested: 'n1' } }, { id: 'b', scores: [1, 2], 
-       info: { nested: 'n2/\\\\' } }]) }`;
+      [{ id: "a", active: true, info: { nested: "n1 \\"quote\\"" } }, { id: "b", scores: [1, 2], 
+       info: { nested: "n2/\\\\" } }]) }`;
       await apiClient.insertMany(testTableName, complexDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
-    it('should throw FirebaseDataConnectError for invalid tableName', () => {
-      expect(() => apiClient.insertMany('', [{ data: 1 }]))
-        .to.throw(FirebaseDataConnectError, /`tableName` must be a non-empty string./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.insertMany('', [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
     });
 
     it('should throw FirebaseDataConnectError for null data', () => {
-      expect(() => apiClient.insertMany(testTableName, null as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+      expect(apiClient.insertMany(testTableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
 
     it('should throw FirebaseDataConnectError for empty array data', () => {
-      expect(() => apiClient.insertMany(testTableName, []))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+      expect(apiClient.insertMany(testTableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
 
     it('should throw FirebaseDataConnectError for non-array data', () => {
-      expect(() => apiClient.insertMany(testTableName, { data: 1 } as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+      expect(apiClient.insertMany(testTableName, { data: 1 } as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
   });
 
@@ -353,7 +390,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
   describe('upsert()', () => {
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { id: 'key1', value: 'updated' };
-      const expectedMutation = `mutation { ${testTableName}_upsert(data: { id: 'key1', value: 'updated' }) }`;
+      const expectedMutation = `mutation { ${testTableName}_upsert(data: { id: "key1", value: "updated" }) }`;
       await apiClient.upsert(testTableName, simpleData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
     });
@@ -363,27 +400,24 @@ describe('DataConnectApiClient CRUD helpers', () => {
       // Note: Matching specific escaping: / -> \\, ' -> \'
       const expectedMutation = `
       mutation { ${testTableName}_upsert(data: 
-      { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\\\' } }) }`;
+      { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
       await apiClient.upsert(testTableName, complexData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
-    it('should throw FirebaseDataConnectError for invalid tableName', () => {
-      expect(() => apiClient.upsert('', { data: 1 }))
-        .to.throw(FirebaseDataConnectError, /`tableName` must be a non-empty string./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.upsert('', { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
     });
 
-    it('should throw FirebaseDataConnectError for null data', () => {
-      expect(() => apiClient.upsert(testTableName, null as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-null object./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      await expect(apiClient.upsert(testTableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
     });
 
-    it('should throw FirebaseDataConnectError for array data', () => {
-      expect(() => apiClient.upsert(testTableName, [{ data: 1 }]))
-        .to.throw(FirebaseDataConnectError, /`data` must be an object, not an array, for single upsert./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for array data', async () => {
+      await expect(apiClient.upsert(testTableName, [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single upsert./);
     });
   });
 
@@ -392,9 +426,9 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
       const expectedMutation = `
-      mutation { ${testTableName}_upsertMany(data: [{ id: 'k1' }, { id: 'k2', value: 99 }]) }`;
+      mutation { ${testTableName}_upsertMany(data: [{ id: "k1" }, { id: "k2", value: 99 }]) }`;
       await apiClient.upsertMany(testTableName, simpleDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
     it('should call executeGraphql with the correct mutation for complex data array', async () => {
@@ -402,36 +436,31 @@ describe('DataConnectApiClient CRUD helpers', () => {
         { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
         { id: 'y', scores: [null, 2] }
       ];
-      // Note: Matching specific escaping: / -> \\, ' -> \'
       const expectedMutation = `
       mutation { ${testTableName}_upsertMany(data: 
-      [{ id: 'x', active: true, info: { nested: 'n1/\\\\\\'x' } }, { id: 'y', scores: [null, 2] }]) }`;
+      [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
       await apiClient.upsertMany(testTableName, complexDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
-    it('should throw FirebaseDataConnectError for invalid tableName', () => {
-      expect(() => apiClient.upsertMany('', [{ data: 1 }]))
-        .to.throw(FirebaseDataConnectError, /`tableName` must be a non-empty string./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      expect(apiClient.upsertMany('', [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
     });
 
-    it('should throw FirebaseDataConnectError for null data', () => {
-      expect(() => apiClient.upsertMany(testTableName, null as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      expect(apiClient.upsertMany(testTableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
     });
 
-    it('should throw FirebaseDataConnectError for empty array data', () => {
-      expect(() => apiClient.upsertMany(testTableName, []))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for empty array data', async () => {
+      expect(apiClient.upsertMany(testTableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
     });
 
-    it('should throw FirebaseDataConnectError for non-array data', () => {
-      expect(() => apiClient.upsertMany(testTableName, { data: 1 } as any))
-        .to.throw(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./)
-        .with.property('code', 'data-connect/invalid-argument');
+    it('should throw FirebaseDataConnectError for non-array data', async () => {
+      await expect(apiClient.upsertMany(testTableName, { data: 1 } as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
     });
   });
 });

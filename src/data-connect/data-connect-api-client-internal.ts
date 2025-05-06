@@ -199,34 +199,51 @@ export class DataConnectApiClient {
     return new FirebaseDataConnectError(code, message);
   }
 
-    /**
-     * Converts JSON data into a GraphQL literal string.
-     * Handles nested objects, arrays, strings, numbers, and booleans.
-     * Ensures strings are properly escaped.
-     */
-    private objectToString(data: any): string {
-    if (typeof data !== 'object' || data === null) {
-      if (typeof data === 'string') {
-        // Properly escape double quotes and backslashes within strings
-        const escapedString = data.replace(/\//g, '\\').replace(/,"/g, '"');
-        return `"${escapedString}"`;
-      }
-      // Handle numbers, booleans, null directly
+  /**
+   * Converts JSON data into a GraphQL literal string.
+   * Handles nested objects, arrays, strings, numbers, and booleans.
+   * Ensures strings are properly escaped.
+   */
+  private objectToString(data: any): string {
+    if (typeof data === 'string') {
+      const escapedString = data
+        .replace(/\\/g, '\\\\') // Replace \ with \\
+        .replace(/"/g, '\\"');  // Replace " with \"
+      return `"${escapedString}"`;
+    }
+    if (typeof data === 'number' || typeof data === 'boolean' || data === null) {
       return String(data);
     }
-
     if (validator.isArray(data)) {
       const elements = data.map(item => this.objectToString(item)).join(', ');
       return `[${elements}]`;
     }
+    if (typeof data === 'object' && data !== null) {
+      // Filter out properties where the value is undefined BEFORE mapping
+      const kvPairs = Object.entries(data)
+        .filter(([, val]) => val !== undefined)
+        .map(([key, val]) => {
+          // GraphQL object keys are typically unquoted.
+          return `${key}: ${this.objectToString(val)}`;
+        });
+  
+      if (kvPairs.length === 0) {
+        return '{}'; // Represent an object with no defined properties as {}
+      }
+      return `{ ${kvPairs.join(', ')} }`;
+    }
+    
+    // If value is undefined (and not an object property, which is handled above,
+    // e.g., if objectToString(undefined) is called directly or for an array element)
+    // it should be represented as 'null'.
+    if (typeof data === 'undefined') {
+      return 'null';
+    }
 
-    // Handle plain objects
-    const entries = Object.entries(data).map(([key, value]) => {
-      // GraphQL object keys are typically unquoted identifiers
-      return `${key}: ${this.objectToString(value)}`;
-    });
-
-    return `{ ${entries.join(', ')} }`;
+    // Fallback for any other types (e.g., Symbol, BigInt - though less common in GQL contexts)
+    // Consider how these should be handled or if an error should be thrown.
+    // For now, simple string conversion.
+    return String(data);
   }
 
   /**
@@ -239,12 +256,12 @@ export class DataConnectApiClient {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
-    if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
-    }
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
         'invalid-argument', '`data` must be an object, not an array, for single insert.');
+    }
+    if (!validator.isNonNullObject(data)) {
+      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
 
     try {
@@ -291,12 +308,12 @@ export class DataConnectApiClient {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
     }
-    if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
-    }
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
         'invalid-argument', '`data` must be an object, not an array, for single upsert.');
+    }
+    if (!validator.isNonNullObject(data)) {
+      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
     }
 
     try {
