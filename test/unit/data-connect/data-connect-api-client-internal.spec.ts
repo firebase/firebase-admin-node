@@ -24,7 +24,7 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DataConnectApiClient, FirebaseDataConnectError }
+import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConnectError }
   from '../../../src/data-connect/data-connect-api-client-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
@@ -235,6 +235,7 @@ describe('DataConnectApiClient', () => {
 describe('DataConnectApiClient CRUD helpers', () => {
   let mockApp: FirebaseApp;
   let apiClient: DataConnectApiClient;
+  let apiClientQueryError: DataConnectApiClient;
   let executeGraphqlStub: sinon.SinonStub;
 
   const connectorConfig: ConnectorConfig = {
@@ -266,6 +267,15 @@ describe('DataConnectApiClient CRUD helpers', () => {
   const tableNames = ['movie', 'Movie', 'MOVIE', 'toybox', 'toyBox', 'ToyBox', 'TOYBOX'];
   const formatedTableNames = ['movie', 'movie', 'mOVIE', 'toybox', 'toyBox', 'toyBox', 'tOYBOX'];
 
+  const serverErrorString = 'Server error response';
+  const additionalErrorMessageForBulkImport =
+    'Make sure that your table name passed in matches the type name in your GraphQL schema file.';
+
+  const expectedQueryError = new FirebaseDataConnectError(
+    DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+    serverErrorString
+  );
+
   // Helper function to normalize GraphQL strings
   const normalizeGraphQLString = (str: string): string => {
     return str
@@ -277,8 +287,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
   beforeEach(() => {
     mockApp = mocks.appWithOptions(mockOptions);
     apiClient = new DataConnectApiClient(connectorConfig, mockApp);
+    apiClientQueryError = new DataConnectApiClient(connectorConfig, mockApp);
     // Stub the instance's executeGraphql method
     executeGraphqlStub = sinon.stub(apiClient, 'executeGraphql').resolves({ data: {} });
+    sinon.stub(apiClientQueryError, 'executeGraphql').rejects(expectedQueryError);
   });
 
   afterEach(() => {
@@ -351,6 +363,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should throw FirebaseDataConnectError for array data', async() => {
       await expect(apiClient.insert(tableName, []))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
+    });
+    
+    it('should amend the message for query errors', async () => {
+      await expect(apiClientQueryError.insert(tableName, { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
   });
 
@@ -433,6 +450,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
       expect(apiClient.insertMany(tableName, { data: 1 } as any))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
+
+    it('should amend the message for query errors', async () => {
+      await expect(apiClientQueryError.insertMany(tableName, [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+    });
   });
 
   // --- UPSERT TESTS ---
@@ -490,6 +512,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should throw FirebaseDataConnectError for array data', async () => {
       await expect(apiClient.upsert(tableName, [{ data: 1 }]))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single upsert./);
+    });
+
+    it('should amend the message for query errors', async () => {
+      await expect(apiClientQueryError.upsert(tableName, { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
   });
 
@@ -568,6 +595,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should throw FirebaseDataConnectError for non-array data', async () => {
       await expect(apiClient.upsertMany(tableName, { data: 1 } as any))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
+    });
+
+    it('should amend the message for query errors', async () => {
+      await expect(apiClientQueryError.upsertMany(tableName, [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
   });
 });

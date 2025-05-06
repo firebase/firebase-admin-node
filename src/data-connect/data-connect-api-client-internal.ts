@@ -254,6 +254,15 @@ export class DataConnectApiClient {
     return tableName;
   }
 
+  private handleBulkImportErrors(err: FirebaseDataConnectError): never {
+    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        `${err.message}. Make sure that your table name passed in matches the type name in your GraphQL schema file.`);
+    }
+    throw err;
+  }
+
   /**
    * Insert a single row into the specified table.
    */
@@ -262,24 +271,31 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`tableName` must be a non-empty string.');
     }
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
-        'invalid-argument', '`data` must be an object, not an array, for single insert.');
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be an object, not an array, for single insert.');
     }
     if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be a non-null object.');
     }
 
-    tableName = this.formatTableName(tableName);
     try {
+      tableName = this.formatTableName(tableName);
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_insert(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError('internal-error', `Failed to construct insert mutation: ${e.message}`);
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        `Failed to construct insert mutation: ${e.message}`);
     }
   }
 
@@ -291,20 +307,25 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`tableName` must be a non-empty string.');
     }
     if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-empty array for insertMany.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be a non-empty array for insertMany.');
     }
 
-    tableName = this.formatTableName(tableName);
     try {
+      tableName = this.formatTableName(tableName);
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_insertMany(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError('internal-error', `Failed to construct insertMany mutation: ${e.message}`);
+      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        `Failed to construct insertMany mutation: ${e.message}`);
     }
   }
 
@@ -316,24 +337,31 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`tableName` must be a non-empty string.');
     }
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
-        'invalid-argument', '`data` must be an object, not an array, for single upsert.');
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be an object, not an array, for single upsert.');
     }
     if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-null object.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be a non-null object.');
     }
 
-    tableName = this.formatTableName(tableName);
     try {
+      tableName = this.formatTableName(tableName);
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_upsert(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError('internal-error', `Failed to construct upsert mutation: ${e.message}`);
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        `Failed to construct upsert mutation: ${e.message}`);
     }
   }
 
@@ -345,20 +373,26 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`tableName` must be a non-empty string.');
     }
     if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError('invalid-argument', '`data` must be a non-empty array for upsertMany.');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`data` must be a non-empty array for upsertMany.');
     }
 
-    tableName = this.formatTableName(tableName);
     try {
+      tableName = this.formatTableName(tableName);
       const gqlDataString = this.objectToString(data);
       const mutation = `mutation { ${tableName}_upsertMany(data: ${gqlDataString}) }`;
       // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation);
+      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError('internal-error', `Failed to construct upsertMany mutation: ${e.message}`);
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        `Failed to construct upsertMany mutation: ${e.message}`);
     }
   }
 }
