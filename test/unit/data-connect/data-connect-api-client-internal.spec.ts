@@ -250,6 +250,22 @@ describe('DataConnectApiClient CRUD helpers', () => {
   const tableName = 'TestTable';
   const formatedTableName = 'testTable';
 
+  const dataWithUndefined = {
+    genre: 'Action',
+    title: 'Die Hard',
+    ratings: null,
+    director: {
+      name: undefined,
+      age: undefined
+    },
+    notes: undefined,
+    releaseYear: undefined,
+    extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
+  };
+
+  const tableNames = ['movie', 'Movie', 'MOVIE', 'toybox', 'toyBox', 'ToyBox', 'TOYBOX'];
+  const formatedTableNames = ['movie', 'movie', 'mOVIE', 'toybox', 'toyBox', 'toyBox', 'tOYBOX'];
+
   // Helper function to normalize GraphQL strings
   const normalizeGraphQLString = (str: string): string => {
     return str
@@ -272,6 +288,15 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   // --- INSERT TESTS ---
   describe('insert()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_insert(data: { name: "a" }) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.insert(tableName, { name: 'a' });
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { name: 'test', value: 123 };
       const expectedMutation = `
@@ -299,18 +324,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
 
     it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
-      const dataWithUndefined = {
-        genre: 'Action',
-        title: 'Die Hard',
-        ratings: null,
-        director: {
-          name: undefined,
-          age: undefined
-        },
-        notes: undefined,
-        releaseYear: undefined,
-        extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
-      };
       const expectedMutation = `
       mutation {
       ${formatedTableName}_insert(data: {
@@ -343,6 +356,15 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   // --- INSERT MANY TESTS ---
   describe('insertMany()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_insertMany(data: [{ name: "a" }]) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.insertMany(tableName, [{ name: 'a' }]);
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
       const expectedMutation = `
@@ -363,6 +385,32 @@ describe('DataConnectApiClient CRUD helpers', () => {
       [{ id: "a", active: true, info: { nested: "n1 \\"quote\\"" } }, { id: "b", scores: [1, 2], 
        info: { nested: "n2/\\\\" } }]) }`;
       await apiClient.insertMany(tableName, complexDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
+      const dataArray = [
+        dataWithUndefined,
+        dataWithUndefined
+      ]
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_insertMany(data: [{
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+      },
+      {
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+      }])
+      }`;
+      await apiClient.insertMany(tableName, dataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
@@ -389,6 +437,15 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   // --- UPSERT TESTS ---
   describe('upsert()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsert(data: { name: "a" }) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.upsert(tableName, { name: 'a' });
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { id: 'key1', value: 'updated' };
       const expectedMutation = `mutation { ${formatedTableName}_upsert(data: { id: "key1", value: "updated" }) }`;
@@ -398,11 +455,25 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
     it('should call executeGraphql with the correct mutation for complex data', async () => {
       const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
-      // Note: Matching specific escaping: / -> \\, ' -> \'
       const expectedMutation = `
       mutation { ${formatedTableName}_upsert(data: 
       { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
       await apiClient.upsert(tableName, complexData);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_upsert(data: {
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+       })
+      }`;
+      await apiClient.upsert(tableName, dataWithUndefined);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
@@ -424,6 +495,15 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   // --- UPSERT MANY TESTS ---
   describe('upsertMany()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsertMany(data: [{ name: "a" }]) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.upsertMany(tableName, [{ name: 'a' }]);
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
       const expectedMutation = `
@@ -441,6 +521,32 @@ describe('DataConnectApiClient CRUD helpers', () => {
       mutation { ${formatedTableName}_upsertMany(data: 
       [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
       await apiClient.upsertMany(tableName, complexDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
+      const dataArray = [
+        dataWithUndefined,
+        dataWithUndefined
+      ]
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_upsertMany(data: [{
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+      },
+      {
+       genre: "Action",
+       title: "Die Hard",
+       ratings: null,
+       director: {},
+       extras: [1, null, "hello", null, { a: 1 }]
+      }])
+      }`;
+      await apiClient.upsertMany(tableName, dataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
 
