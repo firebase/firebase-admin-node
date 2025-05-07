@@ -204,7 +204,7 @@ export class DataConnectApiClient {
    * Handles nested objects, arrays, strings, numbers, and booleans.
    * Ensures strings are properly escaped.
    */
-  private objectToString(data: any): string {
+  private objectToString(data: unknown): string {
     if (typeof data === 'string') {
       const escapedString = data
         .replace(/\\/g, '\\\\') // Replace \ with \\
@@ -278,7 +278,7 @@ export class DataConnectApiClient {
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single insert.');
+        '`data` must be an object, not an array, for single insert. For arrays, please use `insertMany` function.');
     }
     if (!validator.isNonNullObject(data)) {
       throw new FirebaseDataConnectError(
@@ -344,7 +344,7 @@ export class DataConnectApiClient {
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single upsert.');
+        '`data` must be an object, not an array, for single upsert. For arrays, please use `upsertMany` function.');
     }
     if (!validator.isNonNullObject(data)) {
       throw new FirebaseDataConnectError(

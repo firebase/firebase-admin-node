@@ -264,8 +264,8 @@ describe('DataConnectApiClient CRUD helpers', () => {
     extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
   };
 
-  const tableNames = ['movie', 'Movie', 'MOVIE', 'toybox', 'toyBox', 'ToyBox', 'TOYBOX'];
-  const formatedTableNames = ['movie', 'movie', 'mOVIE', 'toybox', 'toyBox', 'toyBox', 'tOYBOX'];
+  const tableNames = ['movie', 'Movie', 'MOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'ToyBox', 'TOYBOX'];
+  const formatedTableNames = ['movie', 'movie', 'mOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'toyBox', 'tOYBOX'];
 
   const serverErrorString = 'Server error response';
   const additionalErrorMessageForBulkImport =
