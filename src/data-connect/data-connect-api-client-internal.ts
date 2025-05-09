@@ -215,11 +215,6 @@ export class DataConnectApiClient {
       return String(data);
     }
     if (validator.isArray(data)) {
-      if (data.includes(null) || data.includes(undefined)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          'Array elements cannot contain `null` or `undefined` values.'); 
-      }
       const elements = data.map(item => this.objectToString(item)).join(', ');
       return `[${elements}]`;
     }

@@ -261,13 +261,8 @@ describe('DataConnectApiClient CRUD helpers', () => {
     },
     notes: undefined,
     releaseYear: undefined,
-    extras: [1, 'hello', { a: 1, b: undefined }]
-  };
-
-  const dataWithSparseArray = {
-    genre: 'Action',
     extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
-  }
+  };
 
   const tableNames = ['movie', 'Movie', 'MOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'ToyBox', 'TOYBOX'];
   const formatedTableNames = ['movie', 'movie', 'mOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'toyBox', 'tOYBOX'];
@@ -348,7 +343,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
        })
       }`;
       await apiClient.insert(tableName, dataWithUndefined);
@@ -373,16 +368,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should amend the message for query errors', async () => {
       await expect(apiClientQueryError.insert(tableName, { data: 1 }))
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
-    });
-
-    [
-      { a: [null] }, { a: [undefined] }, { a: [1, null, 2] }, { a: [1, undefined, 2] },
-      { a: ['a', null, 'b', undefined, 'd'] }, dataWithSparseArray
-    ].forEach((data) => {
-      it('should throw FirebaseDataConnectError for arrays with null or undefined elements', async () => {
-        await expect(apiClient.insert(tableName, data))
-          .to.be.rejectedWith(FirebaseDataConnectError, /Array elements cannot contain `null` or `undefined` values./);
-      });
     });
   });
 
@@ -432,14 +417,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
       },
       {
        genre: "Action",
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
       }])
       }`;
       await apiClient.insertMany(tableName, dataArray);
@@ -470,16 +455,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await expect(apiClientQueryError.insertMany(tableName, [{ data: 1 }]))
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
-
-    [
-      [null], [undefined], [1, null, 2], [1, undefined, 2],
-      ['a', null, 'b', undefined, 'd'], [dataWithSparseArray]
-    ].forEach((data) => {
-      it('should throw FirebaseDataConnectError for arrays with null or undefined elements', async () => {
-        await expect(apiClient.insertMany(tableName, data))
-          .to.be.rejectedWith(FirebaseDataConnectError, /Array elements cannot contain `null` or `undefined` values./);
-      });
-    });
   });
 
   // --- UPSERT TESTS ---
@@ -501,10 +476,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
 
     it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'key2', active: false, items: [1, 2], detail: { status: 'done/\\' } };
+      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
       const expectedMutation = `
       mutation { ${formatedTableName}_upsert(data: 
-      { id: "key2", active: false, items: [1, 2], detail: { status: "done/\\\\" } }) }`;
+      { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
       await apiClient.upsert(tableName, complexData);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
@@ -517,7 +492,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
        })
       }`;
       await apiClient.upsert(tableName, dataWithUndefined);
@@ -543,16 +518,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await expect(apiClientQueryError.upsert(tableName, { data: 1 }))
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
-
-    [
-      { a: [null] }, { a: [undefined] }, { a: [1, null, 2] }, { a: [1, undefined, 2] },
-      { a: ['a', null, 'b', undefined, 'd'] }, dataWithSparseArray
-    ].forEach((data) => {
-      it('should throw FirebaseDataConnectError for arrays with null or undefined elements', async () => {
-        await expect(apiClient.upsert(tableName, data))
-          .to.be.rejectedWith(FirebaseDataConnectError, /Array elements cannot contain `null` or `undefined` values./);
-      });
-    });
   });
 
   // --- UPSERT MANY TESTS ---
@@ -577,11 +542,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for complex data array', async () => {
       const complexDataArray = [
         { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
-        { id: 'y', scores: [1, 2] }
+        { id: 'y', scores: [null, 2] }
       ];
       const expectedMutation = `
       mutation { ${formatedTableName}_upsertMany(data: 
-      [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [1, 2] }]) }`;
+      [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
       await apiClient.upsertMany(tableName, complexDataArray);
       expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
     });
@@ -598,14 +563,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
       },
       {
        genre: "Action",
        title: "Die Hard",
        ratings: null,
        director: {},
-       extras: [1, "hello", { a: 1 }]
+       extras: [1, null, "hello", null, { a: 1 }]
       }])
       }`;
       await apiClient.upsertMany(tableName, dataArray);
@@ -635,16 +600,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should amend the message for query errors', async () => {
       await expect(apiClientQueryError.upsertMany(tableName, [{ data: 1 }]))
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
-    });
-
-    [
-      [null], [undefined], [1, null, 2], [1, undefined, 2],
-      ['a', null, 'b', undefined, 'd'], [dataWithSparseArray]
-    ].forEach((data) => {
-      it('should throw FirebaseDataConnectError for arrays with null or undefined elements', async () => {
-        await expect(apiClient.upsertMany(tableName, data))
-          .to.be.rejectedWith(FirebaseDataConnectError, /Array elements cannot contain `null` or `undefined` values./);
-      });
     });
   });
 });
