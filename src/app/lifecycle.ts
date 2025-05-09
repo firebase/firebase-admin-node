@@ -29,6 +29,16 @@ export class AppStore {
 
   private readonly appStore = new Map<string, FirebaseApp>();
 
+  private appOptionsDeeplyEqual(newAppOptions: AppOptions, existingAppOptions: AppOptions): boolean {
+    return newAppOptions.credential === existingAppOptions.credential
+      && newAppOptions.databaseAuthVariableOverride === existingAppOptions.databaseAuthVariableOverride
+      && newAppOptions.databaseURL === existingAppOptions.databaseURL
+      && newAppOptions.httpAgent === existingAppOptions.httpAgent
+      && newAppOptions.projectId === existingAppOptions.projectId
+      && newAppOptions.serviceAccountId === existingAppOptions.serviceAccountId
+      && newAppOptions.storageBucket === existingAppOptions.storageBucket;
+  }
+
   public initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
     if (typeof options === 'undefined') {
       options = loadOptionsFromEnvVar();
@@ -40,29 +50,25 @@ export class AppStore {
         AppErrorCodes.INVALID_APP_NAME,
         `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
       );
-    } else if (this.appStore.has(appName)) {
-      if (appName === DEFAULT_APP_NAME) {
-        throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          'The default Firebase app already exists. This means you called initializeApp() ' +
-          'more than once without providing an app name as the second argument. In most cases ' +
-          'you only need to call initializeApp() once. But if you do want to initialize ' +
-          'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
-          'name.',
-        );
-      } else {
-        throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
-          'more than once with the same app name as the second argument. Make sure you provide a ' +
-          'unique name every time you call initializeApp().',
-        );
+    } else {
+      const existingApp: FirebaseApp | undefined = this.appStore.get(appName);
+      if (existingApp !== undefined) {
+        if (this.appOptionsDeeplyEqual(options, existingApp.options)) {
+          return existingApp;
+        }
+        else {
+          throw new FirebaseAppError(
+            AppErrorCodes.DUPLICATE_APP,
+            `Firebase app named "${appName}" already exists but with a different configuration. This means you ` +
+            'called initializeApp() more than once with the same app name but a variant of AppOptions.'
+          );
+        }
       }
-    }
 
-    const app = new FirebaseApp(options, appName, this);
-    this.appStore.set(app.name, app);
-    return app;
+      const app = new FirebaseApp(options, appName, this);
+      this.appStore.set(app.name, app);
+      return app;
+    }
   }
 
   public getApp(appName: string = DEFAULT_APP_NAME): App {
