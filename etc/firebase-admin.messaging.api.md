@@ -57,6 +57,7 @@ export interface AndroidNotification {
 
 // @public
 export interface ApnsConfig {
+    live_activity_token?: string;
     fcmOptions?: ApnsFcmOptions;
     headers?: {
         [key: string]: string;
