@@ -79,7 +79,6 @@ export class DataConnect {
    * @param options - Optional {@link GraphqlOptions} when executing a GraphQL query or mutation.
    *
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   * @beta
    */
   public executeGraphql<GraphqlResponse, Variables>(
     query: string,
@@ -95,7 +94,6 @@ export class DataConnect {
  * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
  *
  * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
- * @beta
  */
   public executeGraphqlRead<GraphqlResponse, Variables>(
     query: string,
@@ -110,7 +108,6 @@ export class DataConnect {
    * @param tableName - The name of the table to insert data into.
    * @param variables - The data object to insert. The keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   * @beta
    */
   public insert<GraphQlResponse, Variables extends object>(
     tableName: string,
@@ -125,7 +122,6 @@ export class DataConnect {
    * @param tableName - The name of the table to insert data into.
    * @param variables - An array of data objects to insert. Each object's keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   * @beta
    */
   public insertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
@@ -140,7 +136,6 @@ export class DataConnect {
    * @param tableName - The name of the table to upsert data into.
    * @param variables - The data object to upsert. The keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   * @beta
    */
   public upsert<GraphQlResponse, Variables extends object>(
     tableName: string,
@@ -155,7 +150,6 @@ export class DataConnect {
    * @param tableName - The name of the table to upsert data into.
    * @param variables - An array of data objects to upsert. Each object's keys should correspond to the column names.
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   * @beta
    */
   public upsertMany<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
