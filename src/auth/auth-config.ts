@@ -242,6 +242,11 @@ export interface CreateRequest extends UpdateRequest {
    * The user's multi-factor related properties.
    */
   multiFactor?: MultiFactorCreateSettings;
+
+  /**
+   * The user's primary phone number.
+   */
+  phoneNumber?: string;
 }
 
 /**
