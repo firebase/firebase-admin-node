@@ -18,12 +18,14 @@
 'use strict';
 
 import * as chai from 'chai';
+import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
 import { getDataConnect, DataConnect } from '../../../src/data-connect/index';
+import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
 
 chai.should();
 chai.use(sinonChai);
@@ -81,6 +83,75 @@ describe('DataConnect', () => {
       const dc1: DataConnect = getDataConnect(connectorConfig, mockApp);
       const dc2: DataConnect = getDataConnect({ location: 'us-east1', serviceId: 'my-db' }, mockApp);
       expect(dc1).to.not.equal(dc2);
+    });
+  });
+});
+
+describe('DataConnect CRUD helpers delegation', () => {
+  let mockApp: App;
+  let dataConnect: DataConnect;
+  // Stubs for the client methods
+  let clientInsertStub: sinon.SinonStub;
+  let clientInsertManyStub: sinon.SinonStub;
+  let clientUpsertStub: sinon.SinonStub;
+  let clientUpsertManyStub: sinon.SinonStub;
+
+  const connectorConfig = {
+    location: 'us-west1',
+    serviceId: 'my-crud-service',
+  };
+
+  const testTableName = 'TestTable';
+
+  beforeEach(() => {
+    mockApp = mocks.app();
+
+    dataConnect = getDataConnect(connectorConfig, mockApp);
+
+    // Stub the DataConnectApiClient prototype methods
+    clientInsertStub = sinon.stub(DataConnectApiClient.prototype, 'insert').resolves({ data: {} });
+    clientInsertManyStub = sinon.stub(DataConnectApiClient.prototype, 'insertMany').resolves({ data: {} });
+    clientUpsertStub = sinon.stub(DataConnectApiClient.prototype, 'upsert').resolves({ data: {} });
+    clientUpsertManyStub = sinon.stub(DataConnectApiClient.prototype, 'upsertMany').resolves({ data: {} });
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  // --- INSERT TESTS ---
+  describe('insert()', () => {
+    it('should delegate insert call to the client', async () => {
+      const simpleData = { name: 'test', value: 123 };
+      await dataConnect.insert(testTableName, simpleData);
+      expect(clientInsertStub).to.have.been.calledOnceWithExactly(testTableName, simpleData);
+    });
+  });
+
+  // --- INSERT MANY TESTS ---
+  describe('insertMany()', () => {
+    it('should delegate insertMany call to the client', async () => {
+      const simpleDataArray = [{ name: 'test1' }, { name: 'test2' }];
+      await dataConnect.insertMany(testTableName, simpleDataArray);
+      expect(clientInsertManyStub).to.have.been.calledOnceWithExactly(testTableName, simpleDataArray);
+    });
+  });
+
+  // --- UPSERT TESTS ---
+  describe('upsert()', () => {
+    it('should delegate upsert call to the client', async () => {
+      const simpleData = { id: 'key1', value: 'updated' };
+      await dataConnect.upsert(testTableName, simpleData);
+      expect(clientUpsertStub).to.have.been.calledOnceWithExactly(testTableName, simpleData);
+    });
+  });
+
+  // --- UPSERT MANY TESTS ---
+  describe('upsertMany()', () => {
+    it('should delegate upsertMany call to the client', async () => {
+      const simpleDataArray = [{ id: 'k1' }, { id: 'k2' }];
+      await dataConnect.upsertMany(testTableName, simpleDataArray);
+      expect(clientUpsertManyStub).to.have.been.calledOnceWithExactly(testTableName, simpleDataArray);
     });
   });
 });
