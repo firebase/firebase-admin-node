@@ -1729,15 +1729,15 @@ describe('Messaging', () => {
     invalidApnsLiveActivityTokens.forEach((arg) => {
       it(`should throw given invalid apns live activity token: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({ apns: { live_activity_token: arg }, topic: 'test' });
-        }).to.throw('apns.live_activity_token must be a string value');
+          messaging.send({ apns: { liveActivityToken: arg }, topic: 'test' });
+        }).to.throw('apns.liveActivityToken must be a string value');
       });
     })
 
     it('should throw given empty apns live activity token', () => {
       expect(() => {
-        messaging.send({ apns: { live_activity_token: '' }, topic: 'test' });
-      }).to.throw('apns.live_activity_token must be a non-empty string');
+        messaging.send({ apns: { liveActivityToken: '' }, topic: 'test' });
+      }).to.throw('apns.liveActivityToken must be a non-empty string');
     });
 
     const invalidApnsPayloads: any[] = [null, '', 'payload', true, 1.23];
@@ -2407,7 +2407,7 @@ describe('Messaging', () => {
         label: 'APNS Start LiveActivity',
         req: {
           apns: {
-            live_activity_token: 'live-activity-token',
+            liveActivityToken: 'live-activity-token',
             headers:{
               'apns-priority': '10'
             },
@@ -2460,7 +2460,7 @@ describe('Messaging', () => {
         label: 'APNS Update LiveActivity',
         req: {
           apns: {
-            live_activity_token: 'live-activity-token',
+            liveActivityToken: 'live-activity-token',
             headers:{
               'apns-priority': '10'
             },
@@ -2507,7 +2507,7 @@ describe('Messaging', () => {
         label: 'APNS End LiveActivity',
         req: {
           apns: {
-            live_activity_token: 'live-activity-token',
+            liveActivityToken: 'live-activity-token',
             'headers':{
               'apns-priority': '10'
             },
