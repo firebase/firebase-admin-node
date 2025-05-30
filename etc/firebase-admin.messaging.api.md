@@ -61,6 +61,7 @@ export interface ApnsConfig {
     headers?: {
         [key: string]: string;
     };
+    liveActivityToken?: string;
     payload?: ApnsPayload;
 }
 
