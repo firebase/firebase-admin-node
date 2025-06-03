@@ -242,6 +242,10 @@ export interface WebpushNotification {
  */
 export interface ApnsConfig {
   /**
+   * APN `pushToStartToken` or `pushToken` to start or update live activities.
+   */
+  liveActivityToken?: string;
+  /**
    * A collection of APNs headers. Header values must be strings.
    */
   headers?: { [key: string]: string };
