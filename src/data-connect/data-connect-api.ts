@@ -20,17 +20,23 @@ import { DecodedIdToken } from '../auth/token-verifier';
 /**
  * Interface representing a Data Connect connector configuration.
  */
-export interface ConnectorConfig {
+export type ConnectorConfig = {
   /**
    * Location ID of the Data Connect service.
    */
   location: string;
-
+} & ({
+  /**
+   * Service ID of the Data Connect service.
+   * @deprecated use 'service' instead
+   */
+  serviceId: string;
+} | {
   /**
    * Service ID of the Data Connect service.
    */
-  serviceId: string;
-}
+  service: string;
+});
 
 /**
  * Interface representing GraphQL response.
