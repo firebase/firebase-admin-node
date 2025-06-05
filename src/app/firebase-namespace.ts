@@ -67,6 +67,22 @@ export class FirebaseNamespaceInternals {
   }
 
   /**
+   * Initializes the App instance, or returns an existing App instance that has the same name.
+   *
+   * @param options - Optional options for the App instance. If none present will try to initialize
+   *   from the FIREBASE_CONFIG environment variable. If the environment variable contains a string
+   *   that starts with '{' it will be parsed as JSON, otherwise it will be assumed to be pointing
+   *   to a file. These options are only used when creating a new FirebaseApp instance.
+   * @param appName - Optional name of the FirebaseApp instance.
+   *
+   * @returns An app instance.
+   */
+  public initializeOrGetApp(options?: AppOptions, appName?: string): App {
+    const app = this.appStore.initializeOrGetApp(options, appName);
+    return extendApp(app);
+  }
+
+  /**
    * Returns the App instance with the provided name (or the default App instance
    * if no name is provided).
    *
@@ -294,6 +310,21 @@ export class FirebaseNamespace {
    */
   public initializeApp(options?: AppOptions, appName?: string): App {
     return this.INTERNAL.initializeApp(options, appName);
+  }
+
+  /**
+   * Initializes the App instance, or returns an existing App instance that has the same name.
+   *
+   * @param options - Optional options for the App instance. If none present will try to initialize
+   *   from the FIREBASE_CONFIG environment variable. If the environment variable contains a string
+   *   that starts with '{' it will be parsed as JSON, otherwise it will be assumed to be pointing
+   *   to a file. These options are only used when creating a new FirebaseApp instance.
+   * @param appName - Optional name of the FirebaseApp instance.
+   *
+   * @returns An app instance.
+   */
+  public initializeOrGetApp(options?: AppOptions, appName?: string): App {
+    return this.INTERNAL.initializeOrGetApp(options, appName);
   }
 
   /**

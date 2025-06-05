@@ -35,12 +35,8 @@ export class AppStore {
       options.credential = getApplicationDefault();
     }
 
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (this.appStore.has(appName)) {
+    validateAppNameFormat(appName);
+    if (this.appStore.has(appName)) {
       if (appName === DEFAULT_APP_NAME) {
         throw new FirebaseAppError(
           AppErrorCodes.DUPLICATE_APP,
@@ -65,20 +61,24 @@ export class AppStore {
     return app;
   }
 
+  public initializeOrGetApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
+    validateAppNameFormat(appName);
+    if (!this.appStore.has(appName)) {
+      return this.appStore.get(appName)!;
+    } else {
+      return initializeApp(options, appName);
+    }
+  }
+
   public getApp(appName: string = DEFAULT_APP_NAME): App {
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (!this.appStore.has(appName)) {
+    validateAppNameFormat(appName);
+    if (!this.appStore.has(appName)) {
       let errorMessage: string = (appName === DEFAULT_APP_NAME)
         ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
 
       throw new FirebaseAppError(AppErrorCodes.NO_APP, errorMessage);
     }
-
     return this.appStore.get(appName)!;
   }
 
@@ -119,10 +119,23 @@ export class AppStore {
   }
 }
 
+function validateAppNameFormat(appName: string): void {
+  if (typeof appName !== 'string' || appName === '') {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_APP_NAME,
+      `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+    );
+  }
+}
+
 export const defaultAppStore = new AppStore();
 
 export function initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
   return defaultAppStore.initializeApp(options, appName);
+}
+
+export function initializeOrGetApp(options?: AppOptions, appName?: string): App {
+  return defaultAppStore.initializeOrGetApp(options, appName);
 }
 
 export function getApp(appName: string = DEFAULT_APP_NAME): App {
