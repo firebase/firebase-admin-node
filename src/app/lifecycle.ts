@@ -63,10 +63,10 @@ export class AppStore {
 
   public initializeOrGetApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
     validateAppNameFormat(appName);
-    if (!this.appStore.has(appName)) {
+    if (this.appStore.has(appName)) {
       return this.appStore.get(appName)!;
     } else {
-      return initializeApp(options, appName);
+      return this.initializeApp(options, appName);
     }
   }
 

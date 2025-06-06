@@ -261,6 +261,74 @@ describe('FirebaseNamespace', () => {
     });
   });
 
+  describe('#initializeOrGetApp()', () => {
+    const invalidAppNames = [null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop];
+    invalidAppNames.forEach((invalidAppName) => {
+      it('should throw given non-string app name: ' + JSON.stringify(invalidAppName), () => {
+        expect(() => {
+          firebaseNamespace.initializeOrGetApp(mocks.appOptions, invalidAppName as any);
+        }).to.throw(`Invalid Firebase app name "${invalidAppName}" provided. App name must be a non-empty string.`);
+      });
+    });
+
+    it('should throw given empty string app name', () => {
+      expect(() => {
+        firebaseNamespace.initializeOrGetApp(mocks.appOptions, '');
+      }).to.throw('Invalid Firebase app name "" provided. App name must be a non-empty string.');
+    });
+
+    it('should not throw given a name corresponding to an existing app', () => {
+      let app1 : App | undefined;
+      let app2 : App | undefined;
+      expect(() => {
+        app1 = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+        app2 = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+      }).to.not.throw();
+      expect(app1).to.equal(app2);
+    });
+
+    it('should not throw given no app name if the default app already exists', () => {
+      let app1 : App | undefined;
+      let app2 : App | undefined;
+      expect(() => {
+        app1 = firebaseNamespace.initializeOrGetApp(mocks.appOptions);
+        app2 = firebaseNamespace.initializeOrGetApp(mocks.appOptions);
+      }).to.not.throw();
+      expect(app1).to.equal(app2);
+
+      expect(() => {
+        app2 = firebaseNamespace.initializeOrGetApp(mocks.appOptions, DEFAULT_APP_NAME);
+      }).to.not.throw();
+      expect(app1).to.equal(app2);
+    });
+
+    it('should return a new app with the provided options and app name', () => {
+      const app = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+      expect(app.name).to.equal(mocks.appName);
+      expect(app.options).to.deep.equal(mocks.appOptions);
+    });
+
+    it('should return an app with the default app name if no app name is provided', () => {
+      const app = firebaseNamespace.initializeOrGetApp(mocks.appOptions);
+      expect(app.name).to.deep.equal(DEFAULT_APP_NAME);
+    });
+
+    it('should allow re-use of a deleted app name', () => {
+      const app1 = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+      let app2 : App | undefined;
+      return app1.delete().then(() => {
+        app2 = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+        expect(firebaseNamespace.app(mocks.appName)).to.deep.equal(app2);
+        expect(app2).to.not.equal(app1);
+      });
+    });
+
+    it('should add the new app to the namespace\'s app list', () => {
+      const app = firebaseNamespace.initializeOrGetApp(mocks.appOptions, mocks.appName);
+      expect(firebaseNamespace.app(mocks.appName)).to.deep.equal(app);
+    });
+  });
+
   describe('#auth()', () => {
     it('should throw when called before initializing an app', () => {
       expect(() => {
