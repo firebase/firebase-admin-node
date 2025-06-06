@@ -29,55 +29,25 @@ export class AppStore {
 
   private readonly appStore = new Map<string, FirebaseApp>();
 
-  private appOptionsDeeplyEqual(newAppOptions: AppOptions, existingAppOptions: AppOptions): boolean {
-    return newAppOptions.credential === existingAppOptions.credential
-      && newAppOptions.databaseAuthVariableOverride === existingAppOptions.databaseAuthVariableOverride
-      && newAppOptions.databaseURL === existingAppOptions.databaseURL
-      && newAppOptions.httpAgent === existingAppOptions.httpAgent
-      && newAppOptions.projectId === existingAppOptions.projectId
-      && newAppOptions.serviceAccountId === existingAppOptions.serviceAccountId
-      && newAppOptions.storageBucket === existingAppOptions.storageBucket;
-  }
-
   public initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
     if (typeof options === 'undefined') {
       options = loadOptionsFromEnvVar();
       options.credential = getApplicationDefault();
     }
 
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else {
-      const existingApp: FirebaseApp | undefined = this.appStore.get(appName);
-      if (existingApp !== undefined) {
-        if (this.appOptionsDeeplyEqual(options, existingApp.options)) {
-          return existingApp;
-        }
-        else {
-          throw new FirebaseAppError(
-            AppErrorCodes.DUPLICATE_APP,
-            `Firebase app named "${appName}" already exists but with a different configuration. This means you ` +
-            'called initializeApp() more than once with the same app name but a variant of AppOptions.'
-          );
-        }
-      }
-
-      const app = new FirebaseApp(options, appName, this);
-      this.appStore.set(app.name, app);
-      return app;
+    validateAppNameFormat(appName);
+    if (this.appStore.has(appName)) {
+      return this.appStore.get(appName)!;
     }
+
+    const app = new FirebaseApp(options, appName, this);
+    this.appStore.set(app.name, app);
+    return app;
   }
 
   public getApp(appName: string = DEFAULT_APP_NAME): App {
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (!this.appStore.has(appName)) {
+    validateAppNameFormat(appName);
+    if (!this.appStore.has(appName)) {
       let errorMessage: string = (appName === DEFAULT_APP_NAME)
         ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
@@ -122,6 +92,15 @@ export class AppStore {
    */
   public removeApp(appName: string): void {
     this.appStore.delete(appName);
+  }
+}
+
+function validateAppNameFormat(appName: string): void {
+  if (typeof appName !== 'string' || appName === '') {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_APP_NAME,
+      `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+    );
   }
 }
 
