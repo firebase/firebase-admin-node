@@ -20,7 +20,7 @@ import * as validator from '../utils/validator';
 import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, FirebaseError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
 } from '../utils/api-request';
@@ -132,8 +132,15 @@ class AuthResourceUrlBuilder {
    */
   constructor(protected app: App, protected version: string = 'v1') {
     if (useEmulator()) {
+      const authEmulatorHost = emulatorHost()
+      if (authEmulatorHost && authEmulatorHost.match(/https?:\/\//)) {
+        throw new FirebaseError({
+          code: 'auth/invalid-emulator-host',
+          message: 'FIREBASE_AUTH_EMULATOR_HOST should not contain a protocol (http or https).',
+        });
+      }
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
-        host: emulatorHost()
+        host: authEmulatorHost
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
