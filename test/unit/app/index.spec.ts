@@ -26,7 +26,7 @@ import * as mocks from '../../resources/mocks';
 import * as sinon from 'sinon';
 
 import {
-  initializeApp, getApp, getApps, deleteApp, SDK_VERSION,
+  initializeApp, getApp, getApps, deleteApp, getOrInitializeApp, SDK_VERSION,
   Credential, applicationDefault, cert, refreshToken,
 } from '../../../src/app/index';
 import { clearGlobalAppDefaultCred } from '../../../src/app/credential-factory';
@@ -243,5 +243,60 @@ describe('firebase-admin/app', () => {
     });
 
     after(clearGlobalAppDefaultCred);
+  });
+
+  describe('#getOrInitializeApp()', () => {
+    it('should return an existing default app if it is already initialized', () => {
+      const existingApp = initializeApp(mocks.appOptionsNoAuth);
+      const app = getOrInitializeApp(mocks.appOptionsNoAuth);
+      expect(app).to.equal(existingApp);
+      expect(app.name).to.equal('[DEFAULT]');
+    });
+
+    it('should initialize a new default app if it does not exist', () => {
+      const app = getOrInitializeApp(mocks.appOptionsNoAuth);
+      expect(app.name).to.equal('[DEFAULT]');
+      expect(getApps().length).to.equal(1);
+      expect(getApp()).to.equal(app);
+    });
+
+    it('should return an existing named app if it is already initialized', () => {
+      const appName = 'testApp';
+      const existingApp = initializeApp(mocks.appOptionsNoAuth, appName);
+      const app = getOrInitializeApp(mocks.appOptionsNoAuth, appName);
+      expect(app).to.equal(existingApp);
+      expect(app.name).to.equal(appName);
+    });
+
+    it('should initialize a new named app if it does not exist', () => {
+      const appName = 'testApp';
+      const app = getOrInitializeApp(mocks.appOptionsNoAuth, appName);
+      expect(app.name).to.equal(appName);
+      expect(getApps().length).to.equal(1);
+      expect(getApp(appName)).to.equal(app);
+    });
+
+    it('should use provided options when initializing a new app', () => {
+      const appName = 'customOptionsApp';
+      const customOptions = { ...mocks.appOptionsNoAuth, databaseURL: 'https://custom.firebaseio.com' };
+      const app = getOrInitializeApp(customOptions, appName);
+      expect(app.name).to.equal(appName);
+      expect(app.options.databaseURL).to.equal(customOptions.databaseURL);
+    });
+
+    it('should not require options if the default app already exists', () => {
+      initializeApp(mocks.appOptionsNoAuth);
+      const app = getOrInitializeApp();
+      expect(app.name).to.equal('[DEFAULT]');
+      expect(getApps().length).to.equal(1);
+    });
+
+    it('should not require options if a named app already exists', () => {
+      const appName = 'noOptionsNeeded';
+      initializeApp(mocks.appOptionsNoAuth, appName);
+      const app = getOrInitializeApp(undefined, appName);
+      expect(app.name).to.equal(appName);
+      expect(getApps().length).to.equal(1);
+    });
   });
 });

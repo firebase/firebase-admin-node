@@ -155,6 +155,37 @@ export function deleteApp(app: App): Promise<void> {
 }
 
 /**
+ * Retrieves an existing {@link App} instance, or initializes a new one if
+ * no instance exists for the given app name.
+ *
+ * This function is idempotent. If an app with the same name has already been
+ * initialized, it will be returned. Otherwise, a new app will be initialized.
+ *
+ * @example
+ * ```javascript
+ * // Get the default app
+ * const defaultApp = getOrInitializeApp();
+ *
+ * // Get a named app
+ * const otherApp = getOrInitializeApp({ projectId: 'my-project-id' }, 'otherApp');
+ * ```
+ *
+ * @param options Optional app options for initialization. These are only used
+ *   if a new app is being initialized.
+ * @param appName Optional name of the app to retrieve or initialize. If not
+ *   provided, the default app (`'[DEFAULT]'`) is used.
+ *
+ * @returns The existing or newly initialized {@link App} instance.
+ */
+export function getOrInitializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
+  try {
+    return getApp(appName);
+  } catch (error) {
+    return initializeApp(options, appName);
+  }
+}
+
+/**
  * Constant holding the environment variable name with the default config.
  * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
