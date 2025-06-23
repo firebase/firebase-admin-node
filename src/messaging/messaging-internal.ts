@@ -123,9 +123,32 @@ function validateApnsConfig(config: ApnsConfig | undefined): void {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
   }
+  validateApnsLiveActivityToken(config.liveActivityToken);
   validateStringMap(config.headers, 'apns.headers');
   validateApnsPayload(config.payload);
   validateApnsFcmOptions(config.fcmOptions);
+
+  const propertyMappings = {
+    liveActivityToken: 'live_activity_token'
+  }
+
+  renameProperties(config, propertyMappings)
+}
+
+function validateApnsLiveActivityToken(liveActivityToken: ApnsConfig['liveActivityToken']): void {
+  if (typeof liveActivityToken === 'undefined') {
+    return;
+  } else if (!validator.isString(liveActivityToken)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.liveActivityToken must be a string value',
+    );
+  } else if (!validator.isNonEmptyString(liveActivityToken)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.liveActivityToken must be a non-empty string',
+    );
+  }
 }
 
 /**
