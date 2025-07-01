@@ -118,7 +118,7 @@ export class FirebaseAppInternals {
   }
 
   private shouldRefresh(): boolean {
-    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS) 
+    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS)
       && !this.isRefreshing;
   }
 
@@ -155,12 +155,15 @@ export class FirebaseApp implements App {
 
   private name_: string;
   private options_: AppOptions;
-  private services_: {[name: string]: unknown} = {};
+  private services_: { [name: string]: unknown } = {};
   private isDeleted_ = false;
+  private autoInit_ = false;
+  private customCredential_ = true;
 
-  constructor(options: AppOptions, name: string, private readonly appStore?: AppStore) {
+  constructor(options: AppOptions, name: string, autoInit: boolean = false, private readonly appStore?: AppStore) {
     this.name_ = name;
     this.options_ = deepCopy(options);
+    this.autoInit_ = autoInit;
 
     if (!validator.isNonNullObject(this.options_)) {
       throw new FirebaseAppError(
@@ -172,6 +175,7 @@ export class FirebaseApp implements App {
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
+      this.customCredential_ = false;
       this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
@@ -213,6 +217,20 @@ export class FirebaseApp implements App {
    */
   public getOrInitService<T>(name: string, init: (app: FirebaseApp) => T): T {
     return this.ensureService_(name, () => init(this));
+  }
+
+  /**
+   * @internal
+   */
+  public autoInit(): boolean {
+    return this.autoInit_;
+  }
+
+  /**
+   * @internal
+   */
+  public initializedWithCustomCredential() : boolean {
+    return this.customCredential_;
   }
 
   /**

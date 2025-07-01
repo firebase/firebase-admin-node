@@ -211,8 +211,8 @@ describe('FirebaseNamespace', () => {
       let app1: App | undefined;
       let app2: App | undefined;
       expect(() => {
-        app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-        app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+        app1 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
       }).to.not.throw();
       expect(app1).to.equal(app2);
     });
