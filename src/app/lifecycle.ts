@@ -33,8 +33,6 @@ export class AppStore {
   public initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
     validateAppNameFormat(appName);
 
-    console.error('initializeApp options: ', options);
-
     let autoInit = false;
     if (typeof options === 'undefined') {
       autoInit = true
@@ -42,25 +40,21 @@ export class AppStore {
       options.credential = getApplicationDefault();
     }
 
-    console.error('DEDB 1');
-
+    // Check to see if an App already exists. And validate that we can return it
+    // given the AppOptions parameter provided to initializeApp.
     if (this.appStore.has(appName)) {
-      console.error('DEDB 2');
       const currentApp = this.appStore.get(appName)!;
-      console.error('DEDB 3');
       if (currentApp.autoInit() !== autoInit) {
-        console.error('DEDB 4');
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_ARGUMENT,
           `Firebase app named "${appName}" attempted mismatch between custom AppOptions` +
           ' and an App created via Auto Init.'
         )
       } else if (autoInit) {
-        console.error('DEDB 5');
         return currentApp;
       } else {
-        console.error('DEDB 6');
-
+        // httpAgent breaks idempotency. Throw if the AppOptions parameter or the
+        // existing app contains a httpAgent.
         if (typeof options.httpAgent !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -77,6 +71,9 @@ export class AppStore {
           );
         }
 
+        // Credential breaks idempotency. Throw if the AppOptions parameter contains a
+        // Credential, or if the existing app's credential was provided during its
+        // construction.
         if (typeof options.credential !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -93,19 +90,13 @@ export class AppStore {
           );
         }
 
+        // FirebaseApp appends credentials to the options upon construction. Remove
+        // those generated credentials for the sake of AppOptions parameter comparison.
         const currentAppOptions = { ...currentApp.options };
         delete currentAppOptions.credential;
-
-        console.error('DEDB 9');
-        console.error('options: ', options);
-        console.error('existingApp.options: ', currentAppOptions);
-        console.error('equals: ', deepEqual(options, currentAppOptions));
-
         if (deepEqual(options, currentAppOptions)) {
-          console.error('DEDB 10');
           return currentApp;
         } else {
-          console.error('DEDB 11');
           throw new FirebaseAppError(
             AppErrorCodes.DUPLICATE_APP,
             `A Firebase app named "${appName}" already exists with a different options` +
@@ -115,11 +106,8 @@ export class AppStore {
       }
     }
 
-    console.error('DEDB 12');
-
     const app = new FirebaseApp(options, appName, autoInit, this);
     this.appStore.set(app.name, app);
-    console.error('DEDB returning app with options: ', app.options);
     return app;
   }
 
