@@ -269,17 +269,13 @@ describe('FirebaseApp', () => {
       expect(app.options.storageBucket).to.be.undefined;
     });
 
-    it('DEDB 9 should not throw if initializeApp invoked with the same options', () => {
+    it('should not throw if initializeApp invoked with the same options', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
-      console.error('DEDB entering expect block');
       expect(() => {
-        console.error('DEDB START');
         const app = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
         const app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
         expect(app2).to.equal(app);
-        console.error('DEDB DONE!');
       }).to.not.throw();
-      console.error('DEDB Left expect block');
     });
 
     it('should init with application default creds when no options provided and env variable is not set', () => {
@@ -337,7 +333,7 @@ describe('FirebaseApp', () => {
     it('should call removeApp() on the Firebase namespace internals', () => {
       const store = new AppStore();
       const stub = sinon.stub(store, 'removeApp').resolves();
-      const app = new FirebaseApp(mockApp.options, mockApp.name, /*autoInit=*/false,store);
+      const app = new FirebaseApp(mockApp.options, mockApp.name, /*autoInit=*/false, store);
       return app.delete().then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mocks.appName);
       });
@@ -513,7 +509,7 @@ describe('FirebaseApp', () => {
         expect(() => {
           app.database(url);
         }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. ' +
-          'Please use https://<YOUR FIREBASE>.firebaseio.com');
+                    'Please use https://<YOUR FIREBASE>.firebaseio.com');
       });
     });
   });

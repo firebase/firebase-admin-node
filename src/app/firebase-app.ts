@@ -155,7 +155,7 @@ export class FirebaseApp implements App {
 
   private name_: string;
   private options_: AppOptions;
-  private services_: { [name: string]: unknown } = {};
+  private services_: {[name: string]: unknown} = {};
   private isDeleted_ = false;
   private autoInit_ = false;
   private customCredential_ = true;
