@@ -57,10 +57,15 @@ export const storageBucket = 'bucketName.appspot.com';
 
 export const credential = cert(path.resolve(__dirname, './mock.key.json'));
 
-export const appOptions: AppOptions = {
-  credential,
+export const appOptionsWithoutCredential: AppOptions = {
   databaseURL,
-  storageBucket,
+  storageBucket
+};
+
+export const appOptions: AppOptions = {
+  ...appOptionsWithoutCredential,
+  credential
+
 };
 
 export const appOptionsWithOverride: AppOptions = {

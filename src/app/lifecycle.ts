@@ -22,6 +22,7 @@ import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { App, AppOptions } from './core';
 import { getApplicationDefault } from './credential-internal';
 import { FirebaseApp } from './firebase-app';
+const deepEqual = require('deep-equal');
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -30,48 +31,89 @@ export class AppStore {
   private readonly appStore = new Map<string, FirebaseApp>();
 
   public initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
+    validateAppNameFormat(appName);
+
+    let autoInit = false;
     if (typeof options === 'undefined') {
+      autoInit = true
       options = loadOptionsFromEnvVar();
       options.credential = getApplicationDefault();
     }
 
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (this.appStore.has(appName)) {
-      if (appName === DEFAULT_APP_NAME) {
+    // Check to see if an App already exists. And validate that we can return it
+    // given the AppOptions parameter provided to initializeApp.
+    if (this.appStore.has(appName)) {
+      const currentApp = this.appStore.get(appName)!;
+      if (currentApp.autoInit() !== autoInit) {
         throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          'The default Firebase app already exists. This means you called initializeApp() ' +
-          'more than once without providing an app name as the second argument. In most cases ' +
-          'you only need to call initializeApp() once. But if you do want to initialize ' +
-          'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
-          'name.',
-        );
+          AppErrorCodes.INVALID_ARGUMENT,
+          `Firebase app named "${appName}" attempted mismatch between custom AppOptions` +
+          ' and an App created via Auto Init.'
+        )
+      } else if (autoInit) {
+        return currentApp;
       } else {
-        throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP,
-          `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
-          'more than once with the same app name as the second argument. Make sure you provide a ' +
-          'unique name every time you call initializeApp().',
-        );
+        // httpAgent breaks idempotency. Throw if the AppOptions parameter or the
+        // existing app contains a httpAgent.
+        if (typeof options.httpAgent !== 'undefined') {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_APP_OPTIONS,
+            `Firebase app named "${appName}" already exists and initializeApp was` +
+            ' invoked with an optional http.Agent. The SDK cannot confirm the equality' +
+            ' of http.Agent objects with the existing app. Please use getApp or getApps to reuse' +
+            ' the existing app instead.'
+          );
+        } else if (typeof currentApp.options.httpAgent !== 'undefined') {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_APP_OPTIONS,
+            `An existing app named "${appName}" already exists with a different` +
+            ' options configuration: httpAgent'
+          );
+        }
+
+        // Credential breaks idempotency. Throw if the AppOptions parameter contains a
+        // Credential, or if the existing app's credential was provided during its
+        // construction.
+        if (typeof options.credential !== 'undefined') {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_APP_OPTIONS,
+            `Firebase app named "${appName}" already exists and initializeApp was` +
+            ' invoked with an optional Credential. The SDK cannot confirm the equality' +
+            ' of Credential objects with the existing app. Please use getApp or getApps' +
+            ' to reuse the existing app instead.'
+          );
+        } else if (currentApp.initializedWithCustomCredential()) {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_APP_OPTIONS,
+            `An existing app named "${appName}" already exists with a different` +
+            ' options configuration: Credential'
+          );
+        }
+
+        // FirebaseApp appends credentials to the options upon construction. Remove
+        // those generated credentials for the sake of AppOptions parameter comparison.
+        const currentAppOptions = { ...currentApp.options };
+        delete currentAppOptions.credential;
+        if (deepEqual(options, currentAppOptions)) {
+          return currentApp;
+        } else {
+          throw new FirebaseAppError(
+            AppErrorCodes.DUPLICATE_APP,
+            `A Firebase app named "${appName}" already exists with a different options` +
+            ' configuration. '
+          );
+        }
       }
     }
 
-    const app = new FirebaseApp(options, appName, this);
+    const app = new FirebaseApp(options, appName, autoInit, this);
     this.appStore.set(app.name, app);
     return app;
   }
 
   public getApp(appName: string = DEFAULT_APP_NAME): App {
-    if (typeof appName !== 'string' || appName === '') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_NAME,
-        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
-      );
-    } else if (!this.appStore.has(appName)) {
+    validateAppNameFormat(appName);
+    if (!this.appStore.has(appName)) {
       let errorMessage: string = (appName === DEFAULT_APP_NAME)
         ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
@@ -116,6 +158,15 @@ export class AppStore {
    */
   public removeApp(appName: string): void {
     this.appStore.delete(appName);
+  }
+}
+
+function validateAppNameFormat(appName: string): void {
+  if (typeof appName !== 'string' || appName === '') {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_APP_NAME,
+      `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+    );
   }
 }
 
