@@ -97,7 +97,7 @@ export interface GoogleOAuthAccessToken {
     expires_in: number;
 }
 
-// @public (undocumented)
+// @public
 export function initializeApp(options?: AppOptions, appName?: string): App;
 
 // @public
