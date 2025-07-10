@@ -83,10 +83,10 @@ export interface FirebaseError {
     toJSON(): object;
 }
 
-// @public (undocumented)
+// @public
 export function getApp(appName?: string): App;
 
-// @public (undocumented)
+// @public
 export function getApps(): App[];
 
 // @public
@@ -97,7 +97,7 @@ export interface GoogleOAuthAccessToken {
     expires_in: number;
 }
 
-// @public (undocumented)
+// @public
 export function initializeApp(options?: AppOptions, appName?: string): App;
 
 // @public
