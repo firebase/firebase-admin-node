@@ -83,10 +83,10 @@ export interface FirebaseError {
     toJSON(): object;
 }
 
-// @public (undocumented)
+// @public
 export function getApp(appName?: string): App;
 
-// @public (undocumented)
+// @public
 export function getApps(): App[];
 
 // @public

@@ -220,6 +220,9 @@ export class FirebaseApp implements App {
   }
 
   /**
+   * Returns `true` if this app was initialized with auto-initialization.
+   * FirebaseApp instance.
+   * 
    * @internal
    */
   public autoInit(): boolean {
@@ -227,9 +230,12 @@ export class FirebaseApp implements App {
   }
 
   /**
+   * Returns `true` if the FirebaseApp instance was initialized with a custom
+   * Credential.
+   * 
    * @internal
    */
-  public initializedWithCustomCredential() : boolean {
+  public customCredential() : boolean {
     return this.customCredential_;
   }
 

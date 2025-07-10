@@ -40,10 +40,11 @@ export class AppStore {
       options.credential = getApplicationDefault();
     }
 
-    // Check to see if an App already exists. And validate that we can return it
-    // given the AppOptions parameter provided to initializeApp.
+    // Check if an App already exists and, if so, ensure its AppOptions match
+    // those of this initializeApp request. 
     if (this.appStore.has(appName)) {
       const currentApp = this.appStore.get(appName)!;
+      // Ensure the autoInit state matches the existing app's. If not, throw.
       if (currentApp.autoInit() !== autoInit) {
         throw new FirebaseAppError(
           AppErrorCodes.INVALID_APP_OPTIONS,
@@ -51,10 +52,14 @@ export class AppStore {
           ' and an App created via Auto Init.'
         )
       } else if (autoInit) {
+        // Auto-initialization is triggered when no options were passed to
+        // initializeApp. With no options to compare, simply return the App.
         return currentApp;
       } else {
-        // httpAgent breaks idempotency. Throw if the AppOptions parameter or the
-        // existing app contains a httpAgent.
+        // Auto-initialization was not used.
+
+        // httpAgent breaks idempotency since the objects cannot be compared.
+        // Throw if a httpAgent exists in AppOptions or the existing App.
         if (typeof options.httpAgent !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -70,10 +75,8 @@ export class AppStore {
             ' options configuration: httpAgent'
           );
         }
-
-        // Credential breaks idempotency. Throw if the AppOptions parameter contains a
-        // Credential, or if the existing app's credential was provided during its
-        // construction.
+        // Credential breaks idempotency since the objects cannot be compared.
+        // Throw if a Credential exists in AppOptions or the existing App.
         if (typeof options.credential !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -82,7 +85,7 @@ export class AppStore {
             ' of Credential objects with the existing app. Please use getApp or getApps' +
             ' to reuse the existing app instead.'
           );
-        } else if (currentApp.initializedWithCustomCredential()) {
+        } else if (currentApp.customCredential()) {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
             `An existing app named "${appName}" already exists with a different` +
@@ -90,8 +93,9 @@ export class AppStore {
           );
         }
 
-        // FirebaseApp appends credentials to the options upon construction. Remove
-        // those generated credentials for the sake of AppOptions parameter comparison.
+        // FirebaseApp() appends an instance of Credential to the `options`
+        // field upon construction (below). Run a comparison of the app's
+        // options without this auto generated Credential.
         const currentAppOptions = { ...currentApp.options };
         delete currentAppOptions.credential;
         if (deepEqual(options, currentAppOptions)) {
@@ -161,6 +165,16 @@ export class AppStore {
   }
 }
 
+/**
+ * Checks to see if the provided appName is a non-empty string and throws if it
+ * is not.
+ * 
+ * @param appName A string representation of an App name.
+ * 
+ * @throws FirebaseAppError if appName is not of type string or is empty.
+ * 
+ * @internal
+ */
 function validateAppNameFormat(appName: string): void {
   if (typeof appName !== 'string' || appName === '') {
     throw new FirebaseAppError(
@@ -205,10 +219,26 @@ export function initializeApp(options?: AppOptions, appName: string = DEFAULT_AP
   return defaultAppStore.initializeApp(options, appName);
 }
 
+/**
+ * Returns an existing App instance for the provided name. If no name is provided
+ * the the default app name is queried.
+ *
+ * @param appName - Optional name of the FirebaseApp instance.
+ *
+ * @returns An existing App instance that matches the name provided.
+ *
+ * @throws FirebaseAppError if no {@link App} exists for the given name.
+ * @throws FirebaseAppError if the `appName` is malformed.
+ */
 export function getApp(appName: string = DEFAULT_APP_NAME): App {
   return defaultAppStore.getApp(appName);
 }
 
+/**
+ * A (read-only) array of all initialized apps.
+ * 
+ * @returns An array containing all initialized apps.
+ */
 export function getApps(): App[] {
   return defaultAppStore.getApps();
 }
