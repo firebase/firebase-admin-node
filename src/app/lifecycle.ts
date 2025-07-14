@@ -41,7 +41,7 @@ export class AppStore {
     }
 
     // Check if an App already exists and, if so, ensure its AppOptions match
-    // those of this initializeApp request. 
+    // those of this `initializeApp` request. 
     if (this.appStore.has(appName)) {
       const currentApp = this.appStore.get(appName)!;
       // Ensure the autoInit state matches the existing app's. If not, throw.
@@ -56,10 +56,11 @@ export class AppStore {
         // initializeApp. With no options to compare, simply return the App.
         return currentApp;
       } else {
-        // Auto-initialization was not used.
+        // Auto-initialization was not used. Ensure the options don't contain
+        // incomparable fields, and that options matches the existing app's.
 
-        // httpAgent breaks idempotency since the objects cannot be compared.
-        // Throw if a httpAgent exists in AppOptions or the existing App.
+        // `httpAgent` objects cannot be compared with deepEquals impls.
+        // Idempotency cannot be supported if one exists.
         if (typeof options.httpAgent !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -72,11 +73,12 @@ export class AppStore {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
             `An existing app named "${appName}" already exists with a different` +
-            ' options configuration: httpAgent'
+            ' options configuration: httpAgent.'
           );
         }
-        // Credential breaks idempotency since the objects cannot be compared.
-        // Throw if a Credential exists in AppOptions or the existing App.
+        
+        // `Credential` objects cannot be compared with deepEquals impls.
+        // Idempotency cannot be supported if one exists.
         if (typeof options.credential !== 'undefined') {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
@@ -89,13 +91,15 @@ export class AppStore {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
             `An existing app named "${appName}" already exists with a different` +
-            ' options configuration: Credential'
+            ' options configuration: Credential.'
           );
         }
 
-        // FirebaseApp() appends an instance of Credential to the `options`
-        // field upon construction (below). Run a comparison of the app's
-        // options without this auto generated Credential.
+        // The AppOptions object has no known incomparable fields.
+
+        // FirebaseApp() aguments app.options with a synthesized Credential
+        // upon App construction (below). Run a comparison w/o Credential to
+        // see if the base configurations match. Return the existing app if so.
         const currentAppOptions = { ...currentApp.options };
         delete currentAppOptions.credential;
         if (deepEqual(options, currentAppOptions)) {
@@ -104,7 +108,7 @@ export class AppStore {
           throw new FirebaseAppError(
             AppErrorCodes.DUPLICATE_APP,
             `A Firebase app named "${appName}" already exists with a different options` +
-            ' configuration. '
+            ' configuration.'
           );
         }
       }

@@ -221,7 +221,6 @@ export class FirebaseApp implements App {
 
   /**
    * Returns `true` if this app was initialized with auto-initialization.
-   * FirebaseApp instance.
    * 
    * @internal
    */
