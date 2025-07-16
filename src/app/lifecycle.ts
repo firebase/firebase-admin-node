@@ -22,7 +22,7 @@ import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { App, AppOptions } from './core';
 import { getApplicationDefault } from './credential-internal';
 import { FirebaseApp } from './firebase-app';
-const deepEqual = require('deep-equal');
+const fastDeepEqual = require('fast-deep-equal');
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -71,7 +71,7 @@ export class AppStore {
     // matches. Return the existing app if so.
     const currentAppOptions = { ...currentApp.options };
     delete currentAppOptions.credential;
-    if (!deepEqual(options, currentAppOptions)) {
+    if (!fastDeepEqual(options, currentAppOptions)) {
       throw new FirebaseAppError(
         AppErrorCodes.DUPLICATE_APP,
         `A Firebase app named "${appName}" already exists with a different configuration.`
