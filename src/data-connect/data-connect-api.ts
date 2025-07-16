@@ -30,6 +30,11 @@ export interface ConnectorConfig {
    * Service ID of the Data Connect service.
    */
   serviceId: string;
+  
+  /**
+   * Connector of the Data Connect service.
+   */
+  connector?: string;
 }
 
 /**
