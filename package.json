@@ -209,6 +209,7 @@
     "@firebase/database-types": "^1.0.6",
     "@types/node": "^22.8.7",
     "farmhash-modern": "^1.1.0",
+    "fast-deep-equal": "^3.1.1",
     "google-auth-library": "^9.14.2",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.1.0",
