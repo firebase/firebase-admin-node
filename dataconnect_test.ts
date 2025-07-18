@@ -1,13 +1,13 @@
-const { getDataConnect } = require('./lib/data-connect');
-const { initializeApp } = require('./lib/app');
+// const { getDataConnect } = require('./lib/data-connect');
+// const { initializeApp } = require('./lib/app');
 
-const app = initializeApp();
+// const app = initializeApp();
 
-const config = {
-    serviceId: "<your-service-id>",
-    location: "<us-central>",
+// const config = {
+//     serviceId: "<your-service-id>",
+//     location: "<us-central>",
     // connector:"<connector?"
-};
+// };
 
 // const dataConnect = getDataConnect(config);
 
