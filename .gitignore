@@ -20,3 +20,4 @@ test/resources/appid.txt
 firebase-admin-*.tgz
 
 docgen/markdown/
+service_account.json
