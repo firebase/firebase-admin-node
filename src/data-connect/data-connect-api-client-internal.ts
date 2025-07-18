@@ -41,7 +41,7 @@ const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
 
 /** Firebase Data Connect base URl format when using the Data Connect emulator including a connector. */
 const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT_WITH_CONNECTOR =
-  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/${connector}:{endpointId}';
+  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connector}:{endpointId}';
 
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
@@ -96,7 +96,8 @@ export class DataConnectApiClient {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
+    // return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
+    return this.executeHelper(EXECUTE_GRAPH_QL_READ_ENDPOINT,options, query);
   }
 
     /**
@@ -114,16 +115,21 @@ export class DataConnectApiClient {
     options?: GraphqlOptions<Variables>,
     gql?: string
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if (!validator.isNonEmptyString(gql)) {
+    if (!validator.isNonEmptyString(gql) && typeof options == 'undefined') {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`query` must be a non-empty string.');
-    }
-    if (typeof options !== 'undefined') {
+        '`gql` must be a non-empty string or GraphqlOptions should be a non-null object');
+    } //How would we steer them in the right direction or let them know which area makes the most sense to follow for what they are trying to accomplish? they might want gql to be empty and the message should say
+    if (typeof options !== 'undefined' && !validator.isNonEmptyString(gql)) {
       if (!validator.isNonNullObject(options)) {
         throw new FirebaseDataConnectError(
           DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
           'GraphqlOptions must be a non-null object');
+      }
+      if (!("operationName" in options)) {
+        throw new FirebaseDataConnectError(
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          '`gql` missing thus GraphqlOptions must contain `operationName`.');//Is this too descriptive?
       }
     }
     const data = {
@@ -157,6 +163,7 @@ export class DataConnectApiClient {
         return resp;
       })
       .catch((err) => {
+        console.log(err)
         throw this.toFirebaseError(err);
       });
   }

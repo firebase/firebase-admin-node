@@ -180,7 +180,7 @@ export class DataConnect {
    * @returns QueryRef
    */
   public queryRef<Data, Variables>(name: string, variables?: Variables): QueryRef<Data, Variables> {
-    console.log(this)
+    // console.log(this)
     if (!("connector" in this.connectorConfig)){
       throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeQuery requires a connector');
     }
@@ -242,7 +242,7 @@ class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
       operationName: this.name
     };
     const {data} = await this.client.executeQuery<Data, Variables>(option_params)
-
+    
     return {
       ref: this,
       data: data,
