@@ -46,7 +46,7 @@ const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT_WITH_CONNECTOR =
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 const EXECUTE_QUERY_ENDPOINT = 'executeQuery';
-// const EXECUTE_MUTATION_ENDPOINT = 'executeMutation';
+const EXECUTE_MUTATION_ENDPOINT = 'executeMutation';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -81,7 +81,8 @@ export class DataConnectApiClient {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_ENDPOINT, options);
+    // return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_ENDPOINT, options);
+    return this.executeHelper(EXECUTE_GRAPH_QL_ENDPOINT,options, query);
   }
 
   /**
@@ -100,14 +101,27 @@ export class DataConnectApiClient {
     return this.executeHelper(EXECUTE_GRAPH_QL_READ_ENDPOINT,options, query);
   }
 
-    /**
-   * Uses the name and the variables parameters to execute a query.
+  /**
+   * Execute pre-existing <QueryResult<Data, Variables>> read-only queries
+   * @param options - GraphQL Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @throws FirebaseDataConnectError
    */
   public async executeQuery<Data, Variables>(
     options: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<Data>>{
-    // const {data} = await this.executeHelper(options.operationName!, EXECUTE_QUERY_ENDPOINT, options);
     return this.executeHelper(EXECUTE_QUERY_ENDPOINT,options);
+}
+  /**
+   * Execute pre-existing <MutationResult<Data, Variables>> read and write queries
+   * @param options - GraphQL Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @throws FirebaseDataConnectError
+   */
+  public async executeMutation<Data, Variables>(
+    options: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<Data>>{
+    return this.executeHelper(EXECUTE_MUTATION_ENDPOINT,options);
 }
 
   private async executeHelper<GraphqlResponse, Variables>(
@@ -136,8 +150,6 @@ export class DataConnectApiClient {
       query: gql,
       ...(!gql && { name: options?.operationName}),
       ...(options?.variables && { variables: options?.variables }),
-      //change to if query != operationName for executeQuery and executeMutation
-      //Also how was this needed in conjuncton with executeGraphql before? Just the name of an operation normally doesn't that mean this is how it was used before?
       ...(options?.operationName && { operationName: options?.operationName }),
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
@@ -164,55 +176,6 @@ export class DataConnectApiClient {
       })
       .catch((err) => {
         console.log(err)
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  private async executeGraphqlHelper<GraphqlResponse, Variables>(
-    query: string,
-    endpoint: string,
-    options?: GraphqlOptions<Variables>,
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if (!validator.isNonEmptyString(query)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`query` must be a non-empty string.');
-    }
-    if (typeof options !== 'undefined') {
-      if (!validator.isNonNullObject(options)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          'GraphqlOptions must be a non-null object');
-      }
-    }
-    const data = {
-      query,
-      ...(options?.variables && { variables: options?.variables }),
-      ...(options?.operationName && { operationName: options?.operationName }),
-      ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
-    };
-    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
-      .then(async (url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url,
-          headers: DATA_CONNECT_CONFIG_HEADERS,
-          data,
-        };
-        const resp = await this.httpClient.send(request);
-        if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-          const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
-        }
-        return Promise.resolve({
-          data: resp.data.data as GraphqlResponse,
-        });
-      })
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
         throw this.toFirebaseError(err);
       });
   }

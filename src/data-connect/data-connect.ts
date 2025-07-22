@@ -191,7 +191,7 @@ export class DataConnect {
    * @param name Name of Mutation
    * @returns MutationRef
    */
-  // public mutationRef<Data>(name: string): MutationRef<Data, undefined>;
+  public mutationRef<Data>(name: string): MutationRef<Data, undefined>;
   /**
    * 
    * Returns Mutation Reference
@@ -199,7 +199,7 @@ export class DataConnect {
    * @param variables 
    * @returns MutationRef
    */
-  // public mutationRef<Data, Variables>(name: string, variables: Variables): MutationRef<Data, Variables>;
+  public mutationRef<Data, Variables>(name: string, variables: Variables): MutationRef<Data, Variables>;
   /**
    * 
    * Returns Query Reference
@@ -207,9 +207,12 @@ export class DataConnect {
    * @param variables 
    * @returns MutationRef
    */
-  // public mutationRef<Data, Variables>(name: string, variables?: Variables): MutationRef<Data, Variables> {
-  //   return new MutationRef(name, variables as Variables, this.client);
-  // }
+  public mutationRef<Data, Variables>(name: string, variables?: Variables): MutationRef<Data, Variables> {
+    if (!("connector" in this.connectorConfig)){
+      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeQuery requires a connector');
+    }
+    return new MutationRef(this, name, variables as Variables, this.client);
+  }
 }
 
 abstract class OperationRef<Data, Variables> {
@@ -229,14 +232,13 @@ interface OperationResult<Data, Variables> {
 export interface QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
   ref: QueryRef<Data, Variables>;
 }
-// interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
-//   ref: MutationRef<Data, Variables>;
-// }
+export interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
+  ref: MutationRef<Data, Variables>;
+}
 
 class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   option_params:GraphqlOptions<Variables>;
   async execute(): Promise<QueryResult<Data, Variables>> {
-    // return this.client.executeQuery(this.name, this.variables);
     const option_params = {
       variables: this.variables,
       operationName: this.name
@@ -252,8 +254,20 @@ class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   }
 }
 
-// class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
-//   execute(): Promise<MutationResult<Data, Variables>> {
-//     return this.client.executeMutation(this.name, this.variables);
-//   }
-// }
+class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
+  option_params:GraphqlOptions<Variables>;
+  async execute(): Promise<MutationResult<Data, Variables>> {
+    const option_params = {
+      variables: this.variables,
+      operationName: this.name
+    };
+    const {data} = await this.client.executeMutation<Data, Variables>(option_params)
+    
+    return {
+      ref: this,
+      data: data,
+      variables: this.variables,
+      dataConnect: this.dataConnect
+    }
+  }
+}
