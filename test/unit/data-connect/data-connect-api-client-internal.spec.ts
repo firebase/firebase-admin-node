@@ -71,6 +71,12 @@ describe('DataConnectApiClient', () => {
     serviceId: 'my-service',
   };
 
+  const connectorConfig_with_connector: ConnectorConfig = {
+    location: 'us-west2',
+    serviceId: 'my-service',
+    connector: 'mock-connector' //this is fake, I need to verify where to put it officially within mock.ts perhaps- still unsure
+    };
+
   const clientWithoutProjectId = new DataConnectApiClient(
     connectorConfig,
     mocks.mockCredentialApp());

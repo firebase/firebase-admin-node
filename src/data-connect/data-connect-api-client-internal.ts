@@ -81,8 +81,8 @@ export class DataConnectApiClient {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    // return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_ENDPOINT, options);
-    return this.executeHelper(EXECUTE_GRAPH_QL_ENDPOINT,options, query);
+    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_ENDPOINT, options);
+    // return this.executeHelper(EXECUTE_GRAPH_QL_ENDPOINT,options, query);
   }
 
   /**
@@ -97,8 +97,8 @@ export class DataConnectApiClient {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    // return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
-    return this.executeHelper(EXECUTE_GRAPH_QL_READ_ENDPOINT,options, query);
+    return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
+    // return this.executeHelper(EXECUTE_GRAPH_QL_READ_ENDPOINT,options, query);
   }
 
   /**
@@ -110,7 +110,7 @@ export class DataConnectApiClient {
   public async executeQuery<Data, Variables>(
     options: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<Data>>{
-    return this.executeHelper(EXECUTE_QUERY_ENDPOINT,options);
+    return this.executeOperationHelper(EXECUTE_QUERY_ENDPOINT,options);
 }
   /**
    * Execute pre-existing <MutationResult<Data, Variables>> read and write queries
@@ -121,31 +121,53 @@ export class DataConnectApiClient {
   public async executeMutation<Data, Variables>(
     options: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<Data>>{
-    return this.executeHelper(EXECUTE_MUTATION_ENDPOINT,options);
+    return this.executeOperationHelper(EXECUTE_MUTATION_ENDPOINT,options);
 }
+
+  private async executeGraphqlHelper<GraphqlResponse, Variables>(
+    query: string,
+    endpoint: string,
+    options?: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    if (!validator.isNonEmptyString(query)) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`query` must be a non-empty string.');
+    }
+    if (typeof options !== 'undefined') {
+      if (!validator.isNonNullObject(options)) {
+        throw new FirebaseDataConnectError(
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          'GraphqlOptions must be a non-null object');
+      }
+    }
+    return this.executeHelper(endpoint, options, query)
+    }
+    
+  private async executeOperationHelper<GraphqlResponse, Variables>(
+    endpoint: string,
+    options?: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    if (typeof options == 'undefined') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        'GraphqlOptions should be a non-null object');
+    }
+    if (!("operationName" in options)) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        'GraphqlOptions must contain `operationName`.');
+    }
+
+    return this.executeHelper(endpoint, options)
+    }
+
 
   private async executeHelper<GraphqlResponse, Variables>(
     endpoint: string,
     options?: GraphqlOptions<Variables>,
     gql?: string
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if (!validator.isNonEmptyString(gql) && typeof options == 'undefined') {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`gql` must be a non-empty string or GraphqlOptions should be a non-null object');
-    } //How would we steer them in the right direction or let them know which area makes the most sense to follow for what they are trying to accomplish? they might want gql to be empty and the message should say
-    if (typeof options !== 'undefined' && !validator.isNonEmptyString(gql)) {
-      if (!validator.isNonNullObject(options)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          'GraphqlOptions must be a non-null object');
-      }
-      if (!("operationName" in options)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          '`gql` missing thus GraphqlOptions must contain `operationName`.');//Is this too descriptive?
-      }
-    }
     const data = {
       query: gql,
       ...(!gql && { name: options?.operationName}),
