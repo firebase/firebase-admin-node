@@ -136,9 +136,10 @@ export class AppStore {
  * Validates that the `requestedOptions` and the `existingApp` options objects
  * do not have fields that would break deep equals comparisons.
  * 
- * @param requestedOptions The incoming AppOptions of a new initailizeApp
+ * @param requestedOptions The incoming `AppOptions` of a new `initailizeApp`
  *   request.
- * @param existingApp An existing app with internal options to compare against.
+ * @param existingApp An existing `FirebaseApp` with internal `options` to
+ *   compare against.
  * 
  * @throws FirebaseAppError if the objects cannot be deeply compared.
  * 
@@ -207,15 +208,15 @@ function validateAppNameFormat(appName: string): void {
 export const defaultAppStore = new AppStore();
 
 /**
- * Initializes the App instance.
+ * Initializes the `App` instance.
  *
  * Creates a new instance of {@link App} if one doesn't exist, or returns an existing
- * {@link App} instance if one exists with the same `appName` and `options`.
+ * `App` instance if one exists with the same `appName` and `options`.
  * 
  * Note, due to the inablity to compare `http.Agent` objects and `Credential` objects,
  * this function cannot support idempotency if either of `options.httpAgent` or
  * `options.credential` are defined. When either is defined, subsequent invocations will 
- * throw instead of returning an {@link App} object.
+ * throw a `FirebaseAppError` instead of returning an `App` object.
  *
  * For example, to safely initialize an app that may already exist:
  * 
@@ -228,37 +229,37 @@ export const defaultAppStore = new AppStore();
  * }
  * ```
  *
- * @param options - Optional A set of {@link AppOptions} for the {@link App} instance.
+ * @param options - Optional A set of {@link AppOptions} for the `App` instance.
  *   If not present, `initializeApp` will try to initialize with the options from the
- *   `FIREBASE_CONFIG` environment variable. If the environment variable contains a string
- *   that starts with `{` it will be parsed as JSON, otherwise it will be assumed to be
- *   pointing to a file.
- * @param appName - Optional name of the FirebaseApp instance.
+ *   `FIREBASE_CONFIG` environment variable. If the environment variable contains a
+ *   string that starts with `{` it will be parsed as JSON, otherwise it will be
+ *   assumed to be pointing to a file.
+ * @param appName - Optional name of the `App` instance.
  *
  * @returns A new App instance, or the existing App if the instance already exists with
  *   the provided configuration.
  *
- * @throws FirebaseAppError if an {@link App} with the same name has already been
- *   initialized with a different set of AppOptions.
- * @throws FirebaseAppError if an existing {@link App} exists and `options.httpAgent`
+ * @throws FirebaseAppError if an `App` with the same name has already been
+ *   initialized with a different set of `AppOptions`.
+ * @throws FirebaseAppError if an existing `App` exists and `options.httpAgent`
  *   or `options.credential` are defined. This is due to the function's inability to
- *   determine if the existing {@link App}'s `options` compare to the `options` parameter
+ *   determine if the existing `App`'s `options` equate to the `options` parameter
  *   of this function. It's recommended to use {@link getApp} or {@link getApps} if your
- *   implementation uses either of these two fields in {@link AppOptions}.
+ *   implementation uses either of these two fields in `AppOptions`.
  */
 export function initializeApp(options?: AppOptions, appName: string = DEFAULT_APP_NAME): App {
   return defaultAppStore.initializeApp(options, appName);
 }
 
 /**
- * Returns an existing App instance for the provided name. If no name is provided
- * the the default app name is used.
+ * Returns an existing {@link App} instance for the provided name. If no name
+ * is provided the the default app name is used.
  *
- * @param appName - Optional name of the FirebaseApp instance.
+ * @param appName - Optional name of the `App` instance.
  *
- * @returns An existing App instance that matches the name provided.
+ * @returns An existing `App` instance that matches the name provided.
  *
- * @throws FirebaseAppError if no {@link App} exists for the given name.
+ * @throws FirebaseAppError if no `App` exists for the given name.
  * @throws FirebaseAppError if the `appName` is malformed.
  */
 export function getApp(appName: string = DEFAULT_APP_NAME): App {

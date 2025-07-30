@@ -229,8 +229,8 @@ export class FirebaseApp implements App {
   }
 
   /**
-   * Returns `true` if the FirebaseApp instance was initialized with a custom
-   * Credential.
+   * Returns `true` if the `FirebaseApp` instance was initialized with a custom
+   * `Credential`.
    * 
    * @internal
    */
