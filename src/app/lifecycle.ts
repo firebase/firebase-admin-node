@@ -40,7 +40,7 @@ export class AppStore {
       options.credential = getApplicationDefault();
     }
 
-    // Check if an App already exists and, if so, ensure its AppOptions match
+    // Check if an app already exists and, if so, ensure its `AppOptions` match
     // those of this `initializeApp` request. 
     if (!this.appStore.has(appName)) {
       const app = new FirebaseApp(options, appName, autoInit, this);
@@ -49,7 +49,7 @@ export class AppStore {
     }
 
     const currentApp = this.appStore.get(appName)!;
-    // Ensure the autoInit state matches the existing app's. If not, throw.
+    // Ensure the `autoInit` state matches the existing app's. If not, throw.
     if (currentApp.autoInit() !== autoInit) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
@@ -59,16 +59,16 @@ export class AppStore {
 
     if (autoInit) {
       // Auto-initialization is triggered when no options were passed to
-      // initializeApp. With no options to compare, simply return the App.
+      // `initializeApp`. With no options to compare, simply return the App.
       return currentApp;
     }
 
     // Ensure the options objects don't break deep equal comparisons.
     validateAppOptionsSupportDeepEquals(options, currentApp);
 
-    // FirebaseApp() adds a synthesized Credential to app.options upon App
-    // construction. Run a comparison w/o Credential to see if the base config
-    // matches. Return the existing app if so.
+    // `FirebaseApp()` adds a synthesized `Credential` to `app.options` upon
+    // app construction. Run a comparison w/o `Credential` to see if the base
+    // configurations match. Return the existing app if so.
     const currentAppOptions = { ...currentApp.options };
     delete currentAppOptions.credential;
     if (!fastDeepEqual(options, currentAppOptions)) {
