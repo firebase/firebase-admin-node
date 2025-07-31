@@ -33,7 +33,7 @@ const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
 
 /** The Firebase Data Connect backend base URL format including a connector. */
 const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT_WITH_CONNECTOR =
-    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/${connector}:{endpointId}';
+    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connector}:{endpointId}';
 
 /** Firebase Data Connect base URl format when using the Data Connect emulator. */
 const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
@@ -153,6 +153,15 @@ export class DataConnectApiClient {
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'GraphqlOptions should be a non-null object');
     }
+    //Recent addition
+    if (typeof options !== 'undefined') {
+      if (!validator.isNonNullObject(options)) {
+        throw new FirebaseDataConnectError(
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          'GraphqlOptions must be a non-null object');
+      }
+    }
+
     if (!("operationName" in options)) {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
@@ -215,7 +224,7 @@ export class DataConnectApiClient {
         };
         let urlFormat: string;
         if (useEmulator()) {
-          if ('connector' in urlParams){
+          if ('connector' in urlParams && (endpointId === EXECUTE_QUERY_ENDPOINT || endpointId === EXECUTE_MUTATION_ENDPOINT)){
             urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT_WITH_CONNECTOR, {
             host: emulatorHost()
           });
@@ -226,7 +235,7 @@ export class DataConnectApiClient {
             });
           }
         } else {
-            if ('connector' in urlParams){
+            if ('connector' in urlParams && (endpointId === EXECUTE_QUERY_ENDPOINT || endpointId === EXECUTE_MUTATION_ENDPOINT)){
               urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT_WITH_CONNECTOR}
             else{
               urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;}

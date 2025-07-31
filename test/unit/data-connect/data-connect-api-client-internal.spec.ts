@@ -81,6 +81,10 @@ describe('DataConnectApiClient', () => {
     connectorConfig,
     mocks.mockCredentialApp());
 
+  const clientWithoutProjectId_with_connector = new DataConnectApiClient(
+    connectorConfig_with_connector,
+    mocks.mockCredentialApp());
+
   const mockOptions = {
     credential: new mocks.MockCredential(),
     projectId: 'test-project',
@@ -89,12 +93,14 @@ describe('DataConnectApiClient', () => {
   let app: FirebaseApp;
 
   let apiClient: DataConnectApiClient;
+  let apiClient_with_connector: DataConnectApiClient;
   let sandbox: sinon.SinonSandbox;
 
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     app = mocks.appWithOptions(mockOptions);
     apiClient = new DataConnectApiClient(connectorConfig, app);
+    apiClient_with_connector = new DataConnectApiClient(connectorConfig_with_connector, app);
   });
 
   afterEach(() => {
@@ -115,6 +121,17 @@ describe('DataConnectApiClient', () => {
 
     it('should initialize httpClient with the provided app', () => {
       expect((apiClient as any).httpClient).to.be.an.instanceOf(AuthorizedHttpClient);
+    });
+    // Test for an app instance with a connector within the connector config
+    it('should throw an error if app is not a valid Firebase app instance', () => {
+      expect(() => new DataConnectApiClient(connectorConfig_with_connector, null as unknown as FirebaseApp)).to.throw(
+        FirebaseDataConnectError,
+        'First argument passed to getDataConnect() must be a valid Firebase app instance.'
+      );
+    });
+
+    it('should initialize httpClient with the provided app', () => {
+      expect((apiClient_with_connector as any).httpClient).to.be.an.instanceOf(AuthorizedHttpClient);
     });
   });
 
@@ -215,7 +232,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EXPECTED_HEADERS,
-            data: { query: 'query' }
+             data: { query: 'query' }
           });
         });
     });
@@ -232,6 +249,164 @@ describe('DataConnectApiClient', () => {
             url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { query: 'query' }
+          });
+        });
+    });
+
+    it('should resolve with the GraphQL response on success when a connector is passed in', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient_with_connector.executeGraphql<UsersResponse, unknown>('query', {})
+        .then((resp) => {
+          expect(resp.data.users).to.be.not.empty;
+          expect(resp.data.users[0].name).to.be.not.undefined;
+          expect(resp.data.users[0].address).to.be.not.undefined;
+          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            headers: EXPECTED_HEADERS,
+            data: { query: 'query' }
+          });
+        });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient_with_connector.executeGraphql('query', {})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            headers: EMULATOR_EXPECTED_HEADERS,
+            data: { query: 'query' }
+          });
+        });
+    });
+
+  });
+
+  describe('executeMutation', () => {
+    //what if there's no project id and also there's no connector, what error would that be? -> should error the connector first because you won't even reach the endpoint to find out if there's a project id or not
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId_with_connector.executeMutation({operationName: 'getById'})
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should throw an error if no arguments are passed in', async () => {
+      await expect(apiClient_with_connector.executeMutation(undefined as any)).to.be.rejectedWith(
+        FirebaseDataConnectError,
+        'GraphqlOptions should be a non-null object'
+      );
+    });
+
+    const invalidOptions = [null, NaN, 0, 1, true, false, [], _.noop];
+    invalidOptions.forEach((invalidOption) => {
+      it('should throw given an invalid options object: ' + JSON.stringify(invalidOption), async () => {
+        await expect(apiClient_with_connector.executeMutation(invalidOption as any)).to.be.rejectedWith(
+          FirebaseDataConnectError,
+          'GraphqlOptions must be a non-null object'
+        );
+      });
+    });
+    //could this pass as a null object, also what if the wrong operaton was passed in, would it be handled in another test- say integration?
+    it('should throw an error if there is no operationName', async () => {
+      await expect(apiClient_with_connector.executeMutation({})).to.be.rejectedWith(
+        FirebaseDataConnectError,
+        'GraphqlOptions must contain `operationName`.'
+      );
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+      return apiClient_with_connector.executeMutation({operationName: 'getById'})
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+      return apiClient_with_connector.executeMutation({operationName: 'getById'})
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      const expected = new FirebaseDataConnectError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient_with_connector.executeMutation({operationName: 'getById'})
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject when rejected with a FirebaseDataConnectError', () => {
+      const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      return apiClient_with_connector.executeMutation({operationName: 'getById'})
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should resolve with the Mutation response on success', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient_with_connector.executeMutation<UsersResponse, unknown>({operationName: 'getById'})
+        .then((resp) => {
+          expect(resp.data.users).to.be.not.empty;
+          expect(resp.data.users[0].name).to.be.not.undefined;
+          expect(resp.data.users[0].address).to.be.not.undefined;
+          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeMutation`,
+            headers: EXPECTED_HEADERS,
+             data: { query: undefined, name: 'getById', operationName: 'getById' }
+          });
+        });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient_with_connector.executeMutation({operationName: 'getById'})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeMutation`,
+            headers: EMULATOR_EXPECTED_HEADERS,
+             data: { query: undefined, name: 'getById', operationName: 'getById' }
           });
         });
     });

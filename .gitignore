@@ -21,3 +21,4 @@ firebase-admin-*.tgz
 
 docgen/markdown/
 service_account.json
+dataconnect/

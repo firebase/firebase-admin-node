@@ -84,9 +84,9 @@ export class DataConnect {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if ("connector" in this.connectorConfig){
-      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphql does not require a connector');
-    }
+    // if ("connector" in this.connectorConfig){
+    //   throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphql does not require a connector');
+    // }
     return this.client.executeGraphql(query, options);
   }
 
@@ -102,9 +102,9 @@ export class DataConnect {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if ("connector" in this.connectorConfig){
-      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphqlRead does not require a connector');
-    }
+    // if ("connector" in this.connectorConfig){
+    //   throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphqlRead does not require a connector');
+    // }
     return this.client.executeGraphqlRead(query, options);
   }
 
