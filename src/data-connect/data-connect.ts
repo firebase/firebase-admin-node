@@ -84,9 +84,6 @@ export class DataConnect {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    // if ("connector" in this.connectorConfig){
-    //   throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphql does not require a connector');
-    // }
     return this.client.executeGraphql(query, options);
   }
 
@@ -102,9 +99,6 @@ export class DataConnect {
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    // if ("connector" in this.connectorConfig){
-    //   throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeGraphqlRead does not require a connector');
-    // }
     return this.client.executeGraphqlRead(query, options);
   }
 
@@ -214,7 +208,7 @@ export class DataConnect {
    */
   public mutationRef<Data, Variables>(name: string, variables?: Variables): MutationRef<Data, Variables> {
     if (!("connector" in this.connectorConfig)){
-      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeQuery requires a connector');
+      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeMutation requires a connector');
     }
     return new MutationRef(this, name, variables as Variables, this.client);
   }

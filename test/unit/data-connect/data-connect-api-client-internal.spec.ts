@@ -74,7 +74,7 @@ describe('DataConnectApiClient', () => {
   const connectorConfig_with_connector: ConnectorConfig = {
     location: 'us-west2',
     serviceId: 'my-service',
-    connector: 'mock-connector' //this is fake, I need to verify where to put it officially within mock.ts perhaps- still unsure
+    connector: 'mock-connector'
     };
 
   const clientWithoutProjectId = new DataConnectApiClient(
@@ -274,7 +274,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}:executeGraphql`,
             headers: EXPECTED_HEADERS,
             data: { query: 'query' }
           });
@@ -290,7 +290,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}:executeGraphql`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { query: 'query' }
           });
@@ -300,7 +300,6 @@ describe('DataConnectApiClient', () => {
   });
 
   describe('executeMutation', () => {
-    //what if there's no project id and also there's no connector, what error would that be? -> should error the connector first because you won't even reach the endpoint to find out if there's a project id or not
     it('should reject when project id is not available', () => {
       return clientWithoutProjectId_with_connector.executeMutation({operationName: 'getById'})
         .should.eventually.be.rejectedWith(noProjectId);
@@ -322,7 +321,7 @@ describe('DataConnectApiClient', () => {
         );
       });
     });
-    //could this pass as a null object, also what if the wrong operaton was passed in, would it be handled in another test- say integration?
+    
     it('should throw an error if there is no operationName', async () => {
       await expect(apiClient_with_connector.executeMutation({})).to.be.rejectedWith(
         FirebaseDataConnectError,

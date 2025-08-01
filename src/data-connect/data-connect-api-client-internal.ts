@@ -102,7 +102,7 @@ export class DataConnectApiClient {
   }
 
   /**
-   * Execute pre-existing <QueryResult<Data, Variables>> read-only queries
+   * Execute pre-existing read-only queries <QueryResult<Data, Variables>>
    * @param options - GraphQL Options
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @throws FirebaseDataConnectError
@@ -113,7 +113,7 @@ export class DataConnectApiClient {
     return this.executeOperationHelper(EXECUTE_QUERY_ENDPOINT,options);
 }
   /**
-   * Execute pre-existing <MutationResult<Data, Variables>> read and write queries
+   * Execute pre-existing read and write queries <MutationResult<Data, Variables>>
    * @param options - GraphQL Options
    * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
    * @throws FirebaseDataConnectError
@@ -153,7 +153,6 @@ export class DataConnectApiClient {
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'GraphqlOptions should be a non-null object');
     }
-    //Recent addition
     if (typeof options !== 'undefined') {
       if (!validator.isNonNullObject(options)) {
         throw new FirebaseDataConnectError(
