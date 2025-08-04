@@ -76,10 +76,6 @@ export {
 //     app = getApp();
 //   }
 
-//   const firebaseApp: FirebaseApp = app as FirebaseApp;
-//   const dataConnectService = firebaseApp.getOrInitService('dataConnect', (app) => new DataConnectService(app));
-//   return dataConnectService.getDataConnect(connectorConfig);
-// }
 export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect {
   if (typeof app === 'undefined') {
     app = getApp();
