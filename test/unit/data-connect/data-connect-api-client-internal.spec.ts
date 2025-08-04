@@ -53,8 +53,8 @@ describe('DataConnectApiClient', () => {
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
-  + 'account credentials or set project ID as an app option. Alternatively, set the '
-  + 'GOOGLE_CLOUD_PROJECT environment variable.';
+    + 'account credentials or set project ID as an app option. Alternatively, set the '
+    + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
   const TEST_RESPONSE = {
     data: {
@@ -75,7 +75,7 @@ describe('DataConnectApiClient', () => {
     location: 'us-west2',
     serviceId: 'my-service',
     connector: 'mock-connector'
-    };
+  };
 
   const clientWithoutProjectId = new DataConnectApiClient(
     connectorConfig,
@@ -232,7 +232,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EXPECTED_HEADERS,
-             data: { query: 'query' }
+            data: { query: 'query' }
           });
         });
     });
@@ -301,7 +301,7 @@ describe('DataConnectApiClient', () => {
 
   describe('executeQuery', () => {
     it('should reject when project id is not available', () => {
-      return clientWithoutProjectIdWithConnector.executeQuery({operationName: 'getById'})
+      return clientWithoutProjectIdWithConnector.executeQuery({ operationName: 'getById' })
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
@@ -334,7 +334,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClientWithConnector.executeQuery({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -343,7 +343,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClientWithConnector.executeQuery({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -353,7 +353,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClientWithConnector.executeQuery({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -362,7 +362,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClientWithConnector.executeQuery({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -379,7 +379,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeQuery<UsersResponse, unknown>({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery<UsersResponse, unknown>({ operationName: 'getById' })
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -389,7 +389,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeQuery`,
             headers: EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById'}
+            data: { query: undefined, name: 'getById', operationName: 'getById' }
           });
         });
     });
@@ -407,7 +407,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeQuery<UsersResponse, unknown>({operationName: 'getById', variables: {} })
+      return apiClientWithConnector.executeQuery<UsersResponse, unknown>({ operationName: 'getById', variables: {} })
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -417,7 +417,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeQuery`,
             headers: EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById', variables: {} }
+            data: { query: undefined, name: 'getById', operationName: 'getById', variables: {} }
           });
         });
     });
@@ -427,21 +427,21 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeQuery({operationName: 'getById'})
+      return apiClientWithConnector.executeQuery({ operationName: 'getById' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeQuery`,
             headers: EMULATOR_EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById' }
+            data: { query: undefined, name: 'getById', operationName: 'getById' }
           });
         });
     });
   });
-  
+
   describe('executeMutation', () => {
     it('should reject when project id is not available', () => {
-      return clientWithoutProjectIdWithConnector.executeMutation({operationName: 'getById'})
+      return clientWithoutProjectIdWithConnector.executeMutation({ operationName: 'getById' })
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
@@ -474,7 +474,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClientWithConnector.executeMutation({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -483,7 +483,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClientWithConnector.executeMutation({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -493,7 +493,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClientWithConnector.executeMutation({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -502,7 +502,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClientWithConnector.executeMutation({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation({ operationName: 'getById' })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -519,7 +519,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeMutation<UsersResponse, unknown>({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation<UsersResponse, unknown>({ operationName: 'getById' })
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -529,7 +529,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeMutation`,
             headers: EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById'}
+            data: { query: undefined, name: 'getById', operationName: 'getById' }
           });
         });
     });
@@ -547,7 +547,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeMutation<UsersResponse, unknown>({operationName: 'getById', variables: {} })
+      return apiClientWithConnector.executeMutation<UsersResponse, unknown>({ operationName: 'getById', variables: {} })
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -557,7 +557,7 @@ describe('DataConnectApiClient', () => {
             method: 'POST',
             url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeMutation`,
             headers: EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById', variables: {} }
+            data: { query: undefined, name: 'getById', operationName: 'getById', variables: {} }
           });
         });
     });
@@ -567,13 +567,13 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClientWithConnector.executeMutation({operationName: 'getById'})
+      return apiClientWithConnector.executeMutation({ operationName: 'getById' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig_with_connector.location}/services/${connectorConfig_with_connector.serviceId}/connectors/${connectorConfig_with_connector.connector}:executeMutation`,
             headers: EMULATOR_EXPECTED_HEADERS,
-             data: { query: undefined, name: 'getById', operationName: 'getById' }
+            data: { query: undefined, name: 'getById', operationName: 'getById' }
           });
         });
     });
@@ -708,11 +708,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
     });
 
-    it('should throw FirebaseDataConnectError for array data', async() => {
+    it('should throw FirebaseDataConnectError for array data', async () => {
       await expect(apiClient.insert(tableName, []))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
     });
-    
+
     it('should amend the message for query errors', async () => {
       await expect(apiClientQueryError.insert(tableName, { data: 1 }))
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
