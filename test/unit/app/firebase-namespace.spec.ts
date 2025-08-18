@@ -17,6 +17,7 @@
 
 'use strict';
 
+import http = require('http');
 import path = require('path');
 
 import * as _ from 'lodash';
@@ -49,7 +50,7 @@ import { getSdkVersion } from '../../../src/utils/index';
 
 import {
   app, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules , remoteConfig, appCheck,
+  instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
 import { AppCheck as AppCheckImpl } from '../../../src/app-check/app-check';
 import { Auth as AuthImpl } from '../../../src/auth/auth';
@@ -89,6 +90,20 @@ const expect = chai.expect;
 const DEFAULT_APP_NAME = '[DEFAULT]';
 const DEFAULT_APP_NOT_FOUND = 'The default Firebase app does not exist. Make sure you call initializeApp() '
   + 'before using any of the Firebase services.';
+const INITIALIZE_APP_CREDENTIAL_EXISTANCE_MISMATCH = 'An existing app named "mock-app-name" already '
+  + 'exists with a different options configuration: Credential';
+const INITIALIZE_APP_HTTP_AGENT_EXISTANCE_MISMATCH = 'An existing app named "mock-app-name" already '
+  + 'exists with a different options configuration: httpAgent';
+const INITIALIZE_APP_NOT_IDEMPOTENT_CREDENTIAL = 'Firebase app named "mock-app-name" already exists and '
+  + 'initializeApp was invoked with an optional Credential. The SDK cannot confirm the equality ' 
+  + 'of Credential objects with the existing app. Please use getApp or getApps to reuse the '
+  + 'existing app instead.'
+const INITIALIZE_APP_NOT_IDEMPOTENT_HTTP_AGENT = 'Firebase app named "mock-app-name" already exists and '
+  + 'initializeApp was invoked with an optional http.Agent. The SDK cannot confirm the equality ' 
+  + 'of http.Agent objects with the existing app. Please use getApp or getApps to reuse the '
+  + 'existing app instead.'
+
+  
 
 describe('FirebaseNamespace', () => {
   let firebaseNamespace: FirebaseNamespace;
@@ -207,33 +222,94 @@ describe('FirebaseNamespace', () => {
       }).to.throw('Invalid Firebase app name "" provided. App name must be a non-empty string.');
     });
 
-    it('should throw given a name corresponding to an existing app', () => {
+    it('should not throw given a name corresponding to an existing app', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
       expect(() => {
-        firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-        firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      }).to.throw(`Firebase app named "${mocks.appName}" already exists.`);
+        app1 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+      }).to.not.throw();
+      expect(app1).to.equal(app2);
     });
 
-    it('should throw given no app name if the default app already exists', () => {
+    it('should not throw given no app name if the default app already exists', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
       expect(() => {
-        firebaseNamespace.initializeApp(mocks.appOptions);
-        firebaseNamespace.initializeApp(mocks.appOptions);
-      }).to.throw('The default Firebase app already exists.');
+        app1 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential);
+      }).to.not.throw();
+      expect(app1).to.equal(app2);
+    });
 
+    it('should throw due to the Credential option being not supported by idemopotency', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
       expect(() => {
-        firebaseNamespace.initializeApp(mocks.appOptions);
-        firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-      }).to.throw('The default Firebase app already exists.');
+        app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      }).to.throw(INITIALIZE_APP_NOT_IDEMPOTENT_CREDENTIAL);
+      expect(app1).to.not.be.undefined;
+      expect(app2).to.be.undefined;
+    });
 
+    it('should throw due to idempotency check on Credential option on second app.', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
       expect(() => {
-        firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-        firebaseNamespace.initializeApp(mocks.appOptions);
-      }).to.throw('The default Firebase app already exists.');
+        app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+      }).to.throw(INITIALIZE_APP_CREDENTIAL_EXISTANCE_MISMATCH);
+      expect(app1).to.not.be.undefined;
+      expect(app2).to.be.undefined;
+    });
 
+    it('should throw due to the httpAgent option being not supported by idemopotency', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
+      const httpAgent = new http.Agent();
+      const appOptions = { 
+        ...mocks.appOptionsWithoutCredential,
+        httpAgent
+      }
       expect(() => {
-        firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-        firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-      }).to.throw('The default Firebase app already exists.');
+        app1 = firebaseNamespace.initializeApp(appOptions, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(appOptions, mocks.appName);
+      }).to.throw(INITIALIZE_APP_NOT_IDEMPOTENT_HTTP_AGENT);
+      expect(app1).to.not.be.undefined;
+      expect(app2).to.be.undefined;
+    });
+
+    it('should throw due to idempotency check on httpAgent option on second app.', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
+      const httpAgent = new http.Agent();
+      const appOptions = { 
+        ...mocks.appOptionsWithoutCredential,
+        httpAgent
+      }
+      expect(() => {
+        app1 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(appOptions, mocks.appName);
+      }).to.throw(INITIALIZE_APP_NOT_IDEMPOTENT_HTTP_AGENT);
+      expect(app1).to.not.be.undefined;
+      expect(app2).to.be.undefined;
+    });
+
+    it('should throw due to idempotency check on httpAgent option on first app but not second app.', () => {
+      let app1: App | undefined;
+      let app2: App | undefined;
+      const httpAgent = new http.Agent();
+      const appOptions = { 
+        ...mocks.appOptionsWithoutCredential,
+        httpAgent
+      }
+      expect(() => {
+        app1 = firebaseNamespace.initializeApp(appOptions, mocks.appName);
+        app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+      }).to.throw(INITIALIZE_APP_HTTP_AGENT_EXISTANCE_MISMATCH);
+      expect(app1).to.not.be.undefined;
+      expect(app2).to.be.undefined;
     });
 
     it('should return a new app with the provided options and app name', () => {
@@ -248,10 +324,12 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should allow re-use of a deleted app name', () => {
-      let app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      return app.delete().then(() => {
-        app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-        expect(firebaseNamespace.app(mocks.appName)).to.deep.equal(app);
+      const app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      let app2: App | undefined;
+      return app1.delete().then(() => {
+        app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+        expect(firebaseNamespace.app(mocks.appName)).to.deep.equal(app2);
+        expect(app2).to.not.equal(app1);
       });
     });
 
