@@ -248,47 +248,79 @@ to ensure that exported user records contain the password hashes of the user acc
 9. Setup your project for Firebase Data Connect integration tests:
    1. Set up Data Connect in the Firebase Console:
       1. Go to the Firebase Console, and select **Data Connect** from the **Build** menu.
-      2. Click on **Get Started**. You can skip any Gemini generation of your schema 
-         or operations - you must create these manually.
+      2. Click on **Get Started**. Skip any steps related to Gemini generation. 
       3. Select **Create a new Cloud SQL instance**.
-      4. Set your **Location** to `us-west2`
-      5. Set your **Cloud SQL instance ID** to `my-instance`
-      6. Set your **Database name** to `my-database`
-      7. Set your **Service ID** to `my-service`
-      8. Click **Submit**. This operation may take up to 10 minutes to complete - you may 
-         continue setting up while this completes.
-   2. Set up your Data Connect schema locally:
-      1. Run the following commands from the command line to setup your data connect app:
+      4. When prompted, you must use the following specific configuration values, as the integration tests are hard-coded to expect them:
+         * Set your **Location** to `us-west2`
+         * Set your **Cloud SQL instance ID** to `my-instance`
+         * Set your **Database name** to `my-database`
+         * Set your **Service ID** to `my-service`
+      5. Click **Submit**. 
+         > **Note:** This operation may take up to 10 minutes to complete - you may 
+            continue with Step 2 of setup while this completes.
+   2. Set up your Data Connect schema and operations locally:
+      1. First, create a separate directory for the test configuration and initialize Data Connect. 
+         (Make sure to replace `<PROJECT_ID>` with your actual Firebase Project ID).
          ```bash
          $ mkdir fdc-integration-test
          $ cd fdc-integration-test
          $ firebase init dataconnect --project <PROJECT_ID>
          ```
-      2. The setup script should say **"Your project already has existing services."** 
-         Select the service you just created, `us-west2/my-service`.
-      3. When asked to use an app template, select `no`.
-      4. The set up should complete, and should have created a file `fdc-integration-test/dataconnect/schema/schema.gql`.
-      5. Paste the following lines into `schema.gql`:
-         ```gql
-         type User @table(key: ["id"]) {
-            id: String!
-            name: String!
-            address: String!
-         }
-         
-         type Email @table {
-            id: String!
-            subject: String!
-            date: Date!
-            text: String!
-            from: User!
-         }
-         ```
-      6. Run the following commands from `fdc-integration-test/` to deploy your schema:
+      2. During the interactive init process, follow these prompts:
+         * When it says "Your project already has existing services," select the service you just created: `us-west2/my-service`.
+         * When asked to use an app template, select `no`.
+      3. The set up should be complete. 
+      4. Create your schema and operations:
          ```bash
-         $ firebase deploy --only dataconnect
+         $ touch fdc-integration-test/dataconnect/example/operations.gql
          ```
-      7. When asked if you'd like to execute changes, select `Execute all`.
+         * Paste the following lines into `fdc-integration-test/dataconnect/example/operations.gql`:
+            ```gql
+            query ListUsersPublic @auth(level: PUBLIC, insecureReason: "test") { users { id, name, address } }
+            query ListUsersUserAnon @auth(level: USER_ANON, insecureReason: "test") { users { id, name, address } }
+            query ListUsersUser @auth(level: USER, insecureReason: "test") { users { id, name, address } }
+            query ListUsersUserEmailVerified @auth(level: USER_EMAIL_VERIFIED, insecureReason: "test") { users { id, name, address } }
+            query ListUsersNoAccess @auth(level: NO_ACCESS) { users { id, name, address } }
+            query ListUsersImpersonationAnon @auth(level: USER_ANON) {users(where: { id: { eq_expr: "auth.uid" } }) { id, name, address } }
+            query GetUser($id: User_Key!) @auth(level: NO_ACCESS) { user(key: $id) { id name } }
+
+            query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { name } } }
+            query GetEmail($id: String!) @auth(level: NO_ACCESS) { email(id: $id) { id, subject, date, text, from { id name address } } } 
+
+            mutation upsertFredUser @auth(level: NO_ACCESS) { user_upsert(data: { id: "fred_id", address: "32 Elm St.", name: "Fred" }) }
+            mutation updateFredrickUserImpersonation @auth(level: USER) { user_update( key: { id_expr: "auth.uid" },  data: { address: "64 Elm St. North", name: "Fredrick" } ) }
+            mutation upsertJeffUser @auth(level: NO_ACCESS) { user_upsert(data: { id: "jeff_id", address: "99 Oak St.", name: "Jeff" }) }
+
+            mutation upsertJeffEmail @auth(level: NO_ACCESS) { email_upsert(data: {  id: "jeff_email+id", subject: "free bitcoin inside",  date: "1999-12-31",  text: "get pranked! LOL!",  fromId: "jeff_id", }) }
+
+            mutation InsertEmailPublic @auth(level: PUBLIC, insecureReason: "test") { email_insert(data: { id_expr: "uuidV4()", subject: "PublicEmail",  date: "1999-12-31",  text: "PublicEmail",  fromId: "jeff_id", }) }
+            mutation InsertEmailUserAnon @auth(level: USER_ANON, insecureReason: "test") { email_insert(data: { id_expr: "uuidV4()", subject: "UserAnonEmail",  date: "1999-12-31",  text: "UserAnonEmail",  fromId: "jeff_id", }) }
+            mutation InsertEmailUser @auth(level: USER, insecureReason: "test") { email_insert(data: { id_expr: "uuidV4()", subject: "UserEmail",  date: "1999-12-31",  text: "UserEmail",  fromId: "jeff_id", }) }
+            mutation InsertEmailUserEmailVerified @auth(level: USER_EMAIL_VERIFIED, insecureReason: "test") { email_insert(data: { id_expr: "uuidV4()", subject: "UserEmailVerifiedEmail",  date: "1999-12-31",  text: "UserEmailVerifiedEmail",  fromId: "jeff_id", }) }
+            mutation InsertEmailNoAccess @auth(level: NO_ACCESS) { email_insert(data: { id_expr: "uuidV4()", subject: "NoAccessEmail",  date: "1999-12-31",  text: "NoAccessEmail",  fromId: "jeff_id", }) }
+            mutation InsertEmailImpersonation @auth(level: NO_ACCESS) { email_insert(data: { id_expr: "uuidV4()", subject: "ImpersonatedEmail",  date: "1999-12-31",  text: "ImpersonatedEmail", fromId_expr: "auth.uid" }) }
+            ```
+         * Paste the following lines into `fdc-integration-test/dataconnect/schema/schema.gql`:
+            ```gql
+            type User @table(key: ["id"]) {
+               id: String!
+               name: String!
+               address: String!
+            }
+            
+            type Email @table {
+               id: String!
+               subject: String!
+               date: Date!
+               text: String!
+               from: User!
+            }
+            ```
+      5. Finally, deploy your new schema and operations from within the `fdc-integration-test` directory:
+         ```bash
+         $ firebase deploy --only dataconnect --project <PROJECT_ID>
+         ```
+      6. When asked if you'd like to execute changes, select `Execute all`.
 
 Finally, to run the integration test suite:
 

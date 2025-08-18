@@ -1,0 +1,10 @@
+[debug] [2025-09-12T00:08:18.312Z] ----------------------------------------------------------------------
+[debug] [2025-09-12T00:08:18.314Z] Command:       /Users/stephenarosaj/.nvm/versions/node/v22.18.0/bin/node /Users/stephenarosaj/.nvm/versions/node/v22.18.0/bin/firebase deploy --only dataconnect --project fdc-permanent-billing-00
+[debug] [2025-09-12T00:08:18.315Z] CLI Version:   14.15.2
+[debug] [2025-09-12T00:08:18.315Z] Platform:      darwin
+[debug] [2025-09-12T00:08:18.315Z] Node Version:  v22.18.0
+[debug] [2025-09-12T00:08:18.315Z] Time:          Thu Sep 11 2025 17:08:18 GMT-0700 (Pacific Daylight Time)
+[debug] [2025-09-12T00:08:18.315Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)

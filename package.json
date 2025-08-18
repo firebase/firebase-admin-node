@@ -17,6 +17,7 @@
     "integration": "run-s build test:integration",
     "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
     "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
+    "test:integration:dataconnect": "npx mocha test/integration/data-connect.spec.ts --slow 5000 --timeout 20000 --require ts-node/register",
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",

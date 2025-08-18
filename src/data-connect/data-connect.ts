@@ -88,18 +88,46 @@ export class DataConnect {
   }
 
   /**
- * Execute an arbitrary read-only GraphQL query
- *
- * @param query - The GraphQL read-only query.
- * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
- *
- * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
- */
+   * Execute an arbitrary read-only GraphQL query
+   *
+   * @param query - The GraphQL read-only query.
+   * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
+   *
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   */
   public executeGraphqlRead<GraphqlResponse, Variables>(
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.client.executeGraphqlRead(query, options);
+  }
+
+  /**
+   * Executes a pre-defined GraphQL query with impersonation
+   *
+   * The query must be defined in your Data Connect GQL files. 
+   *
+   * @param options - The GraphQL options, must include impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public async impersonateQuery<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.client.impersonateQuery(options);
+  }
+
+  /**
+   * Executes a pre-defined GraphQL mutation with impersonation.
+   *
+   * The mutation must be defined in your Data Connect GQL files. 
+   * 
+   * @param options - The GraphQL options, must include impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public async impersonateMutation<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.client.impersonateMutation(options);
   }
 
   /**

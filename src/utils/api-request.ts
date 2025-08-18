@@ -730,7 +730,7 @@ class AsyncHttpCall extends AsyncRequestCall {
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
-      this.entity = this.httpConfigImpl.buildEntity(this.options.headers!);
+      this.entity = this.httpConfigImpl.buildEntity(this.options.headers! as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -828,7 +828,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
-      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers!);
+      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers! as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
