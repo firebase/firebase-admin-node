@@ -23,20 +23,32 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { DataConnectService } from './data-connect';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
 const API_VERSION = 'v1alpha';
 
-/** The Firebase Data Connect backend base URL format. */
-const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
-    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+/** The Firebase Data Connect backend service URL format. */
+const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
-/** Firebase Data Connect base URl format when using the Data Connect emultor. */
-const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
+/** The Firebase Data Connect backend connector URL format. */
+const FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT =
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
+
+/** Firebase Data Connect service URL format when using the Data Connect emulator. */
+const FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT =
   'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+
+/** Firebase Data Connect connector URL format when using the Data Connect emulator. */
+const FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT =
+  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
 
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
+
+const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
+const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -138,26 +150,118 @@ export class DataConnectApiClient {
       });
   }
 
-  private async getUrl(version: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
-    return this.getProjectId()
-      .then((projectId) => {
-        const urlParams = {
-          version,
-          projectId,
-          locationId,
-          serviceId,
-          endpointId
+  private async impersonateQuery<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.impersonateHelper(IMPERSONATE_QUERY_ENDPOINT, options);
+  }
+
+  private async impersonateMutation<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.impersonateHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
+  }
+
+  private async impersonateHelper<GraphqlResponse, Variables>(
+    endpoint: string,
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    if (
+      typeof options.operationName === 'undefined' ||
+      !validator.isNonEmptyString(options.operationName)
+    ) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`options.operationName` must be a non-empty string.'
+      );
+    }
+    if (
+      typeof options.impersonate === 'undefined' ||
+      !validator.isNonEmptyString(options.impersonate)
+    ) {
+      if (!validator.isNonNullObject(options?.impersonate)) {
+        throw new FirebaseDataConnectError(
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          '`options.impersonate` must be a non-null object.'
+        );
+      }
+    }
+    // !!!!!!!!! CHECKPOINT !!!!!!!!!
+    const data = {
+      ...(options.variables && { variables: options?.variables }),
+      operationName: options.operationName,
+      extensions: { impersonate: options.impersonate },
+    };
+    const connectorId = DataConnectService.getId(this.connectorConfig);
+    return this.getUrl(
+      API_VERSION,
+      this.connectorConfig.location,
+      this.connectorConfig.serviceId,
+      endpoint,
+      connectorId,
+    )
+      .then(async (url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url,
+          headers: DATA_CONNECT_CONFIG_HEADERS,
+          data,
         };
-        let urlFormat: string;
-        if (useEmulator()) {
-          urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT, {
-            host: emulatorHost()
-          });
-        } else {
-          urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;
+        const resp = await this.httpClient.send(request);
+        if (
+          resp.data.errors &&
+          validator.isNonEmptyArray(resp.data.errors)
+        ) {
+          const allMessages = resp.data.errors
+            .map((error: { message: any }) => error.message)
+            .join(' ');
+          throw new FirebaseDataConnectError(
+            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+            allMessages
+          );
         }
-        return utils.formatString(urlFormat, urlParams);
+        return Promise.resolve({
+          data: resp.data.data as GraphqlResponse,
+        });
+      })
+      .then((resp) => {
+        return resp;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
       });
+  }
+
+  private async getUrl(
+    version: string,
+    locationId: string,
+    serviceId: string,
+    endpointId: string,
+    connectorId?: string,
+  ): Promise<string> {
+    const projectId = await this.getProjectId();
+    const urlParams = {
+      version,
+      projectId,
+      locationId,
+      serviceId,
+      endpointId,
+    };
+    let urlFormat: string;
+    if (useEmulator()) {
+      (urlParams as any).host = emulatorHost();
+      urlFormat = connectorId
+        ? FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT;
+    } else {
+      urlFormat = connectorId
+        ? FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT;
+    }
+    if (connectorId) {
+      (urlParams as any).connectorId = connectorId;      
+    }
+    return utils.formatString(urlFormat, urlParams);
   }
 
   private getProjectId(): Promise<string> {
