@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { DataConnectService } from './data-connect';
+// import { DataConnectService } from './data-connect';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
 const API_VERSION = 'v1alpha';
@@ -47,8 +47,8 @@ const FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT =
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 
-const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
-const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
+// const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
+// const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -124,113 +124,60 @@ export class DataConnectApiClient {
       ...(options?.operationName && { operationName: options?.operationName }),
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
-    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
-      .then(async (url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url,
-          headers: DATA_CONNECT_CONFIG_HEADERS,
-          data,
-        };
-        const resp = await this.httpClient.send(request);
-        if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-          const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
-        }
-        return Promise.resolve({
-          data: resp.data.data as GraphqlResponse,
-        });
-      })
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
+    return this.makeGqlRequest(url, data);
   }
 
-  private async impersonateQuery<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.impersonateHelper(IMPERSONATE_QUERY_ENDPOINT, options);
-  }
+  // private async impersonateQuery<GraphqlResponse, Variables>(
+  //   options: GraphqlOptions<Variables>
+  // ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+  //   return this.impersonateHelper(IMPERSONATE_QUERY_ENDPOINT, options);
+  // }
 
-  private async impersonateMutation<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.impersonateHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
-  }
+  // private async impersonateMutation<GraphqlResponse, Variables>(
+  //   options: GraphqlOptions<Variables>
+  // ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+  //   return this.impersonateHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
+  // }
 
-  private async impersonateHelper<GraphqlResponse, Variables>(
-    endpoint: string,
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    if (
-      typeof options.operationName === 'undefined' ||
-      !validator.isNonEmptyString(options.operationName)
-    ) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`options.operationName` must be a non-empty string.'
-      );
-    }
-    if (
-      typeof options.impersonate === 'undefined' ||
-      !validator.isNonEmptyString(options.impersonate)
-    ) {
-      if (!validator.isNonNullObject(options?.impersonate)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          '`options.impersonate` must be a non-null object.'
-        );
-      }
-    }
-    // !!!!!!!!! CHECKPOINT !!!!!!!!!
-    const data = {
-      ...(options.variables && { variables: options?.variables }),
-      operationName: options.operationName,
-      extensions: { impersonate: options.impersonate },
-    };
-    const connectorId = DataConnectService.getId(this.connectorConfig);
-    return this.getUrl(
-      API_VERSION,
-      this.connectorConfig.location,
-      this.connectorConfig.serviceId,
-      endpoint,
-      connectorId,
-    )
-      .then(async (url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url,
-          headers: DATA_CONNECT_CONFIG_HEADERS,
-          data,
-        };
-        const resp = await this.httpClient.send(request);
-        if (
-          resp.data.errors &&
-          validator.isNonEmptyArray(resp.data.errors)
-        ) {
-          const allMessages = resp.data.errors
-            .map((error: { message: any }) => error.message)
-            .join(' ');
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
-            allMessages
-          );
-        }
-        return Promise.resolve({
-          data: resp.data.data as GraphqlResponse,
-        });
-      })
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
+  // private async impersonateHelper<GraphqlResponse, Variables>(
+  //   endpoint: string,
+  //   options: GraphqlOptions<Variables>
+  // ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+  //   if (
+  //     typeof options.operationName === 'undefined' ||
+  //     !validator.isNonEmptyString(options.operationName)
+  //   ) {
+  //     throw new FirebaseDataConnectError(
+  //       DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+  //       '`options.operationName` must be a non-empty string.'
+  //     );
+  //   }
+  //   if (
+  //     typeof options.impersonate === 'undefined' || 
+  //     !validator.isNonNullObject(options?.impersonate)
+  //   ) {
+  //     throw new FirebaseDataConnectError(
+  //       DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+  //       '`options.impersonate` must be a non-null object.'
+  //     );
+  //   }
+  //   // !!!!!!!!! CHECKPOINT !!!!!!!!!
+  //   const data = {
+  //     ...(options.variables && { variables: options?.variables }),
+  //     operationName: options.operationName,
+  //     extensions: { impersonate: options.impersonate },
+  //   };
+  //   const connectorId = DataConnectService.getId(this.connectorConfig);
+  //   const url = await this.getUrl(
+  //     API_VERSION,
+  //     this.connectorConfig.location,
+  //     this.connectorConfig.serviceId,
+  //     endpoint,
+  //     connectorId,
+  //   );
+  //   return this.makeGqlRequest<GraphqlResponse>(url, data);
+  // }
 
   private async getUrl(
     version: string,
@@ -262,6 +209,31 @@ export class DataConnectApiClient {
       (urlParams as any).connectorId = connectorId;      
     }
     return utils.formatString(urlFormat, urlParams);
+  }
+
+  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
+  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url,
+      headers: DATA_CONNECT_CONFIG_HEADERS,
+      data,
+    };
+    const resp = await this.httpClient.send(request);
+    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
+      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+    }
+    return Promise.resolve({
+      data: resp.data.data as GraphqlResponse,
+    })
+      .then((resp) => {
+        return resp;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
   }
 
   private getProjectId(): Promise<string> {
