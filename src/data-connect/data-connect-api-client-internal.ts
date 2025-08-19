@@ -101,6 +101,15 @@ export class DataConnectApiClient {
     return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
   }
 
+
+  /**
+   * A helper function to execute GraphQL queries.
+   *
+   * @param query - The arbitrary GraphQL query to execute.
+   * @param endpoint - The endpoint to call.
+   * @param options - The GraphQL options.
+   * @returns A promise that fulfills with the GraphQL response, or throws an error.
+   */
   private async executeGraphqlHelper<GraphqlResponse, Variables>(
     query: string,
     endpoint: string,
@@ -134,6 +143,13 @@ export class DataConnectApiClient {
       });
   }
 
+  /**
+   * Makes a GraphQL request to the specified url.
+   *
+   * @param url - The URL to send the request to.
+   * @param data - The GraphQL request payload.
+   * @returns A promise that fulfills with the GraphQL response, or throws an error.
+   */
   private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
   Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     const request: HttpRequestConfig = {
@@ -165,6 +181,13 @@ export class DataConnectApiClient {
     return this.impersonateHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
   }
 
+  /**
+   * A helper function to make impersonated GraphQL requests.
+   *
+   * @param endpoint - The endpoint to call.
+   * @param options - The GraphQL options, including impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
   private async impersonateHelper<GraphqlResponse, Variables>(
     endpoint: string,
     options: GraphqlOptions<Variables>
@@ -209,6 +232,22 @@ export class DataConnectApiClient {
       });
   }
 
+  /**
+   * Constructs the URL for a Data Connect backend request.
+   * 
+   * If no connectorId is provided, will direct the request to an endpoint under services:
+   * .../services/{serviceId}:endpoint
+   *
+   * If connectorId is provided, will direct the request to an endpoint under connectors:
+   * .../services/{serviceId}/connectors/{connectorId}:endpoint
+   * 
+   * @param version - The API version.
+   * @param locationId - The location of the Data Connect service.
+   * @param serviceId - The ID of the Data Connect service.
+   * @param endpointId - The endpoint to call.
+   * @param connectorId - The ID of the connector, if applicable.
+   * @returns A promise that fulfills with the constructed URL.
+   */
   private async getUrl(
     version: string,
     locationId: string,
