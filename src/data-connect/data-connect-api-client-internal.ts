@@ -125,7 +125,32 @@ export class DataConnectApiClient {
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
     const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
-    return this.makeGqlRequest(url, data);
+    return this.makeGqlRequest<GraphqlResponse>(url, data)
+      .then((resp) => {
+        return resp;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
+  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url,
+      headers: DATA_CONNECT_CONFIG_HEADERS,
+      data,
+    };
+    const resp = await this.httpClient.send(request);
+    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
+      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+    }
+    return Promise.resolve({
+      data: resp.data.data as GraphqlResponse,
+    });
   }
 
   // private async impersonateQuery<GraphqlResponse, Variables>(
@@ -211,30 +236,30 @@ export class DataConnectApiClient {
     return utils.formatString(urlFormat, urlParams);
   }
 
-  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
-  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url,
-      headers: DATA_CONNECT_CONFIG_HEADERS,
-      data,
-    };
-    const resp = await this.httpClient.send(request);
-    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
-    }
-    return Promise.resolve({
-      data: resp.data.data as GraphqlResponse,
-    })
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
+  // private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
+  // Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+  //   const request: HttpRequestConfig = {
+  //     method: 'POST',
+  //     url,
+  //     headers: DATA_CONNECT_CONFIG_HEADERS,
+  //     data,
+  //   };
+  //   const resp = await this.httpClient.send(request);
+  //   if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
+  //     const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+  //     throw new FirebaseDataConnectError(
+  //       DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+  //   }
+  //   return Promise.resolve({
+  //     data: resp.data.data as GraphqlResponse,
+  //   })
+  //     .then((resp) => {
+  //       return resp;
+  //     })
+  //     .catch((err) => {
+  //       throw this.toFirebaseError(err);
+  //     });
+  // }
 
   private getProjectId(): Promise<string> {
     if (this.projectId) {
