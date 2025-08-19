@@ -18,7 +18,7 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins
-import path = require('path');
+import * as path from 'path';
 
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
