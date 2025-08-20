@@ -230,6 +230,13 @@ describe('DataConnectApiClient', () => {
         });
     });
   });
+
+  describe('impersonate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.executeGraphql('query', {})
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+  });
 });
 
 describe('DataConnectApiClient CRUD helpers', () => {

@@ -2,7 +2,10 @@ WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
 WARNING: sun.misc.Unsafe::objectFieldOffset has been called by akka.util.Unsafe (file:/Users/stephenarosaj/.cache/firebase/emulators/firebase-database-emulator-v4.11.2.jar)
 WARNING: Please consider reporting this to the maintainers of class akka.util.Unsafe
 WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-11:54:28.201 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-11:54:28.281 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
-11:54:39.125 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
-11:54:39.128 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.
+16:49:54.775 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+16:49:54.866 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
+16:50:04.160 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO com.firebase.core.namespace.NamespaceActor - fake-project-id successfully activated FBKV (SurveyIdle(0)) wait: 86ms, init: 0ms
+16:50:05.737 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
+16:50:05.747 [NamespaceSystem-akka.actor.default-dispatcher-9] INFO com.firebase.core.namespace.Terminator$Terminator - 1 actors left to terminate: fake-project-id
+16:50:05.751 [NamespaceSystem-akka.actor.default-dispatcher-10] INFO com.firebase.core.namespace.NamespaceActor - stopped namespace actor for fake-project-id
+16:50:05.754 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.
