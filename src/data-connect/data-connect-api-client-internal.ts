@@ -144,32 +144,6 @@ export class DataConnectApiClient {
   }
 
   /**
-   * Makes a GraphQL request to the specified url.
-   *
-   * @param url - The URL to send the request to.
-   * @param data - The GraphQL request payload.
-   * @returns A promise that fulfills with the GraphQL response, or throws an error.
-   */
-  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
-  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url,
-      headers: DATA_CONNECT_CONFIG_HEADERS,
-      data,
-    };
-    const resp = await this.httpClient.send(request);
-    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
-    }
-    return Promise.resolve({
-      data: resp.data.data as GraphqlResponse,
-    });
-  }
-
-  /**
    * Executes a GraphQL query with impersonation.
    *
    * @param options - The GraphQL options, including impersonation details.
@@ -308,6 +282,32 @@ export class DataConnectApiClient {
         this.projectId = projectId;
         return projectId;
       });
+  }
+
+  /**
+   * Makes a GraphQL request to the specified url.
+   *
+   * @param url - The URL to send the request to.
+   * @param data - The GraphQL request payload.
+   * @returns A promise that fulfills with the GraphQL response, or throws an error.
+   */
+  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
+  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url,
+      headers: DATA_CONNECT_CONFIG_HEADERS,
+      data,
+    };
+    const resp = await this.httpClient.send(request);
+    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
+      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+    }
+    return Promise.resolve({
+      data: resp.data.data as GraphqlResponse,
+    });
   }
 
   private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
