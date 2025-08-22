@@ -169,12 +169,24 @@ export class DataConnectApiClient {
     });
   }
 
+  /**
+   * Executes a GraphQL query with impersonation.
+   *
+   * @param options - The GraphQL options, including impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
   public async impersonateQuery<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.impersonateHelper(IMPERSONATE_QUERY_ENDPOINT, options);
   }
 
+  /**
+   * Executes a GraphQL mutation with impersonation.
+   *
+   * @param options - The GraphQL options, including impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
   public async impersonateMutation<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
