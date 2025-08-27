@@ -33,12 +33,8 @@ export class DataConnectService {
     this.appInternal = app;
   }
 
-  static getId(connectorConfig: ConnectorConfig): string {
-    return `${connectorConfig.location}-${connectorConfig.serviceId}`;
-  }
-
   getDataConnect(connectorConfig: ConnectorConfig): DataConnect {
-    const id = DataConnectService.getId(connectorConfig);
+    const id = `${connectorConfig.location}-${connectorConfig.serviceId}`;
     const dc = this.dataConnectInstances.get(id);
     if (typeof dc !== 'undefined') {
       return dc;

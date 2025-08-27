@@ -29,7 +29,6 @@ import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConn
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig, GraphqlOptions } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
-import { DataConnectService } from '../../../src/data-connect/data-connect';
 
 describe('DataConnectApiClient', () => {
 
@@ -311,7 +310,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${DataConnectService.getId(connectorConfig)}:impersonateQuery`,
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateQuery`,
             headers: EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -330,7 +329,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${DataConnectService.getId(connectorConfig)}:impersonateQuery`,
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateQuery`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -420,7 +419,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${DataConnectService.getId(connectorConfig)}:impersonateMutation`,
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateMutation`,
             headers: EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -439,7 +438,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${DataConnectService.getId(connectorConfig)}:impersonateMutation`,
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateMutation`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 

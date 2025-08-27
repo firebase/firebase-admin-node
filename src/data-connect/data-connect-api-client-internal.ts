@@ -23,7 +23,6 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { DataConnectService } from './data-connect';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
 const API_VERSION = 'v1alpha';
@@ -201,7 +200,7 @@ export class DataConnectApiClient {
       operationName: options.operationName,
       extensions: { impersonate: options.impersonate },
     };
-    const connectorId = DataConnectService.getId(this.connectorConfig);
+    const connectorId = `${this.connectorConfig.location}-${this.connectorConfig.serviceId}`;
     const url = await this.getUrl(
       API_VERSION,
       this.connectorConfig.location,
