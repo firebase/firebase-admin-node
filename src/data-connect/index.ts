@@ -71,6 +71,11 @@ export {
  * @returns The default `DataConnect` service with the provided connector configuration
  *  if no app is provided, or the `DataConnect` service associated with the provided app.
  */
+// export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect {
+//   if (typeof app === 'undefined') {
+//     app = getApp();
+//   }
+
 export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): DataConnect {
   if (typeof app === 'undefined') {
     app = getApp();
