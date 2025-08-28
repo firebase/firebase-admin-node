@@ -195,18 +195,25 @@ export class DataConnectApiClient {
         '`options.impersonate` must be a non-null object.'
       );
     }
+
+    if (this.connectorConfig.connector === undefined || this.connectorConfig.connector === '') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`connectorConfig.connector` field used to instantiate Data Connect instance \
+        must be a non-empty string (the connectorId) when calling impersonate APIs.');
+    }
+
     const data = {
       ...(options.variables && { variables: options?.variables }),
       operationName: options.operationName,
       extensions: { impersonate: options.impersonate },
     };
-    const connectorId = `${this.connectorConfig.location}-${this.connectorConfig.serviceId}`;
     const url = await this.getUrl(
       API_VERSION,
       this.connectorConfig.location,
       this.connectorConfig.serviceId,
       endpoint,
-      connectorId,
+      this.connectorConfig.connector,
     );
     return this.makeGqlRequest<GraphqlResponse>(url, data)
       .then((resp) => {
@@ -247,17 +254,18 @@ export class DataConnectApiClient {
       locationId,
       serviceId,
       endpointId,
+      connectorId
     };
     let urlFormat: string;
     if (useEmulator()) {
       (urlParams as any).host = emulatorHost();
-      urlFormat = connectorId
-        ? FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT
-        : FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT;
+      urlFormat = connectorId === undefined || connectorId === ''
+        ? FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT;
     } else {
-      urlFormat = connectorId
-        ? FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT
-        : FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT;
+      urlFormat = connectorId === undefined || connectorId === ''
+        ? FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT;
     }
     if (connectorId) {
       (urlParams as any).connectorId = connectorId;      

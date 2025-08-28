@@ -69,6 +69,7 @@ describe('DataConnectApiClient', () => {
   const connectorConfig: ConnectorConfig = {
     location: 'us-west2',
     serviceId: 'my-service',
+    connector: 'my-connector',
   };
 
   const clientWithoutProjectId = new DataConnectApiClient(
@@ -251,6 +252,16 @@ describe('DataConnectApiClient', () => {
       clientWithoutProjectId.impersonateQuery(unauthenticatedOptions)
         .should.eventually.be.rejectedWith(noProjectId);
     });
+    it('should reject when no connectorId is provided', () => {
+      apiClient = new DataConnectApiClient(
+        { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
+        app
+      );
+      apiClient.impersonateQuery({ impersonate: { unauthenticated: true } })
+        .should.eventually.be.rejectedWith(
+          '`connectorConfig.connector` field used to instantiate Data Connect instance \
+          must be a non-empty string (the connectorId) when calling impersonate APIs.');
+    });
 
     it('should reject when a full platform error response is received', () => {
       sandbox
@@ -310,7 +321,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateQuery`,
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
             headers: EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -329,7 +340,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateQuery`,
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -359,6 +370,16 @@ describe('DataConnectApiClient', () => {
     it('should reject when project id is not available', () => {
       clientWithoutProjectId.impersonateMutation(unauthenticatedOptions)
         .should.eventually.be.rejectedWith(noProjectId);
+    });
+    it('should reject when no connectorId is provided', () => {
+      apiClient = new DataConnectApiClient(
+        { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
+        app
+      );
+      apiClient.impersonateMutation({ impersonate: { unauthenticated: true } })
+        .should.eventually.be.rejectedWith(
+          '`connectorConfig.connector` field used to instantiate Data Connect instance \
+          must be a non-empty string (the connectorId) when calling impersonate APIs.');
     });
 
     it('should reject when a full platform error response is received', () => {
@@ -419,7 +440,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateMutation`,
+            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
             headers: EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -438,7 +459,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.location}-${connectorConfig.serviceId}:impersonateMutation`,
+            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { 
               operationName: unauthenticatedOptions.operationName, 
@@ -459,6 +480,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
   const connectorConfig: ConnectorConfig = {
     location: 'us-west1',
     serviceId: 'my-crud-service',
+    connector: 'my-crud-connector',
   };
 
   const mockOptions = {

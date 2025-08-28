@@ -30,6 +30,12 @@ export interface ConnectorConfig {
    * Service ID of the Data Connect service.
    */
   serviceId: string;
+
+  /**
+   * Name of the Data Connect connector.
+   * Required for operations that interact with connectors, such as impersonateQuery and impersonateMutation.
+   */
+  connector?: string;
 }
 
 /**

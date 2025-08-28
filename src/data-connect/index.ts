@@ -51,6 +51,7 @@ export {
  * const connectorConfig: ConnectorConfig = {
  *  location: 'us-west2',
  *  serviceId: 'my-service',
+ *  connectorName: 'my-connector',
  * };
  * 
  * // Get the `DataConnect` service for the default app
