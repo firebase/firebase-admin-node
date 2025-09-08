@@ -255,9 +255,9 @@ to ensure that exported user records contain the password hashes of the user acc
       5. Set your **Cloud SQL instance ID** to `my-instance`
       6. Set your **Database name** to `my-database`
       7. Set your **Service ID** to `my-service`
-      8. Click **Submit**. This operation may take up to 10 minutes to complete.
-   2. Set up your Data Connect schema locally (currently there is no way to 
-      create/edit your schema from the Console):
+      8. Click **Submit**. This operation may take up to 10 minutes to complete - you may 
+         continue setting up while this completes.
+   2. Set up your Data Connect schema locally:
       1. Run the following commands from the command line to setup your data connect app:
          ```bash
          $ mkdir fdc-integration-test
@@ -284,7 +284,7 @@ to ensure that exported user records contain the password hashes of the user acc
             from: User!
          }
          ```
-      6. Run the following commands from `fdc-integration-test/` to setup your data connect app:
+      6. Run the following commands from `fdc-integration-test/` to deploy your schema:
          ```bash
          $ firebase deploy --only dataconnect
          ```
