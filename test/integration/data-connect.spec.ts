@@ -315,8 +315,7 @@ describe('getDataConnect()', () => {
       it('executeGraphql() successfully executes an impersonated mutation with authenticated claims',
         async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
-            updateFredrickUserImpersonated, 
-            { ...optsAuthorizedFredClaims });
+            updateFredrickUserImpersonated, optsAuthorizedFredClaims);
           // Fred -> Fredrick
           expect(resp.data.user_update.id).equals(fredUser.id);
         });
@@ -328,9 +327,8 @@ describe('getDataConnect()', () => {
 
       it('executeGraphql() should return null for an impersonated mutation with non-existing authenticated claims',
         async () => {
-          console.log('test')
           const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
-            updateFredrickUserImpersonated, { ...optsNonExistingClaims });
+            updateFredrickUserImpersonated, optsNonExistingClaims);
           // Should mutate no data
           expect(resp.data.user_update).to.be.null;
         });
