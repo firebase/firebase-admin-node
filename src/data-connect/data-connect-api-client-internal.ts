@@ -25,7 +25,7 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
 
-const API_VERSION = 'v1alpha';
+const API_VERSION = 'v1';
 
 /** The Firebase Data Connect backend base URL format. */
 const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
