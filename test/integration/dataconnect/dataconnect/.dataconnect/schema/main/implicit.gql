@@ -1,0 +1,6 @@
+extend type Email {
+  """
+  ✨ Implicit foreign key field based on `Email`.`from`. It must match the value of `User`.`id`. See `@ref` for how to customize it.
+  """
+  fromId: String! @fdc_generated(from: "Email.from", purpose: IMPLICIT_REF_FIELD)
+}

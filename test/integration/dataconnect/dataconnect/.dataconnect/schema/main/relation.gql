@@ -1,0 +1,134 @@
+extend type Email {
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "Email", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `Email` table.
+  """
+  _count: Int! @fdc_generated(from: "Email", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Email` table where the `date` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  date_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Email.date", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Email` table where the `fromId` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  fromId_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Email.fromId", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Email` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Email.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Email` table where the `subject` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  subject_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Email.subject", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Email` table where the `text` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  text_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Email.text", purpose: QUERY_COUNT)
+  """
+  ✨ Minimum of the `date` field in the `Email` table.
+  """
+  date_min: Date @fdc_generated(from: "Email.date", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `date` field in the `Email` table.
+  """
+  date_max: Date @fdc_generated(from: "Email.date", purpose: QUERY_MAX)
+}
+extend type User {
+  """
+  ✨ List `Email` objects in a one-to-many relationship (where `Email`.`from` is this object).
+  """
+  emails_on_from(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Email_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Email_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Email_Having
+  ): [Email!]! @fdc_generated(from: "Email.from", purpose: QUERY_MULTIPLE_ONE_TO_MANY)
+  """
+  Implicit metadata field that cannot be written. It provides extra information about query results.
+  """
+  _metadata: _Metadata @fdc_generated(from: "User", purpose: METADATA_FIELD)
+  """
+  ✨ Count the number of rows in the `User` table.
+  """
+  _count: Int! @fdc_generated(from: "User", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `address` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  address_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.address", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `id` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  id_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `User` table where the `name` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  name_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "User.name", purpose: QUERY_COUNT)
+}

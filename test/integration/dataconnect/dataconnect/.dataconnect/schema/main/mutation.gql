@@ -1,0 +1,246 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `Email` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  email_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Email_Data!
+  ): Email_KeyOutput! @fdc_generated(from: "Email", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `User` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `Email` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  email_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Email_Data!]!
+  ): [Email_KeyOutput!]! @fdc_generated(from: "Email", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `User` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  user_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `Email` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Email`.
+  """
+  email_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Email_Data!
+  ): Email_KeyOutput! @fdc_generated(from: "Email", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `User` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: User_Data!
+  ): User_KeyOutput! @fdc_generated(from: "User", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `Email` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Email`.
+  """
+  email_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Email_Data!]!
+  ): [Email_KeyOutput!]! @fdc_generated(from: "Email", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `User` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `User`.
+  """
+  user_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [User_Data!]!
+  ): [User_KeyOutput!]! @fdc_generated(from: "User", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `Email` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Email` or `null` if not found.
+  """
+  email_update(
+    """
+    The unique ID of the object.
+    """
+    id: String
+
+    """
+    ✨ `_expr` server value variant of `id` (The unique ID of the object.)
+    """
+    id_expr: String_Expr
+
+    """
+    The key used to identify the object.
+    """
+    key: Email_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Email_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Email_Data!
+  ): Email_KeyOutput @fdc_generated(from: "Email", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `User` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `User` or `null` if not found.
+  """
+  user_update(
+    """
+    The unique ID of the object.
+    """
+    id: String
+
+    """
+    ✨ `_expr` server value variant of `id` (The unique ID of the object.)
+    """
+    id_expr: String_Expr
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: User_Data!
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `Email` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  email_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Email_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Email_Data!
+  ): Int! @fdc_generated(from: "Email", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `User` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  user_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: User_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: User_Data!
+  ): Int! @fdc_generated(from: "User", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `Email` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  email_delete(
+    """
+    The unique ID of the object.
+    """
+    id: String
+
+    """
+    ✨ `_expr` server value variant of `id` (The unique ID of the object.)
+    """
+    id_expr: String_Expr
+
+    """
+    The key used to identify the object.
+    """
+    key: Email_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Email_FirstRow
+  ): Email_KeyOutput @fdc_generated(from: "Email", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `User` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  user_delete(
+    """
+    The unique ID of the object.
+    """
+    id: String
+
+    """
+    ✨ `_expr` server value variant of `id` (The unique ID of the object.)
+    """
+    id_expr: String_Expr
+
+    """
+    The key used to identify the object.
+    """
+    key: User_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: User_FirstRow
+  ): User_KeyOutput @fdc_generated(from: "User", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `Email` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  email_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Email_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Email", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `User` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  user_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: User_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "User", purpose: DELETE_MULTIPLE)
+}
