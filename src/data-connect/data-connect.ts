@@ -103,17 +103,17 @@ export class DataConnect {
   }
 
   /**
-   * Executes a pre-defined GraphQL query with impersonation
+   * Executes a pre-defined GraphQL query with impersonation.
    *
-   * The query must be defined in your Data Connect GQL files. 
+   * The query must be defined in your Data Connect GraphQL files.
    *
    * @param options - The GraphQL options, must include impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
-  public async impersonateQuery<GraphqlResponse, Variables>(
+  public async executeQuery<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.impersonateQuery(options);
+    return this.client.executeQuery(options);
   }
 
   /**
@@ -124,10 +124,10 @@ export class DataConnect {
    * @param options - The GraphQL options, must include impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
-  public async impersonateMutation<GraphqlResponse, Variables>(
+  public async executeMutation<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.impersonateMutation(options);
+    return this.client.executeMutation(options);
   }
 
   /**

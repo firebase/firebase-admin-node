@@ -232,26 +232,26 @@ describe('DataConnectApiClient', () => {
     });
   });
 
-  describe('impersonateQuery', () => {
+  describe('executeQuery', () => {
     const unauthenticatedOptions: GraphqlOptions<unknown> = 
       { operationName: 'unauthenticatedQuery', impersonate: { unauthenticated: true } };
     const authenticatedOptions: GraphqlOptions<unknown> = 
       { operationName: 'authenticatedQuery', impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
     it('should reject when no operationName is provided', () => {
-      apiClient.impersonateQuery({ impersonate: { unauthenticated: true } })
+      apiClient.executeQuery({ impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
-      apiClient.impersonateQuery({ operationName: undefined, impersonate: { unauthenticated: true } })
+      apiClient.executeQuery({ operationName: undefined, impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
     });
     it('should reject when no impersonate object is provided', () => {
-      apiClient.impersonateQuery({ operationName: 'queryName' })
+      apiClient.executeQuery({ operationName: 'queryName' })
         .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-      apiClient.impersonateQuery({ operationName: 'queryName', impersonate: undefined })
+      apiClient.executeQuery({ operationName: 'queryName', impersonate: undefined })
         .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
     });
     it('should reject when project id is not available', () => {
-      clientWithoutProjectId.impersonateQuery(unauthenticatedOptions)
+      clientWithoutProjectId.executeQuery(unauthenticatedOptions)
         .should.eventually.be.rejectedWith(noProjectId);
     });
     it('should reject when no connectorId is provided', () => {
@@ -259,10 +259,10 @@ describe('DataConnectApiClient', () => {
         { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
         app
       );
-      apiClient.impersonateQuery({ impersonate: { unauthenticated: true } })
+      apiClient.executeQuery({ impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith(
-          '`connectorConfig.connector` field used to instantiate Data Connect instance \
-          must be a non-empty string (the connectorId) when calling impersonate APIs.');
+          `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
     });
 
     it('should reject when a full platform error response is received', () => {
@@ -270,7 +270,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.impersonateQuery(unauthenticatedOptions)
+      return apiClient.executeQuery(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -279,7 +279,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.impersonateQuery(unauthenticatedOptions)
+      return apiClient.executeQuery(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -289,7 +289,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.impersonateQuery(unauthenticatedOptions)
+      return apiClient.executeQuery(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -298,7 +298,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClient.impersonateQuery(unauthenticatedOptions)
+      return apiClient.executeQuery(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -316,7 +316,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.impersonateQuery<UsersResponse, unknown>(unauthenticatedOptions).then((resp) => {
+        return apiClient.executeQuery<UsersResponse, unknown>(unauthenticatedOptions).then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
           expect(resp.data.users[0].address).to.be.not.undefined;
@@ -336,7 +336,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.impersonateQuery<UsersResponse, unknown>(authenticatedOptions).then((resp) => {
+        return apiClient.executeQuery<UsersResponse, unknown>(authenticatedOptions).then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
           expect(resp.data.users[0].address).to.be.not.undefined;
@@ -359,7 +359,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.impersonateQuery(unauthenticatedOptions)
+      return apiClient.executeQuery(unauthenticatedOptions)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -379,21 +379,21 @@ describe('DataConnectApiClient', () => {
   const authenticatedOptions: GraphqlOptions<unknown> = 
     { operationName: 'operationName', impersonate: { unauthenticated: true } };
 
-  describe('impersonateMutation', () => {
+  describe('executeMutation', () => {
     it('should reject when no operationName is provided', () => {
-      apiClient.impersonateMutation({ impersonate: { unauthenticated: true } })
+      apiClient.executeMutation({ impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
-      apiClient.impersonateMutation({ operationName: undefined, impersonate: { unauthenticated: true } })
+      apiClient.executeMutation({ operationName: undefined, impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
     });
     it('should reject when no impersonate object is provided', () => {
-      apiClient.impersonateMutation({ operationName: 'queryName' })
+      apiClient.executeMutation({ operationName: 'queryName' })
         .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-      apiClient.impersonateMutation({ operationName: 'queryName', impersonate: undefined })
+      apiClient.executeMutation({ operationName: 'queryName', impersonate: undefined })
         .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
     });
     it('should reject when project id is not available', () => {
-      clientWithoutProjectId.impersonateMutation(unauthenticatedOptions)
+      clientWithoutProjectId.executeMutation(unauthenticatedOptions)
         .should.eventually.be.rejectedWith(noProjectId);
     });
     it('should reject when no connectorId is provided', () => {
@@ -401,10 +401,10 @@ describe('DataConnectApiClient', () => {
         { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
         app
       );
-      apiClient.impersonateMutation({ impersonate: { unauthenticated: true } })
+      apiClient.executeMutation({ impersonate: { unauthenticated: true } })
         .should.eventually.be.rejectedWith(
-          '`connectorConfig.connector` field used to instantiate Data Connect instance \
-          must be a non-empty string (the connectorId) when calling impersonate APIs.');
+          `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
     });
 
     it('should reject when a full platform error response is received', () => {
@@ -412,7 +412,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.impersonateMutation(unauthenticatedOptions)
+      return apiClient.executeMutation(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -421,7 +421,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.impersonateMutation(unauthenticatedOptions)
+      return apiClient.executeMutation(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -431,7 +431,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.impersonateMutation(unauthenticatedOptions)
+      return apiClient.executeMutation(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -440,7 +440,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClient.impersonateMutation(unauthenticatedOptions)
+      return apiClient.executeMutation(unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -458,7 +458,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.impersonateMutation<UsersResponse, unknown>(unauthenticatedOptions)
+        return apiClient.executeMutation<UsersResponse, unknown>(unauthenticatedOptions)
           .then((resp) => {
             expect(resp.data.users).to.be.not.empty;
             expect(resp.data.users[0].name).to.be.not.undefined;
@@ -479,7 +479,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.impersonateMutation<UsersResponse, unknown>(authenticatedOptions)
+        return apiClient.executeMutation<UsersResponse, unknown>(authenticatedOptions)
           .then((resp) => {
             expect(resp.data.users).to.be.not.empty;
             expect(resp.data.users[0].name).to.be.not.undefined;
@@ -511,7 +511,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.impersonateMutation<UsersResponse, unknown>(unauthenticatedOptions)
+      return apiClient.executeMutation<UsersResponse, unknown>(unauthenticatedOptions)
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -534,7 +534,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.impersonateMutation(unauthenticatedOptions)
+      return apiClient.executeMutation(unauthenticatedOptions)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',

@@ -30,11 +30,11 @@ const API_VERSION = 'v1';
 // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE
 /** The Firebase Data Connect backend service URL format. */
 const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
-  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
 /** The Firebase Data Connect backend connector URL format. */
 const FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT =
-  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
 
 /** Firebase Data Connect service URL format when using the Data Connect emulator. */
 const FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT =
@@ -146,35 +146,36 @@ export class DataConnectApiClient {
   /**
    * Executes a GraphQL query with impersonation.
    *
-   * @param options - The GraphQL options, including impersonation details.
+   * @param options - The GraphQL options. Must include impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
-  public async impersonateQuery<GraphqlResponse, Variables>(
+  public async executeQuery<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.impersonateHelper(IMPERSONATE_QUERY_ENDPOINT, options);
+    return this.executeOperationHelper(IMPERSONATE_QUERY_ENDPOINT, options);
   }
 
   /**
    * Executes a GraphQL mutation with impersonation.
    *
-   * @param options - The GraphQL options, including impersonation details.
+   * @param options - The GraphQL options. Must include impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
-  public async impersonateMutation<GraphqlResponse, Variables>(
+  public async executeMutation<GraphqlResponse, Variables>(
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.impersonateHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
+    return this.executeOperationHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
   }
 
   /**
-   * A helper function to make impersonated GraphQL requests.
+   * A helper function to execute operations by making requests to FDC's impersonate
+   * operations endpoints.
    *
    * @param endpoint - The endpoint to call.
    * @param options - The GraphQL options, including impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
-  private async impersonateHelper<GraphqlResponse, Variables>(
+  private async executeOperationHelper<GraphqlResponse, Variables>(
     endpoint: string,
     options: GraphqlOptions<Variables>
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
@@ -200,8 +201,8 @@ export class DataConnectApiClient {
     if (this.connectorConfig.connector === undefined || this.connectorConfig.connector === '') {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`connectorConfig.connector` field used to instantiate Data Connect instance \
-        must be a non-empty string (the connectorId) when calling impersonate APIs.');
+        `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
     }
 
     const data = {
