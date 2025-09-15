@@ -27,14 +27,16 @@ import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-
 
 const API_VERSION = 'v1';
 
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /** The Firebase Data Connect backend service URL format. */
 const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
-  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
 /** The Firebase Data Connect backend connector URL format. */
 const FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT =
-  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
+  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
 
 /** Firebase Data Connect service URL format when using the Data Connect emulator. */
 const FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT =
