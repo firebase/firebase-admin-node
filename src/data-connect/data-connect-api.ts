@@ -30,6 +30,12 @@ export interface ConnectorConfig {
    * Service ID of the Data Connect service.
    */
   serviceId: string;
+
+  /**
+   * Name of the Data Connect connector.
+   * Required for operations that interact with connectors, such as executeQuery and executeMutation.
+   */
+  connector?: string;
 }
 
 /**
@@ -52,7 +58,10 @@ export interface GraphqlOptions<Variables> {
   variables?: Variables;
 
   /**
-   * The name of the GraphQL operation. Required only if `query` contains multiple operations.
+   * The name of the GraphQL operation.
+   * Required for operations that interact with connectors, such as executeQuery and executeMutation.
+   * Required for operations that interact with services, such as executeGraphql, if 
+   * `query` contains multiple operations.
    */
   operationName?: string;
 
