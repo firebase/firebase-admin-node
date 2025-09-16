@@ -29,14 +29,24 @@ const API_VERSION = 'v1alpha';
 
 /** The Firebase Data Connect backend base URL format. */
 const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
-    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
-/** Firebase Data Connect base URl format when using the Data Connect emultor. */
+/** The Firebase Data Connect backend base URL format including a connector. */
+const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT_WITH_CONNECTOR =
+  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connector}:{endpointId}';
+
+/** Firebase Data Connect base URl format when using the Data Connect emulator. */
 const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
   'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
+/** Firebase Data Connect base URl format when using the Data Connect emulator including a connector. */
+const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT_WITH_CONNECTOR =
+  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connector}:{endpointId}';
+
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
+const EXECUTE_QUERY_ENDPOINT = 'executeQuery';
+const EXECUTE_MUTATION_ENDPOINT = 'executeMutation';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -87,6 +97,30 @@ export class DataConnectApiClient {
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
+    // return this.executeHelper(EXECUTE_GRAPH_QL_READ_ENDPOINT,options, query);
+  }
+
+  /**
+   * Execute pre-existing read-only queries <QueryResult<Data, Variables>>
+   * @param options - GraphQL Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @throws FirebaseDataConnectError
+   */
+  public async executeQuery<Data, Variables>(
+    options: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.executeOperationHelper(EXECUTE_QUERY_ENDPOINT, options);
+  }
+  /**
+   * Execute pre-existing read and write queries <MutationResult<Data, Variables>>
+   * @param options - GraphQL Options
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   * @throws FirebaseDataConnectError
+   */
+  public async executeMutation<Data, Variables>(
+    options: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.executeOperationHelper(EXECUTE_MUTATION_ENDPOINT, options);
   }
 
   private async executeGraphqlHelper<GraphqlResponse, Variables>(
@@ -106,13 +140,49 @@ export class DataConnectApiClient {
           'GraphqlOptions must be a non-null object');
       }
     }
+    return this.executeHelper(endpoint, options, query)
+  }
+
+  private async executeOperationHelper<GraphqlResponse, Variables>(
+    endpoint: string,
+    options: GraphqlOptions<Variables>,
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    if (typeof options == 'undefined') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        'GraphqlOptions should be a non-null object');
+    }
+    if (typeof options !== 'undefined') {
+      if (!validator.isNonNullObject(options)) {
+        throw new FirebaseDataConnectError(
+          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          'GraphqlOptions must be a non-null object');
+      }
+    }
+
+    if (!("operationName" in options)) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        'GraphqlOptions must contain `operationName`.');
+    }
+
+    return this.executeHelper(endpoint, options)
+  }
+
+
+  private async executeHelper<GraphqlResponse, Variables>(
+    endpoint: string,
+    options?: GraphqlOptions<Variables>,
+    gql?: string
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     const data = {
-      query,
+      query: gql,
+      ...(!gql && { name: options?.operationName }),
       ...(options?.variables && { variables: options?.variables }),
       ...(options?.operationName && { operationName: options?.operationName }),
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
-    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
+    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint, this.connectorConfig.connector)
       .then(async (url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
@@ -138,7 +208,7 @@ export class DataConnectApiClient {
       });
   }
 
-  private async getUrl(version: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
+  private async getUrl(version: string, locationId: string, serviceId: string, endpointId: string, connector?: string): Promise<string> {
     return this.getProjectId()
       .then((projectId) => {
         const urlParams = {
@@ -146,15 +216,28 @@ export class DataConnectApiClient {
           projectId,
           locationId,
           serviceId,
-          endpointId
+          endpointId,
+          ...(connector && { connector })
         };
         let urlFormat: string;
         if (useEmulator()) {
-          urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT, {
-            host: emulatorHost()
-          });
+          if ('connector' in urlParams && (endpointId === EXECUTE_QUERY_ENDPOINT || endpointId === EXECUTE_MUTATION_ENDPOINT)) {
+            urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT_WITH_CONNECTOR, {
+              host: emulatorHost()
+            });
+          }
+          else {
+            urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT, {
+              host: emulatorHost()
+            });
+          }
         } else {
-          urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;
+          if ('connector' in urlParams && (endpointId === EXECUTE_QUERY_ENDPOINT || endpointId === EXECUTE_MUTATION_ENDPOINT)) {
+            urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT_WITH_CONNECTOR
+          }
+          else {
+            urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;
+          }
         }
         return utils.formatString(urlFormat, urlParams);
       });
@@ -226,13 +309,13 @@ export class DataConnectApiClient {
           // GraphQL object keys are typically unquoted.
           return `${key}: ${this.objectToString(val)}`;
         });
-  
+
       if (kvPairs.length === 0) {
         return '{}'; // Represent an object with no defined properties as {}
       }
       return `{ ${kvPairs.join(', ')} }`;
     }
-    
+
     // If value is undefined (and not an object property, which is handled above,
     // e.g., if objectToString(undefined) is called directly or for an array element)
     // it should be represented as 'null'.
@@ -255,7 +338,7 @@ export class DataConnectApiClient {
   }
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
-    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
+    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`) {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
         `${err.message}. Make sure that your table name passed in matches the type name in your GraphQL schema file.`);

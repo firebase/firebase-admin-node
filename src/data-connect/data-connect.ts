@@ -16,7 +16,7 @@
  */
 
 import { App } from '../app';
-import { DataConnectApiClient } from './data-connect-api-client-internal';
+import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConnectError } from './data-connect-api-client-internal';
 
 import {
   ConnectorConfig,
@@ -156,5 +156,117 @@ export class DataConnect {
     variables: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     return this.client.upsertMany(tableName, variables);
+  }
+
+  /**
+   * Returns Query Reference
+   * @param name Name of Query
+   * @returns QueryRef
+   */
+  public queryRef<Data>(name: string): QueryRef<Data, undefined>;
+  /**
+   * 
+   * Returns Query Reference
+   * @param name Name of Query
+   * @param variables 
+   * @returns QueryRef
+   */
+  public queryRef<Data, Variables>(name: string, variables: Variables): QueryRef<Data, Variables>;
+  /**
+   * 
+   * Returns Query Reference
+   * @param name Name of Query
+   * @param variables 
+   * @returns QueryRef
+   */
+  public queryRef<Data, Variables>(name: string, variables?: Variables): QueryRef<Data, Variables> {
+    if (!("connector" in this.connectorConfig)){
+      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeQuery requires a connector');
+    }
+    return new QueryRef(this, name, variables as Variables, this.client);
+  }
+  /**
+   * Returns Mutation Reference
+   * @param name Name of Mutation
+   * @returns MutationRef
+   */
+  public mutationRef<Data>(name: string): MutationRef<Data, undefined>;
+  /**
+   * 
+   * Returns Mutation Reference
+   * @param name Name of Mutation
+   * @param variables 
+   * @returns MutationRef
+   */
+  public mutationRef<Data, Variables>(name: string, variables: Variables): MutationRef<Data, Variables>;
+  /**
+   * 
+   * Returns Query Reference
+   * @param name Name of Mutation
+   * @param variables 
+   * @returns MutationRef
+   */
+  public mutationRef<Data, Variables>(name: string, variables?: Variables): MutationRef<Data, Variables> {
+    if (!("connector" in this.connectorConfig)){
+      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,'executeMutation requires a connector');
+    }
+    return new MutationRef(this, name, variables as Variables, this.client);
+  }
+}
+
+abstract class OperationRef<Data, Variables> {
+  _data?: Data;
+  constructor(public readonly dataConnect: DataConnect, public readonly name: string, public readonly variables: Variables, protected readonly client: DataConnectApiClient) {
+
+  }
+  abstract execute(): Promise<OperationResult<Data, Variables>>;
+}
+
+interface OperationResult<Data, Variables> {
+  ref: OperationRef<Data, Variables>;
+  data: Data;
+  variables: Variables;
+  dataConnect: DataConnect;
+}
+export interface QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  ref: QueryRef<Data, Variables>;
+}
+export interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
+  ref: MutationRef<Data, Variables>;
+}
+
+class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
+  option_params:GraphqlOptions<Variables>;
+  async execute(): Promise<QueryResult<Data, Variables>> {
+    const option_params = {
+      variables: this.variables,
+      operationName: this.name
+    };
+    const {data} = await this.client.executeQuery<Data, Variables>(option_params)
+    
+    return {
+      ref: this,
+      data: data,
+      variables: this.variables,
+      dataConnect: this.dataConnect
+    }
+  }
+}
+
+class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
+  option_params:GraphqlOptions<Variables>;
+  async execute(): Promise<MutationResult<Data, Variables>> {
+    const option_params = {
+      variables: this.variables,
+      operationName: this.name
+    };
+    const {data} = await this.client.executeMutation<Data, Variables>(option_params)
+    
+    return {
+      ref: this,
+      data: data,
+      variables: this.variables,
+      dataConnect: this.dataConnect
+    }
   }
 }
