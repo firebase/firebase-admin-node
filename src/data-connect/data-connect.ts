@@ -16,7 +16,10 @@
  */
 
 import { App } from '../app';
-import { DataConnectApiClient } from './data-connect-api-client-internal';
+import { 
+  DATA_CONNECT_ERROR_CODE_MAPPING, 
+  DataConnectApiClient, 
+  FirebaseDataConnectError } from './data-connect-api-client-internal';
 
 import {
   ConnectorConfig,
@@ -88,46 +91,18 @@ export class DataConnect {
   }
 
   /**
-   * Execute an arbitrary read-only GraphQL query
-   *
-   * @param query - The GraphQL read-only query.
-   * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
-   *
-   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
-   */
+ * Execute an arbitrary read-only GraphQL query
+ *
+ * @param query - The GraphQL read-only query.
+ * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
+ *
+ * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+ */
   public executeGraphqlRead<GraphqlResponse, Variables>(
     query: string,
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.client.executeGraphqlRead(query, options);
-  }
-
-  /**
-   * Executes a pre-defined GraphQL query with impersonation.
-   *
-   * The query must be defined in your Data Connect GraphQL files.
-   *
-   * @param options - The GraphQL options, must include impersonation details.
-   * @returns A promise that fulfills with the GraphQL response.
-   */
-  public async executeQuery<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.executeQuery(options);
-  }
-
-  /**
-   * Executes a pre-defined GraphQL mutation with impersonation.
-   *
-   * The mutation must be defined in your Data Connect GQL files. 
-   * 
-   * @param options - The GraphQL options, must include impersonation details.
-   * @returns A promise that fulfills with the GraphQL response.
-   */
-  public async executeMutation<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.executeMutation(options);
   }
 
   /**
@@ -184,5 +159,123 @@ export class DataConnect {
     variables: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     return this.client.upsertMany(tableName, variables);
+  }
+
+  /**
+   * Create a reference to a specific "instance" of a named query.
+   * @param name Name of query
+   * @param impersonate Impersonation options for this query
+   * @returns an reference to the named query with the specified impersonation and variables. 
+   */
+  public queryRef<Data>(
+    options: GraphqlOptions<undefined>
+  ): QueryRef<Data, undefined>;
+  /**
+   * Create a reference to a specific "instance" of a named query.
+   * @param name Name of query
+   * @param impersonate Impersonation options for this query
+   * @param variables Variables passed to this query, may be omitted.
+   * @returns an reference to the named query with the specified impersonation and variables. 
+   */
+  public queryRef<Data, Variables>(
+    options: GraphqlOptions<Variables>
+  ): QueryRef<Data, Variables> {
+    if (!('connector' in this.connectorConfig)){
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when creating a queryRef.`);
+    }
+    return new QueryRef(this, options, this.client);
+  }
+
+  /**
+   * Create a reference to a specific "instance" of a named mutation.
+   * @param name Name of mutation
+   * @param impersonate Impersonation options for this mutation
+   * @returns an reference to the named mutation with the specified impersonation and variables. 
+   */
+  public mutationRef<Data>(
+    options: GraphqlOptions<undefined>
+  ): MutationRef<Data, undefined>
+  /**
+   * Create a reference to a specific "instance" of a named mutation.
+   * @param name Name of mutation
+   * @param impersonate Impersonation options for this mutation
+   * @param variables Variables passed to this mutation, may be omitted.
+   * @returns an reference to the named mutation with the specified impersonation and variables. 
+   */
+  public mutationRef<Data, Variables>(
+    options: GraphqlOptions<Variables>
+  ): MutationRef<Data, Variables> {
+    if (!('connector' in this.connectorConfig)){
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when creating a mutationRef.`);
+    }
+    return new MutationRef(this, options, this.client);
+  }
+}
+
+interface OperationResult<Data, Variables> {
+  ref: OperationRef<Data, Variables>;
+  data: Data;
+  variables: Variables;
+  dataConnect: DataConnect;
+}
+
+export interface QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  ref: QueryRef<Data, Variables>;
+}
+
+export interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
+  ref: MutationRef<Data, Variables>;
+}
+
+abstract class OperationRef<Data, Variables> {
+  _data?: Data;  
+  constructor(
+    public readonly dataConnect: DataConnect,
+    public readonly options: GraphqlOptions<Variables>,
+    protected readonly client: DataConnectApiClient
+  ) {
+    if (typeof options.operationName === 'undefined') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        `The 'options.operationName' field must be provided when creating a queryRef
+        or mutationRef.`);
+    }
+    if (typeof options.impersonate === 'undefined') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        `The 'options.impersonate' field must be provided when creating a queryRef
+        or mutationRef.`);
+    }
+  }
+  abstract execute(): Promise<OperationResult<Data, Variables>>;
+}
+
+class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
+  async execute(): Promise<QueryResult<Data, Variables>> {
+    const { data } = await this.client.executeQuery<Data, Variables>(this.options);    
+    return {
+      ref: this,
+      data: data,
+      variables: this.options.variables as Variables,
+      dataConnect: this.dataConnect
+    }
+  }
+}
+
+class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
+  async execute(): Promise<MutationResult<Data, Variables>> {
+    const { data } = await this.client.executeMutation<Data, Variables>(this.options)
+    return {
+      ref: this,
+      data: data,
+      variables: this.options.variables as Variables,
+      dataConnect: this.dataConnect
+    }
   }
 }
