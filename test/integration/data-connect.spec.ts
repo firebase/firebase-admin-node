@@ -87,6 +87,11 @@ interface GetUserVariables {
   id: { id: string; };
 }
 
+interface DeleteResponse {
+  email_deleteMany: number
+  user_deleteMany: number
+}
+
 const connectorConfig: ConnectorConfig = {
   location: 'us-west2',
   serviceId: 'my-service',
@@ -97,14 +102,12 @@ const fredrickUser = { id: fredUser.id, address: '64 Elm St. North', name: 'Fred
 
 const jeffUser = { id: 'jeff_id', address: '99 Oak St.', name: 'Jeff' }
 
-const expectedUserIds = [fredUser.id, jeffUser.id]
-
 const fredEmail = { 
   id: 'email_id',
   subject: 'free bitcoin inside', 
   date: '1999-12-31', 
   text: 'get pranked! LOL!', 
-  fromId: fredUser.id
+  from: { id: fredUser.id }
 }
 
 describe('getDataConnect()', () => {
@@ -116,13 +119,41 @@ describe('getDataConnect()', () => {
     });
   });
 
+  afterEach(async () => {
+    await cleanupDatabase();
+  })
+
+  beforeEach(async () => {
+    await initializeDatabase();
+  });
+
+  /** initial state of database after calling initializeDatabase() */
+  const initialState = { users: [fredUser, jeffUser], emails: [fredEmail] };
+
+  /** helper function which sets initial state of the database before each test */
+  async function initializeDatabase(): Promise<void> {
+    await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+      upsertFredUser
+    );
+    await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+      upsertJeffUser
+    );
+    await getDataConnect(connectorConfig).executeGraphql<EmailUpsertResponse, unknown>(
+      upsertFredEmail
+    );
+  }
+
+  /** helper function which clears state of the database after each test */
+  async function cleanupDatabase(): Promise<void> {
+    await getDataConnect(connectorConfig).executeGraphql<DeleteResponse, unknown>(deleteAll);
+  }
   /** @auth(level: PUBLIC) */
   const queryListUsers = 'query ListUsers @auth(level: PUBLIC) { users { id, name, address } }';
   /** @auth(level: NO_ACCESS) */
   const queryListEmails = 
-    'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { name } } }';
+    'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { id } } }';
   /** no @auth specified - default permissions */
-  const queryGetUserById = 'query GetUser($id: User_Key!) { user(key: $id) { id name } }';
+  const queryGetUserById = 'query GetUser($id: User_Key!) { user(key: $id) { id name address } }';
 
   /** @auth(level: USER) */
   const queryListUsersImpersonation = `
@@ -163,9 +194,15 @@ describe('getDataConnect()', () => {
       subject: "${fredEmail.subject}",
       date: "${fredEmail.date}",
       text: "${fredEmail.text}",
-      fromId: "${fredEmail.fromId}"
+      fromId: "${fredEmail.from.id}"
     })
   }`;
+
+  /** hardcoded delete all mutation, for cleanup */
+  const deleteAll = `mutation delete {
+      email_deleteMany(all: true)
+      user_deleteMany(all: true)
+    }`
 
   describe('executeGraphql()', () => {
     it('executeGraphql() successfully executes a GraphQL mutation', async () => {
@@ -188,15 +225,19 @@ describe('getDataConnect()', () => {
       );
       //{ data: { email_upsert: { id: 'email_id' } } }
       expect(emailResponse.data.email_upsert.id).to.be.not.empty;
+
+      const deleteResponse = await getDataConnect(connectorConfig).executeGraphql<DeleteResponse, unknown>(deleteAll);
+      expect(deleteResponse.data.email_deleteMany).to.be.greaterThan(0);
+      expect(deleteResponse.data.user_deleteMany).to.be.greaterThan(0);
     });
 
     it('executeGraphql() successfully executes a GraphQL query', async () => {
       const resp = await getDataConnect(connectorConfig)
         .executeGraphql<ListUsersResponse, undefined>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
-      expect(resp.data.users.length).to.greaterThan(1);
+      expect(resp.data.users.length).to.equal(initialState.users.length);
       resp.data.users.forEach((user) => {
-        expect(expectedUserIds).to.include(user.id);
+        expect(initialState.users).to.deep.include(user);
       });
     });
 
@@ -205,10 +246,8 @@ describe('getDataConnect()', () => {
         multipleQueries,
         { operationName: 'ListEmails' }
       );
-      expect(resp.data.emails).to.be.not.empty;
-      expect(resp.data.emails.length).equals(1);
-      expect(resp.data.emails[0].id).to.be.not.undefined;
-      expect(resp.data.emails[0].from?.name).to.equal(fredUser.name);
+      expect(resp.data.emails).to.not.be.empty;
+      expect(resp.data.emails).to.deep.equal(initialState.emails);
     });
 
     it('executeGraphql() should throw for a query error when no variables are provided', async () => {
@@ -219,11 +258,9 @@ describe('getDataConnect()', () => {
     it('executeGraphql() successfully executes a GraphQL query with variables', async () => {
       const resp = await getDataConnect(connectorConfig).executeGraphql<GetUserResponse, GetUserVariables>(
         queryGetUserById,
-        { variables: { id: { id: fredUser.id } } }
+        { variables: { id: { id: initialState.users[0].id } } }
       );
-      expect(resp.data.user.id).to.equal(fredUser.id);
-      expect(resp.data.user.name).to.equal(fredUser.name);
-      expect(resp.data.user.address).to.be.undefined;
+      expect(resp.data.user).to.deep.equal(initialState.users[0]);
     });
   });
 
@@ -232,9 +269,9 @@ describe('getDataConnect()', () => {
       const resp = await getDataConnect(connectorConfig)
         .executeGraphqlRead<ListUsersResponse, undefined>(queryListUsers);
       expect(resp.data.users).to.be.not.empty;
-      expect(resp.data.users.length).to.be.greaterThan(1);
+      expect(resp.data.users.length).to.equal(initialState.users.length);
       resp.data.users.forEach((user) => {
-        expect(expectedUserIds).to.include(user.id);
+        expect(initialState.users).to.deep.include(user);
       });
     });
 
@@ -273,9 +310,7 @@ describe('getDataConnect()', () => {
       it('executeGraphqlRead() successfully executes an impersonated query with authenticated claims', async () => {
         const resp =
           await getDataConnect(connectorConfig).executeGraphqlRead<ListUsersResponse, undefined>(
-            queryListUsersImpersonation, 
-            optsAuthorizedFredClaims
-          );
+            queryListUsersImpersonation, optsAuthorizedFredClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
         expect(resp.data.users[0]).to.deep.equal(fredUser);
@@ -290,7 +325,7 @@ describe('getDataConnect()', () => {
       });
 
       it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
-        const resp = await getDataConnect(connectorConfig).executeGraphqlRead<ListUsersResponse, undefined>(
+        const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, undefined>(
           queryListUsersImpersonation, optsAuthorizedFredClaims);
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users.length).equals(1);
@@ -298,8 +333,7 @@ describe('getDataConnect()', () => {
       });
 
       it('executeGraphql() should throw for impersonated query with unauthenticated claims', async () => {
-        return getDataConnect(connectorConfig).executeGraphql(
-          queryListUsersImpersonation, optsUnauthorizedClaims)
+        return getDataConnect(connectorConfig).executeGraphql(queryListUsersImpersonation, optsUnauthorizedClaims)
           .should.eventually.be.rejected.and.has.property('code', 'data-connect/unauthenticated');
       });
 
@@ -314,10 +348,14 @@ describe('getDataConnect()', () => {
 
       it('executeGraphql() successfully executes an impersonated mutation with authenticated claims',
         async () => {
-          const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
+          const updateResp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
             updateFredrickUserImpersonated, optsAuthorizedFredClaims);
           // Fred -> Fredrick
-          expect(resp.data.user_update.id).equals(fredUser.id);
+          expect(updateResp.data.user_update.id).equals(fredUser.id);
+          const queryResp = await getDataConnect(connectorConfig).executeGraphql<GetUserResponse, GetUserVariables>(
+            queryGetUserById, { variables: { id: { id: fredUser.id } } });
+          expect(queryResp.data.user).to.not.be.empty;
+          expect(queryResp.data.user).to.deep.equal(fredrickUser);
         });
 
       it('executeGraphql() should throw for impersonated mutation with unauthenticated claims', async () => {
@@ -339,9 +377,9 @@ describe('getDataConnect()', () => {
         const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, undefined>(
           queryListUsers, optsAuthorizedFredClaims);
         expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).to.be.greaterThan(1);
+        expect(resp.data.users.length).to.equal(initialState.users.length);
         resp.data.users.forEach((user) => {
-          expect(expectedUserIds).to.include(user.id);
+          expect(initialState.users).to.deep.include(user);
         });
       });
 
@@ -349,9 +387,9 @@ describe('getDataConnect()', () => {
         const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, undefined>(
           queryListUsers, optsUnauthorizedClaims);
         expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).to.be.greaterThan(1);
+        expect(resp.data.users.length).to.equal(initialState.users.length);
         resp.data.users.forEach((user) => {
-          expect(expectedUserIds).to.include(user.id);
+          expect(initialState.users).to.deep.include(user);
         });
       });
 
@@ -360,9 +398,9 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, undefined>(
             queryListUsers, optsNonExistingClaims);
           expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users.length).to.be.greaterThan(1);
+          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
-            expect(expectedUserIds).to.include(user.id);
+            expect(initialState.users).to.deep.include(user);
           });
         });
     });
