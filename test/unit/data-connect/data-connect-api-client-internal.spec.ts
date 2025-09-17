@@ -207,7 +207,7 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EXPECTED_HEADERS,
             data: { query: 'query' }
           });
@@ -223,7 +223,7 @@ describe('DataConnectApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { query: 'query' }
           });

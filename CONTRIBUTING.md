@@ -245,6 +245,22 @@ to ensure that exported user records contain the password hashes of the user acc
    3. Click **ADD ANOTHER ROLE** and choose **Firebase Authentication Admin**.
    4. Click **SAVE**.
 
+9. Setup your project for Firebase Data Connect integration tests:
+   1. Set up Data Connect in the Firebase Console:
+      1. Go to the Firebase Console, and select **Data Connect** from the **Build** menu.
+      2. Click on **Get Started**. You can skip any Gemini generation.
+      3. Select **Create a new Cloud SQL instance**.
+      4. Set your **Location** to `us-west2`
+      5. Set your **Cloud SQL instance ID** to `my-instance`
+      6. Set your **Database name** to `my-database`
+      7. Set your **Service ID** to `my-service`
+      8. Click **Submit**. This operation may take up to 10 minutes to complete - you may 
+         continue setting up while this completes.
+   2. Run the following command from the root of the Node Admin SDK repo:
+      ```bash
+      $ firebase deploy --only dataconnect:my-service:my-connector --config ./test/integration/dataconnect/firebase.json --project <PROJECT_ID>
+      ```
+      1. If you're asked if you'd like to execute changes, select `Execute all`.
 
 Finally, to run the integration test suite:
 
