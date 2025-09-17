@@ -27,16 +27,30 @@ import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-
 
 const API_VERSION = 'v1';
 
-/** The Firebase Data Connect backend base URL format. */
-const FIREBASE_DATA_CONNECT_BASE_URL_FORMAT =
-    'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/** The Firebase Data Connect backend service URL format. */
+const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
+  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
 
-/** Firebase Data Connect base URl format when using the Data Connect emultor. */
-const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
+/** The Firebase Data Connect backend connector URL format. */
+const FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT =
+  'https://autopush-firebasedataconnect.sandbox.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
+
+/** Firebase Data Connect service URL format when using the Data Connect emulator. */
+const FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT =
   'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+
+/** Firebase Data Connect connector URL format when using the Data Connect emulator. */
+const FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT =
+  'http://{host}/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
 
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
+
+const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
+const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
 const DATA_CONNECT_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
@@ -89,6 +103,15 @@ export class DataConnectApiClient {
     return this.executeGraphqlHelper(query, EXECUTE_GRAPH_QL_READ_ENDPOINT, options);
   }
 
+
+  /**
+   * A helper function to execute GraphQL queries.
+   *
+   * @param query - The arbitrary GraphQL query to execute.
+   * @param endpoint - The endpoint to call.
+   * @param options - The GraphQL options.
+   * @returns A promise that fulfills with the GraphQL response, or throws an error.
+   */
   private async executeGraphqlHelper<GraphqlResponse, Variables>(
     query: string,
     endpoint: string,
@@ -112,24 +135,8 @@ export class DataConnectApiClient {
       ...(options?.operationName && { operationName: options?.operationName }),
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
-    return this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint)
-      .then(async (url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url,
-          headers: DATA_CONNECT_CONFIG_HEADERS,
-          data,
-        };
-        const resp = await this.httpClient.send(request);
-        if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-          const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
-        }
-        return Promise.resolve({
-          data: resp.data.data as GraphqlResponse,
-        });
-      })
+    const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
+    return this.makeGqlRequest<GraphqlResponse>(url, data)
       .then((resp) => {
         return resp;
       })
@@ -138,26 +145,136 @@ export class DataConnectApiClient {
       });
   }
 
-  private async getUrl(version: string, locationId: string, serviceId: string, endpointId: string): Promise<string> {
-    return this.getProjectId()
-      .then((projectId) => {
-        const urlParams = {
-          version,
-          projectId,
-          locationId,
-          serviceId,
-          endpointId
-        };
-        let urlFormat: string;
-        if (useEmulator()) {
-          urlFormat = utils.formatString(FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT, {
-            host: emulatorHost()
-          });
-        } else {
-          urlFormat = FIREBASE_DATA_CONNECT_BASE_URL_FORMAT;
-        }
-        return utils.formatString(urlFormat, urlParams);
+  /**
+   * Executes a GraphQL query with impersonation.
+   *
+   * @param options - The GraphQL options. Must include impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public async executeQuery<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.executeOperationHelper(IMPERSONATE_QUERY_ENDPOINT, options);
+  }
+
+  /**
+   * Executes a GraphQL mutation with impersonation.
+   *
+   * @param options - The GraphQL options. Must include impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public async executeMutation<GraphqlResponse, Variables>(
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    return this.executeOperationHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
+  }
+
+  /**
+   * A helper function to execute operations by making requests to FDC's impersonate
+   * operations endpoints.
+   *
+   * @param endpoint - The endpoint to call.
+   * @param options - The GraphQL options, including impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  private async executeOperationHelper<GraphqlResponse, Variables>(
+    endpoint: string,
+    options: GraphqlOptions<Variables>
+  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    if (
+      typeof options.operationName === 'undefined' ||
+      !validator.isNonEmptyString(options.operationName)
+    ) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`options.operationName` must be a non-empty string.'
+      );
+    }
+    if (
+      typeof options.impersonate === 'undefined' || 
+      !validator.isNonNullObject(options?.impersonate)
+    ) {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        '`options.impersonate` must be a non-null object.'
+      );
+    }
+
+    if (this.connectorConfig.connector === undefined || this.connectorConfig.connector === '') {
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+    }
+
+    const data = {
+      ...(options.variables && { variables: options?.variables }),
+      operationName: options.operationName,
+      extensions: { impersonate: options.impersonate },
+    };
+    const url = await this.getUrl(
+      API_VERSION,
+      this.connectorConfig.location,
+      this.connectorConfig.serviceId,
+      endpoint,
+      this.connectorConfig.connector,
+    );
+    return this.makeGqlRequest<GraphqlResponse>(url, data)
+      .then((resp) => {
+        return resp;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
       });
+  }
+
+  /**
+   * Constructs the URL for a Data Connect backend request.
+   * 
+   * If no connectorId is provided, will direct the request to an endpoint under services:
+   * .../services/{serviceId}:endpoint
+   *
+   * If connectorId is provided, will direct the request to an endpoint under connectors:
+   * .../services/{serviceId}/connectors/{connectorId}:endpoint
+   * 
+   * @param version - The API version.
+   * @param locationId - The location of the Data Connect service.
+   * @param serviceId - The ID of the Data Connect service.
+   * @param endpointId - The endpoint to call.
+   * @param connectorId - The ID of the connector, if applicable.
+   * @returns A promise that fulfills with the constructed URL.
+   */
+  private async getUrl(
+    version: string,
+    locationId: string,
+    serviceId: string,
+    endpointId: string,
+    connectorId?: string,
+  ): Promise<string> {
+    const projectId = await this.getProjectId();
+    const urlParams = {
+      version,
+      projectId,
+      locationId,
+      serviceId,
+      endpointId,
+      connectorId
+    };
+    let urlFormat: string;
+    if (useEmulator()) {
+      (urlParams as any).host = emulatorHost();
+      urlFormat = connectorId === undefined || connectorId === ''
+        ? FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT;
+    } else {
+      urlFormat = connectorId === undefined || connectorId === ''
+        ? FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT
+        : FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT;
+    }
+    if (connectorId) {
+      (urlParams as any).connectorId = connectorId;      
+    }
+    return utils.formatString(urlFormat, urlParams);
   }
 
   private getProjectId(): Promise<string> {
@@ -176,6 +293,32 @@ export class DataConnectApiClient {
         this.projectId = projectId;
         return projectId;
       });
+  }
+
+  /**
+   * Makes a GraphQL request to the specified url.
+   *
+   * @param url - The URL to send the request to.
+   * @param data - The GraphQL request payload.
+   * @returns A promise that fulfills with the GraphQL response, or throws an error.
+   */
+  private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
+  Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url,
+      headers: DATA_CONNECT_CONFIG_HEADERS,
+      data,
+    };
+    const resp = await this.httpClient.send(request);
+    if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
+      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+      throw new FirebaseDataConnectError(
+        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+    }
+    return Promise.resolve({
+      data: resp.data.data as GraphqlResponse,
+    });
   }
 
   private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
