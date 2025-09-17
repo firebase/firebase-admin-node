@@ -28,7 +28,7 @@ import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-
 const API_VERSION = 'v1';
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE
+// TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 /** The Firebase Data Connect backend service URL format. */
 const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
