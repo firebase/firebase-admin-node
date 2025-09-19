@@ -13,6 +13,7 @@ export type AuthClaims = Partial<DecodedIdToken>;
 
 // @public
 export interface ConnectorConfig {
+    connector?: string;
     location: string;
     serviceId: string;
 }
@@ -27,6 +28,8 @@ export class DataConnect {
     readonly connectorConfig: ConnectorConfig;
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
     executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    executeMutation<GraphqlResponse, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    executeQuery<GraphqlResponse, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
     insert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     insertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     upsert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;

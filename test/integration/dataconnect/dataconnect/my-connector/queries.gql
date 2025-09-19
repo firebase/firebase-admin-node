@@ -34,7 +34,7 @@ query ListUsersNoAccess @auth(level: NO_ACCESS) {
 		address
 	}
 }
-query ListUsersImpersonationAnon @auth(level: USER_ANON) {
+query ListUsersImpersonationAnon @auth(level: USER_ANON, insecureReason: "test") {
 	users(where: { id: { eq_expr: "auth.uid" } }) {
 		id
 		name
@@ -59,7 +59,7 @@ query ListEmails @auth(level: NO_ACCESS) {
 		}
 	}
 }
-query GetEmail($id: String!) @auth(level: NO_ACCESS) {
+query GetEmail($id: String!) @auth(level: USER_ANON, insecureReason: "test") {
 	email(id: $id) {
 		id
 		subject
