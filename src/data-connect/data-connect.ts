@@ -103,33 +103,6 @@ export class DataConnect {
   }
 
   /**
-   * Executes a pre-defined GraphQL query with impersonation.
-   *
-   * The query must be defined in your Data Connect GraphQL files.
-   *
-   * @param options - The GraphQL options, must include operationName and impersonation details.
-   * @returns A promise that fulfills with the GraphQL response.
-   */
-  public async executeQuery<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.executeQuery(options);
-  }
-
-  /**
-   * Executes a pre-defined GraphQL mutation with impersonation.
-   *
-   * The mutation must be defined in your Data Connect GQL files. 
-   * 
-   * @param options - The GraphQL options, must include operationName and impersonation details.
-   * @returns A promise that fulfills with the GraphQL response.
-   */
-  public async executeMutation<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
-  ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.client.executeMutation(options);
-  }
-
   /**
    * Insert a single row into the specified table.
    *
