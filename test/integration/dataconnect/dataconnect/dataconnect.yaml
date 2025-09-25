@@ -10,7 +10,10 @@ schema:
     postgresql:
       database: "my-database"
       cloudSql:
-        instanceId: "my-instance"
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # TODO: CHANGE THIS BACK TO my-instance - my-instance-autopush IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        instanceId: "my-instance-autopush"
         # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
         # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
 connectorDirs: ["./my-connector"]

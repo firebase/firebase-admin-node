@@ -41,10 +41,11 @@ query ListUsersImpersonationAnon @auth(level: USER_ANON, insecureReason: "test")
 		address
 	}
 }
-query GetUser($id: User_Key!) @auth(level: NO_ACCESS) {
+query GetUser($id: User_Key!) @auth(level: PUBLIC, insecureReason: "test") {
 	user(key: $id) {
 		id
 		name
+		address
 	}
 }
 
