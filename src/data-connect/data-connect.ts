@@ -173,8 +173,7 @@ export class DataConnect {
   
   /**
    * Create a reference to a specific "instance" of a named query.
-   * @param name Name of query
-   * @param impersonate Impersonation options for this query
+   * @param options - Required {@link GraphqlOptions} when executing a GraphQL query.
    * @returns an reference to the named query with the specified impersonation and variables. 
    */
   public queryRef<Data>(
@@ -183,9 +182,7 @@ export class DataConnect {
   
   /**
    * Create a reference to a specific "instance" of a named query.
-   * @param name Name of query
-   * @param impersonate Impersonation options for this query
-   * @param variables Variables passed to this query, may be omitted.
+   * @param options - Required {@link GraphqlOptions} when executing a GraphQL query.
    * @returns an reference to the named query with the specified impersonation and variables. 
    */
   public queryRef<Data, Variables>(
@@ -206,8 +203,7 @@ export class DataConnect {
 
   /**
    * Create a reference to a specific "instance" of a named mutation.
-   * @param name Name of mutation
-   * @param impersonate Impersonation options for this mutation
+   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
    * @returns an reference to the named mutation with the specified impersonation and variables. 
    */
   public mutationRef<Data>(
@@ -216,19 +212,16 @@ export class DataConnect {
 
   /**
    * Create a reference to a specific "instance" of a named mutation.
-   * @param name Name of mutation
-   * @param impersonate Impersonation options for this mutation
-   * @param variables Variables passed to this mutation, may be omitted.
+   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
    * @returns an reference to the named mutation with the specified impersonation and variables. 
    */
   public mutationRef<Data, Variables>(
     options: GraphqlOptions<Variables>
-  ): MutationRef<Data, Variables>;  
+  ): MutationRef<Data, Variables>;
+
   /**
    * Create a reference to a specific "instance" of a named mutation.
-   * @param name Name of mutation
-   * @param impersonate Impersonation options for this mutation
-   * @param variables Variables passed to this mutation, may be omitted.
+   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
    * @returns an reference to the named mutation with the specified impersonation and variables. 
    */
   public mutationRef<Data, Variables>(
