@@ -161,6 +161,16 @@ export class DataConnect {
     return this.client.upsertMany(tableName, variables);
   }
 
+  /** @internal */
+  public executeQuery<Data, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.client.executeQuery<Data, Variables>(options);
+  }
+
+  /** @internal */
+  public executeMutation<Data, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.client.executeMutation<Data, Variables>(options);
+  }
+  
   /**
    * Create a reference to a specific "instance" of a named query.
    * @param name Name of query
@@ -191,7 +201,7 @@ export class DataConnect {
         `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when creating a queryRef.`);
     }
-    return new QueryRef(this, options, this.client);
+    return new QueryRef(this, options);
   }
 
   /**
@@ -230,7 +240,7 @@ export class DataConnect {
         `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when creating a mutationRef.`);
     }
-    return new MutationRef(this, options, this.client);
+    return new MutationRef(this, options);
   }
 }
 
@@ -253,7 +263,6 @@ abstract class OperationRef<Data, Variables> {
   constructor(
     public readonly dataConnect: DataConnect,
     public readonly options: GraphqlOptions<Variables>,
-    protected readonly client: DataConnectApiClient
   ) {
     if (typeof options.operationName === 'undefined') {
       throw new FirebaseDataConnectError(
@@ -273,7 +282,7 @@ abstract class OperationRef<Data, Variables> {
 
 class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<QueryResult<Data, Variables>> {
-    const { data } = await this.client.executeQuery<Data, Variables>(this.options);    
+    const { data } = await this.dataConnect.executeQuery<Data, Variables>(this.options);    
     return {
       ref: this,
       data: data,
@@ -285,7 +294,7 @@ class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
 
 class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<MutationResult<Data, Variables>> {
-    const { data } = await this.client.executeMutation<Data, Variables>(this.options)
+    const { data } = await this.dataConnect.executeMutation<Data, Variables>(this.options)
     return {
       ref: this,
       data: data,
