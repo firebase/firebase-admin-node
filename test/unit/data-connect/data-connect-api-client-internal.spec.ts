@@ -1,3 +1,4 @@
+/* eslint-disable max-len */ // TODO: REMOVE THIS
 /*!
  * @license
  * Copyright 2024 Google LLC
@@ -27,8 +28,9 @@ import * as mocks from '../../resources/mocks';
 import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConnectError }
   from '../../../src/data-connect/data-connect-api-client-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { ConnectorConfig, GraphqlOptions } from '../../../src/data-connect';
+import { ConnectorConfig } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
+import { RefOptions } from '../../../src/data-connect/data-connect-api';
 
 describe('DataConnectApiClient', () => {
 
@@ -236,33 +238,30 @@ describe('DataConnectApiClient', () => {
   });
 
   describe('executeQuery', () => {
-    const unauthenticatedOptions: GraphqlOptions<unknown> = 
-      { operationName: 'unauthenticatedQuery', impersonate: { unauthenticated: true } };
-    const authenticatedOptions: GraphqlOptions<unknown> = 
-      { operationName: 'authenticatedQuery', impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
+    const unauthenticatedOptions: RefOptions = { impersonate: { unauthenticated: true } };
+    const authenticatedOptions: RefOptions = { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
     it('should reject when no operationName is provided', () => {
-      apiClient.executeQuery({ impersonate: { unauthenticated: true } })
-        .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
-      apiClient.executeQuery({ operationName: undefined, impersonate: { unauthenticated: true } })
-        .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
+      apiClient.executeQuery( '', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+      apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
     });
-    it('should reject when no impersonate object is provided', () => {
-      apiClient.executeQuery({ operationName: 'queryName' })
-        .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-      apiClient.executeQuery({ operationName: 'queryName', impersonate: undefined })
-        .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-    });
+
     it('should reject when project id is not available', () => {
-      clientWithoutProjectId.executeQuery(unauthenticatedOptions)
-        .should.eventually.be.rejectedWith(noProjectId);
+      clientWithoutProjectId.executeQuery(
+        'unauthenticated query', 
+        undefined, 
+        unauthenticatedOptions
+      ).should.eventually.be.rejectedWith(noProjectId);
     });
+
     it('should reject when no connectorId is provided', () => {
       apiClient = new DataConnectApiClient(
         { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
         app
       );
-      apiClient.executeQuery({ impersonate: { unauthenticated: true } })
+      apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
         .should.eventually.be.rejectedWith(
           `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
@@ -273,7 +272,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.executeQuery(unauthenticatedOptions)
+      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -282,7 +281,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.executeQuery(unauthenticatedOptions)
+      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -292,7 +291,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.executeQuery(unauthenticatedOptions)
+      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -301,7 +300,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClient.executeQuery(unauthenticatedOptions)
+      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -319,7 +318,11 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeQuery<UsersResponse, unknown>(unauthenticatedOptions).then((resp) => {
+        return apiClient.executeQuery<UsersResponse, undefined>(
+          'unauthenticated query', 
+          undefined, 
+          unauthenticatedOptions
+        ).then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
           expect(resp.data.users[0].address).to.be.not.undefined;
@@ -332,8 +335,8 @@ describe('DataConnectApiClient', () => {
             url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
             headers: EXPECTED_HEADERS,
             data: { 
-              operationName: unauthenticatedOptions.operationName, 
-              extensions: { impersonate: unauthenticatedOptions.impersonate }
+              operationName: 'unauthenticated query', 
+              extensions: unauthenticatedOptions
             }
           });
         });
@@ -342,7 +345,11 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeQuery<UsersResponse, unknown>(authenticatedOptions).then((resp) => {
+        return apiClient.executeQuery<UsersResponse, undefined>(
+          'authenticated query', 
+          undefined, 
+          authenticatedOptions
+        ).then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
           expect(resp.data.users[0].address).to.be.not.undefined;
@@ -355,7 +362,7 @@ describe('DataConnectApiClient', () => {
             url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
             headers: EXPECTED_HEADERS,
             data: { 
-              operationName: authenticatedOptions.operationName, 
+              operationName: 'authenticated query', 
               extensions: { impersonate: authenticatedOptions.impersonate }
             }
           });
@@ -368,49 +375,48 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeQuery(unauthenticatedOptions)
-        .then(() => {
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
-            headers: EMULATOR_EXPECTED_HEADERS,
-            data: { 
-              operationName: unauthenticatedOptions.operationName, 
-              extensions: { impersonate: unauthenticatedOptions.impersonate }
-            }
-          });
+      return apiClient.executeQuery(
+        'unauthenticated query', 
+        undefined, 
+        unauthenticatedOptions
+      ).then(() => {
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          headers: EMULATOR_EXPECTED_HEADERS,
+          data: { 
+            operationName: 'unauthenticated query', 
+            extensions: unauthenticatedOptions
+          }
         });
+      });
     });
   });
 
-  const unauthenticatedOptions: GraphqlOptions<unknown> = 
-    { operationName: 'operationName', impersonate: { unauthenticated: true } };
-  const authenticatedOptions: GraphqlOptions<unknown> = 
-    { operationName: 'operationName', impersonate: { unauthenticated: true } };
+  const unauthenticatedOptions: RefOptions = 
+    { impersonate: { unauthenticated: true } };
+  const authenticatedOptions: RefOptions = 
+    { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
   describe('executeMutation', () => {
     it('should reject when no operationName is provided', () => {
-      apiClient.executeMutation({ impersonate: { unauthenticated: true } })
-        .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
-      apiClient.executeMutation({ operationName: undefined, impersonate: { unauthenticated: true } })
-        .should.eventually.be.rejectedWith('`query` must be a non-empty string.');
+      apiClient.executeMutation('', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+      apiClient.executeMutation(undefined as unknown as string, undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
     });
-    it('should reject when no impersonate object is provided', () => {
-      apiClient.executeMutation({ operationName: 'queryName' })
-        .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-      apiClient.executeMutation({ operationName: 'queryName', impersonate: undefined })
-        .should.eventually.be.rejectedWith('GraphqlOptions must be a non-null object');
-    });
+
     it('should reject when project id is not available', () => {
-      clientWithoutProjectId.executeMutation(unauthenticatedOptions)
+      clientWithoutProjectId.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejectedWith(noProjectId);
     });
+
     it('should reject when no connectorId is provided', () => {
       apiClient = new DataConnectApiClient(
         { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
         app
       );
-      apiClient.executeMutation({ impersonate: { unauthenticated: true } })
+      apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejectedWith(
           `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
@@ -421,7 +427,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.executeMutation(unauthenticatedOptions)
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -430,7 +436,7 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
       const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.executeMutation(unauthenticatedOptions)
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -440,7 +446,7 @@ describe('DataConnectApiClient', () => {
         .rejects(utils.errorFrom('not json', 404));
       const expected = new FirebaseDataConnectError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.executeMutation(unauthenticatedOptions)
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -449,7 +455,7 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
-      return apiClient.executeMutation(unauthenticatedOptions)
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
@@ -467,7 +473,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeMutation<UsersResponse, unknown>(unauthenticatedOptions)
+        return apiClient.executeMutation<UsersResponse, undefined>('unauthenticated mutation', undefined, unauthenticatedOptions)
           .then((resp) => {
             expect(resp.data.users).to.be.not.empty;
             expect(resp.data.users[0].name).to.be.not.undefined;
@@ -482,8 +488,8 @@ describe('DataConnectApiClient', () => {
               url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
               headers: EXPECTED_HEADERS,
               data: { 
-                operationName: unauthenticatedOptions.operationName, 
-                extensions: { impersonate: unauthenticatedOptions.impersonate }
+                operationName: 'unauthenticated mutation', 
+                extensions: unauthenticatedOptions
               }
             });
           });
@@ -492,7 +498,7 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeMutation<UsersResponse, unknown>(authenticatedOptions)
+        return apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions)
           .then((resp) => {
             expect(resp.data.users).to.be.not.empty;
             expect(resp.data.users[0].name).to.be.not.undefined;
@@ -507,8 +513,8 @@ describe('DataConnectApiClient', () => {
               url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
               headers: EXPECTED_HEADERS,
               data: { 
-                operationName: authenticatedOptions.operationName, 
-                extensions: { impersonate: authenticatedOptions.impersonate }
+                operationName: 'authenticated mutation', 
+                extensions: authenticatedOptions
               }
             });
           });
@@ -528,7 +534,7 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeMutation<UsersResponse, unknown>(unauthenticatedOptions)
+      return apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions)
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
           expect(resp.data.users[0].name).to.be.not.undefined;
@@ -542,8 +548,8 @@ describe('DataConnectApiClient', () => {
             url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
             headers: EXPECTED_HEADERS,
             data: { 
-              operationName: unauthenticatedOptions.operationName, 
-              extensions: { impersonate: unauthenticatedOptions.impersonate }
+              operationName: 'authenticated mutation', 
+              extensions: authenticatedOptions
             }
           });
         });
@@ -554,15 +560,15 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeMutation(unauthenticatedOptions)
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { 
-              operationName: unauthenticatedOptions.operationName, 
-              extensions: { impersonate: unauthenticatedOptions.impersonate }
+              operationName: 'unauthenticated mutation', 
+              extensions: unauthenticatedOptions
             }
           });
         });
