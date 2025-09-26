@@ -25,6 +25,7 @@ import {
   ConnectorConfig,
   ExecuteGraphqlResponse,
   GraphqlOptions,
+  RefOptions,
 } from './data-connect-api';
 
 export class DataConnectService {
@@ -162,35 +163,51 @@ export class DataConnect {
   }
 
   /** @internal */
-  public executeQuery<Data, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<Data>> {
-    return this.client.executeQuery<Data, Variables>(options);
+  public executeQuery<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
+  ): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.client.executeQuery<Data, Variables>(name, variables, options);
   }
 
   /** @internal */
-  public executeMutation<Data, Variables>(options: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<Data>> {
-    return this.client.executeMutation<Data, Variables>(options);
+  public executeMutation<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
+  ): Promise<ExecuteGraphqlResponse<Data>> {
+    return this.client.executeMutation<Data, Variables>(name, variables, options);
   }
   
   /**
    * Create a reference to a specific "instance" of a named query.
-   * @param options - Required {@link GraphqlOptions} when executing a GraphQL query.
-   * @returns an reference to the named query with the specified impersonation and variables. 
+   * @param name - The name of the query.
+   * @param options - The RefOptions for the query (optional).
+   * @returns A reference to the named query with the specified impersonation and variables. 
    */
   public queryRef<Data>(
-    options: GraphqlOptions<undefined>
+    name: string,
+    options?: RefOptions
   ): QueryRef<Data, undefined>;
   
   /**
    * Create a reference to a specific "instance" of a named query.
-   * @param options - Required {@link GraphqlOptions} when executing a GraphQL query.
-   * @returns an reference to the named query with the specified impersonation and variables. 
+   * @param name - The name of the query.
+   * @param variables - The variables for the query. May be optional if the query's variables are optional.
+   * @param options - The RefOptions for the query (optional).
+   * @returns A reference to the named query with the specified impersonation and variables. 
    */
   public queryRef<Data, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): QueryRef<Data, Variables>;
   
   public queryRef<Data, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): QueryRef<Data, Variables> {
     if (!('connector' in this.connectorConfig)){
       throw new FirebaseDataConnectError(
@@ -198,34 +215,37 @@ export class DataConnect {
         `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when creating a queryRef.`);
     }
-    return new QueryRef(this, options);
+    return new QueryRef(this, name, variables, options);
   }
 
   /**
    * Create a reference to a specific "instance" of a named mutation.
-   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
-   * @returns an reference to the named mutation with the specified impersonation and variables. 
+   * @param name - The name of the mutation.
+   * @param options - The RefOptions for the mutation (optional).
+   * @returns A reference to the named mutation with the specified impersonation and variables. 
    */
   public mutationRef<Data>(
-    options: GraphqlOptions<undefined>
+    name: string,
+    options?: RefOptions
   ): MutationRef<Data, undefined>
 
   /**
    * Create a reference to a specific "instance" of a named mutation.
-   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
-   * @returns an reference to the named mutation with the specified impersonation and variables. 
+   * @param name - The name of the mutation.
+   * @param variables - The variables for the mutation. May be optional if the mutation's variables are optional.
+   * @param options - The RefOptions for the mutation (optional).
+   * @returns A reference to the named mutation with the specified impersonation and variables. 
    */
   public mutationRef<Data, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): MutationRef<Data, Variables>;
 
-  /**
-   * Create a reference to a specific "instance" of a named mutation.
-   * @param options - Required {@link GraphqlOptions} when executing a GraphQL mutation.
-   * @returns an reference to the named mutation with the specified impersonation and variables. 
-   */
   public mutationRef<Data, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): MutationRef<Data, Variables> {
     if (!('connector' in this.connectorConfig)){
       throw new FirebaseDataConnectError(
@@ -233,7 +253,7 @@ export class DataConnect {
         `The 'connectorConfig.connector' field used to instantiate your Data Connect
         instance must be a non-empty string (the connectorId) when creating a mutationRef.`);
     }
-    return new MutationRef(this, options);
+    return new MutationRef(this, name, variables, options);
   }
 }
 
@@ -244,10 +264,16 @@ interface OperationResult<Data, Variables> {
   dataConnect: DataConnect;
 }
 
+/**
+ * The result of executing a query.
+ */
 export interface QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
   ref: QueryRef<Data, Variables>;
 }
 
+/**
+ * The result of executing a mutation.
+ */
 export interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
   ref: MutationRef<Data, Variables>;
 }
@@ -255,31 +281,20 @@ export interface MutationResult<Data, Variables> extends OperationResult<Data, V
 abstract class OperationRef<Data, Variables> {
   constructor(
     public readonly dataConnect: DataConnect,
-    public readonly options: GraphqlOptions<Variables>,
-  ) {
-    if (typeof options.operationName === 'undefined') {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        `The 'options.operationName' field must be provided when creating a queryRef
-        or mutationRef.`);
-    }
-    if (typeof options.impersonate === 'undefined') {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        `The 'options.impersonate' field must be provided when creating a queryRef
-        or mutationRef.`);
-    }
-  }
+    public readonly name: string,
+    public readonly variables: Variables,
+    public readonly options?: RefOptions
+  ) {}
   abstract execute(): Promise<OperationResult<Data, Variables>>;
 }
 
 class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<QueryResult<Data, Variables>> {
-    const { data } = await this.dataConnect.executeQuery<Data, Variables>(this.options);    
+    const { data } = await this.dataConnect.executeQuery<Data, Variables>(this.name, this.variables, this.options);    
     return {
       ref: this,
       data: data,
-      variables: this.options.variables as Variables,
+      variables: this.variables,
       dataConnect: this.dataConnect
     }
   }
@@ -287,11 +302,11 @@ class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
 
 class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<MutationResult<Data, Variables>> {
-    const { data } = await this.dataConnect.executeMutation<Data, Variables>(this.options)
+    const { data } = await this.dataConnect.executeMutation<Data, Variables>(this.name, this.variables, this.options)
     return {
       ref: this,
       data: data,
-      variables: this.options.variables as Variables,
+      variables: this.variables,
       dataConnect: this.dataConnect
     }
   }

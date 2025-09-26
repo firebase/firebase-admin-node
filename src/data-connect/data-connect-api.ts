@@ -33,7 +33,6 @@ export interface ConnectorConfig {
 
   /**
    * Name of the Data Connect connector.
-   * Required for operations that interact with connectors, such as executeQuery and executeMutation.
    */
   connector?: string;
 }
@@ -59,12 +58,22 @@ export interface GraphqlOptions<Variables> {
 
   /**
    * The name of the GraphQL operation.
-   * Required for operations that interact with connectors, such as executeQuery and executeMutation.
    * Required for operations that interact with services, such as executeGraphql, if 
    * `query` contains multiple operations.
    */
   operationName?: string;
 
+  /**
+   * If set, impersonate a request with given Firebase Auth context and evaluate the auth
+   * policies on the operation. If omitted, bypass any defined auth policies.
+   */
+  impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
+}
+
+/**
+ * Interface representing options for OperationRefs.
+ */
+export interface RefOptions {
   /**
    * If set, impersonate a request with given Firebase Auth context and evaluate the auth
    * policies on the operation. If omitted, bypass any defined auth policies.

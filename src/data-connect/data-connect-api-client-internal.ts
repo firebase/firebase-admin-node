@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions } from './data-connect-api';
+import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, RefOptions } from './data-connect-api';
 
 const API_VERSION = 'v1';
 
@@ -152,9 +152,11 @@ export class DataConnectApiClient {
    * @returns A promise that fulfills with the GraphQL response.
    */
   public async executeQuery<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.executeOperationHelper(IMPERSONATE_QUERY_ENDPOINT, options);
+    return this.executeOperationHelper(IMPERSONATE_QUERY_ENDPOINT, name, variables, options);
   }
 
   /**
@@ -164,9 +166,11 @@ export class DataConnectApiClient {
    * @returns A promise that fulfills with the GraphQL response.
    */
   public async executeMutation<GraphqlResponse, Variables>(
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
-    return this.executeOperationHelper(IMPERSONATE_MUTATION_ENDPOINT, options);
+    return this.executeOperationHelper(IMPERSONATE_MUTATION_ENDPOINT, name, variables, options);
   }
 
   /**
@@ -179,24 +183,17 @@ export class DataConnectApiClient {
    */
   private async executeOperationHelper<GraphqlResponse, Variables>(
     endpoint: string,
-    options: GraphqlOptions<Variables>
+    name: string,
+    variables: Variables, 
+    options?: RefOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (
-      typeof options.operationName === 'undefined' ||
-      !validator.isNonEmptyString(options.operationName)
+      typeof name === 'undefined' ||
+      !validator.isNonEmptyString(name)
     ) {
       throw new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`options.operationName` must be a non-empty string.'
-      );
-    }
-    if (
-      typeof options.impersonate === 'undefined' || 
-      !validator.isNonNullObject(options?.impersonate)
-    ) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`options.impersonate` must be a non-null object.'
+        '`name` must be a non-empty string.'
       );
     }
 
@@ -208,9 +205,9 @@ export class DataConnectApiClient {
     }
 
     const data = {
-      ...(options.variables && { variables: options?.variables }),
-      operationName: options.operationName,
-      extensions: { impersonate: options.impersonate },
+      ...(variables && { variables: variables }),
+      operationName: name,
+      extensions: { impersonate: options?.impersonate },
     };
     const url = await this.getUrl(
       API_VERSION,
