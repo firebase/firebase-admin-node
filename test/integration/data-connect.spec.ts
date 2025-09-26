@@ -698,6 +698,69 @@ describe('getDataConnect()', () => {
           expect(resp.data.users[0]).to.deep.equal(fredUser);
         });
       });
+
+      describe('with no impersonation, bypassing auth policies', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersPublic'
+          ).execute();
+          expect(resp.data.users).to.not.be.empty;
+          expect(resp.data.users.length).to.equal(initialState.users.length);
+          resp.data.users.forEach((user) => {
+            expect(initialState.users).to.deep.include(user);
+          });
+        });
+
+        it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersUserAnon'
+          ).execute();
+          expect(resp.data.users).to.not.be.empty;
+          expect(resp.data.users.length).to.equal(initialState.users.length);
+          resp.data.users.forEach((user) => {
+            expect(initialState.users).to.deep.include(user);
+          });
+        });
+
+        it('should successfully execute a query with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersUser'
+          ).execute();
+          expect(resp.data.users).to.not.be.empty;
+          expect(resp.data.users.length).to.equal(initialState.users.length);
+          resp.data.users.forEach((user) => {
+            expect(initialState.users).to.deep.include(user);
+          });
+        });
+
+        it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersUserEmailVerified'
+          ).execute();
+          expect(resp.data.users).to.not.be.empty;
+          expect(resp.data.users.length).to.equal(initialState.users.length);
+          resp.data.users.forEach((user) => {
+            expect(initialState.users).to.deep.include(user);
+          });
+        });
+
+        it('should successfully execute a query with @auth(level: NO_ACCESS)', async () => {
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersNoAccess'
+          ).execute();
+          expect(resp.data.users).to.not.be.empty;
+          expect(resp.data.users.length).to.equal(initialState.users.length);
+          resp.data.users.forEach((user) => {
+            expect(initialState.users).to.deep.include(user);
+          });
+        });
+
+        it("should fail to use the impersonated user's auth.uid", async () => {
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
+            'ListUsersImpersonation'
+          ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+      });
     });
 
     describe('mutationRef()', () => {
