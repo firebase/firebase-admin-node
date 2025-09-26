@@ -16,9 +16,10 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { getDataConnect, ConnectorConfig, GraphqlOptions } from '../../lib/data-connect/index';
+import { getDataConnect, ConnectorConfig } from '../../lib/data-connect/index';
 import firebase from '@firebase/app-compat';
 import { apiKey, projectId } from './setup';
+import { RefOptions } from '../../lib/data-connect/data-connect-api';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -228,13 +229,13 @@ describe('getDataConnect()', () => {
       user_deleteMany(all: true)
     }`
 
-  const optsUnauthorizedClaims: GraphqlOptions<undefined> = {
+  const optsUnauthorizedClaims: RefOptions = {
     impersonate: {
       unauthenticated: true
     }
   };
 
-  const optsAuthorizedFredAnonClaims: GraphqlOptions<undefined> = {
+  const optsAuthorizedFredAnonClaims: RefOptions = {
     impersonate: {
       authClaims: {
         sub: fredUser.id,
@@ -246,7 +247,7 @@ describe('getDataConnect()', () => {
     }
   };
 
-  const optsAuthorizedFredClaims: GraphqlOptions<undefined> = {
+  const optsAuthorizedFredClaims: RefOptions = {
     impersonate: {
       authClaims: {
         sub: fredUser.id,
@@ -254,7 +255,7 @@ describe('getDataConnect()', () => {
     }
   };
 
-  const optsAuthorizedFredEmailVerifiedClaims: GraphqlOptions<undefined> = {
+  const optsAuthorizedFredEmailVerifiedClaims: RefOptions = {
     impersonate: {
       authClaims: {
         sub: fredUser.id,
@@ -263,7 +264,7 @@ describe('getDataConnect()', () => {
     }
   };
 
-  const optsNonExistingClaims: GraphqlOptions<undefined> = {
+  const optsNonExistingClaims: RefOptions = {
     impersonate: {
       authClaims: {
         sub: 'non-exisiting-id',
@@ -475,20 +476,17 @@ describe('getDataConnect()', () => {
     describe('queryRef()', () => {
       it("should fail when executing a query which doesn't exist", async () => {
         return getDataConnect(connectorConfig).queryRef(
-          { 
-            ...optsUnauthorizedClaims, 
-            operationName: 'DOES_NOT_EXIST!!!'
-          }
+          'DOES_NOT_EXIST!!!',
+          undefined,
+          optsUnauthorizedClaims
         ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
       })
 
       it('should execut a query with variables', async () => {
         const resp = await getDataConnect(connectorConfig).queryRef<GetUserResponse, GetUserVariables>(
-          { 
-            ...optsUnauthorizedClaims, 
-            operationName: 'GetUser',
-            variables: { id: { id: fredUser.id } }
-          }
+          'GetUser',
+          { id: { id: fredUser.id } },
+          optsUnauthorizedClaims, 
         ).execute();
         expect(resp.data.user).to.not.be.empty;
         expect(resp.data.user).to.deep.equal(fredUser);
@@ -496,8 +494,10 @@ describe('getDataConnect()', () => {
 
       describe('with unauthenticated impersonation', () => {
         it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsUnauthorizedClaims, operationName: 'ListUsersPublic' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersPublic',
+            undefined,
+            optsUnauthorizedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -507,34 +507,34 @@ describe('getDataConnect()', () => {
         });
 
         it('should fail to execute a query with @auth(level: USER_ANON)', () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsUnauthorizedClaims, operationName: 'ListUsersUserAnon' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: USER)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsUnauthorizedClaims, operationName: 'ListUsersUser' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsUnauthorizedClaims, operationName: 'ListUsersUserEmailVerified' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsUnauthorizedClaims, operationName: 'ListUsersNoAccess' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
       });
 
       describe('with authenticated anonymous impersonation', () => {
         it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersPublic' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredAnonClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -544,8 +544,8 @@ describe('getDataConnect()', () => {
         });
         
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersUserAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredAnonClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -555,26 +555,26 @@ describe('getDataConnect()', () => {
         });
 
         it('should fail to execute a query with @auth(level: USER)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersUser' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersUserEmailVerified' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersNoAccess' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredAnonClaims, operationName: 'ListUsersImpersonationAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredAnonClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).equals(1);
@@ -584,8 +584,8 @@ describe('getDataConnect()', () => {
 
       describe('with authenticated user impersonation', () => {
         it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersPublic' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -595,8 +595,8 @@ describe('getDataConnect()', () => {
         });
 
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersUserAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -606,8 +606,8 @@ describe('getDataConnect()', () => {
         });
 
         it('should successfully execute a query with @auth(level: USER)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersUser' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -617,20 +617,20 @@ describe('getDataConnect()', () => {
         });
 
         it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersUserEmailVerified' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersNoAccess' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredClaims, operationName: 'ListUsersImpersonationAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).equals(1);
@@ -640,8 +640,8 @@ describe('getDataConnect()', () => {
 
       describe('with authenticated email verified user impersonation', () => {
         it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersPublic' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -651,8 +651,8 @@ describe('getDataConnect()', () => {
         });
 
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersUserAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -662,8 +662,8 @@ describe('getDataConnect()', () => {
         });
 
         it('should successfully execute a query with @auth(level: USER)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersUser' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -673,8 +673,8 @@ describe('getDataConnect()', () => {
         });
 
         it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersUserEmailVerified' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).to.equal(initialState.users.length);
@@ -684,14 +684,14 @@ describe('getDataConnect()', () => {
         });
 
         it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
-          return getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersNoAccess' }
+          return getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
-          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, operationName: 'ListUsersImpersonationAnon' }
+          const resp = await getDataConnect(connectorConfig).queryRef<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(resp.data.users).to.not.be.empty;
           expect(resp.data.users.length).equals(1);
@@ -703,10 +703,7 @@ describe('getDataConnect()', () => {
     describe('mutationRef()', () => {
       it("should fail when executing a mutation which doesn't exist", async () => {
         return getDataConnect(connectorConfig).mutationRef(
-          { 
-            ...optsUnauthorizedClaims, 
-            operationName: 'DOES_NOT_EXIST!!!'
-          }
+          'DOES_NOT_EXIST!!!', optsUnauthorizedClaims
         ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
       })
 
@@ -714,52 +711,42 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsUnauthorizedClaims, 
-                operationName: 'InsertEmailPublic', 
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailPublic',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsUnauthorizedClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
 
         it('should fail to execute a mutation with @auth(level: USER_ANON)', () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsUnauthorizedClaims, 
-              operationName: 'InsertEmailUserAnon', 
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUserAnon',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: USER)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsUnauthorizedClaims, 
-              operationName: 'InsertEmailUser',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUser',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsUnauthorizedClaims, 
-              operationName: 'InsertEmailUserEmailVerified',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUserEmailVerified',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsUnauthorizedClaims,
-              operationName: 'InsertEmailNoAccess',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailNoAccess',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsUnauthorizedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
       });
@@ -768,11 +755,9 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredAnonClaims, 
-                operationName: 'InsertEmailPublic',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailPublic',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredAnonClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -780,61 +765,49 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredAnonClaims, 
-                operationName: 'InsertEmailUserAnon',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUserAnon',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredAnonClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
 
         it('should fail to execute a mutation with @auth(level: USER)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsAuthorizedFredAnonClaims,
-              operationName: 'InsertEmailUser',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUser',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsAuthorizedFredAnonClaims,
-              operationName: 'InsertEmailUserEmailVerified',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUserEmailVerified',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsAuthorizedFredAnonClaims,
-              operationName: 'InsertEmailNoAccess',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailNoAccess',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredAnonClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
           const insertResp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredAnonClaims,
-                operationName: 'InsertEmailImpersonation',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailImpersonation',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredAnonClaims
             ).execute();
           expect(insertResp.data.email_insert.id).to.not.be.undefined;
           const queryResp = await getDataConnect(connectorConfig).queryRef<GetEmailResponse, GetEmailVariables>(
-            { 
-              ...optsAuthorizedFredAnonClaims, 
-              operationName: 'GetEmail', 
-              variables: { id: insertResp.data.email_insert.id }
-            }
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredAnonClaims
           ).execute();
           expect(queryResp.data.email.from.id).to.equal(fredUser.id);
         });
@@ -844,11 +817,9 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredClaims,
-                operationName: 'InsertEmailPublic',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailPublic',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -856,11 +827,9 @@ describe('getDataConnect()', () => {
         it('should fail to execute a mutation with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredClaims,
-                operationName: 'InsertEmailUserAnon',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUserAnon',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -868,51 +837,41 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: USER)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredClaims,
-                operationName: 'InsertEmailUser',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUser',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
 
         it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsAuthorizedFredClaims,
-              operationName: 'InsertEmailUserEmailVerified',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailUserEmailVerified',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
 
         it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { 
-              ...optsAuthorizedFredClaims,
-              operationName: 'InsertEmailNoAccess',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailNoAccess',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
           const insertResp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredClaims,
-                operationName: 'InsertEmailImpersonation',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailImpersonation',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredClaims
             ).execute();
           expect(insertResp.data.email_insert.id).to.not.be.undefined;
           const queryResp = await getDataConnect(connectorConfig).queryRef<GetEmailResponse, GetEmailVariables>(
-            { 
-              ...optsAuthorizedFredClaims, 
-              operationName: 'GetEmail',
-              variables: { id: insertResp.data.email_insert.id }
-            }
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredClaims
           ).execute();
           expect(queryResp.data.email.from.id).to.equal(fredUser.id);
         });
@@ -922,11 +881,9 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredEmailVerifiedClaims,
-                operationName: 'InsertEmailPublic',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailPublic',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredEmailVerifiedClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -934,11 +891,9 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredEmailVerifiedClaims,
-                operationName: 'InsertEmailUserAnon',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUserAnon',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredEmailVerifiedClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -946,11 +901,9 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: USER)', async () => {
           const resp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredEmailVerifiedClaims,
-                operationName: 'InsertEmailUser',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUser',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredEmailVerifiedClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
@@ -958,40 +911,33 @@ describe('getDataConnect()', () => {
         it('should successfully execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', async () => {
           const resp = await  getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredEmailVerifiedClaims,
-                operationName: 'InsertEmailUserEmailVerified',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailUserEmailVerified',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredEmailVerifiedClaims
             ).execute();
           expect(resp.data.email_insert.id).to.not.be.undefined;
         });
 
         it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
           return getDataConnect(connectorConfig).mutationRef<InsertEmailResponse, InsertEmailVariables>(
-            { ...optsAuthorizedFredEmailVerifiedClaims, 
-              operationName: 'InsertEmailNoAccess',
-              variables: { id: `email_id_${Math.random() * 1000}` }
-            }
+            'InsertEmailNoAccess',
+            { id: `email_id_${Math.random() * 1000}` },
+            optsAuthorizedFredEmailVerifiedClaims
           ).execute().should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
         });
 
         it("should use the impersonated user's auth.uid", async () => {
           const insertResp = await getDataConnect(connectorConfig)
             .mutationRef<InsertEmailResponse, InsertEmailVariables>(
-              { 
-                ...optsAuthorizedFredEmailVerifiedClaims,
-                operationName: 'InsertEmailImpersonation',
-                variables: { id: `email_id_${Math.random() * 1000}` }
-              }
+              'InsertEmailImpersonation',
+              { id: `email_id_${Math.random() * 1000}` },
+              optsAuthorizedFredEmailVerifiedClaims
             ).execute();
           expect(insertResp.data.email_insert.id).to.not.be.undefined;
           const queryResp = await getDataConnect(connectorConfig).queryRef<GetEmailResponse, GetEmailVariables>(
-            { 
-              ...optsAuthorizedFredEmailVerifiedClaims, 
-              operationName: 'GetEmail',
-              variables: { id: insertResp.data.email_insert.id }
-            }
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredEmailVerifiedClaims
           ).execute();
           expect(queryResp.data.email.from.id).to.equal(fredUser.id);
         });
