@@ -31,11 +31,12 @@ export class DataConnect {
     insert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     insertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     // Warning: (ae-forgotten-export) The symbol "MutationRef" needs to be exported by the entry point index.d.ts
-    mutationRef<Data>(options: GraphqlOptions<undefined>): MutationRef<Data, undefined>;
-    mutationRef<Data, Variables>(options: GraphqlOptions<Variables>): MutationRef<Data, Variables>;
+    mutationRef<Data>(name: string, options?: RefOptions): MutationRef<Data, undefined>;
+    mutationRef<Data, Variables>(name: string, variables: Variables, options?: RefOptions): MutationRef<Data, Variables>;
+    // Warning: (ae-forgotten-export) The symbol "RefOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "QueryRef" needs to be exported by the entry point index.d.ts
-    queryRef<Data>(options: GraphqlOptions<undefined>): QueryRef<Data, undefined>;
-    queryRef<Data, Variables>(options: GraphqlOptions<Variables>): QueryRef<Data, Variables>;
+    queryRef<Data>(name: string, options?: RefOptions): QueryRef<Data, undefined>;
+    queryRef<Data, Variables>(name: string, variables: Variables, options?: RefOptions): QueryRef<Data, Variables>;
     upsert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     upsertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
 }
