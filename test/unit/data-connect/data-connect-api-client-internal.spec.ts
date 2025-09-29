@@ -116,80 +116,82 @@ describe('DataConnectApiClient', () => {
   });
 
   describe('executeGraphql', () => {
-    it('should reject when project id is not available', () => {
-      return clientWithoutProjectId.executeGraphql('query', {})
-        .should.eventually.be.rejectedWith(noProjectId);
-    });
+    describe('should reject with an appropriate error response on failure', () => {
+      it('should reject when project id is not available', () => {
+        return clientWithoutProjectId.executeGraphql('query', {})
+          .should.eventually.be.rejectedWith(noProjectId);
+      });
 
-    it('should throw an error if query is not a non-empty string', async () => {
-      await expect(apiClient.executeGraphql('')).to.be.rejectedWith(
-        FirebaseDataConnectError,
-        '`query` must be a non-empty string.'
-      );
-      await expect(apiClient.executeGraphql(undefined as any)).to.be.rejectedWith(
-        FirebaseDataConnectError,
-        '`query` must be a non-empty string.'
-      );
-    });
-
-    const invalidQueries = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
-    invalidQueries.forEach((invalidQuery) => {
-      it('should throw given a non-string query: ' + JSON.stringify(invalidQuery), async () => {
-        await expect(apiClient.executeGraphql(invalidQuery as any)).to.be.rejectedWith(
+      it('should throw an error if query is not a non-empty string', async () => {
+        await expect(apiClient.executeGraphql('')).to.be.rejectedWith(
+          FirebaseDataConnectError,
+          '`query` must be a non-empty string.'
+        );
+        await expect(apiClient.executeGraphql(undefined as any)).to.be.rejectedWith(
           FirebaseDataConnectError,
           '`query` must be a non-empty string.'
         );
       });
-    });
 
-    const invalidOptions = [null, NaN, 0, 1, true, false, [], _.noop];
-    invalidOptions.forEach((invalidOption) => {
-      it('should throw given an invalid options object: ' + JSON.stringify(invalidOption), async () => {
-        await expect(apiClient.executeGraphql('query', invalidOption as any)).to.be.rejectedWith(
-          FirebaseDataConnectError,
-          'GraphqlOptions must be a non-null object'
-        );
+      const invalidQueries = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
+      invalidQueries.forEach((invalidQuery) => {
+        it('should throw given a non-string query: ' + JSON.stringify(invalidQuery), async () => {
+          await expect(apiClient.executeGraphql(invalidQuery as any)).to.be.rejectedWith(
+            FirebaseDataConnectError,
+            '`query` must be a non-empty string.'
+          );
+        });
+      });
+
+      const invalidOptions = [null, NaN, 0, 1, true, false, [], _.noop];
+      invalidOptions.forEach((invalidOption) => {
+        it('should throw given an invalid options object: ' + JSON.stringify(invalidOption), async () => {
+          await expect(apiClient.executeGraphql('query', invalidOption as any)).to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'GraphqlOptions must be a non-null object'
+          );
+        });
+      });
+
+      it('should reject when a full platform error response is received', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
+
+      it('should reject with unknown-error when error code is not present', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, 404));
+        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
+
+      it('should reject with unknown-error for non-json response', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom('not json', 404));
+        const expected = new FirebaseDataConnectError(
+          'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
+
+      it('should reject when rejected with a FirebaseDataConnectError', () => {
+        const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(expected);
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
 
-    it('should reject when a full platform error response is received', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject with unknown-error when error code is not present', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject with unknown-error for non-json response', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
-      const expected = new FirebaseDataConnectError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject when rejected with a FirebaseDataConnectError', () => {
-      const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(expected);
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should resolve with the GraphQL response on success', () => {
+    it('should resolve with the GraphQL response on success', async () => {
       interface UsersResponse {
         users: [
           user: {
@@ -202,38 +204,34 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeGraphql<UsersResponse, unknown>('query', {})
-        .then((resp) => {
-          expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users[0].name).to.be.not.undefined;
-          expect(resp.data.users[0].address).to.be.not.undefined;
-          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EXPECTED_HEADERS,
-            data: { query: 'query' }
-          });
-        });
+      const resp = await apiClient.executeGraphql<UsersResponse, unknown>('query', {});
+      expect(resp.data.users).to.be.not.empty;
+      expect(resp.data.users[0].name).to.be.not.undefined;
+      expect(resp.data.users[0].address).to.be.not.undefined;
+      expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+        headers: EXPECTED_HEADERS,
+        data: { query: 'query' }
+      });
     });
 
-    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
       process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeGraphql('query', {})
-        .then(() => {
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EMULATOR_EXPECTED_HEADERS,
-            data: { query: 'query' }
-          });
-        });
+      await apiClient.executeGraphql('query', {});
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { query: 'query' }
+      });
     });
   });
 
@@ -241,67 +239,69 @@ describe('DataConnectApiClient', () => {
     const unauthenticatedOptions: RefOptions = { impersonate: { unauthenticated: true } };
     const authenticatedOptions: RefOptions = { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
-    it('should reject when no operationName is provided', () => {
-      apiClient.executeQuery( '', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
-      apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
-        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
-    });
+    describe('should reject with an appropriate error response on failure', () => {
+      it('should reject when no operationName is provided', () => {
+        apiClient.executeQuery( '', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+        apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+      });
 
-    it('should reject when project id is not available', () => {
-      clientWithoutProjectId.executeQuery(
-        'unauthenticated query', 
-        undefined, 
-        unauthenticatedOptions
-      ).should.eventually.be.rejectedWith(noProjectId);
-    });
+      it('should reject when project id is not available', () => {
+        clientWithoutProjectId.executeQuery(
+          'unauthenticated query', 
+          undefined, 
+          unauthenticatedOptions
+        ).should.eventually.be.rejectedWith(noProjectId);
+      });
 
-    it('should reject when no connectorId is provided', () => {
-      apiClient = new DataConnectApiClient(
-        { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
-        app
-      );
-      apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejectedWith(
-          `The 'connectorConfig.connector' field used to instantiate your Data Connect
-        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
-    });
+      it('should reject when no connectorId is provided', () => {
+        apiClient = new DataConnectApiClient(
+          { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
+          app
+        );
+        apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith(
+            `The 'connectorConfig.connector' field used to instantiate your Data Connect
+          instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+      });
 
-    it('should reject when a full platform error response is received', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
+      it('should reject when a full platform error response is received', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
 
-    it('should reject with unknown-error when error code is not present', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
+      it('should reject with unknown-error when error code is not present', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, 404));
+        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
 
-    it('should reject with unknown-error for non-json response', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
-      const expected = new FirebaseDataConnectError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
+      it('should reject with unknown-error for non-json response', () => {
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom('not json', 404));
+        const expected = new FirebaseDataConnectError(
+          'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
 
-    it('should reject when rejected with a FirebaseDataConnectError', () => {
-      const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(expected);
-      return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
+      it('should reject when rejected with a FirebaseDataConnectError', () => {
+        const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(expected);
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
     });
 
     describe('should resolve with the GraphQL response on success', () => {
@@ -314,81 +314,79 @@ describe('DataConnectApiClient', () => {
           }
         ];
       }
-      it('for an unauthenticated request', () => {
+      it('for an unauthenticated request', async () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeQuery<UsersResponse, undefined>(
+        const resp = await apiClient.executeQuery<UsersResponse, undefined>(
           'unauthenticated query', 
           undefined, 
           unauthenticatedOptions
-        ).then((resp) => {
-          expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users[0].name).to.be.not.undefined;
-          expect(resp.data.users[0].address).to.be.not.undefined;
-          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
-            headers: EXPECTED_HEADERS,
-            data: { 
-              operationName: 'unauthenticated query', 
-              extensions: unauthenticatedOptions
-            }
-          });
-        });
-      });
-      it('for an authenticated request', () => {
-        const stub = sandbox
-          .stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeQuery<UsersResponse, undefined>(
-          'authenticated query', 
-          undefined, 
-          authenticatedOptions
-        ).then((resp) => {
-          expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users[0].name).to.be.not.undefined;
-          expect(resp.data.users[0].address).to.be.not.undefined;
-          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
-            headers: EXPECTED_HEADERS,
-            data: { 
-              operationName: 'authenticated query', 
-              extensions: { impersonate: authenticatedOptions.impersonate }
-            }
-          });
-        });
-      });
-    });
-
-    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
-      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
-      const stub = sandbox
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeQuery(
-        'unauthenticated query', 
-        undefined, 
-        unauthenticatedOptions
-      ).then(() => {
+        );
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'POST',
-          url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
-          headers: EMULATOR_EXPECTED_HEADERS,
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          headers: EXPECTED_HEADERS,
           data: { 
             operationName: 'unauthenticated query', 
             extensions: unauthenticatedOptions
           }
         });
+      });
+
+      it('for an authenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeQuery<UsersResponse, undefined>(
+          'authenticated query', 
+          undefined, 
+          authenticatedOptions
+        );
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'authenticated query', 
+            extensions: { impersonate: authenticatedOptions.impersonate }
+          }
+        });
+      });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      await apiClient.executeQuery(
+        'unauthenticated query', 
+        undefined, 
+        unauthenticatedOptions
+      );
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { 
+          operationName: 'unauthenticated query', 
+          extensions: unauthenticatedOptions
+        }
       });
     });
   });
@@ -469,109 +467,71 @@ describe('DataConnectApiClient', () => {
           }
         ];
       }
-      it('for an unauthenticated request', () => {
-        const stub = sandbox
-          .stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeMutation<UsersResponse, undefined>('unauthenticated mutation', undefined, unauthenticatedOptions)
-          .then((resp) => {
-            expect(resp.data.users).to.be.not.empty;
-            expect(resp.data.users[0].name).to.be.not.undefined;
-            expect(resp.data.users[0].address).to.be.not.undefined;
-            expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'POST',
-              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-              // eslint-disable-next-line max-len
-              // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-              url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
-              headers: EXPECTED_HEADERS,
-              data: { 
-                operationName: 'unauthenticated mutation', 
-                extensions: unauthenticatedOptions
-              }
-            });
-          });
-      });
-      it('for an authenticated request', () => {
-        const stub = sandbox
-          .stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        return apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions)
-          .then((resp) => {
-            expect(resp.data.users).to.be.not.empty;
-            expect(resp.data.users[0].name).to.be.not.undefined;
-            expect(resp.data.users[0].address).to.be.not.undefined;
-            expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'POST',
-              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-              // eslint-disable-next-line max-len
-              // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-              url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
-              headers: EXPECTED_HEADERS,
-              data: { 
-                operationName: 'authenticated mutation', 
-                extensions: authenticatedOptions
-              }
-            });
-          });
-      });
-    });
 
-    it('should resolve with the GraphQL response on success for an authenticated request', () => {
-      interface UsersResponse {
-        users: [
-          user: {
-            id: string;
-            name: string;
-            address: string;
+      it('for an unauthenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>('unauthenticated mutation', undefined, unauthenticatedOptions)
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          // eslint-disable-next-line max-len
+          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'unauthenticated mutation', 
+            extensions: unauthenticatedOptions
           }
-        ];
-      }
-      const stub = sandbox
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions)
-        .then((resp) => {
-          expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users[0].name).to.be.not.undefined;
-          expect(resp.data.users[0].address).to.be.not.undefined;
-          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
-            headers: EXPECTED_HEADERS,
-            data: { 
-              operationName: 'authenticated mutation', 
-              extensions: authenticatedOptions
-            }
-          });
         });
+      });
+
+      it('for an authenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions);
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          // eslint-disable-next-line max-len
+          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
+          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'authenticated mutation', 
+            extensions: authenticatedOptions
+          }
+        });
+      });
     });
 
-    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
       process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
-        .then(() => {
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
-            headers: EMULATOR_EXPECTED_HEADERS,
-            data: { 
-              operationName: 'unauthenticated mutation', 
-              extensions: unauthenticatedOptions
-            }
-          });
-        });
+      await apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions);
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { 
+          operationName: 'unauthenticated mutation', 
+          extensions: unauthenticatedOptions
+        }
+      });
     });
   });
 });

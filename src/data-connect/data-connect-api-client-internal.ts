@@ -136,7 +136,6 @@ export class DataConnectApiClient {
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
     const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
-
     try {
       const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
       return resp;
@@ -216,7 +215,6 @@ export class DataConnectApiClient {
       endpoint,
       this.connectorConfig.connector,
     );
-
     try {
       const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
       return resp;
