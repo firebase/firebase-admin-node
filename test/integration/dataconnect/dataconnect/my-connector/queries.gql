@@ -34,7 +34,7 @@ query ListUsersNoAccess @auth(level: NO_ACCESS) {
 		address
 	}
 }
-query ListUsersImpersonationAnon @auth(level: USER_ANON, insecureReason: "test") {
+query ListUsersImpersonationAnon @auth(level: USER_ANON) {
 	users(where: { id: { eq_expr: "auth.uid" } }) {
 		id
 		name
