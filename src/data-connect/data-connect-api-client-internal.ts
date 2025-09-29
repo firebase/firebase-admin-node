@@ -136,13 +136,13 @@ export class DataConnectApiClient {
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
     const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
-    return this.makeGqlRequest<GraphqlResponse>(url, data)
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+
+    try {
+      const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
+      return resp;
+    } catch (err: any) {
+      throw this.toFirebaseError(err);
+    }
   }
 
   /**
@@ -216,13 +216,13 @@ export class DataConnectApiClient {
       endpoint,
       this.connectorConfig.connector,
     );
-    return this.makeGqlRequest<GraphqlResponse>(url, data)
-      .then((resp) => {
-        return resp;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+
+    try {
+      const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
+      return resp;
+    } catch (err: any) {
+      throw this.toFirebaseError(err);
+    }
   }
 
   /**
