@@ -57,6 +57,27 @@ const DATA_CONNECT_CONFIG_HEADERS = {
 };
 
 /**
+ * URL params for requests to an endpoint under services:
+ * .../services/{serviceId}:endpoint
+ */
+interface ServicesUrlParams {
+  version: string;
+  projectId: string;
+  locationId: string;
+  serviceId: string;
+  endpointId: string;
+  host?: string; // Present only when using the emulator
+}
+
+/**
+ * URL params for requests to an endpoint under connectors:
+ * .../services/{serviceId}/connectors/{connectorId}:endpoint
+ */
+interface ConnectorsUrlParams extends ServicesUrlParams {
+  connectorId: string;
+}
+
+/**
  * Class that facilitates sending requests to the Firebase Data Connect backend API.
  *
  * @internal
@@ -135,7 +156,12 @@ export class DataConnectApiClient {
       ...(options?.operationName && { operationName: options?.operationName }),
       ...(options?.impersonate && { extensions: { impersonate: options?.impersonate } }),
     };
-    const url = await this.getUrl(API_VERSION, this.connectorConfig.location, this.connectorConfig.serviceId, endpoint);
+    const url = await this.getServicesUrl(
+      API_VERSION, 
+      this.connectorConfig.location, 
+      this.connectorConfig.serviceId, 
+      endpoint
+    );
     try {
       const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
       return resp;
@@ -208,12 +234,12 @@ export class DataConnectApiClient {
       operationName: name,
       extensions: { impersonate: options?.impersonate },
     };
-    const url = await this.getUrl(
+    const url = await this.getConnectorsUrl(
       API_VERSION,
       this.connectorConfig.location,
       this.connectorConfig.serviceId,
-      endpoint,
       this.connectorConfig.connector,
+      endpoint,
     );
     try {
       const resp = await this.makeGqlRequest<GraphqlResponse>(url, data);
@@ -224,52 +250,69 @@ export class DataConnectApiClient {
   }
 
   /**
-   * Constructs the URL for a Data Connect backend request.
-   * 
-   * If no connectorId is provided, will direct the request to an endpoint under services:
-   * .../services/{serviceId}:endpoint
+   * Constructs the URL for a Data Connect request to a service endpoint.
    *
-   * If connectorId is provided, will direct the request to an endpoint under connectors:
-   * .../services/{serviceId}/connectors/{connectorId}:endpoint
-   * 
    * @param version - The API version.
    * @param locationId - The location of the Data Connect service.
    * @param serviceId - The ID of the Data Connect service.
    * @param endpointId - The endpoint to call.
-   * @param connectorId - The ID of the connector, if applicable.
-   * @returns A promise that fulfills with the constructed URL.
+   * @returns A promise which resolves to the formatted URL string.
    */
-  private async getUrl(
+  private async getServicesUrl(
     version: string,
     locationId: string,
     serviceId: string,
     endpointId: string,
-    connectorId?: string,
   ): Promise<string> {
     const projectId = await this.getProjectId();
-    const urlParams = {
+    const params: ServicesUrlParams = {
       version,
       projectId,
       locationId,
       serviceId,
       endpointId,
-      connectorId
     };
-    let urlFormat: string;
+    let urlFormat = FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT;
     if (useEmulator()) {
-      (urlParams as any).host = emulatorHost();
-      urlFormat = connectorId === undefined || connectorId === ''
-        ? FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT
-        : FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT;
-    } else {
-      urlFormat = connectorId === undefined || connectorId === ''
-        ? FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT
-        : FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT;
+      urlFormat = FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT;
+      params.host = emulatorHost();
     }
-    if (connectorId) {
-      (urlParams as any).connectorId = connectorId;      
+    return utils.formatString(urlFormat, params);
+  }
+
+  /**
+   * Constructs the URL for a Data Connect request to a connector endpoint.
+   *
+   * @param version - The API version.
+   * @param locationId - The location of the Data Connect service.
+   * @param serviceId - The ID of the Data Connect service.
+   * @param connectorId - The ID of the Connector.
+   * @param endpointId - The endpoint to call.
+   * @returns A promise which resolves to the formatted URL string.
+
+   */
+  private async getConnectorsUrl(
+    version: string,
+    locationId: string,
+    serviceId: string,
+    connectorId: string,
+    endpointId: string,
+  ): Promise<string> {
+    const projectId = await this.getProjectId();
+    const params: ConnectorsUrlParams = {
+      version,
+      projectId,
+      locationId,
+      serviceId,
+      connectorId,
+      endpointId,
+    };
+    let urlFormat = FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT;
+    if (useEmulator()) {
+      urlFormat = FIREBASE_DATA_CONNECT_EMULATOR_CONNECTORS_URL_FORMAT;
+      params.host = emulatorHost();
     }
-    return utils.formatString(urlFormat, urlParams);
+    return utils.formatString(urlFormat, params);
   }
 
   private getProjectId(): Promise<string> {
