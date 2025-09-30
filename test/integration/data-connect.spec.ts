@@ -114,10 +114,7 @@ interface DeleteResponse {
 }
 
 const connectorConfig: ConnectorConfig = {
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // TODO: CHANGE THIS BACK TO us-west2 - us-central1 IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  location: 'us-central1',
+  location: 'us-west2',
   serviceId: 'my-service',
   connector: 'my-connector'
 };

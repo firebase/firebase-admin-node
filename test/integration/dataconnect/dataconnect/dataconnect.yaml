@@ -1,19 +1,13 @@
 specVersion: "v1"
 serviceId: "my-service"
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# TODO: CHANGE THIS BACK TO us-west2 - us-central1 IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-location: "us-central1"
+location: "us-west2"
 schema:
   source: "./schema"
   datasource:
     postgresql:
       database: "my-database"
       cloudSql:
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # TODO: CHANGE THIS BACK TO my-instance - my-instance-autopush IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        instanceId: "my-instance-autopush"
+        instanceId: "my-instance"
         # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
         # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
 connectorDirs: ["./my-connector"]

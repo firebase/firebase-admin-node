@@ -211,10 +211,7 @@ describe('DataConnectApiClient', () => {
       expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
       expect(stub).to.have.been.calledOnce.and.calledWith({
         method: 'POST',
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+        url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
         headers: EXPECTED_HEADERS,
         data: { query: 'query' }
       });
@@ -329,10 +326,7 @@ describe('DataConnectApiClient', () => {
         expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'POST',
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
           data: { 
             operationName: 'unauthenticated query', 
@@ -356,10 +350,7 @@ describe('DataConnectApiClient', () => {
         expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'POST',
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
           data: { 
             operationName: 'authenticated query', 
@@ -479,11 +470,7 @@ describe('DataConnectApiClient', () => {
         expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'POST',
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          // eslint-disable-next-line max-len
-          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
           data: { 
             operationName: 'unauthenticated mutation', 
@@ -503,11 +490,7 @@ describe('DataConnectApiClient', () => {
         expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'POST',
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          // eslint-disable-next-line max-len
-          // TODO: CHANGE THIS BACK TO PROD - AUTOPUSH IS ONLY USED FOR LOCAL TESTING BEFORE CHANGES PROPAGATE TO PROD
-          // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          url: `https://autopush-firebasedataconnect.sandbox.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
           data: { 
             operationName: 'authenticated mutation', 
