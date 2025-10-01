@@ -257,7 +257,7 @@ export class DataConnect {
   }
 }
 
-interface OperationResult<Data, Variables> {
+export interface OperationResult<Data, Variables> {
   ref: OperationRef<Data, Variables>;
   data: Data;
   variables: Variables;
@@ -278,7 +278,7 @@ export interface MutationResult<Data, Variables> extends OperationResult<Data, V
   ref: MutationRef<Data, Variables>;
 }
 
-abstract class OperationRef<Data, Variables> {
+export abstract class OperationRef<Data, Variables> {
   constructor(
     public readonly dataConnect: DataConnect,
     public readonly name: string,
@@ -288,7 +288,7 @@ abstract class OperationRef<Data, Variables> {
   abstract execute(): Promise<OperationResult<Data, Variables>>;
 }
 
-class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
+export class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<QueryResult<Data, Variables>> {
     const { data } = await this.dataConnect.executeQuery<Data, Variables>(this.name, this.variables, this.options);    
     return {
@@ -300,7 +300,7 @@ class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
   }
 }
 
-class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
+export class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
   async execute(): Promise<MutationResult<Data, Variables>> {
     const { data } = await this.dataConnect.executeMutation<Data, Variables>(this.name, this.variables, this.options)
     return {

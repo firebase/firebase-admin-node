@@ -30,11 +30,8 @@ export class DataConnect {
     executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
     insert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     insertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
-    // Warning: (ae-forgotten-export) The symbol "MutationRef" needs to be exported by the entry point index.d.ts
     mutationRef<Data>(name: string, options?: RefOptions): MutationRef<Data, undefined>;
     mutationRef<Data, Variables>(name: string, variables: Variables, options?: RefOptions): MutationRef<Data, Variables>;
-    // Warning: (ae-forgotten-export) The symbol "RefOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "QueryRef" needs to be exported by the entry point index.d.ts
     queryRef<Data>(name: string, options?: RefOptions): QueryRef<Data, undefined>;
     queryRef<Data, Variables>(name: string, variables: Variables, options?: RefOptions): QueryRef<Data, Variables>;
     upsert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
@@ -66,6 +63,62 @@ export interface ImpersonateAuthenticated {
 export interface ImpersonateUnauthenticated {
     authClaims?: never;
     unauthenticated: true;
+}
+
+// @public (undocumented)
+export class MutationRef<Data, Variables> extends OperationRef<Data, Variables> {
+    // (undocumented)
+    execute(): Promise<MutationResult<Data, Variables>>;
+}
+
+// @public
+export interface MutationResult<Data, Variables> extends OperationResult<Data, Variables> {
+    // (undocumented)
+    ref: MutationRef<Data, Variables>;
+}
+
+// @public (undocumented)
+export abstract class OperationRef<Data, Variables> {
+    constructor(dataConnect: DataConnect, name: string, variables: Variables, options?: RefOptions | undefined);
+    // (undocumented)
+    readonly dataConnect: DataConnect;
+    // (undocumented)
+    abstract execute(): Promise<OperationResult<Data, Variables>>;
+    // (undocumented)
+    readonly name: string;
+    // (undocumented)
+    readonly options?: RefOptions | undefined;
+    // (undocumented)
+    readonly variables: Variables;
+}
+
+// @public (undocumented)
+export interface OperationResult<Data, Variables> {
+    // (undocumented)
+    data: Data;
+    // (undocumented)
+    dataConnect: DataConnect;
+    // (undocumented)
+    ref: OperationRef<Data, Variables>;
+    // (undocumented)
+    variables: Variables;
+}
+
+// @public (undocumented)
+export class QueryRef<Data, Variables> extends OperationRef<Data, Variables> {
+    // (undocumented)
+    execute(): Promise<QueryResult<Data, Variables>>;
+}
+
+// @public
+export interface QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+    // (undocumented)
+    ref: QueryRef<Data, Variables>;
+}
+
+// @public
+export interface RefOptions {
+    impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
 }
 
 ```
