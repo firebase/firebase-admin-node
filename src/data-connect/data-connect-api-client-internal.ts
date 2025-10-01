@@ -38,13 +38,14 @@ const FIREBASE_DATA_CONNECT_EMULATOR_BASE_URL_FORMAT =
 const EXECUTE_GRAPH_QL_ENDPOINT = 'executeGraphql';
 const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 
+
 function getHeaders(isUsingGen: boolean): { [key: string]: string } {
   const headerValue = {
     'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
     'X-Goog-Api-Client': utils.getMetricsHeader(),
   };
   if (isUsingGen) {
-    headerValue['X-Goog-Api-Client'] += ' js/gen';
+    headerValue['X-Goog-Api-Client'] += ' admin-js/gen';
   }
   return headerValue;
 }
