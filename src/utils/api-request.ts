@@ -1092,7 +1092,9 @@ export class AuthorizedHttpClient extends HttpClient {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
 
-      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) {
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      }
 
       return super.send(requestCopy);
     });
@@ -1126,7 +1128,9 @@ export class AuthorizedHttp2Client extends Http2Client {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
 
-      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) { 
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      }
 
       return super.send(requestCopy);
     });

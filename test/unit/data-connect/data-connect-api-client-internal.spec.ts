@@ -46,6 +46,12 @@ describe('DataConnectApiClient', () => {
     'X-Goog-Api-Client': getMetricsHeader(),
   };
 
+  const EXPECTED_HEADERS_WITH_GEN = {
+    'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'X-Goog-Api-Client': getMetricsHeader() + ' js/gen',
+  };
+
   const EMULATOR_EXPECTED_HEADERS = {
     'Authorization': 'Bearer owner',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
@@ -227,6 +233,35 @@ describe('DataConnectApiClient', () => {
             headers: EMULATOR_EXPECTED_HEADERS,
             data: { query: 'query' }
           });
+        });
+    });
+    it('should use gen headers if set on success', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+      apiClient.setIsUsingGen(true);
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      return apiClient.executeGraphql<UsersResponse, unknown>('query', {})
+        .then((resp) => {
+          expect(resp.data.users).to.be.not.empty;
+          expect(resp.data.users[0].name).to.be.not.undefined;
+          expect(resp.data.users[0].address).to.be.not.undefined;
+          expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            headers: EXPECTED_HEADERS_WITH_GEN,
+            data: { query: 'query' }
+          });
+          apiClient.setIsUsingGen(false);
         });
     });
   });
