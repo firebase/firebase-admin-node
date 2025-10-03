@@ -30,7 +30,7 @@ import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConn
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
-import { RefOptions } from '../../../src/data-connect/data-connect-api';
+import { OperationOptions } from '../../../src/data-connect/data-connect-api';
 
 describe('DataConnectApiClient', () => {
 
@@ -233,8 +233,8 @@ describe('DataConnectApiClient', () => {
   });
 
   describe('executeQuery', () => {
-    const unauthenticatedOptions: RefOptions = { impersonate: { unauthenticated: true } };
-    const authenticatedOptions: RefOptions = { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
+    const unauthenticatedOptions: OperationOptions = { impersonate: { unauthenticated: true } };
+    const authenticatedOptions: OperationOptions = { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
     describe('should reject with an appropriate error response on failure', () => {
       it('should reject when no operationName is provided', () => {
@@ -382,9 +382,9 @@ describe('DataConnectApiClient', () => {
     });
   });
 
-  const unauthenticatedOptions: RefOptions = 
+  const unauthenticatedOptions: OperationOptions = 
     { impersonate: { unauthenticated: true } };
-  const authenticatedOptions: RefOptions = 
+  const authenticatedOptions: OperationOptions = 
     { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
   describe('executeMutation', () => {
