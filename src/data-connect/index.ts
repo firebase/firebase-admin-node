@@ -29,6 +29,7 @@ import { ConnectorConfig } from './data-connect-api';
 export {
   GraphqlOptions,
   ExecuteGraphqlResponse,
+  ExecuteOperationResponse,
   ConnectorConfig,
   ImpersonateAuthenticated,
   ImpersonateUnauthenticated,

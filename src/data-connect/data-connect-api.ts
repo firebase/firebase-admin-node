@@ -38,9 +38,19 @@ export interface ConnectorConfig {
 }
 
 /**
- * Interface representing GraphQL response.
+ * Interface representing ExecuteGraphQL response.
  */
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
+  /**
+   * Data payload of the GraphQL response.
+   */
+  data: GraphqlResponse;
+}
+
+/**
+ * Interface representing ExecuteOperation response.
+ */
+export interface ExecuteOperationResponse<GraphqlResponse> {
   /**
    * Data payload of the GraphQL response.
    */

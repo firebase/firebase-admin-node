@@ -21,6 +21,7 @@ import { DataConnectApiClient } from './data-connect-api-client-internal';
 import {
   ConnectorConfig,
   ExecuteGraphqlResponse,
+  ExecuteOperationResponse,
   GraphqlOptions,
   OperationOptions,
 } from './data-connect-api';
@@ -178,7 +179,7 @@ export class DataConnect {
   public executeQuery<Data>(
     name: string,
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>>;
+  ): Promise<ExecuteOperationResponse<Data>>;
   
   /**
    * Executes a pre-defined GraphQL query, optionally with auth impersonation.
@@ -193,13 +194,13 @@ export class DataConnect {
     name: string,
     variables: Variables, 
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>>;
+  ): Promise<ExecuteOperationResponse<Data>>;
   
   public executeQuery<Data, Variables>(
     name: string,
     variables: Variables, 
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>> {
+  ): Promise<ExecuteOperationResponse<Data>> {
     return this.client.executeQuery<Data, Variables>(name, variables, options);
   }
 
@@ -214,7 +215,7 @@ export class DataConnect {
   public executeMutation<Data>(
     name: string,
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>>;
+  ): Promise<ExecuteOperationResponse<Data>>;
   
   /**
    * Executes a pre-defined GraphQL mutation, optionally with auth impersonation.
@@ -229,13 +230,13 @@ export class DataConnect {
     name: string,
     variables: Variables, 
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>>;
+  ): Promise<ExecuteOperationResponse<Data>>;
 
   public executeMutation<Data, Variables>(
     name: string,
     variables: Variables, 
     options?: OperationOptions
-  ): Promise<ExecuteGraphqlResponse<Data>> {
+  ): Promise<ExecuteOperationResponse<Data>> {
     return this.client.executeMutation<Data, Variables>(name, variables, options);
   }
 }
