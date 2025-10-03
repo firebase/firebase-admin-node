@@ -74,6 +74,14 @@ export class DataConnect {
   }
 
   /**
+   * @param isUsingGen
+   * @internal
+   */
+  useGen(isUsingGen: boolean): void {
+    this.client.setIsUsingGen(isUsingGen);
+  }
+
+  /**
    * Execute an arbitrary GraphQL query or mutation
    *
    * @param query - The GraphQL query or mutation.

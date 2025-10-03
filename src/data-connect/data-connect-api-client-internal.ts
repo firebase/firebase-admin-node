@@ -49,9 +49,17 @@ const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
 const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
-const DATA_CONNECT_CONFIG_HEADERS = {
-  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
-};
+
+function getHeaders(isUsingGen: boolean): { [key: string]: string } {
+  const headerValue = {
+    'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
+    'X-Goog-Api-Client': utils.getMetricsHeader(),
+  };
+  if (isUsingGen) {
+    headerValue['X-Goog-Api-Client'] += ' admin-js/gen';
+  }
+  return headerValue;
+}
 
 /**
  * URL params for requests to an endpoint under services:
@@ -82,6 +90,7 @@ interface ConnectorsUrlParams extends ServicesUrlParams {
 export class DataConnectApiClient {
   private readonly httpClient: HttpClient;
   private projectId?: string;
+  private isUsingGen = false;
 
   constructor(private readonly connectorConfig: ConnectorConfig, private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -90,6 +99,14 @@ export class DataConnectApiClient {
         'First argument passed to getDataConnect() must be a valid Firebase app instance.');
     }
     this.httpClient = new DataConnectHttpClient(app as FirebaseApp);
+  }
+  
+  /**
+   * Update whether the SDK is using a generated one or not.
+   * @param isUsingGen
+   */
+  setIsUsingGen(isUsingGen: boolean): void {
+    this.isUsingGen = isUsingGen;
   }
 
   /**
@@ -342,7 +359,7 @@ export class DataConnectApiClient {
     const request: HttpRequestConfig = {
       method: 'POST',
       url,
-      headers: DATA_CONNECT_CONFIG_HEADERS,
+      headers: getHeaders(this.isUsingGen),
       data,
     };
     const resp = await this.httpClient.send(request);
