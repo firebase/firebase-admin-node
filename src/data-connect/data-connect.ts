@@ -22,7 +22,7 @@ import {
   ConnectorConfig,
   ExecuteGraphqlResponse,
   GraphqlOptions,
-  RefOptions,
+  OperationOptions,
 } from './data-connect-api';
 
 export class DataConnectService {
@@ -160,7 +160,7 @@ export class DataConnect {
   }
 
   /**
-   * Executes a pre-defined GraphQL query with impersonation.
+   * Executes a deployed GraphQL query, optionally with auth impersonation.
    *
    * The query must be defined in your Data Connect GraphQL files.
    *
@@ -169,11 +169,11 @@ export class DataConnect {
    */
   public executeQuery<Data>(
     name: string,
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>>;
   
   /**
-   * Executes a pre-defined GraphQL query with impersonation.
+   * Executes a pre-defined GraphQL query, optionally with auth impersonation.
    *
    * The query must be defined in your Data Connect GraphQL files.
    *
@@ -184,19 +184,19 @@ export class DataConnect {
   public executeQuery<Data, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>>;
   
   public executeQuery<Data, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>> {
     return this.client.executeQuery<Data, Variables>(name, variables, options);
   }
 
   /**
-   * Executes a pre-defined GraphQL mutation with impersonation.
+   * Executes a pre-defined GraphQL mutation, optionally with auth impersonation.
    *
    * The mutation must be defined in your Data Connect GQL files. 
    * 
@@ -205,11 +205,11 @@ export class DataConnect {
    */
   public executeMutation<Data>(
     name: string,
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>>;
   
   /**
-   * Executes a pre-defined GraphQL mutation with impersonation.
+   * Executes a pre-defined GraphQL mutation, optionally with auth impersonation.
    *
    * The mutation must be defined in your Data Connect GQL files. 
    * 
@@ -220,13 +220,13 @@ export class DataConnect {
   public executeMutation<Data, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>>;
 
   public executeMutation<Data, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<Data>> {
     return this.client.executeMutation<Data, Variables>(name, variables, options);
   }

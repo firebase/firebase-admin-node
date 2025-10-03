@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, RefOptions } from './data-connect-api';
+import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
 
 const API_VERSION = 'v1';
 
@@ -176,7 +176,7 @@ export class DataConnectApiClient {
   public async executeQuery<GraphqlResponse, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.executeOperationHelper(IMPERSONATE_QUERY_ENDPOINT, name, variables, options);
   }
@@ -190,7 +190,7 @@ export class DataConnectApiClient {
   public async executeMutation<GraphqlResponse, Variables>(
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     return this.executeOperationHelper(IMPERSONATE_MUTATION_ENDPOINT, name, variables, options);
   }
@@ -207,7 +207,7 @@ export class DataConnectApiClient {
     endpoint: string,
     name: string,
     variables: Variables, 
-    options?: RefOptions
+    options?: OperationOptions
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (
       typeof name === 'undefined' ||

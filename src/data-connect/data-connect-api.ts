@@ -48,7 +48,7 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 }
 
 /**
- * Interface representing GraphQL options.
+ * Interface representing GraphQL options for executing arbitrary GraphQL operations.
  */
 export interface GraphqlOptions<Variables> {
   /**
@@ -71,9 +71,9 @@ export interface GraphqlOptions<Variables> {
 }
 
 /**
- * Interface representing options for OperationRefs.
+ * Interface representing options for executing defined operations.
  */
-export interface RefOptions {
+export interface OperationOptions {
   /**
    * If set, impersonate a request with given Firebase Auth context and evaluate the auth
    * policies on the operation. If omitted, bypass any defined auth policies.

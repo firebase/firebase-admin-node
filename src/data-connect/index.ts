@@ -33,16 +33,10 @@ export {
   ImpersonateAuthenticated,
   ImpersonateUnauthenticated,
   AuthClaims,
-  RefOptions,
+  OperationOptions,
 } from './data-connect-api'
 export {
   DataConnect,
-  OperationRef,
-  QueryRef,
-  MutationRef,
-  OperationResult,
-  QueryResult,
-  MutationResult,
 } from './data-connect'
 
 /**
