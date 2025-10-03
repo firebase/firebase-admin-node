@@ -169,10 +169,10 @@ export class DataConnect {
   }
 
   /**
-   * Executes a deployed GraphQL query, optionally with auth impersonation.
+   * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
+   * Optionally, you may provide auth impersonation.
    *
-   * The query must be defined in your Data Connect GraphQL files.
-   *
+   * @param name - The name of the defined query to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
@@ -182,10 +182,10 @@ export class DataConnect {
   ): Promise<ExecuteOperationResponse<Data>>;
   
   /**
-   * Executes a pre-defined GraphQL query, optionally with auth impersonation.
+   * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
+   * Optionally, you may provide auth impersonation.
    *
-   * The query must be defined in your Data Connect GraphQL files.
-   *
+   * @param name - The name of the defined query to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
    * @param variables - The variables for the query. May be optional if the query's variables are optional.
    * @returns A promise that fulfills with the GraphQL response.
@@ -205,10 +205,10 @@ export class DataConnect {
   }
 
   /**
-   * Executes a pre-defined GraphQL mutation, optionally with auth impersonation.
-   *
-   * The mutation must be defined in your Data Connect GQL files. 
+   * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
+   * Optionally, you may provide auth impersonation.
    * 
+   * @param name - The name of the defined mutation to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
    * @returns A promise that fulfills with the GraphQL response.
    */
@@ -218,10 +218,10 @@ export class DataConnect {
   ): Promise<ExecuteOperationResponse<Data>>;
   
   /**
-   * Executes a pre-defined GraphQL mutation, optionally with auth impersonation.
-   *
-   * The mutation must be defined in your Data Connect GQL files. 
+   * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
+   * Optionally, you may provide auth impersonation.
    * 
+   * @param name - The name of the defined mutation to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
    * @param variables - The variables for the mutation. May be optional if the mutation's variables are optional.
    * @returns A promise that fulfills with the GraphQL response.
