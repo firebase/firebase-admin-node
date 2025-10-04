@@ -274,6 +274,7 @@ function validateAps(aps: Aps): void {
     contentAvailable: 'content-available',
     mutableContent: 'mutable-content',
     threadId: 'thread-id',
+    contentChanged: 'content-changed',
   };
   Object.keys(propertyMappings).forEach((key) => {
     if (key in aps && propertyMappings[key] in aps) {
@@ -298,6 +299,15 @@ function validateAps(aps: Aps): void {
       aps['mutable-content'] = 1;
     } else {
       delete aps['mutable-content'];
+    }
+  }
+
+  const contentChanged = aps['content-changed'];
+  if (typeof contentChanged !== 'undefined' && contentChanged !== 1) {
+    if (contentChanged === true) {
+      aps['content-changed'] = 1;
+    } else {
+      delete aps['content-changed'];
     }
   }
 }

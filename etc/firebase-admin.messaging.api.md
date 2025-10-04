@@ -309,6 +309,7 @@ export interface MessagingOptions {
     priority?: string;
     restrictedPackageName?: string;
     timeToLive?: number;
+    contentChanged?: boolean
 }
 
 // @public
