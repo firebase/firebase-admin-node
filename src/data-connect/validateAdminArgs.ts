@@ -18,30 +18,25 @@
 import { getDataConnect } from './index';
 import { DataConnect } from './data-connect';
 import { ConnectorConfig, OperationOptions } from './data-connect-api';
-import { DATA_CONNECT_ERROR_CODE_MAPPING, FirebaseDataConnectError } from './data-connect-api-client-internal';
-
-
-interface ParsedAdminArgs<Variables> {
-  dc: DataConnect;
-  vars: Variables;
-  options: OperationOptions
-}
+import {
+  DATA_CONNECT_ERROR_CODE_MAPPING,
+  FirebaseDataConnectError,
+} from './data-connect-api-client-internal';
 
 /**
- * The generated Admin SDK will allow the user to pass in variables, a Data Connect 
+ * The generated Admin SDK will allow the user to pass in variables, a Data Connect
  * instance, or operation options. The only required argument is the variables,
- * which are only required when the operation has at least one required variable. 
+ * which are only required when the operation has at least one required variable.
  * Otherwise, all arguments are optional. This function validates the variables
  * and returns back the DataConnect instance, variables, and options based on the
  * arguments passed in.
- * @param connectorConfig DataConnect connector config
- * @param dcOrVarsOrOptions the first argument provided to a generated admin function
- * @param varsOrOptions the second argument provided to a generated admin function
- * @param options the third argument provided to a generated admin function
- * @param hasVars boolean parameter indicating whether the operation has variables
- * @param validateVars boolean parameter indicating whether we should expect to find a value for realVars
+ * @param connectorConfig - DataConnect connector config
+ * @param dcOrVarsOrOptions - the first argument provided to a generated admin function
+ * @param varsOrOptions - the second argument provided to a generated admin function
+ * @param options - the third argument provided to a generated admin function
+ * @param hasVars - boolean parameter indicating whether the operation has variables
+ * @param validateVars - boolean parameter indicating whether we should expect to find a value for realVars
  * @returns parsed DataConnect, Variables, and Options for the operation
- * @internal
  */
 export function validateAdminArgs<Variables extends object>(
   connectorConfig: ConnectorConfig,
@@ -49,8 +44,8 @@ export function validateAdminArgs<Variables extends object>(
   varsOrOptions?: Variables | OperationOptions,
   options?: OperationOptions,
   hasVars?: boolean,
-  validateVars?: boolean,
-): ParsedAdminArgs<Variables> {
+  validateVars?: boolean
+): { dc: DataConnect; vars: Variables; options: OperationOptions; } {
   let dcInstance: DataConnect;
   let realVars: Variables;
   let realOptions: OperationOptions;
@@ -76,7 +71,10 @@ export function validateAdminArgs<Variables extends object>(
   }
 
   if (!dcInstance || (!realVars && validateVars)) {
-    throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT, 'Variables required.');
+    throw new FirebaseDataConnectError(
+      DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+      'Variables required.'
+    );
   }
   return { dc: dcInstance, vars: realVars, options: realOptions };
 }
