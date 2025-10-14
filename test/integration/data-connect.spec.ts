@@ -174,6 +174,9 @@ describe('getDataConnect()', () => {
   /** @auth(level: NO_ACCESS) */
   const queryListEmails = 
     'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { id } } }';
+  /** @auth(level: NO_ACCESS) */
+  const queryGetEmail = 
+    'query GetEmail($id: String!) @auth(level: NO_ACCESS) { email(id: $id) { id subject text date from { id } } }';
   /** no @auth specified - default permissions */
   const queryGetUserById = 'query GetUser($id: User_Key!) { user(key: $id) { id name address } }';
 
@@ -288,15 +291,20 @@ describe('getDataConnect()', () => {
         expect(jeffResponse.data.user_upsert.id).to.not.be.empty;
         expect(jeffResponse.data.user_upsert.id).equals(jeffUser.id);
 
-        const emailResponse = await getDataConnect(connectorConfig).executeGraphql<EmailUpsertResponse, unknown>(
+        const upsertEmailResponse = await getDataConnect(connectorConfig).executeGraphql<EmailUpsertResponse, unknown>(
           upsertFredEmail
         );
         //{ data: { email_upsert: { id: 'email_id' } } }
-        expect(emailResponse.data.email_upsert.id).to.not.be.empty;
+        expect(upsertEmailResponse.data.email_upsert.id).to.not.be.empty;
+        const queryGetEmailResponse = 
+          await getDataConnect(connectorConfig).executeGraphql<GetEmailResponse, GetEmailVariables>(
+            queryGetEmail, { variables: { id: upsertEmailResponse.data.email_upsert.id } }
+          );
+        expect(queryGetEmailResponse.data.email).to.deep.equal(fredEmail);
 
         const deleteResponse = await getDataConnect(connectorConfig).executeGraphql<DeleteResponse, unknown>(deleteAll);
-        expect(deleteResponse.data.email_deleteMany).to.be.greaterThan(0);
-        expect(deleteResponse.data.user_deleteMany).to.be.greaterThan(0);
+        expect(deleteResponse.data.email_deleteMany).to.equal(1);
+        expect(deleteResponse.data.user_deleteMany).to.equal(2);
       });
 
       it('executeGraphql() successfully executes a GraphQL query', async () => {
