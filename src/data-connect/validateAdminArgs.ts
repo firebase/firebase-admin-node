@@ -27,9 +27,36 @@ import {
  * The generated Admin SDK will allow the user to pass in variables, a Data Connect
  * instance, or operation options. The only required argument is the variables,
  * which are only required when the operation has at least one required variable.
- * Otherwise, all arguments are optional. This function validates the variables
- * and returns back the DataConnect instance, variables, and options based on the
- * arguments passed in.
+ * Otherwise, all arguments are optional. 
+ * 
+ * This function validates the variables and returns back the DataConnect instance, 
+ * variables, and options based on the arguments passed in. It always returns a
+ * DataConnect instance, using the {@link connectorConfig} to grab one if not provided.
+ * 
+ * For this function to work properly, if the operation has variables (optional
+ * are required), you must pass hasVars: true (if there are no variables, it is
+ * not required, since undefined is false-y).
+ * 
+ * Examples - validateAdminArgs(Input, with implied connectorConfig argument) => Output: 
+ *   
+ *   Input:  { }
+ *   Output: { dc: <DataConnect from connectorConfig>, vars: undefined, options: undefined }
+ * 
+ *   Input:  { dcOrVarsOrOptions: dataconnect }
+ *   Output: { dc: dataConnect, vars: undefined, options: undefined }
+ * 
+ *   Input:  { dcOrVarsOrOptions: options }
+ *   Output: { dc: <DataConnect from connectorConfig>, vars: undefined, options: options }
+ * 
+ *   Input:  { dcOrVarsOrOptions: variables, varsOrOptions: undefined, options: undefined, hasVars: true }
+ *   Output: { dc: <DataConnect from connectorConfig>, vars: variables, options: undefined }
+ * 
+ *   Input:  { dcOrVarsOrOptions: variables, varsOrOptions: options, options: undefined, hasVars: true }
+ *   Output: { dc: <DataConnect from connectorConfig>, vars: variables, options: options }
+ * 
+ *   Input:  { dcOrVarsOrOptions: dataconnect, varsOrOptions: variables, options: options, hasVars: true }
+ *   Output: { dc: dataconnect, vars: variables, options: options }
+ * 
  * @param connectorConfig - DataConnect connector config
  * @param dcOrVarsOrOptions - the first argument provided to a generated admin function
  * @param varsOrOptions - the second argument provided to a generated admin function
