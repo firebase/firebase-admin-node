@@ -37,25 +37,7 @@ import {
  * are required), you must pass hasVars: true (if there are no variables, it is
  * not required, since undefined is false-y).
  * 
- * Examples - validateAdminArgs(Input, with implied connectorConfig argument) produces Output: 
- *   
- *   Input: \{ \}
- *   Output: \{ dc: DataConnect from connectorConfig, vars: undefined, options: undefined \}
- * 
- *   Input:  \{ dcOrVarsOrOptions: dataconnect \}
- *   Output: \{ dc: dataConnect, vars: undefined, options: undefined \}
- * 
- *   Input:  \{ dcOrVarsOrOptions: options \}
- *   Output: \{ dc: DataConnect from connectorConfig, vars: undefined, options: options \}
- * 
- *   Input:  \{ dcOrVarsOrOptions: variables, varsOrOptions: undefined, options: undefined, hasVars: true \}
- *   Output: \{ dc: DataConnect from connectorConfig, vars: variables, options: undefined \}
- * 
- *   Input:  \{ dcOrVarsOrOptions: variables, varsOrOptions: options, options: undefined, hasVars: true \}
- *   Output: \{ dc: DataConnect from connectorConfig, vars: variables, options: options \}
- * 
- *   Input:  \{ dcOrVarsOrOptions: dataconnect, varsOrOptions: variables, options: options, hasVars: true \}
- *   Output: \{ dc: dataconnect, vars: variables, options: options \}
+ * Usage examples can be found in test files.
  * 
  * @param connectorConfig - DataConnect connector config
  * @param dcOrVarsOrOptions - the first argument provided to a generated admin function

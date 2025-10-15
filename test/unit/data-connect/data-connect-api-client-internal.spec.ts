@@ -1,4 +1,3 @@
-/* eslint-disable max-len */ // TODO: REMOVE THIS
 /*!
  * @license
  * Copyright 2024 Google LLC
@@ -469,7 +468,9 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        const resp = await apiClient.executeMutation<UsersResponse, undefined>('unauthenticated mutation', undefined, unauthenticatedOptions)
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>(
+          'unauthenticated mutation', undefined, unauthenticatedOptions
+        )
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users[0].name).to.be.not.undefined;
         expect(resp.data.users[0].address).to.be.not.undefined;
@@ -489,7 +490,9 @@ describe('DataConnectApiClient', () => {
         const stub = sandbox
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-        const resp = await apiClient.executeMutation<UsersResponse, undefined>('authenticated mutation', undefined, authenticatedOptions);
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>(
+          'authenticated mutation', undefined, authenticatedOptions
+        );
         expect(resp.data.users).to.be.not.empty;
         expect(resp.data.users[0].name).to.be.not.undefined;
         expect(resp.data.users[0].address).to.be.not.undefined;

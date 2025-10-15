@@ -41,7 +41,7 @@ export {
 } from './data-connect'
 export {
   validateAdminArgs
-} from './validateAdminArgs'
+} from './validate-admin-args'
 
 /**
  * Gets the {@link DataConnect} service with the provided connector configuration
