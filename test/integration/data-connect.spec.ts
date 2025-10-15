@@ -68,6 +68,16 @@ interface GetUserResponse {
   user: User;
 }
 
+interface InsertUserVariables {
+  id: string;
+  name: string;
+  address: string;
+}
+
+interface InsertUserResponse {
+  user_insert: { id: string; };
+}
+
 interface ListUsersResponse {
   users: User[];
 }
@@ -487,11 +497,10 @@ describe('getDataConnect()', () => {
         ).should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
       })
 
-      it('should execut a query with variables', async () => {
+      it('should execute a query with variables', async () => {
         const resp = await getDataConnect(connectorConfig).executeQuery<GetUserResponse, GetUserVariables>(
           'GetUser',
           { id: { id: fredUser.id } },
-          optsUnauthorizedClaims, 
         );
         expect(resp.data.user).to.not.be.empty;
         expect(resp.data.user).to.deep.equal(fredUser);
@@ -777,6 +786,21 @@ describe('getDataConnect()', () => {
         return getDataConnect(connectorConfig).executeMutation(
           'DOES_NOT_EXIST!!!', optsUnauthorizedClaims
         ).should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
+      });
+
+      it('should execute a mutation with variables', async () => {
+        const user = { id: 'USER_ID', name: 'USER_NAME', address: 'USER_ADDRESS' };
+        const insertResp = await getDataConnect(connectorConfig)
+          .executeMutation<InsertUserResponse, InsertUserVariables>('InsertUser', user);
+        expect(insertResp.data.user_insert).to.not.be.empty;
+        expect(insertResp.data.user_insert).to.deep.equal({ id: user.id });
+        
+        const getResp = await getDataConnect(connectorConfig).executeQuery<GetUserResponse, GetUserVariables>(
+          'GetUser',
+          { id: { id: user.id } },
+        );
+        expect(getResp.data.user).to.not.be.empty;
+        expect(getResp.data.user).to.deep.equal(user);
       })
 
       describe('with unauthenticated impersonation', () => {
