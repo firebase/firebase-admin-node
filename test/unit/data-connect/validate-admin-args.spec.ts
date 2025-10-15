@@ -23,36 +23,23 @@ import {
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError
 } from '../../../src/data-connect/data-connect-api-client-internal';
-import firebase, { FirebaseApp } from '@firebase/app-compat';
-import { projectId } from '../../resources/mocks';
-import { apiKey } from '../../integration/setup';
+import { App, initializeApp } from '../../../src/app';
+import { defaultAppStore } from '../../../src/app/lifecycle';
 
 interface IdVars {
   id: string
 }
 
 describe('validateAdminArgs()', () => {
-  let app: FirebaseApp;
-  beforeEach(() => {
-    app = firebase.initializeApp({
-      apiKey,
-      authDomain: projectId + '.firebaseapp.com',
-    });
-  });
+  let app: App;
+  let getDataConnectStub: sinon.SinonStub;
 
-  afterEach(() => {
-    app.delete();
-  });
-  
   const connectorConfig: ConnectorConfig = {
     location: 'us-west2',
     serviceId: 'my-service',
     connector: 'my-connector',
   };
-  const stubDcInstance = { connectorConfig: connectorConfig, source: 'STUB' } as unknown as DataConnect;
-  const getDataConnectStub = sinon.stub(DataConnectService.prototype, 'getDataConnect').returns(
-    stubDcInstance
-  );
+
   const providedDcInstance = { connectorConfig: connectorConfig, source: 'PROVIDED' } as unknown as DataConnect;
   const variables: IdVars = { id: 'stephenarosaj' };
   const options: OperationOptions = { impersonate: { unauthenticated: true } };
@@ -61,6 +48,20 @@ describe('validateAdminArgs()', () => {
     DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
     'Variables required.'
   );
+
+  const stubDcInstance = { connectorConfig: connectorConfig, source: 'STUB' } as unknown as DataConnect;
+  beforeEach(() => {
+    getDataConnectStub = sinon.stub(DataConnectService.prototype, 'getDataConnect').returns(stubDcInstance);
+
+    // initializing app required, "using" it is required for successful build/compile 
+    app = initializeApp();
+    app.name;
+  });
+
+  afterEach(() => {
+    getDataConnectStub.restore();
+    defaultAppStore.clearAllApps();
+  });
 
   describe('with no variadic args', () => {
     it('should call getDataConnect to generate a DataConnect instance', () => {
@@ -215,9 +216,9 @@ describe('validateAdminArgs()', () => {
         });
 
         it('and the first argument is undefined variables', () => {
-          expect(validateAdminArgs(
-            connectorConfig, undefined, undefined, undefined, true, true
-          )).to.throw().and.have.property('code', invalidVariablesError.code);
+          expect(() => {
+            validateAdminArgs(connectorConfig, undefined, undefined, undefined, true, true);
+          }).to.throw().and.have.property('code', invalidVariablesError.code);
         });
       });
     });
