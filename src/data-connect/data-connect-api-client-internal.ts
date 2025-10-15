@@ -26,14 +26,26 @@ import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
 
 const API_VERSION = 'v1';
+const FIREBASE_DATA_CONNECT_PROD_URL = 'https://firebasedataconnect.googleapis.com';
 
 /** The Firebase Data Connect backend service URL format. */
 const FIREBASE_DATA_CONNECT_SERVICES_URL_FORMAT =
-  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}:{endpointId}';
+  FIREBASE_DATA_CONNECT_PROD_URL + 
+  '/{version}' + 
+  '/projects/{projectId}' + 
+  '/locations/{locationId}' + 
+  '/services/{serviceId}' + 
+  ':{endpointId}';
 
 /** The Firebase Data Connect backend connector URL format. */
 const FIREBASE_DATA_CONNECT_CONNECTORS_URL_FORMAT =
-  'https://firebasedataconnect.googleapis.com/{version}/projects/{projectId}/locations/{locationId}/services/{serviceId}/connectors/{connectorId}:{endpointId}';
+  FIREBASE_DATA_CONNECT_PROD_URL + 
+  '/{version}' + 
+  '/projects/{projectId}' + 
+  '/locations/{locationId}' + 
+  '/services/{serviceId}' + 
+  '/connectors/{connectorId}' + 
+  ':{endpointId}';
 
 /** Firebase Data Connect service URL format when using the Data Connect emulator. */
 const FIREBASE_DATA_CONNECT_EMULATOR_SERVICES_URL_FORMAT =

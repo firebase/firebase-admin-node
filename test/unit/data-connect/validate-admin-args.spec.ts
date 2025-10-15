@@ -23,7 +23,7 @@ import {
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError
 } from '../../../src/data-connect/data-connect-api-client-internal';
-import firebase from '@firebase/app-compat';
+import firebase, { FirebaseApp } from '@firebase/app-compat';
 import { projectId } from '../../resources/mocks';
 import { apiKey } from '../../integration/setup';
 
@@ -32,12 +32,16 @@ interface IdVars {
 }
 
 describe('validateAdminArgs()', () => {
+  let app: FirebaseApp;
   beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const app = firebase.initializeApp({
+    app = firebase.initializeApp({
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
+  });
+
+  afterEach(() => {
+    app.delete();
   });
   
   const connectorConfig: ConnectorConfig = {
