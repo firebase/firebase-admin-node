@@ -16,7 +16,6 @@
  */
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as mocks from '../../resources/mocks';
 import { ConnectorConfig, validateAdminArgs } from '../../../src/data-connect';
 import { DataConnect, DataConnectService } from '../../../src/data-connect/data-connect';
 import { OperationOptions } from '../../../lib/data-connect';
@@ -24,35 +23,22 @@ import {
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError
 } from '../../../src/data-connect/data-connect-api-client-internal';
-import { FirebaseApp } from '../../../src/app/firebase-app';
+import firebase from '@firebase/app-compat';
+import { projectId } from '../../resources/mocks';
+import { apiKey } from '../../integration/setup';
 
 interface IdVars {
   id: string
 }
 
 describe('validateAdminArgs()', () => {
-  const mockOptions = {
-    credential: new mocks.MockCredential(),
-    projectId: 'test-project',
-  };
-
-  let app: FirebaseApp;
-
-  let sandbox: sinon.SinonSandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-    app = mocks.appWithOptions(mockOptions);
+  before(() => {
+    firebase.initializeApp({
+      apiKey,
+      authDomain: projectId + '.firebaseapp.com',
+    });
   });
-
-  afterEach(() => {
-    sandbox.restore();
-    if (process.env.DATA_CONNECT_EMULATOR_HOST) {
-      delete process.env.DATA_CONNECT_EMULATOR_HOST;
-    }
-    return app.delete();
-  });
-
+  
   const connectorConfig: ConnectorConfig = {
     location: 'us-west2',
     serviceId: 'my-service',
@@ -194,43 +180,39 @@ describe('validateAdminArgs()', () => {
     describe('and validateVars = true', () => {
       describe('should succeed if vars WERE provided', () => {
         it('and the first argument is a DataConnect instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, providedDcInstance, variables, undefined, true, true
-          )).to.not.throw(invalidVariablesError);
-
-          const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
-            connectorConfig, providedDcInstance, variables, undefined, true, true
-          );
-          expect(dcInstance).to.deep.equal(providedDcInstance);
-          expect(inputVars).to.deep.equal(inputVars);
-          expect(inputOpts).to.be.undefined;
+          expect(() => {
+            const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
+              connectorConfig, providedDcInstance, variables, undefined, true, true
+            );
+            expect(dcInstance).to.deep.equal(providedDcInstance);
+            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputOpts).to.be.undefined;
+          }).to.not.throw(invalidVariablesError);          
         });
 
         it('and the first argument is variables instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, variables, undefined, undefined, true, true
-          )).to.not.throw(invalidVariablesError);
-          
-          const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
-            connectorConfig, variables, undefined, undefined, true, true
-          );
-          expect(dcInstance).to.deep.equal(stubDcInstance);
-          expect(inputVars).to.deep.equal(inputVars);
-          expect(inputOpts).to.be.undefined;
+          expect(() => {
+            const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
+              connectorConfig, variables, undefined, undefined, true, true
+            );
+            expect(dcInstance).to.deep.equal(stubDcInstance);
+            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputOpts).to.be.undefined;
+          }).to.not.throw(invalidVariablesError);
         });
       });
 
       describe('should throw if vars were NOT provided', () => {
         it('and the first argument is a DataConnect instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, providedDcInstance, undefined, undefined, true, true
-          )).to.throw(invalidVariablesError);
+          expect(() => {
+            validateAdminArgs(connectorConfig, providedDcInstance, undefined, undefined, true, true);
+          }).to.throw().and.have.property('code', invalidVariablesError.code);
         });
 
         it('and the first argument is undefined variables', () => {
           expect(validateAdminArgs(
             connectorConfig, undefined, undefined, undefined, true, true
-          )).to.throw(invalidVariablesError);
+          )).to.throw().and.have.property('code', invalidVariablesError.code);
         });
       });
     });
@@ -238,22 +220,20 @@ describe('validateAdminArgs()', () => {
     describe('and validateVars = false', () => {
       describe('should succeed if vars WERE provided', () => {
         it('and the first argument is a DataConnect instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, providedDcInstance, variables, undefined, true, false
-          )).to.not.throw(invalidVariablesError);
-
-          const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
-            connectorConfig, providedDcInstance, variables, undefined, true, false
-          );
-          expect(dcInstance).to.deep.equal(providedDcInstance);
-          expect(inputVars).to.be.undefined;
-          expect(inputOpts).to.be.undefined;
+          expect(() => {
+            const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
+              connectorConfig, providedDcInstance, variables, undefined, true, false
+            );
+            expect(dcInstance).to.deep.equal(providedDcInstance);
+            expect(inputVars).to.be.undefined;
+            expect(inputOpts).to.be.undefined;
+          }).to.not.throw(invalidVariablesError);
         });
 
         it('and the first argument is variables instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, variables, undefined, undefined, true, false
-          )).to.not.throw(invalidVariablesError);
+          expect(() => {
+            validateAdminArgs(connectorConfig, variables, undefined, undefined, true, false);
+          }).to.not.throw(invalidVariablesError);
           
           const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
             connectorConfig, variables, undefined, undefined, true, false
@@ -266,29 +246,25 @@ describe('validateAdminArgs()', () => {
 
       describe('should succeed if vars were NOT provided', () => {
         it('and the first argument is a DataConnect instance', () => {
-          expect(validateAdminArgs(
-            connectorConfig, providedDcInstance, undefined, undefined, true, false
-          )).to.not.throw(invalidVariablesError);
-
-          const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
-            connectorConfig, providedDcInstance, undefined, undefined, true, false
-          );
-          expect(dcInstance).to.deep.equal(providedDcInstance);
-          expect(inputVars).to.deep.equal(inputVars);
-          expect(inputOpts).to.be.undefined;
+          expect(() => {
+            const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
+              connectorConfig, providedDcInstance, undefined, undefined, true, false
+            );
+            expect(dcInstance).to.deep.equal(providedDcInstance);
+            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputOpts).to.be.undefined;
+          }).to.not.throw(invalidVariablesError);
         });
 
         it('and the first argument is undefined variables', () => {
-          expect(validateAdminArgs(
-            connectorConfig, undefined, undefined, undefined, true, false
-          )).to.not.throw(invalidVariablesError);
-          
-          const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
-            connectorConfig, undefined, undefined, undefined, true, false
-          );
-          expect(dcInstance).to.deep.equal(stubDcInstance);
-          expect(inputVars).to.be.undefined;
-          expect(inputOpts).to.be.undefined;
+          expect(() => {
+            const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
+              connectorConfig, undefined, undefined, undefined, true, false
+            );
+            expect(dcInstance).to.deep.equal(stubDcInstance);
+            expect(inputVars).to.be.undefined;
+            expect(inputOpts).to.be.undefined;
+          }).to.not.throw(invalidVariablesError);          
         });
       });
     });
