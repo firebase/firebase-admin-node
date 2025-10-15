@@ -17,21 +17,19 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { ConnectorConfig, validateAdminArgs } from '../../../src/data-connect';
-import { DataConnect, DataConnectService } from '../../../src/data-connect/data-connect';
+import { DataConnect } from '../../../src/data-connect/data-connect';
 import { OperationOptions } from '../../../lib/data-connect';
 import { 
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError
 } from '../../../src/data-connect/data-connect-api-client-internal';
-import { App, initializeApp } from '../../../src/app';
-import { defaultAppStore } from '../../../src/app/lifecycle';
+import * as dataConnectIndex from '../../../src/data-connect/index';
 
 interface IdVars {
   id: string
 }
 
 describe('validateAdminArgs()', () => {
-  let app: App;
   let getDataConnectStub: sinon.SinonStub;
 
   const connectorConfig: ConnectorConfig = {
@@ -51,16 +49,11 @@ describe('validateAdminArgs()', () => {
 
   const stubDcInstance = { connectorConfig: connectorConfig, source: 'STUB' } as unknown as DataConnect;
   beforeEach(() => {
-    getDataConnectStub = sinon.stub(DataConnectService.prototype, 'getDataConnect').returns(stubDcInstance);
-
-    // initializing app required, "using" it is required for successful build/compile 
-    app = initializeApp();
-    app.name;
+    getDataConnectStub = sinon.stub(dataConnectIndex, 'getDataConnect').returns(stubDcInstance);
   });
 
   afterEach(() => {
     getDataConnectStub.restore();
-    defaultAppStore.clearAllApps();
   });
 
   describe('with no variadic args', () => {
