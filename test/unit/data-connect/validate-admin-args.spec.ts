@@ -32,8 +32,9 @@ interface IdVars {
 }
 
 describe('validateAdminArgs()', () => {
-  before(() => {
-    firebase.initializeApp({
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const app = firebase.initializeApp({
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
