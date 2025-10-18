@@ -29,14 +29,19 @@ import { ConnectorConfig } from './data-connect-api';
 export {
   GraphqlOptions,
   ExecuteGraphqlResponse,
+  ExecuteOperationResponse,
   ConnectorConfig,
   ImpersonateAuthenticated,
   ImpersonateUnauthenticated,
-  AuthClaims
+  AuthClaims,
+  OperationOptions,
 } from './data-connect-api'
 export {
   DataConnect,
 } from './data-connect'
+export {
+  validateAdminArgs
+} from './validate-admin-args'
 
 /**
  * Gets the {@link DataConnect} service with the provided connector configuration
@@ -51,6 +56,7 @@ export {
  * const connectorConfig: ConnectorConfig = {
  *  location: 'us-west2',
  *  serviceId: 'my-service',
+ *  connectorName: 'my-connector',
  * };
  * 
  * // Get the `DataConnect` service for the default app
