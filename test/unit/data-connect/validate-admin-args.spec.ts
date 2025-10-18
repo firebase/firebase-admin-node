@@ -77,12 +77,12 @@ describe('validateAdminArgs()', () => {
     });
 
     it('should successfully parse the provided options', () => {
-      const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs<object>(
+      const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateAdminArgs(
         connectorConfig, options
       );
       expect(dcInstance).to.deep.equal(stubDcInstance);
       expect(inputVars).to.be.undefined;
-      expect(inputOpts).to.be.deep.equal(options);
+      expect(inputOpts).to.deep.equal(options);
     });
   });
 
@@ -93,7 +93,7 @@ describe('validateAdminArgs()', () => {
       );
       expect(dcInstance).to.deep.equal(providedDcInstance);
       expect(inputVars).to.be.undefined;
-      expect(inputOpts).to.be.deep.equal(options);
+      expect(inputOpts).to.deep.equal(options);
     });
   });
 
@@ -184,7 +184,7 @@ describe('validateAdminArgs()', () => {
               connectorConfig, providedDcInstance, variables, undefined, true, true
             );
             expect(dcInstance).to.deep.equal(providedDcInstance);
-            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputVars).to.deep.equal(variables);
             expect(inputOpts).to.be.undefined;
           }).to.not.throw(invalidVariablesError);          
         });
@@ -195,7 +195,7 @@ describe('validateAdminArgs()', () => {
               connectorConfig, variables, undefined, undefined, true, true
             );
             expect(dcInstance).to.deep.equal(stubDcInstance);
-            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputVars).to.deep.equal(variables);
             expect(inputOpts).to.be.undefined;
           }).to.not.throw(invalidVariablesError);
         });
@@ -238,7 +238,7 @@ describe('validateAdminArgs()', () => {
             connectorConfig, variables, undefined, undefined, true, false
           );
           expect(dcInstance).to.deep.equal(stubDcInstance);
-          expect(inputVars).to.deep.equal(inputVars);
+          expect(inputVars).to.deep.equal(variables);
           expect(inputOpts).to.be.undefined;
         });
       });
@@ -250,7 +250,7 @@ describe('validateAdminArgs()', () => {
               connectorConfig, providedDcInstance, undefined, undefined, true, false
             );
             expect(dcInstance).to.deep.equal(providedDcInstance);
-            expect(inputVars).to.deep.equal(inputVars);
+            expect(inputVars).to.deep.equal(variables);
             expect(inputOpts).to.be.undefined;
           }).to.not.throw(invalidVariablesError);
         });

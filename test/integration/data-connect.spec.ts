@@ -495,7 +495,7 @@ describe('getDataConnect()', () => {
           undefined,
           optsUnauthorizedClaims
         ).should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
-      })
+      });
 
       it('should execute a query with variables', async () => {
         const resp = await getDataConnect(connectorConfig).executeQuery<GetUserResponse, GetUserVariables>(
@@ -504,7 +504,7 @@ describe('getDataConnect()', () => {
         );
         expect(resp.data.user).to.not.be.empty;
         expect(resp.data.user).to.deep.equal(fredUser);
-      })
+      });
 
       describe('with unauthenticated impersonation', () => {
         it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
