@@ -75,11 +75,6 @@ export interface OperationOptions {
     impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
 }
 
-// @public
-export function validateAdminArgs<Variables extends object>(connectorConfig: ConnectorConfig, dcOrVarsOrOptions?: DataConnect | Variables | OperationOptions, varsOrOptions?: Variables | OperationOptions, options?: OperationOptions, hasVars?: boolean, validateVars?: boolean): {
-    dc: DataConnect;
-    vars: Variables;
-    options: OperationOptions;
-};
+// (No @packageDocumentation comment for this package)
 
 ```

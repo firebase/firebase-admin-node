@@ -18,7 +18,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { ConnectorConfig, validateAdminArgs } from '../../../src/data-connect';
 import { DataConnect } from '../../../src/data-connect/data-connect';
-import { OperationOptions } from '../../../lib/data-connect';
+import { OperationOptions } from '../../../src/data-connect';
 import { 
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError

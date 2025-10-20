@@ -21,6 +21,7 @@
  * @packageDocumentation
  */
 
+import { _validateAdminArgs } from './validate-admin-args';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { DataConnect, DataConnectService } from './data-connect';
@@ -39,9 +40,6 @@ export {
 export {
   DataConnect,
 } from './data-connect'
-export {
-  validateAdminArgs
-} from './validate-admin-args'
 
 /**
  * Gets the {@link DataConnect} service with the provided connector configuration
@@ -86,3 +84,8 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
   const dataConnectService = firebaseApp.getOrInitService('dataConnect', (app) => new DataConnectService(app));
   return dataConnectService.getDataConnect(connectorConfig);
 }
+
+/**
+ * @internal
+ */
+export const validateAdminArgs = _validateAdminArgs;

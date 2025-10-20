@@ -16,10 +16,10 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { getDataConnect, ConnectorConfig } from '../../lib/data-connect/index';
+import { getDataConnect, ConnectorConfig } from '../../src/data-connect/index';
 import firebase from '@firebase/app-compat';
 import { apiKey, projectId } from './setup';
-import { OperationOptions } from '../../lib/data-connect/data-connect-api';
+import { OperationOptions } from '../../src/data-connect/data-connect-api';
 
 chai.should();
 chai.use(chaiAsPromised);

@@ -24,6 +24,8 @@ import {
 } from './data-connect-api-client-internal';
 
 /**
+ * @internal
+ * 
  * The generated Admin SDK will allow the user to pass in variables, a Data Connect
  * instance, or operation options. The only required argument is the variables,
  * which are only required when the operation has at least one required variable.
@@ -47,7 +49,7 @@ import {
  * @param validateVars - boolean parameter indicating whether we should expect to find a value for realVars
  * @returns parsed DataConnect, Variables, and Options for the operation
  */
-export function validateAdminArgs<Variables extends object>(
+export function _validateAdminArgs<Variables extends object>(
   connectorConfig: ConnectorConfig,
   dcOrVarsOrOptions?: DataConnect | Variables | OperationOptions,
   varsOrOptions?: Variables | OperationOptions,
