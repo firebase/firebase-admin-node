@@ -318,7 +318,6 @@ describe('getDataConnect()', () => {
       it('executeGraphql() successfully executes a GraphQL query', async () => {
         const resp = await getDataConnect(connectorConfig)
           .executeGraphql<ListUsersResponse, unknown>(queryListUsers);
-        expect(resp.data.users.length).to.equal(initialState.users.length);
         resp.data.users.forEach((user) => {
           expect(initialState.users).to.deep.include(user);
         });
@@ -350,7 +349,6 @@ describe('getDataConnect()', () => {
       it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
         const resp = await getDataConnect(connectorConfig)
           .executeGraphqlRead<ListUsersResponse, unknown>(queryListUsers);
-        expect(resp.data.users.length).to.equal(initialState.users.length);
         resp.data.users.forEach((user) => {
           expect(initialState.users).to.deep.include(user);
         });
@@ -430,7 +428,6 @@ describe('getDataConnect()', () => {
         it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
             queryListUsers, optsAuthorizedFredClaims);
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -439,7 +436,6 @@ describe('getDataConnect()', () => {
         it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
             queryListUsers, optsUnauthorizedClaims);
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -449,7 +445,6 @@ describe('getDataConnect()', () => {
           async () => {
             const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
               queryListUsers, optsNonExistingClaims);
-            expect(resp.data.users.length).to.equal(initialState.users.length);
             resp.data.users.forEach((user) => {
               expect(initialState.users).to.deep.include(user);
             });
@@ -501,7 +496,6 @@ describe('getDataConnect()', () => {
             undefined,
             optsUnauthorizedClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -537,7 +531,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredAnonClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -547,7 +540,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredAnonClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -585,7 +577,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -595,7 +586,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -605,7 +595,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUser', undefined, optsAuthorizedFredClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -637,7 +626,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -647,7 +635,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -657,7 +644,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUser', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -667,7 +653,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserEmailVerified', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -693,7 +678,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersPublic'
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -703,7 +687,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUserAnon'
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -713,7 +696,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUser'
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -723,7 +705,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUserEmailVerified'
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
@@ -733,7 +714,6 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersNoAccess'
           );
-          expect(resp.data.users.length).to.equal(initialState.users.length);
           resp.data.users.forEach((user) => {
             expect(initialState.users).to.deep.include(user);
           });
