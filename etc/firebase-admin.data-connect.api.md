@@ -75,6 +75,4 @@ export interface OperationOptions {
     impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
 }
 
-// (No @packageDocumentation comment for this package)
-
 ```

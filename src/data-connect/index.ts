@@ -1,4 +1,8 @@
-
+/**
+ * Firebase Data Connect service.
+ *
+ * @packageDocumentation
+ */
 
 /*!
  * @license
