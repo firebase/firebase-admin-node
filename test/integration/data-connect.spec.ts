@@ -461,8 +461,8 @@ describe('getDataConnect()', () => {
     });
   });
 
-  describe('operation ref API', () => {
-    describe('queryRef()', () => {
+  describe('executeQuery|Mutation API', () => {
+    describe('executeQuery()', () => {
       it("should fail when executing a query which doesn't exist", async () => {
         return getDataConnect(connectorConfig).executeQuery(
           'DOES_NOT_EXIST!!!',
@@ -687,7 +687,7 @@ describe('getDataConnect()', () => {
       });
     });
 
-    describe('mutationRef()', () => {
+    describe('executeMutation()', () => {
       function generateEmailId(): string {
         return `email_id_${Math.random() * 1000}`;
       }
