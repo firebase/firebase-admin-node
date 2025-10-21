@@ -318,9 +318,7 @@ describe('getDataConnect()', () => {
       it('executeGraphql() successfully executes a GraphQL query', async () => {
         const resp = await getDataConnect(connectorConfig)
           .executeGraphql<ListUsersResponse, unknown>(queryListUsers);
-        resp.data.users.forEach((user) => {
-          expect(initialState.users).to.deep.include(user);
-        });
+        expect(resp.data.users).to.deep.equal(initialState.users);
       });
 
       it('executeGraphql() use the operationName when multiple queries are provided', async () => {
@@ -349,9 +347,7 @@ describe('getDataConnect()', () => {
       it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
         const resp = await getDataConnect(connectorConfig)
           .executeGraphqlRead<ListUsersResponse, unknown>(queryListUsers);
-        resp.data.users.forEach((user) => {
-          expect(initialState.users).to.deep.include(user);
-        });
+        expect(resp.data.users).to.deep.equal(initialState.users);
       });
 
       it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
@@ -428,26 +424,20 @@ describe('getDataConnect()', () => {
         it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
             queryListUsers, optsAuthorizedFredClaims);
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
           const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
             queryListUsers, optsUnauthorizedClaims);
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('executeGraphql() successfully executes an impersonated query with non-existing authenticated claims',
           async () => {
             const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
               queryListUsers, optsNonExistingClaims);
-            resp.data.users.forEach((user) => {
-              expect(initialState.users).to.deep.include(user);
-            });
+            expect(resp.data.users).to.deep.equal(initialState.users);
           });
       });
 
@@ -496,9 +486,7 @@ describe('getDataConnect()', () => {
             undefined,
             optsUnauthorizedClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should fail to execute a query with @auth(level: USER_ANON)', () => {
@@ -531,18 +519,14 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredAnonClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
         
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredAnonClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should fail to execute a query with @auth(level: USER)', async () => {
@@ -577,27 +561,21 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUser', undefined, optsAuthorizedFredClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
@@ -626,36 +604,28 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersPublic', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUser', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
             'ListUsersUserEmailVerified', undefined, optsAuthorizedFredEmailVerifiedClaims
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
@@ -678,45 +648,35 @@ describe('getDataConnect()', () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersPublic'
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUserAnon'
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUser'
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersUserEmailVerified'
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it('should successfully execute a query with @auth(level: NO_ACCESS)', async () => {
           const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
             'ListUsersNoAccess'
           );
-          resp.data.users.forEach((user) => {
-            expect(initialState.users).to.deep.include(user);
-          });
+          expect(resp.data.users).to.deep.equal(initialState.users);
         });
 
         it("should fail to execute a query using the impersonated user's auth.uid", async () => {
