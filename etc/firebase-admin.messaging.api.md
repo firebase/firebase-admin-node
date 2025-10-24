@@ -8,6 +8,7 @@ import { Agent } from 'http';
 
 // @public
 export interface AndroidConfig {
+    bandwidthConstrainedOk?: boolean;
     collapseKey?: string;
     data?: {
         [key: string]: string;
@@ -17,6 +18,7 @@ export interface AndroidConfig {
     notification?: AndroidNotification;
     priority?: ('high' | 'normal');
     restrictedPackageName?: string;
+    restrictedSatelliteOk?: boolean;
     ttl?: number;
 }
 
