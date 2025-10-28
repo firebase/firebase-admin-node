@@ -223,7 +223,7 @@
     "@google-cloud/storage": "^7.14.0"
   },
   "devDependencies": {
-    "@firebase/api-documenter": "^0.4.0",
+    "@firebase/api-documenter": "^0.5.0",
     "@firebase/app-compat": "^0.2.1",
     "@firebase/auth-compat": "^0.6.0",
     "@firebase/auth-types": "^0.13.0",
