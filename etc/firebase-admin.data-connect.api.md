@@ -13,6 +13,7 @@ export type AuthClaims = Partial<DecodedIdToken>;
 
 // @public
 export interface ConnectorConfig {
+    connector?: string;
     location: string;
     serviceId: string;
 }
@@ -27,6 +28,10 @@ export class DataConnect {
     readonly connectorConfig: ConnectorConfig;
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
     executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    executeMutation<Data>(name: string, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeMutation<Data, Variables>(name: string, variables: Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeQuery<Data>(name: string, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeQuery<Data, Variables>(name: string, variables: Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
     insert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     insertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
     upsert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
@@ -35,6 +40,11 @@ export class DataConnect {
 
 // @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
+    data: GraphqlResponse;
+}
+
+// @public
+export interface ExecuteOperationResponse<GraphqlResponse> {
     data: GraphqlResponse;
 }
 
@@ -58,6 +68,11 @@ export interface ImpersonateAuthenticated {
 export interface ImpersonateUnauthenticated {
     authClaims?: never;
     unauthenticated: true;
+}
+
+// @public
+export interface OperationOptions {
+    impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
 }
 
 ```

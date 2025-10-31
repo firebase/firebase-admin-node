@@ -1,3 +1,9 @@
+/**
+ * Firebase Data Connect service.
+ *
+ * @packageDocumentation
+ */
+
 /*!
  * @license
  * Copyright 2024 Google LLC
@@ -15,12 +21,7 @@
  * limitations under the License.
  */
 
-/**
- * Firebase Data Connect service.
- *
- * @packageDocumentation
- */
-
+import { _validateAdminArgs } from './validate-admin-args';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { DataConnect, DataConnectService } from './data-connect';
@@ -29,10 +30,12 @@ import { ConnectorConfig } from './data-connect-api';
 export {
   GraphqlOptions,
   ExecuteGraphqlResponse,
+  ExecuteOperationResponse,
   ConnectorConfig,
   ImpersonateAuthenticated,
   ImpersonateUnauthenticated,
-  AuthClaims
+  AuthClaims,
+  OperationOptions,
 } from './data-connect-api'
 export {
   DataConnect,
@@ -51,6 +54,7 @@ export {
  * const connectorConfig: ConnectorConfig = {
  *  location: 'us-west2',
  *  serviceId: 'my-service',
+ *  connectorName: 'my-connector',
  * };
  * 
  * // Get the `DataConnect` service for the default app
@@ -80,3 +84,8 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
   const dataConnectService = firebaseApp.getOrInitService('dataConnect', (app) => new DataConnectService(app));
   return dataConnectService.getDataConnect(connectorConfig);
 }
+
+/**
+ * @internal
+ */
+export const validateAdminArgs = _validateAdminArgs;
