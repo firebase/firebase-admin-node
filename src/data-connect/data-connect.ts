@@ -170,7 +170,9 @@ export class DataConnect {
 
   /**
    * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
-   * Optionally, you may provide auth impersonation.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
    *
    * @param name - The name of the defined query to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
@@ -183,7 +185,9 @@ export class DataConnect {
   
   /**
    * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
-   * Optionally, you may provide auth impersonation.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
    *
    * @param name - The name of the defined query to execute.
    * @param variables - The variables for the query. May be optional if the query's variables are optional.
@@ -206,7 +210,9 @@ export class DataConnect {
 
   /**
    * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
-   * Optionally, you may provide auth impersonation.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
    * 
    * @param name - The name of the defined mutation to execute.
    * @param options - The GraphQL options, must include operationName and impersonation details.
@@ -219,7 +225,9 @@ export class DataConnect {
   
   /**
    * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
-   * Optionally, you may provide auth impersonation.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
    * 
    * @param name - The name of the defined mutation to execute.
    * @param variables - The variables for the mutation. May be optional if the mutation's variables are optional.
