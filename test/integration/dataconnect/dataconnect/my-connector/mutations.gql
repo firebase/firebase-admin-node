@@ -1,7 +1,8 @@
 mutation upsertFredUser @auth(level: NO_ACCESS) {
 	user_upsert(data: { id: "fred_id", address: "32 Elm St.", name: "Fred" })
 }
-mutation updateFredrickUserImpersonation @auth(level: USER) {
+mutation updateFredrickUserImpersonation
+@auth(level: USER, insecureReason: "test") {
 	user_update(
 		key: { id_expr: "auth.uid" }
 		data: { address: "64 Elm St. North", name: "Fredrick" }
@@ -21,6 +22,11 @@ mutation upsertJeffEmail @auth(level: NO_ACCESS) {
 			fromId: "jeff_id"
 		}
 	)
+}
+
+mutation InsertUser($id: String!, $name: String!, $address: String!)
+@auth(level: PUBLIC, insecureReason: "test") {
+	user_insert(data: { id: $id, name: $name, address: $address })
 }
 
 mutation InsertEmailPublic($id: String!)
@@ -82,7 +88,8 @@ mutation InsertEmailNoAccess($id: String!) @auth(level: NO_ACCESS) {
 		}
 	)
 }
-mutation InsertEmailImpersonation($id: String!) @auth(level: NO_ACCESS) {
+mutation InsertEmailImpersonation($id: String!)
+@auth(level: USER_ANON, insecureReason: "test") {
 	email_insert(
 		data: {
 			id: $id
