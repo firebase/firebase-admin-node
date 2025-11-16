@@ -16,6 +16,7 @@
  */
 
 import { randomUUID } from 'crypto';
+
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 import * as validator from '../utils/validator';
