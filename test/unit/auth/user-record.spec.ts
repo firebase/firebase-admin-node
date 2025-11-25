@@ -82,6 +82,7 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     validSince: '1476136676',
     lastLoginAt: '1476235905000',
+    passwordUpdatedAt: '1476235905000',
     createdAt: '1476136676000',
     lastRefreshAt: '2016-10-12T01:31:45.000Z',
     customAttributes: JSON.stringify({
@@ -161,6 +162,7 @@ function getUserJSON(tenantId?: string): object {
       lastSignInTime: new Date(1476235905000).toUTCString(),
       creationTime: new Date(1476136676000).toUTCString(),
       lastRefreshTime: new Date(1476235905000).toUTCString(),
+      passwordUpdatedAt: new Date(1476235905000).toUTCString(),
     },
     customClaims: {
       admin: true,
@@ -775,16 +777,19 @@ describe('UserMetadata', () => {
   const expectedLastLoginAt = 1476235905000;
   const expectedCreatedAt = 1476136676000;
   const expectedLastRefreshAt = '2016-10-12T01:31:45.000Z';
+  const expectedPasswordUpdatedAt = 1476235905000;
   const actualMetadata: UserMetadata = new UserMetadata({
     localId: 'uid123',
     lastLoginAt: expectedLastLoginAt.toString(),
     createdAt: expectedCreatedAt.toString(),
     lastRefreshAt: expectedLastRefreshAt,
+    passwordUpdatedAt: expectedPasswordUpdatedAt,
   });
   const expectedMetadataJSON = {
     lastSignInTime: new Date(expectedLastLoginAt).toUTCString(),
     creationTime: new Date(expectedCreatedAt).toUTCString(),
     lastRefreshTime: new Date(expectedLastRefreshAt).toUTCString(),
+    passwordUpdatedAt: new Date(expectedPasswordUpdatedAt).toUTCString(),
   };
 
   describe('constructor', () =>  {
@@ -849,6 +854,20 @@ describe('UserMetadata', () => {
         createdAt: expectedCreatedAt.toString(),
       });
       expect(metadata.lastRefreshTime).to.be.null;
+    });
+
+    it('should return expected passwordUpdatedAt', () => {
+      expect(actualMetadata.passwordUpdatedAt).to.equal(
+        new Date(expectedPasswordUpdatedAt).toUTCString());
+    });
+
+    it('should return null when passwordUpdatedAt is not available', () => {
+      const metadata: UserMetadata = new UserMetadata({
+        localId: 'uid123',
+        lastLoginAt: expectedLastLoginAt.toString(),
+        createdAt: expectedCreatedAt.toString(),
+      });
+      expect(metadata.passwordUpdatedAt).to.be.null;
     });
   });
 
@@ -1047,6 +1066,7 @@ describe('UserRecord', () => {
         createdAt: '1476136676000',
         lastLoginAt: '1476235905000',
         lastRefreshAt: '2016-10-12T01:31:45.000Z',
+        passwordUpdatedAt: '1476235905000',
       } as any);
       expect(userRecord.metadata).to.deep.equal(metadata);
     });
