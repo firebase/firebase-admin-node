@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
+import { randomUUID } from 'crypto';
+
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
-import { v4 as uuid } from 'uuid';
 import * as validator from '../utils/validator';
 
 // List of CloudEvent properties that are handled "by hand" and should be skipped by
@@ -50,7 +51,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   }
   const out: Record<string, any> = {
     '@type': 'type.googleapis.com/io.cloudevents.v1.CloudEvent',
-    'id': ce.id ?? uuid(),
+    'id': ce.id ?? randomUUID(),
     'type': ce.type,
     'specVersion': ce.specversion ?? '1.0',
     'source': source
