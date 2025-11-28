@@ -20,7 +20,6 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
@@ -32,7 +31,6 @@ import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import { AppCheckTokenVerifier } from '../../../src/app-check/token-verifier';
 
 const expect = chai.expect;
-chai.use(sinonChai);
 
 describe('AppCheck', () => {
 
