@@ -41,10 +41,9 @@ export interface AppCheckTokenOptions {
   ttlMillis?: number;
 
   /**
-   * Specifies whether this attestation is for use in a *limited use* (`true`)
-   * or *session based* (`false`) context. To enable this attestation to be used
-   * with the *replay protection* feature, set this to `true`. The default value
-   * is `false`.
+   * Specifies whether this token is for a limited use context.
+   * To enable this token to be used with the replay protection feature, set this to `true`.
+   * The default value is `false`.
    */
   limitedUse?: boolean;
 }
