@@ -53,7 +53,20 @@ describe('admin.appCheck', () => {
           expect(token).to.have.keys(['token', 'ttlMillis']);
           expect(token.token).to.be.a('string').and.to.not.be.empty;
           expect(token.ttlMillis).to.be.a('number');
-          expect(token.ttlMillis).to.equals(3600000);
+          expect(token.ttlMillis).to.equals(3600000); // 1 hour
+        });
+    });
+
+    it('should succeed with a vaild limited use token', function () {
+      if (!appId) {
+        this.skip();
+      }
+      return admin.appCheck().createToken(appId as string, { limitedUse: true })
+        .then((token) => {
+          expect(token).to.have.keys(['token', 'ttlMillis']);
+          expect(token.token).to.be.a('string').and.to.not.be.empty;
+          expect(token.ttlMillis).to.be.a('number');
+          expect(token.ttlMillis).to.equals(300000); // 5 minutes
         });
     });
 

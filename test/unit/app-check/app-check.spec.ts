@@ -20,6 +20,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
+import * as sinonChai from 'sinon-chai';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
@@ -31,6 +32,7 @@ import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import { AppCheckTokenVerifier } from '../../../src/app-check/token-verifier';
 
 const expect = chai.expect;
+chai.use(sinonChai);
 
 describe('AppCheck', () => {
 
@@ -166,6 +168,20 @@ describe('AppCheck', () => {
         .then((token) => {
           expect(token.token).equals('token');
           expect(token.ttlMillis).equals(3000);
+        });
+    });
+
+    it('should resolve with AppCheckToken on success with limitedUse', () => {
+      const response = { token: 'token', ttlMillis: 3000 };
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { limitedUse: true })
+        .then((token) => {
+          expect(token.token).equals('token');
+          expect(token.ttlMillis).equals(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith(sinon.match.string, APP_ID, true);
         });
     });
   });
