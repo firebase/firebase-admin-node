@@ -21,7 +21,6 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { HttpClient } from '../../../src/utils/api-request';
-import * as sinonChai from 'sinon-chai';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
@@ -32,7 +31,6 @@ import { FirebaseAppError } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
-chai.use(sinonChai);
 
 describe('AppCheckApiClient', () => {
 
