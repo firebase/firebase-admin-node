@@ -21,6 +21,7 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { HttpClient } from '../../../src/utils/api-request';
+import * as sinonChai from 'sinon-chai';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
@@ -31,6 +32,7 @@ import { FirebaseAppError } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
+chai.use(sinonChai);
 
 describe('AppCheckApiClient', () => {
 
@@ -210,7 +212,31 @@ describe('AppCheckApiClient', () => {
             method: 'POST',
             url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
             headers: EXPECTED_HEADERS,
-            data: { customToken: TEST_TOKEN_TO_EXCHANGE }
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: undefined,
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with limitedUse', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, true)
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: true,
+            }
           });
         });
     });

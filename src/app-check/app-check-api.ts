@@ -39,6 +39,14 @@ export interface AppCheckTokenOptions {
    * be valid. This value must be between 30 minutes and 7 days, inclusive.
    */
   ttlMillis?: number;
+
+  /**
+   * Specifies whether this attestation is for use in a *limited use* (`true`)
+   * or *session based* (`false`) context. To enable this attestation to be used
+   * with the *replay protection* feature, set this to `true`. The default value
+   * is `false`.
+   */
+  limitedUse?: boolean;
 }
 
 /**

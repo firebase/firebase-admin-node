@@ -58,7 +58,11 @@ export class AppCheckApiClient {
    * @param appId - The mobile App ID.
    * @returns A promise that fulfills with a `AppCheckToken`.
    */
-  public exchangeToken(customToken: string, appId: string): Promise<AppCheckToken> {
+  public exchangeToken(
+    customToken: string,
+    appId: string,
+    limitedUse?: boolean
+  ): Promise<AppCheckToken> {
     if (!validator.isNonEmptyString(appId)) {
       throw new FirebaseAppCheckError(
         'invalid-argument',
@@ -75,7 +79,10 @@ export class AppCheckApiClient {
           method: 'POST',
           url,
           headers: FIREBASE_APP_CHECK_CONFIG_HEADERS,
-          data: { customToken }
+          data: {
+            customToken,
+            limitedUse,
+          }
         };
         return this.httpClient.send(request);
       })
