@@ -39,6 +39,13 @@ export interface AppCheckTokenOptions {
    * be valid. This value must be between 30 minutes and 7 days, inclusive.
    */
   ttlMillis?: number;
+
+  /**
+   * Specifies whether this token is for a limited use context.
+   * To enable this token to be used with the replay protection feature, set this to `true`.
+   * The default value is `false`.
+   */
+  limitedUse?: boolean;
 }
 
 /**

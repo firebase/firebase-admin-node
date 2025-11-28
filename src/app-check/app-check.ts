@@ -68,7 +68,7 @@ export class AppCheck {
   public createToken(appId: string, options?: AppCheckTokenOptions): Promise<AppCheckToken> {
     return this.tokenGenerator.createCustomToken(appId, options)
       .then((customToken) => {
-        return this.client.exchangeToken(customToken, appId);
+        return this.client.exchangeToken(customToken, appId, options?.limitedUse);
       });
   }
 

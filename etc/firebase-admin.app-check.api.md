@@ -24,6 +24,7 @@ export interface AppCheckToken {
 
 // @public
 export interface AppCheckTokenOptions {
+    limitedUse?: boolean;
     ttlMillis?: number;
 }
 
