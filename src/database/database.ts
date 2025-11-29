@@ -196,7 +196,7 @@ const RULES_URL_PATH = '.settings/rules.json';
 class DatabaseRulesClient {
 
   private readonly dbUrl: string;
-  private readonly httpClient: DatabaseHttpClient;
+  private readonly httpClient: DatabaseRulesHttpClient;
 
   constructor(app: App, dbUrl: string) {
     let parsedUrl = new URL(dbUrl);
@@ -208,7 +208,7 @@ class DatabaseRulesClient {
 
     parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
     this.dbUrl = parsedUrl.toString();
-    this.httpClient = new DatabaseHttpClient(app as FirebaseApp);
+    this.httpClient = new DatabaseRulesHttpClient(app as FirebaseApp);
   }
 
   /**
@@ -316,7 +316,7 @@ class DatabaseRulesClient {
   }
 }
 
-class DatabaseHttpClient extends AuthorizedHttpClient {
+class DatabaseRulesHttpClient extends AuthorizedHttpClient {
   protected getToken(): Promise<string> {
     const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
     if (emulatorHost) {
