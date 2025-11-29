@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse, TotpMultiFactorInfo,
+  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse, TotpMultiFactorInfo, PasskeyInfo,
 } from '../../../src/auth/user-record';
 import {
   UserInfo, UserMetadata, UserRecord, MultiFactorSettings, MultiFactorInfo, PhoneMultiFactorInfo,
@@ -100,6 +100,22 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
         phoneInfo: '+16505556789',
       },
     ],
+    passkeyInfo: [
+      {
+        name: 'name1@google.com',
+        credentialId: 'credentialId1',
+        displayName: 'passkey1',
+      },
+      {
+        name: 'name2@google.com',
+        credentialId: 'credentialId2',
+        displayName: 'passkey2',
+      },
+      {
+        name: 'name3@google.com',
+        credentialId: 'credentialId3',
+      }
+    ]
   };
   if (typeof tenantId !== 'undefined') {
     response.tenantId = tenantId;
@@ -185,6 +201,23 @@ function getUserJSON(tenantId?: string): object {
         },
       ],
     },
+    passkeyInfo: [
+      {
+        name: 'name1@google.com',
+        credentialId: 'credentialId1',
+        displayName: 'passkey1',
+      },
+      {
+        name: 'name2@google.com',
+        credentialId: 'credentialId2',
+        displayName: 'passkey2',
+      },
+      {
+        name: 'name3@google.com',
+        credentialId: 'credentialId3',
+        displayName: undefined,
+      }
+    ]
   };
 }
 
@@ -662,6 +695,66 @@ describe('MultiFactorSettings', () => {
     });
   });
 });
+
+describe('PasskeyInfo', () => {
+  const passkeyInfoData = {
+    name: 'John Doe',
+    credentialId: 'credential123',
+    displayName: 'john.doe@example.com',
+  };
+  const passkeyInfo = new PasskeyInfo(passkeyInfoData);
+
+  describe('constructor', () => {
+    it('should create a PasskeyInfo object with valid data', () => {
+      expect(passkeyInfo).to.be.an.instanceOf(PasskeyInfo);
+    });
+
+    it('should throw when missing required fields', () => {
+      expect(() => {
+        return new PasskeyInfo(null as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid passkey info response');
+    });
+  });
+
+  describe('getters', () => {
+    it('should return the expected name', () => {
+      expect(passkeyInfo.name).to.equal(passkeyInfoData.name);
+    });
+
+    it('should throw when modifying readonly name property', () => {
+      expect(() => {
+        (passkeyInfo as any).name = 'Modified Name';
+      }).to.throw(Error);
+    });
+
+    it('should return the expected credentialId', () => {
+      expect(passkeyInfo.credentialId).to.equal(passkeyInfoData.credentialId);
+    });
+
+    it('should throw when modifying readonly credentialId property', () => {
+      expect(() => {
+        (passkeyInfo as any).credentialId = 'modifiedCredential';
+      }).to.throw(Error);
+    });
+
+    it('should return the expected displayName', () => {
+      expect(passkeyInfo.displayName).to.equal(passkeyInfoData.displayName);
+    });
+
+    it('should throw when modifying readonly displayName property', () => {
+      expect(() => {
+        (passkeyInfo as any).displayName = 'modifiedDisplayName';
+      }).to.throw(Error);
+    });
+  });
+
+  describe('toJSON', () => {
+    it('should return the expected JSON object', () => {
+      expect(passkeyInfo.toJSON()).to.deep.equal(passkeyInfoData);
+    });
+  });
+});
+
 
 describe('UserInfo', () => {
   describe('constructor', () =>  {
