@@ -2192,6 +2192,7 @@ describe('Messaging', () => {
                 category: 'test.category',
                 contentAvailable: true,
                 mutableContent: true,
+                contentChanged: true,
                 threadId: 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2229,6 +2230,7 @@ describe('Messaging', () => {
                 'category': 'test.category',
                 'content-available': 1,
                 'mutable-content': 1,
+                'content-changed': 1,
                 'thread-id': 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2376,6 +2378,44 @@ describe('Messaging', () => {
           apns: {
             payload: {
               aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS contentChanged explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                contentChanged: false,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS contentChanged set explicitly',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                'content-changed': 1,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: { 'content-changed': 1 },
             },
           },
         },
