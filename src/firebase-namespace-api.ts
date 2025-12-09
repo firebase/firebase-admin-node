@@ -16,6 +16,7 @@
 
 import { appCheck } from './app-check/app-check-namespace';
 import { auth } from './auth/auth-namespace';
+import { fpnv } from './fpnv/fpnv-namespace';
 import { database } from './database/database-namespace';
 import { firestore } from './firestore/firestore-namespace';
 import { instanceId } from './instance-id/instance-id-namespace';
@@ -43,6 +44,7 @@ export namespace app {
   export interface App extends AppCore {
     appCheck(): appCheck.AppCheck;
     auth(): auth.Auth;
+    fpnv(): fpnv.Fpnv;
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;
     installations(): installations.Installations;
@@ -81,6 +83,7 @@ export namespace app {
 export * from './credential/index';
 export { appCheck } from './app-check/app-check-namespace';
 export { auth } from './auth/auth-namespace';
+export { fpnv } from './fpnv/fpnv-namespace';
 export { database } from './database/database-namespace';
 export { firestore } from './firestore/firestore-namespace';
 export { instanceId } from './instance-id/instance-id-namespace';

@@ -1145,3 +1145,35 @@ const TOPIC_MGT_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INTERNAL: 'INTERNAL_ERROR',
   UNKNOWN: 'UNKNOWN_ERROR',
 };
+
+/**
+ * Firebase Phone Number Verification error code structure. This extends PrefixedFirebaseError.
+ */
+export class FirebasePnvError extends PrefixedFirebaseError {
+  /**
+     * @param info - The error code info.
+     * @param message - The error message. This will override the default message if provided.
+     * @constructor
+     * @internal
+     */
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super('fpnv', info.code, message || info.message);
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebasePnvError.prototype;
+  }
+}
+
+export class FpnvErrorCode {
+  static INVALID_TOKEN = 'invalid_token';
+  static EXPIRED_TOKEN = 'expired_token';
+  static COMMON_ISSUE = {
+    code: "code",
+    message: "message"
+  };
+  // TODO: need to update codes properly
+}

@@ -21,6 +21,7 @@ import { HttpClient, HttpRequestConfig, RequestResponseError } from '../utils/ap
 import { Agent } from 'http';
 
 export const ALGORITHM_RS256: jwt.Algorithm = 'RS256' as const;
+export const ALGORITHM_ES256: jwt.Algorithm = 'ES256' as const;
 
 // `jsonwebtoken` converts errors from the `getKey` callback to its own `JsonWebTokenError` type
 // and prefixes the error message with the following. Use the prefix to identify errors thrown
