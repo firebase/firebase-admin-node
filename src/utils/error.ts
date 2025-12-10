@@ -1169,11 +1169,21 @@ export class FirebasePnvError extends PrefixedFirebaseError {
 }
 
 export class FpnvErrorCode {
-  static INVALID_TOKEN = 'invalid_token';
-  static EXPIRED_TOKEN = 'expired_token';
-  static COMMON_ISSUE = {
-    code: "code",
-    message: "message"
+  static readonly INVALID_ARGUMENT: ErrorInfo = {
+    code: 'invalid-argument',
+    message: 'Invalid argument provided to the FPNV method.',
   };
-  // TODO: need to update codes properly
+  static readonly INVALID_TOKEN: ErrorInfo = {
+    code: 'invalid-token',
+    message: 'The provided phone number verification token is invalid.',
+  };
+  static readonly EXPIRED_TOKEN: ErrorInfo = {
+    code: 'expired-token',
+    message: 'The provided phone number verification token has expired.',
+  };
+  static readonly PROJECT_NOT_FOUND: ErrorInfo = {
+    code: 'project-not-found',
+    message: 'No Firebase project was found for the provided credential.',
+  };
+
 }

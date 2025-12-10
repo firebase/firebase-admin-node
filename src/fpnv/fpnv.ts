@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google LLC
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,36 @@
  */
 
 import { App } from '../app';
-import { BaseFpnv } from './base-fpnv';
+import { FpnvToken } from './fpnv-api';
+import {
+  FirebasePhoneNumberTokenVerifier,
+  createFPNTVerifier,
+} from './token-verifier';
 
 /**
  * Fpnv service bound to the provided app.
  */
-export class Fpnv extends BaseFpnv {
+export class Fpnv  {
   private readonly app_: App;
 
+   protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
+
   constructor(app: App) {
-    super(app);
 
     this.app_ = app;
+    this.fpnvVerifier = createFPNTVerifier(app);
   }
 
   /**
-     * Returns the app associated with this Fpnv instance.
-     *
-     * @returns The app associated with this Fpnv instance.
-     */
+   * Returns the app associated with this Auth instance.
+   *
+   * @returns The app associated with this Auth instance.
+   */
   get app(): App {
     return this.app_;
+  }
+
+  public async verifyToken(idToken: string): Promise<FpnvToken> {
+    return await this.fpnvVerifier.verifyJWT(idToken);
   }
 }

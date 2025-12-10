@@ -1,5 +1,6 @@
 /*!
- * Copyright 2021 Google LLC
+ * @license
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +15,25 @@
  * limitations under the License.
  */
 
-import { App } from '../app';
 
-// Import all public types with aliases, and re-export from the auth namespace.
+/**
+ * Interface representing a Fpnv token.
+ */
+export interface FpnvToken {
+    aud: string;
+    auth_time: number;
+    exp: number;
+    iat: number;
+    iss: string;
+    sub: string;
 
-import { Fpnv as TFpnv } from './fpnv';
+    getPhoneNumber(): string;
 
-import {
-  BaseFpnv as TBaseFpnv,
-} from './base-fpnv';
-
-import {
-  FpnvToken as TFpnvToken,
-} from './token-verifier';
-
-
-export declare function fpnv(app?: App): fpnv.Fpnv;
-
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace fpnv {
-    export type BaseFpnv = TBaseFpnv;
-    export type Fpnv = TFpnv;
-    export type FpnvToken = TFpnvToken;
+    /**
+     * Other arbitrary claims included in the ID token.
+     */
+    [key: string]: any;
 }
+
+export {FpnvErrorCode, FirebasePnvError, ErrorInfo} from '../utils/error';
+

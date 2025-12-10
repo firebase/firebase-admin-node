@@ -1,5 +1,6 @@
 /*!
- * Copyright 2020 Google LLC
+ * @license
+ * Copyright 2025 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,22 +54,3 @@ export function getFirebasePnv(app?: App): Fpnv {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('fpnv', (app) => new Fpnv(app));
 }
-
-export {
-  Fpnv,
-} from './fpnv';
-
-export {
-  BaseFpnv,
-} from './base-fpnv';
-
-
-export {
-  FpnvToken,
-} from './token-verifier';
-
-
-export {
-  FirebasePnvError,
-  FpnvErrorCode,
-} from '../utils/error';
