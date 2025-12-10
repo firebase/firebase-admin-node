@@ -28,7 +28,7 @@ import {
 export class Fpnv  {
   private readonly app_: App;
 
-   protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
+  protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
 
   constructor(app: App) {
 

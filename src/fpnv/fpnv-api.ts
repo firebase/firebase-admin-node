@@ -35,5 +35,5 @@ export interface FpnvToken {
     [key: string]: any;
 }
 
-export {FpnvErrorCode, FirebasePnvError, ErrorInfo} from '../utils/error';
+export { FpnvErrorCode, FirebasePnvError, ErrorInfo } from '../utils/error';
 

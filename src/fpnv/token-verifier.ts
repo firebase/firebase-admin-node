@@ -17,7 +17,7 @@
 
 import { App } from '../app';
 import { FpnvErrorCode, FirebasePnvError, ErrorInfo } from '../utils/error';
-import { FpnvToken} from './fpnv-api';
+import { FpnvToken } from './fpnv-api';
 import * as util from '../utils/index';
 import * as validator from '../utils/validator';
 import {
