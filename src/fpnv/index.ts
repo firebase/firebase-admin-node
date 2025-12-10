@@ -1,3 +1,9 @@
+/**
+ * Firebase Phone Number Verification.
+ *
+ * @packageDocumentation
+ */
+
 /*!
  * @license
  * Copyright 2025 Google LLC
@@ -15,15 +21,20 @@
  * limitations under the License.
  */
 
-/**
- * Firebase Phone Number Verification.
- *
- * @packageDocumentation
- */
-
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Fpnv } from './fpnv';
+
+export {
+  Fpnv
+} from './fpnv';
+
+export {
+  FpnvToken,
+  FirebasePnvError,
+  FpnvErrorCode,
+  ErrorInfo
+} from './fpnv-api'
 
 /**
  * Gets the {@link Fpnv} service for the default app or a
