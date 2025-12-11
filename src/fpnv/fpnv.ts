@@ -17,35 +17,42 @@
 
 import { App } from '../app';
 import { FpnvToken } from './fpnv-api';
-import {
-  FirebasePhoneNumberTokenVerifier,
-  createFPNTVerifier,
-} from './token-verifier';
+import { FirebasePhoneNumberTokenVerifier } from './token-verifier';
+import { CLIENT_CERT_URL, PN_TOKEN_INFO } from './fpnv-api-client-internal';
 
 /**
  * Fpnv service bound to the provided app.
  */
-export class Fpnv  {
-  private readonly app_: App;
-
+export class Fpnv {
+  private readonly appInternal: App;
   protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
 
+  /**
+   * @param app - The app for this `Fpnv` service.
+   * @constructor
+   * @internal
+   */
   constructor(app: App) {
 
-    this.app_ = app;
-    this.fpnvVerifier = createFPNTVerifier(app);
+    this.appInternal = app;
+    this.fpnvVerifier = new FirebasePhoneNumberTokenVerifier(
+      CLIENT_CERT_URL,
+      'https://fpnv.googleapis.com/projects/',
+      PN_TOKEN_INFO,
+      app
+    );
   }
 
   /**
-   * Returns the app associated with this Auth instance.
+   * Returns the app associated with this `Fpnv` instance.
    *
-   * @returns The app associated with this Auth instance.
+   * @returns The app associated with this `Fpnv` instance.
    */
   get app(): App {
-    return this.app_;
+    return this.appInternal;
   }
 
-  public async verifyToken(idToken: string): Promise<FpnvToken> {
-    return await this.fpnvVerifier.verifyJWT(idToken);
+  public async verifyToken(fpnvJwt: string): Promise<FpnvToken> {
+    return await this.fpnvVerifier.verifyJWT(fpnvJwt);
   }
 }
