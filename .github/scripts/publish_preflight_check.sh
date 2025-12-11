@@ -146,8 +146,8 @@ echo_info "Generating changelog"
 echo_info "--------------------------------------------"
 echo_info ""
 
-echo_info "---< git fetch origin master --prune --unshallow >---"
-git fetch origin master --prune --unshallow
+echo_info "---< git fetch origin main --prune --unshallow >---"
+git fetch origin main --prune --unshallow
 echo ""
 
 echo_info "Generating changelog from history..."

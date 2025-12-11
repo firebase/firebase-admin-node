@@ -47,7 +47,7 @@ Great, we love hearing how we can improve our products! Share you idea through o
 ## <a name="submit"></a>Want to submit a pull request?
 
 Sweet, we'd love to accept your contribution!
-[Open a new pull request](https://github.com/firebase/firebase-admin-node/pull/new/master) and fill
+[Open a new pull request](https://github.com/firebase/firebase-admin-node/pull/new/main) and fill
 out the provided template.
 
 **If you want to implement a new feature, please open an issue with a proposal first so that we can
