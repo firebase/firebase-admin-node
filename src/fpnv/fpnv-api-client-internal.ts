@@ -58,7 +58,7 @@ export type FpnvErrorCode =
  * @param message - The error message.
  * @constructor
  */
-export class FirebasePnvError extends PrefixedFirebaseError {
+export class FirebaseFpnvError extends PrefixedFirebaseError {
   constructor(code: FpnvErrorCode, message: string) {
     super('fpnv', code, message);
 
@@ -66,6 +66,6 @@ export class FirebasePnvError extends PrefixedFirebaseError {
     // Set the prototype explicitly. See the following link for more details:
     // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
     /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebasePnvError.prototype;
+    (this as any).__proto__ = FirebaseFpnvError.prototype;
   }
 }

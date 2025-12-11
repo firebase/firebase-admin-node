@@ -24,7 +24,7 @@ export interface FpnvToken {
      * The issuer identifier for the issuer of the response.
      * This value is a URL with the format
      * `https://firebaseappcheck.googleapis.com/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
-     * same project number specified in the {@link aud} property.
+     * same project number specified in the {@link FpnvToken.aud} property.
      */
     iss: string;
 
@@ -66,7 +66,7 @@ export interface FpnvToken {
     /**
      * The corresponding user's phone number.
      * This value is not actually one of the JWT token claims. It is added as a
-     * convenience, and is set as the value of the {@link sub} property.
+     * convenience, and is set as the value of the {@link FpnvToken.sub} property.
      */
     getPhoneNumber(): string;
 
@@ -76,5 +76,5 @@ export interface FpnvToken {
     [key: string]: any;
 }
 
-export { FpnvErrorCode, FirebasePnvError } from './fpnv-api-client-internal';
+export { FpnvErrorCode, FirebaseFpnvError } from './fpnv-api-client-internal';
 

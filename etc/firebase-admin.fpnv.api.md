@@ -6,55 +6,28 @@
 
 import { Agent } from 'http';
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
-//
-// @public
-export class FirebasePnvError extends PrefixedFirebaseError {
-}
-
 // @public
 export class Fpnv {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
-    constructor(app: App);
     get app(): App;
     // Warning: (ae-forgotten-export) The symbol "FirebasePhoneNumberTokenVerifier" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
     // (undocumented)
-    verifyToken(idToken: string): Promise<FpnvToken>;
-}
-
-// @public (undocumented)
-export class FpnvErrorCode {
-    // (undocumented)
-    static readonly EXPIRED_TOKEN: ErrorInfo;
-    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    static readonly INVALID_ARGUMENT: ErrorInfo;
-    // (undocumented)
-    static readonly INVALID_TOKEN: ErrorInfo;
-    // (undocumented)
-    static readonly PROJECT_NOT_FOUND: ErrorInfo;
+    verifyToken(fpnvJwt: string): Promise<FpnvToken>;
 }
 
 // @public
 export interface FpnvToken {
     [key: string]: any;
-    // (undocumented)
-    aud: string;
-    // (undocumented)
-    auth_time: number;
-    // (undocumented)
+    aud: string[];
     exp: number;
-    // (undocumented)
     getPhoneNumber(): string;
-    // (undocumented)
     iat: number;
-    // (undocumented)
     iss: string;
-    // (undocumented)
+    jti: string;
+    nonce: string;
     sub: string;
 }
 

@@ -31,8 +31,6 @@ export {
 
 export {
   FpnvToken,
-  FirebasePnvError,
-  FpnvErrorCode,
 } from './fpnv-api'
 
 /**
