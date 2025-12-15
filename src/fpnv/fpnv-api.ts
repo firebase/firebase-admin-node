@@ -23,7 +23,7 @@ export interface FpnvToken {
     /**
      * The issuer identifier for the issuer of the response.
      * This value is a URL with the format
-     * `https://firebaseappcheck.googleapis.com/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
+     * `https://fpnv.googleapis.com/projects/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
      * same project number specified in the {@link FpnvToken.aud} property.
      */
     iss: string;
