@@ -123,3 +123,7 @@ import './data-connect/index.spec';
 import './data-connect/data-connect-api-client-internal.spec';
 import './data-connect/data-connect.spec';
 import './data-connect/validate-admin-args.spec';
+
+
+// Fpnv
+import './fpnv/index.spec';
