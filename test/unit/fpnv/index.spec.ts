@@ -59,7 +59,7 @@ describe('Fpnv', () => {
       expect(fpnvFirst).to.equal(fpnvSecond);
     });
 
-    it('should not return the same instance when different configs are provided', () => {
+    it('should not return the same instance when different app are provided', () => {
       const fpnvFirst: Fpnv = getFirebasePnv(mockApp);
       const fpnvSecond: Fpnv = getFirebasePnv(mockCredentialApp);
       expect(fpnvFirst).to.not.equal(fpnvSecond);
