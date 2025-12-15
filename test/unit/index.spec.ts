@@ -126,3 +126,4 @@ import './data-connect/validate-admin-args.spec';
 
 // Fpnv
 import './fpnv/index.spec';
+import './fpnv/fpnv-api-client-internal.spec';
