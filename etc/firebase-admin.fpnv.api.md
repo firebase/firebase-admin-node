@@ -10,10 +10,6 @@ import { Agent } from 'http';
 export class Fpnv {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
     get app(): App;
-    // Warning: (ae-forgotten-export) The symbol "FirebasePhoneNumberTokenVerifier" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
     // (undocumented)
     verifyToken(fpnvJwt: string): Promise<FpnvToken>;
 }
