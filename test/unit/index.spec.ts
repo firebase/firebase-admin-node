@@ -128,3 +128,4 @@ import './data-connect/validate-admin-args.spec';
 import './fpnv/index.spec';
 import './fpnv/fpnv-api-client-internal.spec';
 import './fpnv/fpnv-api.spec';
+import './fpnv/fpnv.spec';
