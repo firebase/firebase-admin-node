@@ -54,12 +54,12 @@ export interface FpnvToken {
     sub: string;
 
     /**
-     * Unique ID.
+     * A case-sensitive string that uniquely identifies a specific JWT instance
      */
     jti: string;
 
     /**
-     * Unique ID.
+     * A unique, single-use "number used once" value.
      */
     nonce: string;
 

@@ -25,7 +25,7 @@ import { CLIENT_CERT_URL, PN_TOKEN_INFO } from './fpnv-api-client-internal';
  */
 export class Fpnv {
   private readonly appInternal: App;
-  protected readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
+  private readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
 
   /**
    * @param app - The app for this `Fpnv` service.
@@ -52,7 +52,7 @@ export class Fpnv {
     return this.appInternal;
   }
 
-  public async verifyToken(fpnvJwt: string): Promise<FpnvToken> {
-    return await this.fpnvVerifier.verifyJWT(fpnvJwt);
+  public verifyToken(fpnvJwt: string): Promise<FpnvToken> {
+    return this.fpnvVerifier.verifyJWT(fpnvJwt);
   }
 }

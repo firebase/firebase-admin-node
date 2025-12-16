@@ -26,7 +26,7 @@ export interface FirebasePhoneNumberTokenInfo {
   jwtName: string;
   /** The JWT short name. */
   shortName: string;
-  /** The JWT typ" (Type) */
+  /** The JWT typ (Type) */
   typ: string;
 }
 
