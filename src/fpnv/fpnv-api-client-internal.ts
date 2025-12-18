@@ -30,7 +30,7 @@ export interface FirebasePhoneNumberTokenInfo {
   typ: string;
 }
 
-export const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
+export const CLIENT_CERT_URL = 'https://fpnv.googleapis.com/v1beta/jwks';
 
 export const PN_TOKEN_INFO: FirebasePhoneNumberTokenInfo = {
   url: 'https://firebase.google.com/docs/phone-number-verification',

@@ -89,8 +89,8 @@ export class FirebasePhoneNumberTokenVerifier {
       );
     }
 
-    const projectId = await this.ensureProjectId();
-    const decoded = await this.decodeAndVerify(jwtToken, projectId);
+    await this.ensureProjectId();
+    const decoded = await this.decodeAndVerify(jwtToken);
     const decodedIdToken = decoded.payload as FpnvToken;
     decodedIdToken.getPhoneNumber = () => decodedIdToken.sub;
     return decodedIdToken;
@@ -109,10 +109,9 @@ export class FirebasePhoneNumberTokenVerifier {
 
   private async decodeAndVerify(
     token: string,
-    projectId: string,
   ): Promise<DecodedToken> {
     const decodedToken = await this.safeDecode(token);
-    this.verifyContent(decodedToken, projectId);
+    this.verifyContent(decodedToken);
     await this.verifySignature(token);
     return decodedToken;
   }
@@ -136,12 +135,11 @@ export class FirebasePhoneNumberTokenVerifier {
 
   private verifyContent(
     fullDecodedToken: DecodedToken,
-    projectId: string | null,
   ): void {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 
-    const scopedProjectId = `${this.issuer}${projectId}`;
+    const scopedProjectId = `${this.issuer}${payload?.iss?.split('/')?.pop()}`;
     const projectIdMatchMessage = ` Make sure the ${this.tokenInfo.shortName} comes from the same ` +
             'Firebase project as the service account used to authenticate this SDK.';
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
@@ -188,18 +186,17 @@ export class FirebasePhoneNumberTokenVerifier {
             `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     if (error.code === JwtErrorCode.TOKEN_EXPIRED) {
       const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
-                ` from your client app and try again. ${verifyJwtTokenDocsMessage}`;
+        ` from your client app and try again. ${verifyJwtTokenDocsMessage}`;
       return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.EXPIRED_TOKEN, errorMessage);
     } else if (error.code === JwtErrorCode.INVALID_SIGNATURE) {
       const errorMessage = `${this.tokenInfo.jwtName} has invalid signature. ${verifyJwtTokenDocsMessage}`;
       return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
     } else if (error.code === JwtErrorCode.NO_MATCHING_KID) {
       const errorMessage = `${this.tokenInfo.jwtName} has "kid" claim which does not ` +
-                `correspond to a known public key. Most likely the ${this.tokenInfo.shortName} ` +
-                'is expired, so get a fresh token from your client app and try again.';
+        `correspond to a known public key. Most likely the ${this.tokenInfo.shortName} ` +
+        'is expired, so get a fresh token from your client app and try again.';
       return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
     }
     return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, error.message);
   }
-
 }

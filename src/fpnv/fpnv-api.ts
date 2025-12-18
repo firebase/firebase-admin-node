@@ -30,8 +30,9 @@ export interface FpnvToken {
 
     /**
      * The audience for which this token is intended.
-     * This value is a JSON array of two strings, the first is the project number of your
-     * Firebase project, and the second is the project ID of the same project.
+     * This value is an array of two strings, which are URLs that include the project number
+     * and project ID of your Firebase project
+     * E.g. `https://fpnv.googleapis.com/projects/<PROJECT_ID>`.
      */
     aud: string[];
 

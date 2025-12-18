@@ -40,7 +40,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   let signatureVerifierStub: { verify: sinon.SinonStub };
   let withCertificateUrlStub: sinon.SinonStub;
 
-  const MOCK_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/secure-token@system.gserviceaccount.com';
+  const MOCK_CERT_URL = 'https://fpnv.googleapis.com/v1-beta/jwks';
   const MOCK_ISSUER = 'https://fpnv.googleapis.com/projects/';
   const MOCK_PROJECT_NUMBER = '123456789012';
   const MOCK_PROJECT_ID = 'fpnv-team-test';
@@ -62,6 +62,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   };
 
   const VALID_PAYLOAD = {
+    iss: MOCK_ISSUER + MOCK_PROJECT_NUMBER,
     aud: [MOCK_ISSUER + MOCK_PROJECT_NUMBER, MOCK_ISSUER + MOCK_PROJECT_ID],
     sub: '+15555550100',
     exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour

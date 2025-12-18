@@ -52,6 +52,12 @@ export class Fpnv {
     return this.appInternal;
   }
 
+  /**
+   * Verifies a Firebase Phone Number Verification token (FPNV JWT).
+   *
+   * @param fpnvJwt - The FPNV JWT string to verify.
+   * @returns A promise that resolves with the decoded token.
+   */
   public verifyToken(fpnvJwt: string): Promise<FpnvToken> {
     return this.fpnvVerifier.verifyJWT(fpnvJwt);
   }

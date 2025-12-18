@@ -32,7 +32,7 @@ describe('FPNV Constants and Error Class', () => {
 
   describe('Constants Integrity', () => {
     it('should have the correct CLIENT_CERT_URL', () => {
-      expect(CLIENT_CERT_URL).to.equal('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com');
+      expect(CLIENT_CERT_URL).to.equal('https://fpnv.googleapis.com/v1beta/jwks');
     });
 
     it('should have the correct structure and values for PN_TOKEN_INFO', () => {
