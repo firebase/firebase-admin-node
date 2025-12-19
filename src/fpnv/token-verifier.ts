@@ -26,18 +26,17 @@ import {
 import { FirebasePhoneNumberTokenInfo, FPNV_ERROR_CODE_MAPPING } from './fpnv-api-client-internal';
 
 export class FirebasePhoneNumberTokenVerifier {
-
   private readonly shortNameArticle: string;
   private readonly signatureVerifier: SignatureVerifier;
 
   constructor(
-    clientCertUrl: string,
-        private issuer: string,
-        private tokenInfo: FirebasePhoneNumberTokenInfo,
-        private readonly app: App
+    jwksUrl: string,
+    private issuer: string,
+    private tokenInfo: FirebasePhoneNumberTokenInfo,
+    private readonly app: App
   ) {
 
-    if (!validator.isURL(clientCertUrl)) {
+    if (!validator.isURL(jwksUrl)) {
       throw new FirebaseFpnvError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The provided public client certificate URL is an invalid URL.',
@@ -75,8 +74,7 @@ export class FirebasePhoneNumberTokenVerifier {
     }
     this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
 
-    this.signatureVerifier =
-            PublicKeySignatureVerifier.withCertificateUrl(clientCertUrl, app.options.httpAgent);
+    this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(jwksUrl, app.options.httpAgent);
 
     // For backward compatibility, the project ID is validated in the verification call.
   }
@@ -102,7 +100,7 @@ export class FirebasePhoneNumberTokenVerifier {
       throw new FirebaseFpnvError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-                `GOOGLE_CLOUD_PROJECT environment variable to call ${this.tokenInfo.verifyApiName}.`);
+        `GOOGLE_CLOUD_PROJECT environment variable to call ${this.tokenInfo.verifyApiName}.`);
     }
     return projectId;
   }
@@ -122,10 +120,10 @@ export class FirebasePhoneNumberTokenVerifier {
     } catch (err) {
       if (err.code === JwtErrorCode.INVALID_ARGUMENT) {
         const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
-                    `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
+          `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
         const errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed ` +
-                    `the entire string JWT which represents ${this.shortNameArticle} ` +
-                    `${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
+          `the entire string JWT which represents ${this.shortNameArticle} ` +
+          `${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
         throw new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
           errorMessage);
       }
@@ -139,11 +137,10 @@ export class FirebasePhoneNumberTokenVerifier {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
 
-    const scopedProjectId = `${this.issuer}${payload?.iss?.split('/')?.pop()}`;
     const projectIdMatchMessage = ` Make sure the ${this.tokenInfo.shortName} comes from the same ` +
-            'Firebase project as the service account used to authenticate this SDK.';
+      'Firebase project as the service account used to authenticate this SDK.';
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
-            `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
+      `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
 
     let errorMessage: string | undefined;
 
@@ -152,16 +149,20 @@ export class FirebasePhoneNumberTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has no "kid" claim.`;
       errorMessage += verifyJwtTokenDocsMessage;
     } else if (header.alg !== ALGORITHM_ES256) {
-      errorMessage = `${this.tokenInfo.jwtName} has incorrect algorithm. Expected ` + 
-      `"${ALGORITHM_ES256}" but got "${header.alg}". ${verifyJwtTokenDocsMessage}`;
+      errorMessage = `${this.tokenInfo.jwtName} has incorrect algorithm. Expected ` +
+        `"${ALGORITHM_ES256}" but got "${header.alg}". ${verifyJwtTokenDocsMessage}`;
     } else if (header.typ !== this.tokenInfo.typ) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect typ. Expected "${this.tokenInfo.typ}" but got ` +
-                 `"${header.typ}". ${verifyJwtTokenDocsMessage}`;
+        `"${header.typ}". ${verifyJwtTokenDocsMessage}`;
     }
     // FPNV Token
-    else if (!validator.isNonEmptyArray(payload.aud) || !payload.aud.includes(scopedProjectId)) {
+    else if (!validator.isNonEmptyString(payload.iss)) {
+      errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
+        `an issuer starting with "${this.issuer}" but got "${payload.iss}".`
+        + ` ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
+    } else if (!validator.isNonEmptyArray(payload.aud) || !payload.aud.includes(payload.iss)) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected ` +
-        `"${scopedProjectId}" to be one of "${payload.aud}". ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
+        `"${payload.iss}" to be one of "${payload.aud}". ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
     } else if (typeof payload.sub !== 'string') {
       errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim. ${verifyJwtTokenDocsMessage}`;
     } else if (payload.sub === '') {
@@ -183,7 +184,7 @@ export class FirebasePhoneNumberTokenVerifier {
 
   private mapJwtErrorToAuthError(error: JwtError): Error {
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
-            `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
+      `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     if (error.code === JwtErrorCode.TOKEN_EXPIRED) {
       const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
         ` from your client app and try again. ${verifyJwtTokenDocsMessage}`;

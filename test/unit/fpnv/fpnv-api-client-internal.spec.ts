@@ -20,7 +20,7 @@
 import { expect } from 'chai';
 import {
   FirebaseFpnvError,
-  CLIENT_CERT_URL,
+  JWKS_URL,
   PN_TOKEN_INFO,
   FPNV_ERROR_CODE_MAPPING
 } from '../../../src/fpnv/fpnv-api-client-internal';
@@ -32,7 +32,7 @@ describe('FPNV Constants and Error Class', () => {
 
   describe('Constants Integrity', () => {
     it('should have the correct CLIENT_CERT_URL', () => {
-      expect(CLIENT_CERT_URL).to.equal('https://fpnv.googleapis.com/v1beta/jwks');
+      expect(JWKS_URL).to.equal('https://fpnv.googleapis.com/v1beta/jwks');
     });
 
     it('should have the correct structure and values for PN_TOKEN_INFO', () => {

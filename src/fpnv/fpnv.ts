@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FpnvToken } from './fpnv-api';
 import { FirebasePhoneNumberTokenVerifier } from './token-verifier';
-import { CLIENT_CERT_URL, PN_TOKEN_INFO } from './fpnv-api-client-internal';
+import { JWKS_URL, PN_TOKEN_INFO } from './fpnv-api-client-internal';
 
 /**
  * Fpnv service bound to the provided app.
@@ -36,7 +36,7 @@ export class Fpnv {
 
     this.appInternal = app;
     this.fpnvVerifier = new FirebasePhoneNumberTokenVerifier(
-      CLIENT_CERT_URL,
+      JWKS_URL,
       'https://fpnv.googleapis.com/projects/',
       PN_TOKEN_INFO,
       app

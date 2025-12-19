@@ -202,7 +202,8 @@ export class PublicKeySignatureVerifier implements SignatureVerifier {
         'The provided token must be a string.'));
     }
 
-    return verifyJwtSignature(token, getKeyCallback(this.keyFetcher), { algorithms: [ALGORITHM_RS256] })
+    return verifyJwtSignature(token, getKeyCallback(this.keyFetcher), 
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .catch((error: JwtError) => {
         if (error.code === JwtErrorCode.NO_KID_IN_HEADER) {
           // No kid in JWT header. Try with all the public keys.

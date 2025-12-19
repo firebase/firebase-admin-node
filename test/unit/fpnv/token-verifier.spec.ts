@@ -38,7 +38,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   let findProjectIdStub: sinon.SinonStub;
   let decodeJwtStub: sinon.SinonStub;
   let signatureVerifierStub: { verify: sinon.SinonStub };
-  let withCertificateUrlStub: sinon.SinonStub;
+  let withJwksUrlStub: sinon.SinonStub;
 
   const MOCK_CERT_URL = 'https://fpnv.googleapis.com/v1-beta/jwks';
   const MOCK_ISSUER = 'https://fpnv.googleapis.com/projects/';
@@ -74,7 +74,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
     findProjectIdStub = sinon.stub(util, 'findProjectId').resolves(MOCK_PROJECT_ID);
     decodeJwtStub = sinon.stub(jwt, 'decodeJwt');
     signatureVerifierStub = { verify: sinon.stub().resolves() };
-    withCertificateUrlStub = sinon.stub(jwt.PublicKeySignatureVerifier, 'withCertificateUrl')
+    withJwksUrlStub = sinon.stub(jwt.PublicKeySignatureVerifier, 'withJwksUrl')
       .returns(signatureVerifierStub as any);
   });
 
@@ -98,7 +98,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
     it('should instantiate successfully with valid arguments', () => {
       const v = createVerifier();
       expect(v).to.be.instanceOf(FirebasePhoneNumberTokenVerifier);
-      expect(withCertificateUrlStub.calledOnce).to.be.true;
+      expect(withJwksUrlStub.calledOnce).to.be.true;
     });
 
     it('should throw if clientCertUrl is invalid', () => {
