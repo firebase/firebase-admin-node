@@ -96,6 +96,48 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
+      new_ui_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            rolloutValue: {
+              rolloutId: 'rollout_1',
+              value: 'true',
+              percent: 50,
+            }
+          }
+        },
+        description: 'New UI Rollout',
+        valueType: 'BOOLEAN',
+      },
+      personalized_welcome_message: {
+        defaultValue: { value: 'Welcome!' },
+        conditionalValues: {
+          ios: {
+            personalizationValue: {
+              personalizationId: 'personalization_1',
+            }
+          }
+        },
+        description: 'Personalized Welcome Message',
+        valueType: 'STRING',
+      },
+      experiment_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            experimentValue: {
+              experimentId: 'experiment_1',
+              variantValue: [
+                { variantId: 'variant_A', value: 'true' },
+                { variantId: 'variant_B', noChange: true }
+              ]
+            }
+          }
+        },
+        description: 'Experiment Enabled',
+        valueType: 'BOOLEAN',
+      }
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-5',
@@ -153,6 +195,48 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
+      new_ui_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            rolloutValue: {
+              rolloutId: 'rollout_1',
+              value: 'true',
+              percent: 50,
+            }
+          }
+        },
+        description: 'New UI Rollout',
+        valueType: 'BOOLEAN',
+      },
+      personalized_welcome_message: {
+        defaultValue: { value: 'Welcome!' },
+        conditionalValues: {
+          ios: {
+            personalizationValue: {
+              personalizationId: 'personalization_1',
+            }
+          }
+        },
+        description: 'Personalized Welcome Message',
+        valueType: 'STRING',
+      },
+      experiment_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            experimentValue: {
+              experimentId: 'experiment_1',
+              variantValue: [
+                { variantId: 'variant_A', value: 'true' },
+                { variantId: 'variant_B', noChange: true }
+              ]
+            }
+          }
+        },
+        description: 'Experiment Enabled',
+        valueType: 'BOOLEAN',
+      }
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',

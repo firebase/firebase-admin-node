@@ -355,11 +355,72 @@ export interface InAppDefaultValue {
 }
 
 /**
+ * Represents a Rollout value.
+ */
+export interface RolloutValue {
+  rolloutId: string;
+  value: string;
+  percent: number; // Numeric value between 1-100
+}
+
+/**
+ * Represents a Personalization value.
+ */
+export interface PersonalizationValue {
+  personalizationId: string;
+}
+
+/**
+ * Represents a specific variant value within an Experiment.
+ */
+export interface ExperimentVariantExplicitValue {
+  variantId: string;
+  value: string;
+  noChange?: never;
+}
+
+/**
+ * Represents a no-change variant value within an Experiment.
+ */
+export interface ExperimentVariantNoChange {
+  variantId: string;
+  value?: never;
+  noChange: true;
+}
+
+export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
+
+/**
+ * Represents an Experiment value.
+ */
+export interface ExperimentValue {
+  experimentId: string;
+  variantValue: ExperimentVariantValue[];
+}
+
+export interface RolloutParameterValue {
+  rolloutValue: RolloutValue;
+}
+
+export interface PersonalizationParameterValue {
+  personalizationValue: PersonalizationValue;
+}
+
+export interface ExperimentParameterValue {
+  experimentValue: ExperimentValue;
+}
+
+/**
  * Type representing a Remote Config parameter value.
  * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or
  * an `InAppDefaultValue`.
  */
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue =
+  | ExplicitParameterValue
+  | InAppDefaultValue
+  | RolloutParameterValue
+  | PersonalizationParameterValue
+  | ExperimentParameterValue;
 
 /**
  * Interface representing a Remote Config parameter.
