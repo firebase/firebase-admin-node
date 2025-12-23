@@ -395,7 +395,7 @@ export type ExperimentVariantValue = ExperimentVariantExplicitValue | Experiment
  */
 export interface ExperimentValue {
   experimentId: string;
-  variantValues: ExperimentVariantValue[];
+  variantValue: ExperimentVariantValue[];
 }
 
 export interface RolloutParameterValue {

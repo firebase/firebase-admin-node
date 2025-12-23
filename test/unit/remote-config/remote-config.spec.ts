@@ -128,7 +128,7 @@ describe('RemoteConfig', () => {
           ios: {
             experimentValue: {
               experimentId: 'experiment_1',
-              variantValues: [
+              variantValue: [
                 { variantId: 'variant_A', value: 'true' },
                 { variantId: 'variant_B', noChange: true }
               ]
@@ -227,7 +227,7 @@ describe('RemoteConfig', () => {
           ios: {
             experimentValue: {
               experimentId: 'experiment_1',
-              variantValues: [
+              variantValue: [
                 { variantId: 'variant_A', value: 'true' },
                 { variantId: 'variant_B', noChange: true }
               ]
