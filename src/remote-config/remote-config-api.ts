@@ -371,7 +371,7 @@ export interface PersonalizationValue {
 }
 
 /**
- * Represents a specific no change variant value within an Experiment.
+ * Represents a specific variant value within an Experiment.
  */
 export interface ExperimentVariantExplicitValue {
   variantId: string;
