@@ -196,8 +196,12 @@ export interface RemoteConfigParameterGroup {
     };
 }
 
+// Warning: (ae-forgotten-export) The symbol "RolloutParameterValue" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PersonalizationParameterValue" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ExperimentParameterValue" needs to be exported by the entry point index.d.ts
+//
 // @public
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | RolloutParameterValue | PersonalizationParameterValue | ExperimentParameterValue;
 
 // @public
 export interface RemoteConfigTemplate {

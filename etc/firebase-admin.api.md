@@ -434,6 +434,16 @@ export function remoteConfig(app?: App): remoteConfig.RemoteConfig;
 
 // @public (undocumented)
 export namespace remoteConfig {
+    // Warning: (ae-forgotten-export) The symbol "ExperimentParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    export type ExperimentParameterValue = ExperimentParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "ExperimentValue" needs to be exported by the entry point default-namespace.d.ts
+    export type ExperimentValue = ExperimentValue;
+    // Warning: (ae-forgotten-export) The symbol "ExperimentVariantExplicitValue" needs to be exported by the entry point default-namespace.d.ts
+    export type ExperimentVariantExplicitValue = ExperimentVariantExplicitValue;
+    // Warning: (ae-forgotten-export) The symbol "ExperimentVariantNoChange" needs to be exported by the entry point default-namespace.d.ts
+    export type ExperimentVariantNoChange = ExperimentVariantNoChange;
+    // Warning: (ae-forgotten-export) The symbol "ExperimentVariantValue" needs to be exported by the entry point default-namespace.d.ts
+    export type ExperimentVariantValue = ExperimentVariantValue;
     // Warning: (ae-forgotten-export) The symbol "ExplicitParameterValue" needs to be exported by the entry point default-namespace.d.ts
     export type ExplicitParameterValue = ExplicitParameterValue;
     // Warning: (ae-forgotten-export) The symbol "InAppDefaultValue" needs to be exported by the entry point default-namespace.d.ts
@@ -444,6 +454,10 @@ export namespace remoteConfig {
     export type ListVersionsResult = ListVersionsResult;
     // Warning: (ae-forgotten-export) The symbol "ParameterValueType" needs to be exported by the entry point default-namespace.d.ts
     export type ParameterValueType = ParameterValueType;
+    // Warning: (ae-forgotten-export) The symbol "PersonalizationParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    export type PersonalizationParameterValue = PersonalizationParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "PersonalizationValue" needs to be exported by the entry point default-namespace.d.ts
+    export type PersonalizationValue = PersonalizationValue;
     // Warning: (ae-forgotten-export) The symbol "RemoteConfig" needs to be exported by the entry point default-namespace.d.ts
     export type RemoteConfig = RemoteConfig;
     // Warning: (ae-forgotten-export) The symbol "RemoteConfigCondition" needs to be exported by the entry point default-namespace.d.ts
@@ -458,6 +472,10 @@ export namespace remoteConfig {
     export type RemoteConfigTemplate = RemoteConfigTemplate;
     // Warning: (ae-forgotten-export) The symbol "RemoteConfigUser" needs to be exported by the entry point default-namespace.d.ts
     export type RemoteConfigUser = RemoteConfigUser;
+    // Warning: (ae-forgotten-export) The symbol "RolloutParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    export type RolloutParameterValue = RolloutParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "RolloutValue" needs to be exported by the entry point default-namespace.d.ts
+    export type RolloutValue = RolloutValue;
     // Warning: (ae-forgotten-export) The symbol "TagColor" needs to be exported by the entry point default-namespace.d.ts
     export type TagColor = TagColor;
     // Warning: (ae-forgotten-export) The symbol "Version" needs to be exported by the entry point default-namespace.d.ts
