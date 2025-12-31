@@ -27,6 +27,9 @@ import {
   TagColor,
   ListVersionsResult,
   RemoteConfigFetchResponse,
+  RolloutParameterValue,
+  PersonalizationParameterValue,
+  ExperimentParameterValue,
 } from '../../../src/remote-config/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
@@ -628,43 +631,27 @@ describe('RemoteConfig', () => {
 
       const p2 = newTemplate.parameters['new_ui_enabled'];
       expect(p2.defaultValue).deep.equals({ value: 'false' });
-      expect(p2.conditionalValues).deep.equals({
-        ios: {
-          rolloutValue: {
-            rolloutId: 'rollout_1',
-            value: 'true',
-            percent: 50,
-          }
-        }
-      });
+      const rolloutParam = p2.conditionalValues['ios'] as RolloutParameterValue;
+      expect(rolloutParam.rolloutValue.rolloutId).to.equal('rollout_1');
+      expect(rolloutParam.rolloutValue.value).to.equal('true');
+      expect(rolloutParam.rolloutValue.percent).to.equal(50);
       expect(p2.description).equals('New UI Rollout');
       expect(p2.valueType).equals('BOOLEAN');
 
       const p3 = newTemplate.parameters['personalized_welcome_message'];
       expect(p3.defaultValue).deep.equals({ value: 'Welcome!' });
-      expect(p3.conditionalValues).deep.equals({
-        ios: {
-          personalizationValue: {
-            personalizationId: 'personalization_1',
-          }
-        }
-      });
+      const personalizationParam = p3.conditionalValues['ios'] as PersonalizationParameterValue;
+      expect(personalizationParam.personalizationValue.personalizationId).to.equal('personalization_1');
       expect(p3.description).equals('Personalized Welcome Message');
       expect(p3.valueType).equals('STRING');
 
       const p4 = newTemplate.parameters['experiment_enabled'];
       expect(p4.defaultValue).deep.equals({ value: 'false' });
-      expect(p4.conditionalValues).deep.equals({
-        ios: {
-          experimentValue: {
-            experimentId: 'experiment_1',
-            variantValue: [
-              { variantId: 'variant_A', value: 'true' },
-              { variantId: 'variant_B', noChange: true }
-            ]
-          }
-        }
-      });
+      const experimentParam = p4.conditionalValues['ios'] as ExperimentParameterValue;
+      expect(experimentParam.experimentValue.experimentId).to.equal('experiment_1');
+      expect(experimentParam.experimentValue.variantValue.length).to.equal(2);
+      expect(experimentParam.experimentValue.variantValue[0]).to.deep.equal({ variantId: 'variant_A', value: 'true' });
+      expect(experimentParam.experimentValue.variantValue[1]).to.deep.equal({ variantId: 'variant_B', noChange: true });
       expect(p4.description).equals('Experiment Enabled');
       expect(p4.valueType).equals('BOOLEAN');
 
