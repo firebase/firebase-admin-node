@@ -382,6 +382,7 @@ class ServerTemplateImpl implements ServerTemplate {
       // Iterates in order over condition list. If there is a value associated
       // with a condition, this checks if the condition is true.
       for (const [conditionName, conditionEvaluation] of evaluatedConditions) {
+
         if (normalizedConditionalValues[conditionName] && conditionEvaluation) {
           parameterValueWrapper = normalizedConditionalValues[conditionName];
           break;
@@ -395,7 +396,9 @@ class ServerTemplateImpl implements ServerTemplate {
 
       if (parameterValueWrapper) {
         const parameterValue = (parameterValueWrapper as ExplicitParameterValue).value;
-        configValues[key] = new ValueImpl('remote', parameterValue);
+        if (parameterValue !== undefined) {
+          configValues[key] = new ValueImpl('remote', parameterValue);
+        }
         continue;
       }
 
