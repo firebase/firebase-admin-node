@@ -47,6 +47,14 @@ export type DefaultConfig = {
 // @public
 export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
+// @public (undocumented)
+export interface ExperimentParameterValue {
+    // Warning: (ae-forgotten-export) The symbol "ExperimentValue" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    experimentValue: ExperimentValue;
+}
+
 // @public
 export interface ExplicitParameterValue {
     value: string;
@@ -142,6 +150,14 @@ export enum PercentConditionOperator {
     UNKNOWN = "UNKNOWN"
 }
 
+// @public (undocumented)
+export interface PersonalizationParameterValue {
+    // Warning: (ae-forgotten-export) The symbol "PersonalizationValue" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    personalizationValue: PersonalizationValue;
+}
+
 // @public
 export type PredefinedSignals = {
     randomizationId?: string;
@@ -196,10 +212,6 @@ export interface RemoteConfigParameterGroup {
     };
 }
 
-// Warning: (ae-forgotten-export) The symbol "RolloutParameterValue" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "PersonalizationParameterValue" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ExperimentParameterValue" needs to be exported by the entry point index.d.ts
-//
 // @public
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | RolloutParameterValue | PersonalizationParameterValue | ExperimentParameterValue;
 
@@ -221,6 +233,14 @@ export interface RemoteConfigUser {
     email: string;
     imageUrl?: string;
     name?: string;
+}
+
+// @public (undocumented)
+export interface RolloutParameterValue {
+    // Warning: (ae-forgotten-export) The symbol "RolloutValue" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    rolloutValue: RolloutValue;
 }
 
 // @public
