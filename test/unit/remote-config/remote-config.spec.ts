@@ -626,6 +626,48 @@ describe('RemoteConfig', () => {
       expect(p1.description).equals('this is a promo');
       expect(p1.valueType).equals('BOOLEAN');
 
+      const p2 = newTemplate.parameters['new_ui_enabled'];
+      expect(p2.defaultValue).deep.equals({ value: 'false' });
+      expect(p2.conditionalValues).deep.equals({
+        ios: {
+          rolloutValue: {
+            rolloutId: 'rollout_1',
+            value: 'true',
+            percent: 50,
+          }
+        }
+      });
+      expect(p2.description).equals('New UI Rollout');
+      expect(p2.valueType).equals('BOOLEAN');
+
+      const p3 = newTemplate.parameters['personalized_welcome_message'];
+      expect(p3.defaultValue).deep.equals({ value: 'Welcome!' });
+      expect(p3.conditionalValues).deep.equals({
+        ios: {
+          personalizationValue: {
+            personalizationId: 'personalization_1',
+          }
+        }
+      });
+      expect(p3.description).equals('Personalized Welcome Message');
+      expect(p3.valueType).equals('STRING');
+
+      const p4 = newTemplate.parameters['experiment_enabled'];
+      expect(p4.defaultValue).deep.equals({ value: 'false' });
+      expect(p4.conditionalValues).deep.equals({
+        ios: {
+          experimentValue: {
+            experimentId: 'experiment_1',
+            variantValue: [
+              { variantId: 'variant_A', value: 'true' },
+              { variantId: 'variant_B', noChange: true }
+            ]
+          }
+        }
+      });
+      expect(p4.description).equals('Experiment Enabled');
+      expect(p4.valueType).equals('BOOLEAN');
+
       expect(newTemplate.parameterGroups).deep.equals(PARAMETER_GROUPS);
 
       const c = newTemplate.conditions.find((c) => c.name === 'ios');
