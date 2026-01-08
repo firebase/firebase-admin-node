@@ -102,6 +102,7 @@ jobs:
       startsWith(github.event.pull_request.title, '[chore] Release ')
 
     runs-on: ubuntu-latest
+    environment: Release
     permissions:
       contents: write
 
