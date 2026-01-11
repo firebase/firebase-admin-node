@@ -331,5 +331,21 @@ describe('getDataConnect() caching', () => {
       expect(dc1.connectorConfig.connector).to.equal('my-connector');
       expect(dc2.connectorConfig.connector).to.be.undefined;
     });
+
+    it('should not have cache collisions with ambiguous keys', () => {
+      const config1: ConnectorConfig = {
+        location: 'us-west2-a',
+        serviceId: 'b',
+      };
+      const config2: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'a-b',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+
+      expect(dc1).to.not.equal(dc2);
+    });
   });
 });
