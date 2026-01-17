@@ -928,4 +928,24 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
   });
+
+  // --- Issue #3043 ---
+  describe('Issue #3043: String serialization', () => {
+    it('should correctly escape newlines in strings during insert', async () => {
+      const data = {
+        content: 'Line 1\nLine 2',
+      };
+      // JSON.stringify("Line 1\nLine 2") -> "Line 1\nLine 2"
+      // We expect the generated mutation to contain the string content with properly escaped newline.
+      // So the GraphQL argument should look like content: "Line 1\nLine 2"
+      // Note: in the query string, we want literal characters \ and n.
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      // Expected part of the query: content: "Line 1\nLine 2"
+      // which means the string "Line 1\\nLine 2" should be present in the call args.
+      expect(callArgs).to.include('content: "Line 1\\nLine 2"');
+    });
+  });
 });
