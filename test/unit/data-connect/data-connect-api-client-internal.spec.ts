@@ -929,16 +929,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
   });
 
-  // --- Issue #3043 ---
   describe('Issue #3043: String serialization', () => {
-    it('should correctly escape newlines in strings during insert', async () => {
+    it('should correctly escape special characters in strings during insert', async () => {
       const data = {
         content: 'Line 1\nLine 2',
       };
-      // JSON.stringify("Line 1\nLine 2") -> "Line 1\nLine 2"
-      // We expect the generated mutation to contain the string content with properly escaped newline.
-      // So the GraphQL argument should look like content: "Line 1\nLine 2"
-      // Note: in the query string, we want literal characters \ and n.
 
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
@@ -946,6 +941,57 @@ describe('DataConnectApiClient CRUD helpers', () => {
       // Expected part of the query: content: "Line 1\nLine 2"
       // which means the string "Line 1\\nLine 2" should be present in the call args.
       expect(callArgs).to.include('content: "Line 1\\nLine 2"');
+    });
+
+    it('should correctly escape backslash', async () => {
+      const data = {
+        content: 'Backslash \\',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      // "Backslash \\"
+      // Escaped for GraphQL: "Backslash \\\\"
+      expect(callArgs).to.include('content: "Backslash \\\\"');
+    });
+
+    it('should correctly escape double quotes', async () => {
+      const data = {
+        content: 'Quote "test"',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      // "Quote \"test\""
+      // Escaped for GraphQL: "Quote \\"test\\""
+      expect(callArgs).to.include('content: "Quote \\"test\\""');
+    });
+
+    it('should correctly escape tab character', async () => {
+      const data = {
+        content: 'Tab\tCharacter',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      // "Tab\tCharacter"
+      // Escaped for GraphQL: "Tab\\tCharacter"
+      expect(callArgs).to.include('content: "Tab\\tCharacter"');
+    });
+
+    it('should correctly handle emojis', async () => {
+      const data = {
+        content: 'Emoji 😊',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      // "Emoji 😊"
+      expect(callArgs).to.include('content: "Emoji 😊"');
     });
   });
 });
