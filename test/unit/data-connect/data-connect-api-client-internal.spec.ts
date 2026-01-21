@@ -929,7 +929,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
   });
 
-  describe('Issue #3043: String serialization', () => {
+  describe('String serialization', () => {
     it('should correctly escape special characters in strings during insert', async () => {
       const data = {
         content: 'Line 1\nLine 2',
@@ -938,9 +938,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
 
-      // Expected part of the query: content: "Line 1\nLine 2"
-      // which means the string "Line 1\\nLine 2" should be present in the call args.
-      expect(callArgs).to.include('content: "Line 1\\nLine 2"');
+      expect(callArgs).to.include(String.raw`content: "Line 1\nLine 2"`);
     });
 
     it('should correctly escape backslash', async () => {
@@ -951,9 +949,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
 
-      // "Backslash \\"
-      // Escaped for GraphQL: "Backslash \\\\"
-      expect(callArgs).to.include('content: "Backslash \\\\"');
+      expect(callArgs).to.include(String.raw`content: "Backslash \\"`);
     });
 
     it('should correctly escape double quotes', async () => {
@@ -964,9 +960,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
 
-      // "Quote \"test\""
-      // Escaped for GraphQL: "Quote \\"test\\""
-      expect(callArgs).to.include('content: "Quote \\"test\\""');
+      expect(callArgs).to.include(String.raw`content: "Quote \"test\""`);
     });
 
     it('should correctly escape tab character', async () => {
@@ -977,9 +971,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
 
-      // "Tab\tCharacter"
-      // Escaped for GraphQL: "Tab\\tCharacter"
-      expect(callArgs).to.include('content: "Tab\\tCharacter"');
+      expect(callArgs).to.include(String.raw`content: "Tab\tCharacter"`);
     });
 
     it('should correctly handle emojis', async () => {
@@ -990,7 +982,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       const callArgs = executeGraphqlStub.firstCall.args[0];
 
-      // "Emoji 😊"
       expect(callArgs).to.include('content: "Emoji 😊"');
     });
   });
