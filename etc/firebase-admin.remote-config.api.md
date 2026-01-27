@@ -49,11 +49,31 @@ export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 // @public (undocumented)
 export interface ExperimentParameterValue {
-    // Warning: (ae-forgotten-export) The symbol "ExperimentValue" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     experimentValue: ExperimentValue;
 }
+
+// @public
+export interface ExperimentValue {
+    experimentId: string;
+    variantValue: ExperimentVariantValue[];
+}
+
+// @public
+export interface ExperimentVariantExplicitValue {
+    noChange?: never;
+    value: string;
+    variantId: string;
+}
+
+// @public
+export interface ExperimentVariantNoChange {
+    noChange: true;
+    value?: never;
+    variantId: string;
+}
+
+// @public
+export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
 
 // @public
 export interface ExplicitParameterValue {
@@ -150,12 +170,14 @@ export enum PercentConditionOperator {
     UNKNOWN = "UNKNOWN"
 }
 
-// @public (undocumented)
+// @public
 export interface PersonalizationParameterValue {
-    // Warning: (ae-forgotten-export) The symbol "PersonalizationValue" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     personalizationValue: PersonalizationValue;
+}
+
+// @public
+export interface PersonalizationValue {
+    personalizationId: string;
 }
 
 // @public
@@ -235,12 +257,16 @@ export interface RemoteConfigUser {
     name?: string;
 }
 
-// @public (undocumented)
+// @public
 export interface RolloutParameterValue {
-    // Warning: (ae-forgotten-export) The symbol "RolloutValue" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     rolloutValue: RolloutValue;
+}
+
+// @public
+export interface RolloutValue {
+    percent: number;
+    rolloutId: string;
+    value: string;
 }
 
 // @public
