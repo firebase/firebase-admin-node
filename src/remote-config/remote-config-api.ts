@@ -473,6 +473,9 @@ export interface PersonalizationParameterValue {
   personalizationValue: PersonalizationValue;
 }
 
+/**
+ * Interface representing a parameter value linked to an Experiment.
+ */
 export interface ExperimentParameterValue {
   /**
    * The value returned by an Experiment.

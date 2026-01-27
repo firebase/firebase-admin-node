@@ -47,7 +47,7 @@ export type DefaultConfig = {
 // @public
 export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
-// @public (undocumented)
+// @public
 export interface ExperimentParameterValue {
     experimentValue: ExperimentValue;
 }
