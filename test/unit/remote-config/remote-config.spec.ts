@@ -631,7 +631,8 @@ describe('RemoteConfig', () => {
 
       const p2 = newTemplate.parameters['new_ui_enabled'];
       expect(p2.defaultValue).deep.equals({ value: 'false' });
-      const rolloutParam = p2.conditionalValues['ios'] as RolloutParameterValue;
+      expect(p2.conditionalValues).to.not.be.undefined;
+      const rolloutParam = p2.conditionalValues!['ios'] as RolloutParameterValue;
       expect(rolloutParam.rolloutValue.rolloutId).to.equal('rollout_1');
       expect(rolloutParam.rolloutValue.value).to.equal('true');
       expect(rolloutParam.rolloutValue.percent).to.equal(50);
@@ -640,14 +641,16 @@ describe('RemoteConfig', () => {
 
       const p3 = newTemplate.parameters['personalized_welcome_message'];
       expect(p3.defaultValue).deep.equals({ value: 'Welcome!' });
-      const personalizationParam = p3.conditionalValues['ios'] as PersonalizationParameterValue;
+      expect(p3.conditionalValues).to.not.be.undefined;
+      const personalizationParam = p3.conditionalValues!['ios'] as PersonalizationParameterValue;
       expect(personalizationParam.personalizationValue.personalizationId).to.equal('personalization_1');
       expect(p3.description).equals('Personalized Welcome Message');
       expect(p3.valueType).equals('STRING');
 
       const p4 = newTemplate.parameters['experiment_enabled'];
       expect(p4.defaultValue).deep.equals({ value: 'false' });
-      const experimentParam = p4.conditionalValues['ios'] as ExperimentParameterValue;
+      expect(p4.conditionalValues).to.not.be.undefined;
+      const experimentParam = p4.conditionalValues!['ios'] as ExperimentParameterValue;
       expect(experimentParam.experimentValue.experimentId).to.equal('experiment_1');
       expect(experimentParam.experimentValue.variantValue.length).to.equal(2);
       expect(experimentParam.experimentValue.variantValue[0]).to.deep.equal({ variantId: 'variant_A', value: 'true' });
