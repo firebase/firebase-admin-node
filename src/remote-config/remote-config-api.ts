@@ -431,8 +431,8 @@ export interface ExperimentVariantNoChange {
 }
 
 /**
- * Type representing a Experiment variant value.
- * A `ExperimentVariantValue` could be either an
+ * Type representing an Experiment variant value.
+ * An `ExperimentVariantValue` could be either an
  * `ExperimentVariantExplicitValue` or an `ExperimentVariantNoChange`.
  */
 export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
