@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import url = require('url');
+
+
 
 /**
  * Validates that a value is a byte buffer.
@@ -234,33 +235,28 @@ export function isURL(urlStr: any): boolean {
     return false;
   }
   try {
-    const uri = url.parse(urlStr);
+    const uri = new URL(urlStr);
     const scheme = uri.protocol;
-    const slashes = uri.slashes;
+    if (scheme !== 'http:' && scheme !== 'https:') {
+      return false;
+    }
     const hostname = uri.hostname;
-    const pathname = uri.pathname;
-    if ((scheme !== 'http:' && scheme !== 'https:') || !slashes) {
-      return false;
+    // Validate hostname strictly to match previous behavior and prevent weak/invalid domains.
+    // Must be alphanumeric with optional dashes/underscores, separated by dots.
+    // Cannot start/end with dot or dash (mostly).
+    // This regex is safe (no nested quantifiers with overlap).
+    if (!/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/.test(hostname)) {
+      // Check for IPv6 literals which are valid but behave differently.
+      // Node 'new URL' keeps brackets for IPv6: [::1] -> [::1]
+      // Check for IPv6 address (simple check for brackets)
+      if (!/^\[[a-fA-F0-9:.]+\]$/.test(hostname)) {
+        return false;
+      }
     }
-    // Validate hostname: Can contain letters, numbers, underscore and dashes separated by a dot.
-    // Each zone must not start with a hyphen or underscore.
-    if (!hostname || !/^[a-zA-Z0-9]+[\w-]*([.]?[a-zA-Z0-9]+[\w-]*)*$/.test(hostname)) {
-      return false;
-    }
-    // Allow for pathnames: (/chars+)*/?
-    // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
-    const pathnameRe = /^(\/[\w\-.~!$'()*+,;=:@%]+)*\/?$/;
-    // Validate pathname.
-    if (pathname &&
-        pathname !== '/' &&
-        !pathnameRe.test(pathname)) {
-      return false;
-    }
-    // Allow any query string and hash as long as no invalid character is used.
+    return true;
   } catch (e) {
     return false;
   }
-  return true;
 }
 
 
