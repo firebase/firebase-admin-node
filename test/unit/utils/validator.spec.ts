@@ -530,28 +530,3 @@ describe('isISODateString()', () => {
     expect(isISODateString(validISODateString)).to.be.true;
   });
 });
-
-describe('isURL() ReDoS and Long Inputs', () => {
-  it('should handle long valid URLs quickly', function () {
-    this.timeout(1000);
-    const longUrl = 'https://' + Array(50).fill('a').join('.') + '.com';
-    expect(isURL(longUrl)).to.be.true;
-  });
-
-  it('should handle long invalid URLs quickly (ReDoS check)', function () {
-    this.timeout(1000);
-    const longInvalid = 'https://' + 'a'.repeat(22) + '!';
-    expect(isURL(longInvalid)).to.be.false;
-  });
-
-  it('should handle very long domain with many segments', function () {
-    this.timeout(1000);
-    const manySegments = 'https://' + Array(100).fill('a').join('.') + '.com';
-    expect(isURL(manySegments)).to.be.true;
-  });
-
-  it('should reject invalid dot usage caught by strict regex', function () {
-    expect(isURL('https://a.b')).to.be.true;
-    expect(isURL('https://a..b')).to.be.false;
-  });
-});

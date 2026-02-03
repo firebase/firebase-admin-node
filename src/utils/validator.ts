@@ -15,9 +15,6 @@
  * limitations under the License.
  */
 
-
-
-
 /**
  * Validates that a value is a byte buffer.
  *
@@ -252,6 +249,16 @@ export function isURL(urlStr: any): boolean {
       if (!/^\[[a-fA-F0-9:.]+\]$/.test(hostname)) {
         return false;
       }
+    }
+    // Restore strict pathname validation: (/chars+)*/?
+    // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
+    const pathnameRe = /^(\/[\w\-.~!$'()*+,;=:@%]+)*\/?$/;
+    // Validate pathname.
+    const pathname = uri.pathname;
+    if (pathname &&
+      pathname !== '/' &&
+      !pathnameRe.test(pathname)) {
+      return false;
     }
     return true;
   } catch (e) {
