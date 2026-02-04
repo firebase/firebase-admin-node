@@ -34,7 +34,8 @@ on:
 
 jobs:
   stage_release:
-    # To publish a release, merge a PR with the title prefix '[chore] Release ' to main.
+    # To publish a release, merge a PR with the title prefix '[chore] Release ' to main
+    # and ensure the squashed commit message also has the prefix.
     # To stage a release without publishing it, send a 'firebase_build' event or apply
     # the 'release:stage' label to a PR.
     if: github.event.action == 'firebase_build' ||
@@ -136,7 +137,7 @@ jobs:
       run: |
         gh release create "$RELEASE_VER" \
           --title "Firebase Admin Node.js SDK $RELEASE_VER" \
-          --notes '$RELEASE_BODY'
+          --notes "$RELEASE_BODY"
 
     - name: Publish to NPM
       run: ./.github/scripts/publish_package.sh
