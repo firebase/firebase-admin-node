@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
-  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
+  AuthorizedHttpClient, HttpClient, HttpRequestConfig, RequestResponse, RequestResponseError
 } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
@@ -121,7 +121,11 @@ export class FunctionsApiClient {
    * @param extensionId - Optional canonical ID of the extension.
    * @param opts - Optional options when enqueuing a new task.
    */
-  public async enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
+  public async enqueue(
+    data: any,
+    functionName: string,
+    extensionId?: string,
+    opts?: TaskOptions): Promise<RequestResponse | void> {
     if (!validator.isNonEmptyString(functionName)) {
       throw new FirebaseFunctionsError(
         'invalid-argument', 'Function name must be a non empty string');
@@ -159,7 +163,7 @@ export class FunctionsApiClient {
           task: taskPayload,
         }
       };
-      await this.httpClient.send(request);
+      return await this.httpClient.send(request);
     } catch (err: unknown) {
       if (err instanceof RequestResponseError) {
         if (err.response.status === 409) {

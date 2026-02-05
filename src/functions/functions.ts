@@ -18,6 +18,7 @@
 import { App } from '../app';
 import { FirebaseFunctionsError, FunctionsApiClient } from './functions-api-client-internal';
 import { TaskOptions } from './functions-api';
+import { RequestResponse } from '../utils/api-request';
 import * as validator from '../utils/validator';
 
 /**
@@ -99,7 +100,7 @@ export class TaskQueue<Args = Record<string, any>> {
    * @param opts - Optional options when enqueuing a new task.
    * @returns A promise that resolves when the task has successfully been added to the queue.
    */
-  public enqueue(data: Args, opts?: TaskOptions): Promise<void> {
+  public enqueue(data: Args, opts?: TaskOptions): Promise<RequestResponse | void> {
     return this.client.enqueue(data, this.functionName, this.extensionId, opts);
   }
 
