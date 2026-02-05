@@ -309,6 +309,12 @@ export interface Aps {
   mutableContent?: boolean;
 
   /**
+   * Specifies whether to set the `content-changed` property on the message
+   * so the clients can modify the notification via app extensions.
+   */
+  contentChanged?: boolean;
+
+  /**
    * Type of the notification.
    */
   category?: string;
@@ -947,6 +953,18 @@ export interface MessagingOptions {
    * **Default value:** `false`
    */
   contentAvailable?: boolean;
+
+  /**
+   * On iOS, use this field to represent `content-changed` in the APNs payload.
+   *
+   * See {@link https://developer.apple.com/documentation/widgetkit/updating-widgets-with-widgetkit-push-notifications |
+   * Updating Widgets with WidgetKit Push Notifications} for more information.
+   *
+   * On Android and web, this field is ignored.
+   *
+   * **Default value:** `false`
+   */
+  contentChanged?: boolean;
 
   /**
    * The package name of the application which the registration tokens must match
