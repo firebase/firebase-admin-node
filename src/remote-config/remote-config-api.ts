@@ -355,11 +355,145 @@ export interface InAppDefaultValue {
 }
 
 /**
+ * Interface representing a value that is linked to a Rollout.
+ */
+export interface RolloutValue {
+  /**
+   * The ID of the Rollout to which the value is linked.
+   */
+  rolloutId: string;
+
+  /**
+   * The value that is being rolled out.
+   */
+  value: string;
+
+  /**
+   * The rollout percentage representing the exposure of the rollout value in
+   * the target audience.
+   */
+  percent: number; // Numeric value between 1-100
+}
+
+/**
+ * Interface representing a value returned by Personalization.
+ */
+export interface PersonalizationValue {
+  /**
+   * The ID of the Personalization to which the value is linked.
+   */
+  personalizationId: string;
+}
+
+/**
+ * Interface representing a specific variant value within an Experiment.
+ */
+export interface ExperimentVariantExplicitValue {
+  /**
+   * ID of the variant value within an Experiment.
+   */
+  variantId: string;
+
+  /**
+   * Value of the variant within an Experiment. 
+   */
+  value: string;
+
+  /**
+   * Represents an unset `noChange` value. To set `noChange`, use
+   * `ExperimentVariantNoChange` instead.
+   */
+  noChange?: never;
+}
+
+/**
+ * Represents a no-change variant value within an Experiment.
+ */
+export interface ExperimentVariantNoChange {
+  /**
+   * ID of the variant value within an Experiment.
+   */
+  variantId: string;
+
+  /**
+   * Represents an unset value as only one of `noChange` or `value` can be set.
+   * To set a variant value, use `ExperimentVariantExplicitValue` instead. 
+   */
+  value?: never;
+
+  /**
+   * Represents a no-change variant value within an Experiment. If `true`,
+   * the variant served to the client is equal to the value against the
+   * next condition in the evaluation order (or the default value if no
+   * conditions are applicable).
+   */
+  noChange: true;
+}
+
+/**
+ * Type representing an Experiment variant value.
+ * An `ExperimentVariantValue` could be either an
+ * `ExperimentVariantExplicitValue` or an `ExperimentVariantNoChange`.
+ */
+export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
+
+/**
+ * Represents an Experiment value.
+ */
+export interface ExperimentValue {
+  /** 
+   * ID of the Experiment to which the value is linked.
+  */
+  experimentId: string;
+
+  /**
+   * Collection of `ExperimentVariantValue`s that represents the variants
+   * served by the Experiment.
+   */
+  variantValue: ExperimentVariantValue[];
+}
+
+/**
+ * Interface representing a parameter value linked to a Rollout.
+ */
+export interface RolloutParameterValue {
+  /**
+   * The value returned by a Rollout.
+   */
+  rolloutValue: RolloutValue;
+}
+
+/**
+ * Interface representing a parameter value linked to a Personalization.
+ */
+export interface PersonalizationParameterValue {
+  /**
+   * The value returned by a Personalization.
+   */
+  personalizationValue: PersonalizationValue;
+}
+
+/**
+ * Interface representing a parameter value linked to an Experiment.
+ */
+export interface ExperimentParameterValue {
+  /**
+   * The value returned by an Experiment.
+   */
+  experimentValue: ExperimentValue;
+}
+
+/**
  * Type representing a Remote Config parameter value.
  * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or
  * an `InAppDefaultValue`.
  */
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue =
+  | ExplicitParameterValue
+  | InAppDefaultValue
+  | RolloutParameterValue
+  | PersonalizationParameterValue
+  | ExperimentParameterValue;
 
 /**
  * Interface representing a Remote Config parameter.
