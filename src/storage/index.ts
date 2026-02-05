@@ -75,7 +75,14 @@ export async function getDownloadURL(file: File): Promise<string> {
   const endpoint =
     (process.env.STORAGE_EMULATOR_HOST ||
       'https://firebasestorage.googleapis.com') + '/v0';
-  const { downloadTokens } = await getFirebaseMetadata(endpoint, file);
+  const headers = process.env.STORAGE_EMULATOR_HOST
+    ? { Authorization: 'Bearer owner' }
+    : undefined;
+  const { downloadTokens } = await getFirebaseMetadata(
+    endpoint,
+    file,
+    headers
+  );
   if (!downloadTokens) {
     throw new FirebaseError({
       code: 'storage/no-download-token',
