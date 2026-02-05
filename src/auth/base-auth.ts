@@ -107,7 +107,7 @@ export interface SessionCookieOptions {
 
   /**
    * The session cookie custom expiration in milliseconds. The minimum allowed is
-   * 5 minutes and the maxium allowed is 2 weeks.
+   * 5 minutes and the maximum allowed is 2 weeks.
    */
   expiresIn: number;
 }
