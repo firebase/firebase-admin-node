@@ -111,7 +111,36 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
         .to.throw('invalid URL');
     });
 
-    it('should throw if tokenInfo is missing required fields', () => {
+    it('should throw if tokenInfo is null', () => {
+      expect(() => new FirebasePhoneNumberTokenVerifier(
+        MOCK_CERT_URL,
+        MOCK_ISSUER,
+        // @ts-expect-error null for testing
+        null,
+        mockApp
+      ))
+        .to.throw('The provided JWT information is not an object or null.');
+    });
+
+    it('should throw if tokenInfo is missing URL field', () => {
+      const invalidInfo = { ...MOCK_TOKEN_INFO, url: '' };
+      expect(() => createVerifier({ tokenInfo: invalidInfo }))
+        .to.throw('The provided JWT verification documentation URL is invalid.');
+    });
+
+    it('should throw if tokenInfo is missing jwtName field', () => {
+      const invalidInfo = { ...MOCK_TOKEN_INFO, jwtName: '' };
+      expect(() => createVerifier({ tokenInfo: invalidInfo }))
+        .to.throw('The JWT public full name must be a non-empty string.');
+    });
+
+    it('should throw if tokenInfo is missing shortName field', () => {
+      const invalidInfo = { ...MOCK_TOKEN_INFO, shortName: '' };
+      expect(() => createVerifier({ tokenInfo: invalidInfo }))
+        .to.throw('The JWT public short name must be a non-empty string.');
+    });
+
+    it('should throw if tokenInfo is missing verifyApiName field', () => {
       const invalidInfo = { ...MOCK_TOKEN_INFO, verifyApiName: '' };
       expect(() => createVerifier({ tokenInfo: invalidInfo }))
         .to.throw('verify API name must be a non-empty string');
@@ -150,6 +179,18 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
         await expect(verifier.verifyJWT('token'))
           .to.be.rejectedWith('Unknown error');
       });
+
+      it('should rethrow unknown errors from decodeJwt', async () => {
+        const tokenInfo = { ...MOCK_TOKEN_INFO, shortName: 'a-short' };
+        const verifier = createVerifier({ tokenInfo })
+
+        const err = new Error('Invalid argument');
+        (err as any).code = jwt.JwtErrorCode.INVALID_ARGUMENT;
+        decodeJwtStub.rejects(err);
+
+        await expect(verifier.verifyJWT('token'))
+          .to.be.rejectedWith(/Make sure you passed the entire string JWT which represents an a-short/);
+      });
     });
 
     describe('Content Verification', () => {
@@ -179,6 +220,11 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
       it('should throw if "aud" does not contain issuer+projectId', async () => {
         setupDecode({}, { aud: ['wrong-audience'] });
         await expect(verifier.verifyJWT('token')).to.be.rejectedWith('incorrect "aud"');
+      });
+
+      it('should throw if "iss" is missing', async () => {
+        setupDecode({}, { iss: undefined });
+        await expect(verifier.verifyJWT('token')).to.be.rejectedWith('has incorrect "iss"');
       });
 
       it('should throw if "sub" is missing', async () => {
@@ -231,6 +277,16 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
 
         await expect(verifier.verifyJWT('token'))
           .to.be.rejectedWith(/does not correspond to a known public key/)
+          .and.eventually.have.property('code',`${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT}`);
+      });
+
+      it('should throw INVALID_ARGUMENT if signature verifier throws KEY_FETCH_ERROR', async () => {
+        const error = new Error('No Key');
+        (error as any).code = jwt.JwtErrorCode.KEY_FETCH_ERROR;
+        signatureVerifierStub.verify.rejects(error);
+
+        await expect(verifier.verifyJWT('token'))
+          .to.be.rejectedWith(/No Key/)
           .and.eventually.have.property('code',`${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT}`);
       });
     });
