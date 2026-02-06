@@ -24,12 +24,20 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
 import { getFirebasePnv, Fpnv } from '../../../src/fpnv/index';
+import * as fpnvIndex from '../../../src/fpnv/index';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+
+describe('Module export', () => {
+  it('should export Fpnv class', () => {
+    expect(fpnvIndex.Fpnv).to.exist;
+    expect(fpnvIndex.getFirebasePnv).to.be.a('function');
+  });
+});
 
 describe('Fpnv', () => {
   let mockApp: App;
