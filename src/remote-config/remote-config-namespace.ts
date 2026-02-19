@@ -18,6 +18,15 @@ import { App } from '../app';
 import {
   ExplicitParameterValue as TExplicitParameterValue,
   InAppDefaultValue as TInAppDefaultValue,
+  RolloutValue as TRolloutValue,
+  PersonalizationValue as TPersonalizationValue,
+  ExperimentVariantExplicitValue as TExperimentVariantExplicitValue,
+  ExperimentVariantNoChange as TExperimentVariantNoChange,
+  ExperimentVariantValue as TExperimentVariantValue,
+  ExperimentValue as TExperimentValue,
+  RolloutParameterValue as TRolloutParameterValue,
+  PersonalizationParameterValue as TPersonalizationParameterValue,
+  ExperimentParameterValue as TExperimentParameterValue,
   ListVersionsOptions as TListVersionsOptions,
   ListVersionsResult as TListVersionsResult,
   ParameterValueType as TParameterValueType,
@@ -72,6 +81,51 @@ export namespace remoteConfig {
    * Type alias to {@link firebase-admin.remote-config#InAppDefaultValue}.
    */
   export type InAppDefaultValue = TInAppDefaultValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RolloutValue}.
+   */
+  export type RolloutValue = TRolloutValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#PersonalizationValue}.
+   */
+  export type PersonalizationValue = TPersonalizationValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExperimentVariantExplicitValue}.
+   */
+  export type ExperimentVariantExplicitValue = TExperimentVariantExplicitValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExperimentVariantNoChange}.
+   */
+  export type ExperimentVariantNoChange = TExperimentVariantNoChange;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExperimentVariantValue}.
+   */
+  export type ExperimentVariantValue = TExperimentVariantValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExperimentValue}.
+   */
+  export type ExperimentValue = TExperimentValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#RolloutParameterValue}.
+   */
+  export type RolloutParameterValue = TRolloutParameterValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#PersonalizationParameterValue}.
+   */
+  export type PersonalizationParameterValue = TPersonalizationParameterValue;
+
+  /**
+   * Type alias to {@link firebase-admin.remote-config#ExperimentParameterValue}.
+   */
+  export type ExperimentParameterValue = TExperimentParameterValue;
 
   /**
    * Type alias to {@link firebase-admin.remote-config#ListVersionsOptions}.
