@@ -928,4 +928,61 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
     });
   });
+
+  describe('String serialization', () => {
+    it('should correctly escape special characters in strings during insert', async () => {
+      const data = {
+        content: 'Line 1\nLine 2',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Line 1\nLine 2"`);
+    });
+
+    it('should correctly escape backslash', async () => {
+      const data = {
+        content: 'Backslash \\',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Backslash \\"`);
+    });
+
+    it('should correctly escape double quotes', async () => {
+      const data = {
+        content: 'Quote "test"',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Quote \"test\""`);
+    });
+
+    it('should correctly escape tab character', async () => {
+      const data = {
+        content: 'Tab\tCharacter',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Tab\tCharacter"`);
+    });
+
+    it('should correctly handle emojis', async () => {
+      const data = {
+        content: 'Emoji 😊',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include('content: "Emoji 😊"');
+    });
+  });
 });

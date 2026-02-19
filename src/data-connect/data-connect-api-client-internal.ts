@@ -413,10 +413,7 @@ export class DataConnectApiClient {
    */
   private objectToString(data: unknown): string {
     if (typeof data === 'string') {
-      const escapedString = data
-        .replace(/\\/g, '\\\\') // Replace \ with \\
-        .replace(/"/g, '\\"');  // Replace " with \"
-      return `"${escapedString}"`;
+      return JSON.stringify(data);
     }
     if (typeof data === 'number' || typeof data === 'boolean' || data === null) {
       return String(data);
