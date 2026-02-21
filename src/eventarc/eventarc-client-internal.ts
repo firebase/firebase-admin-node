@@ -78,7 +78,7 @@ export class EventarcApiClient {
    * 
    * The following CloudEvent fields are auto-populated if not set:
    *  * specversion - `1.0`
-   *  * id - uuidv4()
+   *  * id - a randomly generated UUID v4 string
    *  * source - populated with `process.env.EVENTARC_CLOUD_EVENT_SOURCE` and 
    *             if not set an error is thrown.
    *  
