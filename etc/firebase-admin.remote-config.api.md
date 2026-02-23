@@ -48,6 +48,34 @@ export type DefaultConfig = {
 export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 // @public
+export interface ExperimentParameterValue {
+    experimentValue: ExperimentValue;
+}
+
+// @public
+export interface ExperimentValue {
+    experimentId: string;
+    variantValue: ExperimentVariantValue[];
+}
+
+// @public
+export interface ExperimentVariantExplicitValue {
+    noChange?: never;
+    value: string;
+    variantId: string;
+}
+
+// @public
+export interface ExperimentVariantNoChange {
+    noChange: true;
+    value?: never;
+    variantId: string;
+}
+
+// @public
+export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
+
+// @public
 export interface ExplicitParameterValue {
     value: string;
 }
@@ -143,6 +171,16 @@ export enum PercentConditionOperator {
 }
 
 // @public
+export interface PersonalizationParameterValue {
+    personalizationValue: PersonalizationValue;
+}
+
+// @public
+export interface PersonalizationValue {
+    personalizationId: string;
+}
+
+// @public
 export type PredefinedSignals = {
     randomizationId?: string;
 };
@@ -197,7 +235,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 // @public
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | RolloutParameterValue | PersonalizationParameterValue | ExperimentParameterValue;
 
 // @public
 export interface RemoteConfigTemplate {
@@ -217,6 +255,18 @@ export interface RemoteConfigUser {
     email: string;
     imageUrl?: string;
     name?: string;
+}
+
+// @public
+export interface RolloutParameterValue {
+    rolloutValue: RolloutValue;
+}
+
+// @public
+export interface RolloutValue {
+    percent: number;
+    rolloutId: string;
+    value: string;
 }
 
 // @public
