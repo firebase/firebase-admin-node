@@ -44,7 +44,7 @@ describe('admin.appCheck', () => {
   });
 
   describe('createToken', () => {
-    it('should succeed with a vaild token', function() {
+    it('should succeed with a valid token', function () {
       if (!appId) {
         this.skip();
       }
@@ -57,7 +57,7 @@ describe('admin.appCheck', () => {
         });
     });
 
-    it('should succeed with a vaild limited use token', function () {
+    it('should succeed with a valid limited use token', function () {
       if (!appId) {
         this.skip();
       }
