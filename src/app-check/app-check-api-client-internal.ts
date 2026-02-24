@@ -73,6 +73,11 @@ export class AppCheckApiClient {
         'invalid-argument',
         '`customToken` must be a non-empty string.');
     }
+    if (typeof limitedUse !== 'undefined' && !validator.isBoolean(limitedUse)) {
+      throw new FirebaseAppCheckError(
+        'invalid-argument',
+        '`limitedUse` must be a boolean value.');
+    }
     return this.getUrl(appId)
       .then((url) => {
         const request: HttpRequestConfig = {
