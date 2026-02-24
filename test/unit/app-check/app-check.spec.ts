@@ -193,7 +193,8 @@ describe('AppCheck', () => {
         .then((token) => {
           expect(token.token).equals('token');
           expect(token.ttlMillis).equals(3000);
-          expect(stub).to.have.been.calledOnce.and.calledWith(sinon.match.string, APP_ID, { limitedUse: true, jti: 'test-jti' });
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.string, APP_ID, { limitedUse: true, jti: 'test-jti' });
         });
     });
   });
