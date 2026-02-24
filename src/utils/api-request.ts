@@ -730,7 +730,7 @@ class AsyncHttpCall extends AsyncRequestCall {
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
-      if (!validator.isNonNullObject(this.options.headers) || Array.isArray(this.options.headers)) {
+      if (!validator.isNonNullObject(this.options.headers)) {
         this.options.headers = {};
       }
       this.entity = this.httpConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
@@ -831,7 +831,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
-      if (!validator.isNonNullObject(this.options.headers) || Array.isArray(this.options.headers)) {
+      if (!validator.isNonNullObject(this.options.headers)) {
         this.options.headers = {};
       }
       this.entity = this.http2ConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
