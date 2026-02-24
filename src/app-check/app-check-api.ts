@@ -46,6 +46,19 @@ export interface AppCheckTokenOptions {
    * The default value is `false`.
    */
   limitedUse?: boolean;
+
+  /**
+   * Specifies the desired `jti` claim (Section 4.1.7 of RFC 7519) in the returned App
+   * Check token. Limited-use App Check tokens with the same `jti` will be counted as the
+   * same token for the purposes of replay protection.
+   *
+   * If this field is omitted or is empty, a randomly generated `jti` will be used in the
+   * returned App Check token.
+   *
+   * An error is returned if this field is specified without setting `limitedUse` to
+   * `true`.
+   */
+  jti?: string;
 }
 
 /**
