@@ -730,12 +730,10 @@ class AsyncHttpCall extends AsyncRequestCall {
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
-      let headers = this.options.headers;
-      if (!validator.isNonNullObject(headers) || Array.isArray(headers)) {
-        headers = {};
-        this.options.headers = headers;
+      if (!validator.isNonNullObject(this.options.headers) || Array.isArray(this.options.headers)) {
+        this.options.headers = {};
       }
-      this.entity = this.httpConfigImpl.buildEntity(headers as http.OutgoingHttpHeaders);
+      this.entity = this.httpConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -833,12 +831,10 @@ class AsyncHttp2Call extends AsyncRequestCall {
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
-      let headers = this.options.headers;
-      if (!validator.isNonNullObject(headers) || Array.isArray(headers)) {
-        headers = {};
-        this.options.headers = headers;
+      if (!validator.isNonNullObject(this.options.headers) || Array.isArray(this.options.headers)) {
+        this.options.headers = {};
       }
-      this.entity = this.http2ConfigImpl.buildEntity(headers as http.OutgoingHttpHeaders);
+      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
