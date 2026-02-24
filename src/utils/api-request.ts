@@ -730,10 +730,12 @@ class AsyncHttpCall extends AsyncRequestCall {
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
-      if (!validator.isNonNullObject(this.options.headers)) {
-        this.options.headers = {};
+      let headers = this.options.headers;
+      if (!validator.isNonNullObject(headers) || Array.isArray(headers)) {
+        headers = {};
+        this.options.headers = headers;
       }
-      this.entity = this.httpConfigImpl.buildEntity(this.options.headers);
+      this.entity = this.httpConfigImpl.buildEntity(headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -831,10 +833,12 @@ class AsyncHttp2Call extends AsyncRequestCall {
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
-      if (!validator.isNonNullObject(this.options.headers)) {
-        this.options.headers = {};
+      let headers = this.options.headers;
+      if (!validator.isNonNullObject(headers) || Array.isArray(headers)) {
+        headers = {};
+        this.options.headers = headers;
       }
-      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers);
+      this.entity = this.http2ConfigImpl.buildEntity(headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -1354,11 +1358,11 @@ export class Http2SessionHandler {
         ));
       })
 
-      http2Session.on('error', (error) => {
+      http2Session.on('error', (error: any) => {
         let errorMessage: any;
         if (error.name == 'AggregateError' && error.errors) {
           errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
-            `[${error.errors.map((error: any) => error.message).join(', ')}]`
+            `[${error.errors.map((e: any) => e.message).join(', ')}]`
         } else {
           errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
         }
