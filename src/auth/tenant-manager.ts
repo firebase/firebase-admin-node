@@ -76,12 +76,15 @@ export class TenantAwareAuth extends BaseAuth {
    *
    * @param app - The app that created this tenant.
    * @param tenantId - The corresponding tenant ID.
+   * @param emHost - Optional emulator host captured at init time.
    * @constructor
    * @internal
    */
-  constructor(app: App, tenantId: string) {
+  constructor(app: App, tenantId: string, emHost?: string | null) {
+    const emIsSet = emHost !== undefined;
     super(app, new TenantAwareAuthRequestHandler(
-      app, tenantId), createFirebaseTokenGenerator(app, tenantId));
+      app, tenantId, emHost), createFirebaseTokenGenerator(
+      app, tenantId, emIsSet ? !!emHost : undefined));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -148,6 +151,7 @@ export class TenantAwareAuth extends BaseAuth {
 export class TenantManager {
   private readonly authRequestHandler: AuthRequestHandler;
   private readonly tenantsMap: {[key: string]: TenantAwareAuth};
+  private readonly emulatorHost: string | undefined;
 
   /**
    * Initializes a TenantManager instance for a specified FirebaseApp.
@@ -159,6 +163,7 @@ export class TenantManager {
    */
   constructor(private readonly app: App) {
     this.authRequestHandler = new AuthRequestHandler(app);
+    this.emulatorHost = this.authRequestHandler.emulatorHostValue;
     this.tenantsMap = {};
   }
 
@@ -174,7 +179,7 @@ export class TenantManager {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
-      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);
+      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId, this.emulatorHost ?? null);
     }
     return this.tenantsMap[tenantId];
   }
