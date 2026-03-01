@@ -98,8 +98,8 @@ export class AppCheckApiClient {
           headers: FIREBASE_APP_CHECK_CONFIG_HEADERS,
           data: {
             customToken,
-            limitedUse: options?.limitedUse,
-            jti: options?.jti,
+            ...(options?.limitedUse !== undefined && { limitedUse: options.limitedUse }),
+            ...(options?.jti !== undefined && { jti: options.jti }),
           }
         };
         return this.httpClient.send(request);
