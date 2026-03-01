@@ -168,6 +168,35 @@ describe('AppCheck', () => {
           expect(token.ttlMillis).equals(3000);
         });
     });
+
+    it('should resolve with AppCheckToken on success with limitedUse', () => {
+      const response = { token: 'token', ttlMillis: 3000 };
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { limitedUse: true })
+        .then((token) => {
+          expect(token.token).equals('token');
+          expect(token.ttlMillis).equals(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith(sinon.match.string, APP_ID, { limitedUse: true });
+        });
+    });
+
+    it('should resolve with AppCheckToken on success with limitedUse and jti', () => {
+      const response = { token: 'token', ttlMillis: 3000 };
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { limitedUse: true, jti: 'test-jti' })
+        .then((token) => {
+          expect(token.token).equals('token');
+          expect(token.ttlMillis).equals(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.string, APP_ID, { limitedUse: true, jti: 'test-jti' });
+        });
+    });
   });
 
   describe('verifyToken', () => {
