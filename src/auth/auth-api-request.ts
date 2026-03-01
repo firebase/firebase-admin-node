@@ -126,14 +126,15 @@ class AuthResourceUrlBuilder {
   /**
    * The resource URL builder constructor.
    *
-   * @param projectId - The resource project ID.
+   * @param app - The app for this URL builder.
    * @param version - The endpoint API version.
+   * @param emulatorHost - Optional emulator host captured at init time.
    * @constructor
    */
-  constructor(protected app: App, protected version: string = 'v1') {
-    if (useEmulator()) {
+  constructor(protected app: App, protected version: string = 'v1', emHost?: string) {
+    if (emHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
-        host: emulatorHost()
+        host: emHost
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
@@ -190,16 +191,17 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   /**
    * The tenant aware resource URL builder constructor.
    *
-   * @param projectId - The resource project ID.
+   * @param app - The app for this URL builder.
    * @param version - The endpoint API version.
    * @param tenantId - The tenant ID.
+   * @param emHost - Optional emulator host captured at init time.
    * @constructor
    */
-  constructor(protected app: App, protected version: string, protected tenantId: string) {
-    super(app, version);
-    if (useEmulator()) {
+  constructor(protected app: App, protected version: string, protected tenantId: string, emHost?: string) {
+    super(app, version, emHost);
+    if (emHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
-        host: emulatorHost()
+        host: emHost
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
@@ -228,8 +230,15 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
  */
 class AuthHttpClient extends AuthorizedHttpClient {
 
+  private readonly isEmulator: boolean;
+
+  constructor(app: FirebaseApp, isEmulator: boolean) {
+    super(app);
+    this.isEmulator = isEmulator;
+  }
+
   protected getToken(): Promise<string> {
-    if (useEmulator()) {
+    if (this.isEmulator) {
       return Promise.resolve('owner');
     }
 
@@ -1013,6 +1022,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 export abstract class AbstractAuthRequestHandler {
 
   protected readonly httpClient: AuthorizedHttpClient;
+  public readonly emulatorHostValue: string | undefined;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
@@ -1067,9 +1077,12 @@ export abstract class AbstractAuthRequestHandler {
 
   /**
    * @param app - The app used to fetch access tokens to sign API requests.
+   * @param emHost - Optional emulator host override. When provided (including
+   *     null for explicitly no emulator), this value is used instead of reading
+   *     from the FIREBASE_AUTH_EMULATOR_HOST environment variable.
    * @constructor
    */
-  constructor(protected readonly app: App) {
+  constructor(protected readonly app: App, emHost?: string | null) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -1077,7 +1090,8 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    this.httpClient = new AuthHttpClient(app as FirebaseApp);
+    this.emulatorHostValue = emHost !== undefined ? (emHost || undefined) : emulatorHost();
+    this.httpClient = new AuthHttpClient(app as FirebaseApp, !!this.emulatorHostValue);
   }
 
   /**
@@ -2088,21 +2102,21 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: App) {
     super(app);
-    this.authResourceUrlBuilder =  new AuthResourceUrlBuilder(app, 'v2');
+    this.authResourceUrlBuilder = new AuthResourceUrlBuilder(app, 'v2', this.emulatorHostValue);
   }
 
   /**
    * @returns A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.app, 'v1');
+    return new AuthResourceUrlBuilder(this.app, 'v1', this.emulatorHostValue);
   }
 
   /**
    * @returns A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.app, 'v2');
+    return new AuthResourceUrlBuilder(this.app, 'v2', this.emulatorHostValue);
   }
 
   /**
@@ -2259,24 +2273,25 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    *
    * @param app - The app used to fetch access tokens to sign API requests.
    * @param tenantId - The request handler's tenant ID.
+   * @param emHost - Optional emulator host override captured at init time.
    * @constructor
    */
-  constructor(app: App, private readonly tenantId: string) {
-    super(app);
+  constructor(app: App, private readonly tenantId: string, emHost?: string | null) {
+    super(app, emHost);
   }
 
   /**
    * @returns A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v1', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v1', this.tenantId, this.emulatorHostValue);
   }
 
   /**
    * @returns A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v2', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v2', this.tenantId, this.emulatorHostValue);
   }
 
   /**

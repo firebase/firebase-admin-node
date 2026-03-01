@@ -959,6 +959,50 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
           });
       });
+
+      it('should keep using emulator after env var is deleted', () => {
+        const emulatorHost = 'localhost:9099';
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = emulatorHost;
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `http://${emulatorHost}/identitytoolkit.googleapis.com${path}`,
+              data,
+              headers: expectedHeadersEmulator,
+              timeout,
+            });
+          });
+      });
+
+      it('should not use emulator when env var is set after initialization', () => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `https://${host}${path}`,
+              data,
+              headers: expectedHeaders,
+              timeout,
+            });
+            delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+          });
+      });
     });
 
     describe('createSessionCookie', () => {
