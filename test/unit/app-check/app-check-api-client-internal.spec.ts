@@ -212,8 +212,6 @@ describe('AppCheckApiClient', () => {
             headers: EXPECTED_HEADERS,
             data: {
               customToken: TEST_TOKEN_TO_EXCHANGE,
-              limitedUse: undefined,
-              jti: undefined,
             }
           });
         });
@@ -235,7 +233,6 @@ describe('AppCheckApiClient', () => {
             data: {
               customToken: TEST_TOKEN_TO_EXCHANGE,
               limitedUse: true,
-              jti: undefined,
             }
           });
         });
@@ -258,6 +255,47 @@ describe('AppCheckApiClient', () => {
               customToken: TEST_TOKEN_TO_EXCHANGE,
               limitedUse: true,
               jti: 'test-jti',
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with empty options', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, {})
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with limitedUse set to false and jti undefined', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { limitedUse: false, jti: undefined })
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: false,
             }
           });
         });
