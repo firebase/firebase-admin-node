@@ -15,9 +15,14 @@
  * limitations under the License.
  */
 
-import { FirebaseError as FirebaseErrorInterface } from '../app';
 import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
+
+export interface HttpResponse {
+  status: number;
+  headers: { [key: string]: any; };
+  data?: string;
+}
 
 /**
  * Defines error info type. This includes a code and message string.
@@ -25,6 +30,8 @@ import { deepCopy } from '../utils/deep-copy';
 export interface ErrorInfo {
   code: string;
   message: string;
+  httpResponse?: HttpResponse;
+  cause?: Error;
 }
 
 /**
@@ -35,32 +42,69 @@ interface ServerToClientCode {
 }
 
 /**
+ * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
+ * addition to a message string and stack trace, it contains a string code.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface FirebaseError {
+  /**
+   * Error codes are strings using the following format: `"service/string-code"`.
+   * Some examples include `"auth/invalid-uid"` and
+   * `"messaging/invalid-recipient"`.
+   *
+   * While the message for a given error can change, the code will remain the same
+   * between backward-compatible versions of the Firebase SDK.
+   */
+  code: string;
+
+  /**
+   * An explanatory message for the error that just occurred.
+   *
+   * This message is designed to be helpful to you, the developer. Because
+   * it generally does not convey meaningful information to end users,
+   * this message should not be displayed in your application.
+   */
+  message: string;
+
+  /**
+   * A string value containing the execution backtrace when the error originally
+   * occurred.
+   *
+   * This information can be useful for troubleshooting the cause of the error with
+   * {@link https://firebase.google.com/support | Firebase Support}.
+   */
+  stack?: string;
+
+  httpResponse?: HttpResponse;
+  cause?: Error;
+
+  /**
+   * Returns a JSON-serializable object representation of this error.
+   *
+   * @returns A JSON-serializable representation of this object.
+   */
+  toJSON(): object;
+}
+
+/**
  * Firebase error code structure. This extends Error.
  */
-export class FirebaseError extends Error implements FirebaseErrorInterface {
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class FirebaseError extends Error implements FirebaseError {
   /**
    * @param errorInfo - The error information (code and message).
-   * @constructor
-   * @internal
    */
   constructor(private errorInfo: ErrorInfo) {
     super(errorInfo.message);
+    this.code = this.errorInfo.code;
+    this.cause = this.errorInfo.cause;
+    this.httpResponse = this.errorInfo.httpResponse;
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
     // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
     /* tslint:enable:max-line-length */
     (this as any).__proto__ = FirebaseError.prototype;
-  }
-
-  /** @returns The error code. */
-  public get code(): string {
-    return this.errorInfo?.code;
-  }
-
-  /** @returns The error message. */
-  public get message(): string {
-    return this.errorInfo?.message;
   }
 
   /** @returns The object representation of the error. */
@@ -80,7 +124,6 @@ export class PrefixedFirebaseError extends FirebaseError {
    * @param codePrefix - The prefix to apply to the error code.
    * @param code - The error code.
    * @param message - The error message.
-   * @constructor
    * @internal
    */
   constructor(private codePrefix: string, code: string, message: string) {
@@ -115,7 +158,6 @@ export class FirebaseAppError extends PrefixedFirebaseError {
   /**
    * @param code - The error code.
    * @param message - The error message.
-   * @constructor
    * @internal
    */
   constructor(code: string, message: string) {
@@ -176,7 +218,6 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -199,7 +240,6 @@ export class FirebaseDatabaseError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -216,7 +256,6 @@ export class FirebaseFirestoreError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -234,7 +273,6 @@ export class FirebaseInstanceIdError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -253,7 +291,6 @@ export class FirebaseInstallationsError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -330,7 +367,6 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * 
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @constructor
    * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
@@ -352,7 +388,6 @@ export class FirebaseMessagingSessionError extends FirebaseMessagingError {
      * @param info - The error code info.
      * @param message - The error message. This will override the default message if provided.
      * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
-     * @constructor
      * @internal
      */
   constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
@@ -384,7 +419,6 @@ export class FirebaseProjectManagementError extends PrefixedFirebaseError {
   /**
    * @param code - The error code.
    * @param message - The error message.
-   * @constructor
    * @internal
    */
   constructor(code: ProjectManagementErrorCode, message: string) {

@@ -129,7 +129,7 @@ type State = 'STATE_UNSPECIFIED' |
   'PROCESSING_WARNING' |
   'PROCESSING_FAILED';
 
-type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
+export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
  *

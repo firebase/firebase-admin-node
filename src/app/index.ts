@@ -23,12 +23,12 @@ import { getSdkVersion } from '../utils';
  * @packageDocumentation
  */
 
-export { App, AppOptions, FirebaseArrayIndexError, FirebaseError } from './core'
+export { App, AppOptions, FirebaseArrayIndexError } from './core';
 export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 
 export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './credential';
 export { applicationDefault, cert, refreshToken } from './credential-factory';
 
-export { FirebaseAppError, AppErrorCodes } from '../utils/error';
+export { FirebaseAppError, AppErrorCodes, FirebaseError, ErrorInfo, HttpResponse } from '../utils/error';
 
 export const SDK_VERSION = getSdkVersion();

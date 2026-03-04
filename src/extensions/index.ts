@@ -62,3 +62,5 @@ export function getExtensions(app?: App): Extensions {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('extensions', (app) => new Extensions(app));
 }
+
+export { FirebaseExtensionsError, ExtensionsErrorCode } from './extensions-api-client-internal';

@@ -39,7 +39,24 @@ describe('FirebaseError', () => {
     const error = new FirebaseError(errorInfo);
     expect(error.code).to.be.equal(code);
     expect(error.message).to.be.equal(message);
+    expect(error instanceof FirebaseError).to.be.true;
+    expect(error instanceof Error).to.be.true;
   });
+
+  it('should initialize correctly with httpResponse and cause', () => {
+    const errorInfoWithExtras = {
+      code,
+      message,
+      httpResponse: { status: 500, headers: {} },
+      cause: new Error('low-level error')
+    };
+    const error = new FirebaseError(errorInfoWithExtras);
+    expect(error.code).to.be.equal(code);
+    expect(error.message).to.be.equal(message);
+    expect(error.httpResponse?.status).to.be.equal(500);
+    expect(error.cause?.message).to.be.equal('low-level error');
+  });
+
 
   it('should throw if no error info is specified', () => {
     expect(() => {
@@ -63,6 +80,8 @@ describe('FirebaseAuthError', () => {
     const error = new FirebaseAuthError(errorCodeInfo);
     expect(error.code).to.be.equal('auth/code');
     expect(error.message).to.be.equal('message');
+    expect(error instanceof FirebaseAuthError).to.be.true;
+    expect(error instanceof FirebaseError).to.be.true;
   });
 
   it('should initialize successfully with a message specified', () => {
@@ -159,6 +178,8 @@ describe('FirebaseMessagingError', () => {
     const error = new FirebaseMessagingError(errorCodeInfo);
     expect(error.code).to.be.equal('messaging/code');
     expect(error.message).to.be.equal('message');
+    expect(error instanceof FirebaseMessagingError).to.be.true;
+    expect(error instanceof FirebaseError).to.be.true;
   });
 
   it('should initialize successfully with a message specified', () => {

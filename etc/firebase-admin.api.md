@@ -228,10 +228,22 @@ export interface FirebaseArrayIndexError {
 
 // @public
 export interface FirebaseError {
+    // (undocumented)
+    cause?: Error;
     code: string;
+    // Warning: (ae-forgotten-export) The symbol "HttpResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    httpResponse?: HttpResponse;
     message: string;
     stack?: string;
     toJSON(): object;
+}
+
+// @public
+export class FirebaseError extends Error implements FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point default-namespace.d.ts
+    constructor(errorInfo: ErrorInfo);
 }
 
 // @public (undocumented)

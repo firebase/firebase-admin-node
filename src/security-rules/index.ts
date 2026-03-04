@@ -65,3 +65,5 @@ export function getSecurityRules(app?: App): SecurityRules {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('securityRules', (app) => new SecurityRules(app));
 }
+
+export { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';

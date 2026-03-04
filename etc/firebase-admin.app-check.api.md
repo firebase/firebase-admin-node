@@ -16,6 +16,9 @@ export class AppCheck {
     verifyToken(appCheckToken: string, options?: VerifyAppCheckTokenOptions): Promise<VerifyAppCheckTokenResponse>;
 }
 
+// @public (undocumented)
+export type AppCheckErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'app-check-token-expired' | 'unknown-error';
+
 // @public
 export interface AppCheckToken {
     token: string;
@@ -37,6 +40,13 @@ export interface DecodedAppCheckToken {
     iat: number;
     iss: string;
     sub: string;
+}
+
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseAppCheckError extends PrefixedFirebaseError {
+    constructor(code: AppCheckErrorCode, message: string);
 }
 
 // @public

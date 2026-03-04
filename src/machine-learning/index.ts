@@ -71,3 +71,5 @@ export function getMachineLearning(app?: App): MachineLearning {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('machineLearning', (app) => new MachineLearning(app));
 }
+
+export { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
