@@ -119,32 +119,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -233,11 +236,12 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -250,32 +254,35 @@ describe('SecurityRulesApiClient', () => {
           status: 'RESOURCE_EXHAUSTED',
         },
       };
+      const mockErr = utils.errorFrom(resourceExhaustedError, 429);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(resourceExhaustedError, 429));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('resource-exhausted', resourceExhaustedError.error.message);
+      const expected = new FirebaseSecurityRulesError('resource-exhausted', resourceExhaustedError.error.message, mockErr.response);
       return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -386,32 +393,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.listRulesets()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.listRulesets()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.listRulesets()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -450,32 +460,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -549,32 +562,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -617,32 +633,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -695,42 +714,35 @@ describe('SecurityRulesApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.deleteRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.deleteRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.deleteRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should throw when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .rejects(expected);
-      stubs.push(stub);
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.deleteRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });

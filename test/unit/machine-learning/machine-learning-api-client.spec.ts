@@ -178,11 +178,12 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should throw when an error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.createModel(NAME_ONLY_OPTIONS)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -227,22 +228,24 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.createModel(NAME_ONLY_OPTIONS)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.createModel(NAME_ONLY_OPTIONS)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -294,11 +297,12 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should throw when an error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -355,22 +359,24 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -424,32 +430,35 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -483,32 +492,35 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.getOperation(OPERATION_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.getOperation(OPERATION_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.getOperation(OPERATION_NAME)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -704,32 +716,35 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should throw when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.listModels()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.listModels()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.listModels()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -782,32 +797,35 @@ describe('MachineLearningApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.deleteModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.deleteModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.deleteModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });

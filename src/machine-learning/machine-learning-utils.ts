@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 
 export type MachineLearningErrorCode =
   'already-exists'
@@ -58,7 +58,7 @@ export class FirebaseMachineLearningError extends PrefixedFirebaseError {
     }
   }
 
-  constructor(code: MachineLearningErrorCode, message: string) {
-    super('machine-learning', code, message);
+  constructor(code: MachineLearningErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('machine-learning', code, message, httpResponse, cause);
   }
 }

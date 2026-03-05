@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 
 export type SecurityRulesErrorCode =
   'already-exists'
@@ -28,7 +28,7 @@ export type SecurityRulesErrorCode =
   | 'unknown-error';
 
 export class FirebaseSecurityRulesError extends PrefixedFirebaseError {
-  constructor(code: SecurityRulesErrorCode, message: string) {
-    super('security-rules', code, message);
+  constructor(code: SecurityRulesErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('security-rules', code, message, httpResponse, cause);
   }
 }

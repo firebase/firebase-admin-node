@@ -19,7 +19,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import { 
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient,RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
@@ -257,16 +257,16 @@ export class RemoteConfigApiClient {
     if (!response.isJson()) {
       return new FirebaseRemoteConfigError(
         'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
+    const error: RemoteConfigApiError = (response.data as ErrorResponse).error || {};
     let code: RemoteConfigErrorCode = 'unknown-error';
     if (error.status && error.status in ERROR_CODE_MAPPING) {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseRemoteConfigError(code, message);
+    return new FirebaseRemoteConfigError(code, message, err.response);
   }
 
   /**
@@ -447,10 +447,10 @@ export class RemoteConfigApiClient {
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: RemoteConfigApiError;
 }
 
-interface Error {
+interface RemoteConfigApiError {
   code?: number;
   message?: string;
   status?: string;
@@ -491,7 +491,7 @@ export type RemoteConfigErrorCode =
  * @constructor
  */
 export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
-  constructor(code: RemoteConfigErrorCode, message: string) {
-    super('remote-config', code, message);
+  constructor(code: RemoteConfigErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('remote-config', code, message, httpResponse, cause);
   }
 }

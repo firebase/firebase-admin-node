@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError } from '../utils/error';
+import { FirebaseAppError, PrefixedFirebaseError, HttpResponse } from '../utils/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 
@@ -85,19 +85,19 @@ export class ExtensionsApiClient {
     if (!response?.isJson()) {
       return new FirebaseExtensionsError(
         'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
     const error = response.data?.error;
     const message = error?.message || `Unknown server error: ${response.text}`;
     switch (error.code) {
     case 403:
-      return  new FirebaseExtensionsError('forbidden', message);
+        return new FirebaseExtensionsError('forbidden', message, err.response);
     case 404:
-      return new FirebaseExtensionsError('not-found', message);
+        return new FirebaseExtensionsError('not-found', message, err.response);
     case 500:
-      return new FirebaseExtensionsError('internal-error', message);
+        return new FirebaseExtensionsError('internal-error', message, err.response);
     }
-    return new FirebaseExtensionsError('unknown-error', message);
+    return new FirebaseExtensionsError('unknown-error', message, err.response);
   }
 }
 
@@ -138,8 +138,8 @@ export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden'
  * @constructor
  */
 export class FirebaseExtensionsError extends PrefixedFirebaseError {
-  constructor(code: ExtensionsErrorCode, message: string) {
-    super('Extensions', code, message);
+  constructor(code: ExtensionsErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('Extensions', code, message, httpResponse, cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

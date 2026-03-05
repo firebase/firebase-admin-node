@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
@@ -349,16 +349,16 @@ export class FunctionsApiClient {
     if (!response.isJson()) {
       return new FirebaseFunctionsError(
         'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
+    const error: FunctionsApiError = (response.data as ErrorResponse).error || {};
     let code: FunctionsErrorCode = 'unknown-error';
     if (error.status && error.status in FUNCTIONS_ERROR_CODE_MAPPING) {
       code = FUNCTIONS_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseFunctionsError(code, message);
+    return new FirebaseFunctionsError(code, message, err.response);
   }
 }
 
@@ -376,10 +376,10 @@ class FunctionsHttpClient extends AuthorizedHttpClient {
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: FunctionsApiError;
 }
 
-interface Error {
+interface FunctionsApiError {
   code?: number;
   message?: string;
   status?: string;
@@ -439,8 +439,8 @@ export type FunctionsErrorCode =
  * @constructor
  */
 export class FirebaseFunctionsError extends PrefixedFirebaseError {
-  constructor(code: FunctionsErrorCode, message: string) {
-    super('functions', code, message);
+  constructor(code: FunctionsErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('functions', code, message, httpResponse, cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

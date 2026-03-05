@@ -292,24 +292,24 @@ export class SecurityRulesApiClient {
     if (!response.isJson()) {
       return new FirebaseSecurityRulesError(
         'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
+    const error: SecurityApiError = (response.data as ErrorResponse).error || {};
     let code: SecurityRulesErrorCode = 'unknown-error';
     if (error.status && error.status in ERROR_CODE_MAPPING) {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseSecurityRulesError(code, message);
+    return new FirebaseSecurityRulesError(code, message, err.response);
   }
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: SecurityApiError;
 }
 
-interface Error {
+interface SecurityApiError {
   code?: number;
   message?: string;
   status?: string;

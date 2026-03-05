@@ -94,11 +94,15 @@ export class FirebaseError extends Error implements FirebaseError {
   /**
    * @param errorInfo - The error information (code and message).
    */
-  constructor(private errorInfo: ErrorInfo) {
+  constructor(errorInfo: ErrorInfo) {
     super(errorInfo.message);
-    this.code = this.errorInfo.code;
-    this.cause = this.errorInfo.cause;
-    this.httpResponse = this.errorInfo.httpResponse;
+    this.code = errorInfo.code;
+    if (errorInfo.cause !== undefined) {
+      this.cause = errorInfo.cause;
+    }
+    if (errorInfo.httpResponse !== undefined) {
+      this.httpResponse = errorInfo.httpResponse;
+    }
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -126,11 +130,18 @@ export class PrefixedFirebaseError extends FirebaseError {
    * @param message - The error message.
    * @internal
    */
-  constructor(private codePrefix: string, code: string, message: string) {
-    super({
+  constructor(private codePrefix: string, code: string, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    const errorInfo: ErrorInfo = {
       code: `${codePrefix}/${code}`,
       message,
-    });
+    };
+    if (httpResponse !== undefined) {
+      errorInfo.httpResponse = httpResponse;
+    }
+    if (cause !== undefined) {
+      errorInfo.cause = cause;
+    }
+    super(errorInfo);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -160,8 +171,8 @@ export class FirebaseAppError extends PrefixedFirebaseError {
    * @param message - The error message.
    * @internal
    */
-  constructor(code: string, message: string) {
-    super('app', code, message);
+  constructor(code: string, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('app', code, message, httpResponse, cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -189,6 +200,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     serverErrorCode: string,
     message?: string,
     rawServerResponse?: object,
+    httpResponse?: HttpResponse,
   ): FirebaseAuthError {
     // serverErrorCode could contain additional details:
     // ERROR_CODE : Detailed message which can also contain colons
@@ -212,6 +224,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
       }
     }
 
+    error.httpResponse = httpResponse;
     return new FirebaseAuthError(error);
   }
 
@@ -222,7 +235,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('auth', info.code, message || info.message);
+    super('auth', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -244,7 +257,12 @@ export class FirebaseDatabaseError extends FirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({ code: 'database/' + info.code, message: message || info.message });
+    super({
+      code: 'database/' + info.code,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause
+    });
   }
 }
 
@@ -260,7 +278,12 @@ export class FirebaseFirestoreError extends FirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({ code: 'firestore/' + info.code, message: message || info.message });
+    super({
+      code: 'firestore/' + info.code,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause
+    });
   }
 }
 
@@ -277,7 +300,12 @@ export class FirebaseInstanceIdError extends FirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({ code: 'instance-id/' + info.code, message: message || info.message });
+    super({
+      code: 'instance-id/' + info.code,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause
+    });
     (this as any).__proto__ = FirebaseInstanceIdError.prototype;
   }
 }
@@ -295,7 +323,12 @@ export class FirebaseInstallationsError extends FirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({ code: 'installations/' + info.code, message: message || info.message });
+    super({
+      code: 'installations/' + info.code,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause
+    });
     (this as any).__proto__ = FirebaseInstallationsError.prototype;
   }
 }
@@ -319,6 +352,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     serverErrorCode: string | null,
     message?: string | null,
     rawServerResponse?: object,
+    httpResponse?: HttpResponse,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     let clientCodeKey = 'UNKNOWN_ERROR';
@@ -336,6 +370,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
       }
     }
 
+    error.httpResponse = httpResponse;
     return new FirebaseMessagingError(error);
   }
 
@@ -346,6 +381,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     serverErrorCode: string,
     message?: string,
     rawServerResponse?: object,
+    httpResponse?: HttpResponse,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
@@ -360,6 +396,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
       }
     }
 
+    error.httpResponse = httpResponse;
     return new FirebaseMessagingError(error);
   }
 
@@ -371,7 +408,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('messaging', info.code, message || info.message);
+    super('messaging', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -421,8 +458,8 @@ export class FirebaseProjectManagementError extends PrefixedFirebaseError {
    * @param message - The error message.
    * @internal
    */
-  constructor(code: ProjectManagementErrorCode, message: string) {
-    super('project-management', code, message);
+  constructor(code: ProjectManagementErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('project-management', code, message, httpResponse, cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

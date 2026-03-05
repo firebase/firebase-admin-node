@@ -378,7 +378,7 @@ export class MachineLearningApiClient {
     if (!response.isJson()) {
       return new FirebaseMachineLearningError(
         'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
 
     const error: Error = (response.data as ErrorResponse).error || {};
@@ -387,7 +387,7 @@ export class MachineLearningApiClient {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseMachineLearningError(code, message);
+    return new FirebaseMachineLearningError(code, message, err.response);
   }
 
   private getProjectUrl(): Promise<string> {

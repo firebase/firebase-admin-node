@@ -1944,7 +1944,7 @@ export abstract class AbstractAuthRequestHandler {
               'errorcode from the error.',
             );
           }
-          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
+          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error, err.response);
         }
         throw err;
       });

@@ -159,29 +159,32 @@ describe('DataConnectApiClient', () => {
       });
 
       it('should reject when a full platform error response is received', () => {
+        const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
         return apiClient.executeGraphql('query', {})
           .should.eventually.be.rejected.and.deep.include(expected);
       });
 
       it('should reject with unknown-error when error code is not present', () => {
+        const mockErr = utils.errorFrom({}, 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({}, 404));
-        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
         return apiClient.executeGraphql('query', {})
           .should.eventually.be.rejected.and.deep.include(expected);
       });
 
       it('should reject with unknown-error for non-json response', () => {
+        const mockErr = utils.errorFrom('not json', 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom('not json', 404));
+          .rejects(mockErr);
         const expected = new FirebaseDataConnectError(
-          'unknown-error', 'Unexpected response with status: 404 and body: not json');
+          'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
         return apiClient.executeGraphql('query', {})
           .should.eventually.be.rejected.and.deep.include(expected);
       });
@@ -269,29 +272,32 @@ describe('DataConnectApiClient', () => {
       });
 
       it('should reject when a full platform error response is received', () => {
+        const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
           .should.eventually.be.rejected.and.deep.include(expected);
       });
 
       it('should reject with unknown-error when error code is not present', () => {
+        const mockErr = utils.errorFrom({}, 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({}, 404));
-        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
           .should.eventually.be.rejected.and.deep.include(expected);
       });
 
       it('should reject with unknown-error for non-json response', () => {
+        const mockErr = utils.errorFrom('not json', 404);
         sandbox
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom('not json', 404));
+          .rejects(mockErr);
         const expected = new FirebaseDataConnectError(
-          'unknown-error', 'Unexpected response with status: 404 and body: not json');
+          'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
           .should.eventually.be.rejected.and.deep.include(expected);
       });
@@ -417,29 +423,32 @@ describe('DataConnectApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       sandbox
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
+        .rejects(mockErr);
+      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       sandbox
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
+        .rejects(mockErr);
+      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       sandbox
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       const expected = new FirebaseDataConnectError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
         .should.eventually.be.rejected.and.deep.include(expected);
     });

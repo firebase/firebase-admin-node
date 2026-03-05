@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -394,7 +394,7 @@ export class DataConnectApiClient {
     if (!response.isJson()) {
       return new FirebaseDataConnectError(
         DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
     }
 
     const error: ServerError = (response.data as ErrorResponse).error || {};
@@ -403,7 +403,7 @@ export class DataConnectApiClient {
       code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseDataConnectError(code, message);
+    return new FirebaseDataConnectError(code, message, err.response);
   }
 
   /**
@@ -670,8 +670,8 @@ export type DataConnectErrorCode =
  * @constructor
  */
 export class FirebaseDataConnectError extends PrefixedFirebaseError {
-  constructor(code: DataConnectErrorCode, message: string) {
-    super('data-connect', code, message);
+  constructor(code: DataConnectErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('data-connect', code, message, httpResponse, cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

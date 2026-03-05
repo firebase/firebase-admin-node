@@ -125,7 +125,7 @@ export class EventarcApiClient {
     const response = err.response;
     return new FirebaseEventarcError(
       'unknown-error',
-      `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
   }
 
   private resolveChannelName(name: string): Promise<string> {

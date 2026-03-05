@@ -441,11 +441,13 @@ export class HttpClient extends RequestClient {
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(
             AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+            `Error while making request: ${err.message}.`,
+            undefined, err);
         }
         throw new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+          `Error while making request: ${err.message}. Error code: ${err.code}`,
+          undefined, err);
       });
   }
 }
@@ -503,11 +505,13 @@ export class Http2Client extends RequestClient {
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(
             AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+            `Error while making request: ${err.message}.`,
+            undefined, err);
         }
         throw new FirebaseAppError(
           AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+          `Error while making request: ${err.message}. Error code: ${err.code}`,
+          undefined, err);
       });
   }
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 import { v4 as uuid } from 'uuid';
 import * as validator from '../utils/validator';
@@ -35,8 +35,8 @@ export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
  * @constructor
  */
 export class FirebaseEventarcError extends PrefixedFirebaseError {
-  constructor(code: EventarcErrorCode, message: string) {
-    super('eventarc', code, message);
+  constructor(code: EventarcErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
+    super('eventarc', code, message, httpResponse, cause);
   }
 }
 

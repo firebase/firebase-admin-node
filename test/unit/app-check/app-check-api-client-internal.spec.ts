@@ -141,32 +141,35 @@ describe('AppCheckApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found');
+      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseAppCheckError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -264,32 +267,35 @@ describe('AppCheckApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found');
+      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found', mockErr.response);
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseAppCheckError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
         .should.eventually.be.rejected.and.deep.include(expected);
     });

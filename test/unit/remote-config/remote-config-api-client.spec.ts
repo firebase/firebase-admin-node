@@ -333,17 +333,18 @@ describe('RemoteConfigApiClient', () => {
 
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurres', () => {
-        const stub = sinon
-          .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({
+        const mockErr = utils.errorFrom({
             error: {
               code: 400,
               message: message,
               status: 'FAILED_PRECONDITION'
             }
-          }, 400));
+        }, 400);
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
         stubs.push(stub);
-        const expected = new FirebaseRemoteConfigError('failed-precondition', message);
+        const expected = new FirebaseRemoteConfigError('failed-precondition', message, mockErr.response);
         return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE)
           .should.eventually.be.rejected.and.deep.include(expected);
       });
@@ -428,17 +429,18 @@ describe('RemoteConfigApiClient', () => {
 
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurs', () => {
-        const stub = sinon
-          .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({
+        const mockErr = utils.errorFrom({
             error: {
               code: 400,
               message: message,
               status: 'FAILED_PRECONDITION'
             }
-          }, 400));
+        }, 400);
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
         stubs.push(stub);
-        const expected = new FirebaseRemoteConfigError('failed-precondition', message);
+        const expected = new FirebaseRemoteConfigError('failed-precondition', message, mockErr.response);
         return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
           .should.eventually.be.rejected.and.deep.include(expected);
       });
@@ -725,32 +727,35 @@ describe('RemoteConfigApiClient', () => {
   function runErrorResponseTests(
     rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData | ListVersionsResult>): void {
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
+      const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found', mockErr.response);
       return rcOperation()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}', mockErr.response);
       return rcOperation()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
       return rcOperation()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
