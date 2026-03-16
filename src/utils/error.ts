@@ -21,7 +21,10 @@ import { deepCopy } from '../utils/deep-copy';
 export interface HttpResponse {
   status: number;
   headers: { [key: string]: any; };
-  data?: string;
+  // Note(error-revamp): This is currently an any type because some endpoints return a string
+  // and others return an object. We should consider making this a string since that is the 
+  // type set in our api proposal.
+  data?: any;
 }
 
 /**
@@ -489,527 +492,528 @@ export class AppErrorCodes {
 /**
  * Auth client error codes and their default messages.
  */
-export class AuthClientErrorCode {
-  public static AUTH_BLOCKING_TOKEN_EXPIRED = {
+export const AuthClientErrorCode = {
+  AUTH_BLOCKING_TOKEN_EXPIRED: {
     code: 'auth-blocking-token-expired',
     message: 'The provided Firebase Auth Blocking token is expired.',
-  };
-  public static BILLING_NOT_ENABLED = {
+  },
+  BILLING_NOT_ENABLED: {
     code: 'billing-not-enabled',
     message: 'Feature requires billing to be enabled.',
-  };
-  public static CLAIMS_TOO_LARGE = {
+  },
+  CLAIMS_TOO_LARGE: {
     code: 'claims-too-large',
     message: 'Developer claims maximum payload size exceeded.',
-  };
-  public static CONFIGURATION_EXISTS = {
+  },
+  CONFIGURATION_EXISTS: {
     code: 'configuration-exists',
     message: 'A configuration already exists with the provided identifier.',
-  };
-  public static CONFIGURATION_NOT_FOUND = {
+  },
+  CONFIGURATION_NOT_FOUND: {
     code: 'configuration-not-found',
     message: 'There is no configuration corresponding to the provided identifier.',
-  };
-  public static ID_TOKEN_EXPIRED = {
+  },
+  ID_TOKEN_EXPIRED: {
     code: 'id-token-expired',
     message: 'The provided Firebase ID token is expired.',
-  };
-  public static INVALID_ARGUMENT = {
+  },
+  INVALID_ARGUMENT: {
     code: 'argument-error',
     message: 'Invalid argument provided.',
-  };
-  public static INVALID_CONFIG = {
+  },
+  INVALID_CONFIG: {
     code: 'invalid-config',
     message: 'The provided configuration is invalid.',
-  };
-  public static EMAIL_ALREADY_EXISTS = {
+  },
+  EMAIL_ALREADY_EXISTS: {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
-  };
-  public static EMAIL_NOT_FOUND = {
+  },
+  EMAIL_NOT_FOUND: {
     code: 'email-not-found',
     message: 'There is no user record corresponding to the provided email.',
-  };
-  public static FORBIDDEN_CLAIM = {
+  },
+  FORBIDDEN_CLAIM: {
     code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
-  };
-  public static INVALID_ID_TOKEN = {
+  },
+  INVALID_ID_TOKEN: {
     code: 'invalid-id-token',
     message: 'The provided ID token is not a valid Firebase ID token.',
-  };
-  public static ID_TOKEN_REVOKED = {
+  },
+  ID_TOKEN_REVOKED: {
     code: 'id-token-revoked',
     message: 'The Firebase ID token has been revoked.',
-  };
-  public static INTERNAL_ERROR = {
+  },
+  INTERNAL_ERROR: {
     code: 'internal-error',
     message: 'An internal error has occurred.',
-  };
-  public static INVALID_CLAIMS = {
+  },
+  INVALID_CLAIMS: {
     code: 'invalid-claims',
     message: 'The provided custom claim attributes are invalid.',
-  };
-  public static INVALID_CONTINUE_URI = {
+  },
+  INVALID_CONTINUE_URI: {
     code: 'invalid-continue-uri',
     message: 'The continue URL must be a valid URL string.',
-  };
-  public static INVALID_CREATION_TIME = {
+  },
+  INVALID_CREATION_TIME: {
     code: 'invalid-creation-time',
     message: 'The creation time must be a valid UTC date string.',
-  };
-  public static INVALID_CREDENTIAL = {
+  },
+  INVALID_CREDENTIAL: {
     code: 'invalid-credential',
     message: 'Invalid credential object provided.',
-  };
-  public static INVALID_DISABLED_FIELD = {
+  },
+  INVALID_DISABLED_FIELD: {
     code: 'invalid-disabled-field',
     message: 'The disabled field must be a boolean.',
-  };
-  public static INVALID_DISPLAY_NAME = {
+  },
+  INVALID_DISPLAY_NAME: {
     code: 'invalid-display-name',
     message: 'The displayName field must be a valid string.',
-  };
-  public static INVALID_DYNAMIC_LINK_DOMAIN = {
+  },
+  INVALID_DYNAMIC_LINK_DOMAIN: {
     code: 'invalid-dynamic-link-domain',
     message: 'The provided dynamic link domain is not configured or authorized ' +
       'for the current project.',
-  };
-  public static INVALID_HOSTING_LINK_DOMAIN = {
+  },
+  INVALID_HOSTING_LINK_DOMAIN: {
     code: 'invalid-hosting-link-domain',
     message: 'The provided hosting link domain is not configured in Firebase ' +
       'Hosting or is not owned by the current project.',
-  };
-  public static INVALID_EMAIL_VERIFIED = {
+  },
+  INVALID_EMAIL_VERIFIED: {
     code: 'invalid-email-verified',
     message: 'The emailVerified field must be a boolean.',
-  };
-  public static INVALID_EMAIL = {
+  },
+  INVALID_EMAIL: {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
-  };
-  public static INVALID_NEW_EMAIL = {
+  },
+  INVALID_NEW_EMAIL: {
     code: 'invalid-new-email',
     message: 'The new email address is improperly formatted.',
-  };
-  public static INVALID_ENROLLED_FACTORS = {
+  },
+  INVALID_ENROLLED_FACTORS: {
     code: 'invalid-enrolled-factors',
     message: 'The enrolled factors must be a valid array of MultiFactorInfo objects.',
-  };
-  public static INVALID_ENROLLMENT_TIME = {
+  },
+  INVALID_ENROLLMENT_TIME: {
     code: 'invalid-enrollment-time',
     message: 'The second factor enrollment time must be a valid UTC date string.',
-  };
-  public static INVALID_HASH_ALGORITHM = {
+  },
+  INVALID_HASH_ALGORITHM: {
     code: 'invalid-hash-algorithm',
     message: 'The hash algorithm must match one of the strings in the list of ' +
       'supported algorithms.',
-  };
-  public static INVALID_HASH_BLOCK_SIZE = {
+  },
+  INVALID_HASH_BLOCK_SIZE: {
     code: 'invalid-hash-block-size',
     message: 'The hash block size must be a valid number.',
-  };
-  public static INVALID_HASH_DERIVED_KEY_LENGTH = {
+  },
+  INVALID_HASH_DERIVED_KEY_LENGTH: {
     code: 'invalid-hash-derived-key-length',
     message: 'The hash derived key length must be a valid number.',
-  };
-  public static INVALID_HASH_KEY = {
+  },
+  INVALID_HASH_KEY: {
     code: 'invalid-hash-key',
     message: 'The hash key must a valid byte buffer.',
-  };
-  public static INVALID_HASH_MEMORY_COST = {
+  },
+  INVALID_HASH_MEMORY_COST: {
     code: 'invalid-hash-memory-cost',
     message: 'The hash memory cost must be a valid number.',
-  };
-  public static INVALID_HASH_PARALLELIZATION = {
+  },
+  INVALID_HASH_PARALLELIZATION: {
     code: 'invalid-hash-parallelization',
     message: 'The hash parallelization must be a valid number.',
-  };
-  public static INVALID_HASH_ROUNDS = {
+  },
+  INVALID_HASH_ROUNDS: {
     code: 'invalid-hash-rounds',
     message: 'The hash rounds must be a valid number.',
-  };
-  public static INVALID_HASH_SALT_SEPARATOR = {
+  },
+  INVALID_HASH_SALT_SEPARATOR: {
     code: 'invalid-hash-salt-separator',
     message: 'The hashing algorithm salt separator field must be a valid byte buffer.',
-  };
-  public static INVALID_LAST_SIGN_IN_TIME = {
+  },
+  INVALID_LAST_SIGN_IN_TIME: {
     code: 'invalid-last-sign-in-time',
     message: 'The last sign-in time must be a valid UTC date string.',
-  };
-  public static INVALID_NAME = {
+  },
+  INVALID_NAME: {
     code: 'invalid-name',
     message: 'The resource name provided is invalid.',
-  };
-  public static INVALID_OAUTH_CLIENT_ID = {
+  },
+  INVALID_OAUTH_CLIENT_ID: {
     code: 'invalid-oauth-client-id',
     message: 'The provided OAuth client ID is invalid.',
-  };
-  public static INVALID_PAGE_TOKEN = {
+  },
+  INVALID_PAGE_TOKEN: {
     code: 'invalid-page-token',
     message: 'The page token must be a valid non-empty string.',
-  };
-  public static INVALID_PASSWORD = {
+  },
+  INVALID_PASSWORD: {
     code: 'invalid-password',
     message: 'The password must be a string with at least 6 characters.',
-  };
-  public static INVALID_PASSWORD_HASH = {
+  },
+  INVALID_PASSWORD_HASH: {
     code: 'invalid-password-hash',
     message: 'The password hash must be a valid byte buffer.',
-  };
-  public static INVALID_PASSWORD_SALT = {
+  },
+  INVALID_PASSWORD_SALT: {
     code: 'invalid-password-salt',
     message: 'The password salt must be a valid byte buffer.',
-  };
-  public static INVALID_PHONE_NUMBER = {
+  },
+  INVALID_PHONE_NUMBER: {
     code: 'invalid-phone-number',
     message: 'The phone number must be a non-empty E.164 standard compliant identifier ' +
       'string.',
-  };
-  public static INVALID_PHOTO_URL = {
+  },
+  INVALID_PHOTO_URL: {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
-  };
-  public static INVALID_PROJECT_ID = {
+  },
+  INVALID_PROJECT_ID: {
     code: 'invalid-project-id',
     message: 'Invalid parent project. Either parent project doesn\'t exist or didn\'t enable multi-tenancy.',
-  };
-  public static INVALID_PROVIDER_DATA = {
+  },
+  INVALID_PROVIDER_DATA: {
     code: 'invalid-provider-data',
     message: 'The providerData must be a valid array of UserInfo objects.',
-  };
-  public static INVALID_PROVIDER_ID = {
+  },
+  INVALID_PROVIDER_ID: {
     code: 'invalid-provider-id',
     message: 'The providerId must be a valid supported provider identifier string.',
-  };
-  public static INVALID_PROVIDER_UID = {
+  },
+  INVALID_PROVIDER_UID: {
     code: 'invalid-provider-uid',
     message: 'The providerUid must be a valid provider uid string.',
-  };
-  public static INVALID_OAUTH_RESPONSETYPE = {
+  },
+  INVALID_OAUTH_RESPONSETYPE: {
     code: 'invalid-oauth-responsetype',
     message: 'Only exactly one OAuth responseType should be set to true.',
-  };
-  public static INVALID_SESSION_COOKIE_DURATION = {
+  },
+  INVALID_SESSION_COOKIE_DURATION: {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +
       'between 5 minutes and 2 weeks.',
-  };
-  public static INVALID_TENANT_ID = {
+  },
+  INVALID_TENANT_ID: {
     code: 'invalid-tenant-id',
     message: 'The tenant ID must be a valid non-empty string.',
-  };
-  public static INVALID_TENANT_TYPE = {
+  },
+  INVALID_TENANT_TYPE: {
     code: 'invalid-tenant-type',
     message: 'Tenant type must be either "full_service" or "lightweight".',
-  };
-  public static INVALID_TESTING_PHONE_NUMBER = {
+  },
+  INVALID_TESTING_PHONE_NUMBER: {
     code: 'invalid-testing-phone-number',
     message: 'Invalid testing phone number or invalid test code provided.',
-  };
-  public static INVALID_UID = {
+  },
+  INVALID_UID: {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
-  };
-  public static INVALID_USER_IMPORT = {
+  },
+  INVALID_USER_IMPORT: {
     code: 'invalid-user-import',
     message: 'The user record to import is invalid.',
-  };
-  public static INVALID_TOKENS_VALID_AFTER_TIME = {
+  },
+  INVALID_TOKENS_VALID_AFTER_TIME: {
     code: 'invalid-tokens-valid-after-time',
     message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
-  };
-  public static MISMATCHING_TENANT_ID = {
+  },
+  MISMATCHING_TENANT_ID: {
     code: 'mismatching-tenant-id',
     message: 'User tenant ID does not match with the current TenantAwareAuth tenant ID.',
-  };
-  public static MISSING_ANDROID_PACKAGE_NAME = {
+  },
+  MISSING_ANDROID_PACKAGE_NAME: {
     code: 'missing-android-pkg-name',
     message: 'An Android Package Name must be provided if the Android App is ' +
       'required to be installed.',
-  };
-  public static MISSING_CONFIG = {
+  },
+  MISSING_CONFIG: {
     code: 'missing-config',
     message: 'The provided configuration is missing required attributes.',
-  };
-  public static MISSING_CONTINUE_URI = {
+  },
+  MISSING_CONTINUE_URI: {
     code: 'missing-continue-uri',
     message: 'A valid continue URL must be provided in the request.',
-  };
-  public static MISSING_DISPLAY_NAME = {
+  },
+  MISSING_DISPLAY_NAME: {
     code: 'missing-display-name',
     message: 'The resource being created or edited is missing a valid display name.',
-  };
-  public static MISSING_EMAIL = {
+  },
+  MISSING_EMAIL: {
     code: 'missing-email',
     message: 'The email is required for the specified action. For example, a multi-factor user ' +
       'requires a verified email.',
-  };
-  public static MISSING_IOS_BUNDLE_ID = {
+  },
+  MISSING_IOS_BUNDLE_ID: {
     code: 'missing-ios-bundle-id',
     message: 'The request is missing an iOS Bundle ID.',
-  };
-  public static MISSING_ISSUER = {
+  },
+  MISSING_ISSUER: {
     code: 'missing-issuer',
     message: 'The OAuth/OIDC configuration issuer must not be empty.',
-  };
-  public static MISSING_HASH_ALGORITHM = {
+  },
+  MISSING_HASH_ALGORITHM: {
     code: 'missing-hash-algorithm',
     message: 'Importing users with password hashes requires that the hashing ' +
       'algorithm and its parameters be provided.',
-  };
-  public static MISSING_OAUTH_CLIENT_ID = {
+  },
+  MISSING_OAUTH_CLIENT_ID: {
     code: 'missing-oauth-client-id',
     message: 'The OAuth/OIDC configuration client ID must not be empty.',
-  };
-  public static MISSING_OAUTH_CLIENT_SECRET = {
+  },
+  MISSING_OAUTH_CLIENT_SECRET: {
     code: 'missing-oauth-client-secret',
     message: 'The OAuth configuration client secret is required to enable OIDC code flow.',
-  };
-  public static MISSING_PROVIDER_ID = {
+  },
+  MISSING_PROVIDER_ID: {
     code: 'missing-provider-id',
     message: 'A valid provider ID must be provided in the request.',
-  };
-  public static MISSING_SAML_RELYING_PARTY_CONFIG = {
+  },
+  MISSING_SAML_RELYING_PARTY_CONFIG: {
     code: 'missing-saml-relying-party-config',
     message: 'The SAML configuration provided is missing a relying party configuration.',
-  };
-  public static MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED = {
+  },
+  MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED: {
     code: 'test-phone-number-limit-exceeded',
     message: 'The maximum allowed number of test phone number / code pairs has been exceeded.',
-  };
-  public static MAXIMUM_USER_COUNT_EXCEEDED = {
+  },
+  MAXIMUM_USER_COUNT_EXCEEDED: {
     code: 'maximum-user-count-exceeded',
     message: 'The maximum allowed number of users to import has been exceeded.',
-  };
-  public static MISSING_UID = {
+  },
+  MISSING_UID: {
     code: 'missing-uid',
     message: 'A uid identifier is required for the current operation.',
-  };
-  public static OPERATION_NOT_ALLOWED = {
+  },
+  OPERATION_NOT_ALLOWED: {
     code: 'operation-not-allowed',
     message: 'The given sign-in provider is disabled for this Firebase project. ' +
       'Enable it in the Firebase console, under the sign-in method tab of the ' +
       'Auth section.',
-  };
-  public static PHONE_NUMBER_ALREADY_EXISTS = {
+  },
+  PHONE_NUMBER_ALREADY_EXISTS: {
     code: 'phone-number-already-exists',
     message: 'The user with the provided phone number already exists.',
-  };
-  public static PROJECT_NOT_FOUND = {
+  },
+  PROJECT_NOT_FOUND: {
     code: 'project-not-found',
     message: 'No Firebase project was found for the provided credential.',
-  };
-  public static INSUFFICIENT_PERMISSION = {
+  },
+  INSUFFICIENT_PERMISSION: {
     code: 'insufficient-permission',
     message: 'Credential implementation provided to initializeApp() via the "credential" property ' +
       'has insufficient permission to access the requested resource. See ' +
       'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
       'with appropriate permissions.',
-  };
-  public static QUOTA_EXCEEDED = {
+  },
+  QUOTA_EXCEEDED: {
     code: 'quota-exceeded',
     message: 'The project quota for the specified operation has been exceeded.',
-  };
-  public static SECOND_FACTOR_LIMIT_EXCEEDED = {
+  },
+  SECOND_FACTOR_LIMIT_EXCEEDED: {
     code: 'second-factor-limit-exceeded',
     message: 'The maximum number of allowed second factors on a user has been exceeded.',
-  };
-  public static SECOND_FACTOR_UID_ALREADY_EXISTS = {
+  },
+  SECOND_FACTOR_UID_ALREADY_EXISTS: {
     code: 'second-factor-uid-already-exists',
     message: 'The specified second factor "uid" already exists.',
-  };
-  public static SESSION_COOKIE_EXPIRED = {
+  },
+  SESSION_COOKIE_EXPIRED: {
     code: 'session-cookie-expired',
     message: 'The Firebase session cookie is expired.',
-  };
-  public static SESSION_COOKIE_REVOKED = {
+  },
+  SESSION_COOKIE_REVOKED: {
     code: 'session-cookie-revoked',
     message: 'The Firebase session cookie has been revoked.',
-  };
-  public static TENANT_NOT_FOUND = {
+  },
+  TENANT_NOT_FOUND: {
     code: 'tenant-not-found',
     message: 'There is no tenant corresponding to the provided identifier.',
-  };
-  public static UID_ALREADY_EXISTS = {
+  },
+  UID_ALREADY_EXISTS: {
     code: 'uid-already-exists',
     message: 'The user with the provided uid already exists.',
-  };
-  public static UNAUTHORIZED_DOMAIN = {
+  },
+  UNAUTHORIZED_DOMAIN: {
     code: 'unauthorized-continue-uri',
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
       'Firebase console.',
-  };
-  public static UNSUPPORTED_FIRST_FACTOR = {
+  },
+  UNSUPPORTED_FIRST_FACTOR: {
     code: 'unsupported-first-factor',
     message: 'A multi-factor user requires a supported first factor.',
-  };
-  public static UNSUPPORTED_SECOND_FACTOR = {
+  },
+  UNSUPPORTED_SECOND_FACTOR: {
     code: 'unsupported-second-factor',
     message: 'The request specified an unsupported type of second factor.',
-  };
-  public static UNSUPPORTED_TENANT_OPERATION = {
+  },
+  UNSUPPORTED_TENANT_OPERATION: {
     code: 'unsupported-tenant-operation',
     message: 'This operation is not supported in a multi-tenant context.',
-  };
-  public static UNVERIFIED_EMAIL = {
+  },
+  UNVERIFIED_EMAIL: {
     code: 'unverified-email',
     message: 'A verified email is required for the specified action. For example, a multi-factor user ' +
       'requires a verified email.',
-  };
-  public static USER_NOT_FOUND = {
+  },
+  USER_NOT_FOUND: {
     code: 'user-not-found',
     message: 'There is no user record corresponding to the provided identifier.',
-  };
-  public static NOT_FOUND = {
+  },
+  NOT_FOUND: {
     code: 'not-found',
     message: 'The requested resource was not found.',
-  };
-  public static USER_DISABLED = {
+  },
+  USER_DISABLED: {
     code: 'user-disabled',
     message: 'The user record is disabled.',
-  }
-  public static USER_NOT_DISABLED = {
+  },
+  USER_NOT_DISABLED: {
     code: 'user-not-disabled',
     message: 'The user must be disabled in order to bulk delete it (or you must pass force=true).',
-  };
-  public static INVALID_RECAPTCHA_ACTION = {
+  },
+  INVALID_RECAPTCHA_ACTION: {
     code: 'invalid-recaptcha-action',
     message: 'reCAPTCHA action must be "BLOCK".'
-  }
-  public static INVALID_RECAPTCHA_ENFORCEMENT_STATE = {
+  },
+  INVALID_RECAPTCHA_ENFORCEMENT_STATE: {
     code: 'invalid-recaptcha-enforcement-state',
     message: 'reCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".'
-  }
-  public static RECAPTCHA_NOT_ENABLED = {
+  },
+  RECAPTCHA_NOT_ENABLED: {
     code: 'racaptcha-not-enabled',
     message: 'reCAPTCHA enterprise is not enabled.'
   }
-}
+} satisfies Record<string, ErrorInfo>;
 
 /**
  * Messaging client error codes and their default messages.
  */
-export class MessagingClientErrorCode {
-  public static INVALID_ARGUMENT = {
+export const MessagingClientErrorCode = {
+  INVALID_ARGUMENT: {
     code: 'invalid-argument',
     message: 'Invalid argument provided.',
-  };
-  public static INVALID_RECIPIENT = {
+  },
+  INVALID_RECIPIENT: {
     code: 'invalid-recipient',
     message: 'Invalid message recipient provided.',
-  };
-  public static INVALID_PAYLOAD = {
+  },
+  INVALID_PAYLOAD: {
     code: 'invalid-payload',
     message: 'Invalid message payload provided.',
-  };
-  public static INVALID_DATA_PAYLOAD_KEY = {
+  },
+  INVALID_DATA_PAYLOAD_KEY: {
     code: 'invalid-data-payload-key',
     message: 'The data message payload contains an invalid key. See the reference documentation ' +
       'for the DataMessagePayload type for restricted keys.',
-  };
-  public static PAYLOAD_SIZE_LIMIT_EXCEEDED = {
+  },
+  PAYLOAD_SIZE_LIMIT_EXCEEDED: {
     code: 'payload-size-limit-exceeded',
     message: 'The provided message payload exceeds the FCM size limits. See the error documentation ' +
       'for more details.',
-  };
-  public static INVALID_OPTIONS = {
+  },
+  INVALID_OPTIONS: {
     code: 'invalid-options',
     message: 'Invalid message options provided.',
-  };
-  public static INVALID_REGISTRATION_TOKEN = {
+  },
+  INVALID_REGISTRATION_TOKEN: {
     code: 'invalid-registration-token',
     message: 'Invalid registration token provided. Make sure it matches the registration token ' +
       'the client app receives from registering with FCM.',
-  };
-  public static REGISTRATION_TOKEN_NOT_REGISTERED = {
+  },
+  REGISTRATION_TOKEN_NOT_REGISTERED: {
     code: 'registration-token-not-registered',
     message: 'The provided registration token is not registered. A previously valid registration ' +
       'token can be unregistered for a variety of reasons. See the error documentation for more ' +
       'details. Remove this registration token and stop using it to send messages.',
-  };
-  public static MISMATCHED_CREDENTIAL = {
+  },
+  MISMATCHED_CREDENTIAL: {
     code: 'mismatched-credential',
     message: 'The credential used to authenticate this SDK does not have permission to send ' +
       'messages to the device corresponding to the provided registration token. Make sure the ' +
       'credential and registration token both belong to the same Firebase project.',
-  };
-  public static INVALID_PACKAGE_NAME = {
+  },
+  INVALID_PACKAGE_NAME: {
     code: 'invalid-package-name',
     message: 'The message was addressed to a registration token whose package name does not match ' +
       'the provided "restrictedPackageName" option.',
-  };
-  public static DEVICE_MESSAGE_RATE_EXCEEDED = {
+  },
+  DEVICE_MESSAGE_RATE_EXCEEDED: {
     code: 'device-message-rate-exceeded',
     message: 'The rate of messages to a particular device is too high. Reduce the number of ' +
       'messages sent to this device and do not immediately retry sending to this device.',
-  };
-  public static TOPICS_MESSAGE_RATE_EXCEEDED = {
+  },
+  TOPICS_MESSAGE_RATE_EXCEEDED: {
     code: 'topics-message-rate-exceeded',
     message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
       'number of messages sent for this topic, and do not immediately retry sending to this topic.',
-  };
-  public static MESSAGE_RATE_EXCEEDED = {
+  },
+  MESSAGE_RATE_EXCEEDED: {
     code: 'message-rate-exceeded',
     message: 'Sending limit exceeded for the message target.',
-  };
-  public static THIRD_PARTY_AUTH_ERROR = {
+  },
+  THIRD_PARTY_AUTH_ERROR: {
     code: 'third-party-auth-error',
     message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
       'SSL certificate was not uploaded or has expired. Check the validity of your development ' +
       'and production certificates.',
-  };
-  public static TOO_MANY_TOPICS = {
+  },
+  TOO_MANY_TOPICS: {
     code: 'too-many-topics',
     message: 'The maximum number of topics the provided registration token can be subscribed to ' +
       'has been exceeded.',
-  };
-  public static AUTHENTICATION_ERROR = {
+  },
+  AUTHENTICATION_ERROR: {
     code: 'authentication-error',
     message: 'An error occurred when trying to authenticate to the FCM servers. Make sure the ' +
       'credential used to authenticate this SDK has the proper permissions. See ' +
       'https://firebase.google.com/docs/admin/setup for setup instructions.',
-  };
-  public static SERVER_UNAVAILABLE = {
+  },
+  SERVER_UNAVAILABLE: {
     code: 'server-unavailable',
     message: 'The FCM server could not process the request in time. See the error documentation ' +
       'for more details.',
-  };
-  public static INTERNAL_ERROR = {
+  },
+  INTERNAL_ERROR: {
     code: 'internal-error',
     message: 'An internal error has occurred. Please retry the request.',
-  };
-  public static UNKNOWN_ERROR = {
+  },
+  UNKNOWN_ERROR: {
     code: 'unknown-error',
     message: 'An unknown server error was returned.',
-  };
-}
+  },
+} satisfies Record<string, ErrorInfo>;
 
-export class InstallationsClientErrorCode {
-  public static INVALID_ARGUMENT = {
+export const InstallationsClientErrorCode = {
+  INVALID_ARGUMENT: {
     code: 'invalid-argument',
     message: 'Invalid argument provided.',
-  };
-  public static INVALID_PROJECT_ID = {
+  },
+  INVALID_PROJECT_ID: {
     code: 'invalid-project-id',
     message: 'Invalid project ID provided.',
-  };
-  public static INVALID_INSTALLATION_ID = {
+  },
+  INVALID_INSTALLATION_ID: {
     code: 'invalid-installation-id',
     message: 'Invalid installation ID provided.',
-  };
-  public static API_ERROR = {
+  },
+  API_ERROR: {
     code: 'api-error',
     message: 'Installation ID API call failed.',
-  };
-}
+  },
+} satisfies Record<string, ErrorInfo>;
 
-export class InstanceIdClientErrorCode extends InstallationsClientErrorCode {
-  public static INVALID_INSTANCE_ID = {
+export const InstanceIdClientErrorCode = {
+  ...InstallationsClientErrorCode,
+  INVALID_INSTANCE_ID: {
     code: 'invalid-instance-id',
     message: 'Invalid instance ID provided.',
-  };
-}
+  },
+} satisfies Record<string, ErrorInfo>;
 
 export type ProjectManagementErrorCode =
   'already-exists'

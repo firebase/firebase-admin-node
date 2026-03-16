@@ -22,7 +22,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError, RequestResponse,
 } from '../utils/api-request';
 import * as utils from '../utils/index';
 
@@ -586,10 +586,13 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
         }
       })
     // Set response validator.
-      .setResponseValidator((response: any) => {
+    .setResponseValidator((response: RequestResponse) => {
         // Response should always contain the session cookie.
-        if (!validator.isNonEmptyString(response.sessionCookie)) {
-          throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+      if (!validator.isNonEmptyString(response.data?.sessionCookie)) {
+          throw new FirebaseAuthError({
+            ...AuthClientErrorCode.INTERNAL_ERROR,
+            httpResponse: response,
+          });
         }
       });
 
@@ -599,7 +602,7 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
  *
  * @internal
  */
-export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('/accounts:batchCreate', 'POST');
+export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('/accounts:batchCreate', 'POST')
 
 
 /**
@@ -625,7 +628,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
         `${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
-  });
+  })
 
 interface GetAccountInfoRequest {
   localId?: string[];
@@ -652,9 +655,13 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
     }
   })
   // Set response validator.
-  .setResponseValidator((response: any) => {
-    if (!response.users || !response.users.length) {
-      throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
+    if (!data.users || !data.users.length) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.USER_NOT_FOUND,
+        httpResponse: response,
+      });
     }
   });
 
@@ -672,7 +679,7 @@ export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
-  });
+  })
 
 
 /**
@@ -688,7 +695,7 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
-  });
+  })
 
 interface BatchDeleteAccountsRequest {
   localIds?: string[];
@@ -721,18 +728,23 @@ export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:ba
         'INTERNAL ASSERT FAILED: Server request is missing force=true field');
     }
   })
-  .setResponseValidator((response: BatchDeleteAccountsResponse) => {
-    const errors = response.errors || [];
-    errors.forEach((batchDeleteErrorInfo) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data: BatchDeleteAccountsResponse = response.data;
+    const errors: BatchDeleteErrorInfo[] = data.errors || [];
+    errors.forEach((batchDeleteErrorInfo: BatchDeleteErrorInfo) => {
       if (typeof batchDeleteErrorInfo.index === 'undefined') {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
+        throw new FirebaseAuthError({
+          ...AuthClientErrorCode.INTERNAL_ERROR,
+          message: 'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field',
+          httpResponse: response,
+        });
       }
       if (!batchDeleteErrorInfo.localId) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field');
+        throw new FirebaseAuthError({
+          ...AuthClientErrorCode.INTERNAL_ERROR,
+          message: 'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field',
+          httpResponse: response,
+        });
       }
       // Allow the (error) message to be missing/undef.
     });
@@ -761,10 +773,14 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
     validateCreateEditRequest(request, WriteOperationType.Update);
   })
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // If the localId is not returned, then the request failed.
-    if (!response.localId) {
-      throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+    if (!data?.localId) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.USER_NOT_FOUND,
+        httpResponse: response,
+      });
     }
   });
 
@@ -800,12 +816,15 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
     validateCreateEditRequest(request, WriteOperationType.Create);
   })
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // If the localId is not returned, then the request failed.
-    if (!response.localId) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to create new user');
+    if (!data?.localId) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to create new user',
+        httpResponse: response,
+      });
     }
   });
 
@@ -830,12 +849,15 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
     }
   })
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // If the oobLink is not returned, then the request failed.
-    if (!response.oobLink) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to create the email action link');
+    if (!data?.oobLink) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to create the email action link',
+        httpResponse: response,
+      });
     }
   });
 
@@ -846,13 +868,15 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
  */
 const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'GET')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the OIDC provider resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to get OIDC configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to get OIDC configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -870,13 +894,15 @@ const DELETE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}',
  */
 const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfigId={providerId}', 'POST')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the OIDC provider resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to create new OIDC configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to create new OIDC configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -887,13 +913,15 @@ const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfig
  */
 const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the configuration resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -929,13 +957,15 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
  */
 const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'GET')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the SAML provider resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to get SAML configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to get SAML configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -953,13 +983,15 @@ const DELETE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{provide
  */
 const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundSamlConfigId={providerId}', 'POST')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the SAML provider resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to create new SAML configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to create new SAML configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -970,13 +1002,15 @@ const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundS
  */
 const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain the configuration resource name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to update SAML configuration',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to update SAML configuration',
+        httpResponse: response,
+      });
     }
   });
 
@@ -1925,11 +1959,13 @@ export abstract class AbstractAuthRequestHandler {
         };
         return this.httpClient.send(req);
       })
+
       .then((response) => {
-        // Validate response.
         const responseValidator = apiSettings.getResponseValidator();
-        responseValidator(response.data);
-        // Return entire response.
+        if (responseValidator) {
+          responseValidator(response);
+        }
+        // Return entire response data.
         return response.data;
       })
       .catch((err) => {
@@ -1937,6 +1973,10 @@ export abstract class AbstractAuthRequestHandler {
           const error = err.response.data;
           const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
           if (!errorCode) {
+            // Note(error-revamp): 2026-03-09 - It seems like we always include the entire error
+            // response in the error message. We should limit this to just the error message.
+            // Another idea is to make the resopnse data more accesable from the ErrorInfo object
+            // by adding a new method to get the response data maybe?
             throw new FirebaseAuthError(
               AuthClientErrorCode.INTERNAL_ERROR,
               'Error returned from server: ' + error + '. Additionally, an ' +
@@ -1983,38 +2023,44 @@ export abstract class AbstractAuthRequestHandler {
 
 /** Instantiates the getConfig endpoint settings. */
 const GET_PROJECT_CONFIG = new ApiSettings('/config', 'GET')
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain at least the config name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to get project config',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to get project config',
+        httpResponse: response,
+      });
     }
   });
 
 /** Instantiates the updateConfig endpoint settings. */
 const UPDATE_PROJECT_CONFIG = new ApiSettings('/config?updateMask={updateMask}', 'PATCH')
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain at least the config name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to update project config',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to update project config',
+        httpResponse: response,
+      });
     }
   });
 
 /** Instantiates the getTenant endpoint settings. */
 const GET_TENANT = new ApiSettings('/tenants/{tenantId}', 'GET')
 // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain at least the tenant name.
-    if (!validator.isNonEmptyString(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to get tenant',
-      );
+    if (!validator.isNonEmptyString(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to get tenant',
+        httpResponse: response,
+      });
     }
   });
 
@@ -2024,14 +2070,16 @@ const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
 /** Instantiates the updateTenant endpoint settings. */
 const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain at least the tenant name.
-    if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to update tenant',
-      );
+    if (!validator.isNonEmptyString(data?.name) ||
+      !Tenant.getTenantIdFromResourceName(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to update tenant',
+        httpResponse: response,
+      });
     }
   });
 
@@ -2059,14 +2107,16 @@ const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
 /** Instantiates the createTenant endpoint settings. */
 const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
 // Set response validator.
-  .setResponseValidator((response: any) => {
+  .setResponseValidator((response: RequestResponse) => {
+    const data = response.data;
     // Response should always contain at least the tenant name.
-    if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Unable to create new tenant',
-      );
+    if (!validator.isNonEmptyString(data?.name) ||
+      !Tenant.getTenantIdFromResourceName(data?.name)) {
+      throw new FirebaseAuthError({
+        ...AuthClientErrorCode.INTERNAL_ERROR,
+        message: 'INTERNAL ASSERT FAILED: Unable to create tenant',
+        httpResponse: response,
+      });
     }
   });
 

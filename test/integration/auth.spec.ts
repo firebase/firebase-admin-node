@@ -33,9 +33,11 @@ import {
   TenantAwareAuth, UpdatePhoneMultiFactorInfoRequest, UpdateTenantRequest, UserImportOptions,
   UserImportRecord, UserRecord, getAuth, UpdateProjectConfigRequest, UserMetadata, MultiFactorConfig,
   PasswordPolicyConfig, SmsRegionConfig, RecaptchaConfig, ActionCodeSettings,
+  FirebaseAuthError,
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
+import { FirebaseAppError, initializeApp, deleteApp } from '../../lib/app';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -3548,6 +3550,77 @@ async function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> 
   }
   return getAuth().deleteUsers(uids);
 }
+
+describe('Standardized Error Handling Demonstration', () => {
+  it('demoErrorResponseLogs: should have httpResponse when a request fails', async () => {
+    const auth = getAuth();
+    console.log('\n\n=======================================================');
+    console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH RESPONSE');
+    console.log('=======================================================');
+    try {
+      console.log('Attempting to fetch a non-existent user...');
+      await auth.getUser('non-existent-uid-' + Date.now());
+    } catch (err: any) {
+      console.log('\n🔥 Caught Exception:');
+      if (err instanceof FirebaseAuthError) {
+        console.log('Exception message:', err.message);
+        console.log('Error code:', err.code);
+        console.log('Cause:', err.cause);
+
+        if (err.httpResponse) {
+          console.log('\n📡 HTTP Response Metadata Attached:');
+          console.log('Status Code:', err.httpResponse.status);
+          console.log('Content Data:', err.httpResponse.data);
+          console.log('Headers:', err.httpResponse.headers);
+        } else {
+          console.log('\n📡 No HTTP Response metadata attached.');
+        }
+      }
+    }
+    console.log('=======================================================\n\n');
+  });
+
+  it('demoErrorResponseLogs: should have error cause', async () => {
+    const originalHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+    process.env.FIREBASE_AUTH_EMULATOR_HOST = 'completely.nonexistent.domain.invalid:9999';
+
+    // Create a new app instance to ensure a fresh Auth instance is created with the new env var
+    const demoApp = initializeApp({ projectId: 'demo-project-' + Date.now() }, 'demo-app-' + Date.now());
+    const auth = getAuth(demoApp);
+
+    console.log('\n\n=======================================================');
+    console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH CAUSE');
+    console.log('=======================================================');
+    try {
+      console.log('Attempting to fetch a user with a simulated network error...');
+      await auth.getUser('some-uid');
+    } catch (err: any) {
+      // console.log(err); 
+      if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
+        console.log('\n🔥 Caught Exception:');
+        console.log('Exception message:', err.message);
+        console.log('Error code:', err.code);
+        console.log('Cause:', err.cause?.message);
+
+        if (err.httpResponse) {
+          console.log('\n📡 HTTP Response Metadata Attached:');
+          console.log('Status Code:', err.httpResponse.status);
+          console.log('Content Data:', err.httpResponse.data);
+          console.log('Headers:', err.httpResponse.headers);
+        } else {
+          console.log('\n📡 No HTTP Response metadata attached.');
+        }
+      } else {
+        console.log('\n🔥 Caught non-Firebase error:');
+        console.log(err);
+      }
+    } finally {
+      process.env.FIREBASE_AUTH_EMULATOR_HOST = originalHost;
+      await deleteApp(demoApp);
+    }
+    console.log('=======================================================\n\n');
+  });
+});
 
 /**
  * Asserts actual object is equal to expected object while ignoring key order.

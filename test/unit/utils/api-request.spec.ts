@@ -29,9 +29,10 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
+  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, HttpRequestConfig,
   parseHttpResponse, RetryConfig, defaultRetryConfig, Http2SessionHandler, Http2RequestConfig,
   RequestResponseError, RequestResponse, AuthorizedHttp2Client,
+  ApiRequestCallback, ApiResponseCallback,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
@@ -2987,15 +2988,20 @@ describe('ApiSettings', () => {
       it('should not return null for responseValidator', () => {
         const validator = apiSettings.getResponseValidator();
         expect(() => {
-          return validator({});
+          return validator({
+            // data: {},
+            // status: 200,
+            // headers: {},
+            // isJson: () => false,
+          } as RequestResponse);
         }).to.not.throw();
       });
     });
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator: ApiCallbackFunction = () => undefined;
-      const responseValidator: ApiCallbackFunction = () => undefined;
+      const requestValidator: ApiRequestCallback = () => undefined;
+      const responseValidator: ApiResponseCallback = () => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {

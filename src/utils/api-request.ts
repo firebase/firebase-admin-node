@@ -31,8 +31,10 @@ import { getMetricsHeader } from '../utils/index';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
-/** API callback function type definition. */
-export type ApiCallbackFunction = (data: object) => void;
+/** API request callback function type definition. */
+export type ApiRequestCallback = (data: any) => void;
+/** API response callback function type definition. */
+export type ApiResponseCallback = (response: RequestResponse) => void;
 
 /**
  * Base configuration for constructing a new request.
@@ -1160,8 +1162,8 @@ export class AuthorizedHttp2Client extends Http2Client {
  * @constructor
  */
 export class ApiSettings {
-  private requestValidator: ApiCallbackFunction;
-  private responseValidator: ApiCallbackFunction;
+  private requestValidator: ApiRequestCallback;
+  private responseValidator: ApiResponseCallback;
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
@@ -1182,14 +1184,14 @@ export class ApiSettings {
    * @param requestValidator - The request validator.
    * @returns The current API settings instance.
    */
-  public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setRequestValidator(requestValidator: ApiRequestCallback | null): ApiSettings {
+    const nullFunction: ApiRequestCallback = () => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
 
   /** @returns The request validator. */
-  public getRequestValidator(): ApiCallbackFunction {
+  public getRequestValidator(): ApiRequestCallback {
     return this.requestValidator;
   }
 
@@ -1197,14 +1199,14 @@ export class ApiSettings {
    * @param responseValidator - The response validator.
    * @returns The current API settings instance.
    */
-  public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setResponseValidator(responseValidator: ApiResponseCallback | null): ApiSettings {
+    const nullFunction: ApiResponseCallback = () => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }
 
   /** @returns The response validator. */
-  public getResponseValidator(): ApiCallbackFunction {
+  public getResponseValidator(): ApiResponseCallback {
     return this.responseValidator;
   }
 }

@@ -20,6 +20,7 @@
 import * as jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -45,6 +46,7 @@ import {
   Auth, TenantAwareAuth, BaseAuth, UserRecord, DecodedIdToken,
   UpdateRequest, AuthProviderConfigFilter, TenantManager,
 } from '../../../src/auth/index';
+import { FirebaseAppError } from '../../../lib/app';
 
 chai.should();
 chai.use(sinonChai);
@@ -3973,6 +3975,95 @@ AUTH_CONFIGS.forEach((testConfig) => {
         await expect(mockAuth.verifyIdToken(unsignedToken))
           .to.be.rejectedWith(errorMessage);
       });
+    });
+  });
+
+  describe('Standardized Error Handling Demonstration', () => {
+    let auth: Auth;
+    let mockApp: FirebaseApp;
+
+    beforeEach(() => {
+      mockApp = mocks.appWithOptions({
+        credential: new mocks.MockCredential(),
+        projectId: 'project-id',
+      });
+      auth = new Auth(mockApp);
+    });
+
+    afterEach(() => {
+      nock.cleanAll();
+    });
+
+    it('demoErrorWithCause: should have a cause when a low-level network error occurs', async () => {
+      const uid = 'some-uid';
+      const expectedError = new Error('Network failure');
+      
+      // Simulate a low-level network error using nock
+      nock('https://identitytoolkit.googleapis.com')
+        .post(/.*accounts:lookup.*/)
+        .replyWithError(expectedError);
+
+      console.log('\n\n=======================================================');
+      console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH CAUSE');
+      console.log('=======================================================');
+      try {
+        console.log('Attempting to fetch a user with a simulated network error...');
+        await auth.getUser(uid);
+      } catch (err: any) {
+        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
+          console.log('\n🔥 Caught Exception:');
+          console.log('Exception message:', err.message);
+          console.log('Error code:', err.code);
+          console.log('Cause:', err.cause);
+
+          if (err.httpResponse) {
+            console.log('\n📡 HTTP Response Metadata Attached:');
+            console.log('Status Code:', err.httpResponse.status);
+            console.log('Content Data:', err.httpResponse.data);
+            console.log('Headers:', err.httpResponse.headers);
+          } else {
+            console.log('\n📡 No HTTP Response metadata attached.');
+          }
+        }
+      }
+      console.log('=======================================================\n\n');
+    });
+
+    it('demoErrorWithResponse: should have httpResponse when a request fails', async () => {
+      const uid = 'some-uid';
+
+      // Simulate a server error using nock
+      nock('https://identitytoolkit.googleapis.com')
+        .post(/.*accounts:lookup.*/)
+        .reply(200, {
+          // Missing 'users' field
+          somethingElse: 'unexpected'
+        });
+
+      console.log('\n\n=======================================================');
+      console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH RESPONSE');
+      console.log('=======================================================');
+      try {
+        console.log('Attempting to fetch a user with a simulated server error...');
+        await auth.getUser(uid);
+      } catch (err: any) {
+        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
+          console.log('\n🔥 Caught Exception:');
+          console.log('Exception message:', err.message);
+          console.log('Error code:', err.code);
+          console.log('Cause:', err.cause);
+
+          if (err.httpResponse) {
+            console.log('\n📡 HTTP Response Metadata Attached:');
+            console.log('   Status Code:', err.httpResponse.status);
+            console.log('   Content Data:', JSON.stringify(err.httpResponse.data));
+            console.log('   Headers:', JSON.stringify(err.httpResponse.headers));
+          } else {
+            console.log('\n📡 No HTTP Response metadata attached.');
+          }
+        }
+      }
+      console.log('=======================================================\n\n');
     });
   });
 });
