@@ -1970,21 +1970,18 @@ export abstract class AbstractAuthRequestHandler {
       })
       .catch((err) => {
         if (err instanceof RequestResponseError) {
-          const error = err.response.data;
-          const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
+          const errorCode = AbstractAuthRequestHandler.getErrorCode(err.response.data);
           if (!errorCode) {
-            // Note(error-revamp): 2026-03-09 - It seems like we always include the entire error
-            // response in the error message. We should limit this to just the error message.
-            // Another idea is to make the resopnse data more accesable from the ErrorInfo object
-            // by adding a new method to get the response data maybe?
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INTERNAL_ERROR,
-              'Error returned from server: ' + error + '. Additionally, an ' +
-              'internal error occurred while attempting to extract the ' +
-              'errorcode from the error.',
-            );
+            // Fallback for unexpected server error responses without a parseable error code.
+            // Note(error-revamp): We need to determine if we want to populate the error cause.
+            throw new FirebaseAuthError({
+              ...AuthClientErrorCode.INTERNAL_ERROR,
+              message: 'An internal error occurred while attempting to extract the errorcode from the error.',
+              cause: err,
+              httpResponse: err.response,
+            });
           }
-          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error, err.response);
+          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, err);
         }
         throw err;
       });

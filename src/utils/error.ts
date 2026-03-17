@@ -17,6 +17,7 @@
 
 import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
+import { RequestResponseError } from './api-request';
 
 export interface HttpResponse {
   status: number;
@@ -195,15 +196,14 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    * @param serverErrorCode - The server error code.
    * @param [message] The error message. The default message is used
    *     if not provided.
-   * @param [rawServerResponse] The error's raw server response.
+   * @param [serverError] The error's raw server response.
    * @returns The corresponding developer-facing error.
    * @internal
    */
   public static fromServerError(
     serverErrorCode: string,
     message?: string,
-    rawServerResponse?: object,
-    httpResponse?: HttpResponse,
+    serverError?: RequestResponseError,
   ): FirebaseAuthError {
     // serverErrorCode could contain additional details:
     // ERROR_CODE : Detailed message which can also contain colons
@@ -218,16 +218,9 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     const error: ErrorInfo = deepCopy((AuthClientErrorCode as any)[clientCodeKey]);
     // Server detailed message should have highest priority.
     error.message = customMessage || message || error.message;
-
-    if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
-      try {
-        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
-      } catch (e) {
-        // Ignore JSON parsing error.
-      }
-    }
-
-    error.httpResponse = httpResponse;
+    // Note(error-revamp): We need to determine if we want to populate the error cause.
+    error.cause = serverError;
+    error.httpResponse = serverError?.response;
     return new FirebaseAuthError(error);
   }
 

@@ -3555,7 +3555,7 @@ describe('Standardized Error Handling Demonstration', () => {
   it('demoErrorResponseLogs: should have httpResponse when a request fails', async () => {
     const auth = getAuth();
     console.log('\n\n=======================================================');
-    console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH RESPONSE');
+    console.log('🔥 DEMONSTRATION 1: FIREBASE ERROR WITH RESPONSE');
     console.log('=======================================================');
     try {
       console.log('Attempting to fetch a non-existent user...');
@@ -3589,7 +3589,7 @@ describe('Standardized Error Handling Demonstration', () => {
     const auth = getAuth(demoApp);
 
     console.log('\n\n=======================================================');
-    console.log('🔥 DEMONSTRATION: FIREBASE ERROR WITH CAUSE');
+    console.log('🔥 DEMONSTRATION 2: FIREBASE ERROR WITH CAUSE');
     console.log('=======================================================');
     try {
       console.log('Attempting to fetch a user with a simulated network error...');
@@ -3600,7 +3600,7 @@ describe('Standardized Error Handling Demonstration', () => {
         console.log('\n🔥 Caught Exception:');
         console.log('Exception message:', err.message);
         console.log('Error code:', err.code);
-        console.log('Cause:', err.cause?.message);
+        console.log('Cause:', err.cause);
 
         if (err.httpResponse) {
           console.log('\n📡 HTTP Response Metadata Attached:');

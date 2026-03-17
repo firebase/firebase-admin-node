@@ -141,29 +141,42 @@ describe('FirebaseAuthError', () => {
       });
     });
 
-    describe('with raw server response specified', () => {
-      const mockRawServerResponse = {
-        error: {
-          code: 'UNEXPECTED_ERROR',
-          message: 'An unexpected error occurred.',
+    describe('with httpResponse specified', () => {
+      const mockHttpResponse = {
+        status: 400,
+        headers: {},
+        data: {
+          error: {
+            code: 'UNEXPECTED_ERROR',
+            message: 'An unexpected error occurred.',
+          },
         },
       };
+      const mockError: any = { response: mockHttpResponse };
 
-      it('should not include raw server response from an expected server code', () => {
+      it('should include httpResponse from an expected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-          'USER_NOT_FOUND', 'Invalid uid', mockRawServerResponse);
+          'USER_NOT_FOUND', 'Invalid uid', mockError);
         expect(error.code).to.be.equal('auth/user-not-found');
         expect(error.message).to.be.equal('Invalid uid');
+        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
       });
 
-      it('should include raw server response from an unexpected server code', () => {
+      it('should include httpResponse from an unexpected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-          'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockRawServerResponse);
+          'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockError);
         expect(error.code).to.be.equal('auth/internal-error');
-        expect(error.message).to.be.equal(
-          'An unexpected error occurred. Raw server response: "' +
-          `${ JSON.stringify(mockRawServerResponse) }"`,
-        );
+        expect(error.message).to.be.equal('An unexpected error occurred.');
+        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
+      });
+
+      it('should include httpResponse from an expected server with server detailed message', () => {
+        const error = FirebaseAuthError.fromServerError(
+          'CONFIGURATION_NOT_FOUND : more details',
+          'Ignored message', mockError);
+        expect(error.code).to.be.equal('auth/configuration-not-found');
+        expect(error.message).to.be.equal('more details');
+        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
       });
     });
   });
