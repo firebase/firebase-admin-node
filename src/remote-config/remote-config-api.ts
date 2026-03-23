@@ -451,6 +451,11 @@ export interface ExperimentValue {
    * served by the Experiment.
    */
   variantValue: ExperimentVariantValue[];
+
+  /**
+   * The percentage of users included in the Experiment.
+   */
+  exposurePercent?: number;
 }
 
 /**

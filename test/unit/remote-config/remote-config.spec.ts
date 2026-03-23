@@ -134,7 +134,8 @@ describe('RemoteConfig', () => {
               variantValue: [
                 { variantId: 'variant_A', value: 'true' },
                 { variantId: 'variant_B', noChange: true }
-              ]
+              ],
+              exposurePercent: 25,
             }
           }
         },
@@ -233,7 +234,8 @@ describe('RemoteConfig', () => {
               variantValue: [
                 { variantId: 'variant_A', value: 'true' },
                 { variantId: 'variant_B', noChange: true }
-              ]
+              ],
+              exposurePercent: 25,
             }
           }
         },
@@ -652,6 +654,7 @@ describe('RemoteConfig', () => {
       expect(p4.conditionalValues).to.not.be.undefined;
       const experimentParam = p4.conditionalValues!['ios'] as ExperimentParameterValue;
       expect(experimentParam.experimentValue.experimentId).to.equal('experiment_1');
+      expect(experimentParam.experimentValue.exposurePercent).to.equal(25);
       expect(experimentParam.experimentValue.variantValue.length).to.equal(2);
       expect(experimentParam.experimentValue.variantValue[0]).to.deep.equal({ variantId: 'variant_A', value: 'true' });
       expect(experimentParam.experimentValue.variantValue[1]).to.deep.equal({ variantId: 'variant_B', noChange: true });
