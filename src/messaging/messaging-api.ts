@@ -428,6 +428,18 @@ export interface AndroidConfig {
   * the app while the device is in direct boot mode.
   */
   directBootOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a bandwidth constrained network.
+   */
+  bandwidthConstrainedOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a restricted satellite network.
+   */
+  restrictedSatelliteOk?: boolean;
 }
 
 /**
