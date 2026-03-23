@@ -453,7 +453,8 @@ export interface ExperimentValue {
   variantValue: ExperimentVariantValue[];
 
   /**
-   * The percentage of users included in the Experiment.
+   * The percentage of users included in the Experiment, represented as a number
+   * between 0 and 100.
    */
   exposurePercent?: number;
 }
