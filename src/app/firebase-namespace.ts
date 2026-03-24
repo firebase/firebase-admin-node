@@ -19,7 +19,7 @@ import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
+  instanceId, installations, projectManagement, securityRules , remoteConfig, fpnv, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getSdkVersion } from '../utils/index';
@@ -37,6 +37,7 @@ import ProjectManagement = projectManagement.ProjectManagement;
 import RemoteConfig = remoteConfig.RemoteConfig;
 import SecurityRules = securityRules.SecurityRules;
 import Storage = storage.Storage;
+import Fpnv = fpnv.Fpnv;
 
 export interface FirebaseServiceNamespace <T> {
   (app?: App): T;
@@ -279,6 +280,18 @@ export class FirebaseNamespace {
     return Object.assign(fn, { AppCheck: appCheck });
   }
 
+  /**
+   * Gets the `Fpnv` service namespace. The returned namespace can be used to get the
+   * `Fpnv` service for the default app or an explicitly specified app.
+   */
+  get fpnv(): FirebaseServiceNamespace<Fpnv> {
+    const fn: FirebaseServiceNamespace<Fpnv> = (app?: App) => {
+      return this.ensureApp(app).fpnv();
+    };
+    const fpnv = require('../fpnv/fpnv').Fpnv;
+    return Object.assign(fn, { Fpnv: fpnv });
+  }
+
   // TODO: Change the return types to app.App in the following methods.
 
   /**
@@ -394,6 +407,11 @@ function extendApp(app: AppCore): App {
 
   result.remoteConfig = () => {
     const fn = require('../remote-config/index').getRemoteConfig;
+    return fn(app);
+  };
+
+  result.fpnv = () => {
+    const fn = require('../fpnv/index').getFirebasePnv;
     return fn(app);
   };
 

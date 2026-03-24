@@ -73,6 +73,9 @@
       "auth": [
         "lib/auth"
       ],
+      "fpnv": [
+        "lib/fpnv"
+      ],
       "eventarc": [
         "lib/eventarc"
       ],
@@ -133,6 +136,11 @@
       "types": "./lib/auth/index.d.ts",
       "require": "./lib/auth/index.js",
       "import": "./lib/esm/auth/index.js"
+    },
+    "./fpnv": {
+      "types": "./lib/fpnv/index.d.ts",
+      "require": "./lib/fpnv/index.js",
+      "import": "./lib/esm/fpnv/index.js"
     },
     "./database": {
       "types": "./lib/database/index.d.ts",
