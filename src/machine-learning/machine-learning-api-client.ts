@@ -139,10 +139,11 @@ export class MachineLearningApiClient {
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument',
-        'First argument passed to admin.machineLearning() must be a valid '
-          + 'Firebase app instance.');
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.machineLearning() must be a valid '
+          + 'Firebase app instance.'
+      });
     }
 
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
@@ -151,7 +152,7 @@ export class MachineLearningApiClient {
   public createModel(model: ModelOptions): Promise<OperationResponse> {
     if (!validator.isNonNullObject(model) ||
         !validator.isNonEmptyString(model.displayName)) {
-      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
+      const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid model content.' });
       return Promise.reject(err);
     }
     return this.getProjectUrl()
@@ -169,7 +170,7 @@ export class MachineLearningApiClient {
     if (!validator.isNonEmptyString(modelId) ||
         !validator.isNonNullObject(model) ||
         !validator.isNonEmptyArray(updateMask)) {
-      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model or mask content.');
+      const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid model or mask content.' });
       return Promise.reject(err);
     }
     return this.getProjectUrl()
@@ -202,27 +203,31 @@ export class MachineLearningApiClient {
 
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResponse> {
     if (!validator.isNonNullObject(options)) {
-      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid ListModelsOptions');
+      const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid ListModelsOptions' });
       return Promise.reject(err);
     }
     if (typeof options.filter !== 'undefined' && !validator.isNonEmptyString(options.filter)) {
-      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid list filter.');
+      const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid list filter.' });
       return Promise.reject(err);
     }
     if (typeof options.pageSize !== 'undefined') {
       if (!validator.isNumber(options.pageSize)) {
-        const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid page size.');
+        const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid page size.' });
         return Promise.reject(err);
       }
       if (options.pageSize < 1 || options.pageSize > 100) {
-        const err = new FirebaseMachineLearningError(
-          'invalid-argument', 'Page size must be between 1 and 100.');
+        const err = new FirebaseMachineLearningError({
+          code: 'invalid-argument',
+          message: 'Page size must be between 1 and 100.'
+        });
         return Promise.reject(err);
       }
     }
     if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
-      const err = new FirebaseMachineLearningError(
-        'invalid-argument', 'Next page token must be a non-empty string.');
+      const err = new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: 'Next page token must be a non-empty string.'
+      });
       return Promise.reject(err);
     }
     return this.getProjectUrl()
@@ -273,8 +278,10 @@ export class MachineLearningApiClient {
       }
 
       // Done operations must have either a response or an error.
-      throw new FirebaseMachineLearningError('invalid-server-response',
-        'Invalid operation response.');
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-server-response',
+        message: 'Invalid operation response.'
+      });
     }
 
     // Operation is not done
@@ -285,8 +292,10 @@ export class MachineLearningApiClient {
     const metadata = op.metadata || {};
     const metadataType: string = metadata['@type'] || '';
     if (!metadataType.includes('ModelOperationMetadata')) {
-      throw new FirebaseMachineLearningError('invalid-server-response',
-        `Unknown Metadata type: ${JSON.stringify(metadata)}`);
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-server-response',
+        message: `Unknown Metadata type: ${JSON.stringify(metadata)}`
+      });
     }
 
     return this.getModel(extractModelId(metadata.name));
@@ -376,9 +385,12 @@ export class MachineLearningApiClient {
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseMachineLearningError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
+      return new FirebaseMachineLearningError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: err.response,
+        cause: err
+      });
     }
 
     const error: Error = (response.data as ErrorResponse).error || {};
@@ -387,7 +399,12 @@ export class MachineLearningApiClient {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseMachineLearningError(code, message, err.response);
+    return new FirebaseMachineLearningError({
+      code,
+      message,
+      httpResponse: err.response,
+      cause: err
+    });
   }
 
   private getProjectUrl(): Promise<string> {
@@ -405,11 +422,12 @@ export class MachineLearningApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseMachineLearningError(
-            'invalid-argument',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-            + 'environment variable.');
+          throw new FirebaseMachineLearningError({
+            code: 'invalid-argument',
+            message: 'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+              + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+              + 'environment variable.'
+          });
         }
 
         this.projectIdPrefix = `projects/${projectId}`;
@@ -419,13 +437,17 @@ export class MachineLearningApiClient {
 
   private getModelName(modelId: string): string {
     if (!validator.isNonEmptyString(modelId)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument', 'Model ID must be a non-empty string.');
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: 'Model ID must be a non-empty string.'
+      });
     }
 
     if (modelId.indexOf('/') !== -1) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument', 'Model ID must not contain any "/" characters.');
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: 'Model ID must not contain any "/" characters.'
+      });
     }
 
     return `models/${modelId}`;

@@ -38,10 +38,11 @@ export class ProjectManagement {
    */
   constructor(readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument',
-        'First argument passed to admin.projectManagement() must be a valid Firebase app '
-              + 'instance.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.projectManagement() must be a valid Firebase app '
+          + 'instance.'
+      });
     }
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
@@ -240,11 +241,12 @@ export class ProjectManagement {
       .then((projectId) => {
         // Assert that a specific project ID was provided within the app.
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseProjectManagementError(
-            'invalid-project-id',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+          throw new FirebaseProjectManagementError({
+            code: 'invalid-project-id',
+            message: 'Failed to determine project ID. Initialize the SDK with service account credentials, or '
                 + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-                + 'environment variable.');
+              + 'environment variable.'
+          });
         }
 
         this.projectId = projectId;

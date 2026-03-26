@@ -62,10 +62,11 @@ export class SecurityRulesApiClient {
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        'First argument passed to admin.securityRules() must be a valid Firebase app '
-          + 'instance.');
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.securityRules() must be a valid Firebase app ' +
+          'instance.'
+      });
     }
 
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
@@ -86,7 +87,10 @@ export class SecurityRulesApiClient {
       !validator.isNonNullObject(ruleset.source) ||
       !validator.isNonEmptyArray(ruleset.source.files)) {
 
-      const err = new FirebaseSecurityRulesError('invalid-argument', 'Invalid rules content.');
+      const err = new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Invalid rules content.'
+      });
       return Promise.reject(err);
     }
 
@@ -95,8 +99,10 @@ export class SecurityRulesApiClient {
         !validator.isNonEmptyString(rf.name) ||
         !validator.isNonEmptyString(rf.content)) {
 
-        const err = new FirebaseSecurityRulesError(
-          'invalid-argument', `Invalid rules file argument: ${JSON.stringify(rf)}`);
+        const err = new FirebaseSecurityRulesError({
+          code: 'invalid-argument',
+          message: `Invalid rules file argument: ${JSON.stringify(rf)}`
+        });
         return Promise.reject(err);
       }
     }
@@ -126,17 +132,24 @@ export class SecurityRulesApiClient {
 
   public listRulesets(pageSize = 100, pageToken?: string): Promise<ListRulesetsResponse> {
     if (!validator.isNumber(pageSize)) {
-      const err = new FirebaseSecurityRulesError('invalid-argument', 'Invalid page size.');
+      const err = new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Invalid page size.'
+      });
       return Promise.reject(err);
     }
     if (pageSize < 1 || pageSize > 100) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Page size must be between 1 and 100.');
+      const err = new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Page size must be between 1 and 100.'
+      });
       return Promise.reject(err);
     }
     if (typeof pageToken !== 'undefined' && !validator.isNonEmptyString(pageToken)) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Next page token must be a non-empty string.');
+      const err = new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Next page token must be a non-empty string.'
+      });
       return Promise.reject(err);
     }
 
@@ -218,11 +231,12 @@ export class SecurityRulesApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseSecurityRulesError(
-            'invalid-argument',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-            + 'environment variable.');
+          throw new FirebaseSecurityRulesError({
+            code: 'invalid-argument',
+            message: 'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+              + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+              + 'environment variable.'
+          });
         }
 
         this.projectIdPrefix = `projects/${projectId}`;
@@ -260,13 +274,17 @@ export class SecurityRulesApiClient {
 
   private getRulesetName(name: string): string {
     if (!validator.isNonEmptyString(name)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must be a non-empty string.');
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Ruleset name must be a non-empty string.'
+      });
     }
 
     if (name.indexOf('/') !== -1) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Ruleset name must not contain any "/" characters.'
+      });
     }
 
     return `rulesets/${name}`;
@@ -290,9 +308,12 @@ export class SecurityRulesApiClient {
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseSecurityRulesError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
+      return new FirebaseSecurityRulesError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: err.response,
+        cause: err
+      });
     }
 
     const error: SecurityApiError = (response.data as ErrorResponse).error || {};
@@ -301,7 +322,7 @@ export class SecurityRulesApiClient {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseSecurityRulesError(code, message, err.response);
+    return new FirebaseSecurityRulesError({ code, message, httpResponse: err.response, cause: err });
   }
 }
 

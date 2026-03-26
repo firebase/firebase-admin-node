@@ -66,9 +66,10 @@ export class RulesetMetadataList {
    */
   constructor(response: ListRulesetsResponse) {
     if (!validator.isNonNullObject(response) || !validator.isArray(response.rulesets)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        `Invalid ListRulesets response: ${JSON.stringify(response)}`);
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: `Invalid ListRulesets response: ${JSON.stringify(response)}`
+      });
     }
 
     this.rulesets = response.rulesets.map((rs) => {
@@ -109,9 +110,10 @@ export class Ruleset implements RulesetMetadata {
       !validator.isNonEmptyString(ruleset.name) ||
       !validator.isNonEmptyString(ruleset.createTime) ||
       !validator.isNonNullObject(ruleset.source)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        `Invalid Ruleset response: ${JSON.stringify(ruleset)}`);
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: `Invalid Ruleset response: ${JSON.stringify(ruleset)}`
+      });
     }
 
     this.name = stripProjectIdPrefix(ruleset.name);
@@ -287,8 +289,10 @@ export class SecurityRules {
    */
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
     if (!validator.isNonEmptyString(name)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument', 'Name must be a non-empty string.');
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Name must be a non-empty string.'
+      });
     }
 
     let content: string;
@@ -297,8 +301,10 @@ export class SecurityRules {
     } else if (validator.isBuffer(source)) {
       content = source.toString('utf-8');
     } else {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument', 'Source must be a non-empty string or a Buffer.');
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Source must be a non-empty string or a Buffer.'
+      });
     }
 
     return {
@@ -361,8 +367,10 @@ export class SecurityRules {
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {
-          throw new FirebaseSecurityRulesError(
-            'not-found', `Ruleset name not found for ${releaseName}.`);
+          throw new FirebaseSecurityRulesError({
+            code: 'not-found',
+            message: `Ruleset name not found for ${releaseName}.`
+          });
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));
@@ -372,8 +380,10 @@ export class SecurityRules {
   private releaseRuleset(ruleset: string | RulesetMetadata, releaseName: string): Promise<void> {
     if (!validator.isNonEmptyString(ruleset) &&
       (!validator.isNonNullObject(ruleset) || !validator.isNonEmptyString(ruleset.name))) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'ruleset must be a non-empty name or a RulesetMetadata object.');
+      const err = new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'ruleset must be a non-empty name or a RulesetMetadata object.'
+      });
       return Promise.reject(err);
     }
 
@@ -387,12 +397,12 @@ export class SecurityRules {
   private getBucketName(bucket?: string): string {
     const bucketName = (typeof bucket !== 'undefined') ? bucket :  this.app.options.storageBucket;
     if (!validator.isNonEmptyString(bucketName)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        'Bucket name not specified or invalid. Specify a default bucket name via the ' +
-        'storageBucket option when initializing the app, or specify the bucket name ' +
-        'explicitly when calling the rules API.',
-      );
+      throw new FirebaseSecurityRulesError({
+        code: 'invalid-argument',
+        message: 'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+          'storageBucket option when initializing the app, or specify the bucket name ' +
+          'explicitly when calling the rules API.'
+      });
     }
 
     return bucketName;

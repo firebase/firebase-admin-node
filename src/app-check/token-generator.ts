@@ -50,9 +50,10 @@ export class AppCheckTokenGenerator {
    */
   constructor(signer: CryptoSigner) {
     if (!validator.isNonNullObject(signer)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'INTERNAL ASSERT: Must provide a CryptoSigner to use AppCheckTokenGenerator.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'INTERNAL ASSERT: Must provide a CryptoSigner to use AppCheckTokenGenerator.'
+      });
     }
     this.signer = signer;
   }
@@ -67,9 +68,10 @@ export class AppCheckTokenGenerator {
    */
   public createCustomToken(appId: string, options?: AppCheckTokenOptions): Promise<string> {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`appId` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`appId` must be a non-empty string.'
+      });
     }
     let customOptions = {};
     if (typeof options !== 'undefined') {
@@ -114,20 +116,24 @@ export class AppCheckTokenGenerator {
    */
   private validateTokenOptions(options: AppCheckTokenOptions): {[key: string]: any} {
     if (!validator.isNonNullObject(options)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'AppCheckTokenOptions must be a non-null object.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'AppCheckTokenOptions must be a non-null object.'
+      });
     }
     if (typeof options.ttlMillis !== 'undefined') {
       if (!validator.isNumber(options.ttlMillis)) {
-        throw new FirebaseAppCheckError('invalid-argument',
-          'ttlMillis must be a duration in milliseconds.');
+        throw new FirebaseAppCheckError({
+          code: 'invalid-argument',
+          message: 'ttlMillis must be a duration in milliseconds.'
+        });
       }
       // ttlMillis must be between 30 minutes and 7 days (inclusive)
       if (options.ttlMillis < (ONE_MINUTE_IN_MILLIS * 30) || options.ttlMillis > (ONE_DAY_IN_MILLIS * 7)) {
-        throw new FirebaseAppCheckError(
-          'invalid-argument',
-          'ttlMillis must be a duration in milliseconds between 30 minutes and 7 days (inclusive).');
+        throw new FirebaseAppCheckError({
+          code: 'invalid-argument',
+          message: 'ttlMillis must be a duration in milliseconds between 30 minutes and 7 days (inclusive).'
+        });
       }
       return { ttl: transformMillisecondsToSecondsString(options.ttlMillis) };
     }
@@ -157,15 +163,23 @@ export function appCheckErrorFromCryptoSignerError(err: Error): Error {
       if (status && status in APP_CHECK_ERROR_CODE_MAPPING) {
         code = APP_CHECK_ERROR_CODE_MAPPING[status];
       }
-      return new FirebaseAppCheckError(code,
-        `Error returned from server while signing a custom token: ${description}`
-      );
+      return new FirebaseAppCheckError({
+        code,
+        message: `Error returned from server while signing a custom token: ${description}`,
+        cause: err
+      });
     }
-    return new FirebaseAppCheckError('internal-error',
-      'Error returned from server: ' + JSON.stringify(errorResponse) + '.'
-    );
+    return new FirebaseAppCheckError({
+      code: 'internal-error',
+      message: 'Error returned from server: ' + JSON.stringify(errorResponse) + '.',
+      cause: err
+    });
   }
-  return new FirebaseAppCheckError(mapToAppCheckErrorCode(err.code), err.message);
+  return new FirebaseAppCheckError({
+    code: mapToAppCheckErrorCode(err.code),
+    message: err.message,
+    cause: err
+  });
 }
 
 function mapToAppCheckErrorCode(code: string): AppCheckErrorCode {

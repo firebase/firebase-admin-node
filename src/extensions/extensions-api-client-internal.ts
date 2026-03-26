@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError, HttpResponse } from '../utils/error';
+import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 
@@ -39,9 +39,10 @@ export class ExtensionsApiClient {
   
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseAppError(
-        'invalid-argument',
-        'First argument passed to getExtensions() must be a valid Firebase app instance.');
+      throw new FirebaseAppError({
+        code: 'invalid-argument',
+        message: 'First argument passed to getExtensions() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new AuthorizedHttpClient(this.app as FirebaseApp);
   }
@@ -83,21 +84,24 @@ export class ExtensionsApiClient {
 
     const response = err.response;
     if (!response?.isJson()) {
-      return new FirebaseExtensionsError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
+      return new FirebaseExtensionsError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: err.response,
+        cause: err
+      });
     }
     const error = response.data?.error;
     const message = error?.message || `Unknown server error: ${response.text}`;
     switch (error.code) {
     case 403:
-        return new FirebaseExtensionsError('forbidden', message, err.response);
+        return new FirebaseExtensionsError({ code: 'forbidden', message, httpResponse: err.response, cause: err });
     case 404:
-        return new FirebaseExtensionsError('not-found', message, err.response);
+        return new FirebaseExtensionsError({ code: 'not-found', message, httpResponse: err.response, cause: err });
     case 500:
-        return new FirebaseExtensionsError('internal-error', message, err.response);
+        return new FirebaseExtensionsError({ code: 'internal-error', message, httpResponse: err.response, cause: err });
     }
-    return new FirebaseExtensionsError('unknown-error', message, err.response);
+    return new FirebaseExtensionsError({ code: 'unknown-error', message, httpResponse: err.response, cause: err });
   }
 }
 
@@ -138,8 +142,8 @@ export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden'
  * @constructor
  */
 export class FirebaseExtensionsError extends PrefixedFirebaseError {
-  constructor(code: ExtensionsErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    super('Extensions', code, message, httpResponse, cause);
+  constructor(info: ErrorInfo, message?: string) {
+    super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

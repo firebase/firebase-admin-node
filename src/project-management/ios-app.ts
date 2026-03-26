@@ -52,8 +52,10 @@ export class IosApp {
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'appId must be a non-empty string.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'appId must be a non-empty string.'
+      });
     }
 
     this.resourceName = `projects/-/iosApps/${appId}`;

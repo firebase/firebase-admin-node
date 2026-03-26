@@ -117,10 +117,21 @@ export class FirebaseError extends Error implements FirebaseError {
 
   /** @returns The object representation of the error. */
   public toJSON(): object {
-    return {
+    const json: any = {
       code: this.code,
       message: this.message,
     };
+    if (this.httpResponse) {
+      json.httpResponse = this.httpResponse;
+    }
+    if (this.cause) {
+      json.cause = {
+        name: this.cause.name || 'Error',
+        message: this.cause.message || String(this.cause),
+        stack: this.cause.stack
+      };
+    }
+    return json;
   }
 }
 
@@ -171,12 +182,13 @@ export class PrefixedFirebaseError extends FirebaseError {
  */
 export class FirebaseAppError extends PrefixedFirebaseError {
   /**
-   * @param code - The error code.
-   * @param message - The error message.
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default message if provided.
    * @internal
    */
-  constructor(code: string, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    super('app', code, message, httpResponse, cause);
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super('app', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
@@ -347,8 +359,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   public static fromServerError(
     serverErrorCode: string | null,
     message?: string | null,
-    rawServerResponse?: object,
-    httpResponse?: HttpResponse,
+    serverError?: RequestResponseError,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     let clientCodeKey = 'UNKNOWN_ERROR';
@@ -358,15 +369,17 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
-    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
+    const rawData = serverError?.response?.data;
+    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawData !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
+        error.message += ` Raw server response: "${typeof rawData === 'string' ? rawData : JSON.stringify(rawData)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
     }
 
-    error.httpResponse = httpResponse;
+    error.cause = serverError;
+    error.httpResponse = serverError?.response;
     return new FirebaseMessagingError(error);
   }
 
@@ -376,23 +389,24 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   public static fromTopicManagementServerError(
     serverErrorCode: string,
     message?: string,
-    rawServerResponse?: object,
-    httpResponse?: HttpResponse,
+    serverError?: RequestResponseError,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
     const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
-    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
+    const rawData = serverError?.response?.data;
+    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawData !== 'undefined') {
       try {
-        error.message += ` Raw server response: "${JSON.stringify(rawServerResponse)}"`;
+        error.message += ` Raw server response: "${typeof rawData === 'string' ? rawData : JSON.stringify(rawData)}"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
     }
 
-    error.httpResponse = httpResponse;
+    error.cause = serverError;
+    error.httpResponse = serverError?.response;
     return new FirebaseMessagingError(error);
   }
 
@@ -450,12 +464,13 @@ export class FirebaseMessagingSessionError extends FirebaseMessagingError {
  */
 export class FirebaseProjectManagementError extends PrefixedFirebaseError {
   /**
-   * @param code - The error code.
-   * @param message - The error message.
+   * @param info - The error code info.
+   * @param message - The error message. This will override the default message if provided.
    * @internal
    */
-  constructor(code: ProjectManagementErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    super('project-management', code, message, httpResponse, cause);
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super('project-management', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

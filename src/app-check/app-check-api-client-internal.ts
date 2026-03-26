@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AppCheckToken } from './app-check-api'
@@ -44,9 +44,10 @@ export class AppCheckApiClient {
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'First argument passed to admin.appCheck() must be a valid Firebase app instance.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.appCheck() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
@@ -60,14 +61,16 @@ export class AppCheckApiClient {
    */
   public exchangeToken(customToken: string, appId: string): Promise<AppCheckToken> {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`appId` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`appId` must be a non-empty string.'
+      });
     }
     if (!validator.isNonEmptyString(customToken)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`customToken` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`customToken` must be a non-empty string.'
+      });
     }
     return this.getUrl(appId)
       .then((url) => {
@@ -89,9 +92,10 @@ export class AppCheckApiClient {
 
   public verifyReplayProtection(token: string): Promise<boolean> {
     if (!validator.isNonEmptyString(token)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`token` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`token` must be a non-empty string.'
+      });
     }
     return this.getVerifyTokenUrl()
       .then((url) => {
@@ -106,8 +110,15 @@ export class AppCheckApiClient {
       .then((resp) => {
         if (typeof resp.data.alreadyConsumed !== 'undefined'
           && !validator.isBoolean(resp.data?.alreadyConsumed)) {
-          throw new FirebaseAppCheckError(
-            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
+          throw new FirebaseAppCheckError({
+            code: 'invalid-argument',
+            message: '`alreadyConsumed` must be a boolean value.',
+            httpResponse: {
+              status: resp.status,
+              headers: resp.headers,
+              data: resp.data
+            }
+          });
         }
         return resp.data.alreadyConsumed || false;
       })
@@ -146,11 +157,12 @@ export class AppCheckApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseAppCheckError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseAppCheckError({
+            code: 'unknown-error',
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
@@ -164,9 +176,12 @@ export class AppCheckApiClient {
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseAppCheckError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
+      return new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: err.response,
+        cause: err
+      });
     }
 
     const error: AppCheckApiError = (response.data as ErrorResponse).error || {};
@@ -175,7 +190,7 @@ export class AppCheckApiClient {
       code = APP_CHECK_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseAppCheckError(code, message, err.response);
+    return new FirebaseAppCheckError({ code, message, httpResponse: err.response, cause: err });
   }
 
   /**
@@ -207,8 +222,10 @@ export class AppCheckApiClient {
    */
   private stringToMilliseconds(duration: string): number {
     if (!validator.isNonEmptyString(duration) || !duration.endsWith('s')) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument', '`ttl` must be a valid duration string with the suffix `s`.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`ttl` must be a valid duration string with the suffix `s`.'
+      });
     }
     const seconds = duration.slice(0, -1);
     return Math.floor(Number(seconds) * 1000);
@@ -255,8 +272,8 @@ export type AppCheckErrorCode =
  * @constructor
  */
 export class FirebaseAppCheckError extends PrefixedFirebaseError {
-  constructor(code: AppCheckErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    super('app-check', code, message, httpResponse, cause);
+  constructor(info: ErrorInfo, message?: string) {
+    super('app-check', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

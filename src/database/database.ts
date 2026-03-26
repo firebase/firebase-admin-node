@@ -225,7 +225,10 @@ class DatabaseRulesClient {
     return this.httpClient.send(req)
       .then((resp) => {
         if (!resp.text) {
-          throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+          throw new FirebaseAppError({
+            code: AppErrorCodes.INTERNAL_ERROR,
+            message: 'HTTP response missing data.'
+          });
         }
         return resp.text;
       })
@@ -296,6 +299,8 @@ class DatabaseRulesClient {
       return new FirebaseDatabaseError({
         code: AppErrorCodes.INTERNAL_ERROR,
         message: this.getErrorMessage(err),
+        httpResponse: err.response,
+        cause: err,
       });
     }
     return err;
@@ -304,7 +309,7 @@ class DatabaseRulesClient {
   private getErrorMessage(err: RequestResponseError): string {
     const intro = 'Error while accessing security rules';
     try {
-      const body: { error?: string } = err.response.data;
+      const body: { error?: string; } = err.response.data;
       if (body && body.error) {
         return `${intro}: ${body.error.trim()}`;
       }

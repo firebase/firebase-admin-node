@@ -48,9 +48,10 @@ const CERT_TYPE_API_MAP = {
 export function assertServerResponse(
   condition: boolean, responseData: object, message: string): void {
   if (!condition) {
-    throw new FirebaseProjectManagementError(
-      'invalid-server-response',
-      `${message} Response data: ${JSON.stringify(responseData, null, 2)}`);
+    throw new FirebaseProjectManagementError({
+      code: 'invalid-server-response',
+      message: `${message} Response data: ${JSON.stringify(responseData, null, 2)}`
+    });
   }
 }
 
@@ -108,9 +109,10 @@ export class ProjectManagementRequestHandler {
     if (!errText) {
       errText = '<missing>';
     }
-    throw new FirebaseProjectManagementError(
-      errorCode,
-      `${ errorMessage } Status code: ${ errStatusCode }. Raw server response: "${ errText }".`);
+    throw new FirebaseProjectManagementError({
+      code: errorCode,
+      message: `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`
+    });
   }
 
   /**

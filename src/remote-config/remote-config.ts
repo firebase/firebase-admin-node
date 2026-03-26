@@ -168,19 +168,21 @@ export class RemoteConfig {
    */
   public createTemplateFromJSON(json: string): RemoteConfigTemplate {
     if (!validator.isNonEmptyString(json)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'JSON string must be a valid non-empty string');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'JSON string must be a valid non-empty string'
+      });
     }
 
     let template: RemoteConfigTemplate;
     try {
       template = JSON.parse(json);
     } catch (e) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Failed to parse the JSON string: ${json}. ` + e
-      );
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `Failed to parse the JSON string: ${json}.`,
+        cause: e
+      });
     }
 
     return new RemoteConfigTemplateImpl(template);
@@ -225,18 +227,20 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
   constructor(config: RemoteConfigTemplate) {
     if (!validator.isNonNullObject(config) ||
       !validator.isNonEmptyString(config.etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(config)}`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `Invalid Remote Config template: ${JSON.stringify(config)}`
+      });
     }
 
     this.etagInternal = config.etag;
 
     if (typeof config.parameters !== 'undefined') {
       if (!validator.isNonNullObject(config.parameters)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Remote Config parameters must be a non-null object');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Remote Config parameters must be a non-null object'
+        });
       }
       this.parameters = config.parameters;
     } else {
@@ -245,9 +249,10 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
     if (typeof config.parameterGroups !== 'undefined') {
       if (!validator.isNonNullObject(config.parameterGroups)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Remote Config parameter groups must be a non-null object');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Remote Config parameter groups must be a non-null object'
+        });
       }
       this.parameterGroups = config.parameterGroups;
     } else {
@@ -256,9 +261,10 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
     if (typeof config.conditions !== 'undefined') {
       if (!validator.isArray(config.conditions)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Remote Config conditions must be an array');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Remote Config conditions must be an array'
+        });
       }
       this.conditions = config.conditions;
     } else {
@@ -335,9 +341,11 @@ class ServerTemplateImpl implements ServerTemplate {
         parsed = JSON.parse(template);
       } catch (e) {
         // Transforms JSON parse errors to Firebase error.
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          `Failed to parse the JSON string: ${template}. ` + e);
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: `Failed to parse the JSON string: ${template}.`,
+          cause: e
+        });
       }
     } else {
       parsed = template;
@@ -355,9 +363,10 @@ class ServerTemplateImpl implements ServerTemplate {
       // This is the only place we should throw during evaluation, since it's under the
       // control of application logic. To preserve forward-compatibility, we should only
       // return false in cases where the SDK is unsure how to evaluate the fetched template.
-      throw new FirebaseRemoteConfigError(
-        'failed-precondition',
-        'No Remote Config Server template in cache. Call load() before calling evaluate().');
+      throw new FirebaseRemoteConfigError({
+        code: 'failed-precondition',
+        message: 'No Remote Config Server template in cache. Call load() before calling evaluate().'
+      });
     }
 
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
@@ -461,17 +470,19 @@ class ServerTemplateDataImpl implements ServerTemplateData {
   constructor(template: ServerTemplateData) {
     if (!validator.isNonNullObject(template) ||
       !validator.isNonEmptyString(template.etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(template)}`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `Invalid Remote Config template: ${JSON.stringify(template)}`
+      });
     }
 
     this.etag = template.etag;
     if (typeof template.parameters !== 'undefined') {
       if (!validator.isNonNullObject(template.parameters)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Remote Config parameters must be a non-null object');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Remote Config parameters must be a non-null object'
+        });
       }
       this.parameters = template.parameters;
     } else {
@@ -480,9 +491,10 @@ class ServerTemplateDataImpl implements ServerTemplateData {
 
     if (typeof template.conditions !== 'undefined') {
       if (!validator.isArray(template.conditions)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Remote Config conditions must be an array');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Remote Config conditions must be an array'
+        });
       }
       this.conditions = template.conditions;
     } else {
@@ -512,76 +524,85 @@ class VersionImpl implements Version {
 
   constructor(version: Version) {
     if (!validator.isNonNullObject(version)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Invalid Remote Config version instance: ${JSON.stringify(version)}`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `Invalid Remote Config version instance: ${JSON.stringify(version)}`
+      });
     }
 
     if (typeof version.versionNumber !== 'undefined') {
       if (!validator.isNonEmptyString(version.versionNumber) &&
         !validator.isNumber(version.versionNumber)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version number must be a non-empty string in int64 format or a number');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version number must be a non-empty string in int64 format or a number'
+        });
       }
       if (!Number.isInteger(Number(version.versionNumber))) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version number must be an integer or a string in int64 format');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version number must be an integer or a string in int64 format'
+        });
       }
       this.versionNumber = version.versionNumber;
     }
 
     if (typeof version.updateOrigin !== 'undefined') {
       if (!validator.isNonEmptyString(version.updateOrigin)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version update origin must be a non-empty string');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version update origin must be a non-empty string'
+        });
       }
       this.updateOrigin = version.updateOrigin;
     }
 
     if (typeof version.updateType !== 'undefined') {
       if (!validator.isNonEmptyString(version.updateType)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version update type must be a non-empty string');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version update type must be a non-empty string'
+        });
       }
       this.updateType = version.updateType;
     }
 
     if (typeof version.updateUser !== 'undefined') {
       if (!validator.isNonNullObject(version.updateUser)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version update user must be a non-null object');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version update user must be a non-null object'
+        });
       }
       this.updateUser = version.updateUser;
     }
 
     if (typeof version.description !== 'undefined') {
       if (!validator.isNonEmptyString(version.description)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version description must be a non-empty string');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version description must be a non-empty string'
+        });
       }
       this.description = version.description;
     }
 
     if (typeof version.rollbackSource !== 'undefined') {
       if (!validator.isNonEmptyString(version.rollbackSource)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version rollback source must be a non-empty string');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version rollback source must be a non-empty string'
+        });
       }
       this.rollbackSource = version.rollbackSource;
     }
 
     if (typeof version.isLegacy !== 'undefined') {
       if (!validator.isBoolean(version.isLegacy)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version.isLegacy must be a boolean');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version.isLegacy must be a boolean'
+        });
       }
       this.isLegacy = version.isLegacy;
     }
@@ -591,9 +612,10 @@ class VersionImpl implements Version {
     // we could still validate it below.
     if (typeof version.updateTime !== 'undefined') {
       if (!this.isValidTimestamp(version.updateTime)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument',
-          'Version update time must be a valid date string');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'Version update time must be a valid date string'
+        });
       }
       this.updateTime = new Date(version.updateTime).toUTCString();
     }

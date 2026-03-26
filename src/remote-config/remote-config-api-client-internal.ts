@@ -19,7 +19,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import { 
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient,RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, HttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
@@ -57,9 +57,10 @@ export class RemoteConfigApiClient {
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'First argument passed to admin.remoteConfig() must be a valid Firebase app instance.');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.remoteConfig() must be a valid Firebase app instance.'
+      });
     }
 
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
@@ -236,11 +237,12 @@ export class RemoteConfigApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseRemoteConfigError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-            + 'environment variable.');
+          throw new FirebaseRemoteConfigError({
+            code: 'unknown-error',
+            message: 'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+              + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+              + 'environment variable.'
+          });
         }
 
         this.projectIdPrefix = `projects/${projectId}`;
@@ -255,9 +257,12 @@ export class RemoteConfigApiClient {
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseRemoteConfigError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`, err.response);
+      return new FirebaseRemoteConfigError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: err.response,
+        cause: err
+      });
     }
 
     const error: RemoteConfigApiError = (response.data as ErrorResponse).error || {};
@@ -266,7 +271,7 @@ export class RemoteConfigApiClient {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseRemoteConfigError(code, message, err.response);
+    return new FirebaseRemoteConfigError({ code, message, httpResponse: err.response, cause: err });
   }
 
   /**
@@ -318,29 +323,34 @@ export class RemoteConfigApiClient {
   private validateInputRemoteConfigTemplate(template: RemoteConfigTemplate): RemoteConfigTemplate {
     const templateCopy = deepCopy(template);
     if (!validator.isNonNullObject(templateCopy)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(templateCopy)}`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `Invalid Remote Config template: ${JSON.stringify(templateCopy)}`
+      });
     }
     if (!validator.isNonEmptyString(templateCopy.etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ETag must be a non-empty string.');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'ETag must be a non-empty string.'
+      });
     }
     if (!validator.isNonNullObject(templateCopy.parameters)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config parameters must be a non-null object');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'Remote Config parameters must be a non-null object'
+      });
     }
     if (!validator.isNonNullObject(templateCopy.parameterGroups)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config parameter groups must be a non-null object');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'Remote Config parameter groups must be a non-null object'
+      });
     }
     if (!validator.isArray(templateCopy.conditions)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config conditions must be an array');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'Remote Config conditions must be an array'
+      });
     }
     if (typeof templateCopy.version !== 'undefined') {
       // exclude output only properties and keep the only input property: description
@@ -361,23 +371,26 @@ export class RemoteConfigApiClient {
   private validateVersionNumber(versionNumber: string | number, propertyName = 'versionNumber'): string {
     if (!validator.isNonEmptyString(versionNumber) &&
       !validator.isNumber(versionNumber)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `${propertyName} must be a non-empty string in int64 format or a number`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `${propertyName} must be a non-empty string in int64 format or a number`
+      });
     }
     if (!Number.isInteger(Number(versionNumber))) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `${propertyName} must be an integer or a string in int64 format`);
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: `${propertyName} must be an integer or a string in int64 format`
+      });
     }
     return versionNumber.toString();
   }
 
   private validateEtag(etag?: string): void {
     if (!validator.isNonEmptyString(etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ETag header is not present in the server response.');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'ETag header is not present in the server response.'
+      });
     }
   }
 
@@ -393,31 +406,40 @@ export class RemoteConfigApiClient {
   private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {
     const optionsCopy = deepCopy(options);
     if (!validator.isNonNullObject(optionsCopy)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ListVersionsOptions must be a non-null object.');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'ListVersionsOptions must be a non-null object.'
+      });
     }
     if (typeof optionsCopy.pageSize !== 'undefined') {
       if (!validator.isNumber(optionsCopy.pageSize)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'pageSize must be a number.');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'pageSize must be a number.'
+        });
       }
       if (optionsCopy.pageSize < 1 || optionsCopy.pageSize > 300) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'pageSize must be a number between 1 and 300 (inclusive).'
+        });
       }
     }
     if (typeof optionsCopy.pageToken !== 'undefined' && !validator.isNonEmptyString(optionsCopy.pageToken)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageToken must be a string value.');
+      throw new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'pageToken must be a string value.'
+      });
     }
     if (typeof optionsCopy.endVersionNumber !== 'undefined') {
       optionsCopy.endVersionNumber = this.validateVersionNumber(optionsCopy.endVersionNumber, 'endVersionNumber');
     }
     if (typeof optionsCopy.startTime !== 'undefined') {
       if (!(optionsCopy.startTime instanceof Date) && !validator.isUTCDateString(optionsCopy.startTime)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'startTime must be a valid Date object or a UTC date string.');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'startTime must be a valid Date object or a UTC date string.'
+        });
       }
       // Convert startTime to RFC3339 UTC "Zulu" format.
       if (optionsCopy.startTime instanceof Date) {
@@ -428,8 +450,10 @@ export class RemoteConfigApiClient {
     }
     if (typeof optionsCopy.endTime !== 'undefined') {
       if (!(optionsCopy.endTime instanceof Date) && !validator.isUTCDateString(optionsCopy.endTime)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'endTime must be a valid Date object or a UTC date string.');
+        throw new FirebaseRemoteConfigError({
+          code: 'invalid-argument',
+          message: 'endTime must be a valid Date object or a UTC date string.'
+        });
       }
       // Convert endTime to RFC3339 UTC "Zulu" format.
       if (optionsCopy.endTime instanceof Date) {
@@ -491,7 +515,7 @@ export type RemoteConfigErrorCode =
  * @constructor
  */
 export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
-  constructor(code: RemoteConfigErrorCode, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    super('remote-config', code, message, httpResponse, cause);
+  constructor(info: ErrorInfo, message?: string) {
+    super('remote-config', info.code, message || info.message, info.httpResponse, info.cause);
   }
 }

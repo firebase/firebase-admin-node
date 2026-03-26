@@ -163,9 +163,10 @@ export class MachineLearning {
     return this.client.listModels(options)
       .then((resp) => {
         if (!validator.isNonNullObject(resp)) {
-          throw new FirebaseMachineLearningError(
-            'invalid-argument',
-            `Invalid ListModels response: ${JSON.stringify(resp)}`);
+          throw new FirebaseMachineLearningError({
+            code: 'invalid-argument',
+            message: `Invalid ListModels response: ${JSON.stringify(resp)}`
+          });
         }
         let models: Model[] = [];
         if (resp.models) {
@@ -205,9 +206,11 @@ export class MachineLearning {
           return modelOptions;
         })
         .catch((err: Error) => {
-          throw new FirebaseMachineLearningError(
-            'internal-error',
-            `Error during signing upload url: ${err.message}`);
+          throw new FirebaseMachineLearningError({
+            code: 'internal-error',
+            message: `Error during signing upload url: ${err.message}`,
+            cause: err,
+          });
         });
     }
     return Promise.resolve(modelOptions);
@@ -220,9 +223,10 @@ export class MachineLearning {
     const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
     const matches = gcsRegex.exec(unsignedUrl);
     if (!matches) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument',
-        `Invalid unsigned url: ${unsignedUrl}`);
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: `Invalid unsigned url: ${unsignedUrl}`
+      });
     }
     const bucketName = matches[1];
     const blobName = matches[2];
@@ -384,9 +388,10 @@ export class Model {
     !validator.isNonEmptyString(model.updateTime) ||
     !validator.isNonEmptyString(model.displayName) ||
     !validator.isNonEmptyString(model.etag)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-server-response',
-        `Invalid Model response: ${JSON.stringify(model)}`);
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-server-response',
+        message: `Invalid Model response: ${JSON.stringify(model)}`
+      });
     }
     const tmpModel = deepCopy(model);
 

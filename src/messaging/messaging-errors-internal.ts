@@ -31,7 +31,7 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
     const json = err.response.data;
     const errorCode = getErrorCode(json);
     const errorMessage = getErrorMessage(json);
-    return FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
+    return FirebaseMessagingError.fromServerError(errorCode, errorMessage, err);
   }
 
   // Non-JSON response
@@ -58,6 +58,8 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
     code: error.code,
     message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
       `${ err.response.status }.`,
+    httpResponse: err.response,
+    cause: err,
   });
 }
 
