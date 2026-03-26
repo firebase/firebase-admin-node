@@ -1025,6 +1025,8 @@ describe('ConditionEvaluator', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['foo', '^ba.*$'], actual: 'bar', outcome: true },
           { targets: ['  bar   '], actual: 'biz', outcome: false },
+          { targets: ['^(a+)+$'], actual: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX', outcome: false },
+          { targets: ['[a-z)+'], actual: 'test', outcome: false }, // invalid regex pattern
         ];
 
         testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS_REGEX));

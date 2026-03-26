@@ -28,7 +28,7 @@ import {
   CustomSignalOperator,
 } from './remote-config-api';
 import { createHash } from 'crypto';
-
+import * as vm from 'vm';
 
 /**
  * Encapsulates condition evaluation logic to simplify organization and
@@ -226,7 +226,7 @@ export class ConditionEvaluator {
       return compareStrings(
         targetCustomSignalValues,
         actualCustomSignalValue,
-        (target, actual) => new RegExp(target).test(actual),
+        (target, actual) => safeRegexTest(target, actual),
       );
 
     // For numeric operators only one target value is allowed.
@@ -272,6 +272,38 @@ function compareStrings(
 ): boolean {
   const actual = String(actualValue);
   return targetValues.some((target) => predicateFn(target, actual));
+}
+
+// Pre-compile a single V8 context to avoid the high performance penalty of
+// creating a new context for every regex evaluation.
+const sharedRegexSandbox = {
+  pattern: '',
+  actual: '',
+  result: false,
+};
+const sharedRegexContext = vm.createContext(sharedRegexSandbox);
+const sharedRegexScript = new vm.Script(`
+  try {
+    result = new RegExp(pattern).test(actual);
+  } catch (e) {
+    result = false;
+  }
+`);
+
+// Compares a regex against an actual string safely with a timeout to mitigate ReDoS.
+function safeRegexTest(pattern: string, actual: string): boolean {
+  try {
+    sharedRegexSandbox.pattern = pattern;
+    sharedRegexSandbox.actual = actual;
+    sharedRegexSandbox.result = false;
+
+    // Timeout is set to 100ms.
+    sharedRegexScript.runInContext(sharedRegexContext, { timeout: 100 });
+    return sharedRegexSandbox.result;
+  } catch (e) {
+    // Return false if the regex evaluation times out or throws any other error.
+    return false;
+  }
 }
 
 // Compares two numbers against each other.
