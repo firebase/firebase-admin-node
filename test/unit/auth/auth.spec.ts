@@ -20,7 +20,6 @@
 import * as jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -32,7 +31,7 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import { AuthClientErrorCode, FirebaseAppError, FirebaseAuthError } from '../../../src/utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
 import { DecodedAuthBlockingToken, FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
@@ -3977,167 +3976,5 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
   });
 
-  describe('Standardized Error Handling Demonstration', () => {
-    let auth: Auth;
-    let mockApp: FirebaseApp;
 
-    beforeEach(() => {
-      mockApp = mocks.appWithOptions({
-        credential: new mocks.MockCredential(),
-        projectId: 'project-id',
-      });
-      auth = new Auth(mockApp);
-    });
-
-    afterEach(() => {
-      nock.cleanAll();
-    });
-
-    it('demoErrorWithCause: should have a cause when a low-level network error occurs', async () => {
-      const uid = 'some-uid';
-      const expectedError = new Error('Network failure');
-      
-      // Simulate a low-level network error using nock
-      nock('https://identitytoolkit.googleapis.com')
-        .post(/.*accounts:lookup.*/)
-        .replyWithError(expectedError);
-
-      console.log('\n\n=======================================================');
-      console.log('🔥 DEMONSTRATION 1: FIREBASE ERROR WITH CAUSE');
-      console.log('=======================================================');
-      try {
-        console.log('Attempting to fetch a user with a simulated network error...');
-        await auth.getUser(uid);
-      } catch (err: any) {
-        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
-          console.log('\n🔥 Caught Exception:');
-          console.log('Exception message:', err.message);
-          console.log('Error code:', err.code);
-          console.log('Cause:', err.cause);
-
-          if (err.httpResponse) {
-            console.log('\n📡 HTTP Response Metadata Attached:');
-            console.log('Status Code:', err.httpResponse.status);
-            console.log('Content Data:', err.httpResponse.data);
-            console.log('Headers:', err.httpResponse.headers);
-          } else {
-            console.log('\n📡 No HTTP Response metadata attached.');
-          }
-        }
-      }
-      console.log('=======================================================\n\n');
-    });
-
-    it('demoErrorWithResponse: should have httpResponse when a request fails', async () => {
-      const uid = 'some-uid';
-
-      // Simulate a server error using nock
-      nock('https://identitytoolkit.googleapis.com')
-        .post(/.*accounts:lookup.*/)
-        .reply(200, {
-          // Missing 'users' field
-          somethingElse: 'unexpected'
-        });
-
-      console.log('\n\n=======================================================');
-      console.log('🔥 DEMONSTRATION 2: FIREBASE ERROR WITH RESPONSE');
-      console.log('=======================================================');
-      try {
-        console.log('Attempting to fetch a user with a simulated server error...');
-        await auth.getUser(uid);
-      } catch (err: any) {
-        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
-          console.log('\n🔥 Caught Exception:');
-          console.log('Exception message:', err.message);
-          console.log('Error code:', err.code);
-          console.log('Cause:', err.cause);
-
-          if (err.httpResponse) {
-            console.log('\n📡 HTTP Response Metadata Attached:');
-            console.log('   Status Code:', err.httpResponse.status);
-            console.log('   Content Data:', JSON.stringify(err.httpResponse.data));
-            console.log('   Headers:', JSON.stringify(err.httpResponse.headers));
-          } else {
-            console.log('\n📡 No HTTP Response metadata attached.');
-          }
-        }
-      }
-      console.log('=======================================================\n\n');
-    });
-    it('demoErrorWithUnextractableCode: should have cause when errorCode is missing', async () => {
-      const uid = 'some-uid';
-
-      // Simulate a server error with an invalid body using nock
-      nock('https://identitytoolkit.googleapis.com')
-        .post(/.*accounts:lookup.*/)
-        .reply(500, {
-          // No error code or message
-          foo: 'bar'
-        });
-
-      console.log('\n\n=======================================================');
-      console.log('🔥 DEMONSTRATION 3: FIREBASE ERROR WITH UNEXTRACTABLE CODE');
-      console.log('=======================================================');
-      try {
-        console.log('Attempting to fetch a user with a simulated unextractable error...');
-        await auth.getUser(uid);
-      } catch (err: any) {
-        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
-          console.log('\n🔥 Caught Exception:');
-          console.log(err);
-          console.log('Exception message:', err.message);
-          console.log('Error code:', err.code);
-          console.log('Cause:', err.cause);
-
-          if (err.httpResponse) {
-            console.log('\n📡 HTTP Response Metadata Attached:');
-            console.log('   Status Code:', err.httpResponse.status);
-            console.log('   Content Data:', JSON.stringify(err.httpResponse.data));
-            console.log('   Headers:', JSON.stringify(err.httpResponse.headers));
-          } else {
-            console.log('\n📡 No HTTP Response metadata attached.');
-          }
-        }
-      }
-      console.log('=======================================================\n\n');
-    });
-
-    it('demoErrorWithValidFormat: should have cause and httpResponse when error has valid format', async () => {
-      const uid = 'some-uid';
-
-      // Simulate a server error with a valid body using nock
-      nock('https://identitytoolkit.googleapis.com')
-        .post(/.*accounts:lookup.*/)
-        .reply(400, {
-          error: {
-            message: 'USER_NOT_FOUND : Some detailed custom message here: with more colons',
-          }
-        });
-
-      console.log('\n\n=======================================================');
-      console.log('🔥 DEMONSTRATION 4: FIREBASE ERROR WITH VALID FORMAT');
-      console.log('=======================================================');
-      try {
-        console.log('Attempting to fetch a user with a simulated valid formatted error...');
-        await auth.getUser(uid);
-      } catch (err: any) {
-        if (err instanceof FirebaseAppError || err instanceof FirebaseAuthError) {
-          console.log('\n🔥 Caught Exception:');
-          console.log('Exception message:', err.message);
-          console.log('Error code:', err.code);
-          console.log('Cause:', err.cause);
-
-          if (err.httpResponse) {
-            console.log('\n📡 HTTP Response Metadata Attached:');
-            console.log('   Status Code:', err.httpResponse.status);
-            console.log('   Content Data:', JSON.stringify(err.httpResponse.data));
-            console.log('   Headers:', JSON.stringify(err.httpResponse.headers));
-          } else {
-            console.log('\n📡 No HTTP Response metadata attached.');
-          }
-        }
-      }
-      console.log('=======================================================\n\n');
-    });
-  });
 });
