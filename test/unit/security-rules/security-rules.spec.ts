@@ -30,7 +30,7 @@ const expect = chai.expect;
 
 describe('SecurityRules', () => {
 
-  const EXPECTED_ERROR = new FirebaseSecurityRulesError('internal-error', 'message');
+  const EXPECTED_ERROR = new FirebaseSecurityRulesError({ code: 'internal-error', message: 'message' });
   const FIRESTORE_RULESET_RESPONSE = {
     name: 'projects/test-project/rulesets/foo',
     createTime: '2019-03-08T23:45:23.288047Z',
@@ -49,23 +49,25 @@ describe('SecurityRules', () => {
   };
   const CREATE_TIME_UTC = 'Fri, 08 Mar 2019 23:45:23 GMT';
 
-  const INVALID_RULESET_ERROR = new FirebaseSecurityRulesError(
-    'invalid-argument',
-    'ruleset must be a non-empty name or a RulesetMetadata object.',
-  );
+  const INVALID_RULESET_ERROR = new FirebaseSecurityRulesError({
+    code: 'invalid-argument',
+    message: 'ruleset must be a non-empty name or a RulesetMetadata object.'
+  });
   const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], { name: '' }];
 
-  const INVALID_BUCKET_ERROR = new FirebaseSecurityRulesError(
-    'invalid-argument',
-    'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+  const INVALID_BUCKET_ERROR = new FirebaseSecurityRulesError({
+    code: 'invalid-argument',
+    message: 'Bucket name not specified or invalid. Specify a default bucket name via the ' +
     'storageBucket option when initializing the app, or specify the bucket name ' +
-    'explicitly when calling the rules API.',
-  );
+    'explicitly when calling the rules API.'
+  });
   const INVALID_BUCKET_NAMES: any[] = [null, '', true, false, 1, 0, {}, []];
 
   const INVALID_SOURCES: any[] = [null, undefined, '', 1, true, {}, []];
-  const INVALID_SOURCE_ERROR = new FirebaseSecurityRulesError(
-    'invalid-argument', 'Source must be a non-empty string or a Buffer.');
+  const INVALID_SOURCE_ERROR = new FirebaseSecurityRulesError({
+    code: 'invalid-argument',
+    message: 'Source must be a non-empty string or a Buffer.'
+  });
 
   let securityRules: SecurityRules;
   let mockApp: FirebaseApp;

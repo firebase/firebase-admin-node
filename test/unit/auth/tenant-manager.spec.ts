@@ -389,9 +389,10 @@ describe('TenantManager', () => {
       anonymousSignInEnabled: true,
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
-    const expectedError = new FirebaseAuthError(
-      AuthClientErrorCode.INTERNAL_ERROR,
-      'Unable to create the tenant provided.');
+    const expectedError = new FirebaseAuthError({
+      code: AuthClientErrorCode.INTERNAL_ERROR.code,
+      message: 'Unable to create the tenant provided.'
+    });
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
@@ -482,9 +483,10 @@ describe('TenantManager', () => {
       anonymousSignInEnabled: true,
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
-    const expectedError = new FirebaseAuthError(
-      AuthClientErrorCode.INTERNAL_ERROR,
-      'Unable to update the tenant provided.');
+    const expectedError = new FirebaseAuthError({
+      code: AuthClientErrorCode.INTERNAL_ERROR.code,
+      message: 'Unable to update the tenant provided.'
+    });
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
     afterEach(() => {

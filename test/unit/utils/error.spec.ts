@@ -238,17 +238,22 @@ describe('FirebaseMessagingError', () => {
       });
     });
 
-    describe('with raw server response specified', () => {
-      const mockRawServerResponse = {
-        error: {
-          code: 'UNEXPECTED_ERROR',
-          message: 'Message override.',
+    describe('with server error specified', () => {
+      const mockHttpResponse = {
+        status: 400,
+        headers: {},
+        data: {
+          error: {
+            code: 'UNEXPECTED_ERROR',
+            message: 'Message override.',
+          },
         },
       };
+      const mockError: any = { response: mockHttpResponse };
 
       it('should not include raw server response from an expected server code', () => {
         const error = FirebaseMessagingError.fromServerError(
-          'InvalidRegistration', /* message */ undefined, mockRawServerResponse,
+          'InvalidRegistration', /* message */ undefined, mockError,
         );
         const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
         expect(error.code).to.equal('messaging/' + expectedError.code);
@@ -257,12 +262,12 @@ describe('FirebaseMessagingError', () => {
 
       it('should include raw server response from an unexpected server code', () => {
         const error = FirebaseMessagingError.fromServerError(
-          'UNEXPECTED_ERROR', /* message */ undefined, mockRawServerResponse,
+          'UNEXPECTED_ERROR', /* message */ undefined, mockError,
         );
         const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.be.equal(
-          `${ expectedError.message } Raw server response: "${ JSON.stringify(mockRawServerResponse) }"`,
+          `${ expectedError.message } Raw server response: "${ JSON.stringify(mockHttpResponse.data) }"`,
         );
       });
     });

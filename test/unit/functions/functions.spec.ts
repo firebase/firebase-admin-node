@@ -110,7 +110,7 @@ describe('Functions', () => {
 });
 
 describe('TaskQueue', () => {
-  const INTERNAL_ERROR = new FirebaseFunctionsError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseFunctionsError({ code: 'internal-error', message: 'message' });
   const FUNCTION_NAME = 'function-name';
 
   let taskQueue: TaskQueue;

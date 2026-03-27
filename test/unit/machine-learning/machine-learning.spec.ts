@@ -40,7 +40,7 @@ describe('MachineLearning', () => {
   const PROJECT_NUMBER = '987654';
   const OPERATION_ID = '456789';
   const OPERATION_NAME = `projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`
-  const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
+  const EXPECTED_ERROR = new FirebaseMachineLearningError({ code: 'internal-error', message: 'message' });
   const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
   const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
   const MODEL_RESPONSE: {

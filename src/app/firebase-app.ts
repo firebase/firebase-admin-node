@@ -110,7 +110,11 @@ export class FirebaseAppInternals {
           'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
         }
 
-        throw new FirebaseAppError({ code: AppErrorCodes.INVALID_CREDENTIAL, message: errorMessage });
+        throw new FirebaseAppError({
+          code: AppErrorCodes.INVALID_CREDENTIAL,
+          message: errorMessage,
+          cause: error as Error
+        });
       })
       .finally(() => {
         this.isRefreshing = false;

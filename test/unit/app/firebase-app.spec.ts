@@ -173,30 +173,50 @@ describe('FirebaseApp', () => {
 
     it('should throw when the environment variable points to non existing file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
-      expect(() => {
+      try {
         firebaseNamespace.initializeApp();
-      }).to.throw('Failed to parse app options file: Error: ENOENT: no such file or directory');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse app options file: /);
+        expect(err.cause).to.have.property('code', 'ENOENT');
+      }
     });
 
     it('should throw when the environment variable contains bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
-      expect(() => {
+      try {
         firebaseNamespace.initializeApp();
-      }).to.throw(/Failed to parse app options file: SyntaxError:/);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse app options file: /);
+        expect(err.cause).to.be.instanceOf(SyntaxError);
+      }
     });
 
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
-      expect(() => {
+      try {
         firebaseNamespace.initializeApp();
-      }).to.throw('Failed to parse app options file');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse app options file: /);
+        expect(err.cause).to.be.instanceOf(SyntaxError);
+      }
     });
 
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
-      expect(() => {
+      try {
         firebaseNamespace.initializeApp();
-      }).to.throw('Failed to parse app options file');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse app options file: /);
+        expect(err.cause).to.be.instanceOf(SyntaxError);
+      }
     });
 
     it('should ignore a bad config key in the config file', () => {
@@ -827,20 +847,31 @@ describe('FirebaseApp', () => {
       })
     });
 
-    it('Includes the original error in exception', () => {
+    it('Includes the original error in exception', async () => {
       getTokenStub.restore();
-      const mockError = new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL, 'Something went wrong');
+      const mockError = new FirebaseAppError({
+        code: AppErrorCodes.INVALID_CREDENTIAL,
+        message: 'Something went wrong'
+      });
       getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
       const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
         + ' failed to fetch a valid Google OAuth2 access token with the following error: "Something went wrong".';
-      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
+      
+      try {
+        await mockApp.INTERNAL.getToken(true);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err.message).to.equal(detailedMessage);
+        expect(err.cause).to.equal(mockError);
+      }
     });
 
-    it('Returns a detailed message when an error is due to an invalid_grant', () => {
+    it('Returns a detailed message when an error is due to an invalid_grant', async () => {
       getTokenStub.restore();
-      const mockError = new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL, 'Failed to get credentials: invalid_grant (reason)');
+      const mockError = new FirebaseAppError({
+        code: AppErrorCodes.INVALID_CREDENTIAL,
+        message: 'Failed to get credentials: invalid_grant (reason)'
+      });
       getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
       const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
         + ' failed to fetch a valid Google OAuth2 access token with the following error: "Failed to get credentials:'
@@ -849,7 +880,14 @@ describe('FirebaseApp', () => {
         + ' make sure the key ID for your key file is still present at '
         + 'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate a new key file '
         + 'at https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
-      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
+      
+      try {
+        await mockApp.INTERNAL.getToken(true);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err.message).to.equal(detailedMessage);
+        expect(err.cause).to.equal(mockError);
+      }
     });
   });
 

@@ -163,9 +163,16 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'not-found',
+          message: 'Requested entity not found',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeGraphql('query', {})
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject with unknown-error when error code is not present', () => {
@@ -173,9 +180,16 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unknown server error: {}',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeGraphql('query', {})
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject with unknown-error for non-json response', () => {
@@ -183,14 +197,20 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError(
-          'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unexpected response with status: 404 and body: not json',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeGraphql('query', {})
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject when rejected with a FirebaseDataConnectError', () => {
-        const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+        const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(expected);
@@ -276,9 +296,16 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'not-found',
+          message: 'Requested entity not found',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject with unknown-error when error code is not present', () => {
@@ -286,9 +313,16 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unknown server error: {}',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject with unknown-error for non-json response', () => {
@@ -296,14 +330,20 @@ describe('DataConnectApiClient', () => {
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(mockErr);
-        const expected = new FirebaseDataConnectError(
-          'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unexpected response with status: 404 and body: not json',
+          httpResponse: mockErr.response,
+          cause: mockErr
+        });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
 
       it('should reject when rejected with a FirebaseDataConnectError', () => {
-        const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+        const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
         sandbox
           .stub(HttpClient.prototype, 'send')
           .rejects(expected);
@@ -427,9 +467,16 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(mockErr);
-      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found', mockErr.response);
+      const expected = new FirebaseDataConnectError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: mockErr.response,
+        cause: mockErr
+      });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
@@ -437,9 +484,16 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(mockErr);
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}', mockErr.response);
+      const expected = new FirebaseDataConnectError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: mockErr.response,
+        cause: mockErr
+      });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -447,14 +501,20 @@ describe('DataConnectApiClient', () => {
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(mockErr);
-      const expected = new FirebaseDataConnectError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json', mockErr.response);
+      const expected = new FirebaseDataConnectError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: mockErr.response,
+        cause: mockErr
+      });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseDataConnectError', () => {
-      const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
+      const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
       sandbox
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
@@ -606,10 +666,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
   const additionalErrorMessageForBulkImport =
     'Make sure that your table name passed in matches the type name in your GraphQL schema file.';
 
-  const expectedQueryError = new FirebaseDataConnectError(
-    DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
-    serverErrorString
-  );
+  const expectedQueryError = new FirebaseDataConnectError({
+    code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+    message: serverErrorString
+  });
 
   // Helper function to normalize GraphQL strings
   const normalizeGraphQLString = (str: string): string => {
@@ -701,8 +761,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
     
     it('should amend the message for query errors', async () => {
-      await expect(apiClientQueryError.insert(tableName, { data: 1 }))
-        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+      try {
+        await apiClientQueryError.insert(tableName, { data: 1 });
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
     });
   });
 
@@ -787,8 +853,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
 
     it('should amend the message for query errors', async () => {
-      await expect(apiClientQueryError.insertMany(tableName, [{ data: 1 }]))
-        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+      try {
+        await apiClientQueryError.insertMany(tableName, [{ data: 1 }]);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
     });
   });
 
@@ -850,8 +922,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
 
     it('should amend the message for query errors', async () => {
-      await expect(apiClientQueryError.upsert(tableName, { data: 1 }))
-        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+      try {
+        await apiClientQueryError.upsert(tableName, { data: 1 });
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
     });
   });
 
@@ -933,8 +1011,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
     });
 
     it('should amend the message for query errors', async () => {
-      await expect(apiClientQueryError.upsertMany(tableName, [{ data: 1 }]))
-        .to.be.rejectedWith(FirebaseDataConnectError, `${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+      try {
+        await apiClientQueryError.upsertMany(tableName, [{ data: 1 }]);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
     });
   });
 

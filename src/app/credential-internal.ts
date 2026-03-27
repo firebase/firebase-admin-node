@@ -184,7 +184,7 @@ class ServiceAccount {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError({
         code: AppErrorCodes.INVALID_CREDENTIAL,
-        message: 'Failed to parse service account json file.',
+        message: `Failed to parse service account json file: ${(error as Error).message}`,
         cause: error,
       });
     }

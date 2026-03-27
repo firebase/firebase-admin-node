@@ -34,7 +34,7 @@ const expect = chai.expect;
 
 describe('AppCheck', () => {
 
-  const INTERNAL_ERROR = new FirebaseAppCheckError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseAppCheckError({ code: 'internal-error', message: 'message' });
   const APP_ID = '1:1234:android:1234';
   const TEST_TOKEN_TO_EXCHANGE = 'signed-custom-token';
 

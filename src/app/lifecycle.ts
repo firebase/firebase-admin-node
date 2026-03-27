@@ -322,7 +322,7 @@ function loadOptionsFromEnvVar(): AppOptions {
     // Throw a nicely formed error message if the file contents cannot be parsed
     throw new FirebaseAppError({
       code: AppErrorCodes.INVALID_APP_OPTIONS,
-      message: 'Failed to parse app options file.',
+      message: `Failed to parse app options file: ${(error as Error).message}`,
       cause: error as Error
     });
   }

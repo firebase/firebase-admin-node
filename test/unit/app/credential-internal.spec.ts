@@ -37,6 +37,7 @@ import {
   getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential, ApplicationDefaultCredential
 } from '../../../src/app/credential-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import { FirebaseAppError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -84,19 +85,37 @@ describe('Credential', () => {
     });
 
     it('should throw if called with the path to a non-existent file', () => {
-      expect(() => new ServiceAccountCredential('invalid-file'))
-        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+      try {
+        new ServiceAccountCredential('invalid-file');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.have.property('code', 'ENOENT');
+      }
     });
 
     it('should throw if called with the path to an invalid file', () => {
       const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
-      expect(() => new ServiceAccountCredential(invalidPath))
-        .to.throw('Failed to parse service account json file: SyntaxError');
+      try {
+        new ServiceAccountCredential(invalidPath);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.be.instanceOf(SyntaxError);
+      }
     });
 
     it('should throw if called with an empty string path', () => {
-      expect(() => new ServiceAccountCredential(''))
-        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+      try {
+        new ServiceAccountCredential('');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.have.property('code', 'ENOENT');
+      }
     });
 
     it('should throw given an object without a "project_id" property', () => {
