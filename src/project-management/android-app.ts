@@ -171,8 +171,8 @@ export class AndroidApp {
     if (!certificateToDelete.resourceName) {
       throw new FirebaseProjectManagementError({
         code: 'invalid-argument',
-        message: 'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to retrieve ' +
-              'certificates with a resourceName.'
+        message: 'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to ' +
+              'retrieve certificates with a resourceName.'
       });
     }
     return this.requestHandler.deleteResource(certificateToDelete.resourceName);

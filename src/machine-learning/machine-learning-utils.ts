@@ -38,23 +38,23 @@ export type MachineLearningErrorCode =
 export class FirebaseMachineLearningError extends PrefixedFirebaseError {
   public static fromOperationError(code: number, message: string): FirebaseMachineLearningError {
     switch (code) {
-      case 1: return new FirebaseMachineLearningError({ code: 'cancelled', message });
-      case 2: return new FirebaseMachineLearningError({ code: 'unknown-error', message });
-      case 3: return new FirebaseMachineLearningError({ code: 'invalid-argument', message });
-      case 4: return new FirebaseMachineLearningError({ code: 'deadline-exceeded', message });
-      case 5: return new FirebaseMachineLearningError({ code: 'not-found', message });
-      case 6: return new FirebaseMachineLearningError({ code: 'already-exists', message });
-      case 7: return new FirebaseMachineLearningError({ code: 'permission-denied', message });
-      case 8: return new FirebaseMachineLearningError({ code: 'resource-exhausted', message });
-      case 9: return new FirebaseMachineLearningError({ code: 'failed-precondition', message });
-      case 10: return new FirebaseMachineLearningError({ code: 'aborted', message });
-      case 11: return new FirebaseMachineLearningError({ code: 'out-of-range', message });
-      case 13: return new FirebaseMachineLearningError({ code: 'internal-error', message });
-      case 14: return new FirebaseMachineLearningError({ code: 'service-unavailable', message });
-      case 15: return new FirebaseMachineLearningError({ code: 'data-loss', message });
-      case 16: return new FirebaseMachineLearningError({ code: 'unauthenticated', message });
+    case 1: return new FirebaseMachineLearningError({ code: 'cancelled', message });
+    case 2: return new FirebaseMachineLearningError({ code: 'unknown-error', message });
+    case 3: return new FirebaseMachineLearningError({ code: 'invalid-argument', message });
+    case 4: return new FirebaseMachineLearningError({ code: 'deadline-exceeded', message });
+    case 5: return new FirebaseMachineLearningError({ code: 'not-found', message });
+    case 6: return new FirebaseMachineLearningError({ code: 'already-exists', message });
+    case 7: return new FirebaseMachineLearningError({ code: 'permission-denied', message });
+    case 8: return new FirebaseMachineLearningError({ code: 'resource-exhausted', message });
+    case 9: return new FirebaseMachineLearningError({ code: 'failed-precondition', message });
+    case 10: return new FirebaseMachineLearningError({ code: 'aborted', message });
+    case 11: return new FirebaseMachineLearningError({ code: 'out-of-range', message });
+    case 13: return new FirebaseMachineLearningError({ code: 'internal-error', message });
+    case 14: return new FirebaseMachineLearningError({ code: 'service-unavailable', message });
+    case 15: return new FirebaseMachineLearningError({ code: 'data-loss', message });
+    case 16: return new FirebaseMachineLearningError({ code: 'unauthenticated', message });
     default:
-        return new FirebaseMachineLearningError({ code: 'unknown-error', message });
+      return new FirebaseMachineLearningError({ code: 'unknown-error', message });
     }
   }
 

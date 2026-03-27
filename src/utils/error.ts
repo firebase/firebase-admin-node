@@ -22,9 +22,6 @@ import { RequestResponseError } from './api-request';
 export interface HttpResponse {
   status: number;
   headers: { [key: string]: any; };
-  // Note(error-revamp): This is currently an any type because some endpoints return a string
-  // and others return an object. We should consider making this a string since that is the 
-  // type set in our api proposal.
   data?: any;
 }
 
@@ -230,7 +227,6 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     const error: ErrorInfo = deepCopy((AuthClientErrorCode as any)[clientCodeKey]);
     // Server detailed message should have highest priority.
     error.message = customMessage || message || error.message;
-    // Note(error-revamp): We need to determine if we want to populate the error cause.
     error.cause = serverError;
     error.httpResponse = serverError?.response;
     return new FirebaseAuthError(error);
@@ -500,6 +496,7 @@ export class AppErrorCodes {
 /**
  * Auth client error codes and their default messages.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const AuthClientErrorCode = {
   AUTH_BLOCKING_TOKEN_EXPIRED: {
     code: 'auth-blocking-token-expired',
@@ -901,6 +898,7 @@ export const AuthClientErrorCode = {
 /**
  * Messaging client error codes and their default messages.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const MessagingClientErrorCode = {
   INVALID_ARGUMENT: {
     code: 'invalid-argument',
@@ -996,6 +994,7 @@ export const MessagingClientErrorCode = {
   },
 } satisfies Record<string, ErrorInfo>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const InstallationsClientErrorCode = {
   INVALID_ARGUMENT: {
     code: 'invalid-argument',
@@ -1015,6 +1014,7 @@ export const InstallationsClientErrorCode = {
   },
 } satisfies Record<string, ErrorInfo>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const InstanceIdClientErrorCode = {
   ...InstallationsClientErrorCode,
   INVALID_INSTANCE_ID: {

@@ -334,11 +334,11 @@ describe('RemoteConfigApiClient', () => {
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurres', () => {
         const mockErr = utils.errorFrom({
-            error: {
-              code: 400,
-              message: message,
-              status: 'FAILED_PRECONDITION'
-            }
+          error: {
+            code: 400,
+            message: message,
+            status: 'FAILED_PRECONDITION'
+          }
         }, 400);
         const stub = sinon
           .stub(HttpClient.prototype, 'send')
@@ -437,11 +437,11 @@ describe('RemoteConfigApiClient', () => {
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurs', () => {
         const mockErr = utils.errorFrom({
-            error: {
-              code: 400,
-              message: message,
-              status: 'FAILED_PRECONDITION'
-            }
+          error: {
+            code: 400,
+            message: message,
+            status: 'FAILED_PRECONDITION'
+          }
         }, 400);
         const stub = sinon
           .stub(HttpClient.prototype, 'send')

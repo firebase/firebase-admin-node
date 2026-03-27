@@ -170,7 +170,10 @@ export class MachineLearningApiClient {
     if (!validator.isNonEmptyString(modelId) ||
         !validator.isNonNullObject(model) ||
         !validator.isNonEmptyArray(updateMask)) {
-      const err = new FirebaseMachineLearningError({ code: 'invalid-argument', message: 'Invalid model or mask content.' });
+      const err = new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: 'Invalid model or mask content.',
+      });
       return Promise.reject(err);
     }
     return this.getProjectUrl()

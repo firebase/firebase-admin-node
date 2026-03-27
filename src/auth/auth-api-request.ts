@@ -585,10 +585,10 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
           throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION);
         }
       })
-    // Set response validator.
-    .setResponseValidator((response: RequestResponse) => {
+      // Set response validator.
+      .setResponseValidator((response: RequestResponse) => {
         // Response should always contain the session cookie.
-      if (!validator.isNonEmptyString(response.data?.sessionCookie)) {
+        if (!validator.isNonEmptyString(response.data?.sessionCookie)) {
           throw new FirebaseAuthError({
             ...AuthClientErrorCode.INTERNAL_ERROR,
             httpResponse: response,
@@ -1973,7 +1973,6 @@ export abstract class AbstractAuthRequestHandler {
           const errorCode = AbstractAuthRequestHandler.getErrorCode(err.response.data);
           if (!errorCode) {
             // Fallback for unexpected server error responses without a parseable error code.
-            // Note(error-revamp): We need to determine if we want to populate the error cause.
             throw new FirebaseAuthError({
               ...AuthClientErrorCode.INTERNAL_ERROR,
               message: 'An internal error occurred while attempting to extract the errorcode from the error.',

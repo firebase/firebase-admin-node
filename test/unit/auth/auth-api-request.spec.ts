@@ -660,7 +660,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = utils.responseFrom({ localId: "1234" });
+      const validResponse = utils.responseFrom({ localId: '1234' });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -816,7 +816,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SIGN_UP_NEW_USER.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = utils.responseFrom({ localId: "1234" });
+      const validResponse = utils.responseFrom({ localId: '1234' });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();

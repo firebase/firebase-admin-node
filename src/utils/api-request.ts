@@ -157,7 +157,7 @@ class DefaultRequestResponse implements RequestResponse {
     }
     throw new FirebaseAppError({
       code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      message: "Error while parsing response data",
+      message: 'Error while parsing response data',
       cause: this.parseError as Error,
       httpResponse: {
         status: this.status,

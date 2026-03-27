@@ -473,7 +473,8 @@ export class DataConnectApiClient {
     if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
-        message: `${err.message}. Make sure that your table name passed in matches the type name in your GraphQL schema file.`,
+        message: `${err.message}. Make sure that your table name passed in matches the type name in your `
+          + 'GraphQL schema file.',
         cause: err,
       });
     }
@@ -496,7 +497,8 @@ export class DataConnectApiClient {
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be an object, not an array, for single insert. For arrays, please use `insertMany` function.'
+        message: '`data` must be an object, not an array, for single insert. For arrays, please use '
+          + '`insertMany` function.'
       });
     }
     if (!validator.isNonNullObject(data)) {
@@ -572,7 +574,8 @@ export class DataConnectApiClient {
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be an object, not an array, for single upsert. For arrays, please use `upsertMany` function.'
+        message: '`data` must be an object, not an array, for single upsert. For arrays, please use '
+          + '`upsertMany` function.'
       });
     }
     if (!validator.isNonNullObject(data)) {
