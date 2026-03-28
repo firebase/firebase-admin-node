@@ -609,6 +609,25 @@ describe('RemoteConfig', () => {
       });
     });
 
+    it('should throw if experiment exposure percent is out of range', () => {
+      sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (sourceTemplate.parameters as any).experiment_enabled
+        .conditionalValues.ios.experimentValue.exposurePercent = 101;
+      const jsonString = JSON.stringify(sourceTemplate);
+      expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+        .to.throw('Experiment exposure percent must be between 0 and 100 (experiment_enabled)');
+    });
+
+    it('should accept experiment exposure percent for boundary and middle values', () => {
+      [0, 52, 100].forEach((validExposurePercent) => {
+        sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+        (sourceTemplate.parameters as any).experiment_enabled
+          .conditionalValues.ios.experimentValue.exposurePercent = validExposurePercent;
+        const jsonString = JSON.stringify(sourceTemplate);
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString)).to.not.throw();
+      });
+    });
+
     it('should succeed when a valid json string is provided', () => {
       const jsonString = JSON.stringify(REMOTE_CONFIG_RESPONSE);
       const newTemplate = remoteConfig.createTemplateFromJSON(jsonString);
@@ -1670,6 +1689,19 @@ describe('RemoteConfig', () => {
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
           'message', 'Remote Config conditions must be an array');
+    });
+
+    it('should reject when API response contains invalid experiment exposure percent', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (response.parameters as any).experiment_enabled
+        .conditionalValues.ios.experimentValue.exposurePercent = 101;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+      return rcOperation()
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Experiment exposure percent must be between 0 and 100 (experiment_enabled)');
     });
   }
 
