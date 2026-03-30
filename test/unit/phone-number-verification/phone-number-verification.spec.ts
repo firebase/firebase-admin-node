@@ -23,7 +23,7 @@ import * as sinon from 'sinon';
 import { App } from '../../../src/app/index';
 import * as mocks from '../../resources/mocks';
 import { PhoneNumberVerification } from '../../../src/phone-number-verification/phone-number-verification';
-import { FirebasePhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
+import { PhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
 import { PhoneNumberVerificationToken } from '../../../src/phone-number-verification/phone-number-verification-api';
 
 describe('PhoneNumberVerification Service', () => {
@@ -33,7 +33,7 @@ describe('PhoneNumberVerification Service', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
-    verifyJwtStub = sinon.stub(FirebasePhoneNumberTokenVerifier.prototype, 'verifyJWT');
+    verifyJwtStub = sinon.stub(PhoneNumberTokenVerifier.prototype, 'verifyJWT');
 
     phoneNumberVerificationService = new PhoneNumberVerification(mockApp);
   });

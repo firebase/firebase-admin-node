@@ -19,7 +19,7 @@ import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules , remoteConfig, phoneNumberVerification, AppOptions,
+  instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getSdkVersion } from '../utils/index';
@@ -37,7 +37,6 @@ import ProjectManagement = projectManagement.ProjectManagement;
 import RemoteConfig = remoteConfig.RemoteConfig;
 import SecurityRules = securityRules.SecurityRules;
 import Storage = storage.Storage;
-import PhoneNumberVerification = phoneNumberVerification.PhoneNumberVerification;
 
 export interface FirebaseServiceNamespace <T> {
   (app?: App): T;
@@ -280,18 +279,6 @@ export class FirebaseNamespace {
     return Object.assign(fn, { AppCheck: appCheck });
   }
 
-  /**
-   * Gets the `PhoneNumberVerification` service namespace. The returned namespace can be used to get the
-   * `PhoneNumberVerification` service for the default app or an explicitly specified app.
-   */
-  get phoneNumberVerification(): FirebaseServiceNamespace<PhoneNumberVerification> {
-    const fn: FirebaseServiceNamespace<PhoneNumberVerification> = (app?: App) => {
-      return this.ensureApp(app).phoneNumberVerification();
-    };
-    const phoneNumberVerification = require(
-      '../phone-number-verification/phone-number-verification').PhoneNumberVerification;
-    return Object.assign(fn, { PhoneNumberVerification: phoneNumberVerification });
-  }
 
 
   // TODO: Change the return types to app.App in the following methods.
@@ -412,10 +399,6 @@ function extendApp(app: AppCore): App {
     return fn(app);
   };
 
-  result.phoneNumberVerification = () => {
-    const fn = require('../phone-number-verification/index').getPhoneNumberVerification;
-    return fn(app);
-  };
 
 
   (result as any).__extended = true;

@@ -26,7 +26,6 @@ import { projectManagement } from './project-management/project-management-names
 import { remoteConfig } from './remote-config/remote-config-namespace';
 import { securityRules } from './security-rules/security-rules-namespace';
 import { storage } from './storage/storage-namespace';
-import { phoneNumberVerification } from './phone-number-verification/phone-number-verification-namespace';
 
 import { App as AppCore, AppOptions } from './app/index';
 
@@ -57,7 +56,6 @@ export namespace app {
     remoteConfig(): remoteConfig.RemoteConfig;
     securityRules(): securityRules.SecurityRules;
     storage(): storage.Storage;
-    phoneNumberVerification(): phoneNumberVerification.PhoneNumberVerification;
 
     /**
      * Renders this local `FirebaseApp` unusable and frees the resources of
@@ -93,7 +91,6 @@ export { projectManagement } from './project-management/project-management-names
 export { remoteConfig } from './remote-config/remote-config-namespace';
 export { securityRules } from './security-rules/security-rules-namespace';
 export { storage } from './storage/storage-namespace';
-export { phoneNumberVerification } from './phone-number-verification/phone-number-verification-namespace';
 
 // Declare other top-level members of the admin namespace below. Unfortunately, there's no
 // compile-time mechanism to ensure that the FirebaseNamespace class actually provides these

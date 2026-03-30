@@ -25,7 +25,7 @@ import {
 } from '../utils/jwt';
 import { FirebasePhoneNumberTokenInfo, FPNV_ERROR_CODE_MAPPING } from './phone-number-verification-api-client-internal';
 
-export class FirebasePhoneNumberTokenVerifier {
+export class PhoneNumberTokenVerifier {
   private readonly shortNameArticle: string;
   private readonly signatureVerifier: SignatureVerifier;
 

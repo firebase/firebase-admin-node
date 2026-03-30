@@ -24,7 +24,7 @@ import * as sinon from 'sinon';
 import { App } from '../../../src/app/index';
 import * as jwt from '../../../src/utils/jwt';
 import * as util from '../../../src/utils/index';
-import { FirebasePhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
+import { PhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
 import {
   FirebasePhoneNumberTokenInfo,
   FPNV_ERROR_CODE_MAPPING
@@ -34,8 +34,8 @@ import * as mocks from '../../resources/mocks';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-describe('FirebasePhoneNumberTokenVerifier', () => {
-  let verifier: FirebasePhoneNumberTokenVerifier;
+describe('PhoneNumberTokenVerifier', () => {
+  let verifier: PhoneNumberTokenVerifier;
   let mockApp: App;
 
   let findProjectIdStub: sinon.SinonStub;
@@ -88,8 +88,8 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   /**
    * Helper to instantiate the verifier with default valid args
    */
-  function createVerifier(overrides: Partial<any> = {}): FirebasePhoneNumberTokenVerifier {
-    return new FirebasePhoneNumberTokenVerifier(
+  function createVerifier(overrides: Partial<any> = {}): PhoneNumberTokenVerifier {
+    return new PhoneNumberTokenVerifier(
       overrides.clientCertUrl || MOCK_CERT_URL,
       overrides.issuer || MOCK_ISSUER,
       overrides.tokenInfo || MOCK_TOKEN_INFO,
@@ -100,7 +100,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   describe('Constructor', () => {
     it('should instantiate successfully with valid arguments', () => {
       const v = createVerifier();
-      expect(v).to.be.instanceOf(FirebasePhoneNumberTokenVerifier);
+      expect(v).to.be.instanceOf(PhoneNumberTokenVerifier);
       expect(withJwksUrlStub.calledOnce).to.be.true;
     });
 
@@ -115,7 +115,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
     });
 
     it('should throw if tokenInfo is null', () => {
-      expect(() => new FirebasePhoneNumberTokenVerifier(
+      expect(() => new PhoneNumberTokenVerifier(
         MOCK_CERT_URL,
         MOCK_ISSUER,
         // @ts-expect-error null for testing

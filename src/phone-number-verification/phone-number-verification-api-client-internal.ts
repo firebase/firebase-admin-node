@@ -32,7 +32,7 @@ export interface FirebasePhoneNumberTokenInfo {
 
 export const JWKS_URL = 'https://fpnv.googleapis.com/v1beta/jwks';
 
-export const PN_TOKEN_INFO: FirebasePhoneNumberTokenInfo = {
+export const FPNV_TOKEN_INFO: FirebasePhoneNumberTokenInfo = {
   url: 'https://firebase.google.com/docs/phone-number-verification',
   verifyApiName: 'verifyToken()',
   jwtName: 'Firebase Phone Verification token',

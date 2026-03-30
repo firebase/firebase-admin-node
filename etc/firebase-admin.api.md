@@ -27,8 +27,6 @@ export namespace app {
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
-        fpnv(): fpnv.Fpnv;
-        // (undocumented)
         installations(): installations.Installations;
         // @deprecated (undocumented)
         instanceId(): instanceId.InstanceId;
@@ -291,17 +289,6 @@ export namespace firestore {
     import UnionToIntersection = _firestore.UnionToIntersection;
     import ReadOnlyTransactionOptions = _firestore.ReadOnlyTransactionOptions;
     import setLogFunction = _firestore.setLogFunction;
-}
-
-// @public
-export function fpnv(app?: App): fpnv.Fpnv;
-
-// @public (undocumented)
-export namespace fpnv {
-    // Warning: (ae-forgotten-export) The symbol "Fpnv" needs to be exported by the entry point default-namespace.d.ts
-    export type Fpnv = Fpnv;
-    // Warning: (ae-forgotten-export) The symbol "FpnvToken" needs to be exported by the entry point default-namespace.d.ts
-    export type FpnvToken = FpnvToken;
 }
 
 // @public

@@ -17,15 +17,15 @@
 
 import { App } from '../app';
 import { PhoneNumberVerificationToken } from './phone-number-verification-api';
-import { FirebasePhoneNumberTokenVerifier } from './token-verifier';
-import { JWKS_URL, PN_TOKEN_INFO } from './phone-number-verification-api-client-internal';
+import { PhoneNumberTokenVerifier } from './token-verifier';
+import { JWKS_URL, FPNV_TOKEN_INFO } from './phone-number-verification-api-client-internal';
 
 /**
  * PhoneNumberVerification service bound to the provided app.
  */
 export class PhoneNumberVerification {
   private readonly appInternal: App;
-  private readonly phoneNumberVerificationVerifier: FirebasePhoneNumberTokenVerifier;
+  private readonly phoneNumberVerificationVerifier: PhoneNumberTokenVerifier;
 
   /**
    * @param app - The app for this `PhoneNumberVerification` service.
@@ -35,10 +35,10 @@ export class PhoneNumberVerification {
   constructor(app: App) {
 
     this.appInternal = app;
-    this.phoneNumberVerificationVerifier = new FirebasePhoneNumberTokenVerifier(
+    this.phoneNumberVerificationVerifier = new PhoneNumberTokenVerifier(
       JWKS_URL,
       'https://fpnv.googleapis.com/projects/',
-      PN_TOKEN_INFO,
+      FPNV_TOKEN_INFO,
       app
     );
   }
