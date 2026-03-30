@@ -16,9 +16,9 @@
     "typings": "./lib/auth/index.d.ts",
     "dist": "./lib/auth/index.js"
   },
-  "firebase-admin/fpnv": {
-    "typings": "./lib/fpnv/index.d.ts",
-    "dist": "./lib/fpnv/index.js"
+  "firebase-admin/phone-number-verification": {
+    "typings": "./lib/phone-number-verification/index.d.ts",
+    "dist": "./lib/phone-number-verification/index.js"
   },
   "firebase-admin/database": {
     "typings": "./lib/database/index.d.ts",

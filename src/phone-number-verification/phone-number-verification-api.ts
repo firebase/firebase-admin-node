@@ -17,14 +17,14 @@
 
 
 /**
- * Interface representing a Fpnv token.
+ * Interface representing a PhoneNumberVerification token.
  */
-export interface FpnvToken {
+export interface PhoneNumberVerificationToken {
     /**
      * The issuer identifier for the issuer of the response.
      * This value is a URL with the format
      * `https://fpnv.googleapis.com/projects/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
-     * same project number specified in the {@link FpnvToken.aud} property.
+     * same project number specified in the {@link PhoneNumberVerificationToken.aud} property.
      */
     iss: string;
 
@@ -37,14 +37,14 @@ export interface FpnvToken {
     aud: string[];
 
     /**
-     * The Fpnv token's expiration time, in seconds since the Unix epoch. That is, the
-     * time at which this Fpnv token expires and should no longer be considered valid.
+     * The PhoneNumberVerification token's expiration time, in seconds since the Unix epoch. That is, the
+     * time at which this PhoneNumberVerification token expires and should no longer be considered valid.
      */
     exp: number;
 
     /**
-     * The Fpnv token's issued-at time, in seconds since the Unix epoch. That is, the
-     * time at which this Fpnv token was issued and should start to be considered
+     * The PhoneNumberVerification token's issued-at time, in seconds since the Unix epoch. That is, the
+     * time at which this PhoneNumberVerification token was issued and should start to be considered
      * valid.
      */
     iat: number;
@@ -67,9 +67,9 @@ export interface FpnvToken {
     /**
      * The corresponding user's phone number.
      * This value is not actually one of the JWT token claims. It is added as a
-     * convenience, and is set as the value of the {@link FpnvToken.sub} property.
+     * convenience, and is set as the value of the {@link PhoneNumberVerificationToken.sub} property.
      */
-    getPhoneNumber(): string;
+    phoneNumber: string;
 
     /**
      * Other arbitrary claims included in the token.
@@ -77,5 +77,8 @@ export interface FpnvToken {
     [key: string]: any;
 }
 
-export { FpnvErrorCode, FirebaseFpnvError } from './fpnv-api-client-internal';
+export {
+  PhoneNumberVerificationErrorCode,
+  FirebasePhoneNumberVerificationError,
+} from './phone-number-verification-api-client-internal';
 

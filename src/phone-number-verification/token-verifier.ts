@@ -16,14 +16,14 @@
  */
 
 import { App } from '../app';
-import { FirebaseFpnvError, FpnvToken } from './fpnv-api';
+import { FirebasePhoneNumberVerificationError, PhoneNumberVerificationToken } from './phone-number-verification-api';
 import * as util from '../utils/index';
 import * as validator from '../utils/validator';
 import {
   DecodedToken, decodeJwt, JwtError, JwtErrorCode,
   PublicKeySignatureVerifier, ALGORITHM_ES256, SignatureVerifier,
 } from '../utils/jwt';
-import { FirebasePhoneNumberTokenInfo, FPNV_ERROR_CODE_MAPPING } from './fpnv-api-client-internal';
+import { FirebasePhoneNumberTokenInfo, FPNV_ERROR_CODE_MAPPING } from './phone-number-verification-api-client-internal';
 
 export class FirebasePhoneNumberTokenVerifier {
   private readonly shortNameArticle: string;
@@ -37,41 +37,42 @@ export class FirebasePhoneNumberTokenVerifier {
   ) {
 
     if (!validator.isURL(jwksUrl)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The provided public client certificate URL is an invalid URL.',
       );
     } else if (!validator.isURL(issuer)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The provided JWT issuer is an invalid URL.',
       );
     } else if (!validator.isNonNullObject(tokenInfo)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The provided JWT information is not an object or null.',
       );
     } else if (!validator.isURL(tokenInfo.url)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The provided JWT verification documentation URL is invalid.',
       );
     } else if (!validator.isNonEmptyString(tokenInfo.verifyApiName)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The JWT verify API name must be a non-empty string.',
       );
     } else if (!validator.isNonEmptyString(tokenInfo.jwtName)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The JWT public full name must be a non-empty string.',
       );
     } else if (!validator.isNonEmptyString(tokenInfo.shortName)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'The JWT public short name must be a non-empty string.',
       );
     }
+
     this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
 
     this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(jwksUrl, app.options.httpAgent);
@@ -79,9 +80,9 @@ export class FirebasePhoneNumberTokenVerifier {
     // Project ID is validated in the verification call.
   }
 
-  public async verifyJWT(jwtToken: string): Promise<FpnvToken> {
+  public async verifyJWT(jwtToken: string): Promise<PhoneNumberVerificationToken> {
     if (!validator.isString(jwtToken)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN,
         `First argument to ${this.tokenInfo.verifyApiName} must be a string.`,
       );
@@ -89,22 +90,21 @@ export class FirebasePhoneNumberTokenVerifier {
 
     const projectId = await this.ensureProjectId();
     const decoded = await this.decodeAndVerify(jwtToken, projectId);
-    const decodedIdToken = decoded.payload as FpnvToken;
-    Object.defineProperty(decodedIdToken, 'getPhoneNumber', {
-      value: () => decodedIdToken.sub,
-      enumerable: false,
-    });
+    const decodedIdToken = decoded.payload as PhoneNumberVerificationToken;
+    decodedIdToken.phoneNumber = decodedIdToken.sub;
     return decodedIdToken;
   }
+
 
   private async ensureProjectId(): Promise<string> {
     const projectId = await util.findProjectId(this.app);
     if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseFpnvError(
+      throw new FirebasePhoneNumberVerificationError(
         FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
         'Must initialize app with a cert credential or set your Firebase project ID as the ' +
         `GOOGLE_CLOUD_PROJECT environment variable to call ${this.tokenInfo.verifyApiName}.`);
     }
+
     return projectId;
   }
 
@@ -128,10 +128,11 @@ export class FirebasePhoneNumberTokenVerifier {
         const errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed ` +
           `the entire string JWT which represents ${this.shortNameArticle} ` +
           `${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
-        throw new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        throw new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
           errorMessage);
       }
-      throw new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, err.message);
+      throw new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, err.message);
+
     }
   }
 
@@ -178,7 +179,7 @@ export class FirebasePhoneNumberTokenVerifier {
     }
 
     if (errorMessage) {
-      throw new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
+      throw new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
     }
   }
 
@@ -196,16 +197,17 @@ export class FirebasePhoneNumberTokenVerifier {
     if (error.code === JwtErrorCode.TOKEN_EXPIRED) {
       const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
         ` from your client app and try again. ${verifyJwtTokenDocsMessage}`;
-      return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.EXPIRED_TOKEN, errorMessage);
+      return new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.EXPIRED_TOKEN, errorMessage);
     } else if (error.code === JwtErrorCode.INVALID_SIGNATURE) {
       const errorMessage = `${this.tokenInfo.jwtName} has invalid signature. ${verifyJwtTokenDocsMessage}`;
-      return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
+      return new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
     } else if (error.code === JwtErrorCode.NO_MATCHING_KID) {
       const errorMessage = `${this.tokenInfo.jwtName} has "kid" claim which does not ` +
         `correspond to a known public key. Most likely the ${this.tokenInfo.shortName} ` +
         'is expired, so get a fresh token from your client app and try again.';
-      return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
+      return new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, errorMessage);
     }
-    return new FirebaseFpnvError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, error.message);
+    return new FirebasePhoneNumberVerificationError(FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT, error.message);
   }
+
 }

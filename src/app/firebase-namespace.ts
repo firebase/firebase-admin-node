@@ -19,7 +19,7 @@ import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules , remoteConfig, fpnv, AppOptions,
+  instanceId, installations, projectManagement, securityRules , remoteConfig, phoneNumberVerification, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getSdkVersion } from '../utils/index';
@@ -37,7 +37,7 @@ import ProjectManagement = projectManagement.ProjectManagement;
 import RemoteConfig = remoteConfig.RemoteConfig;
 import SecurityRules = securityRules.SecurityRules;
 import Storage = storage.Storage;
-import Fpnv = fpnv.Fpnv;
+import PhoneNumberVerification = phoneNumberVerification.PhoneNumberVerification;
 
 export interface FirebaseServiceNamespace <T> {
   (app?: App): T;
@@ -281,16 +281,18 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Gets the `Fpnv` service namespace. The returned namespace can be used to get the
-   * `Fpnv` service for the default app or an explicitly specified app.
+   * Gets the `PhoneNumberVerification` service namespace. The returned namespace can be used to get the
+   * `PhoneNumberVerification` service for the default app or an explicitly specified app.
    */
-  get fpnv(): FirebaseServiceNamespace<Fpnv> {
-    const fn: FirebaseServiceNamespace<Fpnv> = (app?: App) => {
-      return this.ensureApp(app).fpnv();
+  get phoneNumberVerification(): FirebaseServiceNamespace<PhoneNumberVerification> {
+    const fn: FirebaseServiceNamespace<PhoneNumberVerification> = (app?: App) => {
+      return this.ensureApp(app).phoneNumberVerification();
     };
-    const fpnv = require('../fpnv/fpnv').Fpnv;
-    return Object.assign(fn, { Fpnv: fpnv });
+    const phoneNumberVerification = require(
+      '../phone-number-verification/phone-number-verification').PhoneNumberVerification;
+    return Object.assign(fn, { PhoneNumberVerification: phoneNumberVerification });
   }
+
 
   // TODO: Change the return types to app.App in the following methods.
 
@@ -410,10 +412,11 @@ function extendApp(app: AppCore): App {
     return fn(app);
   };
 
-  result.fpnv = () => {
-    const fn = require('../fpnv/index').getFirebasePnv;
+  result.phoneNumberVerification = () => {
+    const fn = require('../phone-number-verification/index').getPhoneNumberVerification;
     return fn(app);
   };
+
 
   (result as any).__extended = true;
   return result;

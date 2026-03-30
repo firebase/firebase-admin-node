@@ -16,26 +16,26 @@
  */
 
 import { App } from '../app';
-import { FpnvToken } from './fpnv-api';
+import { PhoneNumberVerificationToken } from './phone-number-verification-api';
 import { FirebasePhoneNumberTokenVerifier } from './token-verifier';
-import { JWKS_URL, PN_TOKEN_INFO } from './fpnv-api-client-internal';
+import { JWKS_URL, PN_TOKEN_INFO } from './phone-number-verification-api-client-internal';
 
 /**
- * Fpnv service bound to the provided app.
+ * PhoneNumberVerification service bound to the provided app.
  */
-export class Fpnv {
+export class PhoneNumberVerification {
   private readonly appInternal: App;
-  private readonly fpnvVerifier: FirebasePhoneNumberTokenVerifier;
+  private readonly phoneNumberVerificationVerifier: FirebasePhoneNumberTokenVerifier;
 
   /**
-   * @param app - The app for this `Fpnv` service.
+   * @param app - The app for this `PhoneNumberVerification` service.
    * @constructor
    * @internal
    */
   constructor(app: App) {
 
     this.appInternal = app;
-    this.fpnvVerifier = new FirebasePhoneNumberTokenVerifier(
+    this.phoneNumberVerificationVerifier = new FirebasePhoneNumberTokenVerifier(
       JWKS_URL,
       'https://fpnv.googleapis.com/projects/',
       PN_TOKEN_INFO,
@@ -44,21 +44,22 @@ export class Fpnv {
   }
 
   /**
-   * Returns the app associated with this `Fpnv` instance.
+   * Returns the app associated with this `PhoneNumberVerification` instance.
    *
-   * @returns The app associated with this `Fpnv` instance.
+   * @returns The app associated with this `PhoneNumberVerification` instance.
    */
   get app(): App {
     return this.appInternal;
   }
 
   /**
-   * Verifies a Firebase Phone Number Verification token (FPNV JWT).
+   * Verifies a Firebase Phone Number Verification token (JWT).
    *
-   * @param fpnvJwt - The FPNV JWT string to verify.
+   * @param jwt - The JWT string to verify.
    * @returns A promise that resolves with the decoded token.
    */
-  public verifyToken(fpnvJwt: string): Promise<FpnvToken> {
-    return this.fpnvVerifier.verifyJWT(fpnvJwt);
+  public verifyToken(jwt: string): Promise<PhoneNumberVerificationToken> {
+    return this.phoneNumberVerificationVerifier.verifyJWT(jwt);
   }
 }
+

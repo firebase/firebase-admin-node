@@ -44,9 +44,9 @@ export const FPNV_ERROR_CODE_MAPPING = {
   INVALID_ARGUMENT: 'invalid-argument',
   INVALID_TOKEN: 'invalid-token',
   EXPIRED_TOKEN: 'expired-token',
-} satisfies Record<string, FpnvErrorCode>;
+} satisfies Record<string, PhoneNumberVerificationErrorCode>;
 
-export type FpnvErrorCode =
+export type PhoneNumberVerificationErrorCode =
   | 'invalid-argument'
   | 'invalid-token'
   | 'expired-token'
@@ -58,14 +58,15 @@ export type FpnvErrorCode =
  * @param message - The error message.
  * @constructor
  */
-export class FirebaseFpnvError extends PrefixedFirebaseError {
-  constructor(code: FpnvErrorCode, message: string) {
-    super('fpnv', code, message);
+export class FirebasePhoneNumberVerificationError extends PrefixedFirebaseError {
+  constructor(code: PhoneNumberVerificationErrorCode, message: string) {
+    super('phone-number-verification', code, message);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:
     // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
     /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseFpnvError.prototype;
+    (this as any).__proto__ = FirebasePhoneNumberVerificationError.prototype;
   }
 }
+

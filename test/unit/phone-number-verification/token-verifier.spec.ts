@@ -24,8 +24,11 @@ import * as sinon from 'sinon';
 import { App } from '../../../src/app/index';
 import * as jwt from '../../../src/utils/jwt';
 import * as util from '../../../src/utils/index';
-import { FirebasePhoneNumberTokenVerifier } from '../../../src/fpnv/token-verifier';
-import { FirebasePhoneNumberTokenInfo, FPNV_ERROR_CODE_MAPPING } from '../../../src/fpnv/fpnv-api-client-internal';
+import { FirebasePhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
+import {
+  FirebasePhoneNumberTokenInfo,
+  FPNV_ERROR_CODE_MAPPING
+} from '../../../src/phone-number-verification/phone-number-verification-api-client-internal';
 import * as mocks from '../../resources/mocks';
 
 chai.use(chaiAsPromised);
@@ -44,7 +47,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
   const MOCK_ISSUER = 'https://fpnv.googleapis.com/projects/';
   const MOCK_PROJECT_NUMBER = '123456789012';
   const MOCK_PROJECT_ID = 'fpnv-team-test';
-  const MOCK_FPNV_PREFIX = 'fpnv';
+  const MOCK_FPNV_PREFIX = 'phone-number-verification';
 
 
   const MOCK_TOKEN_INFO: FirebasePhoneNumberTokenInfo = {
@@ -303,7 +306,7 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
     });
 
     describe('Success', () => {
-      it('should return the token with getPhoneNumber() method appended', async () => {
+      it('should return the token with phoneNumber property appended', async () => {
         decodeJwtStub.resolves({ header: VALID_HEADER, payload: VALID_PAYLOAD });
         signatureVerifierStub.verify.resolves();
 
@@ -313,10 +316,11 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
         expect(result.sub).to.equal(VALID_PAYLOAD.sub);
         expect(result.aud).to.deep.equal(VALID_PAYLOAD.aud);
 
-        // Check the dynamic method addition
-        expect(result).to.have.property('getPhoneNumber');
-        expect(result.getPhoneNumber()).to.equal(VALID_PAYLOAD.sub);
+        // Check the property
+        expect(result).to.have.property('phoneNumber');
+        expect(result.phoneNumber).to.equal(VALID_PAYLOAD.sub);
       });
     });
+
   });
 });

@@ -22,12 +22,12 @@ import * as sinon from 'sinon';
 
 import { App } from '../../../src/app/index';
 import * as mocks from '../../resources/mocks';
-import { Fpnv } from '../../../src/fpnv/fpnv';
-import { FirebasePhoneNumberTokenVerifier } from '../../../src/fpnv/token-verifier';
-import { FpnvToken } from '../../../src/fpnv/fpnv-api';
+import { PhoneNumberVerification } from '../../../src/phone-number-verification/phone-number-verification';
+import { FirebasePhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
+import { PhoneNumberVerificationToken } from '../../../src/phone-number-verification/phone-number-verification-api';
 
-describe('Fpnv Service', () => {
-  let fpnvService: Fpnv;
+describe('PhoneNumberVerification Service', () => {
+  let phoneNumberVerificationService: PhoneNumberVerification;
   let mockApp: App;
   let verifyJwtStub: sinon.SinonStub;
 
@@ -35,7 +35,7 @@ describe('Fpnv Service', () => {
     mockApp = mocks.app();
     verifyJwtStub = sinon.stub(FirebasePhoneNumberTokenVerifier.prototype, 'verifyJWT');
 
-    fpnvService = new Fpnv(mockApp);
+    phoneNumberVerificationService = new PhoneNumberVerification(mockApp);
   });
 
   afterEach(() => {
@@ -44,20 +44,20 @@ describe('Fpnv Service', () => {
   });
 
   describe('Constructor', () => {
-    it('should be an instance of Fpnv', () => {
-      expect(fpnvService).to.be.instanceOf(Fpnv);
+    it('should be an instance of PhoneNumberVerification', () => {
+      expect(phoneNumberVerificationService).to.be.instanceOf(PhoneNumberVerification);
     });
   });
 
   describe('get app()', () => {
     it('should return the app instance provided in the constructor', () => {
-      expect(fpnvService.app).to.equal(mockApp);
+      expect(phoneNumberVerificationService.app).to.equal(mockApp);
     });
   });
 
   describe('verifyToken()', () => {
     const mockTokenString = 'eyJh...mock.jwt...token';
-    const mockDecodedToken: FpnvToken = {
+    const mockDecodedToken: PhoneNumberVerificationToken = {
       iss: 'https://fpnv.googleapis.com/projects/1234567890',
       aud: ['1234567890', 'my-project-id'],
       exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
@@ -65,15 +65,13 @@ describe('Fpnv Service', () => {
       sub: '+15555550100',                       // Phone number
       jti: 'unique-token-id-123',
       nonce: 'random-nonce-string',
-      getPhoneNumber() {
-        return this.sub;
-      },
+      phoneNumber: '+15555550100',
     };
 
     it('should call the internal verifier with the provided JWT string', async () => {
       verifyJwtStub.resolves(mockDecodedToken);
 
-      await fpnvService.verifyToken(mockTokenString);
+      await phoneNumberVerificationService.verifyToken(mockTokenString);
 
       expect(verifyJwtStub.calledOnce).to.be.true;
       expect(verifyJwtStub.calledWith(mockTokenString)).to.be.true;
@@ -82,7 +80,7 @@ describe('Fpnv Service', () => {
     it('should return the decoded token object on success', async () => {
       verifyJwtStub.resolves(mockDecodedToken);
 
-      const result = await fpnvService.verifyToken(mockTokenString);
+      const result = await phoneNumberVerificationService.verifyToken(mockTokenString);
 
       expect(result).to.equal(mockDecodedToken);
     });
@@ -92,7 +90,7 @@ describe('Fpnv Service', () => {
       verifyJwtStub.rejects(mockError);
 
       try {
-        await fpnvService.verifyToken(mockTokenString);
+        await phoneNumberVerificationService.verifyToken(mockTokenString);
         // If we reach here, the test failed
         expect.fail('Should have thrown an error');
       } catch (error) {
@@ -100,4 +98,5 @@ describe('Fpnv Service', () => {
       }
     });
   });
+
 });
