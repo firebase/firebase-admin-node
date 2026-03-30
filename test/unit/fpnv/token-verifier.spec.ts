@@ -236,6 +236,17 @@ describe('FirebasePhoneNumberTokenVerifier', () => {
         setupDecode({}, { sub: '' });
         await expect(verifier.verifyJWT('token')).to.be.rejectedWith('empty "sub"');
       });
+
+      it('should throw if payload is missing', async () => {
+        decodeJwtStub.resolves({ header: VALID_HEADER, payload: undefined });
+        await expect(verifier.verifyJWT('token')).to.be.rejectedWith('has no payload');
+      });
+
+      it('should throw if "aud" does not match the current app projectId', async () => {
+        findProjectIdStub.resolves('some-other-project-id');
+        setupDecode(); // uses VALID_PAYLOAD which has 'fpnv-team-test'
+        await expect(verifier.verifyJWT('token')).to.be.rejectedWith('has incorrect "aud"');
+      });
     });
 
     describe('Signature Verification', () => {

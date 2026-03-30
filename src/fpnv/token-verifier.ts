@@ -76,7 +76,7 @@ export class FirebasePhoneNumberTokenVerifier {
 
     this.signatureVerifier = PublicKeySignatureVerifier.withJwksUrl(jwksUrl, app.options.httpAgent);
 
-    // For backward compatibility, the project ID is validated in the verification call.
+    // Project ID is validated in the verification call.
   }
 
   public async verifyJWT(jwtToken: string): Promise<FpnvToken> {
@@ -87,10 +87,13 @@ export class FirebasePhoneNumberTokenVerifier {
       );
     }
 
-    await this.ensureProjectId();
-    const decoded = await this.decodeAndVerify(jwtToken);
+    const projectId = await this.ensureProjectId();
+    const decoded = await this.decodeAndVerify(jwtToken, projectId);
     const decodedIdToken = decoded.payload as FpnvToken;
-    decodedIdToken.getPhoneNumber = () => decodedIdToken.sub;
+    Object.defineProperty(decodedIdToken, 'getPhoneNumber', {
+      value: () => decodedIdToken.sub,
+      enumerable: false,
+    });
     return decodedIdToken;
   }
 
@@ -107,9 +110,10 @@ export class FirebasePhoneNumberTokenVerifier {
 
   private async decodeAndVerify(
     token: string,
+    projectId: string
   ): Promise<DecodedToken> {
     const decodedToken = await this.safeDecode(token);
-    this.verifyContent(decodedToken);
+    this.verifyContent(decodedToken, projectId);
     await this.verifySignature(token);
     return decodedToken;
   }
@@ -133,6 +137,7 @@ export class FirebasePhoneNumberTokenVerifier {
 
   private verifyContent(
     fullDecodedToken: DecodedToken,
+    projectId: string
   ): void {
     const header = fullDecodedToken && fullDecodedToken.header;
     const payload = fullDecodedToken && fullDecodedToken.payload;
@@ -141,11 +146,12 @@ export class FirebasePhoneNumberTokenVerifier {
       'Firebase project as the service account used to authenticate this SDK.';
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
+    const scopedProjectId = `${this.issuer}${projectId}`;
 
     let errorMessage: string | undefined;
 
     // JWT Header
-    if (typeof header.kid === 'undefined') {
+    if (!header || typeof header.kid === 'undefined') {
       errorMessage = `${this.tokenInfo.jwtName} has no "kid" claim.`;
       errorMessage += verifyJwtTokenDocsMessage;
     } else if (header.alg !== ALGORITHM_ES256) {
@@ -156,13 +162,15 @@ export class FirebasePhoneNumberTokenVerifier {
         `"${header.typ}". ${verifyJwtTokenDocsMessage}`;
     }
     // FPNV Token
-    else if (!validator.isNonEmptyString(payload.iss)) {
+    else if (!payload) {
+      errorMessage = `${this.tokenInfo.jwtName} has no payload. ${verifyJwtTokenDocsMessage}`;
+    } else if (typeof payload.iss !== 'string' || !payload.iss.startsWith(this.issuer)) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
         `an issuer starting with "${this.issuer}" but got "${payload.iss}".`
         + ` ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
-    } else if (!validator.isNonEmptyArray(payload.aud) || !payload.aud.includes(payload.iss)) {
+    } else if (!validator.isNonEmptyArray(payload.aud) || !payload.aud.includes(scopedProjectId)) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected ` +
-        `"${payload.iss}" to be one of "${payload.aud}". ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
+        `"${scopedProjectId}" to be one of "${payload.aud}". ${projectIdMatchMessage} ${verifyJwtTokenDocsMessage}`;
     } else if (typeof payload.sub !== 'string') {
       errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim. ${verifyJwtTokenDocsMessage}`;
     } else if (payload.sub === '') {
