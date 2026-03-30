@@ -473,12 +473,12 @@ export type FunctionsErrorCode =
 
 /**
  * Firebase Functions error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseFunctionsError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('functions', info.code, message || info.message, info.httpResponse, info.cause);
 

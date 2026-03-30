@@ -29,12 +29,12 @@ export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
 
 /**
  * Firebase Eventarc error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseEventarcError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('eventarc', info.code, message || info.message, info.httpResponse, info.cause);
   }

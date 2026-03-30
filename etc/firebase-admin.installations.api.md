@@ -24,27 +24,23 @@ export class Installations {
 }
 
 // @public (undocumented)
-export class InstallationsClientErrorCode {
-    // (undocumented)
-    static API_ERROR: {
+export const InstallationsClientErrorCode: {
+    INVALID_ARGUMENT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
+    INVALID_PROJECT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_INSTALLATION_ID: {
+    INVALID_INSTALLATION_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROJECT_ID: {
+    API_ERROR: {
         code: string;
         message: string;
     };
-}
+};
 
 ```

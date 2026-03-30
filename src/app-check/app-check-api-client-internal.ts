@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { AppCheckToken } from './app-check-api'
+import { AppCheckToken } from './app-check-api';
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
@@ -207,7 +207,7 @@ export class AppCheckApiClient {
     return {
       token,
       ttlMillis
-    }
+    };
   }
 
   /**
@@ -242,7 +242,7 @@ interface AppCheckApiError {
   status?: string;
 }
 
-export const APP_CHECK_ERROR_CODE_MAPPING: { [key: string]: AppCheckErrorCode } = {
+export const APP_CHECK_ERROR_CODE_MAPPING: { [key: string]: AppCheckErrorCode; } = {
   ABORTED: 'aborted',
   INVALID_ARGUMENT: 'invalid-argument',
   INVALID_CREDENTIAL: 'invalid-credential',
@@ -266,12 +266,12 @@ export type AppCheckErrorCode =
 
 /**
  * Firebase App Check error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseAppCheckError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('app-check', info.code, message || info.message, info.httpResponse, info.cause);
 

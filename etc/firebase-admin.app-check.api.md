@@ -46,7 +46,8 @@ export interface DecodedAppCheckToken {
 //
 // @public
 export class FirebaseAppCheckError extends PrefixedFirebaseError {
-    constructor(code: AppCheckErrorCode, message: string);
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public

@@ -23,6 +23,14 @@ export interface DelayDelivery {
 // @public
 export type DeliverySchedule = DelayDelivery | AbsoluteDelivery;
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseFunctionsError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // @public
 export class Functions {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -31,6 +39,9 @@ export class Functions {
     readonly app: App;
     taskQueue<Args = Record<string, any>>(functionName: string, extensionId?: string): TaskQueue<Args>;
 }
+
+// @public (undocumented)
+export type FunctionsErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'failed-precondition' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'task-already-exists';
 
 // @public
 export function getFunctions(app?: App): Functions;

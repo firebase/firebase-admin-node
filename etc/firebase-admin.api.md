@@ -221,6 +221,18 @@ export namespace database {
 }
 
 // @public
+export interface ErrorInfo {
+    // (undocumented)
+    cause?: Error;
+    // (undocumented)
+    code: string;
+    // (undocumented)
+    httpResponse?: HttpResponse;
+    // (undocumented)
+    message: string;
+}
+
+// @public
 export interface FirebaseArrayIndexError {
     error: FirebaseError;
     index: number;
@@ -231,8 +243,6 @@ export interface FirebaseError {
     // (undocumented)
     cause?: Error;
     code: string;
-    // Warning: (ae-forgotten-export) The symbol "HttpResponse" needs to be exported by the entry point default-namespace.d.ts
-    //
     // (undocumented)
     httpResponse?: HttpResponse;
     message: string;
@@ -242,7 +252,6 @@ export interface FirebaseError {
 
 // @public
 export class FirebaseError extends Error implements FirebaseError {
-    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point default-namespace.d.ts
     constructor(errorInfo: ErrorInfo);
 }
 
@@ -309,6 +318,18 @@ export interface GoogleOAuthAccessToken {
     access_token: string;
     // (undocumented)
     expires_in: number;
+}
+
+// @public (undocumented)
+export interface HttpResponse {
+    // (undocumented)
+    data?: any;
+    // (undocumented)
+    headers: {
+        [key: string]: any;
+    };
+    // (undocumented)
+    status: number;
 }
 
 // @public (undocumented)

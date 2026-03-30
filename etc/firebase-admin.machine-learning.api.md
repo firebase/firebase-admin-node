@@ -6,6 +6,14 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export class FirebaseMachineLearningError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // @public (undocumented)
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
     // (undocumented)
@@ -43,6 +51,9 @@ export class MachineLearning {
     unpublishModel(modelId: string): Promise<Model>;
     updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 }
+
+// @public (undocumented)
+export type MachineLearningErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-server-response' | 'not-found' | 'resource-exhausted' | 'service-unavailable' | 'unknown-error' | 'cancelled' | 'deadline-exceeded' | 'permission-denied' | 'failed-precondition' | 'aborted' | 'out-of-range' | 'data-loss' | 'unauthenticated';
 
 // @public
 export class Model {

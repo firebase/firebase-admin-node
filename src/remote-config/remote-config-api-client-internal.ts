@@ -509,12 +509,12 @@ export type RemoteConfigErrorCode =
 
 /**
  * Firebase Remote Config error code structure. This extends PrefixedFirebaseError.
- *
- * @param {RemoteConfigErrorCode} code The error code.
- * @param {string} message The error message.
- * @constructor
  */
 export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('remote-config', info.code, message || info.message, info.httpResponse, info.cause);
   }

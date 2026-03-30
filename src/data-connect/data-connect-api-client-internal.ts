@@ -699,12 +699,12 @@ export type DataConnectErrorCode =
 
 /**
  * Firebase Data Connect error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseDataConnectError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('data-connect', info.code, message || info.message, info.httpResponse, info.cause);
 

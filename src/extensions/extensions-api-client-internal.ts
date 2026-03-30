@@ -136,12 +136,12 @@ type State = 'STATE_UNSPECIFIED' |
 export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseExtensionsError extends PrefixedFirebaseError {
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
 

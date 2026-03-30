@@ -36,6 +36,7 @@ export type MachineLearningErrorCode =
   | 'unauthenticated';
 
 export class FirebaseMachineLearningError extends PrefixedFirebaseError {
+  /** @internal */
   public static fromOperationError(code: number, message: string): FirebaseMachineLearningError {
     switch (code) {
     case 1: return new FirebaseMachineLearningError({ code: 'cancelled', message });

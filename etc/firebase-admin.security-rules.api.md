@@ -6,6 +6,14 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export class FirebaseSecurityRulesError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -55,5 +63,8 @@ export class SecurityRules {
     releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
     releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
 }
+
+// @public (undocumented)
+export type SecurityRulesErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-server-response' | 'not-found' | 'resource-exhausted' | 'service-unavailable' | 'unknown-error';
 
 ```

@@ -121,7 +121,7 @@ export interface GoogleOAuthAccessToken {
 // @public (undocumented)
 export interface HttpResponse {
     // (undocumented)
-    data?: string;
+    data?: any;
     // (undocumented)
     headers: {
         [key: string]: any;

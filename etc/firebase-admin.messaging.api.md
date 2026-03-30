@@ -200,103 +200,84 @@ export class Messaging {
 }
 
 // @public
-export class MessagingClientErrorCode {
-    // (undocumented)
-    static AUTHENTICATION_ERROR: {
+export const MessagingClientErrorCode: {
+    INVALID_ARGUMENT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static DEVICE_MESSAGE_RATE_EXCEEDED: {
+    INVALID_RECIPIENT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INTERNAL_ERROR: {
+    INVALID_PAYLOAD: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
+    INVALID_DATA_PAYLOAD_KEY: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_DATA_PAYLOAD_KEY: {
+    PAYLOAD_SIZE_LIMIT_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_OPTIONS: {
+    INVALID_OPTIONS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PACKAGE_NAME: {
+    INVALID_REGISTRATION_TOKEN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PAYLOAD: {
+    REGISTRATION_TOKEN_NOT_REGISTERED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_RECIPIENT: {
+    MISMATCHED_CREDENTIAL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_REGISTRATION_TOKEN: {
+    INVALID_PACKAGE_NAME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MESSAGE_RATE_EXCEEDED: {
+    DEVICE_MESSAGE_RATE_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISMATCHED_CREDENTIAL: {
+    TOPICS_MESSAGE_RATE_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static PAYLOAD_SIZE_LIMIT_EXCEEDED: {
+    MESSAGE_RATE_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static REGISTRATION_TOKEN_NOT_REGISTERED: {
+    THIRD_PARTY_AUTH_ERROR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static SERVER_UNAVAILABLE: {
+    TOO_MANY_TOPICS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static THIRD_PARTY_AUTH_ERROR: {
+    AUTHENTICATION_ERROR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static TOO_MANY_TOPICS: {
+    SERVER_UNAVAILABLE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static TOPICS_MESSAGE_RATE_EXCEEDED: {
+    INTERNAL_ERROR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNKNOWN_ERROR: {
+    UNKNOWN_ERROR: {
         code: string;
         message: string;
     };
-}
+};
 
 // @public
 export interface MessagingOptions {
