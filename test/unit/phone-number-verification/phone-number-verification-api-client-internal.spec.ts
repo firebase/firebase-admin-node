@@ -21,7 +21,7 @@ import { expect } from 'chai';
 import {
   FirebasePhoneNumberVerificationError,
   JWKS_URL,
-  PN_TOKEN_INFO,
+  FPNV_TOKEN_INFO,
   FPNV_ERROR_CODE_MAPPING
 } from '../../../src/phone-number-verification/phone-number-verification-api-client-internal';
 import { PrefixedFirebaseError, FirebaseError } from '../../../src/utils/error';
@@ -35,11 +35,11 @@ describe('FPNV Constants and Error Class', () => {
       expect(JWKS_URL).to.equal('https://fpnv.googleapis.com/v1beta/jwks');
     });
 
-    it('should have the correct structure and values for PN_TOKEN_INFO', () => {
-      expect(PN_TOKEN_INFO).to.be.an('object');
-      expect(PN_TOKEN_INFO).to.have.all.keys('url', 'verifyApiName', 'jwtName', 'shortName', 'typ');
-      expect(PN_TOKEN_INFO.shortName).to.equal('FPNV token');
-      expect(PN_TOKEN_INFO.typ).to.equal('JWT');
+    it('should have the correct structure and values for FPNV_TOKEN_INFO', () => {
+      expect(FPNV_TOKEN_INFO).to.be.an('object');
+      expect(FPNV_TOKEN_INFO).to.have.all.keys('url', 'verifyApiName', 'jwtName', 'shortName', 'typ');
+      expect(FPNV_TOKEN_INFO.shortName).to.equal('FPNV token');
+      expect(FPNV_TOKEN_INFO.typ).to.equal('JWT');
     });
 
     it('should have the correct structure and values for FPNV_ERROR_CODE_MAPPING', () => {
