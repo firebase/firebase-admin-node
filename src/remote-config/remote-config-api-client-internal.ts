@@ -16,8 +16,8 @@
 
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { 
-  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient,RequestResponse
+import {
+  HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 import * as utils from '../utils/index';
@@ -119,7 +119,7 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
+  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean; }): Promise<RemoteConfigTemplate> {
     template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force === true) {
@@ -480,7 +480,7 @@ interface RemoteConfigApiError {
   status?: string;
 }
 
-const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
+const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode; } = {
   ABORTED: 'aborted',
   ALREADY_EXISTS: 'already-exists',
   INVALID_ARGUMENT: 'invalid-argument',
@@ -494,6 +494,9 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   UNKNOWN: 'unknown-error',
 };
 
+/**
+ * Remote Config client error codes and their default messages.
+ */
 export type RemoteConfigErrorCode =
   'aborted'
   | 'already-exists'

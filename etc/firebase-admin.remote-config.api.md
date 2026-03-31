@@ -217,7 +217,7 @@ export interface RemoteConfigCondition {
     tagColor?: TagColor;
 }
 
-// @public (undocumented)
+// @public
 export type RemoteConfigErrorCode = 'aborted' | 'already-exists' | 'failed-precondition' | 'internal-error' | 'invalid-argument' | 'not-found' | 'out-of-range' | 'permission-denied' | 'resource-exhausted' | 'unauthenticated' | 'unknown-error';
 
 // @public

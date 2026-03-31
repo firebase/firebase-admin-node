@@ -133,6 +133,9 @@ type State = 'STATE_UNSPECIFIED' |
   'PROCESSING_WARNING' |
   'PROCESSING_FAILED';
 
+/**
+ * Extensions client error codes and their default messages.
+ */
 export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
@@ -145,10 +148,5 @@ export class FirebaseExtensionsError extends PrefixedFirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseExtensionsError.prototype;
   }
 }

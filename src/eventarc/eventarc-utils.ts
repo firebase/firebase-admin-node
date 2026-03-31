@@ -25,6 +25,9 @@ import * as validator from '../utils/validator';
 const TOP_LEVEL_CE_ATTRS: string[] = 
     ['id', 'type', 'specversion', 'source', 'data', 'time', 'datacontenttype', 'subject'];
 
+/**
+ * Eventarc client error codes and their default messages.
+ */
 export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
 
 /**
@@ -37,6 +40,7 @@ export class FirebaseEventarcError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     super('eventarc', info.code, message || info.message, info.httpResponse, info.cause);
+
   }
 }
 

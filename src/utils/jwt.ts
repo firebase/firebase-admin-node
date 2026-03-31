@@ -353,7 +353,6 @@ export function decodeJwt(jwtToken: string): Promise<DecodedToken> {
 export class JwtError extends Error {
   constructor(readonly code: JwtErrorCode, readonly message: string) {
     super(message);
-    (this as any).__proto__ = JwtError.prototype;
   }
 }
 

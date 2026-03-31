@@ -38,7 +38,7 @@ export class DataConnect {
     upsertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
 }
 
-// @public (undocumented)
+// @public
 export type DataConnectErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'query-error';
 
 // @public

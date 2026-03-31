@@ -686,6 +686,9 @@ export const DATA_CONNECT_ERROR_CODE_MAPPING: { [key: string]: DataConnectErrorC
   QUERY_ERROR: 'query-error',
 };
 
+/**
+ * Data Connect client error codes and their default messages.
+ */
 export type DataConnectErrorCode =
   'aborted'
   | 'invalid-argument'
@@ -698,7 +701,7 @@ export type DataConnectErrorCode =
   | 'query-error';
 
 /**
- * Firebase Data Connect error code structure. This extends PrefixedFirebaseError.
+ * Firebase Data Connect error type. This extends PrefixedFirebaseError.
  */
 export class FirebaseDataConnectError extends PrefixedFirebaseError {
   /**
@@ -708,10 +711,5 @@ export class FirebaseDataConnectError extends PrefixedFirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     super('data-connect', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseDataConnectError.prototype;
   }
 }

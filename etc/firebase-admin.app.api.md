@@ -65,13 +65,9 @@ export function deleteApp(app: App): Promise<void>;
 
 // @public
 export interface ErrorInfo {
-    // (undocumented)
     cause?: Error;
-    // (undocumented)
     code: string;
-    // (undocumented)
     httpResponse?: HttpResponse;
-    // (undocumented)
     message: string;
 }
 
@@ -79,6 +75,7 @@ export interface ErrorInfo {
 //
 // @public
 export class FirebaseAppError extends PrefixedFirebaseError {
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public
@@ -89,10 +86,8 @@ export interface FirebaseArrayIndexError {
 
 // @public
 export interface FirebaseError {
-    // (undocumented)
     cause?: Error;
     code: string;
-    // (undocumented)
     httpResponse?: HttpResponse;
     message: string;
     stack?: string;
@@ -118,15 +113,12 @@ export interface GoogleOAuthAccessToken {
     expires_in: number;
 }
 
-// @public (undocumented)
+// @public
 export interface HttpResponse {
-    // (undocumented)
     data?: any;
-    // (undocumented)
     headers: {
         [key: string]: any;
     };
-    // (undocumented)
     status: number;
 }
 

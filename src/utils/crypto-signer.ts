@@ -226,11 +226,6 @@ export class CryptoSignerError extends Error {
   constructor(private errorInfo: ExtendedErrorInfo) {
     super(errorInfo.message);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = CryptoSignerError.prototype;
   }
 
   /** @returns The error code. */

@@ -16,7 +16,7 @@ export class AppCheck {
     verifyToken(appCheckToken: string, options?: VerifyAppCheckTokenOptions): Promise<VerifyAppCheckTokenResponse>;
 }
 
-// @public (undocumented)
+// @public
 export type AppCheckErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'app-check-token-expired' | 'unknown-error';
 
 // @public

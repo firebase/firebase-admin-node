@@ -40,7 +40,7 @@ export class Functions {
     taskQueue<Args = Record<string, any>>(functionName: string, extensionId?: string): TaskQueue<Args>;
 }
 
-// @public (undocumented)
+// @public
 export type FunctionsErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'failed-precondition' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'task-already-exists';
 
 // @public

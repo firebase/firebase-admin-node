@@ -52,7 +52,7 @@ export class MachineLearning {
     updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 }
 
-// @public (undocumented)
+// @public
 export type MachineLearningErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-server-response' | 'not-found' | 'resource-exhausted' | 'service-unavailable' | 'unknown-error' | 'cancelled' | 'deadline-exceeded' | 'permission-denied' | 'failed-precondition' | 'aborted' | 'out-of-range' | 'data-loss' | 'unauthenticated';
 
 // @public

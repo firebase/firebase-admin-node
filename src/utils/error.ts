@@ -19,9 +19,15 @@ import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
 import { RequestResponseError } from './api-request';
 
+/**
+ * Represents the raw HTTP response object.
+ */
 export interface HttpResponse {
+  /** The HTTP status code of the response. */
   status: number;
+  /** The HTTP headers of the response. */
   headers: { [key: string]: any; };
+  /** The response data payload. */
   data?: any;
 }
 
@@ -29,9 +35,13 @@ export interface HttpResponse {
  * Defines error info type. This includes a code and message string.
  */
 export interface ErrorInfo {
+  /** The string error code. */
   code: string;
+  /** The error message. */
   message: string;
+  /** The HTTP response associated with this error, if any. */
   httpResponse?: HttpResponse;
+  /** The original wrapped error that triggered this error, if any. */
   cause?: Error;
 }
 
@@ -76,7 +86,14 @@ export interface FirebaseError {
    */
   stack?: string;
 
+  /**
+   * The HTTP response associated with this error, if any.
+   */
   httpResponse?: HttpResponse;
+
+  /**
+   * The original wrapped error that triggered this error, if any.
+   */
   cause?: Error;
 
   /**
@@ -105,11 +122,6 @@ export class FirebaseError extends Error implements FirebaseError {
       this.httpResponse = errorInfo.httpResponse;
     }
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseError.prototype;
   }
 
   /** @returns The object representation of the error. */
@@ -155,11 +167,6 @@ export class PrefixedFirebaseError extends FirebaseError {
     }
     super(errorInfo);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = PrefixedFirebaseError.prototype;
   }
 
   /**
@@ -181,17 +188,11 @@ export class FirebaseAppError extends PrefixedFirebaseError {
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('app', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseAppError.prototype;
   }
 }
 
@@ -235,17 +236,11 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('auth', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseAuthError.prototype;
   }
 }
 
@@ -257,7 +252,6 @@ export class FirebaseDatabaseError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
@@ -278,7 +272,6 @@ export class FirebaseFirestoreError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
@@ -300,7 +293,6 @@ export class FirebaseInstanceIdError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
@@ -310,7 +302,6 @@ export class FirebaseInstanceIdError extends FirebaseError {
       httpResponse: info.httpResponse,
       cause: info.cause
     });
-    (this as any).__proto__ = FirebaseInstanceIdError.prototype;
   }
 }
 
@@ -323,7 +314,6 @@ export class FirebaseInstallationsError extends FirebaseError {
    * @param info - The error code info.
    * @param message - The error message. This will override the default
    *     message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
@@ -333,7 +323,6 @@ export class FirebaseInstallationsError extends FirebaseError {
       httpResponse: info.httpResponse,
       cause: info.cause
     });
-    (this as any).__proto__ = FirebaseInstallationsError.prototype;
   }
 }
 
@@ -410,17 +399,11 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * 
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('messaging', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseMessagingError.prototype;
   }
 }
 
@@ -431,18 +414,12 @@ export class FirebaseMessagingSessionError extends FirebaseMessagingError {
      * @param info - The error code info.
      * @param message - The error message. This will override the default message if provided.
      * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
-     * @internal
      */
   constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
     // Override default message if custom message provided.
     super(info, message || info.message);
     this.pendingBatchResponse = pendingBatchResponse;
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseMessagingSessionError.prototype;
   }
 
   /** @returns The object representation of the error. */
@@ -462,17 +439,11 @@ export class FirebaseProjectManagementError extends PrefixedFirebaseError {
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
-   * @internal
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('project-management', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseProjectManagementError.prototype;
   }
 }
 

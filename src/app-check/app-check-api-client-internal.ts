@@ -253,6 +253,9 @@ export const APP_CHECK_ERROR_CODE_MAPPING: { [key: string]: AppCheckErrorCode; }
   UNKNOWN: 'unknown-error',
 };
 
+/**
+ * App Check client error codes and their default messages.
+ */
 export type AppCheckErrorCode =
   'aborted'
   | 'invalid-argument'
@@ -265,7 +268,7 @@ export type AppCheckErrorCode =
   | 'unknown-error';
 
 /**
- * Firebase App Check error code structure. This extends PrefixedFirebaseError.
+ * Firebase App Check error type. This extends PrefixedFirebaseError.
  */
 export class FirebaseAppCheckError extends PrefixedFirebaseError {
   /**
@@ -275,10 +278,5 @@ export class FirebaseAppCheckError extends PrefixedFirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     super('app-check', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseAppCheckError.prototype;
   }
 }

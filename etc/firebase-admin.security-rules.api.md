@@ -64,7 +64,7 @@ export class SecurityRules {
     releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
 }
 
-// @public (undocumented)
+// @public
 export type SecurityRulesErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-server-response' | 'not-found' | 'resource-exhausted' | 'service-unavailable' | 'unknown-error';
 
 ```

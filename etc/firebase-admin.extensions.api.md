@@ -15,7 +15,7 @@ export class Extensions {
     runtime(): Runtime;
 }
 
-// @public (undocumented)
+// @public
 export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts

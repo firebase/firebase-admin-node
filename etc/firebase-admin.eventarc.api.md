@@ -43,7 +43,7 @@ export class Eventarc {
     channel(options?: ChannelOptions): Channel;
 }
 
-// @public (undocumented)
+// @public
 export type EventarcErrorCode = 'unknown-error' | 'invalid-argument';
 
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts

@@ -104,6 +104,8 @@ export { Filter }
 //
 // @public
 export class FirebaseFirestoreError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 export { Firestore }
