@@ -279,8 +279,6 @@ export class FirebaseNamespace {
     return Object.assign(fn, { AppCheck: appCheck });
   }
 
-
-
   // TODO: Change the return types to app.App in the following methods.
 
   /**
@@ -398,8 +396,6 @@ function extendApp(app: AppCore): App {
     const fn = require('../remote-config/index').getRemoteConfig;
     return fn(app);
   };
-
-
 
   (result as any).__extended = true;
   return result;

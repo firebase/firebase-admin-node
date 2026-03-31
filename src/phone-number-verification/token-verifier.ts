@@ -31,8 +31,8 @@ export class PhoneNumberTokenVerifier {
 
   constructor(
     jwksUrl: string,
-    private issuer: string,
-    private tokenInfo: FirebasePhoneNumberTokenInfo,
+    private readonly issuer: string,
+    private readonly tokenInfo: FirebasePhoneNumberTokenInfo,
     private readonly app: App
   ) {
 
