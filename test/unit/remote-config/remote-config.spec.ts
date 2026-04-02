@@ -628,6 +628,29 @@ describe('RemoteConfig', () => {
       });
     });
 
+    it('should throw if experiment exposure percent in a parameter group is out of range', () => {
+      sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (sourceTemplate.parameterGroups as any).new_menu.parameters.pumpkin_spice_season
+        .conditionalValues.android_en = {
+          experimentValue: { experimentId: 'exp_1', exposurePercent: 101, variantValue: [] },
+        };
+      const jsonString = JSON.stringify(sourceTemplate);
+      expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+        .to.throw('Experiment exposure percent must be between 0 and 100 (pumpkin_spice_season)');
+    });
+
+    it('should accept valid experiment exposure percent in a parameter group', () => {
+      [0, 50, 100].forEach((validExposurePercent) => {
+        sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+        (sourceTemplate.parameterGroups as any).new_menu.parameters.pumpkin_spice_season
+          .conditionalValues.android_en = {
+            experimentValue: { experimentId: 'exp_1', exposurePercent: validExposurePercent, variantValue: [] },
+          };
+        const jsonString = JSON.stringify(sourceTemplate);
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString)).to.not.throw();
+      });
+    });
+
     it('should succeed when a valid json string is provided', () => {
       const jsonString = JSON.stringify(REMOTE_CONFIG_RESPONSE);
       const newTemplate = remoteConfig.createTemplateFromJSON(jsonString);

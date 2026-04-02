@@ -244,7 +244,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       this.parameters = {};
     }
 
-    validateExperimentExposurePercents(this.parameters);
+    validateAllParameterExposures(this.parameters);
 
     if (typeof config.parameterGroups !== 'undefined') {
       if (!validator.isNonNullObject(config.parameterGroups)) {
@@ -255,6 +255,12 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       this.parameterGroups = config.parameterGroups;
     } else {
       this.parameterGroups = {};
+    }
+
+    for (const group of Object.values(this.parameterGroups)) {
+      if (validator.isNonNullObject(group) && validator.isNonNullObject(group.parameters)) {
+        validateAllParameterExposures(group.parameters);
+      }
     }
 
     if (typeof config.conditions !== 'undefined') {
@@ -451,7 +457,7 @@ class ServerConfigImpl implements ServerConfig {
   }
 }
 
-function validateExperimentExposurePercents(
+function validateAllParameterExposures(
   parameters: { [key: string]: RemoteConfigParameter }
 ): void {
   // Walk each parameter and validate any exposurePercent present in
