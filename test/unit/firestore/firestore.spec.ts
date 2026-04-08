@@ -28,7 +28,7 @@ import {
 } from '../../../src/app/credential-internal';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
 import { getSdkVersion } from '../../../src/utils/index';
-const DEFAULT_DATABASE_ID = '(default)';
+import { DEFAULT_DATABASE_ID } from '../../../src/firestore/index';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;

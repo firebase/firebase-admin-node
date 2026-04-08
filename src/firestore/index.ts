@@ -24,7 +24,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirestoreService, FirestoreSettings } from './firestore-internal';
-const DEFAULT_DATABASE_ID = '(default)';
+export const DEFAULT_DATABASE_ID = '(default)';
 
 export {
   AddPrefixToKeys,
