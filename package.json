@@ -73,6 +73,9 @@
       "auth": [
         "lib/auth"
       ],
+      "phone-number-verification": [
+        "lib/phone-number-verification"
+      ],
       "eventarc": [
         "lib/eventarc"
       ],
@@ -133,6 +136,11 @@
       "types": "./lib/auth/index.d.ts",
       "require": "./lib/auth/index.js",
       "import": "./lib/esm/auth/index.js"
+    },
+    "./phone-number-verification": {
+      "types": "./lib/phone-number-verification/index.d.ts",
+      "require": "./lib/phone-number-verification/index.js",
+      "import": "./lib/esm/phone-number-verification/index.js"
     },
     "./database": {
       "types": "./lib/database/index.d.ts",
