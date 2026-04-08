@@ -24,33 +24,35 @@ export interface PhoneNumberVerificationToken {
      * The issuer identifier for the issuer of the response.
      * This value is a URL with the format
      * `https://fpnv.googleapis.com/projects/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
+     * project number of your Firebase project, and the
      * same project number specified in the {@link PhoneNumberVerificationToken.aud} property.
      */
     iss: string;
 
     /**
      * The audience for which this token is intended.
-     * This value is a string array, one of which is a URL with the format
-     * `https://fpnv.googleapis.com/projects/<PROJECT_NUMBER>`, where `<PROJECT_NUMBER>` is the
-     * project number of your Firebase project.
+     * This value is a JSON array of two strings, the first is the project number of your
+     * Firebase project, and the second is the project ID of the same project.
      */
     aud: string[];
 
     /**
-     * The PhoneNumberVerification token's expiration time, in seconds since the Unix epoch. That is, the
-     * time at which this PhoneNumberVerification token expires and should no longer be considered valid.
+     * The PhoneNumber Verification token's expiration time, in seconds since the Unix epoch. That is, the
+     * time at which this PhoneNumber Verification token expires and should no longer be considered valid.
      */
     exp: number;
 
     /**
-     * The PhoneNumberVerification token's issued-at time, in seconds since the Unix epoch. That is, the
-     * time at which this PhoneNumberVerification token was issued and should start to be considered
+     * The PhoneNumber Verification token's issued-at time, in seconds since the Unix epoch. That is, the
+     * time at which this PhoneNumber Verification token was issued and should start to be considered
      * valid.
      */
     iat: number;
 
     /**
-     * The phone number of User.
+     * The phone number corresponding to this token.
+     * As a convenience, this value is copied over to the
+     * {@link PhoneNumberVerificationToken.phoneNumber | phoneNumber} property.
      */
     sub: string;
 

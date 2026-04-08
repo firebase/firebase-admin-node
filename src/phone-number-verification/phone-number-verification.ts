@@ -53,9 +53,9 @@ export class PhoneNumberVerification {
   }
 
   /**
-   * Verifies a Firebase Phone Number Verification token (JWT).
+   * Verifies a Firebase Phone Number Verification token.
    *
-   * @param jwt - The JWT string to verify.
+   * @param jwt - A string containing the Firebase Phone Number Verification JWT.
    * @returns A promise that resolves with the decoded token.
    */
   public verifyToken(jwt: string): Promise<PhoneNumberVerificationToken> {

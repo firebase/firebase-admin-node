@@ -1,9 +1,3 @@
-/**
- * Firebase Phone Number Verification.
- *
- * @packageDocumentation
- */
-
 /*!
  * @license
  * Copyright 2025 Google LLC
@@ -19,6 +13,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/**
+ * Firebase Phone Number Verification.
+ *
+ * @packageDocumentation
  */
 
 import { App, getApp } from '../app';
