@@ -16,7 +16,7 @@
  */
 
 import { FirebaseApp } from '../app/firebase-app';
-import { AppErrorCodes, FirebaseAppError } from './error';
+import { AppErrorCodes, FirebaseAppError, toHttpResponse } from './error';
 import * as validator from './validator';
 
 import http = require('http');
@@ -159,11 +159,7 @@ class DefaultRequestResponse implements RequestResponse {
       code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
       message: 'Error while parsing response data',
       cause: this.parseError as Error,
-      httpResponse: {
-        status: this.status,
-        data: this.text,
-        headers: this.headers
-      }
+      httpResponse: toHttpResponse(this)
     });
   }
 

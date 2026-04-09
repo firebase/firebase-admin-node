@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -385,7 +385,7 @@ export class DataConnectApiClient {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
         message: allMessages,
-        httpResponse: resp,
+        httpResponse: toHttpResponse(resp),
       });
     }
     return Promise.resolve({
@@ -403,7 +403,7 @@ export class DataConnectApiClient {
       return new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -414,7 +414,12 @@ export class DataConnectApiClient {
       code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseDataConnectError({ code: code, message: message, httpResponse: err.response, cause: err });
+    return new FirebaseDataConnectError({
+      code,
+      message,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 
   /**

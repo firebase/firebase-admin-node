@@ -30,6 +30,7 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 import { OperationOptions } from '../../../src/data-connect/data-connect-api';
+import { toHttpResponse } from '../../../src/utils/error';
 
 describe('DataConnectApiClient', () => {
 
@@ -166,7 +167,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'not-found',
           message: 'Requested entity not found',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeGraphql('query', {})
@@ -183,7 +184,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'unknown-error',
           message: 'Unknown server error: {}',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeGraphql('query', {})
@@ -200,7 +201,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'unknown-error',
           message: 'Unexpected response with status: 404 and body: not json',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeGraphql('query', {})
@@ -299,7 +300,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'not-found',
           message: 'Requested entity not found',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
@@ -316,7 +317,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'unknown-error',
           message: 'Unknown server error: {}',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
@@ -333,7 +334,7 @@ describe('DataConnectApiClient', () => {
         const expected = new FirebaseDataConnectError({
           code: 'unknown-error',
           message: 'Unexpected response with status: 404 and body: not json',
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
@@ -470,7 +471,7 @@ describe('DataConnectApiClient', () => {
       const expected = new FirebaseDataConnectError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
@@ -487,7 +488,7 @@ describe('DataConnectApiClient', () => {
       const expected = new FirebaseDataConnectError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
@@ -504,7 +505,7 @@ describe('DataConnectApiClient', () => {
       const expected = new FirebaseDataConnectError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)

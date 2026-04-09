@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 
@@ -87,7 +87,7 @@ export class ExtensionsApiClient {
       return new FirebaseExtensionsError({
         code: 'unknown-error',
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -95,13 +95,33 @@ export class ExtensionsApiClient {
     const message = error?.message || `Unknown server error: ${response.text}`;
     switch (error.code) {
     case 403:
-      return new FirebaseExtensionsError({ code: 'forbidden', message, httpResponse: err.response, cause: err });
+      return new FirebaseExtensionsError({
+        code: 'forbidden',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     case 404:
-      return new FirebaseExtensionsError({ code: 'not-found', message, httpResponse: err.response, cause: err });
+      return new FirebaseExtensionsError({
+        code: 'not-found',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     case 500:
-      return new FirebaseExtensionsError({ code: 'internal-error', message, httpResponse: err.response, cause: err });
+      return new FirebaseExtensionsError({
+        code: 'internal-error',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     }
-    return new FirebaseExtensionsError({ code: 'unknown-error', message, httpResponse: err.response, cause: err });
+    return new FirebaseExtensionsError({
+      code: 'unknown-error',
+      message,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 }
 

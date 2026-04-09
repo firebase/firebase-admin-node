@@ -27,7 +27,7 @@ import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
@@ -149,7 +149,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
@@ -167,7 +167,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
@@ -185,7 +185,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
@@ -297,7 +297,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
@@ -315,7 +315,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
@@ -333,7 +333,7 @@ describe('AppCheckApiClient', () => {
       const expected = new FirebaseAppCheckError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)

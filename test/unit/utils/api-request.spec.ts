@@ -275,7 +275,20 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
       expect(resp.text).to.equal(respData);
-      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      
+      try {
+        resp.data;
+        expect.fail('Should have thrown');
+      } catch (err: any) {
+        expect(err.code).to.equal('app/unable-to-parse-response');
+        expect(err.message).to.equal('Error while parsing response data');
+        expect(err.httpResponse).to.deep.equal({
+          status: 200,
+          data: respData,
+          headers: { 'content-type': 'text/plain' }
+        });
+      }
+
       expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.false;
     });

@@ -19,7 +19,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, ExponentialBackoffPoller
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
@@ -391,7 +391,7 @@ export class MachineLearningApiClient {
       return new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -405,7 +405,7 @@ export class MachineLearningApiClient {
     return new FirebaseMachineLearningError({
       code,
       message,
-      httpResponse: err.response,
+      httpResponse: toHttpResponse(response),
       cause: err
     });
   }

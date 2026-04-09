@@ -27,7 +27,7 @@ import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { EMULATED_SERVICE_ACCOUNT_DEFAULT } from '../../../src/functions/functions-api-client-internal';
 
@@ -229,7 +229,7 @@ describe('FunctionsApiClient', () => {
       const expected = new FirebaseFunctionsError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.enqueue({}, FUNCTION_NAME)
@@ -247,7 +247,7 @@ describe('FunctionsApiClient', () => {
       const expected = new FirebaseFunctionsError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.enqueue({}, FUNCTION_NAME)
@@ -265,7 +265,7 @@ describe('FunctionsApiClient', () => {
       const expected = new FirebaseFunctionsError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.enqueue({}, FUNCTION_NAME)
@@ -293,7 +293,7 @@ describe('FunctionsApiClient', () => {
       const expected = new FirebaseFunctionsError({
         code: 'task-already-exists',
         message: 'A task with ID mock-task already exists',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })
@@ -650,7 +650,7 @@ describe('FunctionsApiClient', () => {
       const expected = new FirebaseFunctionsError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.delete('mock-task', FUNCTION_NAME)

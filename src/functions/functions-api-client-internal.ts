@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
@@ -183,7 +183,7 @@ export class FunctionsApiClient {
           throw new FirebaseFunctionsError({
             code: 'task-already-exists',
             message: `A task with ID ${opts?.id} already exists`,
-            httpResponse: err.response,
+            httpResponse: toHttpResponse(err.response),
             cause: err,
           });
         } else {
@@ -387,7 +387,7 @@ export class FunctionsApiClient {
       return new FirebaseFunctionsError({
         code: 'unknown-error',
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -398,7 +398,7 @@ export class FunctionsApiClient {
       code = FUNCTIONS_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseFunctionsError({ code, message, httpResponse: err.response, cause: err });
+    return new FirebaseFunctionsError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 }
 

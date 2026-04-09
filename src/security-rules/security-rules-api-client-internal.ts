@@ -15,7 +15,7 @@
  */
 
 import { HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -311,7 +311,7 @@ export class SecurityRulesApiClient {
       return new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -322,7 +322,7 @@ export class SecurityRulesApiClient {
       code = ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseSecurityRulesError({ code, message, httpResponse: err.response, cause: err });
+    return new FirebaseSecurityRulesError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 }
 

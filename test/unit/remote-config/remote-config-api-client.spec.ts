@@ -26,7 +26,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
@@ -347,7 +347,7 @@ describe('RemoteConfigApiClient', () => {
         const expected = new FirebaseRemoteConfigError({
           code: 'failed-precondition',
           message,
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE)
@@ -450,7 +450,7 @@ describe('RemoteConfigApiClient', () => {
         const expected = new FirebaseRemoteConfigError({
           code: 'failed-precondition',
           message,
-          httpResponse: mockErr.response,
+          httpResponse: toHttpResponse(mockErr.response),
           cause: mockErr
         });
         return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
@@ -751,7 +751,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return rcOperation()
@@ -769,7 +769,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return rcOperation()
@@ -787,7 +787,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return rcOperation()

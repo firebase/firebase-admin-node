@@ -17,7 +17,7 @@
 
 import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
-import { RequestResponseError } from './api-request';
+import { RequestResponseError, RequestResponse } from './api-request';
 
 /**
  * Represents the raw HTTP response object.
@@ -29,6 +29,21 @@ export interface HttpResponse {
   headers: { [key: string]: any; };
   /** The response data payload. */
   data?: any;
+}
+
+/**
+ * Maps a RequestResponse to a clean HttpResponse, preserving raw text if not JSON.
+ *
+ * @param resp - The RequestResponse to map.
+ * @returns A clean HttpResponse object.
+ * @internal
+ */
+export function toHttpResponse(resp: RequestResponse): HttpResponse {
+  return {
+    status: resp.status,
+    headers: resp.headers,
+    data: resp.isJson() ? resp.data : resp.text,
+  };
 }
 
 /**
@@ -131,7 +146,11 @@ export class FirebaseError extends Error implements FirebaseError {
       message: this.message,
     };
     if (this.httpResponse) {
-      json.httpResponse = this.httpResponse;
+      json.httpResponse = {
+        status: this.httpResponse.status,
+        headers: this.httpResponse.headers,
+        data: this.httpResponse.data,
+      };
     }
     if (this.cause) {
       json.cause = {
@@ -229,7 +248,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     // Server detailed message should have highest priority.
     error.message = customMessage || message || error.message;
     error.cause = serverError;
-    error.httpResponse = serverError?.response;
+    error.httpResponse = serverError?.response ? toHttpResponse(serverError.response) : undefined;
     return new FirebaseAuthError(error);
   }
 
@@ -364,7 +383,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     }
 
     error.cause = serverError;
-    error.httpResponse = serverError?.response;
+    error.httpResponse = serverError?.response ? toHttpResponse(serverError.response) : undefined;
     return new FirebaseMessagingError(error);
   }
 
@@ -391,7 +410,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     }
 
     error.cause = serverError;
-    error.httpResponse = serverError?.response;
+    error.httpResponse = serverError?.response ? toHttpResponse(serverError.response) : undefined;
     return new FirebaseMessagingError(error);
   }
 

@@ -15,7 +15,7 @@
  */
 
 import { RequestResponseError } from '../utils/api-request';
-import { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
+import { FirebaseMessagingError, MessagingClientErrorCode, toHttpResponse } from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**
@@ -58,7 +58,7 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
     code: error.code,
     message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
       `${ err.response.status }.`,
-    httpResponse: err.response,
+    httpResponse: toHttpResponse(err.response),
     cause: err,
   });
 }

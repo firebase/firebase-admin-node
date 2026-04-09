@@ -69,6 +69,33 @@ describe('FirebaseError', () => {
     const error = new FirebaseError(errorInfo);
     expect(error.toJSON()).to.deep.equal({ code, message });
   });
+
+  it('toJSON() should not leak extra properties from RequestResponse', () => {
+    const mockHttpResponse = {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      data: { foo: 'bar' },
+      text: '{"foo":"bar"}', // Extra property from RequestResponse
+      parsedData: { foo: 'bar' }, // Simulated private field
+      parseError: undefined, // Simulated private field
+      isJson: () => true, // Method from RequestResponse
+    };
+    const error = new FirebaseError({
+      code: 'code',
+      message: 'message',
+      httpResponse: mockHttpResponse as any
+    });
+    
+    const json = error.toJSON() as any;
+    expect(json.httpResponse).to.deep.equal({
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      data: { foo: 'bar' }
+    });
+    expect(json.httpResponse.text).to.be.undefined;
+    expect(json.httpResponse.parsedData).to.be.undefined;
+    expect(json.httpResponse.isJson).to.be.undefined;
+  });
 });
 
 describe('FirebaseAuthError', () => {
@@ -151,6 +178,7 @@ describe('FirebaseAuthError', () => {
             message: 'An unexpected error occurred.',
           },
         },
+        isJson: () => true,
       };
       const mockError: any = { response: mockHttpResponse };
 
@@ -159,7 +187,11 @@ describe('FirebaseAuthError', () => {
           'USER_NOT_FOUND', 'Invalid uid', mockError);
         expect(error.code).to.be.equal('auth/user-not-found');
         expect(error.message).to.be.equal('Invalid uid');
-        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
+        expect(error.httpResponse).to.deep.equal({
+          status: mockHttpResponse.status,
+          headers: mockHttpResponse.headers,
+          data: mockHttpResponse.data,
+        });
       });
 
       it('should include httpResponse from an unexpected server code', () => {
@@ -167,7 +199,11 @@ describe('FirebaseAuthError', () => {
           'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockError);
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal('An unexpected error occurred.');
-        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
+        expect(error.httpResponse).to.deep.equal({
+          status: mockHttpResponse.status,
+          headers: mockHttpResponse.headers,
+          data: mockHttpResponse.data,
+        });
       });
 
       it('should include httpResponse from an expected server with server detailed message', () => {
@@ -176,7 +212,38 @@ describe('FirebaseAuthError', () => {
           'Ignored message', mockError);
         expect(error.code).to.be.equal('auth/configuration-not-found');
         expect(error.message).to.be.equal('more details');
-        expect(error.httpResponse).to.deep.equal(mockHttpResponse);
+        expect(error.httpResponse).to.deep.equal({
+          status: mockHttpResponse.status,
+          headers: mockHttpResponse.headers,
+          data: mockHttpResponse.data,
+        });
+      });
+
+      it('should not leak extra properties from RequestResponse in toJSON() via fromServerError', () => {
+        const mockRequestResponse = {
+          status: 400,
+          headers: {},
+          data: {
+            error: {
+              code: 'UNEXPECTED_ERROR',
+              message: 'An unexpected error occurred.',
+            },
+          },
+          text: '{"error":...}',
+          isJson: () => true,
+        };
+        const mockError: any = { response: mockRequestResponse };
+        const error = FirebaseAuthError.fromServerError(
+          'USER_NOT_FOUND', 'Invalid uid', mockError);
+        
+        const json = error.toJSON() as any;
+        expect(json.httpResponse).to.deep.equal({
+          status: 400,
+          headers: {},
+          data: mockRequestResponse.data
+        });
+        expect(json.httpResponse.text).to.be.undefined;
+        expect(json.httpResponse.isJson).to.be.undefined;
       });
     });
   });
@@ -248,6 +315,7 @@ describe('FirebaseMessagingError', () => {
             message: 'Message override.',
           },
         },
+        isJson: () => true,
       };
       const mockError: any = { response: mockHttpResponse };
 

@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AppCheckToken } from './app-check-api';
@@ -113,11 +113,7 @@ export class AppCheckApiClient {
           throw new FirebaseAppCheckError({
             code: 'invalid-argument',
             message: '`alreadyConsumed` must be a boolean value.',
-            httpResponse: {
-              status: resp.status,
-              headers: resp.headers,
-              data: resp.data
-            }
+            httpResponse: toHttpResponse(resp)
           });
         }
         return resp.data.alreadyConsumed || false;
@@ -179,7 +175,7 @@ export class AppCheckApiClient {
       return new FirebaseAppCheckError({
         code: 'unknown-error',
         message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
-        httpResponse: err.response,
+        httpResponse: toHttpResponse(response),
         cause: err
       });
     }
@@ -190,7 +186,7 @@ export class AppCheckApiClient {
       code = APP_CHECK_ERROR_CODE_MAPPING[error.status];
     }
     const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseAppCheckError({ code, message, httpResponse: err.response, cause: err });
+    return new FirebaseAppCheckError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 
   /**

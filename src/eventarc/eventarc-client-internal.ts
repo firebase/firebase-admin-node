@@ -24,7 +24,7 @@ import {
 } from '../utils/api-request';
 import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 
 const EVENTARC_API = 'https://eventarcpublishing.googleapis.com/v1';
@@ -128,7 +128,7 @@ export class EventarcApiClient {
     return new FirebaseEventarcError({
       code: 'unknown-error',
       message: `Unexpected response with status: ${response.status}.`,
-      httpResponse: response,
+      httpResponse: toHttpResponse(response),
       cause: err,
     });
   }

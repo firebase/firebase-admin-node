@@ -24,7 +24,7 @@ import { FirebaseSecurityRulesError } from '../../../src/security-rules/security
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { getSdkVersion, getMetricsHeader } from '../../../src/utils/index';
 
@@ -127,7 +127,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRuleset(RULESET_NAME)
@@ -145,7 +145,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRuleset(RULESET_NAME)
@@ -163,7 +163,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRuleset(RULESET_NAME)
@@ -264,7 +264,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRuleset(RULES_CONTENT)
@@ -289,7 +289,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'resource-exhausted',
         message: resourceExhaustedError.error.message,
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRuleset(RULES_CONTENT)
@@ -307,7 +307,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRuleset(RULES_CONTENT)
@@ -325,7 +325,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRuleset(RULES_CONTENT)
@@ -448,7 +448,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listRulesets()
@@ -466,7 +466,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listRulesets()
@@ -484,7 +484,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listRulesets()
@@ -535,7 +535,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRelease(RELEASE_NAME)
@@ -553,7 +553,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRelease(RELEASE_NAME)
@@ -571,7 +571,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getRelease(RELEASE_NAME)
@@ -657,7 +657,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
@@ -675,7 +675,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
@@ -693,7 +693,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
@@ -748,7 +748,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
@@ -766,7 +766,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
@@ -784,7 +784,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
@@ -849,7 +849,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteRuleset(RULESET_NAME)
@@ -867,7 +867,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteRuleset(RULESET_NAME)
@@ -885,7 +885,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteRuleset(RULESET_NAME)

@@ -23,7 +23,7 @@ import { FirebaseMachineLearningError } from '../../../src/machine-learning/mach
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import { MachineLearningApiClient } from '../../../src/machine-learning/machine-learning-api-client';
@@ -186,7 +186,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createModel(NAME_ONLY_OPTIONS)
@@ -243,7 +243,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createModel(NAME_ONLY_OPTIONS)
@@ -261,7 +261,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.createModel(NAME_ONLY_OPTIONS)
@@ -325,7 +325,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
@@ -394,7 +394,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
@@ -412,7 +412,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_OPTIONS, NAME_ONLY_MASK_LIST)
@@ -478,7 +478,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getModel(MODEL_ID)
@@ -496,7 +496,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getModel(MODEL_ID)
@@ -514,7 +514,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getModel(MODEL_ID)
@@ -560,7 +560,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getOperation(OPERATION_NAME)
@@ -578,7 +578,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getOperation(OPERATION_NAME)
@@ -596,7 +596,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.getOperation(OPERATION_NAME)
@@ -804,7 +804,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listModels()
@@ -822,7 +822,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listModels()
@@ -840,7 +840,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.listModels()
@@ -905,7 +905,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'not-found',
         message: 'Requested entity not found',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteModel(MODEL_ID)
@@ -923,7 +923,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unknown server error: {}',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteModel(MODEL_ID)
@@ -941,7 +941,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError({
         code: 'unknown-error',
         message: 'Unexpected response with status: 404 and body: not json',
-        httpResponse: mockErr.response,
+        httpResponse: toHttpResponse(mockErr.response),
         cause: mockErr
       });
       return apiClient.deleteModel(MODEL_ID)
