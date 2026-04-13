@@ -397,7 +397,7 @@ export class FunctionsApiClient {
     if (error.status && error.status in FUNCTIONS_ERROR_CODE_MAPPING) {
       code = FUNCTIONS_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
+    const message = error.message || 'Unknown server error';
     return new FirebaseFunctionsError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 }

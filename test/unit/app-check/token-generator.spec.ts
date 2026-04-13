@@ -335,8 +335,7 @@ describe('AppCheckTokenGenerator', () => {
         expect(appCheckError).to.be.an.instanceof(FirebaseAppCheckError);
         expect(appCheckError).to.have.property('code', 'app-check/unknown-error');
         expect(appCheckError).to.have.property('message',
-          'Error returned from server while signing a custom token: '+
-          '{"status":500,"headers":{},"data":{"error":{}},"text":"{\\"error\\":{}}"}');
+          'Error returned from server while signing a custom token: Unknown server error');
       });
 
       it('should convert CryptoSignerError HttpError with no errorcode to FirebaseAppCheckError', () => {
@@ -349,7 +348,7 @@ describe('AppCheckTokenGenerator', () => {
         expect(appCheckError).to.be.an.instanceof(FirebaseAppCheckError);
         expect(appCheckError).to.have.property('code', 'app-check/internal-error');
         expect(appCheckError).to.have.property('message',
-          'Error returned from server: null.');
+          'Error returned from server.');
       });
     });
   });

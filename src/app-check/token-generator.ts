@@ -25,6 +25,7 @@ import {
 } from './app-check-api-client-internal';
 import { AppCheckTokenOptions } from './app-check-api';
 import { RequestResponseError } from '../utils/api-request';
+import { toHttpResponse } from '../utils/error';
 
 const ONE_MINUTE_IN_SECONDS = 60;
 const ONE_MINUTE_IN_MILLIS = ONE_MINUTE_IN_SECONDS * 1000;
@@ -157,7 +158,7 @@ export function appCheckErrorFromCryptoSignerError(err: Error): Error {
     const errorResponse = httpError.response.data;
     if (errorResponse?.error) {
       const status = errorResponse.error.status;
-      const description = errorResponse.error.message || JSON.stringify(httpError.response);
+      const description = errorResponse.error.message || 'Unknown server error';
 
       let code: AppCheckErrorCode = 'unknown-error';
       if (status && status in APP_CHECK_ERROR_CODE_MAPPING) {
@@ -166,12 +167,14 @@ export function appCheckErrorFromCryptoSignerError(err: Error): Error {
       return new FirebaseAppCheckError({
         code,
         message: `Error returned from server while signing a custom token: ${description}`,
+        httpResponse: toHttpResponse(httpError.response),
         cause: err
       });
     }
     return new FirebaseAppCheckError({
       code: 'internal-error',
-      message: 'Error returned from server: ' + JSON.stringify(errorResponse) + '.',
+      message: 'Error returned from server.',
+      httpResponse: toHttpResponse(httpError.response),
       cause: err
     });
   }

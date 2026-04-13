@@ -17,7 +17,7 @@
 
 import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
-import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
+import { FirebaseInstallationsError, InstallationsClientErrorCode, toHttpResponse } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
 } from '../utils/api-request';
@@ -33,7 +33,7 @@ const FIREBASE_IID_PATH = '/v1/';
 const FIREBASE_IID_TIMEOUT = 10000;
 
 /** HTTP error codes raised by the backend server. */
-const ERROR_CODES: {[key: number]: string} = {
+const ERROR_CODES: { [key: number]: string; } = {
   400: 'Malformed installation ID argument.',
   401: 'Request not authorized.',
   403: 'Project does not match installation ID or the client does not have sufficient privileges.',
@@ -100,7 +100,12 @@ export class FirebaseInstallationsRequestHandler {
           const template: string = ERROR_CODES[response.status];
           const message: string = template ?
             `Installation ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
-          throw new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR, message);
+          throw new FirebaseInstallationsError({
+            ...InstallationsClientErrorCode.API_ERROR,
+            message,
+            httpResponse: toHttpResponse(response),
+            cause: err,
+          });
         }
         // In case of timeouts and other network errors, the HttpClient returns a
         // FirebaseError wrapped in the response. Simply throw it here.

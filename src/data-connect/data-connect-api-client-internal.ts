@@ -413,7 +413,7 @@ export class DataConnectApiClient {
     if (error.status && error.status in DATA_CONNECT_ERROR_CODE_MAPPING) {
       code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
+    const message = error.message || 'Unknown server error';
     return new FirebaseDataConnectError({
       code,
       message,

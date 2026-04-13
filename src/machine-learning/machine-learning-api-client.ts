@@ -401,7 +401,7 @@ export class MachineLearningApiClient {
     if (error.status && error.status in ERROR_CODE_MAPPING) {
       code = ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
+    const message = error.message || 'Unknown server error';
     return new FirebaseMachineLearningError({
       code,
       message,

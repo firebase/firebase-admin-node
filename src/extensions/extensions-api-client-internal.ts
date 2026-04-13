@@ -92,7 +92,7 @@ export class ExtensionsApiClient {
       });
     }
     const error = response.data?.error;
-    const message = error?.message || `Unknown server error: ${response.text}`;
+    const message = error?.message || 'Unknown server error';
     switch (error.code) {
     case 403:
       return new FirebaseExtensionsError({

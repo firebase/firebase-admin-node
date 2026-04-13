@@ -19,7 +19,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   AuthorizedHttpClient, RequestResponseError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
-import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
+import { FirebaseProjectManagementError, ProjectManagementErrorCode, HttpResponse, toHttpResponse } from '../utils/error';
 import { getSdkVersion } from '../utils/index';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
@@ -68,7 +68,7 @@ export class ProjectManagementRequestHandler {
     `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
   private readonly httpClient: AuthorizedHttpClient;
 
-  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string): void {
+  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string, httpResponse?: HttpResponse): void {
     let errorCode: ProjectManagementErrorCode;
     let errorMessage: string;
 
@@ -111,7 +111,12 @@ export class ProjectManagementRequestHandler {
     }
     throw new FirebaseProjectManagementError({
       code: errorCode,
-      message: `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`
+      message: errorMessage,
+      httpResponse: httpResponse || {
+        status: errStatusCode,
+        headers: {},
+        data: errText,
+      },
     });
   }
 
@@ -332,7 +337,7 @@ export class ProjectManagementRequestHandler {
       .catch((err) => {
         if (err instanceof RequestResponseError) {
           ProjectManagementRequestHandler.wrapAndRethrowHttpError(
-            err.response.status, err.response.text);
+            err.response.status, err.response.text, toHttpResponse(err.response));
         }
         throw err;
       });

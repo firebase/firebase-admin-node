@@ -185,7 +185,7 @@ export class AppCheckApiClient {
     if (error.status && error.status in APP_CHECK_ERROR_CODE_MAPPING) {
       code = APP_CHECK_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
+    const message = error.message || 'Unknown server error';
     return new FirebaseAppCheckError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 

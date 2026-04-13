@@ -28,7 +28,7 @@ export interface HttpResponse {
   /** The HTTP headers of the response. */
   headers: { [key: string]: any; };
   /** The response data payload. */
-  data?: any;
+  data?: string | object;
 }
 
 /**
