@@ -316,7 +316,7 @@ export interface GoogleOAuthAccessToken {
 
 // @public
 export interface HttpResponse {
-    data?: any;
+    data?: string | object;
     headers: {
         [key: string]: any;
     };
