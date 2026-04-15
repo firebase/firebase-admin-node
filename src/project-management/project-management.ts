@@ -29,7 +29,7 @@ import { AppMetadata, AppPlatform } from './app-metadata';
 export class ProjectManagement {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
-  private projectId: string;
+  private projectId!: string;
 
   /**
    * @param app - The app for this ProjectManagement service.

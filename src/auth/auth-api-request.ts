@@ -121,7 +121,7 @@ enum WriteOperationType {
 class AuthResourceUrlBuilder {
 
   protected urlFormat: string;
-  private projectId: string;
+  private projectId!: string;
 
   /**
    * The resource URL builder constructor.
@@ -494,7 +494,7 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
       // JSON parsing error. This should never happen as we stringify the claims internally.
       // However, we still need to check since setAccountInfo via edit requests could pass
       // this field.
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, error.message);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, (error as Error).message);
     }
     const invalidClaims: string[] = [];
     // Check for any invalid claims.
@@ -1013,8 +1013,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 export abstract class AbstractAuthRequestHandler {
 
   protected readonly httpClient: AuthorizedHttpClient;
-  private authUrlBuilder: AuthResourceUrlBuilder;
-  private projectConfigUrlBuilder: AuthResourceUrlBuilder;
+  private authUrlBuilder!: AuthResourceUrlBuilder;
+  private projectConfigUrlBuilder!: AuthResourceUrlBuilder;
 
   /**
    * @param response - The response to check for errors.

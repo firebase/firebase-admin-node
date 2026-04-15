@@ -38,8 +38,8 @@ export interface FirebaseAccessToken {
  * Internals of a FirebaseApp instance.
  */
 export class FirebaseAppInternals {
-  private cachedToken_: FirebaseAccessToken;
-  private promiseToCachedToken_: Promise<FirebaseAccessToken>;
+  private cachedToken_!: FirebaseAccessToken;
+  private promiseToCachedToken_!: Promise<FirebaseAccessToken>;
   private tokenListeners_: Array<(token: string) => void>;
   private isRefreshing: boolean;
 
