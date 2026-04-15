@@ -350,7 +350,7 @@ class ServerTemplateImpl implements ServerTemplate {
    * Evaluates the current template in cache to produce a {@link ServerConfig}.
    */
   public evaluate(context: EvaluationContext = {}): ServerConfig {
-    const cachedTemplate = this.getCachedTemplate('evaluate()');
+    const cachedTemplate = this.getCachedTemplate(`${this.evaluate.name}()`);
 
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
       cachedTemplate.conditions, context);
@@ -415,7 +415,7 @@ class ServerTemplateImpl implements ServerTemplate {
    * @returns JSON representation of the server template
    */
   public toJSON(): ServerTemplateData {
-    return this.getCachedTemplate('toJSON()');
+    return this.getCachedTemplate(`${this.toJSON.name}()`);
   }
 
   private getCachedTemplate(methodName: string): ServerTemplateData {
