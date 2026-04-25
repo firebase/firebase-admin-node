@@ -299,7 +299,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
  * Remote Config dataplane template data implementation.
  */
 class ServerTemplateImpl implements ServerTemplate {
-  private cache: ServerTemplateData;
+  private cache?: ServerTemplateData;
   private stringifiedDefaultConfig: { [key: string]: string } = {};
 
   constructor(
@@ -350,18 +350,10 @@ class ServerTemplateImpl implements ServerTemplate {
    * Evaluates the current template in cache to produce a {@link ServerConfig}.
    */
   public evaluate(context: EvaluationContext = {}): ServerConfig {
-    if (!this.cache) {
-
-      // This is the only place we should throw during evaluation, since it's under the
-      // control of application logic. To preserve forward-compatibility, we should only
-      // return false in cases where the SDK is unsure how to evaluate the fetched template.
-      throw new FirebaseRemoteConfigError(
-        'failed-precondition',
-        'No Remote Config Server template in cache. Call load() before calling evaluate().');
-    }
+    const cachedTemplate = this.getCachedTemplate(`${this.evaluate.name}()`);
 
     const evaluatedConditions = this.conditionEvaluator.evaluateConditions(
-      this.cache.conditions, context);
+      cachedTemplate.conditions, context);
 
     const configValues: { [key: string]: Value } = {};
 
@@ -371,7 +363,7 @@ class ServerTemplateImpl implements ServerTemplate {
     }
 
     // Overlays config Value objects derived by evaluating the template.
-    for (const [key, parameter] of Object.entries(this.cache.parameters)) {
+    for (const [key, parameter] of Object.entries(cachedTemplate.parameters)) {
       const { conditionalValues, defaultValue } = parameter;
 
       // Supports parameters with no conditional values.
@@ -423,6 +415,15 @@ class ServerTemplateImpl implements ServerTemplate {
    * @returns JSON representation of the server template
    */
   public toJSON(): ServerTemplateData {
+    return this.getCachedTemplate(`${this.toJSON.name}()`);
+  }
+
+  private getCachedTemplate(methodName: string): ServerTemplateData {
+    if (!this.cache) {
+      throw new FirebaseRemoteConfigError(
+        'failed-precondition',
+        `No Remote Config Server template in cache. Call load() or set() before calling ${methodName}.`);
+    }
     return this.cache;
   }
 }
@@ -453,7 +454,7 @@ class ServerConfigImpl implements ServerConfig {
  */
 class ServerTemplateDataImpl implements ServerTemplateData {
   public parameters: { [key: string]: RemoteConfigParameter };
-  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+  public parameterGroups!: { [key: string]: RemoteConfigParameterGroup };
   public conditions: NamedCondition[];
   public readonly etag: string;
   public version?: Version;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseArrayIndexError } from '../app/index';
+import { FirebaseArrayIndexError, FirebaseError } from '../app/index';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
@@ -752,7 +752,7 @@ export class UserImportBuilder {
         // Save the client side error with respect to the developer provided array.
         this.userImportResultErrors.push({
           index,
-          error,
+          error: error as FirebaseError,
         });
       }
     });

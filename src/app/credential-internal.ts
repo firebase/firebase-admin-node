@@ -37,7 +37,7 @@ const SCOPES = [
 export class ApplicationDefaultCredential implements Credential {
 
   private readonly googleAuth: GoogleAuth;
-  private authClient: AnyAuthClient;
+  private authClient?: AnyAuthClient;
   private projectId?: string;
   private quotaProjectId?: string;
   private accountId?: string;
@@ -121,7 +121,7 @@ export class ServiceAccountCredential implements Credential {
   public readonly privateKey: string;
   public readonly clientEmail: string;
 
-  private googleAuth: GoogleAuth;
+  private googleAuth!: GoogleAuth;
   private authClient: AnyAuthClient | undefined;
 
   /**
@@ -173,9 +173,9 @@ export class ServiceAccountCredential implements Credential {
  */
 class ServiceAccount {
 
-  public readonly projectId: string;
-  public readonly privateKey: string;
-  public readonly clientEmail: string;
+  public readonly projectId!: string;
+  public readonly privateKey!: string;
+  public readonly clientEmail!: string;
 
   public static fromPath(filePath: string): ServiceAccount {
     try {
@@ -231,7 +231,7 @@ class ServiceAccount {
  */
 export class RefreshTokenCredential implements Credential {
 
-  private googleAuth: GoogleAuth;
+  private googleAuth!: GoogleAuth;
   private authClient: AnyAuthClient | undefined;
 
   /**
@@ -278,10 +278,10 @@ export class RefreshTokenCredential implements Credential {
 
 class RefreshToken {
 
-  public readonly clientId: string;
-  public readonly clientSecret: string;
-  public readonly refreshToken: string;
-  public readonly type: string;
+  public readonly clientId!: string;
+  public readonly clientSecret!: string;
+  public readonly refreshToken!: string;
+  public readonly type!: string;
 
   /*
    * Tries to load a RefreshToken from a path. Throws if the path doesn't exist or the
@@ -330,7 +330,7 @@ class RefreshToken {
  */
 export class ImpersonatedServiceAccountCredential implements Credential {
 
-  private googleAuth: GoogleAuth;
+  private googleAuth!: GoogleAuth;
   private authClient: AnyAuthClient | undefined;
 
   /**

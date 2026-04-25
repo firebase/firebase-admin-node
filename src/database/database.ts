@@ -64,8 +64,8 @@ const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
 export class DatabaseService {
 
   private readonly appInternal: App;
-  private tokenListener: (token: string) => void;
-  private tokenRefreshTimeout: NodeJS.Timeout;
+  private tokenListener!: (token: string) => void;
+  private tokenRefreshTimeout!: NodeJS.Timeout;
 
   private databases: {
     [dbUrl: string]: Database;

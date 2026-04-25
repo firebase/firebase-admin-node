@@ -1154,7 +1154,33 @@ describe('RemoteConfig', () => {
       });
     });
 
+    describe('toJSON', () => {
+      it('should throw if template is not present in cache', () => {
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        const expected = new FirebaseRemoteConfigError(
+          'failed-precondition',
+          'No Remote Config Server template in cache. Call load() or set() before calling toJSON().',
+        );
+
+        expect(() => initializedTemplate.toJSON()).to.throw(FirebaseRemoteConfigError)
+          .with.property('code', expected.code);
+        expect(() => initializedTemplate.toJSON()).to.throw(expected.message);
+      });
+    });
+
     describe('evaluate', () => {
+      it('should throw if template is not present in cache', () => {
+        const initializedTemplate = remoteConfig.initServerTemplate();
+        const expected = new FirebaseRemoteConfigError(
+          'failed-precondition',
+          'No Remote Config Server template in cache. Call load() or set() before calling evaluate().',
+        );
+
+        expect(() => initializedTemplate.evaluate()).to.throw(FirebaseRemoteConfigError)
+          .with.property('code', expected.code);
+        expect(() => initializedTemplate.evaluate()).to.throw(expected.message);
+      });
+
       it('returns a config when template is present in cache', () => {
         const stub = sinon
           .stub(RemoteConfigApiClient.prototype, 'getServerTemplate')
