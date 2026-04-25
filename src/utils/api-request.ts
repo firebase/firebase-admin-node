@@ -23,7 +23,6 @@ import * as validator from './validator';
 import http = require('http');
 import https = require('https');
 import http2 = require('http2');
-import url = require('url');
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
@@ -991,23 +990,23 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
     return data;
   }
 
-  protected buildUrl(): url.UrlWithStringQuery {
+  protected buildUrl(): URL {
     const fullUrl: string = this.urlWithProtocol();
+    const parsedUrl = new URL(fullUrl);
     if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
-      return url.parse(fullUrl);
+      return parsedUrl;
     }
     if (!validator.isObject(this.data)) {
       throw new Error(`${this.method} requests cannot have a body`);
     }
-    // Parse URL and append data to query string.
-    const parsedUrl = new url.URL(fullUrl);
-    const dataObj = this.data as { [key: string]: string; };
+    // Append data to query string.
+    const dataObj = this.data as {[key: string]: string};
     for (const key in dataObj) {
       if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
       }
     }
-    return url.parse(parsedUrl.toString());
+    return parsedUrl;
   }
 
   protected urlWithProtocol(): string {
@@ -1044,7 +1043,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
-    let port: string | null = parsed.port;
+    let port: string = parsed.port;
     if (!port) {
       const isHttps = protocol === 'https:';
       port = isHttps ? '443' : '80';
@@ -1054,7 +1053,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
       protocol,
       hostname: parsed.hostname,
       port,
-      path: parsed.path,
+      path: `${parsed.pathname}${parsed.search}`,
       method: this.method,
       agent: this.httpAgent,
       headers: Object.assign({}, this.headers),
@@ -1082,7 +1081,7 @@ class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2Reque
 
     return {
       protocol,
-      path: parsed.path,
+      path: `${parsed.pathname}${parsed.search}`,
       method: this.method,
       headers: Object.assign({}, this.headers),
     };
