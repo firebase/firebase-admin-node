@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { AppCheckToken } from './app-check-api'
+import { AppCheckToken, AppCheckTokenOptions } from './app-check-api'
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
@@ -58,7 +58,11 @@ export class AppCheckApiClient {
    * @param appId - The mobile App ID.
    * @returns A promise that fulfills with a `AppCheckToken`.
    */
-  public exchangeToken(customToken: string, appId: string): Promise<AppCheckToken> {
+  public exchangeToken(
+    customToken: string,
+    appId: string,
+    options?: AppCheckTokenOptions
+  ): Promise<AppCheckToken> {
     if (!validator.isNonEmptyString(appId)) {
       throw new FirebaseAppCheckError(
         'invalid-argument',
@@ -69,13 +73,34 @@ export class AppCheckApiClient {
         'invalid-argument',
         '`customToken` must be a non-empty string.');
     }
+    if (typeof options?.limitedUse !== 'undefined' && !validator.isBoolean(options.limitedUse)) {
+      throw new FirebaseAppCheckError(
+        'invalid-argument',
+        '`limitedUse` must be a boolean value.');
+    }
+    if (typeof options?.jti !== 'undefined') {
+      if (!validator.isString(options.jti)) {
+        throw new FirebaseAppCheckError(
+          'invalid-argument',
+          '`jti` must be a string value.');
+      }
+      if (options.jti !== '' && !options.limitedUse) {
+        throw new FirebaseAppCheckError(
+          'invalid-argument',
+          '`jti` cannot be specified without setting `limitedUse` to `true`.');
+      }
+    }
     return this.getUrl(appId)
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
           url,
           headers: FIREBASE_APP_CHECK_CONFIG_HEADERS,
-          data: { customToken }
+          data: {
+            customToken,
+            ...(options?.limitedUse !== undefined && { limitedUse: options.limitedUse }),
+            ...(options?.jti !== undefined && { jti: options.jti }),
+          }
         };
         return this.httpClient.send(request);
       })

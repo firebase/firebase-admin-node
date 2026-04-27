@@ -210,9 +210,116 @@ describe('AppCheckApiClient', () => {
             method: 'POST',
             url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
             headers: EXPECTED_HEADERS,
-            data: { customToken: TEST_TOKEN_TO_EXCHANGE }
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+            }
           });
         });
+    });
+
+    it('should resolve with the App Check token on success with limitedUse', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { limitedUse: true })
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: true,
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with jti', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { limitedUse: true, jti: 'test-jti' })
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: true,
+              jti: 'test-jti',
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with empty options', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, {})
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+            }
+          });
+        });
+    });
+
+    it('should resolve with the App Check token on success with limitedUse set to false and jti undefined', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      stubs.push(stub);
+      return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { limitedUse: false, jti: undefined })
+        .then((resp) => {
+          expect(resp.token).to.deep.equal(TEST_RESPONSE.token);
+          expect(resp.ttlMillis).to.deep.equal(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: `https://firebaseappcheck.googleapis.com/v1/projects/test-project/apps/${APP_ID}:exchangeCustomToken`,
+            headers: EXPECTED_HEADERS,
+            data: {
+              customToken: TEST_TOKEN_TO_EXCHANGE,
+              limitedUse: false,
+            }
+          });
+        });
+    });
+
+    const invalidJtis = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
+    invalidJtis.forEach((invalidJti) => {
+      it('should throw given a non-string jti: ' + JSON.stringify(invalidJti), () => {
+        expect(() => {
+          apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { jti: invalidJti as any });
+        }).to.throw('jti` must be a string value.');
+      });
+    });
+
+    it('should throw given jti without limitedUse', () => {
+      expect(() => {
+        apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { jti: 'test-jti' });
+      }).to.throw('jti` cannot be specified without setting `limitedUse` to `true`.');
+    });
+
+    it('should throw given jti with limitedUse set to false', () => {
+      expect(() => {
+        apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID, { jti: 'test-jti', limitedUse: false });
+      }).to.throw('jti` cannot be specified without setting `limitedUse` to `true`.');
     });
 
     new Map([['3s', 3000], ['4.1s', 4100], ['3.000000001s', 3000], ['3.000001s', 3000]])
