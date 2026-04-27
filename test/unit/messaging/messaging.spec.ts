@@ -1899,6 +1899,8 @@ describe('Messaging', () => {
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
             directBootOk: true,
+            bandwidthConstrainedOk: true,
+            restrictedSatelliteOk: true,
             notification: {
               clickAction: 'test.click.action',
               titleLocKey: 'title.loc.key',
@@ -1927,6 +1929,8 @@ describe('Messaging', () => {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
             direct_boot_ok: true,
+            bandwidth_constrained_ok: true,
+            restricted_satellite_ok: true,
             notification: {
               click_action: 'test.click.action',
               title_loc_key: 'title.loc.key',
@@ -1983,6 +1987,8 @@ describe('Messaging', () => {
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
             directBootOk: true,
+            bandwidthConstrainedOk: true,
+            restrictedSatelliteOk: true,
             ttl: 5,
             data: {
               k1: 'v1',
@@ -2031,6 +2037,8 @@ describe('Messaging', () => {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
             direct_boot_ok: true,
+            bandwidth_constrained_ok: true,
+            restricted_satellite_ok: true,
             ttl: '0.005000000s', // 5 ms = 5,000,000 ns
             data: {
               k1: 'v1',
