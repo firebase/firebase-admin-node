@@ -26,7 +26,6 @@ var pkg = require('./package.json');
 
 // File I/O
 var ts = require('gulp-typescript');
-var del = require('del');
 var header = require('gulp-header');
 var filter = require('gulp-filter');
 
@@ -64,8 +63,9 @@ var banner = `/*! firebase-admin v${pkg.version} */\n`;
 /*  TASKS  */
 /***********/
 
-gulp.task('cleanup', function() {
-  return del([
+gulp.task('cleanup', async function() {
+  const { deleteAsync } = await import('del');
+  return deleteAsync([
     paths.build,
   ]);
 });
