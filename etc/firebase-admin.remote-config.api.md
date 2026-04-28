@@ -55,6 +55,7 @@ export interface ExperimentParameterValue {
 // @public
 export interface ExperimentValue {
     experimentId: string;
+    exposurePercent?: number;
     variantValue: ExperimentVariantValue[];
 }
 
