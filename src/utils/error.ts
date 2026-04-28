@@ -356,7 +356,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * @param serverErrorCode - The server error code.
    * @param [message] The error message. The default message is used
    *     if not provided.
-   * @param [rawServerResponse] The error's raw server response.
+   * @param [serverError] The error's raw server response.
    * @returns The corresponding developer-facing error.
    * @internal
    */
