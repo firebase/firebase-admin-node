@@ -43,7 +43,7 @@ export interface BaseRequestConfig {
   method: HttpMethod;
   /** Target URL of the request. Should be a well-formed URL including protocol, hostname, port and path. */
   url: string;
-  headers?: {[key: string]: string};
+  headers?: { [key: string]: string; };
   data?: string | object | Buffer | null;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
@@ -63,7 +63,7 @@ export interface Http2RequestConfig extends BaseRequestConfig {
   http2SessionHandler: Http2SessionHandler;
 }
 
-type RequestConfig = HttpRequestConfig | Http2RequestConfig
+type RequestConfig = HttpRequestConfig | Http2RequestConfig;
 
 /**
  * Represents an HTTP or HTTP/2 response received from a remote server.
@@ -96,15 +96,15 @@ interface LowLevelHttpResponse extends BaseLowLevelResponse {
   config: HttpRequestConfig;
 }
 
-type IncomingHttp2Headers = http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader
+type IncomingHttp2Headers = http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader;
 
 interface LowLevelHttp2Response extends BaseLowLevelResponse {
-  headers: IncomingHttp2Headers
+  headers: IncomingHttp2Headers;
   request: http2.ClientHttp2Stream | null;
   config: Http2RequestConfig;
 }
 
-type LowLevelResponse = LowLevelHttpResponse | LowLevelHttp2Response
+type LowLevelResponse = LowLevelHttpResponse | LowLevelHttp2Response;
 
 interface BaseLowLevelError extends Error {
   code?: string;
@@ -122,7 +122,7 @@ interface LowLevelHttp2Error extends BaseLowLevelError {
   response?: LowLevelHttp2Response;
 }
 
-type LowLevelError = LowLevelHttpError | LowLevelHttp2Error
+type LowLevelError = LowLevelHttpError | LowLevelHttp2Error;
 
 class DefaultRequestResponse implements RequestResponse {
 
@@ -294,7 +294,7 @@ export class RequestClient {
 
   constructor(retry: RetryConfig | null = defaultRetryConfig()) {
     if (retry) {
-      this.retry = retry
+      this.retry = retry;
       validateRetryConfig(this.retry);
     }
   }
@@ -397,7 +397,7 @@ export class RequestClient {
 export class HttpClient extends RequestClient {
 
   constructor(retry?: RetryConfig | null) {
-    super(retry)
+    super(retry);
   }
 
   /**
@@ -544,7 +544,7 @@ export function parseHttpResponse(
   const statusLine: string = headerLines[0];
   const status: string = statusLine.trim().split(/\s/)[1];
 
-  const headers: {[key: string]: string} = {};
+  const headers: { [key: string]: string; } = {};
   headerLines.slice(1).forEach((line) => {
     const colonPos = line.indexOf(':');
     const name = line.substring(0, colonPos).trim().toLowerCase();
@@ -584,7 +584,7 @@ class AsyncRequestCall {
   protected entity: Buffer | undefined;
   protected promise: Promise<LowLevelResponse>;
 
-  constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) {}
+  constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) { }
 
   /**
    * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
@@ -600,13 +600,13 @@ class AsyncRequestCall {
     }
 
     const segments: string[] = contentType.split(';');
-    const emptyObject: {[key: string]: string} = {};
+    const emptyObject: { [key: string]: string; } = {};
     const headerParams = segments.slice(1)
       .map((segment) => segment.trim().split('='))
       .reduce((curr, params) => {
         // Parse key=value pairs in the content-type header into properties of an object.
         if (params.length === 2) {
-          const keyValuePair: {[key: string]: string} = {};
+          const keyValuePair: { [key: string]: string; } = {};
           keyValuePair[params[0]] = params[1];
           return Object.assign(curr, keyValuePair);
         }
@@ -740,7 +740,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 
   private constructor(config: HttpRequestConfig) {
     const httpConfigImpl = new HttpRequestConfigImpl(config);
-    super(httpConfigImpl)
+    super(httpConfigImpl);
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
@@ -831,7 +831,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 }
 
 class AsyncHttp2Call extends AsyncRequestCall {
-  private readonly http2ConfigImpl: Http2RequestConfigImpl
+  private readonly http2ConfigImpl: Http2RequestConfigImpl;
 
   /**
    * Sends an HTTP2 request based on the provided configuration.
@@ -842,7 +842,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 
   private constructor(config: Http2RequestConfig) {
     const http2ConfigImpl = new Http2RequestConfigImpl(config);
-    super(http2ConfigImpl)
+    super(http2ConfigImpl);
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
@@ -894,7 +894,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
     req.end(this.entity);
   }
 
-  private handleHttp2Response(headers: IncomingHttp2Headers, stream: http2.ClientHttp2Stream): void{
+  private handleHttp2Response(headers: IncomingHttp2Headers, stream: http2.ClientHttp2Stream): void {
     if (stream.aborted) {
       return;
     }
@@ -945,7 +945,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 class BaseRequestConfigImpl implements BaseRequestConfig {
 
   constructor(protected readonly config: RequestConfig) {
-    this.config = config
+    this.config = config;
   }
 
   get method(): HttpMethod {
@@ -956,7 +956,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
     return this.config.url;
   }
 
-  get headers(): {[key: string]: string} | undefined {
+  get headers(): { [key: string]: string; } | undefined {
     return this.config.headers;
   }
 
@@ -1000,7 +1000,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
     }
     // Parse URL and append data to query string.
     const parsedUrl = new url.URL(fullUrl);
-    const dataObj = this.data as {[key: string]: string};
+    const dataObj = this.data as { [key: string]: string; };
     for (const key in dataObj) {
       if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
@@ -1033,7 +1033,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
 class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequestConfig {
 
   constructor(private readonly httpConfig: HttpRequestConfig) {
-    super(httpConfig)
+    super(httpConfig);
   }
 
   get httpAgent(): http.Agent | undefined {
@@ -1067,7 +1067,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
 class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2RequestConfig {
 
   constructor(private readonly http2Config: Http2RequestConfig) {
-    super(http2Config)
+    super(http2Config);
   }
 
   get http2SessionHandler(): Http2SessionHandler {
@@ -1115,7 +1115,7 @@ export class AuthorizedHttpClient extends HttpClient {
       }
 
       if (!requestCopy.headers['X-Goog-Api-Client']) {
-        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader();
       }
 
       return super.send(requestCopy);
@@ -1150,13 +1150,13 @@ export class AuthorizedHttp2Client extends Http2Client {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
 
-      if (!requestCopy.headers['X-Goog-Api-Client']) { 
-        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) {
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader();
       }
 
       return super.send(requestCopy);
     });
-  } 
+  }
 
   protected getToken(): Promise<string> {
     return this.app.INTERNAL.getToken()
@@ -1257,9 +1257,9 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
   private reject: (err: object) => void;
 
   constructor(
-      private readonly initialPollingDelayMillis: number = 1000,
-      private readonly maxPollingDelayMillis: number = 10000,
-      private readonly masterTimeoutMillis: number = 60000) {
+    private readonly initialPollingDelayMillis: number = 1000,
+    private readonly maxPollingDelayMillis: number = 10000,
+    private readonly masterTimeoutMillis: number = 60000) {
     super();
   }
 
@@ -1305,7 +1305,7 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 
         if (!result) {
           this.repollTimer =
-                setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
+            setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
           this.numTries++;
           return;
         }
@@ -1341,21 +1341,15 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 
 export class Http2SessionHandler {
 
-  private http2Session: http2.ClientHttp2Session
-  protected promise: Promise<void>
-  protected resolve: () => void;
-  protected reject: (_: any) => void;
+  private http2Session: http2.ClientHttp2Session;
+  private sessionErrors: Error[] = [];
 
-  constructor(url: string){
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-      this.http2Session = this.createSession(url)
-    });
+  constructor(url: string) {
+    this.http2Session = this.createSession(url);
   }
 
   public createSession(url: string): http2.ClientHttp2Session {
-    if (!this.http2Session || this.isClosed ) {
+    if (!this.http2Session || this.isClosed) {
       const opts: http2.SecureClientSessionOptions = {
         // Set local max concurrent stream limit to respect backend limit
         peerMaxConcurrentStreams: 100,
@@ -1364,49 +1358,48 @@ export class Http2SessionHandler {
       const http2Session = http2.connect(url, opts)
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        this.reject(new FirebaseAppError({
+        const error = new FirebaseAppError({
           code: AppErrorCodes.NETWORK_ERROR,
           message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
-        }));
-      })
+        });
+        this.sessionErrors.push(error);
+      });
 
       http2Session.on('error', (error: any) => {
         let errorMessage: any;
         if (error.name == 'AggregateError' && error.errors) {
           errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
-            `[${error.errors.map((e: any) => e.message).join(', ')}]`
+            `[${error.errors.map((e: any) => e.message).join(', ')}]`;
         } else {
-          errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
+          errorMessage = `Session error while making requests: ${error.code} - ${error.message} `;
         }
-        this.reject(new FirebaseAppError({
+        const appError = new FirebaseAppError({
           code: AppErrorCodes.NETWORK_ERROR,
           message: errorMessage,
           cause: error,
-        }));
-      })
-
-      http2Session.on('close', () => {
-        // Resolve current promise
-        this.resolve()
+        });
+        this.sessionErrors.push(appError);
       });
-      return http2Session
+
+
+      return http2Session;
     }
-    return this.http2Session
+    return this.http2Session;
   }
 
-  public invoke(): Promise<void> {
-    return this.promise
+  public getErrors(): Error[] {
+    return this.sessionErrors;
   }
 
   get session(): http2.ClientHttp2Session {
-    return this.http2Session
+    return this.http2Session;
   }
 
   get isClosed(): boolean {
-    return this.http2Session.closed
+    return this.http2Session.closed;
   }
 
   public close(): void {
-    this.http2Session.close()
+    this.http2Session.close();
   }
 }

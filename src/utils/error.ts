@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import { BatchResponse } from '../messaging/messaging-api';
 import { deepCopy } from '../utils/deep-copy';
 import { RequestResponseError, RequestResponse } from './api-request';
 
@@ -426,30 +425,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   }
 }
 
-export class FirebaseMessagingSessionError extends FirebaseMessagingError {
-  public pendingBatchResponse?: Promise<BatchResponse>;
-  /**
-     * 
-     * @param info - The error code info.
-     * @param message - The error message. This will override the default message if provided.
-     * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
-     */
-  constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
-    // Override default message if custom message provided.
-    super(info, message || info.message);
-    this.pendingBatchResponse = pendingBatchResponse;
 
-  }
-
-  /** @returns The object representation of the error. */
-  public toJSON(): object {
-    return {
-      code: this.code,
-      message: this.message,
-      pendingBatchResponse: this.pendingBatchResponse,
-    };
-  }
-}
 
 /**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.
