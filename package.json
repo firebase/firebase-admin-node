@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19.0"
   },
   "scripts": {
     "build": "gulp build",
@@ -221,7 +221,7 @@
     "fast-deep-equal": "^3.1.1",
     "google-auth-library": "^10.6.1",
     "jsonwebtoken": "^9.0.0",
-    "jwks-rsa": "^3.1.0",
+    "jwks-rsa": "^4.0.1",
     "node-forge": "^1.4.0",
     "uuid": "^11.0.2"
   },
