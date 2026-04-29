@@ -63,3 +63,5 @@ export function getEventarc(app?: App): Eventarc {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('eventarc', (app) => new Eventarc(app));
 }
+
+export { FirebaseEventarcError, EventarcErrorCode } from './eventarc-utils';

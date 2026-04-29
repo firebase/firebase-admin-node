@@ -33,7 +33,7 @@ import {
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const EXPECTED_ERROR = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
 const VALID_SHA_1_HASH = '0123456789abcdefABCDEF012345678901234567';
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';

@@ -165,8 +165,8 @@ function initFirestore(app: App, databaseId: string, firestoreSettings?: Firesto
     throw new FirebaseFirestoreError({
       code: 'missing-dependencies',
       message: 'Failed to import the Cloud Firestore client library for Node.js. '
-        + 'Make sure to install the "@google-cloud/firestore" npm package. '
-        + `Original error: ${err}`,
+        + 'Make sure to install the "@google-cloud/firestore" npm package.',
+      cause: err as Error,
     });
   }
 

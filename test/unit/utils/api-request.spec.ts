@@ -29,9 +29,10 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
+  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, HttpRequestConfig,
   parseHttpResponse, RetryConfig, defaultRetryConfig, Http2SessionHandler, Http2RequestConfig,
   RequestResponseError, RequestResponse, AuthorizedHttp2Client,
+  ApiRequestCallback, ApiResponseCallback,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
@@ -274,7 +275,20 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
       expect(resp.text).to.equal(respData);
-      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      
+      try {
+        resp.data;
+        expect.fail('Should have thrown');
+      } catch (err: any) {
+        expect(err.code).to.equal('app/unable-to-parse-response');
+        expect(err.message).to.equal('Error while parsing response data');
+        expect(err.httpResponse).to.deep.equal({
+          status: 200,
+          data: respData,
+          headers: { 'content-type': 'text/plain' }
+        });
+      }
+
       expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.false;
     });
@@ -2987,15 +3001,20 @@ describe('ApiSettings', () => {
       it('should not return null for responseValidator', () => {
         const validator = apiSettings.getResponseValidator();
         expect(() => {
-          return validator({});
+          return validator({
+            // data: {},
+            // status: 200,
+            // headers: {},
+            // isJson: () => false,
+          } as RequestResponse);
         }).to.not.throw();
       });
     });
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator: ApiCallbackFunction = () => undefined;
-      const responseValidator: ApiCallbackFunction = () => undefined;
+      const requestValidator: ApiRequestCallback = () => undefined;
+      const responseValidator: ApiResponseCallback = () => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {

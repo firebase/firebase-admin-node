@@ -27,7 +27,7 @@ import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { EMULATED_SERVICE_ACCOUNT_DEFAULT } from '../../../src/functions/functions-api-client-internal';
 
@@ -221,38 +221,61 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError('not-found', 'Requested entity not found');
+      const expected = new FirebaseFunctionsError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const expected = new FirebaseAppError({ code: 'network-error', message: 'socket hang up' });
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
@@ -262,16 +285,21 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should reject when a task with the same ID exists', () => {
+      const mockErr = utils.errorFrom({}, 409);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 409));
+        .rejects(mockErr);
       stubs.push(stub);
-      expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })).to.eventually.throw(
-        new FirebaseFunctionsError(
-          'task-already-exists',
-          'A task with ID mock-task already exists'
-        )
-      )
+      const expected = new FirebaseFunctionsError({
+        code: 'task-already-exists',
+        message: 'A task with ID mock-task already exists',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should resolve on success', () => {
@@ -614,11 +642,21 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should throw on non-404 HTTP errors', () => {
+      const mockErr = utils.errorFrom({}, 500);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 500));
+        .rejects(mockErr);
       stubs.push(stub);
-      expect(apiClient.delete('mock-task', FUNCTION_NAME)).to.eventually.throw(utils.errorFrom({}, 500));
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.delete('mock-task', FUNCTION_NAME)
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
   })
 });

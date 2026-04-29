@@ -187,13 +187,13 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_CREATE_SESSION_COOKIE.getResponseValidator();
     it('should succeed with sessionCookie returned', () => {
-      const validResponse = { sessionCookie: 'SESSION_COOKIE' };
+      const validResponse = utils.responseFrom({ sessionCookie: 'SESSION_COOKIE' });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
     it('should fail when no session cookie is returned', () => {
-      const invalidResponse = {};
+      const invalidResponse = utils.responseFrom({});
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
@@ -220,7 +220,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
   it('should return empty response validator', () => {
     expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator()).to.not.be.null;
     expect(() => {
-      const emptyResponse = {};
+      const emptyResponse = utils.responseFrom({});
       const responseValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator();
       responseValidator(emptyResponse);
     }).not.to.throw();
@@ -251,7 +251,7 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
   it('should return empty response validator', () => {
     expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getResponseValidator()).to.not.be.null;
     expect(() => {
-      const emptyResponse = {};
+      const emptyResponse = utils.responseFrom({});
       const responseValidator = FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getResponseValidator();
       responseValidator(emptyResponse);
     }).not.to.throw();
@@ -369,19 +369,19 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = { users: [{ localId: 'foo' }] };
+      const validResponse = utils.responseFrom({ users: [{ localId: 'foo' }] });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
     it('should fail when the response object is empty', () => {
-      const invalidResponse = {};
+      const invalidResponse = utils.responseFrom({});
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
     });
     it('should fail when the response object has an empty list of users', () => {
-      const invalidResponse = { users: [] };
+      const invalidResponse = utils.responseFrom({ users: [] });
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
@@ -445,13 +445,13 @@ describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = { users: [] };
+      const validResponse = utils.responseFrom({ users: [] });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
     it('should succeed even if users are not returned', () => {
-      const invalidResponse = {};
+      const invalidResponse = utils.responseFrom({});
       expect(() => {
         responseValidator(invalidResponse);
       }).not.to.throw();
@@ -469,7 +469,7 @@ describe('FIREBASE_AUTH_DELETE_ACCOUNT', () => {
   it('should return empty response validator', () => {
     expect(FIREBASE_AUTH_DELETE_ACCOUNT.getResponseValidator()).to.not.be.null;
     expect(() => {
-      const emptyResponse = {};
+      const emptyResponse = utils.responseFrom({});
       const responseValidator = FIREBASE_AUTH_DELETE_ACCOUNT.getResponseValidator();
       responseValidator(emptyResponse);
     }).not.to.throw();
@@ -660,13 +660,13 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = { localId: '1234' };
+      const validResponse = utils.responseFrom({ localId: '1234' });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
     it('should fail when localId is not returned', () => {
-      const invalidResponse = {};
+      const invalidResponse = utils.responseFrom({});
       expect(() => {
         return responseValidator(invalidResponse);
       }).to.throw();
@@ -816,13 +816,13 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SIGN_UP_NEW_USER.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = { localId: '1234' };
+      const validResponse = utils.responseFrom({ localId: '1234' });
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
     it('should fail when localId is not returned', () => {
-      const invalidResponse = {};
+      const invalidResponse = utils.responseFrom({});
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();

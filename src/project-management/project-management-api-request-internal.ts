@@ -19,7 +19,9 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   AuthorizedHttpClient, RequestResponseError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
-import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
+import {
+  FirebaseProjectManagementError, ProjectManagementErrorCode, HttpResponse, toHttpResponse,
+} from '../utils/error';
 import { getSdkVersion } from '../utils/index';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
@@ -48,9 +50,10 @@ const CERT_TYPE_API_MAP = {
 export function assertServerResponse(
   condition: boolean, responseData: object, message: string): void {
   if (!condition) {
-    throw new FirebaseProjectManagementError(
-      'invalid-server-response',
-      `${message} Response data: ${JSON.stringify(responseData, null, 2)}`);
+    throw new FirebaseProjectManagementError({
+      code: 'invalid-server-response',
+      message: `${message} Response data: ${JSON.stringify(responseData, null, 2)}`
+    });
   }
 }
 
@@ -67,7 +70,7 @@ export class ProjectManagementRequestHandler {
     `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
   private readonly httpClient: AuthorizedHttpClient;
 
-  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string): void {
+  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string, httpResponse?: HttpResponse): void {
     let errorCode: ProjectManagementErrorCode;
     let errorMessage: string;
 
@@ -108,9 +111,15 @@ export class ProjectManagementRequestHandler {
     if (!errText) {
       errText = '<missing>';
     }
-    throw new FirebaseProjectManagementError(
-      errorCode,
-      `${ errorMessage } Status code: ${ errStatusCode }. Raw server response: "${ errText }".`);
+    throw new FirebaseProjectManagementError({
+      code: errorCode,
+      message: errorMessage,
+      httpResponse: httpResponse || {
+        status: errStatusCode,
+        headers: {},
+        data: errText,
+      },
+    });
   }
 
   /**
@@ -330,7 +339,7 @@ export class ProjectManagementRequestHandler {
       .catch((err) => {
         if (err instanceof RequestResponseError) {
           ProjectManagementRequestHandler.wrapAndRethrowHttpError(
-            err.response.status, err.response.text);
+            err.response.status, err.response.text, toHttpResponse(err.response));
         }
         throw err;
       });

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
+/**
+ * Security Rules client error codes and their default messages.
+ */
 export type SecurityRulesErrorCode =
   'already-exists'
   | 'authentication-error'
@@ -28,7 +31,11 @@ export type SecurityRulesErrorCode =
   | 'unknown-error';
 
 export class FirebaseSecurityRulesError extends PrefixedFirebaseError {
-  constructor(code: SecurityRulesErrorCode, message: string) {
-    super('security-rules', code, message);
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
+  constructor(info: ErrorInfo, message?: string) {
+    super('security-rules', info.code, message || info.message, info.httpResponse, info.cause);
   }
 }

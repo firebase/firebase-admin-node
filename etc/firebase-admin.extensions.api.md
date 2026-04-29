@@ -16,6 +16,17 @@ export class Extensions {
 }
 
 // @public
+export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
+
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseExtensionsError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
+// @public
 export function getExtensions(app?: App): Extensions;
 
 // @public

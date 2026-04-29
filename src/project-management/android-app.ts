@@ -55,8 +55,10 @@ export class AndroidApp {
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'appId must be a non-empty string.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'appId must be a non-empty string.'
+      });
     }
 
     this.resourceName = `projects/-/androidApps/${appId}`;
@@ -167,10 +169,11 @@ export class AndroidApp {
    */
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
     if (!certificateToDelete.resourceName) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument',
-        'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to retrieve ' +
-              'certificates with a resourceName.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to ' +
+              'retrieve certificates with a resourceName.'
+      });
     }
     return this.requestHandler.deleteResource(certificateToDelete.resourceName);
   }
@@ -243,8 +246,10 @@ export class ShaCertificate {
     } else if (/^[a-fA-F0-9]{64}$/.test(shaHash)) {
       this.certType = 'sha256';
     } else {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'shaHash must be either a sha256 hash or a sha1 hash.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'shaHash must be either a sha256 hash or a sha1 hash.'
+      });
     }
   }
 }

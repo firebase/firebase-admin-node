@@ -221,6 +221,14 @@ export namespace database {
 }
 
 // @public
+export interface ErrorInfo {
+    cause?: Error;
+    code: string;
+    httpResponse?: HttpResponse;
+    message: string;
+}
+
+// @public
 export interface FirebaseArrayIndexError {
     error: FirebaseError;
     index: number;
@@ -228,10 +236,17 @@ export interface FirebaseArrayIndexError {
 
 // @public
 export interface FirebaseError {
+    cause?: Error;
     code: string;
+    httpResponse?: HttpResponse;
     message: string;
     stack?: string;
     toJSON(): object;
+}
+
+// @public
+export class FirebaseError extends Error implements FirebaseError {
+    constructor(errorInfo: ErrorInfo);
 }
 
 // @public (undocumented)
@@ -297,6 +312,15 @@ export interface GoogleOAuthAccessToken {
     access_token: string;
     // (undocumented)
     expires_in: number;
+}
+
+// @public
+export interface HttpResponse {
+    data?: string | object;
+    headers: {
+        [key: string]: any;
+    };
+    status: number;
 }
 
 // @public (undocumented)

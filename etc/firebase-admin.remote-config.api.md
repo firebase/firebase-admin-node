@@ -89,6 +89,14 @@ export interface FetchResponseData {
     status: number;
 }
 
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -208,6 +216,9 @@ export interface RemoteConfigCondition {
     name: string;
     tagColor?: TagColor;
 }
+
+// @public
+export type RemoteConfigErrorCode = 'aborted' | 'already-exists' | 'failed-precondition' | 'internal-error' | 'invalid-argument' | 'not-found' | 'out-of-range' | 'permission-denied' | 'resource-exhausted' | 'unauthenticated' | 'unknown-error';
 
 // @public
 export class RemoteConfigFetchResponse {

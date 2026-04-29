@@ -212,15 +212,15 @@ export function handleCryptoSignerError(err: Error): Error {
     return err;
   }
   if (err.code === CryptoSignerErrorCode.SERVER_ERROR && validator.isNonNullObject(err.cause)) {
-    const httpError = err.cause;
-    const errorResponse = (httpError as RequestResponseError).response.data;
+    const httpError = err.cause as RequestResponseError;
+    const errorResponse = httpError.response.data;
     if (validator.isNonNullObject(errorResponse) && errorResponse.error) {
       const errorCode = errorResponse.error.status;
       const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
         'for more details on how to use and troubleshoot this feature.';
       const errorMsg = `${errorResponse.error.message}; ${description}`;
 
-      return FirebaseAuthError.fromServerError(errorCode, errorMsg, errorResponse);
+      return FirebaseAuthError.fromServerError(errorCode, errorMsg, httpError);
     }
     return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR,
       'Error returned from server: ' + errorResponse + '. Additionally, an ' +

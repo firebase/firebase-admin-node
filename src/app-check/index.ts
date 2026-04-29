@@ -68,3 +68,5 @@ export function getAppCheck(app?: App): AppCheck {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('appCheck', (app) => new AppCheck(app));
 }
+
+export { FirebaseAppCheckError, AppCheckErrorCode } from './app-check-api-client-internal';

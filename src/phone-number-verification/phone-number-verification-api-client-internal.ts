@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 export interface FirebasePhoneNumberTokenInfo {
   /** Documentation URL. */
@@ -54,13 +54,12 @@ export type PhoneNumberVerificationErrorCode =
 /**
  * Firebase Phone Number Verification error code structure. This extends `PrefixedFirebaseError`.
  *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
+ * @param info - The error code info.
+ * @param message - The error message. If provided, this will override the default message.
  */
 export class FirebasePhoneNumberVerificationError extends PrefixedFirebaseError {
-  constructor(code: PhoneNumberVerificationErrorCode, message: string) {
-    super('phone-number-verification', code, message);
+  constructor(info: ErrorInfo, message?: string) {
+    super('phone-number-verification', info.code, message || info.message, info.httpResponse, info.cause);
 
     /* tslint:disable:max-line-length */
     // Set the prototype explicitly. See the following link for more details:

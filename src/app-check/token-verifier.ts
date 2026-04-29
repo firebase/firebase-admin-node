@@ -48,10 +48,10 @@ export class AppCheckTokenVerifier {
    */
   public verifyToken(token: string): Promise<DecodedAppCheckToken> {
     if (!validator.isString(token)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'App check token must be a non-null string.',
-      );
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'App check token must be a non-null string.'
+      });
     }
 
     return this.ensureProjectId()
@@ -69,11 +69,11 @@ export class AppCheckTokenVerifier {
     return util.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseAppCheckError(
-            'invalid-credential',
-            'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-            'GOOGLE_CLOUD_PROJECT environment variable to verify an App Check token.'
-          );
+          throw new FirebaseAppCheckError({
+            code: 'invalid-credential',
+            message: 'Must initialize app with a cert credential or set your Firebase project ID as the ' +
+              'GOOGLE_CLOUD_PROJECT environment variable to verify an App Check token.'
+          });
         }
         return projectId;
       })
@@ -93,7 +93,10 @@ export class AppCheckTokenVerifier {
       .catch(() => {
         const errorMessage = 'Decoding App Check token failed. Make sure you passed ' +
           'the entire string JWT which represents the Firebase App Check token.';
-        throw new FirebaseAppCheckError('invalid-argument', errorMessage);
+        throw new FirebaseAppCheckError({
+          code: 'invalid-argument',
+          message: errorMessage
+        });
       });
   }
 
@@ -126,7 +129,10 @@ export class AppCheckTokenVerifier {
       errorMessage = 'The provided App Check token has an empty string "sub" (subject) claim.';
     }
     if (errorMessage) {
-      throw new FirebaseAppCheckError('invalid-argument', errorMessage);
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: errorMessage
+      });
     }
   }
 
@@ -148,16 +154,32 @@ export class AppCheckTokenVerifier {
     if (error.code === JwtErrorCode.TOKEN_EXPIRED) {
       const errorMessage = 'The provided App Check token has expired. Get a fresh App Check token' +
         ' from your client app and try again.'
-      return new FirebaseAppCheckError('app-check-token-expired', errorMessage);
+      return new FirebaseAppCheckError({
+        code: 'app-check-token-expired',
+        message: errorMessage,
+        cause: error
+      });
     } else if (error.code === JwtErrorCode.INVALID_SIGNATURE) {
       const errorMessage = 'The provided App Check token has invalid signature.';
-      return new FirebaseAppCheckError('invalid-argument', errorMessage);
+      return new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: errorMessage,
+        cause: error
+      });
     } else if (error.code === JwtErrorCode.NO_MATCHING_KID) {
       const errorMessage = 'The provided App Check token has "kid" claim which does not ' +
         'correspond to a known public key. Most likely the provided App Check token ' +
         'is expired, so get a fresh token from your client app and try again.';
-      return new FirebaseAppCheckError('invalid-argument', errorMessage);
+      return new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: errorMessage,
+        cause: error
+      });
     }
-    return new FirebaseAppCheckError('invalid-argument', error.message);
+    return new FirebaseAppCheckError({
+      code: 'invalid-argument',
+      message: error.message,
+      cause: error
+    });
   }
 }

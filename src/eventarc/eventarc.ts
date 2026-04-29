@@ -45,10 +45,10 @@ export class Eventarc {
    */
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseEventarcError(
-        'invalid-argument',
-        'First argument passed to Eventarc() must be a valid Firebase app instance.',
-      );
+      throw new FirebaseEventarcError({
+        code: 'invalid-argument',
+        message: 'First argument passed to Eventarc() must be a valid Firebase app instance.'
+      });
     }
 
     this.appInternal = app;
@@ -117,10 +117,10 @@ export class Eventarc {
     } else if (validator.isArray(opts?.allowedEventTypes)) {
       allowedEventTypes = opts?.allowedEventTypes as string[];
     } else if (typeof opts?.allowedEventTypes !== 'undefined') {
-      throw new FirebaseEventarcError(
-        'invalid-argument',
-        'AllowedEventTypes must be either an array of strings or a comma separated string.',
-      );
+      throw new FirebaseEventarcError({
+        code: 'invalid-argument',
+        message: 'AllowedEventTypes must be either an array of strings or a comma separated string.'
+      });
     }
     return new Channel(this, channel, allowedEventTypes);
   }
@@ -145,15 +145,16 @@ export class Channel {
    */
   constructor(eventarc: Eventarc, name: string, allowedEventTypes?: string[]) {
     if (!validator.isNonNullObject(eventarc)) {
-      throw new FirebaseEventarcError(
-        'invalid-argument',
-        'First argument passed to Channel() must be a valid Eventarc service instance.',
-      );
+      throw new FirebaseEventarcError({
+        code: 'invalid-argument',
+        message: 'First argument passed to Channel() must be a valid Eventarc service instance.'
+      });
     }
     if (!validator.isNonEmptyString(name)) {
-      throw new FirebaseEventarcError(
-        'invalid-argument', 'name is required.',
-      );
+      throw new FirebaseEventarcError({
+        code: 'invalid-argument',
+        message: 'name is required.'
+      });
     }
 
     this.nameInternal = name;

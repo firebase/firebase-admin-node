@@ -27,7 +27,7 @@ import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
@@ -141,38 +141,61 @@ describe('AppCheckApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found');
+      const expected = new FirebaseAppCheckError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      const expected = new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const expected = new FirebaseAppError({ code: 'network-error', message: 'socket hang up' });
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
@@ -190,8 +213,10 @@ describe('AppCheckApiClient', () => {
             .stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom(response, 200));
           stubs.push(stub);
-          const expected = new FirebaseAppCheckError(
-            'invalid-argument', '`ttl` must be a valid duration string with the suffix `s`.');
+          const expected = new FirebaseAppCheckError({
+            code: 'invalid-argument',
+            message: '`ttl` must be a valid duration string with the suffix `s`.'
+          });
           return apiClient.exchangeToken(TEST_TOKEN_TO_EXCHANGE, APP_ID)
             .should.eventually.be.rejected.and.deep.include(expected);
         });
@@ -264,38 +289,61 @@ describe('AppCheckApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('not-found', 'Requested entity not found');
+      const expected = new FirebaseAppCheckError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseAppCheckError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      const expected = new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const expected = new FirebaseAppError({ code: 'network-error', message: 'socket hang up' });
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
@@ -312,10 +360,14 @@ describe('AppCheckApiClient', () => {
             .stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom(response, 200));
           stubs.push(stub);
-          const expected = new FirebaseAppCheckError(
-            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
+          const expected = new FirebaseAppCheckError({
+            code: 'invalid-argument',
+            message: '`alreadyConsumed` must be a boolean value.'
+          });
           return apiClient.verifyReplayProtection(TEST_TOKEN_TO_EXCHANGE)
-            .should.eventually.be.rejected.and.deep.include(expected);
+            .should.eventually.be.rejected
+            .and.deep.include(expected)
+            .and.have.nested.property('httpResponse.status', 200);
         });
       });
 

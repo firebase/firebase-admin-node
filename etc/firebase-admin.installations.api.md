@@ -10,6 +10,8 @@ import { Agent } from 'http';
 //
 // @public
 export class FirebaseInstallationsError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -24,27 +26,23 @@ export class Installations {
 }
 
 // @public (undocumented)
-export class InstallationsClientErrorCode {
-    // (undocumented)
-    static API_ERROR: {
+export const InstallationsClientErrorCode: {
+    INVALID_ARGUMENT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
+    INVALID_PROJECT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_INSTALLATION_ID: {
+    INVALID_INSTALLATION_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROJECT_ID: {
+    API_ERROR: {
         code: string;
         message: string;
     };
-}
+};
 
 ```

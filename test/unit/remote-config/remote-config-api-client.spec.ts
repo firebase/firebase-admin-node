@@ -26,7 +26,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
@@ -333,19 +333,27 @@ describe('RemoteConfigApiClient', () => {
 
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurres', () => {
+        const mockErr = utils.errorFrom({
+          error: {
+            code: 400,
+            message: message,
+            status: 'FAILED_PRECONDITION'
+          }
+        }, 400);
         const stub = sinon
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({
-            error: {
-              code: 400,
-              message: message,
-              status: 'FAILED_PRECONDITION'
-            }
-          }, 400));
+          .rejects(mockErr);
         stubs.push(stub);
-        const expected = new FirebaseRemoteConfigError('failed-precondition', message);
+        const expected = new FirebaseRemoteConfigError({
+          code: 'failed-precondition',
+          message,
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
         return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
     });
   });
@@ -428,19 +436,27 @@ describe('RemoteConfigApiClient', () => {
 
     VALIDATION_ERROR_MESSAGES.forEach((message) => {
       it('should reject with failed-precondition when a validation error occurs', () => {
+        const mockErr = utils.errorFrom({
+          error: {
+            code: 400,
+            message: message,
+            status: 'FAILED_PRECONDITION'
+          }
+        }, 400);
         const stub = sinon
           .stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({
-            error: {
-              code: 400,
-              message: message,
-              status: 'FAILED_PRECONDITION'
-            }
-          }, 400));
+          .rejects(mockErr);
         stubs.push(stub);
-        const expected = new FirebaseRemoteConfigError('failed-precondition', message);
+        const expected = new FirebaseRemoteConfigError({
+          code: 'failed-precondition',
+          message,
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
         return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejected.and.deep.include(expected);
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
       });
     });
   });
@@ -715,8 +731,10 @@ describe('RemoteConfigApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE));
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('invalid-argument',
-        'ETag header is not present in the server response.');
+      const expected = new FirebaseRemoteConfigError({
+        code: 'invalid-argument',
+        message: 'ETag header is not present in the server response.'
+      });
       return rcOperation()
         .should.eventually.be.rejected.and.deep.include(expected);
     });
@@ -725,38 +743,61 @@ describe('RemoteConfigApiClient', () => {
   function runErrorResponseTests(
     rcOperation: () => Promise<RemoteConfigTemplate | ServerTemplateData | ListVersionsResult>): void {
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
+      const expected = new FirebaseRemoteConfigError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseRemoteConfigError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      const expected = new FirebaseRemoteConfigError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const expected = new FirebaseAppError({ code: 'network-error', message: 'socket hang up' });
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);

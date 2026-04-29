@@ -64,3 +64,8 @@ export function getPhoneNumberVerification(app?: App): PhoneNumberVerification {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('phone-number-verification', (app) => new PhoneNumberVerification(app));
 }
+
+export {
+  FirebasePhoneNumberVerificationError,
+  PhoneNumberVerificationErrorCode,
+} from './phone-number-verification-api-client-internal';

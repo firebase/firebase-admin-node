@@ -63,10 +63,19 @@ export interface Credential {
 // @public
 export function deleteApp(app: App): Promise<void>;
 
+// @public
+export interface ErrorInfo {
+    cause?: Error;
+    code: string;
+    httpResponse?: HttpResponse;
+    message: string;
+}
+
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
 export class FirebaseAppError extends PrefixedFirebaseError {
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public
@@ -77,10 +86,17 @@ export interface FirebaseArrayIndexError {
 
 // @public
 export interface FirebaseError {
+    cause?: Error;
     code: string;
+    httpResponse?: HttpResponse;
     message: string;
     stack?: string;
     toJSON(): object;
+}
+
+// @public
+export class FirebaseError extends Error implements FirebaseError {
+    constructor(errorInfo: ErrorInfo);
 }
 
 // @public
@@ -95,6 +111,15 @@ export interface GoogleOAuthAccessToken {
     access_token: string;
     // (undocumented)
     expires_in: number;
+}
+
+// @public
+export interface HttpResponse {
+    data?: string | object;
+    headers: {
+        [key: string]: any;
+    };
+    status: number;
 }
 
 // @public

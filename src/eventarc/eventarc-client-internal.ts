@@ -24,7 +24,7 @@ import {
 } from '../utils/api-request';
 import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 
 const EVENTARC_API = 'https://eventarcpublishing.googleapis.com/v1';
@@ -46,9 +46,10 @@ export class EventarcApiClient {
 
   constructor(private readonly app: App, private readonly channel: Channel) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseEventarcError(
-        'invalid-argument',
-        'First argument passed to Channel() must be a valid Eventarc service instance.');
+      throw new FirebaseEventarcError({
+        code: 'invalid-argument',
+        message: 'First argument passed to Channel() must be a valid Eventarc service instance.'
+      });
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
     this.resolvedChannelName = this.resolveChannelName(channel.name);
@@ -61,11 +62,12 @@ export class EventarcApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseEventarcError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseEventarcError({
+            code: 'unknown-error',
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
@@ -123,9 +125,12 @@ export class EventarcApiClient {
     }
 
     const response = err.response;
-    return new FirebaseEventarcError(
-      'unknown-error',
-      `Unexpected response with status: ${response.status} and body: ${response.text}`);
+    return new FirebaseEventarcError({
+      code: 'unknown-error',
+      message: `Unexpected response with status: ${response.status}.`,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 
   private resolveChannelName(name: string): Promise<string> {
@@ -136,7 +141,10 @@ export class EventarcApiClient {
     } else {
       const match = CHANNEL_NAME_REGEX.exec(name);
       if (match === null || match.length < 4) {
-        throw new FirebaseEventarcError('invalid-argument', 'Invalid channel name format.');
+        throw new FirebaseEventarcError({
+          code: 'invalid-argument',
+          message: 'Invalid channel name format.'
+        });
       }
       const projectId = match[2];
       const location = match[3];

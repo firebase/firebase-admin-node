@@ -106,3 +106,5 @@ export function getRemoteConfig(app?: App): RemoteConfig {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('remoteConfig', (app) => new RemoteConfig(app));
 }
+
+export { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-api-client-internal';

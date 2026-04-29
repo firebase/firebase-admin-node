@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -106,9 +106,10 @@ export class DataConnectApiClient {
 
   constructor(private readonly connectorConfig: ConnectorConfig, private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        'First argument passed to getDataConnect() must be a valid Firebase app instance.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'First argument passed to getDataConnect() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new DataConnectHttpClient(app as FirebaseApp);
   }
@@ -165,15 +166,17 @@ export class DataConnectApiClient {
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (!validator.isNonEmptyString(query)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`query` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`query` must be a non-empty string.'
+      });
     }
     if (typeof options !== 'undefined') {
       if (!validator.isNonNullObject(options)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          'GraphqlOptions must be a non-null object');
+        throw new FirebaseDataConnectError({
+          code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          message: 'GraphqlOptions must be a non-null object'
+        });
       }
     }
     const data = {
@@ -242,17 +245,18 @@ export class DataConnectApiClient {
       typeof name === 'undefined' ||
       !validator.isNonEmptyString(name)
     ) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`name` must be a non-empty string.'
-      );
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`name` must be a non-empty string.'
+      });
     }
 
     if (this.connectorConfig.connector === undefined || this.connectorConfig.connector === '') {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        `The 'connectorConfig.connector' field used to instantiate your Data Connect
-        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`
+      });
     }
 
     const data = {
@@ -348,11 +352,12 @@ export class DataConnectApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseDataConnectError({
+            code: DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
@@ -377,8 +382,11 @@ export class DataConnectApiClient {
     const resp = await this.httpClient.send(request);
     if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
       const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        message: allMessages,
+        httpResponse: toHttpResponse(resp),
+      });
     }
     return Promise.resolve({
       data: resp.data.data as GraphqlResponse,
@@ -392,9 +400,12 @@ export class DataConnectApiClient {
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      return new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: toHttpResponse(response),
+        cause: err
+      });
     }
 
     const error: ServerError = (response.data as ErrorResponse).error || {};
@@ -402,8 +413,13 @@ export class DataConnectApiClient {
     if (error.status && error.status in DATA_CONNECT_ERROR_CODE_MAPPING) {
       code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseDataConnectError(code, message);
+    const message = error.message || 'Unknown server error';
+    return new FirebaseDataConnectError({
+      code,
+      message,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 
   /**
@@ -460,9 +476,12 @@ export class DataConnectApiClient {
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
     if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
-        `${err.message}. Make sure that your table name passed in matches the type name in your GraphQL schema file.`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        message: `${err.message}. Make sure that your table name passed in matches the type name in your `
+          + 'GraphQL schema file.',
+        cause: err,
+      });
     }
     throw err;
   }
@@ -475,19 +494,23 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
     }
     if (validator.isArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single insert. For arrays, please use `insertMany` function.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be an object, not an array, for single insert. For arrays, please use '
+          + '`insertMany` function.'
+      });
     }
     if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-null object.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be a non-null object.'
+      });
     }
 
     try {
@@ -497,9 +520,11 @@ export class DataConnectApiClient {
       // Use internal executeGraphql
       return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct insert mutation: ${e.message}`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct insert mutation: ${e.message}`,
+        cause: e,
+      });
     }
   }
 
@@ -511,14 +536,16 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
     }
     if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-empty array for insertMany.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be a non-empty array for insertMany.',
+      });
     }
 
     try {
@@ -528,8 +555,11 @@ export class DataConnectApiClient {
       // Use internal executeGraphql
       return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct insertMany mutation: ${e.message}`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct insertMany mutation: ${e.message}`,
+        cause: e,
+      });
     }
   }
 
@@ -541,19 +571,23 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
     }
     if (validator.isArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single upsert. For arrays, please use `upsertMany` function.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be an object, not an array, for single upsert. For arrays, please use '
+          + '`upsertMany` function.'
+      });
     }
     if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-null object.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be a non-null object.'
+      });
     }
 
     try {
@@ -563,9 +597,11 @@ export class DataConnectApiClient {
       // Use internal executeGraphql
       return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct upsert mutation: ${e.message}`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct upsert mutation: ${e.message}`,
+        cause: e,
+      });
     }
   }
 
@@ -577,14 +613,16 @@ export class DataConnectApiClient {
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
     }
     if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-empty array for upsertMany.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be a non-empty array for upsertMany.'
+      });
     }
 
     try {
@@ -594,9 +632,11 @@ export class DataConnectApiClient {
       // Use internal executeGraphql
       return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct upsertMany mutation: ${e.message}`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct upsertMany mutation: ${e.message}`,
+        cause: e,
+      });
     }
   }
 }
@@ -651,6 +691,9 @@ export const DATA_CONNECT_ERROR_CODE_MAPPING: { [key: string]: DataConnectErrorC
   QUERY_ERROR: 'query-error',
 };
 
+/**
+ * Data Connect client error codes and their default messages.
+ */
 export type DataConnectErrorCode =
   'aborted'
   | 'invalid-argument'
@@ -663,20 +706,15 @@ export type DataConnectErrorCode =
   | 'query-error';
 
 /**
- * Firebase Data Connect error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
+ * Firebase Data Connect error type. This extends PrefixedFirebaseError.
  */
 export class FirebaseDataConnectError extends PrefixedFirebaseError {
-  constructor(code: DataConnectErrorCode, message: string) {
-    super('data-connect', code, message);
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
+  constructor(info: ErrorInfo, message?: string) {
+    super('data-connect', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseDataConnectError.prototype;
   }
 }

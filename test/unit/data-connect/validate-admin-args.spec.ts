@@ -42,10 +42,10 @@ describe('validateAdminArgs()', () => {
   const variables: IdVars = { id: 'stephenarosaj' };
   const options: OperationOptions = { impersonate: { unauthenticated: true } };
 
-  const invalidVariablesError = new FirebaseDataConnectError(
-    DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-    'Variables required.'
-  );
+  const invalidVariablesError = new FirebaseDataConnectError({
+    code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+    message: 'Variables required.'
+  });
 
   const stubDcInstance = { connectorConfig: connectorConfig, source: 'STUB' } as unknown as DataConnect;
   beforeEach(() => {

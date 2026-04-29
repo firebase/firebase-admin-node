@@ -56,483 +56,388 @@ export class Auth extends BaseAuth {
 }
 
 // @public
-export class AuthClientErrorCode {
-    // (undocumented)
-    static AUTH_BLOCKING_TOKEN_EXPIRED: {
+export const AuthClientErrorCode: {
+    AUTH_BLOCKING_TOKEN_EXPIRED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static BILLING_NOT_ENABLED: {
+    BILLING_NOT_ENABLED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static CLAIMS_TOO_LARGE: {
+    CLAIMS_TOO_LARGE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static CONFIGURATION_EXISTS: {
+    CONFIGURATION_EXISTS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static CONFIGURATION_NOT_FOUND: {
+    CONFIGURATION_NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static EMAIL_ALREADY_EXISTS: {
+    ID_TOKEN_EXPIRED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static EMAIL_NOT_FOUND: {
+    INVALID_ARGUMENT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static FORBIDDEN_CLAIM: {
+    INVALID_CONFIG: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static ID_TOKEN_EXPIRED: {
+    EMAIL_ALREADY_EXISTS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static ID_TOKEN_REVOKED: {
+    EMAIL_NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INSUFFICIENT_PERMISSION: {
+    FORBIDDEN_CLAIM: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INTERNAL_ERROR: {
+    INVALID_ID_TOKEN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
+    ID_TOKEN_REVOKED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_CLAIMS: {
+    INTERNAL_ERROR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_CONFIG: {
+    INVALID_CLAIMS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_CONTINUE_URI: {
+    INVALID_CONTINUE_URI: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_CREATION_TIME: {
+    INVALID_CREATION_TIME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_CREDENTIAL: {
+    INVALID_CREDENTIAL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_DISABLED_FIELD: {
+    INVALID_DISABLED_FIELD: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_DISPLAY_NAME: {
+    INVALID_DISPLAY_NAME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_DYNAMIC_LINK_DOMAIN: {
+    INVALID_DYNAMIC_LINK_DOMAIN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_EMAIL: {
+    INVALID_HOSTING_LINK_DOMAIN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_EMAIL_VERIFIED: {
+    INVALID_EMAIL_VERIFIED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ENROLLED_FACTORS: {
+    INVALID_EMAIL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ENROLLMENT_TIME: {
+    INVALID_NEW_EMAIL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_ALGORITHM: {
+    INVALID_ENROLLED_FACTORS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_BLOCK_SIZE: {
+    INVALID_ENROLLMENT_TIME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_DERIVED_KEY_LENGTH: {
+    INVALID_HASH_ALGORITHM: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_KEY: {
+    INVALID_HASH_BLOCK_SIZE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_MEMORY_COST: {
+    INVALID_HASH_DERIVED_KEY_LENGTH: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_PARALLELIZATION: {
+    INVALID_HASH_KEY: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_ROUNDS: {
+    INVALID_HASH_MEMORY_COST: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HASH_SALT_SEPARATOR: {
+    INVALID_HASH_PARALLELIZATION: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_HOSTING_LINK_DOMAIN: {
+    INVALID_HASH_ROUNDS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_ID_TOKEN: {
+    INVALID_HASH_SALT_SEPARATOR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_LAST_SIGN_IN_TIME: {
+    INVALID_LAST_SIGN_IN_TIME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_NAME: {
+    INVALID_NAME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_NEW_EMAIL: {
+    INVALID_OAUTH_CLIENT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_OAUTH_CLIENT_ID: {
+    INVALID_PAGE_TOKEN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_OAUTH_RESPONSETYPE: {
+    INVALID_PASSWORD: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PAGE_TOKEN: {
+    INVALID_PASSWORD_HASH: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PASSWORD: {
+    INVALID_PASSWORD_SALT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PASSWORD_HASH: {
+    INVALID_PHONE_NUMBER: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PASSWORD_SALT: {
+    INVALID_PHOTO_URL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PHONE_NUMBER: {
+    INVALID_PROJECT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PHOTO_URL: {
+    INVALID_PROVIDER_DATA: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROJECT_ID: {
+    INVALID_PROVIDER_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROVIDER_DATA: {
+    INVALID_PROVIDER_UID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROVIDER_ID: {
+    INVALID_OAUTH_RESPONSETYPE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_PROVIDER_UID: {
+    INVALID_SESSION_COOKIE_DURATION: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_RECAPTCHA_ACTION: {
+    INVALID_TENANT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_RECAPTCHA_ENFORCEMENT_STATE: {
+    INVALID_TENANT_TYPE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_SESSION_COOKIE_DURATION: {
+    INVALID_TESTING_PHONE_NUMBER: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_TENANT_ID: {
+    INVALID_UID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_TENANT_TYPE: {
+    INVALID_USER_IMPORT: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_TESTING_PHONE_NUMBER: {
+    INVALID_TOKENS_VALID_AFTER_TIME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_TOKENS_VALID_AFTER_TIME: {
+    MISMATCHING_TENANT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_UID: {
+    MISSING_ANDROID_PACKAGE_NAME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static INVALID_USER_IMPORT: {
+    MISSING_CONFIG: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED: {
+    MISSING_CONTINUE_URI: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MAXIMUM_USER_COUNT_EXCEEDED: {
+    MISSING_DISPLAY_NAME: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISMATCHING_TENANT_ID: {
+    MISSING_EMAIL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_ANDROID_PACKAGE_NAME: {
+    MISSING_IOS_BUNDLE_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_CONFIG: {
+    MISSING_ISSUER: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_CONTINUE_URI: {
+    MISSING_HASH_ALGORITHM: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_DISPLAY_NAME: {
+    MISSING_OAUTH_CLIENT_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_EMAIL: {
+    MISSING_OAUTH_CLIENT_SECRET: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_HASH_ALGORITHM: {
+    MISSING_PROVIDER_ID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_IOS_BUNDLE_ID: {
+    MISSING_SAML_RELYING_PARTY_CONFIG: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_ISSUER: {
+    MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_OAUTH_CLIENT_ID: {
+    MAXIMUM_USER_COUNT_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_OAUTH_CLIENT_SECRET: {
+    MISSING_UID: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_PROVIDER_ID: {
+    OPERATION_NOT_ALLOWED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_SAML_RELYING_PARTY_CONFIG: {
+    PHONE_NUMBER_ALREADY_EXISTS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static MISSING_UID: {
+    PROJECT_NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static NOT_FOUND: {
+    INSUFFICIENT_PERMISSION: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static OPERATION_NOT_ALLOWED: {
+    QUOTA_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static PHONE_NUMBER_ALREADY_EXISTS: {
+    SECOND_FACTOR_LIMIT_EXCEEDED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static PROJECT_NOT_FOUND: {
+    SECOND_FACTOR_UID_ALREADY_EXISTS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static QUOTA_EXCEEDED: {
+    SESSION_COOKIE_EXPIRED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static RECAPTCHA_NOT_ENABLED: {
+    SESSION_COOKIE_REVOKED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static SECOND_FACTOR_LIMIT_EXCEEDED: {
+    TENANT_NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static SECOND_FACTOR_UID_ALREADY_EXISTS: {
+    UID_ALREADY_EXISTS: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static SESSION_COOKIE_EXPIRED: {
+    UNAUTHORIZED_DOMAIN: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static SESSION_COOKIE_REVOKED: {
+    UNSUPPORTED_FIRST_FACTOR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static TENANT_NOT_FOUND: {
+    UNSUPPORTED_SECOND_FACTOR: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UID_ALREADY_EXISTS: {
+    UNSUPPORTED_TENANT_OPERATION: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNAUTHORIZED_DOMAIN: {
+    UNVERIFIED_EMAIL: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNSUPPORTED_FIRST_FACTOR: {
+    USER_NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNSUPPORTED_SECOND_FACTOR: {
+    NOT_FOUND: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNSUPPORTED_TENANT_OPERATION: {
+    USER_DISABLED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static UNVERIFIED_EMAIL: {
+    USER_NOT_DISABLED: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static USER_DISABLED: {
+    INVALID_RECAPTCHA_ACTION: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static USER_NOT_DISABLED: {
+    INVALID_RECAPTCHA_ENFORCEMENT_STATE: {
         code: string;
         message: string;
     };
-    // (undocumented)
-    static USER_NOT_FOUND: {
+    RECAPTCHA_NOT_ENABLED: {
         code: string;
         message: string;
     };
-}
+};
 
 // @public
 export type AuthFactorType = 'phone';
@@ -732,6 +637,8 @@ export interface EmailSignInProviderConfig {
 //
 // @public
 export class FirebaseAuthError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public

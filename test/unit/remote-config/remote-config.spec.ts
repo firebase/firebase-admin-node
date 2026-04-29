@@ -46,7 +46,7 @@ const expect = chai.expect;
 
 describe('RemoteConfig', () => {
 
-  const INTERNAL_ERROR = new FirebaseRemoteConfigError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseRemoteConfigError({ code: 'internal-error', message: 'message' });
   const PARAMETER_GROUPS = {
     new_menu: {
       description: 'Description of the group.',

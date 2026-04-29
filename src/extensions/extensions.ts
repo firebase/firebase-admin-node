@@ -62,16 +62,17 @@ export class Runtime {
   constructor(client: ExtensionsApiClient) {
     this.projectId = this.getProjectId();
     if (!validator.isNonEmptyString(process.env['EXT_INSTANCE_ID'])) {
-      throw new FirebaseExtensionsError(
-        'invalid-argument',
-        'Runtime is only available from within a running Extension instance.'
-      );
+      throw new FirebaseExtensionsError({
+        code: 'invalid-argument',
+        message: 'Runtime is only available from within a running Extension instance.'
+      });
     }
     this.extensionInstanceId = process.env['EXT_INSTANCE_ID'];
     if (!validator.isNonNullObject(client) || !('updateRuntimeData' in client)) {
-      throw new FirebaseExtensionsError(
-        'invalid-argument',
-        'Must provide a valid ExtensionsApiClient instance to create a new Runtime.');
+      throw new FirebaseExtensionsError({
+        code: 'invalid-argument',
+        message: 'Must provide a valid ExtensionsApiClient instance to create a new Runtime.'
+      });
     }
     this.client = client;
   }
@@ -118,10 +119,10 @@ export class Runtime {
    */
   public async setFatalError(errorMessage: string): Promise<void> {
     if (!validator.isNonEmptyString(errorMessage)) {
-      throw new FirebaseExtensionsError(
-        'invalid-argument',
-        'errorMessage must not be empty'
-      );
+      throw new FirebaseExtensionsError({
+        code: 'invalid-argument',
+        message: 'errorMessage must not be empty'
+      });
     }
     await this.client.updateRuntimeData(
       this.projectId,
@@ -137,10 +138,10 @@ export class Runtime {
   private getProjectId(): string {
     const projectId = process.env['PROJECT_ID'];
     if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseExtensionsError(
-        'invalid-argument',
-        'PROJECT_ID must not be undefined in Extensions runtime environment'
-      );
+      throw new FirebaseExtensionsError({
+        code: 'invalid-argument',
+        message: 'PROJECT_ID must not be undefined in Extensions runtime environment'
+      });
     }
     return projectId;
   }

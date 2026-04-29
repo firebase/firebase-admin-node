@@ -110,9 +110,10 @@ export class AppCheck {
       return;
     }
     if (!validator.isNonNullObject(options)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'VerifyAppCheckTokenOptions must be a non-null object.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'VerifyAppCheckTokenOptions must be a non-null object.'
+      });
     }
   }
 }

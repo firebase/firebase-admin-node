@@ -29,7 +29,7 @@ import { storage } from './storage/storage-namespace';
 
 import { App as AppCore, AppOptions } from './app/index';
 
-export { AppOptions, FirebaseError, FirebaseArrayIndexError } from './app/index';
+export { AppOptions, FirebaseError, FirebaseArrayIndexError, ErrorInfo, HttpResponse } from './app/index';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace app {

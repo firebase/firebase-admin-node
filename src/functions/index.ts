@@ -71,3 +71,5 @@ export function getFunctions(app?: App): Functions {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('functions', (app) => new Functions(app));
 }
+
+export { FirebaseFunctionsError, FunctionsErrorCode } from './functions-api-client-internal';

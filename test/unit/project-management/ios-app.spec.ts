@@ -31,7 +31,7 @@ import { AppPlatform, IosApp, IosAppMetadata } from '../../../src/project-manage
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const EXPECTED_ERROR = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
 describe('IosApp', () => {
   // Stubs used to simulate underlying api calls.
@@ -79,7 +79,7 @@ describe('IosApp', () => {
   });
 
   describe('getMetadata', () => {
-    const expectedError = new FirebaseProjectManagementError('internal-error', 'message');
+    const expectedError = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
     const VALID_IOS_APP_METADATA_API_RESPONSE = {
       name: 'test-resource-name',

@@ -18,7 +18,7 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError } from '../utils/error';
+import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 
@@ -39,9 +39,10 @@ export class ExtensionsApiClient {
   
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseAppError(
-        'invalid-argument',
-        'First argument passed to getExtensions() must be a valid Firebase app instance.');
+      throw new FirebaseAppError({
+        code: 'invalid-argument',
+        message: 'First argument passed to getExtensions() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new AuthorizedHttpClient(this.app as FirebaseApp);
   }
@@ -83,21 +84,44 @@ export class ExtensionsApiClient {
 
     const response = err.response;
     if (!response?.isJson()) {
-      return new FirebaseExtensionsError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      return new FirebaseExtensionsError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: toHttpResponse(response),
+        cause: err
+      });
     }
     const error = response.data?.error;
-    const message = error?.message || `Unknown server error: ${response.text}`;
+    const message = error?.message || 'Unknown server error';
     switch (error.code) {
     case 403:
-      return  new FirebaseExtensionsError('forbidden', message);
+      return new FirebaseExtensionsError({
+        code: 'forbidden',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     case 404:
-      return new FirebaseExtensionsError('not-found', message);
+      return new FirebaseExtensionsError({
+        code: 'not-found',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     case 500:
-      return new FirebaseExtensionsError('internal-error', message);
+      return new FirebaseExtensionsError({
+        code: 'internal-error',
+        message,
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
     }
-    return new FirebaseExtensionsError('unknown-error', message);
+    return new FirebaseExtensionsError({
+      code: 'unknown-error',
+      message,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 }
 
@@ -129,22 +153,20 @@ type State = 'STATE_UNSPECIFIED' |
   'PROCESSING_WARNING' |
   'PROCESSING_FAILED';
 
-type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
+/**
+ * Extensions client error codes and their default messages.
+ */
+export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
  */
 export class FirebaseExtensionsError extends PrefixedFirebaseError {
-  constructor(code: ExtensionsErrorCode, message: string) {
-    super('Extensions', code, message);
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
+  constructor(info: ErrorInfo, message?: string) {
+    super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseExtensionsError.prototype;
   }
 }

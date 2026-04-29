@@ -57,7 +57,7 @@ describe('FPNV Constants and Error Class', () => {
     const testMessage = 'The provided token is malformed or invalid.';
 
     it('should correctly extend PrefixedFirebaseError', () => {
-      const error = new FirebasePhoneNumberVerificationError(testCode, testMessage);
+      const error = new FirebasePhoneNumberVerificationError({ code: testCode, message: testMessage });
 
       expect(error).to.be.an.instanceOf(FirebasePhoneNumberVerificationError);
       expect(error).to.be.an.instanceOf(PrefixedFirebaseError);
@@ -67,7 +67,7 @@ describe('FPNV Constants and Error Class', () => {
 
 
     it('should have the correct error properties on the instance', () => {
-      const error = new FirebasePhoneNumberVerificationError(testCode, testMessage);
+      const error = new FirebasePhoneNumberVerificationError({ code: testCode, message: testMessage });
 
       expect(error.code).to.equal(`${FPNV_PREFIX}/${testCode}`);
       expect(error.message).to.equal(testMessage);
@@ -77,7 +77,7 @@ describe('FPNV Constants and Error Class', () => {
       const codes = Object.values(FPNV_ERROR_CODE_MAPPING);
 
       codes.forEach(code => {
-        const error = new FirebasePhoneNumberVerificationError(code, `Test message for ${code}`);
+        const error = new FirebasePhoneNumberVerificationError({ code, message: `Test message for ${code}` });
         expect(error.code).to.equal(`${FPNV_PREFIX}/${code}`);
       });
     });

@@ -39,6 +39,9 @@ export class DataConnect {
 }
 
 // @public
+export type DataConnectErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'query-error';
+
+// @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
     data: GraphqlResponse;
 }
@@ -46,6 +49,14 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 // @public
 export interface ExecuteOperationResponse<GraphqlResponse> {
     data: GraphqlResponse;
+}
+
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseDataConnectError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public

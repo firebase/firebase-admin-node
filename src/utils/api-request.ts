@@ -16,7 +16,7 @@
  */
 
 import { FirebaseApp } from '../app/firebase-app';
-import { AppErrorCodes, FirebaseAppError } from './error';
+import { AppErrorCodes, FirebaseAppError, toHttpResponse } from './error';
 import * as validator from './validator';
 
 import http = require('http');
@@ -31,8 +31,10 @@ import { getMetricsHeader } from '../utils/index';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
-/** API callback function type definition. */
-export type ApiCallbackFunction = (data: object) => void;
+/** API request callback function type definition. */
+export type ApiRequestCallback = (data: any) => void;
+/** API response callback function type definition. */
+export type ApiResponseCallback = (response: RequestResponse) => void;
 
 /**
  * Base configuration for constructing a new request.
@@ -130,7 +132,6 @@ class DefaultRequestResponse implements RequestResponse {
 
   private readonly parsedData: any;
   private readonly parseError: Error;
-  private readonly request: string;
 
   /**
    * Constructs a new `RequestResponse` from the given `LowLevelResponse`.
@@ -141,26 +142,25 @@ class DefaultRequestResponse implements RequestResponse {
     this.text = resp.data;
     try {
       if (!resp.data) {
-        throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+        throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'HTTP response missing data.' });
       }
       this.parsedData = JSON.parse(resp.data);
     } catch (err) {
       this.parsedData = undefined;
       this.parseError = err;
     }
-    this.request = `${resp.config.method} ${resp.config.url}`;
   }
 
   get data(): any {
     if (this.isJson()) {
       return this.parsedData;
     }
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      `Error while parsing response data: "${ this.parseError.toString() }". Raw server ` +
-      `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
-      `request: "${ this.request }."`,
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Error while parsing response data',
+      cause: this.parseError as Error,
+      httpResponse: toHttpResponse(this)
+    });
   }
 
   public isJson(): boolean {
@@ -185,17 +185,17 @@ class MultipartRequestResponse implements RequestResponse {
   }
 
   get text(): string {
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      'Unable to parse multipart payload as text',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Unable to parse multipart payload as text'
+    });
   }
 
   get data(): any {
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      'Unable to parse multipart payload as JSON',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Unable to parse multipart payload as JSON'
+    });
   }
 
   public isJson(): boolean {
@@ -258,28 +258,34 @@ export function defaultRetryConfig(): RetryConfig {
  */
 function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_ARGUMENT, 'maxRetries must be a non-negative integer');
+    throw new FirebaseAppError({
+      code: AppErrorCodes.INVALID_ARGUMENT,
+      message: 'maxRetries must be a non-negative integer'
+    });
   }
 
   if (typeof retry.backOffFactor !== 'undefined') {
     if (!validator.isNumber(retry.backOffFactor) || retry.backOffFactor < 0) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_ARGUMENT, 'backOffFactor must be a non-negative number');
+      throw new FirebaseAppError({
+        code: AppErrorCodes.INVALID_ARGUMENT,
+        message: 'backOffFactor must be a non-negative number'
+      });
     }
   }
 
   if (!validator.isNumber(retry.maxDelayInMillis) || retry.maxDelayInMillis < 0) {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_ARGUMENT, 'maxDelayInMillis must be a non-negative integer');
+    throw new FirebaseAppError({
+      code: AppErrorCodes.INVALID_ARGUMENT,
+      message: 'maxDelayInMillis must be a non-negative integer'
+    });
   }
 
   if (typeof retry.statusCodes !== 'undefined' && !validator.isArray(retry.statusCodes)) {
-    throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'statusCodes must be an array');
+    throw new FirebaseAppError({ code: AppErrorCodes.INVALID_ARGUMENT, message: 'statusCodes must be an array' });
   }
 
   if (typeof retry.ioErrorCodes !== 'undefined' && !validator.isArray(retry.ioErrorCodes)) {
-    throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'ioErrorCodes must be an array');
+    throw new FirebaseAppError({ code: AppErrorCodes.INVALID_ARGUMENT, message: 'ioErrorCodes must be an array' });
   }
 }
 
@@ -379,7 +385,7 @@ export class RequestClient {
     }
 
     if (!this.retry) {
-      throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Expected this.retry to exist.');
+      throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'Expected this.retry to exist.' });
     }
 
     const backOffFactor = this.retry.backOffFactor || 0;
@@ -439,13 +445,17 @@ export class HttpClient extends RequestClient {
         }
 
         if (err.code === 'ETIMEDOUT') {
-          throw new FirebaseAppError(
-            AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+          throw new FirebaseAppError({
+            code: AppErrorCodes.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
         }
-        throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+        throw new FirebaseAppError({
+          code: AppErrorCodes.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
       });
   }
 }
@@ -501,13 +511,17 @@ export class Http2Client extends RequestClient {
         }
 
         if (err.code === 'ETIMEDOUT') {
-          throw new FirebaseAppError(
-            AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+          throw new FirebaseAppError({
+            code: AppErrorCodes.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
         }
-        throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+        throw new FirebaseAppError({
+          code: AppErrorCodes.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
       });
   }
 }
@@ -554,7 +568,7 @@ export function parseHttpResponse(
     request: null,
   };
   if (!validator.isNumber(lowLevelResponse.status)) {
-    throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Malformed HTTP status line.');
+    throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'Malformed HTTP status line.' });
   }
   return new DefaultRequestResponse(lowLevelResponse);
 }
@@ -778,9 +792,10 @@ class AsyncHttpCall extends AsyncRequestCall {
     }
 
     if (!res.statusCode) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INTERNAL_ERROR,
-        'Expected a statusCode on the response from a ClientRequest');
+      throw new FirebaseAppError({
+        code: AppErrorCodes.INTERNAL_ERROR,
+        message: 'Expected a statusCode on the response from a ClientRequest'
+      });
     }
 
     const response: LowLevelResponse = {
@@ -885,9 +900,10 @@ class AsyncHttp2Call extends AsyncRequestCall {
     }
 
     if (!headers[':status']) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INTERNAL_ERROR,
-        'Expected a statusCode on the response from a ClientRequest');
+      throw new FirebaseAppError({
+        code: AppErrorCodes.INTERNAL_ERROR,
+        message: 'Expected a statusCode on the response from a ClientRequest'
+      });
     }
 
     const response: LowLevelHttp2Response = {
@@ -1156,8 +1172,8 @@ export class AuthorizedHttp2Client extends Http2Client {
  * @constructor
  */
 export class ApiSettings {
-  private requestValidator: ApiCallbackFunction;
-  private responseValidator: ApiCallbackFunction;
+  private requestValidator: ApiRequestCallback;
+  private responseValidator: ApiResponseCallback;
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
@@ -1178,14 +1194,14 @@ export class ApiSettings {
    * @param requestValidator - The request validator.
    * @returns The current API settings instance.
    */
-  public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setRequestValidator(requestValidator: ApiRequestCallback | null): ApiSettings {
+    const nullFunction: ApiRequestCallback = () => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
 
   /** @returns The request validator. */
-  public getRequestValidator(): ApiCallbackFunction {
+  public getRequestValidator(): ApiRequestCallback {
     return this.requestValidator;
   }
 
@@ -1193,14 +1209,14 @@ export class ApiSettings {
    * @param responseValidator - The response validator.
    * @returns The current API settings instance.
    */
-  public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setResponseValidator(responseValidator: ApiResponseCallback | null): ApiSettings {
+    const nullFunction: ApiResponseCallback = () => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }
 
   /** @returns The response validator. */
-  public getResponseValidator(): ApiCallbackFunction {
+  public getResponseValidator(): ApiResponseCallback {
     return this.responseValidator;
   }
 }
@@ -1348,10 +1364,10 @@ export class Http2SessionHandler {
       const http2Session = http2.connect(url, opts)
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
-        ));
+        this.reject(new FirebaseAppError({
+          code: AppErrorCodes.NETWORK_ERROR,
+          message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
+        }));
       })
 
       http2Session.on('error', (error: any) => {
@@ -1362,10 +1378,11 @@ export class Http2SessionHandler {
         } else {
           errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
         }
-        this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          errorMessage
-        ));
+        this.reject(new FirebaseAppError({
+          code: AppErrorCodes.NETWORK_ERROR,
+          message: errorMessage,
+          cause: error,
+        }));
       })
 
       http2Session.on('close', () => {

@@ -44,6 +44,17 @@ export class Eventarc {
 }
 
 // @public
+export type EventarcErrorCode = 'unknown-error' | 'invalid-argument';
+
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseEventarcError extends PrefixedFirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
+// @public
 export function getEventarc(app?: App): Eventarc;
 
 ```
