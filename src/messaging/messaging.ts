@@ -237,7 +237,10 @@ export class Messaging {
       });
   }
 
-  private parseSendResponses(results: PromiseSettledResult<SendResponse>[], sessionErrors: Error[] = []): BatchResponse {
+  private parseSendResponses(
+    results: PromiseSettledResult<SendResponse>[],
+    sessionErrors: Error[] = []
+  ): BatchResponse {
     const responses: SendResponse[] = [];
     results.forEach(result => {
       if (result.status === 'fulfilled') {
@@ -245,9 +248,11 @@ export class Messaging {
       } else { // rejected
         let error = result.reason;
         if (sessionErrors && sessionErrors.length > 0) {
-          const cause = sessionErrors.length === 1
-            ? sessionErrors[0]
-            : new (global as any).AggregateError(sessionErrors, 'Multiple session errors occurred');
+          // Combine the original stream error and all session errors
+          const allErrors = [result.reason, ...sessionErrors];
+          // TODO: AggregateError is supported in Node 18+ but only included in the ES2021+ 
+          // We use (global as any).AggregateError as a workaround to access it in ES2020.
+          const cause = new (global as any).AggregateError(allErrors, 'Stream failure and session failures occurred');
 
           const streamMessage = result.reason.message || 'Unknown stream error';
 

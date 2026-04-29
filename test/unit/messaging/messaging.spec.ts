@@ -935,12 +935,17 @@ describe('Messaging', () => {
           'Session failure occurred'
         );
         expect(responses[1].error!.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
-        expect(responses[1].error!.cause).to.be.an.instanceOf(Error);
-        expect(responses[1].error!.cause!.message).to.contain(sessionError);
+        expect(responses[1].error!.cause!.constructor.name).to.equal('AggregateError');
+        const cause = responses[1].error!.cause as any;
+        expect(cause.errors).to.be.an.instanceOf(Array);
+        expect(cause.errors.length).to.equal(2);
+        expect(cause.errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect(cause.errors[1].message).to.contain(sessionError);
       });
     });
 
-    it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur using HTTP/2', () => {
+    it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur' +
+      ' using HTTP/2', () => {
       const sessionError1 = 'MOCK_SESSION_ERROR_1';
       const sessionError2 = 'MOCK_SESSION_ERROR_2';
       
@@ -969,9 +974,10 @@ describe('Messaging', () => {
         expect(cause).to.not.be.undefined;
         expect(cause!.constructor.name).to.equal('AggregateError');
         expect((cause as any).errors).to.be.an.instanceOf(Array);
-        expect((cause as any).errors.length).to.equal(2);
-        expect((cause as any).errors[0].message).to.contain(sessionError1);
-        expect((cause as any).errors[1].message).to.contain(sessionError2);
+        expect((cause as any).errors.length).to.equal(3);
+        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect((cause as any).errors[1].message).to.contain(sessionError1);
+        expect((cause as any).errors[2].message).to.contain(sessionError2);
       });
     });
 
