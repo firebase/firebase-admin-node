@@ -1772,6 +1772,26 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
+      it('should resolve with undefined on createNewAccount request success with noFetchUserRecord == true', () => {
+        // Stub createNewAccount to return expected uid.
+        const createUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'createNewAccount')
+          .resolves(uid);
+        // Stub getAccountInfoByUid to return expected result.
+        const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+          .resolves(expectedGetAccountInfoResult);
+        stubs.push(createUserStub);
+        stubs.push(getUserStub);
+        return auth.createUser(propertiesToCreate, true)
+          .then((resp) => {
+            // Confirm underlying API called with expected parameters.
+            // getUser should NOT be called
+            expect(createUserStub).to.have.been.calledOnce.and.calledWith(propertiesToCreate);
+            expect(getUserStub).not.to.have.been.called;
+            // Confirm expected user record response returned.
+            expect(resp).to.be.undefined;
+          });
+      });
+
       it('should throw an error when createNewAccount returns an error', () => {
         // Stub createNewAccount to throw a backend error.
         const createUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'createNewAccount')
@@ -2215,6 +2235,26 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
             // Confirm expected user record response returned.
             expect(userRecord).to.deep.equal(expectedUserRecord);
+          });
+      });
+
+      it('should resolve with undefined on updateExistingAccount request success with noFetchUserRecord=true', () => {
+        // Stub updateExistingAccount to return expected uid.
+        const updateUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'updateExistingAccount')
+          .resolves(uid);
+        // Stub getAccountInfoByUid to return expected result.
+        const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
+          .resolves(expectedGetAccountInfoResult);
+        stubs.push(updateUserStub);
+        stubs.push(getUserStub);
+        return auth.updateUser(uid, propertiesToEdit, true)
+          .then((resp) => {
+            // Confirm underlying API called with expected parameters.
+            // getUser should NOT be called
+            expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+            expect(getUserStub).not.to.have.been.called;
+            // Confirm expected user record response returned.
+            expect(resp).to.be.undefined;
           });
       });
 
