@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/no-use-before-define': 0,
     '@typescript-eslint/no-var-requires': 0,
+    '@typescript-eslint/no-require-imports': 0,
+    '@typescript-eslint/no-unused-expressions': 0,
 
     // Required checks
     'indent': ['error', 2],
@@ -54,7 +56,14 @@ module.exports = {
       }
     ],
     'no-unused-vars': 'off', // Must be disabled to enable the next rule
-    '@typescript-eslint/no-unused-vars': ['error'],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        'varsIgnorePattern': '^_',
+        'argsIgnorePattern': '^_',
+        'caughtErrors': 'none'
+      }
+    ],
     'quotes': ['error', 'single', {'avoidEscape': true}],
     '@typescript-eslint/naming-convention': [
       'error',

@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2024 Google Inc.
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import { DataConnectApiClient } from './data-connect-api-client-internal';
 import {
   ConnectorConfig,
   ExecuteGraphqlResponse,
+  ExecuteOperationResponse,
   GraphqlOptions,
+  OperationOptions,
 } from './data-connect-api';
 
 export class DataConnectService {
@@ -73,6 +75,14 @@ export class DataConnect {
   }
 
   /**
+   * @param isUsingGen
+   * @internal
+   */
+  useGen(isUsingGen: boolean): void {
+    this.client.setIsUsingGen(isUsingGen);
+  }
+
+  /**
    * Execute an arbitrary GraphQL query or mutation
    *
    * @param query - The GraphQL query or mutation.
@@ -88,13 +98,13 @@ export class DataConnect {
   }
 
   /**
- * Execute an arbitrary read-only GraphQL query
- *
- * @param query - The GraphQL read-only query.
- * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
- *
- * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
- */
+   * Execute an arbitrary read-only GraphQL query
+   *
+   * @param query - The GraphQL read-only query.
+   * @param options - Optional {@link GraphqlOptions} when executing a read-only GraphQL query.
+   *
+   * @returns A promise that fulfills with a `ExecuteGraphqlResponse`.
+   */
   public executeGraphqlRead<GraphqlResponse, Variables>(
     query: string,
     options?: GraphqlOptions<Variables>,
@@ -156,5 +166,85 @@ export class DataConnect {
     variables: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     return this.client.upsertMany(tableName, variables);
+  }
+
+  /**
+   * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
+   *
+   * @param name - The name of the defined query to execute.
+   * @param options - The GraphQL options, must include operationName and impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public executeQuery<Data>(
+    name: string,
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>>;
+  
+  /**
+   * Executes a GraphQL query. The query must be defined in your Data Connect GraphQL files.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
+   *
+   * @param name - The name of the defined query to execute.
+   * @param variables - The variables for the query. May be optional if the query's variables are optional.
+   * @param options - The GraphQL options, must include operationName and impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public executeQuery<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>>;
+  
+  public executeQuery<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>> {
+    return this.client.executeQuery<Data, Variables>(name, variables, options);
+  }
+
+  /**
+   * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
+   * 
+   * @param name - The name of the defined mutation to execute.
+   * @param options - The GraphQL options, must include operationName and impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public executeMutation<Data>(
+    name: string,
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>>;
+  
+  /**
+   * Executes a GraphQL mutation. The mutation must be defined in your Data Connect GraphQL files.
+   * Optionally, you can provide auth impersonation details. If you don't
+   * specify a value for this option, the query will run with admin privileges
+   * and will ignore all auth directives.
+   * 
+   * @param name - The name of the defined mutation to execute.
+   * @param variables - The variables for the mutation. May be optional if the mutation's variables are optional.
+   * @param options - The GraphQL options, must include operationName and impersonation details.
+   * @returns A promise that fulfills with the GraphQL response.
+   */
+  public executeMutation<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>>;
+
+  public executeMutation<Data, Variables>(
+    name: string,
+    variables: Variables, 
+    options?: OperationOptions
+  ): Promise<ExecuteOperationResponse<Data>> {
+    return this.client.executeMutation<Data, Variables>(name, variables, options);
   }
 }

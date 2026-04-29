@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -730,7 +730,10 @@ class AsyncHttpCall extends AsyncRequestCall {
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
-      this.entity = this.httpConfigImpl.buildEntity(this.options.headers!);
+      if (!validator.isNonNullObject(this.options.headers)) {
+        this.options.headers = {};
+      }
+      this.entity = this.httpConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -828,7 +831,10 @@ class AsyncHttp2Call extends AsyncRequestCall {
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
-      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers!);
+      if (!validator.isNonNullObject(this.options.headers)) {
+        this.options.headers = {};
+      }
+      this.entity = this.http2ConfigImpl.buildEntity(this.options.headers as http.OutgoingHttpHeaders);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -1092,7 +1098,9 @@ export class AuthorizedHttpClient extends HttpClient {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
 
-      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) {
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      }
 
       return super.send(requestCopy);
     });
@@ -1126,7 +1134,9 @@ export class AuthorizedHttp2Client extends Http2Client {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
 
-      requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) { 
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      }
 
       return super.send(requestCopy);
     });
@@ -1344,11 +1354,11 @@ export class Http2SessionHandler {
         ));
       })
 
-      http2Session.on('error', (error) => {
+      http2Session.on('error', (error: any) => {
         let errorMessage: any;
         if (error.name == 'AggregateError' && error.errors) {
           errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
-            `[${error.errors.map((error: any) => error.message).join(', ')}]`
+            `[${error.errors.map((e: any) => e.message).join(', ')}]`
         } else {
           errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
         }

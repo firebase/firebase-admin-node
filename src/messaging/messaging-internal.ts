@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -422,6 +422,8 @@ function validateAndroidConfig(config: AndroidConfig | undefined): void {
     collapseKey: 'collapse_key',
     restrictedPackageName: 'restricted_package_name',
     directBootOk: 'direct_boot_ok',
+    bandwidthConstrainedOk: 'bandwidth_constrained_ok',
+    restrictedSatelliteOk: 'restricted_satellite_ok',
   };
   renameProperties(config, propertyMappings);
 }

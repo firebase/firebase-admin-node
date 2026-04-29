@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 Google Inc.
+# Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -146,8 +146,8 @@ echo_info "Generating changelog"
 echo_info "--------------------------------------------"
 echo_info ""
 
-echo_info "---< git fetch origin master --prune --unshallow >---"
-git fetch origin master --prune --unshallow
+echo_info "---< git fetch origin main --prune --unshallow >---"
+git fetch origin main --prune --unshallow
 echo ""
 
 echo_info "Generating changelog from history..."

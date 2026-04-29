@@ -1,5 +1,5 @@
 /*!
- * Copyright 2024 Google Inc.
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,329 +16,990 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { getDataConnect, ConnectorConfig, GraphqlOptions } from '../../lib/data-connect/index';
+import { getDataConnect, ConnectorConfig } from '../../lib/data-connect/index';
+import firebase from '@firebase/app-compat';
+import { apiKey, projectId } from './setup';
+import { OperationOptions } from '../../lib/data-connect/data-connect-api';
 
 chai.should();
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-/*
-// Schema
-type User @table(key: "uid") {
-  uid: String!
-  name: String!
-  address: String!
-}
-*/
+/**
+ * // Schema
+ * type User @table(key: ["id"]) {
+ *   id: String!
+ *   name: String!
+ *   address: String!
+ * }
+ */
 type User = {
-  uid?: string;
-  name?: string;
-  address?: string;
+  id: string;
+  name: string;
+  address: string;
   // Generated
   emails_on_from?: Email[];
 };
 
-/*
-// Schema
-type Email @table {
-  subject: String!
-  date: Date!
-  text: String!
-  from: User!
-}
+/**
+ * // Schema
+ * type Email @table {
+ *  id: String!
+ *  subject: String!
+ *  date: Date!
+ *  text: String!
+ *  from: User!
+ * }
 */
 type Email = {
-  subject?: string;
-  date?: string;
-  text?: string;
-  from?: User;
-  // Generated
-  id?: string;
+  subject: string;
+  date: string;
+  text: string;
+  from: User;
+  id: string;
 };
 
-interface UserResponse {
+interface GetUserVariables {
+  id: { id: string; };
+}
+
+interface GetUserResponse {
   user: User;
 }
 
-interface UsersResponse {
+interface InsertUserVariables {
+  id: string;
+  name: string;
+  address: string;
+}
+
+interface InsertUserResponse {
+  user_insert: { id: string; };
+}
+
+interface ListUsersResponse {
   users: User[];
 }
 
 interface UserUpsertResponse {
-  user_upsert: { uid: string; };
+  user_upsert: { id: string; };
 }
 
 interface UserUpdateResponse {
-  user_update: { uid: string; };
+  user_update: { id: string; };
 }
 
-interface EmailsResponse {
+interface GetEmailVariables {
+  id: string
+}
+
+interface GetEmailResponse {
+  email: Email;
+}
+
+interface EmailUpsertResponse {
+  email_upsert: { id: string; };
+}
+
+interface InsertEmailVariables {
+  id: string;
+}
+
+interface InsertEmailResponse {
+  email_insert: { id: string; };
+}
+
+interface InsertEmailResponse {
+  email_insert: { id: string; };
+}
+
+interface ListEmailsResponse {
   emails: Email[];
 }
 
-interface UserVariables {
-  id: { uid: string; };
+interface DeleteResponse {
+  email_deleteMany: number
+  user_deleteMany: number
 }
 
 const connectorConfig: ConnectorConfig = {
   location: 'us-west2',
   serviceId: 'my-service',
+  connector: 'my-connector'
 };
 
-const userId = 'QVBJcy5ndXJ3';
+const fredUser = { id: 'fred_id', address: '32 Elm St.', name: 'Fred' }
+const fredrickUser = { id: fredUser.id, address: '64 Elm St. North', name: 'Fredrick' }
+
+const jeffUser = { id: 'jeff_id', address: '99 Oak St.', name: 'Jeff' }
+
+const fredEmail = { 
+  id: 'email_id',
+  subject: 'free bitcoin inside', 
+  date: '1999-12-31', 
+  text: 'get pranked! LOL!', 
+  from: { id: fredUser.id }
+}
 
 describe('getDataConnect()', () => {
 
-  const queryListUsers = 'query ListUsers @auth(level: PUBLIC) { users { uid, name, address } }';
-  const queryListEmails = 'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { name } } }';
-  const queryGetUserById = 'query GetUser($id: User_Key!) { user(key: $id) { uid name } }';
+  before(() => {
+    firebase.initializeApp({
+      apiKey,
+      authDomain: projectId + '.firebaseapp.com',
+    });
+  });
 
-  const queryListUsersImpersonation = `
-    query ListUsers @auth(level: USER) {
-      users(where: { uid: { eq_expr: "auth.uid" } }) { uid, name, address }
-    }`;
+  afterEach(async () => {
+    await cleanupDatabase();
+  })
 
-  const multipleQueries = `
-  ${queryListUsers}
-  ${queryListEmails}
-  `;
+  beforeEach(async () => {
+    await initializeDatabase();
+  });
 
-  const mutation = `mutation user { user_insert(data: {uid: "${userId}", address: "32 St", name: "Fred Car"}) }`;
+  /** initial state of database after calling initializeDatabase() */
+  const initialState = { users: [fredUser, jeffUser], emails: [fredEmail] };
 
-  const updateImpersonatedUser = `
-    mutation UpdateUser @auth(level: USER) {
-      user_update(key: { uid_expr: "auth.uid" }, data: { address: "32 Elm St.", name: "Fredrick" })
-    }`;
-
-  const upsertUser = `mutation UpsertUser($id: String) { 
-  user_upsert(data: { uid: $id, address: "32 St.", name: "Fred" }) }`;
-
-  const testUser = {
-    name: 'Fred',
-    address: '32 St.',
-    uid: userId
+  /** helper function which sets initial state of the database before each test */
+  async function initializeDatabase(): Promise<void> {
+    await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+      upsertFredUser
+    );
+    await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+      upsertJeffUser
+    );
+    await getDataConnect(connectorConfig).executeGraphql<EmailUpsertResponse, unknown>(
+      upsertFredEmail
+    );
   }
 
-  const expectedUsers = [
-    testUser,
-    {
-      name: 'Jeff',
-      address: '99 Oak St. N',
-      uid: 'QVBJcy5ndXJ1'
+  /** helper function which clears state of the database after each test */
+  async function cleanupDatabase(): Promise<void> {
+    await getDataConnect(connectorConfig).executeGraphql<DeleteResponse, unknown>(deleteAll);
+  }
+  /** @auth(level: PUBLIC) */
+  const queryListUsers = 'query ListUsers @auth(level: PUBLIC) { users { id, name, address } }';
+  /** @auth(level: NO_ACCESS) */
+  const queryListEmails = 
+    'query ListEmails @auth(level: NO_ACCESS) { emails { id subject text date from { id } } }';
+  /** @auth(level: NO_ACCESS) */
+  const queryGetEmail = 
+    'query GetEmail($id: String!) @auth(level: NO_ACCESS) { email(id: $id) { id subject text date from { id } } }';
+  /** no @auth specified - default permissions */
+  const queryGetUserById = 'query GetUser($id: User_Key!) { user(key: $id) { id name address } }';
+
+  /** @auth(level: USER) */
+  const queryListUsersImpersonation = `
+    query ListUsers @auth(level: USER) {
+      users(where: { id: { eq_expr: "auth.uid" } }) { id, name, address }
+    }`;
+  
+  const multipleQueries = `
+    ${queryListUsers}
+    ${queryListEmails}
+  `;
+
+  /** hardcoded upsert fredUser query, with non-impersonateable id */
+  const upsertFredUser = 
+    `mutation user {
+      user_upsert(data: {id: "${fredUser.id}", address: "${fredUser.address}", name: "${fredUser.name}"})
+    }`;
+
+  /** hardcoded upsert fredrickUser query, with impersonateable id */
+  const updateFredrickUserImpersonated = 
+    `mutation upsertFredrickUserImpersonated @auth(level: USER) {
+      user_update(
+        key: { id_expr: "auth.uid" }, 
+        data: { address: "${fredrickUser.address}", name: "${fredrickUser.name}" }
+      )
+    }`;
+  
+  /** hardcoded upsert jeffUser query, with non-impersonateable id */
+  const upsertJeffUser = 
+    `mutation user {
+      user_upsert(data: {id: "${jeffUser.id}", address: "${jeffUser.address}", name: "${jeffUser.name}"})
+    }`;
+
+  /** hardcoded upsert fredEmail query, with non-impersonateable id */
+  const upsertFredEmail = `mutation email {
+    email_upsert(data: {
+      id:"${fredEmail.id}",
+      subject: "${fredEmail.subject}",
+      date: "${fredEmail.date}",
+      text: "${fredEmail.text}",
+      fromId: "${fredEmail.from.id}"
+    })
+  }`;
+
+  /** hardcoded delete all mutation, for cleanup */
+  const deleteAll = `mutation delete {
+      email_deleteMany(all: true)
+      user_deleteMany(all: true)
+    }`
+
+  const optsUnauthorizedClaims: OperationOptions = {
+    impersonate: {
+      unauthenticated: true
     }
-  ];
+  };
 
-  describe('executeGraphql()', () => {
-    it('executeGraphql() successfully executes a GraphQL mutation', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
-        upsertUser, { variables: { id: userId } }
-      );
-      //{ data: { user_insert: { uid: 'QVBJcy5ndXJ3' } } }
-      expect(resp.data.user_upsert.uid).to.be.not.empty;
-      expect(resp.data.user_upsert.uid).equals(userId);
-    });
-
-    it('executeGraphql() successfully executes a GraphQL', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, UserVariables>(queryListUsers);
-      expect(resp.data.users).to.be.not.empty;
-      expect(resp.data.users.length).to.be.greaterThan(1);
-      expectedUsers.forEach((expectedUser) => {
-        expect(resp.data.users).to.deep.include(expectedUser);
-      });
-    });
-
-    it('executeGraphql() use the operationName when multiple queries are provided', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphql<EmailsResponse, unknown>(
-        multipleQueries,
-        { operationName: 'ListEmails' }
-      );
-      expect(resp.data.emails).to.be.not.empty;
-      expect(resp.data.emails.length).equals(1);
-      expect(resp.data.emails[0].id).to.be.not.undefined;
-      expect(resp.data.emails[0].from?.name).to.equal('Jeff');
-    });
-
-    it('executeGraphql() should throw for a query error', async () => {
-      return getDataConnect(connectorConfig).executeGraphql(mutation)
-        .should.eventually.be.rejected.and.have.property('code', 'data-connect/query-error');
-    });
-
-    it('executeGraphql() successfully executes a GraphQL query with variables', async () => {
-      const resp = await getDataConnect(connectorConfig).executeGraphql<UserResponse, UserVariables>(
-        queryGetUserById,
-        { variables: { id: { uid: userId } } }
-      );
-      expect(resp.data.user.uid).to.equal(testUser.uid);
-      expect(resp.data.user.name).to.equal(testUser.name);
-      expect(resp.data.user.address).to.be.undefined;
-    });
-  });
-
-  describe('executeGraphqlRead()', () => {
-    it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
-      const resp =
-        await getDataConnect(connectorConfig).executeGraphqlRead<UsersResponse, UserVariables>(queryListUsers);
-      expect(resp.data.users).to.be.not.empty;
-      expect(resp.data.users.length).to.be.greaterThan(1);
-      expectedUsers.forEach((expectedUser) => {
-        expect(resp.data.users).to.deep.include(expectedUser);
-      });
-    });
-
-    it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
-      return getDataConnect(connectorConfig).executeGraphqlRead(mutation)
-        .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
-    });
-  });
-
-  describe('Impersonation', () => {
-    const optsAuthorizedClaims: GraphqlOptions<undefined> = {
-      impersonate: {
-        authClaims: {
-          sub: userId,
-          email_verified: true
+  const optsAuthorizedFredAnonClaims: OperationOptions = {
+    impersonate: {
+      authClaims: {
+        sub: fredUser.id,
+        firebase: {
+          identities: { who: 'me' },
+          sign_in_provider: 'anonymous'
         }
       }
-    };
+    }
+  };
 
-    const optsNonExistingClaims: GraphqlOptions<undefined> = {
-      impersonate: {
-        authClaims: {
-          sub: 'non-exisiting-id',
-          email_verified: true
-        }
+  const optsAuthorizedFredClaims: OperationOptions = {
+    impersonate: {
+      authClaims: {
+        sub: fredUser.id,
       }
-    };
+    }
+  };
 
-    const optsUnauthorizedClaims: GraphqlOptions<undefined> = {
-      impersonate: {
-        unauthenticated: true
+  const optsAuthorizedFredEmailVerifiedClaims: OperationOptions = {
+    impersonate: {
+      authClaims: {
+        sub: fredUser.id,
+        email_verified: true
       }
-    };
+    }
+  };
 
-    describe('USER Auth Policy', () => {
-      it('executeGraphqlRead() successfully executes an impersonated query with authenticated claims', async () => {
-        const resp =
-          await getDataConnect(connectorConfig).executeGraphqlRead<UsersResponse, undefined>(
-            queryListUsersImpersonation, optsAuthorizedClaims);
-        expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).equals(1);
-        expect(resp.data.users[0]).to.deep.equal(testUser);
+  const optsNonExistingClaims: OperationOptions = {
+    impersonate: {
+      authClaims: {
+        sub: 'non-exisiting-id',
+        email_verified: true
+      }
+    }
+  };
+
+
+  describe('executeGraphql* API', () => {
+    describe('executeGraphql()', () => {
+      it('executeGraphql() successfully executes a GraphQL mutation', async () => {
+        const fredResponse = await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+          upsertFredUser
+        );
+        //{ data: { user_insert: { id: 'fred_id' } } }
+        expect(fredResponse.data.user_upsert.id).equals(fredUser.id);
+
+        const jeffResponse = await getDataConnect(connectorConfig).executeGraphql<UserUpsertResponse, unknown>(
+          upsertJeffUser
+        );
+        //{ data: { user_insert: { id: 'jeff_id' } } }
+        expect(jeffResponse.data.user_upsert.id).equals(jeffUser.id);
+
+        const upsertEmailResponse = await getDataConnect(connectorConfig).executeGraphql<EmailUpsertResponse, unknown>(
+          upsertFredEmail
+        );
+        //{ data: { email_upsert: { id: 'email_id' } } }
+        expect(upsertEmailResponse.data.email_upsert.id).to.not.be.empty;
+        const queryGetEmailResponse = 
+          await getDataConnect(connectorConfig).executeGraphql<GetEmailResponse, GetEmailVariables>(
+            queryGetEmail, { variables: { id: upsertEmailResponse.data.email_upsert.id } }
+          );
+        expect(queryGetEmailResponse.data.email).to.deep.equal(fredEmail);
+
+        const deleteResponse = await getDataConnect(connectorConfig).executeGraphql<DeleteResponse, unknown>(deleteAll);
+        expect(deleteResponse.data.email_deleteMany).to.equal(1);
+        expect(deleteResponse.data.user_deleteMany).to.equal(2);
       });
 
-      it('executeGraphqlRead() should throw for impersonated query with unauthenticated claims', async () => {
-        return getDataConnect(connectorConfig).executeGraphqlRead(queryListUsersImpersonation, optsUnauthorizedClaims)
-          .should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+      it('executeGraphql() successfully executes a GraphQL query', async () => {
+        const resp = await getDataConnect(connectorConfig)
+          .executeGraphql<ListUsersResponse, unknown>(queryListUsers);
+        expect(resp.data.users).to.deep.equal(initialState.users);
       });
 
-      it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
-        const resp =
-          await getDataConnect(connectorConfig).executeGraphqlRead<UsersResponse, undefined>(
-            queryListUsersImpersonation, optsAuthorizedClaims);
-        expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).equals(1);
-        expect(resp.data.users[0]).to.deep.equal(testUser);
+      it('executeGraphql() use the operationName when multiple queries are provided', async () => {
+        const resp = await getDataConnect(connectorConfig).executeGraphql<ListEmailsResponse, unknown>(
+          multipleQueries,
+          { operationName: 'ListEmails' }
+        );
+        expect(resp.data.emails).to.deep.equal(initialState.emails);
       });
 
-      it('executeGraphql() should throw for impersonated query with unauthenticated claims', async () => {
-        return getDataConnect(connectorConfig).executeGraphql(queryListUsersImpersonation, optsUnauthorizedClaims)
-          .should.eventually.be.rejected.and.has.property('code', 'data-connect/unauthenticated');
+      it('executeGraphql() should throw for a query error when no variables are provided', async () => {
+        return getDataConnect(connectorConfig).executeGraphql(queryGetUserById)
+          .should.eventually.be.rejected.and.have.property('code', 'data-connect/query-error');
       });
 
-      it('executeGraphql() should return an empty list for an impersonated query with non-existing authenticated ' + 
-        'claims',
-      async () => {
-        const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
-          queryListUsersImpersonation, optsNonExistingClaims);
-        // Should find no data
-        expect(resp.data.users).to.be.empty;
+      it('executeGraphql() successfully executes a GraphQL query with variables', async () => {
+        const resp = await getDataConnect(connectorConfig).executeGraphql<GetUserResponse, GetUserVariables>(
+          queryGetUserById,
+          { variables: { id: { id: initialState.users[0].id } } }
+        );
+        expect(resp.data.user).to.deep.equal(initialState.users[0]);
       });
-
-      it('executeGraphql() successfully executes an impersonated mutation with authenticated claims',
-        async () => {
-          const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
-            updateImpersonatedUser, optsAuthorizedClaims);
-          // Fred -> Fredrick
-          expect(resp.data.user_update.uid).equals(userId);
-        });
-
-      it('executeGraphql() should throw for impersonated mutation with unauthenticated claims', async () => {
-        return getDataConnect(connectorConfig).executeGraphql(updateImpersonatedUser, optsUnauthorizedClaims)
-          .should.eventually.be.rejected.and.has.property('code', 'data-connect/unauthenticated');
-      });
-
-      it('executeGraphql() should return null for an impersonated mutation with non-existing authenticated claims',
-        async () => {
-          const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, undefined>(
-            updateImpersonatedUser, optsNonExistingClaims);
-          // Should mutate no data
-          expect(resp.data.user_update).to.be.null;
-        });
     });
 
-    describe('PUBLIC Auth Policy', () => {
-      const expectedUsers = [
-        {
-          name: 'Fredrick',
-          address: '32 Elm St.',
-          uid: userId
-        },
-        {
-          name: 'Jeff',
-          address: '99 Oak St. N',
-          uid: 'QVBJcy5ndXJ1'
-        }
-      ];
-
-      it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
-        const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
-          queryListUsers, optsAuthorizedClaims);
-        expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).to.be.greaterThan(1);
-        expectedUsers.forEach((expectedUser) => {
-          expect(resp.data.users).to.deep.include(expectedUser);
-        })
+    describe('executeGraphqlRead()', () => {
+      it('executeGraphqlRead() successfully executes a read-only GraphQL', async () => {
+        const resp = await getDataConnect(connectorConfig)
+          .executeGraphqlRead<ListUsersResponse, unknown>(queryListUsers);
+        expect(resp.data.users).to.deep.equal(initialState.users);
       });
 
-      it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
-        const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
-          queryListUsers, optsUnauthorizedClaims);
-        expect(resp.data.users).to.be.not.empty;
-        expect(resp.data.users.length).to.be.greaterThan(1);
-        expectedUsers.forEach((expectedUser) => {
-          expect(resp.data.users).to.deep.include(expectedUser);
+      it('executeGraphqlRead() should throw for a GraphQL mutation', async () => {
+        return getDataConnect(connectorConfig).executeGraphqlRead(upsertFredUser)
+          .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+      });
+    });
+
+    describe('executeGraphql* impersonation', () => {
+      describe('USER Auth Policy', () => {
+        it('executeGraphqlRead() successfully executes an impersonated query with authenticated claims', async () => {
+          const resp =
+            await getDataConnect(connectorConfig).executeGraphqlRead<ListUsersResponse, unknown>(
+              queryListUsersImpersonation, optsAuthorizedFredClaims);
+          expect(resp.data.users.length).equals(1);
+          expect(resp.data.users[0]).to.deep.equal(fredUser);
         });
-      });
 
-      it('executeGraphql() successfully executes an impersonated query with non-existing authenticated claims',
+        it('executeGraphqlRead() should throw for impersonated query with unauthenticated claims', async () => {
+          return getDataConnect(connectorConfig).executeGraphqlRead(
+            queryListUsersImpersonation, 
+            optsUnauthorizedClaims
+          )
+            .should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
+          const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
+            queryListUsersImpersonation, optsAuthorizedFredClaims);
+          expect(resp.data.users.length).equals(1);
+          expect(resp.data.users[0]).to.deep.equal(fredUser);
+        });
+
+        it('executeGraphql() should throw for impersonated query with unauthenticated claims', async () => {
+          return getDataConnect(connectorConfig).executeGraphql(queryListUsersImpersonation, optsUnauthorizedClaims)
+            .should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('executeGraphql() should return an empty list for an impersonated query with non-existing authenticated ' + 
+          'claims',
         async () => {
-          const resp = await getDataConnect(connectorConfig).executeGraphql<UsersResponse, undefined>(
-            queryListUsers, optsNonExistingClaims);
-          expect(resp.data.users).to.be.not.empty;
-          expect(resp.data.users.length).to.be.greaterThan(1);
-          expectedUsers.forEach((expectedUser) => {
-            expect(resp.data.users).to.deep.include(expectedUser);
+          const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
+            queryListUsersImpersonation, optsNonExistingClaims);
+          // Should find no data
+          expect(resp.data.users).to.be.empty;
+        });
+
+        it('executeGraphql() successfully executes an impersonated mutation with authenticated claims',
+          async () => {
+            const updateResp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, unknown>(
+              updateFredrickUserImpersonated, optsAuthorizedFredClaims);
+            // Fred -> Fredrick
+            expect(updateResp.data.user_update.id).equals(fredUser.id);
+            const queryResp = await getDataConnect(connectorConfig).executeGraphql<GetUserResponse, GetUserVariables>(
+              queryGetUserById, { variables: { id: { id: fredUser.id } } });
+            expect(queryResp.data.user).to.deep.equal(fredrickUser);
           });
+
+        it('executeGraphql() should throw for impersonated mutation with unauthenticated claims', async () => {
+          return getDataConnect(connectorConfig).executeGraphql(updateFredrickUserImpersonated, optsUnauthorizedClaims)
+            .should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
         });
+
+        it('executeGraphql() should return null for an impersonated mutation with non-existing authenticated claims',
+          async () => {
+            const resp = await getDataConnect(connectorConfig).executeGraphql<UserUpdateResponse, unknown>(
+              updateFredrickUserImpersonated, optsNonExistingClaims);
+            // Should mutate no data
+            expect(resp.data.user_update).to.be.null;
+          });
+      });
+
+      describe('PUBLIC Auth Policy', () => {
+        it('executeGraphql() successfully executes an impersonated query with authenticated claims', async () => {
+          const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
+            queryListUsers, optsAuthorizedFredClaims);
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('executeGraphql() successfully executes an impersonated query with unauthenticated claims', async () => {
+          const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
+            queryListUsers, optsUnauthorizedClaims);
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('executeGraphql() successfully executes an impersonated query with non-existing authenticated claims',
+          async () => {
+            const resp = await getDataConnect(connectorConfig).executeGraphql<ListUsersResponse, unknown>(
+              queryListUsers, optsNonExistingClaims);
+            expect(resp.data.users).to.deep.equal(initialState.users);
+          });
+      });
+
+      describe('NO_ACCESS Auth Policy', () => {
+        it('executeGraphql() should throw for an impersonated query with authenticated claims', async () => {
+          return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsAuthorizedFredClaims)
+            .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it('executeGraphql() should throw for an impersonated query with unauthenticated claims', async () => {
+          return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsUnauthorizedClaims)
+            .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it('executeGraphql() should throw for an impersonated query with non-existing authenticated claims',
+          async () => {
+            return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsNonExistingClaims)
+              .should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+          });
+      });
+    });
+  });
+
+  describe('executeQuery|Mutation API', () => {
+    describe('executeQuery()', () => {
+      it("should fail when executing a query which doesn't exist", async () => {
+        return getDataConnect(connectorConfig).executeQuery(
+          'DOES_NOT_EXIST!!!',
+          undefined,
+          optsUnauthorizedClaims
+        ).should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
+      });
+
+      it('should execute a query with variables', async () => {
+        const resp = await getDataConnect(connectorConfig).executeQuery<GetUserResponse, GetUserVariables>(
+          'GetUser',
+          { id: { id: fredUser.id } },
+        );
+        expect(resp.data.user).to.deep.equal(fredUser);
+      });
+
+      describe('with unauthenticated impersonation', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersPublic',
+            undefined,
+            optsUnauthorizedClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should fail to execute a query with @auth(level: USER_ANON)', () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: USER)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+      });
+
+      describe('with authenticated anonymous impersonation', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredAnonClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+        
+        it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredAnonClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should fail to execute a query with @auth(level: USER)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredAnonClaims
+          );
+          expect(resp.data.users.length).equals(1);
+          expect(resp.data.users[0]).to.deep.equal(fredUser);
+        });
+      });
+
+      describe('with authenticated user impersonation', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should fail to execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredClaims
+          );
+          expect(resp.data.users.length).equals(1);
+          expect(resp.data.users[0]).to.deep.equal(fredUser);
+        });
+      });
+
+      describe('with authenticated email verified user impersonation', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersPublic', undefined, optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUser', undefined, optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersUserEmailVerified', undefined, optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should fail to execute a query with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersNoAccess', undefined, optsAuthorizedFredEmailVerifiedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse, undefined>(
+            'ListUsersImpersonationAnon', undefined, optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(resp.data.users.length).equals(1);
+          expect(resp.data.users[0]).to.deep.equal(fredUser);
+        });
+      });
+
+      describe('with no impersonation, bypassing auth policies', () => {
+        it('should successfully execute a query with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersPublic'
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersUserAnon'
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersUser'
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersUserEmailVerified'
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it('should successfully execute a query with @auth(level: NO_ACCESS)', async () => {
+          const resp = await getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersNoAccess'
+          );
+          expect(resp.data.users).to.deep.equal(initialState.users);
+        });
+
+        it("should fail to execute a query using the impersonated user's auth.uid", async () => {
+          return getDataConnect(connectorConfig).executeQuery<ListUsersResponse>(
+            'ListUsersImpersonationAnon'
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/query-error');
+        });
+      });
     });
 
-    describe('NO_ACCESS Auth Policy', () => {
-      it('executeGraphql() should throw for an impersonated query with authenticated claims', async () => {
-        return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsAuthorizedClaims)
-          .should.eventually.be.rejected.and.has.property('code', 'data-connect/permission-denied');
+    describe('executeMutation()', () => {
+      function generateEmailId(): string {
+        return `email_id_${Math.random() * 1000}`;
+      }
+
+      it("should fail when executing a mutation which doesn't exist", async () => {
+        return getDataConnect(connectorConfig).executeMutation(
+          'DOES_NOT_EXIST!!!', optsUnauthorizedClaims
+        ).should.eventually.be.rejected.and.have.property('code', 'data-connect/not-found');
       });
 
-      it('executeGraphql() should throw for an impersonated query with unauthenticated claims', async () => {
-        return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsUnauthorizedClaims)
-          .should.eventually.be.rejected.and.has.property('code', 'data-connect/permission-denied');
-      });
+      it('should execute a mutation with variables', async () => {
+        const user = { id: 'USER_ID', name: 'USER_NAME', address: 'USER_ADDRESS' };
+        const insertResp = await getDataConnect(connectorConfig)
+          .executeMutation<InsertUserResponse, InsertUserVariables>('InsertUser', user);
+        expect(insertResp.data.user_insert).to.deep.equal({ id: user.id });
+        
+        const getResp = await getDataConnect(connectorConfig).executeQuery<GetUserResponse, GetUserVariables>(
+          'GetUser',
+          { id: { id: user.id } },
+        );
+        expect(getResp.data.user).to.deep.equal(user);
+      })
 
-      it('executeGraphql() should throw for an impersonated query with non-existing authenticated claims',
-        async () => {
-          return await getDataConnect(connectorConfig).executeGraphql(queryListEmails, optsNonExistingClaims)
-            .should.eventually.be.rejected.and.has.property('code', 'data-connect/permission-denied');
+      describe('with unauthenticated impersonation', () => {
+        it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailPublic',
+              { id: generateEmailId() },
+              optsUnauthorizedClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
         });
+
+        it('should fail to execute a mutation with @auth(level: USER_ANON)', () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUserAnon',
+            { id: generateEmailId() },
+            optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUser',
+            { id: generateEmailId() },
+            optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUserEmailVerified',
+            { id: generateEmailId() },
+            optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailNoAccess',
+            { id: generateEmailId() },
+            optsUnauthorizedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+      });
+
+      describe('with authenticated anonymous impersonation', () => {
+        it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailPublic',
+              { id: generateEmailId() },
+              optsAuthorizedFredAnonClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserAnon',
+              { id: generateEmailId() },
+              optsAuthorizedFredAnonClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUser',
+            { id: generateEmailId() },
+            optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUserEmailVerified',
+            { id: generateEmailId() },
+            optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailNoAccess',
+            { id: generateEmailId() },
+            optsAuthorizedFredAnonClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const insertResp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailImpersonation',
+              { id: generateEmailId() },
+              optsAuthorizedFredAnonClaims
+            );
+          expect(insertResp.data.email_insert.id).to.not.be.undefined;
+          const queryResp = await getDataConnect(connectorConfig).executeQuery<GetEmailResponse, GetEmailVariables>(
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredAnonClaims
+          );
+          expect(queryResp.data.email.from.id).to.equal(fredUser.id);
+        });
+      });
+
+      describe('with authenticated user impersonation', () => {
+        it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailPublic',
+              { id: generateEmailId() },
+              optsAuthorizedFredClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserAnon',
+              { id: generateEmailId() },
+              optsAuthorizedFredClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUser',
+              { id: generateEmailId() },
+              optsAuthorizedFredClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should fail to execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailUserEmailVerified',
+            { id: generateEmailId() },
+            optsAuthorizedFredClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/unauthenticated');
+        });
+
+        it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailNoAccess',
+            { id: generateEmailId() },
+            optsAuthorizedFredClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const insertResp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailImpersonation',
+              { id: generateEmailId() },
+              optsAuthorizedFredClaims
+            );
+          expect(insertResp.data.email_insert.id).to.not.be.undefined;
+          const queryResp = await getDataConnect(connectorConfig).executeQuery<GetEmailResponse, GetEmailVariables>(
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredClaims
+          );
+          expect(queryResp.data.email.from.id).to.equal(fredUser.id);
+        });
+      });
+
+      describe('with authenticated email verified user impersonation', () => {
+        it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailPublic',
+              { id: generateEmailId() },
+              optsAuthorizedFredEmailVerifiedClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserAnon',
+              { id: generateEmailId() },
+              optsAuthorizedFredEmailVerifiedClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUser',
+              { id: generateEmailId() },
+              optsAuthorizedFredEmailVerifiedClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          const resp = await  getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserEmailVerified',
+              { id: generateEmailId() },
+              optsAuthorizedFredEmailVerifiedClaims
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should fail to execute a mutation with @auth(level: NO_ACCESS)', async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailNoAccess',
+            { id: generateEmailId() },
+            optsAuthorizedFredEmailVerifiedClaims
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/permission-denied');
+        });
+
+        it("should use the impersonated user's auth.uid", async () => {
+          const insertResp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailImpersonation',
+              { id: generateEmailId() },
+              optsAuthorizedFredEmailVerifiedClaims
+            );
+          expect(insertResp.data.email_insert.id).to.not.be.undefined;
+          const queryResp = await getDataConnect(connectorConfig).executeQuery<GetEmailResponse, GetEmailVariables>(
+            'GetEmail',
+            { id: insertResp.data.email_insert.id },
+            optsAuthorizedFredEmailVerifiedClaims
+          );
+          expect(queryResp.data.email.from.id).to.equal(fredUser.id);
+        });
+      });
+
+      describe('with no impersonation, bypassing auth policies', () => {
+        it('should successfully execute a mutation with @auth(level: PUBLIC)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailPublic',
+              { id: generateEmailId() }
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER_ANON)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserAnon',
+              { id: generateEmailId() }
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER)', async () => {
+          const resp = await getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUser',
+              { id: generateEmailId() }
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: USER_EMAIL_VERIFIED)', async () => {
+          const resp = await  getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailUserEmailVerified',
+              { id: generateEmailId() }
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it('should successfully execute a mutation with @auth(level: NO_ACCESS)', async () => {
+          const resp = await  getDataConnect(connectorConfig)
+            .executeMutation<InsertEmailResponse, InsertEmailVariables>(
+              'InsertEmailNoAccess',
+              { id: generateEmailId() }
+            );
+          expect(resp.data.email_insert.id).to.not.be.undefined;
+        });
+
+        it("should fail to execute a mutation using the impersonated user's auth.uid", async () => {
+          return getDataConnect(connectorConfig).executeMutation<InsertEmailResponse, InsertEmailVariables>(
+            'InsertEmailImpersonation',
+            { id: generateEmailId() },
+          ).should.eventually.be.rejected.and.have.property('code', 'data-connect/query-error');
+        });
+      });
     });
   });
 });

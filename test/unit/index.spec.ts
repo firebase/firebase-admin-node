@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,3 +121,12 @@ import './extensions/extensions-api-client-internal.spec';
 // Data Connect
 import './data-connect/index.spec';
 import './data-connect/data-connect-api-client-internal.spec';
+import './data-connect/data-connect.spec';
+import './data-connect/validate-admin-args.spec';
+
+// Phone Number Verification
+import './phone-number-verification/index.spec';
+import './phone-number-verification/phone-number-verification-api-client-internal.spec';
+import './phone-number-verification/phone-number-verification.spec';
+import './phone-number-verification/token-verifier.spec'
+

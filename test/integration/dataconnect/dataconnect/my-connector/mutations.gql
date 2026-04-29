@@ -1,0 +1,102 @@
+mutation upsertFredUser @auth(level: NO_ACCESS) {
+	user_upsert(data: { id: "fred_id", address: "32 Elm St.", name: "Fred" })
+}
+mutation updateFredrickUserImpersonation
+@auth(level: USER, insecureReason: "test") {
+	user_update(
+		key: { id_expr: "auth.uid" }
+		data: { address: "64 Elm St. North", name: "Fredrick" }
+	)
+}
+mutation upsertJeffUser @auth(level: NO_ACCESS) {
+	user_upsert(data: { id: "jeff_id", address: "99 Oak St.", name: "Jeff" })
+}
+
+mutation upsertJeffEmail @auth(level: NO_ACCESS) {
+	email_upsert(
+		data: {
+			id: "jeff_email_id"
+			subject: "free bitcoin inside"
+			date: "1999-12-31"
+			text: "get pranked! LOL!"
+			fromId: "jeff_id"
+		}
+	)
+}
+
+mutation InsertUser($id: String!, $name: String!, $address: String!)
+@auth(level: PUBLIC, insecureReason: "test") {
+	user_insert(data: { id: $id, name: $name, address: $address })
+}
+
+mutation InsertEmailPublic($id: String!)
+@auth(level: PUBLIC, insecureReason: "test") {
+	email_insert(
+		data: {
+			id: $id
+			subject: "PublicEmail"
+			date: "1999-12-31"
+			text: "PublicEmail"
+			fromId: "jeff_id"
+		}
+	)
+}
+mutation InsertEmailUserAnon($id: String!)
+@auth(level: USER_ANON, insecureReason: "test") {
+	email_insert(
+		data: {
+			id: $id
+			subject: "UserAnonEmail"
+			date: "1999-12-31"
+			text: "UserAnonEmail"
+			fromId: "jeff_id"
+		}
+	)
+}
+mutation InsertEmailUser($id: String!)
+@auth(level: USER, insecureReason: "test") {
+	email_insert(
+		data: {
+			id: $id
+			subject: "UserEmail"
+			date: "1999-12-31"
+			text: "UserEmail"
+			fromId: "jeff_id"
+		}
+	)
+}
+mutation InsertEmailUserEmailVerified($id: String!)
+@auth(level: USER_EMAIL_VERIFIED, insecureReason: "test") {
+	email_insert(
+		data: {
+			id: $id
+			subject: "UserEmailVerifiedEmail"
+			date: "1999-12-31"
+			text: "UserEmailVerifiedEmail"
+			fromId: "jeff_id"
+		}
+	)
+}
+mutation InsertEmailNoAccess($id: String!) @auth(level: NO_ACCESS) {
+	email_insert(
+		data: {
+			id: $id
+			subject: "NoAccessEmail"
+			date: "1999-12-31"
+			text: "NoAccessEmail"
+			fromId: "jeff_id"
+		}
+	)
+}
+mutation InsertEmailImpersonation($id: String!)
+@auth(level: USER_ANON, insecureReason: "test") {
+	email_insert(
+		data: {
+			id: $id
+			subject: "ImpersonatedEmail"
+			date: "1999-12-31"
+			text: "ImpersonatedEmail"
+			fromId_expr: "auth.uid"
+		}
+	)
+}

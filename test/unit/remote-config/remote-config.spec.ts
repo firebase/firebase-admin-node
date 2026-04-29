@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@ import {
   TagColor,
   ListVersionsResult,
   RemoteConfigFetchResponse,
+  RolloutParameterValue,
+  PersonalizationParameterValue,
+  ExperimentParameterValue,
 } from '../../../src/remote-config/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
@@ -96,6 +99,49 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
+      new_ui_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            rolloutValue: {
+              rolloutId: 'rollout_1',
+              value: 'true',
+              percent: 50,
+            }
+          }
+        },
+        description: 'New UI Rollout',
+        valueType: 'BOOLEAN',
+      },
+      personalized_welcome_message: {
+        defaultValue: { value: 'Welcome!' },
+        conditionalValues: {
+          ios: {
+            personalizationValue: {
+              personalizationId: 'personalization_1',
+            }
+          }
+        },
+        description: 'Personalized Welcome Message',
+        valueType: 'STRING',
+      },
+      experiment_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            experimentValue: {
+              experimentId: 'experiment_1',
+              variantValue: [
+                { variantId: 'variant_A', value: 'true' },
+                { variantId: 'variant_B', noChange: true }
+              ],
+              exposurePercent: 25,
+            }
+          }
+        },
+        description: 'Experiment Enabled',
+        valueType: 'BOOLEAN',
+      }
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-5',
@@ -153,6 +199,49 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
         valueType: 'BOOLEAN',
       },
+      new_ui_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            rolloutValue: {
+              rolloutId: 'rollout_1',
+              value: 'true',
+              percent: 50,
+            }
+          }
+        },
+        description: 'New UI Rollout',
+        valueType: 'BOOLEAN',
+      },
+      personalized_welcome_message: {
+        defaultValue: { value: 'Welcome!' },
+        conditionalValues: {
+          ios: {
+            personalizationValue: {
+              personalizationId: 'personalization_1',
+            }
+          }
+        },
+        description: 'Personalized Welcome Message',
+        valueType: 'STRING',
+      },
+      experiment_enabled: {
+        defaultValue: { value: 'false' },
+        conditionalValues: {
+          ios: {
+            experimentValue: {
+              experimentId: 'experiment_1',
+              variantValue: [
+                { variantId: 'variant_A', value: 'true' },
+                { variantId: 'variant_B', noChange: true }
+              ],
+              exposurePercent: 25,
+            }
+          }
+        },
+        description: 'Experiment Enabled',
+        valueType: 'BOOLEAN',
+      }
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',
@@ -520,6 +609,48 @@ describe('RemoteConfig', () => {
       });
     });
 
+    it('should throw if experiment exposure percent is out of range', () => {
+      sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (sourceTemplate.parameters as any).experiment_enabled
+        .conditionalValues.ios.experimentValue.exposurePercent = 101;
+      const jsonString = JSON.stringify(sourceTemplate);
+      expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+        .to.throw('Experiment exposure percent must be between 0 and 100 (experiment_enabled)');
+    });
+
+    it('should accept experiment exposure percent for boundary and middle values', () => {
+      [0, 52, 100].forEach((validExposurePercent) => {
+        sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+        (sourceTemplate.parameters as any).experiment_enabled
+          .conditionalValues.ios.experimentValue.exposurePercent = validExposurePercent;
+        const jsonString = JSON.stringify(sourceTemplate);
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString)).to.not.throw();
+      });
+    });
+
+    it('should throw if experiment exposure percent in a parameter group is out of range', () => {
+      sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (sourceTemplate.parameterGroups as any).new_menu.parameters.pumpkin_spice_season
+        .conditionalValues.android_en = {
+          experimentValue: { experimentId: 'exp_1', exposurePercent: 101, variantValue: [] },
+        };
+      const jsonString = JSON.stringify(sourceTemplate);
+      expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+        .to.throw('Experiment exposure percent must be between 0 and 100 (pumpkin_spice_season)');
+    });
+
+    it('should accept valid experiment exposure percent in a parameter group', () => {
+      [0, 50, 100].forEach((validExposurePercent) => {
+        sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+        (sourceTemplate.parameterGroups as any).new_menu.parameters.pumpkin_spice_season
+          .conditionalValues.android_en = {
+            experimentValue: { experimentId: 'exp_1', exposurePercent: validExposurePercent, variantValue: [] },
+          };
+        const jsonString = JSON.stringify(sourceTemplate);
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString)).to.not.throw();
+      });
+    });
+
     it('should succeed when a valid json string is provided', () => {
       const jsonString = JSON.stringify(REMOTE_CONFIG_RESPONSE);
       const newTemplate = remoteConfig.createTemplateFromJSON(jsonString);
@@ -541,6 +672,36 @@ describe('RemoteConfig', () => {
       expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
       expect(p1.description).equals('this is a promo');
       expect(p1.valueType).equals('BOOLEAN');
+
+      const p2 = newTemplate.parameters['new_ui_enabled'];
+      expect(p2.defaultValue).deep.equals({ value: 'false' });
+      expect(p2.conditionalValues).to.not.be.undefined;
+      const rolloutParam = p2.conditionalValues!['ios'] as RolloutParameterValue;
+      expect(rolloutParam.rolloutValue.rolloutId).to.equal('rollout_1');
+      expect(rolloutParam.rolloutValue.value).to.equal('true');
+      expect(rolloutParam.rolloutValue.percent).to.equal(50);
+      expect(p2.description).equals('New UI Rollout');
+      expect(p2.valueType).equals('BOOLEAN');
+
+      const p3 = newTemplate.parameters['personalized_welcome_message'];
+      expect(p3.defaultValue).deep.equals({ value: 'Welcome!' });
+      expect(p3.conditionalValues).to.not.be.undefined;
+      const personalizationParam = p3.conditionalValues!['ios'] as PersonalizationParameterValue;
+      expect(personalizationParam.personalizationValue.personalizationId).to.equal('personalization_1');
+      expect(p3.description).equals('Personalized Welcome Message');
+      expect(p3.valueType).equals('STRING');
+
+      const p4 = newTemplate.parameters['experiment_enabled'];
+      expect(p4.defaultValue).deep.equals({ value: 'false' });
+      expect(p4.conditionalValues).to.not.be.undefined;
+      const experimentParam = p4.conditionalValues!['ios'] as ExperimentParameterValue;
+      expect(experimentParam.experimentValue.experimentId).to.equal('experiment_1');
+      expect(experimentParam.experimentValue.exposurePercent).to.equal(25);
+      expect(experimentParam.experimentValue.variantValue.length).to.equal(2);
+      expect(experimentParam.experimentValue.variantValue[0]).to.deep.equal({ variantId: 'variant_A', value: 'true' });
+      expect(experimentParam.experimentValue.variantValue[1]).to.deep.equal({ variantId: 'variant_B', noChange: true });
+      expect(p4.description).equals('Experiment Enabled');
+      expect(p4.valueType).equals('BOOLEAN');
 
       expect(newTemplate.parameterGroups).deep.equals(PARAMETER_GROUPS);
 
@@ -1551,6 +1712,19 @@ describe('RemoteConfig', () => {
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
           'message', 'Remote Config conditions must be an array');
+    });
+
+    it('should reject when API response contains invalid experiment exposure percent', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      (response.parameters as any).experiment_enabled
+        .conditionalValues.ios.experimentValue.exposurePercent = 101;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+      return rcOperation()
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Experiment exposure percent must be between 0 and 100 (experiment_enabled)');
     });
   }
 

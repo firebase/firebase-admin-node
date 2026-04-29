@@ -1,0 +1,75 @@
+query ListUsersPublic @auth(level: PUBLIC, insecureReason: "test") {
+	users {
+		id
+		name
+		address
+	}
+}
+query ListUsersUserAnon @auth(level: USER_ANON, insecureReason: "test") {
+	users {
+		id
+		name
+		address
+	}
+}
+query ListUsersUser @auth(level: USER, insecureReason: "test") {
+	users {
+		id
+		name
+		address
+	}
+}
+query ListUsersUserEmailVerified
+@auth(level: USER_EMAIL_VERIFIED, insecureReason: "test") {
+	users {
+		id
+		name
+		address
+	}
+}
+query ListUsersNoAccess @auth(level: NO_ACCESS) {
+	users {
+		id
+		name
+		address
+	}
+}
+query ListUsersImpersonationAnon @auth(level: USER_ANON) {
+	users(where: { id: { eq_expr: "auth.uid" } }) {
+		id
+		name
+		address
+	}
+}
+query GetUser($id: User_Key!) @auth(level: PUBLIC, insecureReason: "test") {
+	user(key: $id) {
+		id
+		name
+		address
+	}
+}
+
+query ListEmails @auth(level: NO_ACCESS) {
+	emails {
+		id
+		subject
+		text
+		date
+		from {
+			name
+		}
+	}
+}
+query GetEmail($id: String!) @auth(level: USER_ANON, insecureReason: "test") {
+	email(id: $id) {
+		id
+		subject
+		date
+		text
+		from {
+			id
+			name
+			address
+		}
+	}
+}

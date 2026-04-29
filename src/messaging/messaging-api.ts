@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -428,6 +428,18 @@ export interface AndroidConfig {
   * the app while the device is in direct boot mode.
   */
   directBootOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a bandwidth constrained network.
+   */
+  bandwidthConstrainedOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a restricted satellite network.
+   */
+  restrictedSatelliteOk?: boolean;
 }
 
 /**
