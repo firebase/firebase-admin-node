@@ -23,8 +23,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
-import { getFirestore, initializeFirestore, Firestore } from '../../../src/firestore/index';
-import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
+import { getFirestore, initializeFirestore, Firestore, DEFAULT_DATABASE_ID } from '../../../src/firestore/index';
 
 chai.should();
 chai.use(sinonChai);
