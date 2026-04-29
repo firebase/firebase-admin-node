@@ -17,8 +17,8 @@
 
 import { App } from '../app';
 import { deepCopy } from '../utils/deep-copy';
-import { 
-  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError, FirebaseMessagingSessionError
+import {
+  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError
 } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
@@ -156,7 +156,7 @@ export class Messaging {
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: { message: Message; validate_only?: boolean } = { message: copy };
+        const request: { message: Message; validate_only?: boolean; } = { message: copy };
         if (dryRun) {
           request.validate_only = true;
         }
@@ -212,57 +212,52 @@ export class Messaging {
 
     return this.getUrlPath()
       .then((urlPath) => {
-        if (http2SessionHandler) {
-          let sendResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>;
-          return new Promise((resolve: (result: PromiseSettledResult<SendResponse>[]) => void, reject) => {
-            // Start session listeners
-            http2SessionHandler.invoke().catch((error) => {
-              const pendingBatchResponse = 
-                sendResponsePromise ? sendResponsePromise.then(this.parseSendResponses) : undefined;
-              reject(new FirebaseMessagingSessionError(error, undefined, pendingBatchResponse));
-            });
-
-            // Start making requests
-            const requests: Promise<SendResponse>[] = copy.map(async (message) => {
-              validateMessage(message);
-              const request: { message: Message; validate_only?: boolean; } = { message };
-              if (dryRun) {
-                request.validate_only = true;
-              }
-              return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
-                FCM_SEND_HOST, urlPath, request, http2SessionHandler);
-            });
-
-            // Resolve once all requests have completed
-            sendResponsePromise = Promise.allSettled(requests);
-            sendResponsePromise.then(resolve);
-          });
-        } else {
-          const requests: Promise<SendResponse>[] = copy.map(async (message) => {
-            validateMessage(message);
-            const request: { message: Message; validate_only?: boolean; } = { message };
-            if (dryRun) {
-              request.validate_only = true;
-            }
+        const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+          validateMessage(message);
+          const request: { message: Message; validate_only?: boolean; } = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          if (http2SessionHandler) {
+            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
+              FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+          } else {
             return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(
               FCM_SEND_HOST, urlPath, request);
-          });
-          return Promise.allSettled(requests);
-        }
+          }
+        });
+        return Promise.allSettled(requests);
       })
-      .then(this.parseSendResponses)
+      .then((results) => {
+        const sessionErrors = http2SessionHandler ? http2SessionHandler.getErrors() : [];
+        return this.parseSendResponses(results, sessionErrors);
+      })
       .finally(() => {
         http2SessionHandler?.close();
       });
   }
 
-  private parseSendResponses(results: PromiseSettledResult<SendResponse>[]): BatchResponse {
+  private parseSendResponses(results: PromiseSettledResult<SendResponse>[], sessionErrors: Error[] = []): BatchResponse {
     const responses: SendResponse[] = [];
     results.forEach(result => {
       if (result.status === 'fulfilled') {
         responses.push(result.value);
       } else { // rejected
-        responses.push({ success: false, error: result.reason });
+        let error = result.reason;
+        if (sessionErrors && sessionErrors.length > 0) {
+          const cause = sessionErrors.length === 1
+            ? sessionErrors[0]
+            : new (global as any).AggregateError(sessionErrors, 'Multiple session errors occurred');
+
+          const streamMessage = result.reason.message || 'Unknown stream error';
+
+          error = new FirebaseMessagingError({
+            code: MessagingClientErrorCode.UNKNOWN_ERROR.code,
+            message: `${streamMessage}. Session failure occurred`,
+            cause: cause
+          });
+        }
+        responses.push({ success: false, error });
       }
     });
     const successCount: number = responses.filter((resp) => resp.success).length;

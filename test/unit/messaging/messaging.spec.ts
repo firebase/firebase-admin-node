@@ -34,7 +34,6 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
-import { FirebaseMessagingSessionError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -913,7 +912,7 @@ describe('Messaging', () => {
       });
     });
 
-    it('should throw error with BatchResponse promise on session error event using HTTP/2', () => {
+    it('should be fulfilled with a BatchResponse containing session errors when session fails using HTTP/2', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'))
       const sessionError = 'MOCK_SESSION_ERROR'
       mockedHttp2Responses.push(mockHttp2Error(
@@ -924,18 +923,57 @@ describe('Messaging', () => {
 
       return messaging.sendEach(
         [validMessage, validMessage], true
-      ).catch(async (error: FirebaseMessagingSessionError) => {
-        expect(error.code).to.equal('messaging/app/network-error');
-        expect(error.pendingBatchResponse).to.not.be.undefined;
-        await error.pendingBatchResponse?.then((response: BatchResponse) => {
-          expect(http2Mocker.requests.length).to.equal(2);
-          expect(response.failureCount).to.equal(1);
-          const responses = response.responses;
-          checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
-          checkSendResponseFailure(responses[1], 'app/network-error');
-        })
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        const responses = response.responses;
+        checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
+        checkSendResponseFailure(
+          responses[1],
+          'messaging/unknown-error',
+          'Session failure occurred'
+        );
+        expect(responses[1].error!.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
+        expect(responses[1].error!.cause).to.be.an.instanceOf(Error);
+        expect(responses[1].error!.cause!.message).to.contain(sessionError);
       });
-    })
+    });
+
+    it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur using HTTP/2', () => {
+      const sessionError1 = 'MOCK_SESSION_ERROR_1';
+      const sessionError2 = 'MOCK_SESSION_ERROR_2';
+      
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_1'),
+        new Error(sessionError1)
+      ));
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_2'),
+        new Error(sessionError2)
+      ));
+      
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messaging.sendEach(
+        [validMessage, validMessage], true
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.failureCount).to.equal(2);
+        
+        const failure = response.responses[0];
+        expect(failure.success).to.be.false;
+        expect(failure.error!.code).to.equal('messaging/unknown-error');
+        
+        const cause = failure.error!.cause;
+        expect(cause).to.not.be.undefined;
+        expect(cause!.constructor.name).to.equal('AggregateError');
+        expect((cause as any).errors).to.be.an.instanceOf(Array);
+        expect((cause as any).errors.length).to.equal(2);
+        expect((cause as any).errors[0].message).to.contain(sessionError1);
+        expect((cause as any).errors[1].message).to.contain(sessionError2);
+      });
+    });
 
     // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types using HTTP/2', () => {
