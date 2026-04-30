@@ -34,6 +34,7 @@ import {
   InAppDefaultValue,
   ServerConfig,
   RemoteConfigParameterValue,
+  ExperimentParameterValue,
   EvaluationContext,
   ServerTemplateData,
   NamedCondition,
@@ -243,6 +244,8 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       this.parameters = {};
     }
 
+    validateAllParameterExposures(this.parameters);
+
     if (typeof config.parameterGroups !== 'undefined') {
       if (!validator.isNonNullObject(config.parameterGroups)) {
         throw new FirebaseRemoteConfigError(
@@ -252,6 +255,12 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       this.parameterGroups = config.parameterGroups;
     } else {
       this.parameterGroups = {};
+    }
+
+    for (const group of Object.values(this.parameterGroups)) {
+      if (validator.isNonNullObject(group) && validator.isNonNullObject(group.parameters)) {
+        validateAllParameterExposures(group.parameters);
+      }
     }
 
     if (typeof config.conditions !== 'undefined') {
@@ -445,6 +454,52 @@ class ServerConfigImpl implements ServerConfig {
   }
   getAll(): { [key: string]: Value } {
     return { ...this.configValues };
+  }
+}
+
+function validateAllParameterExposures(
+  parameters: { [key: string]: RemoteConfigParameter }
+): void {
+  // Walk each parameter and validate any exposurePercent present in
+  // conditional values only. Experiment exposure is condition-scoped.
+  for (const [parameterName, parameter] of Object.entries(parameters)) {
+    if (!validator.isNonNullObject(parameter)) {
+      continue;
+    }
+
+    if (!validator.isNonNullObject(parameter.conditionalValues)) {
+      continue;
+    }
+
+    for (const conditionalValue of Object.values(parameter.conditionalValues)) {
+      validateExperimentExposurePercent(conditionalValue, parameterName);
+    }
+  }
+}
+
+function validateExperimentExposurePercent(
+  parameterValue: RemoteConfigParameterValue | undefined,
+  parameterName: string,
+): void {
+  // Only experiment-backed values can carry `exposurePercent`.
+  // For other parameter value types, this validator is a no-op.
+  if (!validator.isNonNullObject(parameterValue) ||
+    !validator.isNonNullObject((parameterValue as ExperimentParameterValue).experimentValue)) {
+    return;
+  }
+
+  const exposurePercent = (parameterValue as ExperimentParameterValue).experimentValue.exposurePercent;
+  // `exposurePercent` is optional. If absent, leave behavior unchanged.
+  if (typeof exposurePercent === 'undefined') {
+    return;
+  }
+
+  // Enforce public contract: numeric and within [0, 100].
+  if (!validator.isNumber(exposurePercent) || !Number.isFinite(exposurePercent) ||
+    exposurePercent < 0 || exposurePercent > 100) {
+    throw new FirebaseRemoteConfigError(
+      'invalid-argument',
+      `Experiment exposure percent must be between 0 and 100 (${parameterName})`);
   }
 }
 
