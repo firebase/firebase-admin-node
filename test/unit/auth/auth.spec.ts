@@ -375,6 +375,46 @@ AUTH_CONFIGS.forEach((testConfig) => {
           expect(tenantManager1).to.equal(tenantManager2);
         });
       });
+
+      describe('authForTenant() emulator isolation', () => {
+        afterEach(() => {
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        });
+
+        it('should not use emulator for tenant auth when env var set after Auth init', async () => {
+          // Initialize Auth WITHOUT the emulator env var.
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+          const noEmulatorAuth = new Auth(mocks.app());
+
+          // Set the env var AFTER Auth initialization.
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+
+          // Lazily create tenant auth — should inherit non-emulator mode.
+          const tenantAuth = noEmulatorAuth.tenantManager().authForTenant('tenant1');
+          const token = await tenantAuth.createCustomToken('uid1');
+          const decoded = jwt.decode(token, { complete: true });
+
+          // Token should be signed (not emulator-style unsigned).
+          expect(decoded).to.have.property('header').that.has.property('alg').that.does.not.equal('none');
+        });
+
+        it('should use emulator for tenant auth when env var set before Auth init', async () => {
+          // Initialize Auth WITH the emulator env var.
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+          const emulatorAuth = new Auth(mocks.app());
+
+          // Delete the env var AFTER Auth initialization.
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+          // Lazily create tenant auth — should inherit emulator mode.
+          const tenantAuth = emulatorAuth.tenantManager().authForTenant('tenant1');
+          const token = await tenantAuth.createCustomToken('uid1');
+          const decoded = jwt.decode(token, { complete: true });
+
+          // Token should be unsigned (emulator-style).
+          expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+        });
+      });
     }
 
     describe('createCustomToken()', () => {
@@ -3972,6 +4012,63 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // the getUser method and get rejected (instead of succeed locally).
         await expect(mockAuth.verifyIdToken(unsignedToken))
           .to.be.rejectedWith(errorMessage);
+      });
+
+      it('verifyIdToken() should still work after env var is deleted', () => {
+        const uid = userRecord.uid;
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          header: {},
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince,
+        }, 'secret');
+
+        // Delete the env var after init; emulator mode should persist.
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return mockAuth.verifyIdToken(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Should still behave as emulator (force revocation check).
+            expect(error).to.have.property('code', 'auth/id-token-revoked');
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
+
+      it('verifySessionCookie() should still work after env var is deleted', () => {
+        const uid = userRecord.uid;
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince,
+        }, 'secret');
+
+        // Delete the env var after init; emulator mode should persist.
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return mockAuth.verifySessionCookie(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.have.property('code', 'auth/session-cookie-revoked');
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
       });
     });
   });
