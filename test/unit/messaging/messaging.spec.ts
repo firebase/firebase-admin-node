@@ -932,7 +932,7 @@ describe('Messaging', () => {
         checkSendResponseFailure(
           responses[1],
           'messaging/unknown-error',
-          'Session failure occurred'
+          sessionError
         );
         expect(responses[1].error!.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
         expect(responses[1].error!.cause!.constructor.name).to.equal('AggregateError');

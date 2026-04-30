@@ -255,10 +255,13 @@ export class Messaging {
           const cause = new (global as any).AggregateError(allErrors, 'Stream failure and session failures occurred');
 
           const streamMessage = result.reason.message || 'Unknown stream error';
+          const sessionMessage = sessionErrors.length > 0
+            ? `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`
+            : '';
 
           error = new FirebaseMessagingError({
             code: MessagingClientErrorCode.UNKNOWN_ERROR.code,
-            message: `${streamMessage}. Session failure occurred`,
+            message: `${streamMessage}${sessionMessage}`,
             cause: cause
           });
         }

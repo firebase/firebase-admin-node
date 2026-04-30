@@ -1345,19 +1345,20 @@ export class Http2SessionHandler {
   private sessionErrors: Error[] = [];
 
   constructor(url: string) {
-    this.http2Session = this.createSession(url);
+    this.createSession(url);
   }
 
   public createSession(url: string): http2.ClientHttp2Session {
-    if (!this.http2Session || this.isClosed) {
+    if (!this.http2Session || this.isCurrentSessionClosed) {
+      this.sessionErrors = [];
       const opts: http2.SecureClientSessionOptions = {
         // Set local max concurrent stream limit to respect backend limit
         peerMaxConcurrentStreams: 100,
         ALPNProtocols: ['h2']
       }
-      const http2Session = http2.connect(url, opts)
+      this.http2Session = http2.connect(url, opts)
 
-      http2Session.on('goaway', (errorCode, _, opaqueData) => {
+      this.http2Session.on('goaway', (errorCode, _, opaqueData) => {
         const error = new FirebaseAppError({
           code: AppErrorCodes.NETWORK_ERROR,
           message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
@@ -1365,13 +1366,13 @@ export class Http2SessionHandler {
         this.sessionErrors.push(error);
       });
 
-      http2Session.on('error', (error: any) => {
+      this.http2Session.on('error', (error: any) => {
         let errorMessage: any;
-        if (error.name == 'AggregateError' && error.errors) {
+        if (error?.name === 'AggregateError' && Array.isArray(error.errors)) {
           errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
             `[${error.errors.map((e: any) => e.message).join(', ')}]`;
         } else {
-          errorMessage = `Session error while making requests: ${error.code} - ${error.message} `;
+          errorMessage = `Session error while making requests: ${error?.code} - ${error?.message} `;
         }
         const appError = new FirebaseAppError({
           code: AppErrorCodes.NETWORK_ERROR,
@@ -1380,9 +1381,6 @@ export class Http2SessionHandler {
         });
         this.sessionErrors.push(appError);
       });
-
-
-      return http2Session;
     }
     return this.http2Session;
   }
@@ -1395,11 +1393,11 @@ export class Http2SessionHandler {
     return this.http2Session;
   }
 
-  get isClosed(): boolean {
-    return this.http2Session.closed;
+  get isCurrentSessionClosed(): boolean {
+    return !!this.http2Session?.closed;
   }
 
   public close(): void {
-    this.http2Session.close();
+    this.http2Session?.close();
   }
 }
