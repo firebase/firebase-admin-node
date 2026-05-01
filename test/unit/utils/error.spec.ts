@@ -21,10 +21,12 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {
-  FirebaseError, FirebaseMessagingError, MessagingClientErrorCode,
-} from '../../../src/utils/error';
+import { FirebaseError } from '../../../src/utils/error';
 import { FirebaseAuthError } from '../../../src/auth/error';
+import {
+  FirebaseMessagingError,
+  messagingClientErrorCode,
+} from '../../../src/messaging/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -277,14 +279,14 @@ describe('FirebaseMessagingError', () => {
     describe('without message specified', () => {
       it('should initialize an error from an expected server code', () => {
         const error = FirebaseMessagingError.fromServerError('InvalidRegistration');
-        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        const expectedError = messagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.equal(expectedError.message);
       });
 
       it('should initialize an error from an unexpected server code', () => {
         const error = FirebaseMessagingError.fromServerError('UNEXPECTED_ERROR');
-        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        const expectedError = messagingClientErrorCode.UNKNOWN_ERROR;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.equal(expectedError.message);
       });
@@ -293,14 +295,14 @@ describe('FirebaseMessagingError', () => {
     describe('with message specified', () => {
       it('should initialize an error from an expected server code', () => {
         const error = FirebaseMessagingError.fromServerError('InvalidRegistration', 'Message override.');
-        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        const expectedError = messagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.equal('Message override.');
       });
 
       it('should initialize an error from an unexpected server code', () => {
         const error = FirebaseMessagingError.fromServerError('UNEXPECTED_ERROR', 'Message override.');
-        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        const expectedError = messagingClientErrorCode.UNKNOWN_ERROR;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.equal('Message override.');
       });
@@ -324,7 +326,7 @@ describe('FirebaseMessagingError', () => {
         const error = FirebaseMessagingError.fromServerError(
           'InvalidRegistration', /* message */ undefined, mockError,
         );
-        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        const expectedError = messagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.equal(expectedError.message);
       });
@@ -333,7 +335,7 @@ describe('FirebaseMessagingError', () => {
         const error = FirebaseMessagingError.fromServerError(
           'UNEXPECTED_ERROR', /* message */ undefined, mockError,
         );
-        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        const expectedError = messagingClientErrorCode.UNKNOWN_ERROR;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.be.equal(
           `${expectedError.message} Raw server response: "${JSON.stringify(mockHttpResponse.data)}"`,

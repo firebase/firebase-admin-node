@@ -15,9 +15,7 @@
  * limitations under the License.
  */
 
-import { BatchResponse } from '../messaging/messaging-api';
-import { deepCopy } from '../utils/deep-copy';
-import { RequestResponseError, RequestResponse } from './api-request';
+import { RequestResponse } from './api-request';
 
 /**
  * Represents the raw HTTP response object.
@@ -58,13 +56,6 @@ export interface ErrorInfo {
   httpResponse?: HttpResponse;
   /** The original wrapped error that triggered this error, if any. */
   cause?: Error;
-}
-
-/**
- * Defines a type that stores all server to client codes (string enum).
- */
-interface ServerToClientCode {
-  [code: string]: string;
 }
 
 /**
@@ -215,7 +206,6 @@ export class FirebaseAppError extends PrefixedFirebaseError {
   }
 }
 
-
 /**
  * Firebase Database error code structure. This extends FirebaseError.
  */
@@ -257,111 +247,6 @@ export class FirebaseFirestoreError extends FirebaseError {
 }
 
 /**
- * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseMessagingError extends PrefixedFirebaseError {
-  /**
-   * Creates the developer-facing error corresponding to the backend error code.
-   *
-   * @param serverErrorCode - The server error code.
-   * @param [message] The error message. The default message is used
-   *     if not provided.
-   * @param [serverError] The error's raw server response.
-   * @returns The corresponding developer-facing error.
-   * @internal
-   */
-  public static fromServerError(
-    serverErrorCode: string | null,
-    message?: string | null,
-    serverError?: RequestResponseError,
-  ): FirebaseMessagingError {
-    // If not found, default to unknown error.
-    let clientCodeKey = 'UNKNOWN_ERROR';
-    if (serverErrorCode && serverErrorCode in MESSAGING_SERVER_TO_CLIENT_CODE) {
-      clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode];
-    }
-    const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
-    error.message = message || error.message;
-
-    const rawData = serverError?.response?.data;
-    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawData !== 'undefined') {
-      try {
-        error.message += ` Raw server response: "${typeof rawData === 'string' ? rawData : JSON.stringify(rawData)}"`;
-      } catch (e) {
-        // Ignore JSON parsing error.
-      }
-    }
-
-    error.cause = serverError;
-    error.httpResponse = serverError?.response ? toHttpResponse(serverError.response) : undefined;
-    return new FirebaseMessagingError(error);
-  }
-
-  /**
-   * @internal
-   */
-  public static fromTopicManagementServerError(
-    serverErrorCode: string,
-    message?: string,
-    serverError?: RequestResponseError,
-  ): FirebaseMessagingError {
-    // If not found, default to unknown error.
-    const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
-    const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
-    error.message = message || error.message;
-
-    const rawData = serverError?.response?.data;
-    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawData !== 'undefined') {
-      try {
-        error.message += ` Raw server response: "${typeof rawData === 'string' ? rawData : JSON.stringify(rawData)}"`;
-      } catch (e) {
-        // Ignore JSON parsing error.
-      }
-    }
-
-    error.cause = serverError;
-    error.httpResponse = serverError?.response ? toHttpResponse(serverError.response) : undefined;
-    return new FirebaseMessagingError(error);
-  }
-
-  /**
-   * 
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default message if provided.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
-    super('messaging', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
-}
-
-export class FirebaseMessagingSessionError extends FirebaseMessagingError {
-  public pendingBatchResponse?: Promise<BatchResponse>;
-  /**
-     * 
-     * @param info - The error code info.
-     * @param message - The error message. This will override the default message if provided.
-     * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
-     */
-  constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
-    // Override default message if custom message provided.
-    super(info, message || info.message);
-    this.pendingBatchResponse = pendingBatchResponse;
-
-  }
-
-  /** @returns The object representation of the error. */
-  public toJSON(): object {
-    return {
-      code: this.code,
-      message: this.message,
-      pendingBatchResponse: this.pendingBatchResponse,
-    };
-  }
-}
-
-/**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.
  */
 export class FirebaseProjectManagementError extends PrefixedFirebaseError {
@@ -393,106 +278,6 @@ export class AppErrorCodes {
   public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
 }
 
-
-/**
- * Messaging client error codes and their default messages.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const MessagingClientErrorCode = {
-  INVALID_ARGUMENT: {
-    code: 'invalid-argument',
-    message: 'Invalid argument provided.',
-  },
-  INVALID_RECIPIENT: {
-    code: 'invalid-recipient',
-    message: 'Invalid message recipient provided.',
-  },
-  INVALID_PAYLOAD: {
-    code: 'invalid-payload',
-    message: 'Invalid message payload provided.',
-  },
-  INVALID_DATA_PAYLOAD_KEY: {
-    code: 'invalid-data-payload-key',
-    message: 'The data message payload contains an invalid key. See the reference documentation ' +
-      'for the DataMessagePayload type for restricted keys.',
-  },
-  PAYLOAD_SIZE_LIMIT_EXCEEDED: {
-    code: 'payload-size-limit-exceeded',
-    message: 'The provided message payload exceeds the FCM size limits. See the error documentation ' +
-      'for more details.',
-  },
-  INVALID_OPTIONS: {
-    code: 'invalid-options',
-    message: 'Invalid message options provided.',
-  },
-  INVALID_REGISTRATION_TOKEN: {
-    code: 'invalid-registration-token',
-    message: 'Invalid registration token provided. Make sure it matches the registration token ' +
-      'the client app receives from registering with FCM.',
-  },
-  REGISTRATION_TOKEN_NOT_REGISTERED: {
-    code: 'registration-token-not-registered',
-    message: 'The provided registration token is not registered. A previously valid registration ' +
-      'token can be unregistered for a variety of reasons. See the error documentation for more ' +
-      'details. Remove this registration token and stop using it to send messages.',
-  },
-  MISMATCHED_CREDENTIAL: {
-    code: 'mismatched-credential',
-    message: 'The credential used to authenticate this SDK does not have permission to send ' +
-      'messages to the device corresponding to the provided registration token. Make sure the ' +
-      'credential and registration token both belong to the same Firebase project.',
-  },
-  INVALID_PACKAGE_NAME: {
-    code: 'invalid-package-name',
-    message: 'The message was addressed to a registration token whose package name does not match ' +
-      'the provided "restrictedPackageName" option.',
-  },
-  DEVICE_MESSAGE_RATE_EXCEEDED: {
-    code: 'device-message-rate-exceeded',
-    message: 'The rate of messages to a particular device is too high. Reduce the number of ' +
-      'messages sent to this device and do not immediately retry sending to this device.',
-  },
-  TOPICS_MESSAGE_RATE_EXCEEDED: {
-    code: 'topics-message-rate-exceeded',
-    message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
-      'number of messages sent for this topic, and do not immediately retry sending to this topic.',
-  },
-  MESSAGE_RATE_EXCEEDED: {
-    code: 'message-rate-exceeded',
-    message: 'Sending limit exceeded for the message target.',
-  },
-  THIRD_PARTY_AUTH_ERROR: {
-    code: 'third-party-auth-error',
-    message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
-      'SSL certificate was not uploaded or has expired. Check the validity of your development ' +
-      'and production certificates.',
-  },
-  TOO_MANY_TOPICS: {
-    code: 'too-many-topics',
-    message: 'The maximum number of topics the provided registration token can be subscribed to ' +
-      'has been exceeded.',
-  },
-  AUTHENTICATION_ERROR: {
-    code: 'authentication-error',
-    message: 'An error occurred when trying to authenticate to the FCM servers. Make sure the ' +
-      'credential used to authenticate this SDK has the proper permissions. See ' +
-      'https://firebase.google.com/docs/admin/setup for setup instructions.',
-  },
-  SERVER_UNAVAILABLE: {
-    code: 'server-unavailable',
-    message: 'The FCM server could not process the request in time. See the error documentation ' +
-      'for more details.',
-  },
-  INTERNAL_ERROR: {
-    code: 'internal-error',
-    message: 'An internal error has occurred. Please retry the request.',
-  },
-  UNKNOWN_ERROR: {
-    code: 'unknown-error',
-    message: 'An unknown server error was returned.',
-  },
-} satisfies Record<string, ErrorInfo>;
-
 export type ProjectManagementErrorCode =
   'already-exists'
   | 'authentication-error'
@@ -503,67 +288,3 @@ export type ProjectManagementErrorCode =
   | 'not-found'
   | 'service-unavailable'
   | 'unknown-error';
-
-
-/** @const {ServerToClientCode} Messaging server to client enum error codes. */
-const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
-  /* GENERIC ERRORS */
-  // Generic invalid message parameter provided.
-  InvalidParameters: 'INVALID_ARGUMENT',
-  // Mismatched sender ID.
-  MismatchSenderId: 'MISMATCHED_CREDENTIAL',
-  // FCM server unavailable.
-  Unavailable: 'SERVER_UNAVAILABLE',
-  // FCM server internal error.
-  InternalServerError: 'INTERNAL_ERROR',
-
-  /* SEND ERRORS */
-  // Invalid registration token format.
-  InvalidRegistration: 'INVALID_REGISTRATION_TOKEN',
-  // Registration token is not registered.
-  NotRegistered: 'REGISTRATION_TOKEN_NOT_REGISTERED',
-  // Registration token does not match restricted package name.
-  InvalidPackageName: 'INVALID_PACKAGE_NAME',
-  // Message payload size limit exceeded.
-  MessageTooBig: 'PAYLOAD_SIZE_LIMIT_EXCEEDED',
-  // Invalid key in the data message payload.
-  InvalidDataKey: 'INVALID_DATA_PAYLOAD_KEY',
-  // Invalid time to live option.
-  InvalidTtl: 'INVALID_OPTIONS',
-  // Device message rate exceeded.
-  DeviceMessageRateExceeded: 'DEVICE_MESSAGE_RATE_EXCEEDED',
-  // Topics message rate exceeded.
-  TopicsMessageRateExceeded: 'TOPICS_MESSAGE_RATE_EXCEEDED',
-  // Invalid APNs credentials.
-  InvalidApnsCredential: 'THIRD_PARTY_AUTH_ERROR',
-
-  /* FCM v1 canonical error codes */
-  NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
-  PERMISSION_DENIED: 'MISMATCHED_CREDENTIAL',
-  RESOURCE_EXHAUSTED: 'MESSAGE_RATE_EXCEEDED',
-  UNAUTHENTICATED: 'THIRD_PARTY_AUTH_ERROR',
-
-  /* FCM v1 new error codes */
-  APNS_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
-  INTERNAL: 'INTERNAL_ERROR',
-  INVALID_ARGUMENT: 'INVALID_ARGUMENT',
-  QUOTA_EXCEEDED: 'MESSAGE_RATE_EXCEEDED',
-  SENDER_ID_MISMATCH: 'MISMATCHED_CREDENTIAL',
-  THIRD_PARTY_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
-  UNAVAILABLE: 'SERVER_UNAVAILABLE',
-  UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
-  UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
-};
-
-/** @const {ServerToClientCode} Topic management (IID) server to client enum error codes. */
-const TOPIC_MGT_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
-  /* TOPIC SUBSCRIPTION MANAGEMENT ERRORS */
-  NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
-  INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
-  TOO_MANY_TOPICS: 'TOO_MANY_TOPICS',
-  RESOURCE_EXHAUSTED: 'TOO_MANY_TOPICS',
-  PERMISSION_DENIED: 'AUTHENTICATION_ERROR',
-  DEADLINE_EXCEEDED: 'SERVER_UNAVAILABLE',
-  INTERNAL: 'INTERNAL_ERROR',
-  UNKNOWN: 'UNKNOWN_ERROR',
-};
