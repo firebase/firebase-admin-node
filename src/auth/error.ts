@@ -232,81 +232,136 @@ const authClientErrorMessages: Record<AuthErrorCode, string> = {
   'racaptcha-not-enabled': 'reCAPTCHA enterprise is not enabled.',
 };
 
-/** @const {ServerToClientCode} Auth server to client enum error codes. */
+/** @const {Record<string, string>} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: Record<string, string> = {
+  // Feature being configured or used requires a billing account.
   BILLING_NOT_ENABLED: 'BILLING_NOT_ENABLED',
+  // Claims payload is too large.
   CLAIMS_TOO_LARGE: 'CLAIMS_TOO_LARGE',
+  // Configuration being added already exists.
   CONFIGURATION_EXISTS: 'CONFIGURATION_EXISTS',
+  // Configuration not found.
   CONFIGURATION_NOT_FOUND: 'CONFIGURATION_NOT_FOUND',
+  // Provided credential has insufficient permissions.
   INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
-  INVALID_CLAIMS: 'INVALID_CLAIMS',
+  // Provided configuration has invalid fields.
   INVALID_CONFIG: 'INVALID_CONFIG',
+  // Provided configuration identifier is invalid.
+  INVALID_CONFIG_ID: 'INVALID_PROVIDER_ID',
+  // ActionCodeSettings missing continue URL.
   INVALID_CONTINUE_URI: 'INVALID_CONTINUE_URI',
-  INVALID_CREATION_TIME: 'INVALID_CREATION_TIME',
+  // Dynamic link domain in provided ActionCodeSettings is not authorized.
   INVALID_DYNAMIC_LINK_DOMAIN: 'INVALID_DYNAMIC_LINK_DOMAIN',
-  INVALID_EMAIL_VERIFIED: 'INVALID_EMAIL_VERIFIED',
-  INVALID_EMAIL: 'INVALID_EMAIL',
-  INVALID_ENROLLED_FACTORS: 'INVALID_ENROLLED_FACTORS',
-  INVALID_ENROLLMENT_TIME: 'INVALID_ENROLLMENT_TIME',
-  INVALID_HASH_ALGORITHM: 'INVALID_HASH_ALGORITHM',
-  INVALID_HASH_BLOCK_SIZE: 'INVALID_HASH_BLOCK_SIZE',
-  INVALID_HASH_DERIVED_KEY_LENGTH: 'INVALID_HASH_DERIVED_KEY_LENGTH',
-  INVALID_HASH_KEY: 'INVALID_HASH_KEY',
-  INVALID_HASH_MEMORY_COST: 'INVALID_HASH_MEMORY_COST',
-  INVALID_HASH_PARALLELIZATION: 'INVALID_HASH_PARALLELIZATION',
-  INVALID_HASH_ROUNDS: 'INVALID_HASH_ROUNDS',
-  INVALID_HASH_SALT_SEPARATOR: 'INVALID_HASH_SALT_SEPARATOR',
-  INVALID_LAST_SIGN_IN_TIME: 'INVALID_LAST_SIGN_IN_TIME',
-  INVALID_MFA_REQUIRED_KEY: 'INVALID_ARGUMENT',
-  INVALID_OAUTH_CLIENT_ID: 'INVALID_OAUTH_CLIENT_ID',
-  INVALID_PAGE_TOKEN: 'INVALID_PAGE_TOKEN',
-  INVALID_PASSWORD: 'INVALID_PASSWORD',
-  INVALID_PASSWORD_HASH: 'INVALID_PASSWORD_HASH',
-  INVALID_PASSWORD_SALT: 'INVALID_PASSWORD_SALT',
-  INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
-  INVALID_PHOTO_URL: 'INVALID_PHOTO_URL',
-  INVALID_PROJECT_ID: 'INVALID_PROJECT_ID',
-  INVALID_PROVIDER_DATA: 'INVALID_PROVIDER_DATA',
-  INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
-  INVALID_PROVIDER_UID: 'INVALID_PROVIDER_UID',
-  INVALID_RECAPTCHA_ACTION: 'INVALID_RECAPTCHA_ACTION',
-  INVALID_RECAPTCHA_ENFORCEMENT_STATE: 'INVALID_RECAPTCHA_ENFORCEMENT_STATE',
-  INVALID_SESSION_COOKIE_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
-  INVALID_TENANT_ID: 'INVALID_TENANT_ID',
-  INVALID_TENANT_TYPE: 'INVALID_TENANT_TYPE',
-  INVALID_TESTING_PHONE_NUMBER: 'INVALID_TESTING_PHONE_NUMBER',
-  MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
-  MISSING_CONTINUE_URI: 'MISSING_CONTINUE_URI',
-  MISSING_HASH_ALGORITHM: 'MISSING_HASH_ALGORITHM',
-  MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
-  MISSING_MFA_REQUIRED_KEY: 'INVALID_ARGUMENT',
-  MISSING_UID: 'MISSING_UID',
-  OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
-  RECAPTCHA_NOT_ENABLED: 'RECAPTCHA_NOT_ENABLED',
-  SECOND_FACTOR_LIMIT_EXCEEDED: 'SECOND_FACTOR_LIMIT_EXCEEDED',
-  SECOND_FACTOR_UID_ALREADY_EXISTS: 'SECOND_FACTOR_UID_ALREADY_EXISTS',
-  TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
-  UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
-  UNSUPPORTED_FIRST_FACTOR: 'UNSUPPORTED_FIRST_FACTOR',
-  UNSUPPORTED_SECOND_FACTOR: 'UNSUPPORTED_SECOND_FACTOR',
-  UNSUPPORTED_TENANT_OPERATION: 'UNSUPPORTED_TENANT_OPERATION',
-  UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
-  USER_NOT_DISABLED: 'USER_NOT_DISABLED',
+  // Hosting link domain in provided ActionCodeSettings is not owned by the current project.
+  INVALID_HOSTING_LINK_DOMAIN: 'INVALID_HOSTING_LINK_DOMAIN',
+  // uploadAccount provides an email that already exists.
   DUPLICATE_EMAIL: 'EMAIL_ALREADY_EXISTS',
+  // uploadAccount provides a localId that already exists.
   DUPLICATE_LOCAL_ID: 'UID_ALREADY_EXISTS',
+  // Request specified a multi-factor enrollment ID that already exists.
+  DUPLICATE_MFA_ENROLLMENT_ID: 'SECOND_FACTOR_UID_ALREADY_EXISTS',
+  // setAccountInfo email already exists.
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  // /accounts:sendOobCode for password reset when user is not found.
   EMAIL_NOT_FOUND: 'EMAIL_NOT_FOUND',
-  INVALID_TENANT_TYPE_CONVERSION: 'INVALID_ARGUMENT',
-  MISSING_EMAIL: 'INVALID_EMAIL',
-  MISSING_LOCAL_ID: 'MISSING_UID',
-  MISSING_PASSWORD: 'INVALID_PASSWORD',
-  PASSWORD_LOGIN_DISABLED: 'OPERATION_NOT_ALLOWED',
-  PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
-  PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
-  USER_NOT_FOUND: 'USER_NOT_FOUND',
-  WEAK_PASSWORD: 'INVALID_PASSWORD',
-  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  // Reserved claim name.
+  FORBIDDEN_CLAIM: 'FORBIDDEN_CLAIM',
+  // Invalid claims provided.
+  INVALID_CLAIMS: 'INVALID_CLAIMS',
+  // Invalid session cookie duration.
+  INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
+  // Invalid email provided.
+  INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid new email provided.
+  INVALID_NEW_EMAIL: 'INVALID_NEW_EMAIL',
+  // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
+  INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
+  // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
+  // Invalid tenant/parent resource name.
+  INVALID_NAME: 'INVALID_NAME',
+  // OIDC configuration has an invalid OAuth client ID.
+  INVALID_OAUTH_CLIENT_ID: 'INVALID_OAUTH_CLIENT_ID',
+  // Invalid page token.
+  INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
+  // Invalid phone number.
+  INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
+  // Invalid agent project. Either agent project doesn't exist or didn't enable multi-tenancy.
+  INVALID_PROJECT_ID: 'INVALID_PROJECT_ID',
+  // Invalid provider ID.
+  INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
+  // Invalid service account.
+  INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  // Invalid testing phone number.
+  INVALID_TESTING_PHONE_NUMBER: 'INVALID_TESTING_PHONE_NUMBER',
+  // Invalid tenant type.
+  INVALID_TENANT_TYPE: 'INVALID_TENANT_TYPE',
+  // Missing Android package name.
+  MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
+  // Missing configuration.
+  MISSING_CONFIG: 'MISSING_CONFIG',
+  // Missing configuration identifier.
+  MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
+  // Missing tenant display name: This can be thrown on CreateTenant and UpdateTenant.
+  MISSING_DISPLAY_NAME: 'MISSING_DISPLAY_NAME',
+  // Email is required for the specified action. For example a multi-factor user requires
+  // a verified email.
+  MISSING_EMAIL: 'MISSING_EMAIL',
+  // Missing iOS bundle ID.
+  MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
+  // Missing OIDC issuer.
+  MISSING_ISSUER: 'MISSING_ISSUER',
+  // No localId provided (deleteAccount missing localId).
+  MISSING_LOCAL_ID: 'MISSING_UID',
+  // OIDC configuration is missing an OAuth client ID.
+  MISSING_OAUTH_CLIENT_ID: 'MISSING_OAUTH_CLIENT_ID',
+  // Missing provider ID.
+  MISSING_PROVIDER_ID: 'MISSING_PROVIDER_ID',
+  // Missing SAML RP config.
+  MISSING_SAML_RELYING_PARTY_CONFIG: 'MISSING_SAML_RELYING_PARTY_CONFIG',
+  // Empty user list in uploadAccount.
+  MISSING_USER_ACCOUNT: 'MISSING_UID',
+  // Password auth disabled in console.
+  OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
+  // Provided credential has insufficient permissions.
+  PERMISSION_DENIED: 'INSUFFICIENT_PERMISSION',
+  // Phone number already exists.
+  PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
+  // Project not found.
+  PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // In multi-tenancy context: project creation quota exceeded.
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  // Currently only 5 second factors can be set on the same user.
+  SECOND_FACTOR_LIMIT_EXCEEDED: 'SECOND_FACTOR_LIMIT_EXCEEDED',
+  // Tenant not found.
+  TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
+  // Tenant ID mismatch.
+  TENANT_ID_MISMATCH: 'MISMATCHING_TENANT_ID',
+  // Token expired error.
+  TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
+  // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
+  UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
+  // A multi-factor user requires a supported first factor.
+  UNSUPPORTED_FIRST_FACTOR: 'UNSUPPORTED_FIRST_FACTOR',
+  // The request specified an unsupported type of second factor.
+  UNSUPPORTED_SECOND_FACTOR: 'UNSUPPORTED_SECOND_FACTOR',
+  // Operation is not supported in a multi-tenant context.
+  UNSUPPORTED_TENANT_OPERATION: 'UNSUPPORTED_TENANT_OPERATION',
+  // A verified email is required for the specified action. For example a multi-factor user
+  // requires a verified email.
+  UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
+  // User on which action is to be performed is not found.
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  // User record is disabled.
+  USER_DISABLED: 'USER_DISABLED',
+  // Password provided is too weak.
+  WEAK_PASSWORD: 'INVALID_PASSWORD',
+  // Unrecognized reCAPTCHA action.
+  INVALID_RECAPTCHA_ACTION: 'INVALID_RECAPTCHA_ACTION',
+  // Unrecognized reCAPTCHA enforcement state.
+  INVALID_RECAPTCHA_ENFORCEMENT_STATE: 'INVALID_RECAPTCHA_ENFORCEMENT_STATE',
+  // reCAPTCHA is not enabled for account defender.
+  RECAPTCHA_NOT_ENABLED: 'RECAPTCHA_NOT_ENABLED'
 };
 
 /**
