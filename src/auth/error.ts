@@ -291,7 +291,7 @@ const AUTH_SERVER_TO_CLIENT_CODE: Record<string, string> = {
   // Invalid provider ID.
   INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
   // Invalid service account.
-  INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  INVALID_SERVICE_ACCOUNT: 'INVALID_CREDENTIAL',
   // Invalid testing phone number.
   INVALID_TESTING_PHONE_NUMBER: 'INVALID_TESTING_PHONE_NUMBER',
   // Invalid tenant type.
