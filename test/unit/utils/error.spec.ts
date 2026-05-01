@@ -22,8 +22,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
-  FirebaseError, FirebaseAuthError, FirebaseMessagingError, MessagingClientErrorCode,
+  FirebaseError, FirebaseMessagingError, MessagingClientErrorCode,
 } from '../../../src/utils/error';
+import { FirebaseAuthError } from '../../../src/auth/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -85,7 +86,7 @@ describe('FirebaseError', () => {
       message: 'message',
       httpResponse: mockHttpResponse as any
     });
-    
+
     const json = error.toJSON() as any;
     expect(json.httpResponse).to.deep.equal({
       status: 200,
@@ -235,7 +236,7 @@ describe('FirebaseAuthError', () => {
         const mockError: any = { response: mockRequestResponse };
         const error = FirebaseAuthError.fromServerError(
           'USER_NOT_FOUND', 'Invalid uid', mockError);
-        
+
         const json = error.toJSON() as any;
         expect(json.httpResponse).to.deep.equal({
           status: 400,
@@ -335,7 +336,7 @@ describe('FirebaseMessagingError', () => {
         const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
         expect(error.code).to.equal('messaging/' + expectedError.code);
         expect(error.message).to.be.equal(
-          `${ expectedError.message } Raw server response: "${ JSON.stringify(mockHttpResponse.data) }"`,
+          `${expectedError.message} Raw server response: "${JSON.stringify(mockHttpResponse.data)}"`,
         );
       });
     });

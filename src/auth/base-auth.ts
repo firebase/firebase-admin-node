@@ -15,7 +15,8 @@
  */
 
 import { App, FirebaseArrayIndexError } from '../app';
-import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
+import { ErrorInfo } from '../utils/error';
 import { deepCopy } from '../utils/deep-copy';
 import * as validator from '../utils/validator';
 
@@ -217,7 +218,7 @@ export abstract class BaseAuth {
         if (checkRevoked || isEmulator) {
           return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
-            AuthClientErrorCode.ID_TOKEN_REVOKED);
+            authClientErrorCode.ID_TOKEN_REVOKED);
         }
         return decodedIdToken;
       });
@@ -331,7 +332,7 @@ export abstract class BaseAuth {
   public getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult> {
     if (!validator.isArray(identifiers)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT, '`identifiers` parameter must be an array');
+        authClientErrorCode.INVALID_ARGUMENT, '`identifiers` parameter must be an array');
     }
     return this.authRequestHandler
       .getAccountInfoByIdentifiers(identifiers)
@@ -355,7 +356,7 @@ export abstract class BaseAuth {
               return !!matchingUserInfo && id.providerUid === matchingUserInfo.uid;
             } else {
               throw new FirebaseAuthError(
-                AuthClientErrorCode.INTERNAL_ERROR,
+                authClientErrorCode.INTERNAL_ERROR,
                 'Unhandled identifier type');
             }
           });
@@ -427,7 +428,7 @@ export abstract class BaseAuth {
         if (error.code === 'auth/user-not-found') {
           // Something must have happened after creating the user and then retrieving it.
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'Unable to create the user record provided.');
         }
         throw error;
@@ -477,7 +478,7 @@ export abstract class BaseAuth {
   public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
     if (!validator.isArray(uids)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT, '`uids` parameter must be an array');
+        authClientErrorCode.INVALID_ARGUMENT, '`uids` parameter must be an array');
     }
     return this.authRequestHandler.deleteAccounts(uids, /*force=*/true)
       .then((batchDeleteAccountsResponse) => {
@@ -496,7 +497,7 @@ export abstract class BaseAuth {
         result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
           if (batchDeleteErrorInfo.index === undefined) {
             throw new FirebaseAuthError(
-              AuthClientErrorCode.INTERNAL_ERROR,
+              authClientErrorCode.INTERNAL_ERROR,
               'Corrupt BatchDeleteAccountsResponse detected');
           }
 
@@ -504,7 +505,7 @@ export abstract class BaseAuth {
             // We unconditionally set force=true, so the 'NOT_DISABLED' error
             // should not be possible.
             const code = msg && msg.startsWith('NOT_DISABLED') ?
-              AuthClientErrorCode.USER_NOT_DISABLED : AuthClientErrorCode.INTERNAL_ERROR;
+              authClientErrorCode.USER_NOT_DISABLED : authClientErrorCode.INTERNAL_ERROR;
             return new FirebaseAuthError(code, batchDeleteErrorInfo.message);
           };
 
@@ -544,7 +545,7 @@ export abstract class BaseAuth {
       if (properties.providerToLink.providerId === 'email') {
         if (typeof properties.email !== 'undefined') {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             "Both UpdateRequest.email and UpdateRequest.providerToLink.providerId='email' were set. To "
             + 'link to the email/password provider, only specify the UpdateRequest.email field.');
         }
@@ -553,7 +554,7 @@ export abstract class BaseAuth {
       } else if (properties.providerToLink.providerId === 'phone') {
         if (typeof properties.phoneNumber !== 'undefined') {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             "Both UpdateRequest.phoneNumber and UpdateRequest.providerToLink.providerId='phone' were set. To "
             + 'link to a phone provider, only specify the UpdateRequest.phoneNumber field.');
         }
@@ -569,7 +570,7 @@ export abstract class BaseAuth {
         // to relax this restriction and just unlink it.
         if (properties.phoneNumber === null) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             "Both UpdateRequest.phoneNumber=null and UpdateRequest.providersToUnlink=['phone'] were set. To "
             + 'unlink from a phone provider, only specify the UpdateRequest.phoneNumber=null field.');
         }
@@ -683,7 +684,7 @@ export abstract class BaseAuth {
     // Return rejected promise if expiresIn is not available.
     if (!validator.isNonNullObject(sessionCookieOptions) ||
         !validator.isNumber(sessionCookieOptions.expiresIn)) {
-      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+      return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
     }
     return this.authRequestHandler.createSessionCookie(
       idToken, sessionCookieOptions.expiresIn);
@@ -723,7 +724,7 @@ export abstract class BaseAuth {
         if (checkRevoked || isEmulator) {
           return this.verifyDecodedJWTNotRevokedOrDisabled(
             decodedIdToken,
-            AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+            authClientErrorCode.SESSION_COOKIE_REVOKED);
         }
         return decodedIdToken;
       });
@@ -966,7 +967,7 @@ export abstract class BaseAuth {
     }
     return Promise.reject(
       new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"AuthProviderConfigFilter.type" must be either "saml" or "oidc"'));
   }
 
@@ -997,7 +998,7 @@ export abstract class BaseAuth {
           return new SAMLConfig(response);
         });
     }
-    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID));
   }
 
   /**
@@ -1019,7 +1020,7 @@ export abstract class BaseAuth {
     } else if (SAMLConfig.isProviderId(providerId)) {
       return this.authRequestHandler.deleteInboundSamlConfig(providerId);
     }
-    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID));
   }
 
   /**
@@ -1041,7 +1042,7 @@ export abstract class BaseAuth {
     providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(updatedConfig)) {
       return Promise.reject(new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         'Request is missing "UpdateAuthProviderRequest" configuration.',
       ));
     }
@@ -1056,7 +1057,7 @@ export abstract class BaseAuth {
           return new SAMLConfig(response);
         });
     }
-    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID));
   }
 
   /**
@@ -1073,7 +1074,7 @@ export abstract class BaseAuth {
   public createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(config)) {
       return Promise.reject(new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         'Request is missing "AuthProviderConfig" configuration.',
       ));
     }
@@ -1088,7 +1089,7 @@ export abstract class BaseAuth {
           return new SAMLConfig(response);
         });
     }
-    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID));
   }
 
   /** @alpha */
@@ -1121,7 +1122,7 @@ export abstract class BaseAuth {
       .then((user: UserRecord) => {
         if (user.disabled) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.USER_DISABLED,
+            authClientErrorCode.USER_DISABLED,
             'The user record is disabled.');
         }
         // If no tokens valid after time available, token is not revoked.

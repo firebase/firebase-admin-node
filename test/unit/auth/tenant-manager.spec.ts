@@ -26,7 +26,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
 import { TenantServerResponse } from '../../../src/auth/tenant';
-import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 import {
   CreateTenantRequest, UpdateTenantRequest, ListTenantsResult, Tenant, TenantManager,
 } from '../../../src/auth/index';
@@ -102,7 +102,7 @@ describe('TenantManager', () => {
   describe('getTenant()', () => {
     const tenantId = 'tenant-id';
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
-    const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+    const expectedError = new FirebaseAuthError(authClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
@@ -173,7 +173,7 @@ describe('TenantManager', () => {
   });
 
   describe('listTenants()', () => {
-    const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+    const expectedError = new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR);
     const pageToken = 'PAGE_TOKEN';
     const maxResult = 500;
     const listTenantsResponse: any = {
@@ -307,7 +307,7 @@ describe('TenantManager', () => {
 
   describe('deleteTenant()', () => {
     const tenantId = 'tenant-id';
-    const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+    const expectedError = new FirebaseAuthError(authClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
@@ -390,7 +390,7 @@ describe('TenantManager', () => {
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError({
-      code: AuthClientErrorCode.INTERNAL_ERROR.code,
+      code: authClientErrorCode.INTERNAL_ERROR.code,
       message: 'Unable to create the tenant provided.'
     });
     // Stubs used to simulate underlying API calls.
@@ -484,7 +484,7 @@ describe('TenantManager', () => {
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError({
-      code: AuthClientErrorCode.INTERNAL_ERROR.code,
+      code: authClientErrorCode.INTERNAL_ERROR.code,
       message: 'Unable to update the tenant provided.'
     });
     // Stubs used to simulate underlying API calls.

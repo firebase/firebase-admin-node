@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
+import { ErrorInfo } from '../utils/error';
 import { RequestResponseError } from '../utils/api-request';
 import { CryptoSigner, CryptoSignerError, CryptoSignerErrorCode } from '../utils/crypto-signer';
 
@@ -99,13 +100,13 @@ export class FirebaseTokenGenerator {
   constructor(signer: CryptoSigner, public readonly tenantId?: string) {
     if (!validator.isNonNullObject(signer)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
+        authClientErrorCode.INVALID_CREDENTIAL,
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
     }
     if (typeof this.tenantId !== 'undefined' && !validator.isNonEmptyString(this.tenantId)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '`tenantId` argument must be a non-empty string.');
     }
     this.signer = signer;
@@ -131,7 +132,7 @@ export class FirebaseTokenGenerator {
     }
 
     if (errorMessage) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 
     const claims: {[key: string]: any} = {};
@@ -141,7 +142,7 @@ export class FirebaseTokenGenerator {
         if (Object.prototype.hasOwnProperty.call(developerClaims, key)) {
           if (BLACKLISTED_CLAIMS.indexOf(key) !== -1) {
             throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ARGUMENT,
+              authClientErrorCode.INVALID_ARGUMENT,
               `Developer claim "${key}" is reserved and cannot be specified.`,
             );
           }
@@ -222,22 +223,22 @@ export function handleCryptoSignerError(err: Error): Error {
 
       return FirebaseAuthError.fromServerError(errorCode, errorMsg, httpError);
     }
-    return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR,
+    return new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR,
       'Error returned from server: ' + errorResponse + '. Additionally, an ' +
       'internal error occurred while attempting to extract the ' +
       'errorcode from the error.'
     );
   }
-  return new FirebaseAuthError(mapToAuthClientErrorCode(err.code), err.message);
+  return new FirebaseAuthError(mapToauthClientErrorCode(err.code), err.message);
 }
 
-function mapToAuthClientErrorCode(code: string): ErrorInfo {
+function mapToauthClientErrorCode(code: string): ErrorInfo {
   switch (code) {
   case CryptoSignerErrorCode.INVALID_CREDENTIAL:
-    return AuthClientErrorCode.INVALID_CREDENTIAL;
+    return authClientErrorCode.INVALID_CREDENTIAL;
   case CryptoSignerErrorCode.INVALID_ARGUMENT:
-    return AuthClientErrorCode.INVALID_ARGUMENT;
+    return authClientErrorCode.INVALID_ARGUMENT;
   default:
-    return AuthClientErrorCode.INTERNAL_ERROR;
+    return authClientErrorCode.INTERNAL_ERROR;
   }
 }
