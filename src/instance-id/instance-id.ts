@@ -15,11 +15,9 @@
  */
 
 import { getInstallations } from '../installations';
+import { FirebaseInstallationsError, installationsClientErrorCode } from '../installations/error';
 import { App } from '../app/index';
-import {
-  FirebaseInstallationsError, FirebaseInstanceIdError,
-  InstallationsClientErrorCode, InstanceIdClientErrorCode,
-} from '../utils/error';
+import { FirebaseInstanceIdError, instanceIdClientErrorCode } from './error';
 import * as validator from '../utils/validator';
 
 /**
@@ -40,7 +38,7 @@ export class InstanceId {
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
-        InstanceIdClientErrorCode.INVALID_ARGUMENT,
+        instanceIdClientErrorCode.INVALID_ARGUMENT,
         'First argument passed to instanceId() must be a valid Firebase app instance.',
       );
     }
@@ -67,8 +65,8 @@ export class InstanceId {
       .catch((err) => {
         if (err instanceof FirebaseInstallationsError) {
           let code = err.code.replace('installations/', '');
-          if (code === InstallationsClientErrorCode.INVALID_INSTALLATION_ID.code) {
-            code = InstanceIdClientErrorCode.INVALID_INSTANCE_ID.code;
+          if (code === installationsClientErrorCode.INVALID_INSTALLATION_ID.code) {
+            code = instanceIdClientErrorCode.INVALID_INSTANCE_ID.code;
           }
 
           throw new FirebaseInstanceIdError({ code, message: err.message });

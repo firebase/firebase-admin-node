@@ -257,49 +257,6 @@ export class FirebaseFirestoreError extends FirebaseError {
 }
 
 /**
- * Firebase instance ID error code structure. This extends FirebaseError.
- */
-export class FirebaseInstanceIdError extends FirebaseError {
-  /**
-   * 
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default
-   *     message if provided.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
-    super({
-      code: 'instance-id/' + info.code,
-      message: message || info.message,
-      httpResponse: info.httpResponse,
-      cause: info.cause
-    });
-  }
-}
-
-/**
- * Firebase Installations service error code structure. This extends `FirebaseError`.
- */
-export class FirebaseInstallationsError extends FirebaseError {
-  /**
-   * 
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default
-   *     message if provided.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
-    super({
-      code: 'installations/' + info.code,
-      message: message || info.message,
-      httpResponse: info.httpResponse,
-      cause: info.cause
-    });
-  }
-}
-
-
-/**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
  */
 export class FirebaseMessagingError extends PrefixedFirebaseError {
@@ -533,35 +490,6 @@ export const MessagingClientErrorCode = {
   UNKNOWN_ERROR: {
     code: 'unknown-error',
     message: 'An unknown server error was returned.',
-  },
-} satisfies Record<string, ErrorInfo>;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const InstallationsClientErrorCode = {
-  INVALID_ARGUMENT: {
-    code: 'invalid-argument',
-    message: 'Invalid argument provided.',
-  },
-  INVALID_PROJECT_ID: {
-    code: 'invalid-project-id',
-    message: 'Invalid project ID provided.',
-  },
-  INVALID_INSTALLATION_ID: {
-    code: 'invalid-installation-id',
-    message: 'Invalid installation ID provided.',
-  },
-  API_ERROR: {
-    code: 'api-error',
-    message: 'Installation ID API call failed.',
-  },
-} satisfies Record<string, ErrorInfo>;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const InstanceIdClientErrorCode = {
-  ...InstallationsClientErrorCode,
-  INVALID_INSTANCE_ID: {
-    code: 'invalid-instance-id',
-    message: 'Invalid instance ID provided.',
   },
 } satisfies Record<string, ErrorInfo>;
 

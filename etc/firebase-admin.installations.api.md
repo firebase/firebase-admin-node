@@ -25,24 +25,7 @@ export class Installations {
     deleteInstallation(fid: string): Promise<void>;
 }
 
-// @public (undocumented)
-export const InstallationsClientErrorCode: {
-    INVALID_ARGUMENT: {
-        code: string;
-        message: string;
-    };
-    INVALID_PROJECT_ID: {
-        code: string;
-        message: string;
-    };
-    INVALID_INSTALLATION_ID: {
-        code: string;
-        message: string;
-    };
-    API_ERROR: {
-        code: string;
-        message: string;
-    };
-};
+// @public
+export type InstallationsErrorCode = 'invalid-argument' | 'invalid-project-id' | 'invalid-installation-id' | 'api-error';
 
 ```
