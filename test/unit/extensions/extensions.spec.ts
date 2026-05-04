@@ -22,7 +22,7 @@ import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { Extensions } from '../../../src/extensions/extensions';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 import { SettableProcessingState } from '../../../src/extensions/extensions-api';
 import { FirebaseExtensionsError } from '../../../src/extensions/extensions-api-client-internal';

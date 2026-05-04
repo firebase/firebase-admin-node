@@ -18,7 +18,8 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { FirebaseAppError } from '../app/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 

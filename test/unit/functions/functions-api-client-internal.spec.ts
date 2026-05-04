@@ -27,7 +27,8 @@ import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { EMULATED_SERVICE_ACCOUNT_DEFAULT } from '../../../src/functions/functions-api-client-internal';
 

@@ -16,7 +16,8 @@
  */
 
 import { FirebaseApp } from '../app/firebase-app';
-import { AppErrorCodes, FirebaseAppError, toHttpResponse } from './error';
+import { toHttpResponse } from './error';
+import { AppErrorCodes, FirebaseAppError } from '../app/error';
 import * as validator from './validator';
 
 import http = require('http');

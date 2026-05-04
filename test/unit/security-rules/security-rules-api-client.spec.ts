@@ -24,7 +24,8 @@ import { FirebaseSecurityRulesError } from '../../../src/security-rules/security
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { getSdkVersion, getMetricsHeader } from '../../../src/utils/index';
 

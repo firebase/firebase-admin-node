@@ -19,7 +19,8 @@ import * as path from 'path';
 
 import { FirebaseDatabase } from '@firebase/database-types';
 import { FirebaseDatabaseError } from './error';
-import { AppErrorCodes, FirebaseAppError, toHttpResponse } from '../utils/error';
+import { AppErrorCodes, FirebaseAppError } from '../app/error';
+import { toHttpResponse } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 
 import { App } from '../app';

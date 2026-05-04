@@ -35,7 +35,7 @@ import {
   auth, messaging, machineLearning, storage, firestore, database,
   instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
-import { FirebaseAppError, AppErrorCodes } from '../../../src/utils/error';
+import { FirebaseAppError, AppErrorCodes } from '../../../src/app/error';
 
 import Auth = auth.Auth;
 import Database = database.Database;

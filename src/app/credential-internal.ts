@@ -20,7 +20,7 @@ import fs = require('fs');
 import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute, AnyAuthClient } from 'google-auth-library'
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import * as util from '../utils/validator';
 
 const SCOPES = [

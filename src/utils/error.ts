@@ -190,35 +190,3 @@ export class PrefixedFirebaseError extends FirebaseError {
     return `${this.codePrefix}/${code}` === this.code;
   }
 }
-
-/**
- * Firebase App error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseAppError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default message if provided.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
-    super('app', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
-}
-
-/**
- * App client error codes and their default messages.
- */
-export class AppErrorCodes {
-  public static APP_DELETED = 'app-deleted';
-  public static DUPLICATE_APP = 'duplicate-app';
-  public static INVALID_ARGUMENT = 'invalid-argument';
-  public static INTERNAL_ERROR = 'internal-error';
-  public static INVALID_APP_NAME = 'invalid-app-name';
-  public static INVALID_APP_OPTIONS = 'invalid-app-options';
-  public static INVALID_CREDENTIAL = 'invalid-credential';
-  public static NETWORK_ERROR = 'network-error';
-  public static NETWORK_TIMEOUT = 'network-timeout';
-  public static NO_APP = 'no-app';
-  public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
-}

@@ -18,7 +18,7 @@
 import fs = require('fs');
 
 import * as validator from '../utils/validator';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import { App, AppOptions } from './core';
 import { getApplicationDefault } from './credential-internal';
 import { FirebaseApp } from './firebase-app';

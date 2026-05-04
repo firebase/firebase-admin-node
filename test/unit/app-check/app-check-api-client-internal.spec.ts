@@ -27,7 +27,8 @@ import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
-import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;

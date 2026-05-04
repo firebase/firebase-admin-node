@@ -21,7 +21,7 @@ import { Credential } from './credential';
 import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCodes, FirebaseAppError } from './error';
 
 const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
 
