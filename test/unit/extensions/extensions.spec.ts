@@ -15,8 +15,16 @@
  * limitations under the License.
  */
 
+import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { expect } from 'chai';
+import * as sinonChai from 'sinon-chai';
+import * as chaiAsPromised from 'chai-as-promised';
+
+chai.should();
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
@@ -25,7 +33,7 @@ import { Extensions } from '../../../src/extensions/extensions';
 import { FirebaseAppError } from '../../../src/app/error';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 import { SettableProcessingState } from '../../../src/extensions/extensions-api';
-import { FirebaseExtensionsError } from '../../../src/extensions/extensions-api-client-internal';
+import { FirebaseExtensionsError } from '../../../src/extensions/error';
 
 describe('Extensions', () => {
   const mockOptions = {
