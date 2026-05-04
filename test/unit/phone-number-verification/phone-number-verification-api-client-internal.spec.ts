@@ -19,11 +19,13 @@
 
 import { expect } from 'chai';
 import {
-  FirebasePhoneNumberVerificationError,
   JWKS_URL,
-  FPNV_TOKEN_INFO,
-  FPNV_ERROR_CODE_MAPPING
+  FPNV_TOKEN_INFO
 } from '../../../src/phone-number-verification/phone-number-verification-api-client-internal';
+import {
+  FirebasePhoneNumberVerificationError,
+  FPNV_ERROR_CODE_MAPPING
+} from '../../../src/phone-number-verification/error';
 import { PrefixedFirebaseError, FirebaseError } from '../../../src/utils/error';
 
 const FPNV_PREFIX = 'phone-number-verification';

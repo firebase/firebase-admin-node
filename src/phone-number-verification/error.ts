@@ -1,0 +1,46 @@
+/*!
+ * Copyright 2026 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+
+export const FPNV_ERROR_CODE_MAPPING = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_TOKEN: 'invalid-token',
+  EXPIRED_TOKEN: 'expired-token',
+} satisfies Record<string, PhoneNumberVerificationErrorCode>;
+
+export type PhoneNumberVerificationErrorCode =
+  | 'invalid-argument'
+  | 'invalid-token'
+  | 'expired-token';
+
+/**
+ * Firebase Phone Number Verification error code structure. This extends `PrefixedFirebaseError`.
+ *
+ * @param info - The error code info.
+ * @param message - The error message. If provided, this will override the default message.
+ */
+export class FirebasePhoneNumberVerificationError extends PrefixedFirebaseError {
+  constructor(info: ErrorInfo, message?: string) {
+    super('phone-number-verification', info.code, message || info.message, info.httpResponse, info.cause);
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebasePhoneNumberVerificationError.prototype;
+  }
+}
