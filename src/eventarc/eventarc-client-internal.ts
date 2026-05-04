@@ -16,7 +16,8 @@
  */
 
 import * as validator from '../utils/validator';
-import { FirebaseEventarcError, toCloudEventProtoFormat } from './eventarc-utils';
+import { toCloudEventProtoFormat } from './eventarc-utils';
+import { FirebaseEventarcError } from './error';
 import { App } from '../app';
 import { Channel } from './eventarc';
 import {
