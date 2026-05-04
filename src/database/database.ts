@@ -18,7 +18,8 @@ import { URL } from 'url';
 import * as path from 'path';
 
 import { FirebaseDatabase } from '@firebase/database-types';
-import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError, toHttpResponse } from '../utils/error';
+import { FirebaseDatabaseError } from './error';
+import { AppErrorCodes, FirebaseAppError, toHttpResponse } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 
 import { App } from '../app';
