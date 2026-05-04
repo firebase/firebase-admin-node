@@ -19,7 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
+import { FirebaseMachineLearningError } from '../../../src/machine-learning/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';

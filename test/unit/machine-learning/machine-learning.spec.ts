@@ -27,7 +27,7 @@ import {
   ModelResponse,
   OperationResponse
 } from '../../../src/machine-learning/machine-learning-api-client';
-import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
+import { FirebaseMachineLearningError } from '../../../src/machine-learning/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { MachineLearning, Model, ModelOptions } from '../../../src/machine-learning/index';
 

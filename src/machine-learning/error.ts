@@ -17,10 +17,10 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Machine Learning client error codes and their default messages.
+ * Machine Learning client error codes.
  */
 export type MachineLearningErrorCode =
-  'already-exists'
+  | 'already-exists'
   | 'authentication-error'
   | 'internal-error'
   | 'invalid-argument'
@@ -68,6 +68,5 @@ export class FirebaseMachineLearningError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     super('machine-learning', info.code, message || info.message, info.httpResponse, info.cause);
-
   }
 }
