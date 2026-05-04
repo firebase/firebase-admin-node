@@ -33,10 +33,8 @@ import {
 } from '../../../src/remote-config/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
-import {
-  FirebaseRemoteConfigError,
-  RemoteConfigApiClient
-} from '../../../src/remote-config/remote-config-api-client-internal';
+import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
+import { FirebaseRemoteConfigError } from '../../../src/remote-config/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   NamedCondition, ServerTemplate, ServerTemplateData, Version

@@ -19,7 +19,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseRemoteConfigError, RemoteConfigErrorCode, ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
@@ -478,47 +479,4 @@ interface RemoteConfigApiError {
   code?: number;
   message?: string;
   status?: string;
-}
-
-const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode; } = {
-  ABORTED: 'aborted',
-  ALREADY_EXISTS: 'already-exists',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INTERNAL: 'internal-error',
-  FAILED_PRECONDITION: 'failed-precondition',
-  NOT_FOUND: 'not-found',
-  OUT_OF_RANGE: 'out-of-range',
-  PERMISSION_DENIED: 'permission-denied',
-  RESOURCE_EXHAUSTED: 'resource-exhausted',
-  UNAUTHENTICATED: 'unauthenticated',
-  UNKNOWN: 'unknown-error',
-};
-
-/**
- * Remote Config client error codes and their default messages.
- */
-export type RemoteConfigErrorCode =
-  'aborted'
-  | 'already-exists'
-  | 'failed-precondition'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'not-found'
-  | 'out-of-range'
-  | 'permission-denied'
-  | 'resource-exhausted'
-  | 'unauthenticated'
-  | 'unknown-error';
-
-/**
- * Firebase Remote Config error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('remote-config', info.code, message || info.message, info.httpResponse, info.cause);
-  }
 }
