@@ -22,7 +22,7 @@ import {
   FirebaseAppCheckError,
   AppCheckErrorCode,
   APP_CHECK_ERROR_CODE_MAPPING,
-} from './app-check-api-client-internal';
+} from './error';
 import { AppCheckTokenOptions } from './app-check-api';
 import { RequestResponseError } from '../utils/api-request';
 import { toHttpResponse } from '../utils/error';
