@@ -85,7 +85,7 @@ export class ProjectManagement {
     shaCertificate(shaHash: string): ShaCertificate;
 }
 
-// @public (undocumented)
+// @public
 export type ProjectManagementErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-project-id' | 'invalid-server-response' | 'not-found' | 'service-unavailable' | 'unknown-error';
 
 // @public

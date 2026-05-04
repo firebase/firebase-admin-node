@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseProjectManagementError } from '../utils/error';
+import { FirebaseProjectManagementError } from './error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
 import { AppMetadata, AppPlatform } from './app-metadata';

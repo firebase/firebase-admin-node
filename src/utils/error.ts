@@ -247,21 +247,6 @@ export class FirebaseFirestoreError extends FirebaseError {
 }
 
 /**
- * Firebase project management error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseProjectManagementError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default message if provided.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
-    super('project-management', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
-}
-
-/**
  * App client error codes and their default messages.
  */
 export class AppErrorCodes {
@@ -277,14 +262,3 @@ export class AppErrorCodes {
   public static NO_APP = 'no-app';
   public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
 }
-
-export type ProjectManagementErrorCode =
-  'already-exists'
-  | 'authentication-error'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'invalid-project-id'
-  | 'invalid-server-response'
-  | 'not-found'
-  | 'service-unavailable'
-  | 'unknown-error';
