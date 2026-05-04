@@ -20,7 +20,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseFunctionsError, FunctionsErrorCode, FUNCTIONS_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
@@ -445,47 +446,6 @@ export interface Task {
     body: string;
     headers: { [key: string]: string };
   };
-}
-
-export const FUNCTIONS_ERROR_CODE_MAPPING: { [key: string]: FunctionsErrorCode } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  FAILED_PRECONDITION: 'failed-precondition',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-};
-
-/**
- * Functions client error codes and their default messages.
- */
-export type FunctionsErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'failed-precondition'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'task-already-exists';
-
-/**
- * Firebase Functions error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseFunctionsError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('functions', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
 }
 
 function tasksEmulatorUrl(resources: utils.ParsedResource): string | undefined {

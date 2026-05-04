@@ -25,7 +25,8 @@ import * as mocks from '../../resources/mocks';
 import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
+import { FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
+import { FirebaseFunctionsError } from '../../../src/functions/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import { toHttpResponse } from '../../../src/utils/error';
 import { FirebaseAppError } from '../../../src/app/error';

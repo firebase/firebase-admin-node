@@ -23,7 +23,8 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FunctionsApiClient, FirebaseFunctionsError } from '../../../src/functions/functions-api-client-internal';
+import { FunctionsApiClient } from '../../../src/functions/functions-api-client-internal';
+import { FirebaseFunctionsError } from '../../../src/functions/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Functions, TaskQueue } from '../../../src/functions/functions';
 
