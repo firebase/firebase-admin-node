@@ -32,20 +32,26 @@ export const ERROR_CODE_MAPPING: Record<string, RemoteConfigErrorCode> = {
 };
 
 /**
- * Remote Config client error codes and their default messages.
+ * The constant mapping for valid Remote Config client error codes.
  */
-export type RemoteConfigErrorCode =
-  | 'aborted'
-  | 'already-exists'
-  | 'failed-precondition'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'not-found'
-  | 'out-of-range'
-  | 'permission-denied'
-  | 'resource-exhausted'
-  | 'unauthenticated'
-  | 'unknown-error';
+export const RemoteConfigErrorCode = {
+  ABORTED: 'aborted',
+  ALREADY_EXISTS: 'already-exists',
+  FAILED_PRECONDITION: 'failed-precondition',
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+  NOT_FOUND: 'not-found',
+  OUT_OF_RANGE: 'out-of-range',
+  PERMISSION_DENIED: 'permission-denied',
+  RESOURCE_EXHAUSTED: 'resource-exhausted',
+  UNAUTHENTICATED: 'unauthenticated',
+  UNKNOWN_ERROR: 'unknown-error',
+} as const;
+
+/**
+ * The type definition for valid Remote Config client error codes.
+ */
+export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
 /**
  * Firebase Remote Config error code structure. This extends PrefixedFirebaseError.

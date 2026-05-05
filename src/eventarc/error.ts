@@ -17,9 +17,17 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Eventarc client error codes and their default messages.
+ * The constant mapping for valid Eventarc client error codes.
  */
-export type EventarcErrorCode = 'unknown-error' | 'invalid-argument';
+export const EventarcErrorCode = {
+  UNKNOWN_ERROR: 'unknown-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+} as const;
+
+/**
+ * The type definition for valid Eventarc client error codes.
+ */
+export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
 
 /**
  * Firebase Eventarc error code structure. This extends PrefixedFirebaseError.

@@ -26,6 +26,14 @@ export class Installations {
 }
 
 // @public
-export type InstallationsErrorCode = 'invalid-argument' | 'invalid-project-id' | 'invalid-installation-id' | 'api-error';
+export const InstallationsErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_INSTALLATION_ID: "invalid-installation-id";
+    readonly API_ERROR: "api-error";
+};
+
+// @public
+export type InstallationsErrorCode = typeof InstallationsErrorCode[keyof typeof InstallationsErrorCode];
 
 ```

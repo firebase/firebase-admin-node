@@ -30,6 +30,6 @@ export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './credential
 export { applicationDefault, cert, refreshToken } from './credential-factory';
 
 export { FirebaseError, ErrorInfo, HttpResponse } from '../utils/error';
-export { FirebaseAppError, AppErrorCodes } from './error';
+export { FirebaseAppError, AppErrorCode } from './error';
 
 export const SDK_VERSION = getSdkVersion();

@@ -17,18 +17,24 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Project Management client error codes.
+ * The constant mapping for valid Project Management client error codes.
  */
-export type ProjectManagementErrorCode =
-  | 'already-exists'
-  | 'authentication-error'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'invalid-project-id'
-  | 'invalid-server-response'
-  | 'not-found'
-  | 'service-unavailable'
-  | 'unknown-error';
+export const ProjectManagementErrorCode = {
+  ALREADY_EXISTS: 'already-exists',
+  AUTHENTICATION_ERROR: 'authentication-error',
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_PROJECT_ID: 'invalid-project-id',
+  INVALID_SERVER_RESPONSE: 'invalid-server-response',
+  NOT_FOUND: 'not-found',
+  SERVICE_UNAVAILABLE: 'service-unavailable',
+  UNKNOWN_ERROR: 'unknown-error',
+} as const;
+
+/**
+ * The type definition for valid Project Management client error codes.
+ */
+export type ProjectManagementErrorCode = typeof ProjectManagementErrorCode[keyof typeof ProjectManagementErrorCode];
 
 /**
  * Firebase project management error code structure. This extends PrefixedFirebaseError.

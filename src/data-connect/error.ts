@@ -30,18 +30,24 @@ export const DATA_CONNECT_ERROR_CODE_MAPPING: Record<string, DataConnectErrorCod
 };
 
 /**
- * Data Connect client error codes and their default messages.
+ * The constant mapping for valid Data Connect client error codes.
  */
-export type DataConnectErrorCode =
-  | 'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'query-error';
+export const DataConnectErrorCode = {
+  ABORTED: 'aborted',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  INTERNAL: 'internal-error',
+  PERMISSION_DENIED: 'permission-denied',
+  UNAUTHENTICATED: 'unauthenticated',
+  NOT_FOUND: 'not-found',
+  UNKNOWN: 'unknown-error',
+  QUERY_ERROR: 'query-error',
+} as const;
+
+/**
+ * The type definition for valid Data Connect client error codes.
+ */
+export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
 
 /**
  * Firebase Data Connect error type. This extends PrefixedFirebaseError.

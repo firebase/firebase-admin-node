@@ -19,7 +19,21 @@ import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 /**
  * Extensions client error codes and their default messages.
  */
-export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
+/**
+ * The constant mapping for valid Extensions client error codes.
+ */
+export const ExtensionsErrorCode = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  NOT_FOUND: 'not-found',
+  FORBIDDEN: 'forbidden',
+  INTERNAL_ERROR: 'internal-error',
+  UNKNOWN_ERROR: 'unknown-error',
+} as const;
+
+/**
+ * The type definition for valid Extensions client error codes.
+ */
+export type ExtensionsErrorCode = typeof ExtensionsErrorCode[keyof typeof ExtensionsErrorCode];
 
 /**
  * Firebase Extensions error code structure. This extends PrefixedFirebaseError.

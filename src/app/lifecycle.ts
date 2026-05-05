@@ -18,7 +18,7 @@
 import fs = require('fs');
 
 import * as validator from '../utils/validator';
-import { AppErrorCodes, FirebaseAppError } from './error';
+import { AppErrorCode, FirebaseAppError } from './error';
 import { App, AppOptions } from './core';
 import { getApplicationDefault } from './credential-internal';
 import { FirebaseApp } from './firebase-app';
@@ -52,7 +52,7 @@ export class AppStore {
     // Ensure the `autoInit` state matches the existing app's. If not, throw.
     if (currentApp.autoInit() !== autoInit) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INVALID_APP_OPTIONS,
+        code: AppErrorCode.INVALID_APP_OPTIONS,
         message: `A Firebase app named "${appName}" already exists with a different configuration.`
       });
     }
@@ -73,7 +73,7 @@ export class AppStore {
     delete currentAppOptions.credential;
     if (!fastDeepEqual(options, currentAppOptions)) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.DUPLICATE_APP,
+        code: AppErrorCode.DUPLICATE_APP,
         message: `A Firebase app named "${appName}" already exists with a different configuration.`
       });
 
@@ -89,7 +89,7 @@ export class AppStore {
         ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
 
-      throw new FirebaseAppError({ code: AppErrorCodes.NO_APP, message: errorMessage });
+      throw new FirebaseAppError({ code: AppErrorCode.NO_APP, message: errorMessage });
     }
 
     return this.appStore.get(appName)!;
@@ -102,7 +102,7 @@ export class AppStore {
 
   public deleteApp(app: App): Promise<void> {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
-      throw new FirebaseAppError({ code: AppErrorCodes.INVALID_ARGUMENT, message: 'Invalid app argument.' });
+      throw new FirebaseAppError({ code: AppErrorCode.INVALID_ARGUMENT, message: 'Invalid app argument.' });
     }
 
     // Make sure the given app already exists.
@@ -152,7 +152,7 @@ function validateAppOptionsSupportDeepEquals(
   // http.Agent checks.
   if (typeof requestedOptions.httpAgent !== 'undefined') {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_OPTIONS,
+      code: AppErrorCode.INVALID_APP_OPTIONS,
       message: `Firebase app named "${existingApp.name}" already exists and initializeApp was` +
         ' invoked with an optional http.Agent. The SDK cannot confirm the equality' +
         ' of http.Agent objects with the existing app. Please use getApp or getApps to reuse' +
@@ -160,7 +160,7 @@ function validateAppOptionsSupportDeepEquals(
     });
   } else if (typeof existingApp.options.httpAgent !== 'undefined') {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_OPTIONS,
+      code: AppErrorCode.INVALID_APP_OPTIONS,
       message: `An existing app named "${existingApp.name}" already exists with a different` +
         ' options configuration: httpAgent.'
     });
@@ -169,7 +169,7 @@ function validateAppOptionsSupportDeepEquals(
   // Credential checks.
   if (typeof requestedOptions.credential !== 'undefined') {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_OPTIONS,
+      code: AppErrorCode.INVALID_APP_OPTIONS,
       message: `Firebase app named "${existingApp.name}" already exists and initializeApp was` +
         ' invoked with an optional Credential. The SDK cannot confirm the equality' +
         ' of Credential objects with the existing app. Please use getApp or getApps' +
@@ -179,7 +179,7 @@ function validateAppOptionsSupportDeepEquals(
 
   if (existingApp.customCredential()) {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_OPTIONS,
+      code: AppErrorCode.INVALID_APP_OPTIONS,
       message: `An existing app named "${existingApp.name}" already exists with a different` +
         ' options configuration: Credential.'
     });
@@ -199,7 +199,7 @@ function validateAppOptionsSupportDeepEquals(
 function validateAppNameFormat(appName: string): void {
   if (!validator.isNonEmptyString(appName)) {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_NAME,
+      code: AppErrorCode.INVALID_APP_NAME,
       message: `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`
     });
   }
@@ -321,7 +321,7 @@ function loadOptionsFromEnvVar(): AppOptions {
   } catch (error) {
     // Throw a nicely formed error message if the file contents cannot be parsed
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_APP_OPTIONS,
+      code: AppErrorCode.INVALID_APP_OPTIONS,
       message: `Failed to parse app options file: ${(error as Error).message}`,
       cause: error as Error
     });

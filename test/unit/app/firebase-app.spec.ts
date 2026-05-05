@@ -35,7 +35,7 @@ import {
   auth, messaging, machineLearning, storage, firestore, database,
   instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
-import { FirebaseAppError, AppErrorCodes } from '../../../src/app/error';
+import { FirebaseAppError, AppErrorCode } from '../../../src/app/error';
 
 import Auth = auth.Auth;
 import Database = database.Database;
@@ -850,7 +850,7 @@ describe('FirebaseApp', () => {
     it('Includes the original error in exception', async () => {
       getTokenStub.restore();
       const mockError = new FirebaseAppError({
-        code: AppErrorCodes.INVALID_CREDENTIAL,
+        code: AppErrorCode.INVALID_CREDENTIAL,
         message: 'Something went wrong'
       });
       getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
@@ -869,7 +869,7 @@ describe('FirebaseApp', () => {
     it('Returns a detailed message when an error is due to an invalid_grant', async () => {
       getTokenStub.restore();
       const mockError = new FirebaseAppError({
-        code: AppErrorCodes.INVALID_CREDENTIAL,
+        code: AppErrorCode.INVALID_CREDENTIAL,
         message: 'Failed to get credentials: invalid_grant (reason)'
       });
       getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);

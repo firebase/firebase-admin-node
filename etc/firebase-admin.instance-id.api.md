@@ -26,6 +26,15 @@ export class InstanceId {
 }
 
 // @public
-export type InstanceIdErrorCode = 'invalid-argument' | 'invalid-project-id' | 'invalid-installation-id' | 'api-error' | 'invalid-instance-id';
+export const InstanceIdErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_INSTALLATION_ID: "invalid-installation-id";
+    readonly API_ERROR: "api-error";
+    readonly INVALID_INSTANCE_ID: "invalid-instance-id";
+};
+
+// @public
+export type InstanceIdErrorCode = typeof InstanceIdErrorCode[keyof typeof InstanceIdErrorCode];
 
 ```

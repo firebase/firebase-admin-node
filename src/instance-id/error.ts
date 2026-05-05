@@ -18,36 +18,30 @@ import { FirebaseError, ErrorInfo } from '../utils/error';
 import { installationsClientErrorCode } from '../installations/error';
 
 /**
- * Instance ID client error codes.
+ * The constant mapping for valid Instance ID client error codes.
  */
-export type InstanceIdErrorCode =
-  | 'invalid-argument'
-  | 'invalid-project-id'
-  | 'invalid-installation-id'
-  | 'api-error'
-  | 'invalid-instance-id';
-
+export const InstanceIdErrorCode = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_PROJECT_ID: 'invalid-project-id',
+  INVALID_INSTALLATION_ID: 'invalid-installation-id',
+  API_ERROR: 'api-error',
+  INVALID_INSTANCE_ID: 'invalid-instance-id',
+} as const;
 
 /**
- * Instance ID client error codes and their default messages.
+ * The type definition for valid Instance ID client error codes.
  */
-const instanceIdClientErrorMessages = {
-  'invalid-instance-id': 'Invalid instance ID provided.',
-};
-
-function createInstanceIdErrorInfo(code: 'invalid-instance-id'): ErrorInfo {
-  return {
-    code,
-    message: instanceIdClientErrorMessages[code] || 'An unknown error occurred.',
-  };
-}
+export type InstanceIdErrorCode = typeof InstanceIdErrorCode[keyof typeof InstanceIdErrorCode];
 
 /**
  * Internal Instance ID client error code mapping used to construct ErrorInfo.
  */
-export const instanceIdClientErrorCode = {
+export const instanceIdClientErrorCode: { readonly [K in keyof typeof InstanceIdErrorCode]: ErrorInfo } = {
   ...installationsClientErrorCode,
-  INVALID_INSTANCE_ID: createInstanceIdErrorInfo('invalid-instance-id'),
+  INVALID_INSTANCE_ID: {
+    code: InstanceIdErrorCode.INVALID_INSTANCE_ID,
+    message: 'Invalid instance ID provided.',
+  },
 };
 
 /**

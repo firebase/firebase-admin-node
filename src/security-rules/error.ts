@@ -17,18 +17,24 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Security Rules client error codes and their default messages.
+ * The constant mapping for valid Security Rules client error codes.
  */
-export type SecurityRulesErrorCode =
-  'already-exists'
-  | 'authentication-error'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'invalid-server-response'
-  | 'not-found'
-  | 'resource-exhausted'
-  | 'service-unavailable'
-  | 'unknown-error';
+export const SecurityRulesErrorCode = {
+  ALREADY_EXISTS: 'already-exists',
+  AUTHENTICATION_ERROR: 'authentication-error',
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_SERVER_RESPONSE: 'invalid-server-response',
+  NOT_FOUND: 'not-found',
+  RESOURCE_EXHAUSTED: 'resource-exhausted',
+  SERVICE_UNAVAILABLE: 'service-unavailable',
+  UNKNOWN_ERROR: 'unknown-error',
+} as const;
+
+/**
+ * The type definition for valid Security Rules client error codes.
+ */
+export type SecurityRulesErrorCode = typeof SecurityRulesErrorCode[keyof typeof SecurityRulesErrorCode];
 
 export class FirebaseSecurityRulesError extends PrefixedFirebaseError {
   /**

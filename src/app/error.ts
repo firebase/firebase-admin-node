@@ -31,18 +31,25 @@ export class FirebaseAppError extends PrefixedFirebaseError {
 }
 
 /**
- * App client error codes and their default messages.
+ * The constant mapping for valid App client error codes.
  */
-export class AppErrorCodes {
-  public static APP_DELETED = 'app-deleted';
-  public static DUPLICATE_APP = 'duplicate-app';
-  public static INVALID_ARGUMENT = 'invalid-argument';
-  public static INTERNAL_ERROR = 'internal-error';
-  public static INVALID_APP_NAME = 'invalid-app-name';
-  public static INVALID_APP_OPTIONS = 'invalid-app-options';
-  public static INVALID_CREDENTIAL = 'invalid-credential';
-  public static NETWORK_ERROR = 'network-error';
-  public static NETWORK_TIMEOUT = 'network-timeout';
-  public static NO_APP = 'no-app';
-  public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
-}
+export const AppErrorCode = {
+  APP_DELETED: 'app-deleted',
+  DUPLICATE_APP: 'duplicate-app',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_APP_NAME: 'invalid-app-name',
+  INVALID_APP_OPTIONS: 'invalid-app-options',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  NETWORK_ERROR: 'network-error',
+  NETWORK_TIMEOUT: 'network-timeout',
+  NO_APP: 'no-app',
+  UNABLE_TO_PARSE_RESPONSE: 'unable-to-parse-response',
+} as const;
+
+/**
+ * The type definition for valid App client error codes.
+ */
+export type AppErrorCode = typeof AppErrorCode[keyof typeof AppErrorCode];
+
+

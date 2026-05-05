@@ -17,26 +17,32 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Machine Learning client error codes.
+ * The constant mapping for valid Machine Learning client error codes.
  */
-export type MachineLearningErrorCode =
-  | 'already-exists'
-  | 'authentication-error'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'invalid-server-response'
-  | 'not-found'
-  | 'resource-exhausted'
-  | 'service-unavailable'
-  | 'unknown-error'
-  | 'cancelled'
-  | 'deadline-exceeded'
-  | 'permission-denied'
-  | 'failed-precondition'
-  | 'aborted'
-  | 'out-of-range'
-  | 'data-loss'
-  | 'unauthenticated';
+export const MachineLearningErrorCode = {
+  ALREADY_EXISTS: 'already-exists',
+  AUTHENTICATION_ERROR: 'authentication-error',
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_SERVER_RESPONSE: 'invalid-server-response',
+  NOT_FOUND: 'not-found',
+  RESOURCE_EXHAUSTED: 'resource-exhausted',
+  SERVICE_UNAVAILABLE: 'service-unavailable',
+  UNKNOWN_ERROR: 'unknown-error',
+  CANCELLED: 'cancelled',
+  DEADLINE_EXCEEDED: 'deadline-exceeded',
+  PERMISSION_DENIED: 'permission-denied',
+  FAILED_PRECONDITION: 'failed-precondition',
+  ABORTED: 'aborted',
+  OUT_OF_RANGE: 'out-of-range',
+  DATA_LOSS: 'data-loss',
+  UNAUTHENTICATED: 'unauthenticated',
+} as const;
+
+/**
+ * The type definition for valid Machine Learning client error codes.
+ */
+export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
 export class FirebaseMachineLearningError extends PrefixedFirebaseError {
   /** @internal */

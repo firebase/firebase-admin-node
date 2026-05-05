@@ -13,30 +13,22 @@ export interface App {
 }
 
 // @public
-export class AppErrorCodes {
-    // (undocumented)
-    static APP_DELETED: string;
-    // (undocumented)
-    static DUPLICATE_APP: string;
-    // (undocumented)
-    static INTERNAL_ERROR: string;
-    // (undocumented)
-    static INVALID_APP_NAME: string;
-    // (undocumented)
-    static INVALID_APP_OPTIONS: string;
-    // (undocumented)
-    static INVALID_ARGUMENT: string;
-    // (undocumented)
-    static INVALID_CREDENTIAL: string;
-    // (undocumented)
-    static NETWORK_ERROR: string;
-    // (undocumented)
-    static NETWORK_TIMEOUT: string;
-    // (undocumented)
-    static NO_APP: string;
-    // (undocumented)
-    static UNABLE_TO_PARSE_RESPONSE: string;
-}
+export const AppErrorCode: {
+    readonly APP_DELETED: "app-deleted";
+    readonly DUPLICATE_APP: "duplicate-app";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_APP_NAME: "invalid-app-name";
+    readonly INVALID_APP_OPTIONS: "invalid-app-options";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly NETWORK_ERROR: "network-error";
+    readonly NETWORK_TIMEOUT: "network-timeout";
+    readonly NO_APP: "no-app";
+    readonly UNABLE_TO_PARSE_RESPONSE: "unable-to-parse-response";
+};
+
+// @public
+export type AppErrorCode = typeof AppErrorCode[keyof typeof AppErrorCode];
 
 // @public
 export function applicationDefault(httpAgent?: Agent): Credential;

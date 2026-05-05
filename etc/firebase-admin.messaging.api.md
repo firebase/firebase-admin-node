@@ -204,7 +204,30 @@ export class Messaging {
 }
 
 // @public
-export type MessagingErrorCode = 'invalid-argument' | 'invalid-recipient' | 'invalid-payload' | 'invalid-data-payload-key' | 'payload-size-limit-exceeded' | 'invalid-options' | 'invalid-registration-token' | 'registration-token-not-registered' | 'mismatched-credential' | 'invalid-package-name' | 'device-message-rate-exceeded' | 'topics-message-rate-exceeded' | 'message-rate-exceeded' | 'third-party-auth-error' | 'too-many-topics' | 'authentication-error' | 'server-unavailable' | 'internal-error' | 'unknown-error';
+export const MessagingErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_RECIPIENT: "invalid-recipient";
+    readonly INVALID_PAYLOAD: "invalid-payload";
+    readonly INVALID_DATA_PAYLOAD_KEY: "invalid-data-payload-key";
+    readonly PAYLOAD_SIZE_LIMIT_EXCEEDED: "payload-size-limit-exceeded";
+    readonly INVALID_OPTIONS: "invalid-options";
+    readonly INVALID_REGISTRATION_TOKEN: "invalid-registration-token";
+    readonly REGISTRATION_TOKEN_NOT_REGISTERED: "registration-token-not-registered";
+    readonly MISMATCHED_CREDENTIAL: "mismatched-credential";
+    readonly INVALID_PACKAGE_NAME: "invalid-package-name";
+    readonly DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded";
+    readonly TOPICS_MESSAGE_RATE_EXCEEDED: "topics-message-rate-exceeded";
+    readonly MESSAGE_RATE_EXCEEDED: "message-rate-exceeded";
+    readonly THIRD_PARTY_AUTH_ERROR: "third-party-auth-error";
+    readonly TOO_MANY_TOPICS: "too-many-topics";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly SERVER_UNAVAILABLE: "server-unavailable";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type MessagingErrorCode = typeof MessagingErrorCode[keyof typeof MessagingErrorCode];
 
 // @public
 export interface MessagingOptions {

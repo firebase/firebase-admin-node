@@ -30,19 +30,25 @@ export const FUNCTIONS_ERROR_CODE_MAPPING: Record<string, FunctionsErrorCode> = 
 };
 
 /**
- * Functions client error codes and their default messages.
+ * The constant mapping for valid Functions client error codes.
  */
-export type FunctionsErrorCode =
-  | 'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'failed-precondition'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'task-already-exists';
+export const FunctionsErrorCode = {
+  ABORTED: 'aborted',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  INTERNAL_ERROR: 'internal-error',
+  FAILED_PRECONDITION: 'failed-precondition',
+  PERMISSION_DENIED: 'permission-denied',
+  UNAUTHENTICATED: 'unauthenticated',
+  NOT_FOUND: 'not-found',
+  UNKNOWN_ERROR: 'unknown-error',
+  TASK_ALREADY_EXISTS: 'task-already-exists',
+} as const;
+
+/**
+ * The type definition for valid Functions client error codes.
+ */
+export type FunctionsErrorCode = typeof FunctionsErrorCode[keyof typeof FunctionsErrorCode];
 
 /**
  * Firebase Functions error code structure. This extends PrefixedFirebaseError.

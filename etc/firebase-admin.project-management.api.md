@@ -86,7 +86,20 @@ export class ProjectManagement {
 }
 
 // @public
-export type ProjectManagementErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-project-id' | 'invalid-server-response' | 'not-found' | 'service-unavailable' | 'unknown-error';
+export const ProjectManagementErrorCode: {
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_SERVER_RESPONSE: "invalid-server-response";
+    readonly NOT_FOUND: "not-found";
+    readonly SERVICE_UNAVAILABLE: "service-unavailable";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type ProjectManagementErrorCode = typeof ProjectManagementErrorCode[keyof typeof ProjectManagementErrorCode];
 
 // @public
 export class ShaCertificate {

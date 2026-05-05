@@ -17,40 +17,41 @@
 import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Installations client error codes.
+ * The constant mapping for valid Installations client error codes.
  */
-export type InstallationsErrorCode =
-  | 'invalid-argument'
-  | 'invalid-project-id'
-  | 'invalid-installation-id'
-  | 'api-error';
+export const InstallationsErrorCode = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_PROJECT_ID: 'invalid-project-id',
+  INVALID_INSTALLATION_ID: 'invalid-installation-id',
+  API_ERROR: 'api-error',
+} as const;
 
 /**
- * Installations client error codes and their default messages.
+ * The type definition for valid Installations client error codes.
  */
-const installationsClientErrorMessages: Record<InstallationsErrorCode, string> = {
-  'invalid-argument': 'Invalid argument provided.',
-  'invalid-project-id': 'Invalid project ID provided.',
-  'invalid-installation-id': 'Invalid installation ID provided.',
-  'api-error': 'Installation ID API call failed.',
-};
+export type InstallationsErrorCode = typeof InstallationsErrorCode[keyof typeof InstallationsErrorCode];
 
 /**
  * Internal Installations client error code mapping used to construct ErrorInfo.
  */
-export const installationsClientErrorCode = {
-  INVALID_ARGUMENT: createInstallationsErrorInfo('invalid-argument'),
-  INVALID_PROJECT_ID: createInstallationsErrorInfo('invalid-project-id'),
-  INVALID_INSTALLATION_ID: createInstallationsErrorInfo('invalid-installation-id'),
-  API_ERROR: createInstallationsErrorInfo('api-error'),
+export const installationsClientErrorCode: { readonly [K in keyof typeof InstallationsErrorCode]: ErrorInfo } = {
+  INVALID_ARGUMENT: {
+    code: InstallationsErrorCode.INVALID_ARGUMENT,
+    message: 'Invalid argument provided.',
+  },
+  INVALID_PROJECT_ID: {
+    code: InstallationsErrorCode.INVALID_PROJECT_ID,
+    message: 'Invalid project ID provided.',
+  },
+  INVALID_INSTALLATION_ID: {
+    code: InstallationsErrorCode.INVALID_INSTALLATION_ID,
+    message: 'Invalid installation ID provided.',
+  },
+  API_ERROR: {
+    code: InstallationsErrorCode.API_ERROR,
+    message: 'Installation ID API call failed.',
+  },
 };
-
-function createInstallationsErrorInfo(code: InstallationsErrorCode): ErrorInfo {
-  return {
-    code,
-    message: installationsClientErrorMessages[code] || 'An unknown error occurred.',
-  };
-}
 
 /**
  * Firebase Installations service error code structure. This extends `FirebaseError`.

@@ -44,7 +44,13 @@ export class Eventarc {
 }
 
 // @public
-export type EventarcErrorCode = 'unknown-error' | 'invalid-argument';
+export const EventarcErrorCode: {
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+};
+
+// @public
+export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
 
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //

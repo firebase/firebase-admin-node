@@ -41,7 +41,21 @@ export class Functions {
 }
 
 // @public
-export type FunctionsErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'failed-precondition' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'task-already-exists';
+export const FunctionsErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly TASK_ALREADY_EXISTS: "task-already-exists";
+};
+
+// @public
+export type FunctionsErrorCode = typeof FunctionsErrorCode[keyof typeof FunctionsErrorCode];
 
 // @public
 export function getFunctions(app?: App): Functions;

@@ -29,18 +29,24 @@ export const APP_CHECK_ERROR_CODE_MAPPING: Record<string, AppCheckErrorCode> = {
 };
 
 /**
- * App Check client error codes and their default messages.
+ * The constant mapping for valid App Check client error codes.
  */
-export type AppCheckErrorCode =
-  | 'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'app-check-token-expired'
-  | 'unknown-error';
+export const AppCheckErrorCode = {
+  ABORTED: 'aborted',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  INTERNAL: 'internal-error',
+  PERMISSION_DENIED: 'permission-denied',
+  UNAUTHENTICATED: 'unauthenticated',
+  NOT_FOUND: 'not-found',
+  APP_CHECK_TOKEN_EXPIRED: 'app-check-token-expired',
+  UNKNOWN: 'unknown-error',
+} as const;
+
+/**
+ * The type definition for valid App Check client error codes.
+ */
+export type AppCheckErrorCode = typeof AppCheckErrorCode[keyof typeof AppCheckErrorCode];
 
 /**
  * Firebase App Check error type. This extends PrefixedFirebaseError.

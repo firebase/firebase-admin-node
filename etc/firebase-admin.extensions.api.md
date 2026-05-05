@@ -16,7 +16,16 @@ export class Extensions {
 }
 
 // @public
-export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
+export const ExtensionsErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly NOT_FOUND: "not-found";
+    readonly FORBIDDEN: "forbidden";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type ExtensionsErrorCode = typeof ExtensionsErrorCode[keyof typeof ExtensionsErrorCode];
 
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
