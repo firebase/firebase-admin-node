@@ -116,7 +116,7 @@ export type AuthErrorCode =
   | 'user-not-disabled'
   | 'invalid-recaptcha-action'
   | 'invalid-recaptcha-enforcement-state'
-  | 'racaptcha-not-enabled';
+  | 'recaptcha-not-enabled';
 
 /**
 * Auth client error codes and their default messages.
@@ -229,7 +229,7 @@ const authClientErrorMessages: Record<AuthErrorCode, string> = {
   'user-not-disabled': 'The user must be disabled in order to bulk delete it (or you must pass force=true).',
   'invalid-recaptcha-action': 'reCAPTCHA action must be "BLOCK".',
   'invalid-recaptcha-enforcement-state': 'reCAPTCHA enforcement state must be either "OFF", "AUDIT" or "ENFORCE".',
-  'racaptcha-not-enabled': 'reCAPTCHA enterprise is not enabled.',
+  'recaptcha-not-enabled': 'reCAPTCHA enterprise is not enabled.',
 };
 
 /** @const {Record<string, string>} Auth server to client enum error codes. */
@@ -462,7 +462,7 @@ export const authClientErrorCode = {
   USER_NOT_DISABLED: createAuthErrorInfo('user-not-disabled'),
   INVALID_RECAPTCHA_ACTION: createAuthErrorInfo('invalid-recaptcha-action'),
   INVALID_RECAPTCHA_ENFORCEMENT_STATE: createAuthErrorInfo('invalid-recaptcha-enforcement-state'),
-  RECAPTCHA_NOT_ENABLED: createAuthErrorInfo('racaptcha-not-enabled'),
+  RECAPTCHA_NOT_ENABLED: createAuthErrorInfo('recaptcha-not-enabled'),
 };
 
 function createAuthErrorInfo(code: AuthErrorCode): ErrorInfo {

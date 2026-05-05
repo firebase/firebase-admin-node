@@ -229,10 +229,10 @@ export function handleCryptoSignerError(err: Error): Error {
       'errorcode from the error.'
     );
   }
-  return new FirebaseAuthError(mapToauthClientErrorCode(err.code), err.message);
+  return new FirebaseAuthError(mapToAuthErrorInfo(err.code), err.message);
 }
 
-function mapToauthClientErrorCode(code: string): ErrorInfo {
+function mapToAuthErrorInfo(code: string): ErrorInfo {
   switch (code) {
   case CryptoSignerErrorCode.INVALID_CREDENTIAL:
     return authClientErrorCode.INVALID_CREDENTIAL;
