@@ -28,10 +28,10 @@ export const enableLogging: typeof rtdb.enableLogging;
 
 export { EventType }
 
-// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseDatabaseError extends FirebaseError {
+export class FirebaseDatabaseError extends PrefixedFirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }

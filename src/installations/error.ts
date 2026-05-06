@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseError, ErrorInfo } from '../utils/error';
+import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Installations client error codes.
@@ -54,9 +54,9 @@ export const installationsClientErrorCode: { readonly [K in keyof typeof Install
 };
 
 /**
- * Firebase Installations service error code structure. This extends `FirebaseError`.
+ * Firebase Installations service error code structure. This extends `PrefixedFirebaseError`.
  */
-export class FirebaseInstallationsError extends FirebaseError {
+export class FirebaseInstallationsError extends PrefixedFirebaseError {
   /**
    * 
    * @param info - The error code info.
@@ -65,11 +65,6 @@ export class FirebaseInstallationsError extends FirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({
-      code: 'installations/' + info.code,
-      message: message || info.message,
-      httpResponse: info.httpResponse,
-      cause: info.cause
-    });
+    super('installations', info.code, message || info.message, info.httpResponse, info.cause);
   }
 }

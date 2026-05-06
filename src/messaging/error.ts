@@ -311,8 +311,7 @@ export class FirebaseMessagingSessionError extends FirebaseMessagingError {
   /** @returns The object representation of the error. */
   public toJSON(): object {
     return {
-      code: this.code,
-      message: this.message,
+      ...super.toJSON(),
       pendingBatchResponse: this.pendingBatchResponse,
     };
   }

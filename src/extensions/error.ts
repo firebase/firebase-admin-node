@@ -17,9 +17,6 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Extensions client error codes and their default messages.
- */
-/**
  * The constant mapping for valid Extensions client error codes.
  */
 export const ExtensionsErrorCode = {
