@@ -18,6 +18,8 @@
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 import * as validator from '../utils/validator';
+// TODO: remove import in next major (v14)
+import * as crypto from 'crypto';
 
 // List of CloudEvent properties that are handled "by hand" and should be skipped by
 // automatic attribute copy.
