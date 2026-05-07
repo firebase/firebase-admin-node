@@ -146,6 +146,11 @@ export interface DecodedIdToken {
   iss: string;
 
   /**
+   * The display name of the user to whom the ID token belongs, if available.
+   */
+  name?: string;
+
+  /**
    * The phone number of the user to whom the ID token belongs, if available.
    */
   phone_number?: string;
