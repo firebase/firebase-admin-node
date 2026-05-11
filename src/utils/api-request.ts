@@ -16,7 +16,8 @@
  */
 
 import { FirebaseApp } from '../app/firebase-app';
-import { AppErrorCodes, FirebaseAppError, toHttpResponse } from './error';
+import { toHttpResponse } from './error';
+import { AppErrorCode, FirebaseAppError } from '../app/error';
 import * as validator from './validator';
 
 import http = require('http');
@@ -142,7 +143,7 @@ class DefaultRequestResponse implements RequestResponse {
     this.text = resp.data;
     try {
       if (!resp.data) {
-        throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'HTTP response missing data.' });
+        throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'HTTP response missing data.' });
       }
       this.parsedData = JSON.parse(resp.data);
     } catch (err) {
@@ -156,7 +157,7 @@ class DefaultRequestResponse implements RequestResponse {
       return this.parsedData;
     }
     throw new FirebaseAppError({
-      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
       message: 'Error while parsing response data',
       cause: this.parseError as Error,
       httpResponse: toHttpResponse(this)
@@ -186,14 +187,14 @@ class MultipartRequestResponse implements RequestResponse {
 
   get text(): string {
     throw new FirebaseAppError({
-      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
       message: 'Unable to parse multipart payload as text'
     });
   }
 
   get data(): any {
     throw new FirebaseAppError({
-      code: AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
       message: 'Unable to parse multipart payload as JSON'
     });
   }
@@ -259,7 +260,7 @@ export function defaultRetryConfig(): RetryConfig {
 function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_ARGUMENT,
+      code: AppErrorCode.INVALID_ARGUMENT,
       message: 'maxRetries must be a non-negative integer'
     });
   }
@@ -267,7 +268,7 @@ function validateRetryConfig(retry: RetryConfig): void {
   if (typeof retry.backOffFactor !== 'undefined') {
     if (!validator.isNumber(retry.backOffFactor) || retry.backOffFactor < 0) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INVALID_ARGUMENT,
+        code: AppErrorCode.INVALID_ARGUMENT,
         message: 'backOffFactor must be a non-negative number'
       });
     }
@@ -275,17 +276,17 @@ function validateRetryConfig(retry: RetryConfig): void {
 
   if (!validator.isNumber(retry.maxDelayInMillis) || retry.maxDelayInMillis < 0) {
     throw new FirebaseAppError({
-      code: AppErrorCodes.INVALID_ARGUMENT,
+      code: AppErrorCode.INVALID_ARGUMENT,
       message: 'maxDelayInMillis must be a non-negative integer'
     });
   }
 
   if (typeof retry.statusCodes !== 'undefined' && !validator.isArray(retry.statusCodes)) {
-    throw new FirebaseAppError({ code: AppErrorCodes.INVALID_ARGUMENT, message: 'statusCodes must be an array' });
+    throw new FirebaseAppError({ code: AppErrorCode.INVALID_ARGUMENT, message: 'statusCodes must be an array' });
   }
 
   if (typeof retry.ioErrorCodes !== 'undefined' && !validator.isArray(retry.ioErrorCodes)) {
-    throw new FirebaseAppError({ code: AppErrorCodes.INVALID_ARGUMENT, message: 'ioErrorCodes must be an array' });
+    throw new FirebaseAppError({ code: AppErrorCode.INVALID_ARGUMENT, message: 'ioErrorCodes must be an array' });
   }
 }
 
@@ -385,7 +386,7 @@ export class RequestClient {
     }
 
     if (!this.retry) {
-      throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'Expected this.retry to exist.' });
+      throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'Expected this.retry to exist.' });
     }
 
     const backOffFactor = this.retry.backOffFactor || 0;
@@ -446,13 +447,13 @@ export class HttpClient extends RequestClient {
 
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError({
-            code: AppErrorCodes.NETWORK_TIMEOUT,
+            code: AppErrorCode.NETWORK_TIMEOUT,
             message: `Error while making request: ${err.message}.`,
             cause: err
           });
         }
         throw new FirebaseAppError({
-          code: AppErrorCodes.NETWORK_ERROR,
+          code: AppErrorCode.NETWORK_ERROR,
           message: `Error while making request: ${err.message}. Error code: ${err.code}`,
           cause: err
         });
@@ -512,13 +513,13 @@ export class Http2Client extends RequestClient {
 
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError({
-            code: AppErrorCodes.NETWORK_TIMEOUT,
+            code: AppErrorCode.NETWORK_TIMEOUT,
             message: `Error while making request: ${err.message}.`,
             cause: err
           });
         }
         throw new FirebaseAppError({
-          code: AppErrorCodes.NETWORK_ERROR,
+          code: AppErrorCode.NETWORK_ERROR,
           message: `Error while making request: ${err.message}. Error code: ${err.code}`,
           cause: err
         });
@@ -568,7 +569,7 @@ export function parseHttpResponse(
     request: null,
   };
   if (!validator.isNumber(lowLevelResponse.status)) {
-    throw new FirebaseAppError({ code: AppErrorCodes.INTERNAL_ERROR, message: 'Malformed HTTP status line.' });
+    throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'Malformed HTTP status line.' });
   }
   return new DefaultRequestResponse(lowLevelResponse);
 }
@@ -793,7 +794,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 
     if (!res.statusCode) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INTERNAL_ERROR,
+        code: AppErrorCode.INTERNAL_ERROR,
         message: 'Expected a statusCode on the response from a ClientRequest'
       });
     }
@@ -901,7 +902,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 
     if (!headers[':status']) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INTERNAL_ERROR,
+        code: AppErrorCode.INTERNAL_ERROR,
         message: 'Expected a statusCode on the response from a ClientRequest'
       });
     }
@@ -1365,7 +1366,7 @@ export class Http2SessionHandler {
 
       http2Session.on('goaway', (errorCode, _, opaqueData) => {
         this.reject(new FirebaseAppError({
-          code: AppErrorCodes.NETWORK_ERROR,
+          code: AppErrorCode.NETWORK_ERROR,
           message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
         }));
       })
@@ -1379,7 +1380,7 @@ export class Http2SessionHandler {
           errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
         }
         this.reject(new FirebaseAppError({
-          code: AppErrorCodes.NETWORK_ERROR,
+          code: AppErrorCode.NETWORK_ERROR,
           message: errorMessage,
           cause: error,
         }));

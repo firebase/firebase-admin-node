@@ -24,7 +24,7 @@ import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { FirebaseProjectManagementError } from '../../../src/utils/error';
+import { FirebaseProjectManagementError } from '../../../src/project-management/error';
 import * as mocks from '../../resources/mocks';
 import {
   AndroidApp, AndroidAppMetadata, AppPlatform, ShaCertificate,

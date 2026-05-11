@@ -68,4 +68,4 @@ export function getPhoneNumberVerification(app?: App): PhoneNumberVerification {
 export {
   FirebasePhoneNumberVerificationError,
   PhoneNumberVerificationErrorCode,
-} from './phone-number-verification-api-client-internal';
+} from './error';

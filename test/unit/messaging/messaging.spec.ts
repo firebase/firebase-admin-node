@@ -34,7 +34,7 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
-import { FirebaseMessagingSessionError } from '../../../src/utils/error';
+import { FirebaseMessagingSessionError } from '../../../src/messaging/error';
 
 chai.should();
 chai.use(sinonChai);

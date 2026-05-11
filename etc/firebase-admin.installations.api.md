@@ -6,10 +6,10 @@
 
 import { Agent } from 'http';
 
-// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseInstallationsError extends FirebaseError {
+export class FirebaseInstallationsError extends PrefixedFirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }
@@ -25,24 +25,15 @@ export class Installations {
     deleteInstallation(fid: string): Promise<void>;
 }
 
-// @public (undocumented)
-export const InstallationsClientErrorCode: {
-    INVALID_ARGUMENT: {
-        code: string;
-        message: string;
-    };
-    INVALID_PROJECT_ID: {
-        code: string;
-        message: string;
-    };
-    INVALID_INSTALLATION_ID: {
-        code: string;
-        message: string;
-    };
-    API_ERROR: {
-        code: string;
-        message: string;
-    };
+// @public
+export const InstallationsErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_INSTALLATION_ID: "invalid-installation-id";
+    readonly API_ERROR: "api-error";
 };
+
+// @public
+export type InstallationsErrorCode = typeof InstallationsErrorCode[keyof typeof InstallationsErrorCode];
 
 ```

@@ -90,4 +90,4 @@ export function getDataConnect(connectorConfig: ConnectorConfig, app?: App): Dat
  */
 export const validateAdminArgs = _validateAdminArgs;
 
-export { FirebaseDataConnectError, DataConnectErrorCode } from './data-connect-api-client-internal';
+export { FirebaseDataConnectError, DataConnectErrorCode } from './error';

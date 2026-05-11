@@ -16,7 +16,8 @@
  */
 
 import { App } from '../app';
-import { FirebaseFunctionsError, FunctionsApiClient } from './functions-api-client-internal';
+import { FunctionsApiClient } from './functions-api-client-internal';
+import { FirebaseFunctionsError } from './error';
 import { TaskOptions } from './functions-api';
 import * as validator from '../utils/validator';
 

@@ -66,4 +66,4 @@ export function getSecurityRules(app?: App): SecurityRules {
   return firebaseApp.getOrInitService('securityRules', (app) => new SecurityRules(app));
 }
 
-export { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
+export { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './error';

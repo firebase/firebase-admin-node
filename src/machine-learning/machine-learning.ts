@@ -24,7 +24,7 @@ import {
   MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions,
   ListModelsOptions, ModelOptions,
 } from './machine-learning-api-client';
-import { FirebaseMachineLearningError } from './machine-learning-utils';
+import { FirebaseMachineLearningError } from './error';
 
 /** Response object for a listModels operation. */
 export interface ListModelsResult {

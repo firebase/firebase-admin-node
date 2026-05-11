@@ -63,4 +63,4 @@ export function getExtensions(app?: App): Extensions {
   return firebaseApp.getOrInitService('extensions', (app) => new Extensions(app));
 }
 
-export { FirebaseExtensionsError, ExtensionsErrorCode } from './extensions-api-client-internal';
+export { FirebaseExtensionsError, ExtensionsErrorCode } from './error';

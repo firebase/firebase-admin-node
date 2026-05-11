@@ -18,7 +18,9 @@ import { URL } from 'url';
 import * as path from 'path';
 
 import { FirebaseDatabase } from '@firebase/database-types';
-import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError, toHttpResponse } from '../utils/error';
+import { FirebaseDatabaseError } from './error';
+import { AppErrorCode, FirebaseAppError } from '../app/error';
+import { toHttpResponse } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 
 import { App } from '../app';
@@ -226,7 +228,7 @@ class DatabaseRulesClient {
       .then((resp) => {
         if (!resp.text) {
           throw new FirebaseAppError({
-            code: AppErrorCodes.INTERNAL_ERROR,
+            code: AppErrorCode.INTERNAL_ERROR,
             message: 'HTTP response missing data.'
           });
         }
@@ -297,7 +299,7 @@ class DatabaseRulesClient {
   private handleError(err: Error): Error {
     if (err instanceof RequestResponseError) {
       return new FirebaseDatabaseError({
-        code: AppErrorCodes.INTERNAL_ERROR,
+        code: AppErrorCode.INTERNAL_ERROR,
         message: this.getErrorMessage(err),
         httpResponse: toHttpResponse(err.response),
         cause: err,

@@ -20,11 +20,12 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
-import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-internal';
+import { FirebaseSecurityRulesError } from '../../../src/security-rules/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { getSdkVersion, getMetricsHeader } from '../../../src/utils/index';
 

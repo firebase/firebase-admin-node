@@ -20,7 +20,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseDataConnectError, DataConnectErrorCode, DATA_CONNECT_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -677,44 +678,4 @@ interface ServerError {
   code?: number;
   message?: string;
   status?: string;
-}
-
-export const DATA_CONNECT_ERROR_CODE_MAPPING: { [key: string]: DataConnectErrorCode } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-  QUERY_ERROR: 'query-error',
-};
-
-/**
- * Data Connect client error codes and their default messages.
- */
-export type DataConnectErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'query-error';
-
-/**
- * Firebase Data Connect error type. This extends PrefixedFirebaseError.
- */
-export class FirebaseDataConnectError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('data-connect', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
 }

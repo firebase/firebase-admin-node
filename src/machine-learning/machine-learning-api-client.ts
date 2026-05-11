@@ -22,7 +22,7 @@ import {
 import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
+import { FirebaseMachineLearningError, MachineLearningErrorCode } from './error';
 
 /**
  * Firebase ML Model input objects

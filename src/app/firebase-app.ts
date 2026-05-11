@@ -21,7 +21,7 @@ import { Credential } from './credential';
 import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCode, FirebaseAppError } from './error';
 
 const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
 
@@ -70,7 +70,7 @@ export class FirebaseAppInternals {
           typeof result.expires_in !== 'number' ||
           typeof result.access_token !== 'string') {
           throw new FirebaseAppError({
-            code: AppErrorCodes.INVALID_CREDENTIAL,
+            code: AppErrorCode.INVALID_CREDENTIAL,
             message: `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
               'tokens must be an object with the "expires_in" (number) and "access_token" ' +
             '(string) properties.',
@@ -111,7 +111,7 @@ export class FirebaseAppInternals {
         }
 
         throw new FirebaseAppError({
-          code: AppErrorCodes.INVALID_CREDENTIAL,
+          code: AppErrorCode.INVALID_CREDENTIAL,
           message: errorMessage,
           cause: error as Error
         });
@@ -171,7 +171,7 @@ export class FirebaseApp implements App {
 
     if (!validator.isNonNullObject(this.options_)) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INVALID_APP_OPTIONS,
+        code: AppErrorCode.INVALID_APP_OPTIONS,
         message: 'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
           `app named "${this.name_}". Options must be a non-null object.`
       });
@@ -186,7 +186,7 @@ export class FirebaseApp implements App {
     const credential = this.options_.credential;
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       throw new FirebaseAppError({
-        code: AppErrorCodes.INVALID_APP_OPTIONS,
+        code: AppErrorCode.INVALID_APP_OPTIONS,
         message: 'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
           `app named "${this.name_}". The "credential" property must be an object which implements ` +
           'the Credential interface.'
@@ -284,7 +284,7 @@ export class FirebaseApp implements App {
   private checkDestroyed_(): void {
     if (this.isDeleted_) {
       throw new FirebaseAppError({
-        code: AppErrorCodes.APP_DELETED,
+        code: AppErrorCode.APP_DELETED,
         message: `Firebase app named "${this.name_}" has already been deleted.`
       });
     }

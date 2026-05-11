@@ -218,7 +218,22 @@ export interface RemoteConfigCondition {
 }
 
 // @public
-export type RemoteConfigErrorCode = 'aborted' | 'already-exists' | 'failed-precondition' | 'internal-error' | 'invalid-argument' | 'not-found' | 'out-of-range' | 'permission-denied' | 'resource-exhausted' | 'unauthenticated' | 'unknown-error';
+export const RemoteConfigErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly NOT_FOUND: "not-found";
+    readonly OUT_OF_RANGE: "out-of-range";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
 // @public
 export class RemoteConfigFetchResponse {

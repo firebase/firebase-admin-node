@@ -15,7 +15,7 @@
  */
 
 import { App } from '../app';
-import { FirebaseProjectManagementError } from '../utils/error';
+import { FirebaseProjectManagementError } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';

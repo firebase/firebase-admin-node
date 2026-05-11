@@ -22,7 +22,7 @@ import { OperationOptions } from '../../../src/data-connect';
 import { 
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError
-} from '../../../src/data-connect/data-connect-api-client-internal';
+} from '../../../src/data-connect/error';
 import * as dataConnectIndex from '../../../src/data-connect/index';
 
 interface IdVars {

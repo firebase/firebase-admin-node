@@ -17,7 +17,8 @@
 import { App } from '../app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
+import { RemoteConfigApiClient } from './remote-config-api-client-internal';
+import { FirebaseRemoteConfigError } from './error';
 import { ConditionEvaluator } from './condition-evaluator-internal';
 import { ValueImpl } from './internal/value-impl';
 import {

@@ -17,7 +17,7 @@
 
 import { App } from '../app';
 import * as validator from '../utils/validator';
-import { FirebaseEventarcError } from './eventarc-utils';
+import { FirebaseEventarcError } from './error';
 import { CloudEvent } from './cloudevent';
 import { EventarcApiClient } from './eventarc-client-internal';
 

@@ -16,7 +16,7 @@
 
 import * as validator from '../utils/validator';
 import * as util from '../utils/index';
-import { FirebaseAppCheckError } from './app-check-api-client-internal';
+import { FirebaseAppCheckError } from './error';
 import {
   ALGORITHM_RS256, DecodedToken, decodeJwt, JwtError,
   JwtErrorCode, PublicKeySignatureVerifier, SignatureVerifier

@@ -30,9 +30,13 @@ import { InstanceId } from '../../../src/instance-id/index';
 import { Installations } from '../../../src/installations/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  FirebaseInstanceIdError, InstanceIdClientErrorCode,
-  FirebaseInstallationsError, InstallationsClientErrorCode,
-} from '../../../src/utils/error';
+  FirebaseInstanceIdError,
+  instanceIdClientErrorCode,
+} from '../../../src/instance-id/error';
+import {
+  FirebaseInstallationsError,
+  installationsClientErrorCode,
+} from '../../../src/installations/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -175,7 +179,7 @@ describe('InstanceId', () => {
 
     it('should throw a FirebaseInstanceIdError error when the backend returns an error', () => {
       // Stub deleteInstanceId to throw a backend error.
-      const originalError = new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR);
+      const originalError = new FirebaseInstallationsError(installationsClientErrorCode.API_ERROR);
       const stub = sinon.stub(Installations.prototype, 'deleteInstallation')
         .rejects(originalError);
       stubs.push(stub);
@@ -186,7 +190,7 @@ describe('InstanceId', () => {
           // Confirm underlying API called with expected parameters.
           expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
           // Confirm expected error returned.
-          const expectedError = new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR);
+          const expectedError = new FirebaseInstanceIdError(instanceIdClientErrorCode.API_ERROR);
           expect(error).to.be.instanceOf(FirebaseInstanceIdError)
           expect(error).to.deep.include(expectedError);
         });

@@ -53,7 +53,28 @@ export class MachineLearning {
 }
 
 // @public
-export type MachineLearningErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-server-response' | 'not-found' | 'resource-exhausted' | 'service-unavailable' | 'unknown-error' | 'cancelled' | 'deadline-exceeded' | 'permission-denied' | 'failed-precondition' | 'aborted' | 'out-of-range' | 'data-loss' | 'unauthenticated';
+export const MachineLearningErrorCode: {
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_SERVER_RESPONSE: "invalid-server-response";
+    readonly NOT_FOUND: "not-found";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly SERVICE_UNAVAILABLE: "service-unavailable";
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly CANCELLED: "cancelled";
+    readonly DEADLINE_EXCEEDED: "deadline-exceeded";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly ABORTED: "aborted";
+    readonly OUT_OF_RANGE: "out-of-range";
+    readonly DATA_LOSS: "data-loss";
+    readonly UNAUTHENTICATED: "unauthenticated";
+};
+
+// @public
+export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
 // @public
 export class Model {

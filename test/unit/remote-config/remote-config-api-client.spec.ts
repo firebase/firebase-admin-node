@@ -19,14 +19,13 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import {
-  FirebaseRemoteConfigError,
-  RemoteConfigApiClient
-} from '../../../src/remote-config/remote-config-api-client-internal';
+import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
+import { FirebaseRemoteConfigError } from '../../../src/remote-config/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { FirebaseAppError, toHttpResponse } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
