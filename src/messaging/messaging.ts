@@ -259,7 +259,7 @@ export class Messaging {
           const sessionMessage = `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`;
 
           error = new FirebaseMessagingError({
-            code: MessagingClientErrorCode.UNKNOWN_ERROR.code,
+            code: messagingClientErrorCode.UNKNOWN_ERROR.code,
             message: `${streamMessage}${sessionMessage}`,
             cause: cause
           });
