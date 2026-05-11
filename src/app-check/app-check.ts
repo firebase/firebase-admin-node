@@ -18,7 +18,8 @@
 import * as validator from '../utils/validator';
 
 import { App } from '../app';
-import { AppCheckApiClient, FirebaseAppCheckError } from './app-check-api-client-internal';
+import { AppCheckApiClient } from './app-check-api-client-internal';
+import { FirebaseAppCheckError } from './error';
 import {
   appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator,
 } from './token-generator';

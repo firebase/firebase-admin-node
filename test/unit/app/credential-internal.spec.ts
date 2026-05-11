@@ -37,7 +37,7 @@ import {
   getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential, ApplicationDefaultCredential
 } from '../../../src/app/credential-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 
 chai.should();
 chai.use(sinonChai);

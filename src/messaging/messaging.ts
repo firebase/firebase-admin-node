@@ -18,8 +18,9 @@
 import { App } from '../app';
 import { deepCopy } from '../utils/deep-copy';
 import {
-  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError
-} from '../utils/error';
+  messagingClientErrorCode, FirebaseMessagingError
+} from './error';
+import { ErrorInfo } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
@@ -98,7 +99,7 @@ export class Messaging {
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
+        messagingClientErrorCode.INVALID_ARGUMENT,
         'First argument passed to admin.messaging() must be a valid Firebase app instance.',
       );
     }
@@ -152,7 +153,7 @@ export class Messaging {
     validateMessage(copy);
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
     return this.getUrlPath()
       .then((urlPath) => {
@@ -196,16 +197,16 @@ export class Messaging {
     const copy: Message[] = deepCopy(messages);
     if (!validator.isNonEmptyArray(copy)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
     if (copy.length > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
+        messagingClientErrorCode.INVALID_ARGUMENT,
         `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
     const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`);
@@ -296,15 +297,15 @@ export class Messaging {
     const copy: MulticastMessage = deepCopy(message);
     if (!validator.isNonNullObject(copy)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
     }
     if (!validator.isNonEmptyArray(copy.tokens)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
     }
     if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
+        messagingClientErrorCode.INVALID_ARGUMENT,
         `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
     }
 
@@ -386,7 +387,7 @@ export class Messaging {
         if (!validator.isNonEmptyString(projectId)) {
           // Assert for an explicit project ID (either via AppOptions or the cert itself).
           throw new FirebaseMessagingError(
-            MessagingClientErrorCode.INVALID_ARGUMENT,
+            messagingClientErrorCode.INVALID_ARGUMENT,
             'Failed to determine project ID for Messaging. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
@@ -459,7 +460,7 @@ export class Messaging {
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
       !validator.isNonEmptyString(registrationTokenOrTokens)) {
@@ -482,7 +483,7 @@ export class Messaging {
   private validateRegistrationTokens(
     registrationTokenOrTokens: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (validator.isArray(registrationTokenOrTokens)) {
       // Validate the array contains no more than 1,000 registration tokens.
@@ -517,7 +518,7 @@ export class Messaging {
   private validateTopicType(
     topic: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyString(topic)) {
       throw new FirebaseMessagingError(
@@ -538,7 +539,7 @@ export class Messaging {
   private validateTopic(
     topic: string,
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isTopic(topic)) {
       throw new FirebaseMessagingError(

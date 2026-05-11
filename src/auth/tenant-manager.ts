@@ -17,7 +17,7 @@
 import * as validator from '../utils/validator';
 import { App } from '../app';
 import * as utils from '../utils/index';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 import { BaseAuth, createFirebaseTokenGenerator, SessionCookieOptions } from './base-auth';
 import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
@@ -93,7 +93,7 @@ export class TenantAwareAuth extends BaseAuth {
       .then((decodedClaims) => {
         // Validate tenant ID.
         if (decodedClaims.firebase.tenant !== this.tenantId) {
-          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          throw new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
         }
         return decodedClaims;
       });
@@ -106,11 +106,11 @@ export class TenantAwareAuth extends BaseAuth {
     idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Validate arguments before processing.
     if (!validator.isNonEmptyString(idToken)) {
-      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
+      return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_ID_TOKEN));
     }
     if (!validator.isNonNullObject(sessionCookieOptions) ||
         !validator.isNumber(sessionCookieOptions.expiresIn)) {
-      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+      return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
     }
     // This will verify the ID token and then match the tenant ID before creating the session cookie.
     return this.verifyIdToken(idToken)
@@ -127,7 +127,7 @@ export class TenantAwareAuth extends BaseAuth {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
       .then((decodedClaims) => {
         if (decodedClaims.firebase.tenant !== this.tenantId) {
-          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          throw new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
         }
         return decodedClaims;
       });
@@ -171,7 +171,7 @@ export class TenantManager {
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
     if (!validator.isNonEmptyString(tenantId)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
       this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);

@@ -39,7 +39,20 @@ export class DataConnect {
 }
 
 // @public
-export type DataConnectErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'unknown-error' | 'query-error';
+export const DataConnectErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL: "internal-error";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly UNKNOWN: "unknown-error";
+    readonly QUERY_ERROR: "query-error";
+};
+
+// @public
+export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
 
 // @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {

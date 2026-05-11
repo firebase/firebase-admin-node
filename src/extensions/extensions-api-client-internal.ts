@@ -18,7 +18,9 @@
 import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { AuthorizedHttpClient, HttpClient, RequestResponseError, HttpRequestConfig } from '../utils/api-request';
-import { FirebaseAppError, PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseExtensionsError } from './error';
+import { FirebaseAppError } from '../app/error';
 import * as validator from '../utils/validator';
 import * as utils from '../utils';
 
@@ -152,21 +154,3 @@ type State = 'STATE_UNSPECIFIED' |
   'PROCESSING_COMPLETE' |
   'PROCESSING_WARNING' |
   'PROCESSING_FAILED';
-
-/**
- * Extensions client error codes and their default messages.
- */
-export type ExtensionsErrorCode = 'invalid-argument' | 'not-found' | 'forbidden' | 'internal-error' | 'unknown-error';
-/**
- * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseExtensionsError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
-}

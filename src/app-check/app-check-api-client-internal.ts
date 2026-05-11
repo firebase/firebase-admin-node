@@ -20,7 +20,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, ErrorInfo, toHttpResponse } from '../utils/error';
+import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseAppCheckError, AppCheckErrorCode, APP_CHECK_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AppCheckToken } from './app-check-api';
@@ -236,43 +237,4 @@ interface AppCheckApiError {
   code?: number;
   message?: string;
   status?: string;
-}
-
-export const APP_CHECK_ERROR_CODE_MAPPING: { [key: string]: AppCheckErrorCode; } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-};
-
-/**
- * App Check client error codes and their default messages.
- */
-export type AppCheckErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'app-check-token-expired'
-  | 'unknown-error';
-
-/**
- * Firebase App Check error type. This extends PrefixedFirebaseError.
- */
-export class FirebaseAppCheckError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('app-check', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
 }

@@ -204,84 +204,30 @@ export class Messaging {
 }
 
 // @public
-export const MessagingClientErrorCode: {
-    INVALID_ARGUMENT: {
-        code: string;
-        message: string;
-    };
-    INVALID_RECIPIENT: {
-        code: string;
-        message: string;
-    };
-    INVALID_PAYLOAD: {
-        code: string;
-        message: string;
-    };
-    INVALID_DATA_PAYLOAD_KEY: {
-        code: string;
-        message: string;
-    };
-    PAYLOAD_SIZE_LIMIT_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    INVALID_OPTIONS: {
-        code: string;
-        message: string;
-    };
-    INVALID_REGISTRATION_TOKEN: {
-        code: string;
-        message: string;
-    };
-    REGISTRATION_TOKEN_NOT_REGISTERED: {
-        code: string;
-        message: string;
-    };
-    MISMATCHED_CREDENTIAL: {
-        code: string;
-        message: string;
-    };
-    INVALID_PACKAGE_NAME: {
-        code: string;
-        message: string;
-    };
-    DEVICE_MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    TOPICS_MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    THIRD_PARTY_AUTH_ERROR: {
-        code: string;
-        message: string;
-    };
-    TOO_MANY_TOPICS: {
-        code: string;
-        message: string;
-    };
-    AUTHENTICATION_ERROR: {
-        code: string;
-        message: string;
-    };
-    SERVER_UNAVAILABLE: {
-        code: string;
-        message: string;
-    };
-    INTERNAL_ERROR: {
-        code: string;
-        message: string;
-    };
-    UNKNOWN_ERROR: {
-        code: string;
-        message: string;
-    };
+export const MessagingErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_RECIPIENT: "invalid-recipient";
+    readonly INVALID_PAYLOAD: "invalid-payload";
+    readonly INVALID_DATA_PAYLOAD_KEY: "invalid-data-payload-key";
+    readonly PAYLOAD_SIZE_LIMIT_EXCEEDED: "payload-size-limit-exceeded";
+    readonly INVALID_OPTIONS: "invalid-options";
+    readonly INVALID_REGISTRATION_TOKEN: "invalid-registration-token";
+    readonly REGISTRATION_TOKEN_NOT_REGISTERED: "registration-token-not-registered";
+    readonly MISMATCHED_CREDENTIAL: "mismatched-credential";
+    readonly INVALID_PACKAGE_NAME: "invalid-package-name";
+    readonly DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded";
+    readonly TOPICS_MESSAGE_RATE_EXCEEDED: "topics-message-rate-exceeded";
+    readonly MESSAGE_RATE_EXCEEDED: "message-rate-exceeded";
+    readonly THIRD_PARTY_AUTH_ERROR: "third-party-auth-error";
+    readonly TOO_MANY_TOPICS: "too-many-topics";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly SERVER_UNAVAILABLE: "server-unavailable";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly UNKNOWN_ERROR: "unknown-error";
 };
+
+// @public
+export type MessagingErrorCode = typeof MessagingErrorCode[keyof typeof MessagingErrorCode];
 
 // @public
 export interface MessagingOptions {

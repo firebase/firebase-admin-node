@@ -81,10 +81,10 @@ function mockSendRequest(messageId = 'projects/projec_id/messages/message_id'): 
 function mockHttp2SendRequestResponse(messageId = 'projects/projec_id/messages/message_id'): mocks.MockHttp2Response {
   return {
     headers: {
-      ':status': 200, 
+      ':status': 200,
     },
     data: Buffer.from(JSON.stringify({ name: `${messageId}` })),
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockSendError(
@@ -118,14 +118,14 @@ function mockHttp2SendRequestError(
       'content-type': contentType
     },
     data: Buffer.from(response)
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
-function mockHttp2Error(streamError?: any, sessionError?:any): mocks.MockHttp2Response {
+function mockHttp2Error(streamError?: any, sessionError?: any): mocks.MockHttp2Response {
   return {
     streamError: streamError,
     sessionError: sessionError
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockErrorResponse(
@@ -211,14 +211,14 @@ describe('Messaging', () => {
   let messaging: Messaging;
   let legacyMessaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
-  let mockedHttp2Responses: mocks.MockHttp2Response[] = []
+  let mockedHttp2Responses: mocks.MockHttp2Response[] = [];
   const http2Mocker: mocks.Http2Mocker = new mocks.Http2Mocker();
   let httpsRequestStub: sinon.SinonStub;
   let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
-  let messagingService: { [key: string]: any };
-  let nullAccessTokenMessagingService: { [key: string]: any };
+  let messagingService: { [key: string]: any; };
+  let nullAccessTokenMessagingService: { [key: string]: any; };
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
@@ -250,7 +250,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-    http2Mocker.done()
+    http2Mocker.done();
     mockedHttp2Responses = [];
     getTokenStub.restore();
     return mockApp.delete();
@@ -518,7 +518,7 @@ describe('Messaging', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([invalidMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -541,7 +541,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -560,7 +560,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       const message = {
         token: 'a',
         android: {
@@ -594,7 +594,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -619,8 +619,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -636,15 +636,15 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
-      return nullAccessTokenMessaging.sendEach(
-        [validMessage, validMessage],
-      ).then((response: BatchResponse) => {
-        expect(response.failureCount).to.equal(2);
-        response.responses.forEach(resp => checkSendResponseFailure(
-          resp, 'app/invalid-credential'));
+      'returns null access tokens', () => {
+        return nullAccessTokenMessaging.sendEach(
+          [validMessage, validMessage],
+        ).then((response: BatchResponse) => {
+          expect(response.failureCount).to.equal(2);
+          response.responses.forEach(resp => checkSendResponseFailure(
+            resp, 'app/invalid-credential'));
+        });
       });
-    });
 
     it('should expose the FCM error code in a detailed error via BatchResponse', () => {
       const messageIds = [
@@ -664,8 +664,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -712,7 +712,7 @@ describe('Messaging', () => {
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
 
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
 
       return legacyMessaging.sendEach(messages)
         .then((response: BatchResponse) => {
@@ -733,8 +733,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], false)
         .then((response: BatchResponse) => {
@@ -755,8 +755,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       const message = {
         token: 'a',
@@ -793,8 +793,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -822,9 +822,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -842,14 +842,14 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
-      return nullAccessTokenMessaging.sendEach(
-        [validMessage, validMessage], false).then((response: BatchResponse) => {
-        expect(response.failureCount).to.equal(2);
-        response.responses.forEach(resp => checkSendResponseFailure(
-          resp, 'app/invalid-credential'));
+      'returns null access tokens using HTTP/2', () => {
+        return nullAccessTokenMessaging.sendEach(
+          [validMessage, validMessage], false).then((response: BatchResponse) => {
+            expect(response.failureCount).to.equal(2);
+            response.responses.forEach(resp => checkSendResponseFailure(
+              resp, 'app/invalid-credential'));
+          });
       });
-    });
 
     it('should expose the FCM error code in a detailed error via BatchResponse using HTTP/2', () => {
       const messageIds = [
@@ -870,9 +870,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -898,7 +898,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage, validMessage], false
@@ -913,13 +913,13 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse containing session errors when session fails using HTTP/2', () => {
-      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'))
-      const sessionError = 'MOCK_SESSION_ERROR'
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'));
+      const sessionError = 'MOCK_SESSION_ERROR';
       mockedHttp2Responses.push(mockHttp2Error(
         new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
         new Error(sessionError)
       ));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage], true
@@ -946,40 +946,40 @@ describe('Messaging', () => {
 
     it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur' +
       ' using HTTP/2', () => {
-      const sessionError1 = 'MOCK_SESSION_ERROR_1';
-      const sessionError2 = 'MOCK_SESSION_ERROR_2';
-      
-      mockedHttp2Responses.push(mockHttp2Error(
-        new Error('MOCK_STREAM_ERROR_1'),
-        new Error(sessionError1)
-      ));
-      mockedHttp2Responses.push(mockHttp2Error(
-        new Error('MOCK_STREAM_ERROR_2'),
-        new Error(sessionError2)
-      ));
-      
-      http2Mocker.http2Stub(mockedHttp2Responses);
+        const sessionError1 = 'MOCK_SESSION_ERROR_1';
+        const sessionError2 = 'MOCK_SESSION_ERROR_2';
 
-      return messaging.sendEach(
-        [validMessage, validMessage], true
-      ).then((response: BatchResponse) => {
-        expect(http2Mocker.requests.length).to.equal(2);
-        expect(response.failureCount).to.equal(2);
-        
-        const failure = response.responses[0];
-        expect(failure.success).to.be.false;
-        expect(failure.error!.code).to.equal('messaging/unknown-error');
-        
-        const cause = failure.error!.cause;
-        expect(cause).to.not.be.undefined;
-        expect(cause!.constructor.name).to.equal('AggregateError');
-        expect((cause as any).errors).to.be.an.instanceOf(Array);
-        expect((cause as any).errors.length).to.equal(3);
-        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR');
-        expect((cause as any).errors[1].message).to.contain(sessionError1);
-        expect((cause as any).errors[2].message).to.contain(sessionError2);
+        mockedHttp2Responses.push(mockHttp2Error(
+          new Error('MOCK_STREAM_ERROR_1'),
+          new Error(sessionError1)
+        ));
+        mockedHttp2Responses.push(mockHttp2Error(
+          new Error('MOCK_STREAM_ERROR_2'),
+          new Error(sessionError2)
+        ));
+
+        http2Mocker.http2Stub(mockedHttp2Responses);
+
+        return messaging.sendEach(
+          [validMessage, validMessage], true
+        ).then((response: BatchResponse) => {
+          expect(http2Mocker.requests.length).to.equal(2);
+          expect(response.failureCount).to.equal(2);
+
+          const failure = response.responses[0];
+          expect(failure.success).to.be.false;
+          expect(failure.error!.code).to.equal('messaging/unknown-error');
+
+          const cause = failure.error!.cause;
+          expect(cause).to.not.be.undefined;
+          expect(cause!.constructor.name).to.equal('AggregateError');
+          expect((cause as any).errors).to.be.an.instanceOf(Array);
+          expect((cause as any).errors.length).to.equal(3);
+          expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR');
+          expect((cause as any).errors[1].message).to.contain(sessionError1);
+          expect((cause as any).errors[2].message).to.contain(sessionError2);
+        });
       });
-    });
 
     // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types using HTTP/2', () => {
@@ -993,11 +993,11 @@ describe('Messaging', () => {
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(messages, false)
-        .then ((response: BatchResponse) => {
+        .then((response: BatchResponse) => {
           expect(http2Mocker.requests.length).to.equal(3);
           expect(response.successCount).to.equal(3);
           expect(response.failureCount).to.equal(0);
@@ -1149,7 +1149,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1174,7 +1174,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1205,8 +1205,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1222,15 +1222,15 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
-      return nullAccessTokenMessaging.sendEachForMulticast(
-        { tokens: ['a', 'a'] },
-      ).then((response: BatchResponse) => {
-        expect(response.failureCount).to.equal(2);
-        response.responses.forEach(resp => checkSendResponseFailure(
-          resp, 'app/invalid-credential'));
+      'returns null access tokens', () => {
+        return nullAccessTokenMessaging.sendEachForMulticast(
+          { tokens: ['a', 'a'] },
+        ).then((response: BatchResponse) => {
+          expect(response.failureCount).to.equal(2);
+          response.responses.forEach(resp => checkSendResponseFailure(
+            resp, 'app/invalid-credential'));
+        });
       });
-    });
 
     it('should expose the FCM error code in a detailed error via BatchResponse', () => {
       const messageIds = [
@@ -1250,8 +1250,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1292,8 +1292,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1318,8 +1318,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1350,9 +1350,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1368,15 +1368,15 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
-      return nullAccessTokenMessaging.sendEachForMulticast(
-        { tokens: ['a', 'a'] }, false
-      ).then((response: BatchResponse) => {
-        expect(response.failureCount).to.equal(2);
-        response.responses.forEach(resp => checkSendResponseFailure(
-          resp, 'app/invalid-credential'));
+      'returns null access tokens using HTTP/2', () => {
+        return nullAccessTokenMessaging.sendEachForMulticast(
+          { tokens: ['a', 'a'] }, false
+        ).then((response: BatchResponse) => {
+          expect(response.failureCount).to.equal(2);
+          response.responses.forEach(resp => checkSendResponseFailure(
+            resp, 'app/invalid-credential'));
+        });
       });
-    });
 
     it('should expose the FCM error code in a detailed error via BatchResponse using HTTP/2', () => {
       const messageIds = [
@@ -1396,9 +1396,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1422,7 +1422,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast(
         { tokens: ['a', 'a', 'a'] }, false
       ).then((response: BatchResponse) => {
@@ -1453,7 +1453,7 @@ describe('Messaging', () => {
 
     const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
-      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+      it(`should throw given an invalid ttl: ${ttl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1468,7 +1468,7 @@ describe('Messaging', () => {
 
     const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1484,7 +1484,7 @@ describe('Messaging', () => {
     });
 
     invalidImages.forEach((imageUrl) => {
-      it(`should throw given an invalid imageUrl: ${ imageUrl }`, () => {
+      it(`should throw given an invalid imageUrl: ${imageUrl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1530,7 +1530,7 @@ describe('Messaging', () => {
     const invalidVibrateTimings = [[null, 500], [-100]];
     invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
       const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
-      it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+      it(`should throw given an null or negative vibrateTimingsMillis: ${vibrateTimingsMillis}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1560,7 +1560,7 @@ describe('Messaging', () => {
     });
 
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1769,14 +1769,14 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false]
+    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false];
     invalidApnsLiveActivityTokens.forEach((arg) => {
       it(`should throw given invalid apns live activity token: ${JSON.stringify(arg)}`, () => {
         expect(() => {
           messaging.send({ apns: { liveActivityToken: arg }, topic: 'test' });
         }).to.throw('apns.liveActivityToken must be a string value');
       });
-    })
+    });
 
     it('should throw given empty apns live activity token', () => {
       expect(() => {
@@ -1854,757 +1854,757 @@ describe('Messaging', () => {
       req: any;
       expectedReq?: any;
     }> = [
-      {
-        label: 'Generic data message',
-        req: {
-          data: {
-            k1: 'v1',
-            k2: 'v2',
-          },
-        },
-      },
-      {
-        label: 'Generic notification message',
-        req: {
-          notification: {
-            title: 'test.title',
-            body: 'test.body',
-            imageUrl: 'https://example.com/image.png',
-          },
-        },
-        expectedReq: {
-          notification: {
-            title: 'test.title',
-            body: 'test.body',
-            image: 'https://example.com/image.png',
-          },
-        },
-      },
-      {
-        label: 'Generic fcmOptions message',
-        req: {
-          fcmOptions: {
-            analyticsLabel: 'test.analytics',
-          },
-        },
-      },
-      {
-        label: 'Android data message',
-        req: {
-          android: {
+        {
+          label: 'Generic data message',
+          req: {
             data: {
               k1: 'v1',
               k2: 'v2',
             },
           },
         },
-      },
-      {
-        label: 'Android notification message',
-        req: {
-          android: {
+        {
+          label: 'Generic notification message',
+          req: {
             notification: {
               title: 'test.title',
               body: 'test.body',
-              icon: 'test.icon',
-              color: '#112233',
-              sound: 'test.sound',
-              tag: 'test.tag',
               imageUrl: 'https://example.com/image.png',
-              ticker: 'test.ticker',
-              sticky: true,
-              visibility: 'private',
-              proxy: 'deny',
             },
           },
-        },
-        expectedReq: {
-          android: {
+          expectedReq: {
             notification: {
               title: 'test.title',
               body: 'test.body',
-              icon: 'test.icon',
-              color: '#112233',
-              sound: 'test.sound',
-              tag: 'test.tag',
               image: 'https://example.com/image.png',
-              ticker: 'test.ticker',
-              sticky: true,
-              visibility: 'PRIVATE',
-              proxy: 'DENY'
             },
           },
         },
-      },
-      {
-        label: 'Android camel cased properties',
-        req: {
-          android: {
-            collapseKey: 'test.key',
-            restrictedPackageName: 'test.package',
-            directBootOk: true,
-            bandwidthConstrainedOk: true,
-            restrictedSatelliteOk: true,
-            notification: {
-              clickAction: 'test.click.action',
-              titleLocKey: 'title.loc.key',
-              titleLocArgs: ['arg1', 'arg2'],
-              bodyLocKey: 'body.loc.key',
-              bodyLocArgs: ['arg1', 'arg2'],
-              channelId: 'test.channel',
-              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
-              localOnly: true,
-              priority: 'high',
-              vibrateTimingsMillis: [100, 50, 250],
-              defaultVibrateTimings: false,
-              defaultSound: true,
-              lightSettings: {
-                color: '#AABBCCDD',
-                lightOnDurationMillis: 200,
-                lightOffDurationMillis: 300,
-              },
-              defaultLightSettings: false,
-              notificationCount: 1,
-            },
-          },
-        },
-        expectedReq: {
-          android: {
-            collapse_key: 'test.key',
-            restricted_package_name: 'test.package',
-            direct_boot_ok: true,
-            bandwidth_constrained_ok: true,
-            restricted_satellite_ok: true,
-            notification: {
-              click_action: 'test.click.action',
-              title_loc_key: 'title.loc.key',
-              title_loc_args: ['arg1', 'arg2'],
-              body_loc_key: 'body.loc.key',
-              body_loc_args: ['arg1', 'arg2'],
-              channel_id: 'test.channel',
-              event_time: '2019-10-20T18:30:00.000Z',
-              local_only: true,
-              notification_priority: 'PRIORITY_HIGH',
-              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
-              default_vibrate_timings: false,
-              default_sound: true,
-              light_settings: {
-                color: {
-                  red: 0.6666666666666666,
-                  green: 0.7333333333333333,
-                  blue: 0.8,
-                  alpha: 0.8666666666666667,
-                },
-                light_on_duration: '0.200000000s',
-                light_off_duration: '0.300000000s',
-              },
-              default_light_settings: false,
-              notification_count: 1,
-            },
-          },
-        },
-      },
-      {
-        label: 'Android TTL',
-        req: {
-          android: {
-            priority: 'high',
-            collapseKey: 'test.key',
-            restrictedPackageName: 'test.package',
-            ttl: 5000,
-          },
-        },
-        expectedReq: {
-          android: {
-            priority: 'high',
-            collapse_key: 'test.key',
-            restricted_package_name: 'test.package',
-            ttl: '5s',
-          },
-        },
-      },
-      {
-        label: 'All Android properties',
-        req: {
-          android: {
-            priority: 'high',
-            collapseKey: 'test.key',
-            restrictedPackageName: 'test.package',
-            directBootOk: true,
-            bandwidthConstrainedOk: true,
-            restrictedSatelliteOk: true,
-            ttl: 5,
-            data: {
-              k1: 'v1',
-              k2: 'v2',
-            },
-            notification: {
-              title: 'test.title',
-              body: 'test.body',
-              icon: 'test.icon',
-              color: '#112233',
-              sound: 'test.sound',
-              tag: 'test.tag',
-              imageUrl: 'https://example.com/image.png',
-              clickAction: 'test.click.action',
-              titleLocKey: 'title.loc.key',
-              titleLocArgs: ['arg1', 'arg2'],
-              bodyLocKey: 'body.loc.key',
-              bodyLocArgs: ['arg1', 'arg2'],
-              channelId: 'test.channel',
-              ticker: 'test.ticker',
-              sticky: true,
-              visibility: 'private',
-              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
-              localOnly: true,
-              priority: 'high',
-              vibrateTimingsMillis: [100, 50, 250],
-              defaultVibrateTimings: false,
-              defaultSound: true,
-              lightSettings: {
-                color: '#AABBCC',
-                lightOnDurationMillis: 200,
-                lightOffDurationMillis: 300,
-              },
-              defaultLightSettings: false,
-              notificationCount: 1,
-              proxy: 'if_priority_lowered',
-            },
+        {
+          label: 'Generic fcmOptions message',
+          req: {
             fcmOptions: {
               analyticsLabel: 'test.analytics',
             },
           },
         },
-        expectedReq: {
-          android: {
-            priority: 'high',
-            collapse_key: 'test.key',
-            restricted_package_name: 'test.package',
-            direct_boot_ok: true,
-            bandwidth_constrained_ok: true,
-            restricted_satellite_ok: true,
-            ttl: '0.005000000s', // 5 ms = 5,000,000 ns
-            data: {
-              k1: 'v1',
-              k2: 'v2',
-            },
-            notification: {
-              title: 'test.title',
-              body: 'test.body',
-              icon: 'test.icon',
-              color: '#112233',
-              sound: 'test.sound',
-              tag: 'test.tag',
-              image: 'https://example.com/image.png',
-              click_action: 'test.click.action',
-              title_loc_key: 'title.loc.key',
-              title_loc_args: ['arg1', 'arg2'],
-              body_loc_key: 'body.loc.key',
-              body_loc_args: ['arg1', 'arg2'],
-              channel_id: 'test.channel',
-              ticker: 'test.ticker',
-              sticky: true,
-              visibility: 'PRIVATE',
-              event_time: '2019-10-20T18:30:00.000Z',
-              local_only: true,
-              notification_priority: 'PRIORITY_HIGH',
-              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
-              default_vibrate_timings: false,
-              default_sound: true,
-              light_settings: {
-                color: {
-                  red: 0.6666666666666666,
-                  green: 0.7333333333333333,
-                  blue: 0.8,
-                  alpha: 1,
-                },
-                light_on_duration: '0.200000000s',
-                light_off_duration: '0.300000000s',
-              },
-              default_light_settings: false,
-              notification_count: 1,
-              proxy: 'IF_PRIORITY_LOWERED',
-            },
-            fcmOptions: {
-              analyticsLabel: 'test.analytics',
-            },
-          },
-        },
-      },
-      {
-        label: 'Webpush data message',
-        req: {
-          webpush: {
-            data: {
-              k1: 'v1',
-              k2: 'v2',
-            },
-          },
-        },
-      },
-      {
-        label: 'Webpush notification message',
-        req: {
-          webpush: {
-            notification: {
-              title: 'test.title',
-              body: 'test.body',
-              icon: 'test.icon',
-            },
-          },
-        },
-      },
-      {
-        label: 'All Webpush properties',
-        req: {
-          webpush: {
-            headers: {
-              h1: 'v1',
-              h2: 'v2',
-            },
-            data: {
-              k1: 'v1',
-              k2: 'v2',
-            },
-            notification: {
-              title: 'test.title',
-              body: 'test.body',
-              icon: 'test.icon',
-              actions: [{
-                action: 'test.action.1',
-                title: 'test.action.1.title',
-                icon: 'test.action.1.icon',
-              }, {
-                action: 'test.action.2',
-                title: 'test.action.2.title',
-                icon: 'test.action.2.icon',
-              }],
-              badge: 'test.badge',
+        {
+          label: 'Android data message',
+          req: {
+            android: {
               data: {
-                key: 'value',
-              },
-              dir: 'auto',
-              image: 'test.image',
-              requireInteraction: true,
-            },
-            fcmOptions: {
-              link: 'https://example.com',
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS headers only',
-        req: {
-          apns: {
-            headers: {
-              k1: 'v1',
-              k2: 'v2',
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS string alert',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                alert: 'test.alert',
+                k1: 'v1',
+                k2: 'v2',
               },
             },
           },
         },
-      },
-      {
-        label: 'All APNS properties',
-        req: {
-          apns: {
-            headers: {
-              h1: 'v1',
-              h2: 'v2',
-            },
-            payload: {
-              aps: {
-                alert: {
-                  title: 'title',
-                  subtitle: 'subtitle',
-                  body: 'body',
-                  titleLocKey: 'title.loc.key',
-                  titleLocArgs: ['arg1', 'arg2'],
-                  subtitleLocKey: 'subtitle.loc.key',
-                  subtitleLocArgs: ['arg1', 'arg2'],
-                  locKey: 'body.loc.key',
-                  locArgs: ['arg1', 'arg2'],
-                  actionLocKey: 'action.loc.key',
-                  launchImage: 'image',
-                },
-                badge: 42,
+        {
+          label: 'Android notification message',
+          req: {
+            android: {
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
                 sound: 'test.sound',
-                category: 'test.category',
-                contentAvailable: true,
-                mutableContent: true,
-                threadId: 'thread.id',
+                tag: 'test.tag',
+                imageUrl: 'https://example.com/image.png',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'private',
+                proxy: 'deny',
               },
-              customKey1: 'custom.value',
-              customKey2: { nested: 'value' },
             },
-            fcmOptions: {
-              analyticsLabel: 'test.analytics',
-              imageUrl: 'https://example.com/image.png',
+          },
+          expectedReq: {
+            android: {
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
+                sound: 'test.sound',
+                tag: 'test.tag',
+                image: 'https://example.com/image.png',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'PRIVATE',
+                proxy: 'DENY'
+              },
             },
           },
         },
-        expectedReq: {
-          apns: {
-            headers: {
-              h1: 'v1',
-              h2: 'v2',
-            },
-            payload: {
-              aps: {
-                'alert': {
-                  'title': 'title',
-                  'subtitle': 'subtitle',
-                  'body': 'body',
-                  'title-loc-key': 'title.loc.key',
-                  'title-loc-args': ['arg1', 'arg2'],
-                  'subtitle-loc-key': 'subtitle.loc.key',
-                  'subtitle-loc-args': ['arg1', 'arg2'],
-                  'loc-key': 'body.loc.key',
-                  'loc-args': ['arg1', 'arg2'],
-                  'action-loc-key': 'action.loc.key',
-                  'launch-image': 'image',
+        {
+          label: 'Android camel cased properties',
+          req: {
+            android: {
+              collapseKey: 'test.key',
+              restrictedPackageName: 'test.package',
+              directBootOk: true,
+              bandwidthConstrainedOk: true,
+              restrictedSatelliteOk: true,
+              notification: {
+                clickAction: 'test.click.action',
+                titleLocKey: 'title.loc.key',
+                titleLocArgs: ['arg1', 'arg2'],
+                bodyLocKey: 'body.loc.key',
+                bodyLocArgs: ['arg1', 'arg2'],
+                channelId: 'test.channel',
+                eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+                localOnly: true,
+                priority: 'high',
+                vibrateTimingsMillis: [100, 50, 250],
+                defaultVibrateTimings: false,
+                defaultSound: true,
+                lightSettings: {
+                  color: '#AABBCCDD',
+                  lightOnDurationMillis: 200,
+                  lightOffDurationMillis: 300,
                 },
-                'badge': 42,
-                'sound': 'test.sound',
-                'category': 'test.category',
-                'content-available': 1,
-                'mutable-content': 1,
-                'thread-id': 'thread.id',
+                defaultLightSettings: false,
+                notificationCount: 1,
               },
-              customKey1: 'custom.value',
-              customKey2: { nested: 'value' },
-            },
-            fcmOptions: {
-              analyticsLabel: 'test.analytics',
-              image: 'https://example.com/image.png',
             },
           },
-        },
-      },
-      {
-        label: 'APNS critical sound',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  critical: true,
-                  name: 'test.sound',
-                  volume: 0.5,
+          expectedReq: {
+            android: {
+              collapse_key: 'test.key',
+              restricted_package_name: 'test.package',
+              direct_boot_ok: true,
+              bandwidth_constrained_ok: true,
+              restricted_satellite_ok: true,
+              notification: {
+                click_action: 'test.click.action',
+                title_loc_key: 'title.loc.key',
+                title_loc_args: ['arg1', 'arg2'],
+                body_loc_key: 'body.loc.key',
+                body_loc_args: ['arg1', 'arg2'],
+                channel_id: 'test.channel',
+                event_time: '2019-10-20T18:30:00.000Z',
+                local_only: true,
+                notification_priority: 'PRIORITY_HIGH',
+                vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+                default_vibrate_timings: false,
+                default_sound: true,
+                light_settings: {
+                  color: {
+                    red: 0.6666666666666666,
+                    green: 0.7333333333333333,
+                    blue: 0.8,
+                    alpha: 0.8666666666666667,
+                  },
+                  light_on_duration: '0.200000000s',
+                  light_off_duration: '0.300000000s',
                 },
+                default_light_settings: false,
+                notification_count: 1,
               },
             },
           },
         },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  critical: 1,
-                  name: 'test.sound',
-                  volume: 0.5,
-                },
-              },
+        {
+          label: 'Android TTL',
+          req: {
+            android: {
+              priority: 'high',
+              collapseKey: 'test.key',
+              restrictedPackageName: 'test.package',
+              ttl: 5000,
+            },
+          },
+          expectedReq: {
+            android: {
+              priority: 'high',
+              collapse_key: 'test.key',
+              restricted_package_name: 'test.package',
+              ttl: '5s',
             },
           },
         },
-      },
-      {
-        label: 'APNS critical sound name only',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  name: 'test.sound',
-                },
-              },
-            },
-          },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  name: 'test.sound',
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS critical sound explicitly false',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  critical: false,
-                  name: 'test.sound',
-                  volume: 0.5,
-                },
-              },
-            },
-          },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {
-                sound: {
-                  name: 'test.sound',
-                  volume: 0.5,
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS contentAvailable explicitly false',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                contentAvailable: false,
-              },
-            },
-          },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {},
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS content-available set explicitly',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                'content-available': 1,
-              },
-            },
-          },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: { 'content-available': 1 },
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS mutableContent explicitly false',
-        req: {
-          apns: {
-            payload: {
-              aps: {
-                mutableContent: false,
-              },
-            },
-          },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {},
-            },
-          },
-        },
-      },
-      {
-        label: 'APNS custom fields',
-        req: {
-          apns: {
-            payload: {
-              aps: {
+        {
+          label: 'All Android properties',
+          req: {
+            android: {
+              priority: 'high',
+              collapseKey: 'test.key',
+              restrictedPackageName: 'test.package',
+              directBootOk: true,
+              bandwidthConstrainedOk: true,
+              restrictedSatelliteOk: true,
+              ttl: 5,
+              data: {
                 k1: 'v1',
-                k2: true,
+                k2: 'v2',
+              },
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
+                sound: 'test.sound',
+                tag: 'test.tag',
+                imageUrl: 'https://example.com/image.png',
+                clickAction: 'test.click.action',
+                titleLocKey: 'title.loc.key',
+                titleLocArgs: ['arg1', 'arg2'],
+                bodyLocKey: 'body.loc.key',
+                bodyLocArgs: ['arg1', 'arg2'],
+                channelId: 'test.channel',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'private',
+                eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+                localOnly: true,
+                priority: 'high',
+                vibrateTimingsMillis: [100, 50, 250],
+                defaultVibrateTimings: false,
+                defaultSound: true,
+                lightSettings: {
+                  color: '#AABBCC',
+                  lightOnDurationMillis: 200,
+                  lightOffDurationMillis: 300,
+                },
+                defaultLightSettings: false,
+                notificationCount: 1,
+                proxy: 'if_priority_lowered',
+              },
+              fcmOptions: {
+                analyticsLabel: 'test.analytics',
               },
             },
           },
-        },
-        expectedReq: {
-          apns: {
-            payload: {
-              aps: {
+          expectedReq: {
+            android: {
+              priority: 'high',
+              collapse_key: 'test.key',
+              restricted_package_name: 'test.package',
+              direct_boot_ok: true,
+              bandwidth_constrained_ok: true,
+              restricted_satellite_ok: true,
+              ttl: '0.005000000s', // 5 ms = 5,000,000 ns
+              data: {
                 k1: 'v1',
-                k2: true,
+                k2: 'v2',
+              },
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
+                sound: 'test.sound',
+                tag: 'test.tag',
+                image: 'https://example.com/image.png',
+                click_action: 'test.click.action',
+                title_loc_key: 'title.loc.key',
+                title_loc_args: ['arg1', 'arg2'],
+                body_loc_key: 'body.loc.key',
+                body_loc_args: ['arg1', 'arg2'],
+                channel_id: 'test.channel',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'PRIVATE',
+                event_time: '2019-10-20T18:30:00.000Z',
+                local_only: true,
+                notification_priority: 'PRIORITY_HIGH',
+                vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+                default_vibrate_timings: false,
+                default_sound: true,
+                light_settings: {
+                  color: {
+                    red: 0.6666666666666666,
+                    green: 0.7333333333333333,
+                    blue: 0.8,
+                    alpha: 1,
+                  },
+                  light_on_duration: '0.200000000s',
+                  light_off_duration: '0.300000000s',
+                },
+                default_light_settings: false,
+                notification_count: 1,
+                proxy: 'IF_PRIORITY_LOWERED',
+              },
+              fcmOptions: {
+                analyticsLabel: 'test.analytics',
               },
             },
           },
         },
-      },
-      {
-        label: 'APNS Start LiveActivity',
-        req: {
-          apns: {
-            liveActivityToken: 'live-activity-token',
-            headers:{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                event: 'start',
-                'content-state': {
-                  'demo': 1
-                },
-                'attributes-type': 'DemoAttributes',
-                'attributes': {
-                  'demoAttribute': 1,
-                },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
+        {
+          label: 'Webpush data message',
+          req: {
+            webpush: {
+              data: {
+                k1: 'v1',
+                k2: 'v2',
               },
             },
           },
         },
-        expectedReq: {
-          apns: {
-            live_activity_token: 'live-activity-token',
-            headers:{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                event: 'start',
-                'content-state': {
-                  'demo': 1
-                },
-                'attributes-type': 'DemoAttributes',
-                'attributes': {
-                  'demoAttribute': 1,
-                },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
+        {
+          label: 'Webpush notification message',
+          req: {
+            webpush: {
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
               },
             },
           },
         },
-      },
-      {
-        label: 'APNS Update LiveActivity',
-        req: {
-          apns: {
-            liveActivityToken: 'live-activity-token',
-            headers:{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                event: 'update',
-                'content-state': {
-                  'test1': 100,
-                  'test2': 'demo'
+        {
+          label: 'All Webpush properties',
+          req: {
+            webpush: {
+              headers: {
+                h1: 'v1',
+                h2: 'v2',
+              },
+              data: {
+                k1: 'v1',
+                k2: 'v2',
+              },
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                actions: [{
+                  action: 'test.action.1',
+                  title: 'test.action.1.title',
+                  icon: 'test.action.1.icon',
+                }, {
+                  action: 'test.action.2',
+                  title: 'test.action.2.title',
+                  icon: 'test.action.2.icon',
+                }],
+                badge: 'test.badge',
+                data: {
+                  key: 'value',
                 },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
+                dir: 'auto',
+                image: 'test.image',
+                requireInteraction: true,
+              },
+              fcmOptions: {
+                link: 'https://example.com',
               },
             },
           },
         },
-        expectedReq: {
-          apns: {
-            live_activity_token: 'live-activity-token',
-            headers:{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                event: 'update',
-                'content-state': {
-                  'test1': 100,
-                  'test2': 'demo'
-                },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
+        {
+          label: 'APNS headers only',
+          req: {
+            apns: {
+              headers: {
+                k1: 'v1',
+                k2: 'v2',
               },
             },
           },
         },
-      },
-      {
-        label: 'APNS End LiveActivity',
-        req: {
-          apns: {
-            liveActivityToken: 'live-activity-token',
-            'headers':{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                'dismissal-date': 1746475860808 + 60,
-                event: 'end',
-                'content-state': {
-                  'test1': 100,
-                  'test2': 'demo'
+        {
+          label: 'APNS string alert',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  alert: 'test.alert',
                 },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
               },
             },
           },
         },
-        expectedReq: {
-          apns: {
-            live_activity_token: 'live-activity-token',
-            'headers':{
-              'apns-priority': '10'
-            },
-            payload: {
-              aps: {
-                timestamp: 1746475860808,
-                'dismissal-date': 1746475860808 + 60,
-                event: 'end',
-                'content-state': {
-                  'test1': 100,
-                  'test2': 'demo'
+        {
+          label: 'All APNS properties',
+          req: {
+            apns: {
+              headers: {
+                h1: 'v1',
+                h2: 'v2',
+              },
+              payload: {
+                aps: {
+                  alert: {
+                    title: 'title',
+                    subtitle: 'subtitle',
+                    body: 'body',
+                    titleLocKey: 'title.loc.key',
+                    titleLocArgs: ['arg1', 'arg2'],
+                    subtitleLocKey: 'subtitle.loc.key',
+                    subtitleLocArgs: ['arg1', 'arg2'],
+                    locKey: 'body.loc.key',
+                    locArgs: ['arg1', 'arg2'],
+                    actionLocKey: 'action.loc.key',
+                    launchImage: 'image',
+                  },
+                  badge: 42,
+                  sound: 'test.sound',
+                  category: 'test.category',
+                  contentAvailable: true,
+                  mutableContent: true,
+                  threadId: 'thread.id',
                 },
-                'alert': {
-                  'title': 'test title',
-                  'body': 'test body'
-                }
+                customKey1: 'custom.value',
+                customKey2: { nested: 'value' },
+              },
+              fcmOptions: {
+                analyticsLabel: 'test.analytics',
+                imageUrl: 'https://example.com/image.png',
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              headers: {
+                h1: 'v1',
+                h2: 'v2',
+              },
+              payload: {
+                aps: {
+                  'alert': {
+                    'title': 'title',
+                    'subtitle': 'subtitle',
+                    'body': 'body',
+                    'title-loc-key': 'title.loc.key',
+                    'title-loc-args': ['arg1', 'arg2'],
+                    'subtitle-loc-key': 'subtitle.loc.key',
+                    'subtitle-loc-args': ['arg1', 'arg2'],
+                    'loc-key': 'body.loc.key',
+                    'loc-args': ['arg1', 'arg2'],
+                    'action-loc-key': 'action.loc.key',
+                    'launch-image': 'image',
+                  },
+                  'badge': 42,
+                  'sound': 'test.sound',
+                  'category': 'test.category',
+                  'content-available': 1,
+                  'mutable-content': 1,
+                  'thread-id': 'thread.id',
+                },
+                customKey1: 'custom.value',
+                customKey2: { nested: 'value' },
+              },
+              fcmOptions: {
+                analyticsLabel: 'test.analytics',
+                image: 'https://example.com/image.png',
               },
             },
           },
         },
-      },
-    ];
+        {
+          label: 'APNS critical sound',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    critical: true,
+                    name: 'test.sound',
+                    volume: 0.5,
+                  },
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    critical: 1,
+                    name: 'test.sound',
+                    volume: 0.5,
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS critical sound name only',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    name: 'test.sound',
+                  },
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    name: 'test.sound',
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS critical sound explicitly false',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    critical: false,
+                    name: 'test.sound',
+                    volume: 0.5,
+                  },
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {
+                  sound: {
+                    name: 'test.sound',
+                    volume: 0.5,
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS contentAvailable explicitly false',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  contentAvailable: false,
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {},
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS content-available set explicitly',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  'content-available': 1,
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: { 'content-available': 1 },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS mutableContent explicitly false',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  mutableContent: false,
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {},
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS custom fields',
+          req: {
+            apns: {
+              payload: {
+                aps: {
+                  k1: 'v1',
+                  k2: true,
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              payload: {
+                aps: {
+                  k1: 'v1',
+                  k2: true,
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS Start LiveActivity',
+          req: {
+            apns: {
+              liveActivityToken: 'live-activity-token',
+              headers: {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  event: 'start',
+                  'content-state': {
+                    'demo': 1
+                  },
+                  'attributes-type': 'DemoAttributes',
+                  'attributes': {
+                    'demoAttribute': 1,
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              live_activity_token: 'live-activity-token',
+              headers: {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  event: 'start',
+                  'content-state': {
+                    'demo': 1
+                  },
+                  'attributes-type': 'DemoAttributes',
+                  'attributes': {
+                    'demoAttribute': 1,
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS Update LiveActivity',
+          req: {
+            apns: {
+              liveActivityToken: 'live-activity-token',
+              headers: {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  event: 'update',
+                  'content-state': {
+                    'test1': 100,
+                    'test2': 'demo'
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              live_activity_token: 'live-activity-token',
+              headers: {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  event: 'update',
+                  'content-state': {
+                    'test1': 100,
+                    'test2': 'demo'
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+        },
+        {
+          label: 'APNS End LiveActivity',
+          req: {
+            apns: {
+              liveActivityToken: 'live-activity-token',
+              'headers': {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  'dismissal-date': 1746475860808 + 60,
+                  event: 'end',
+                  'content-state': {
+                    'test1': 100,
+                    'test2': 'demo'
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+          expectedReq: {
+            apns: {
+              live_activity_token: 'live-activity-token',
+              'headers': {
+                'apns-priority': '10'
+              },
+              payload: {
+                aps: {
+                  timestamp: 1746475860808,
+                  'dismissal-date': 1746475860808 + 60,
+                  event: 'end',
+                  'content-state': {
+                    'test1': 100,
+                    'test2': 'demo'
+                  },
+                  'alert': {
+                    'title': 'test title',
+                    'body': 'test body'
+                  }
+                },
+              },
+            },
+          },
+        },
+      ];
 
     validMessages.forEach((config) => {
       it(`should serialize well-formed Message: ${config.label}`, () => {
@@ -2656,10 +2656,10 @@ describe('Messaging', () => {
     invalidRegistrationTokens.forEach((invalidRegistrationToken) => {
       it('should throw given invalid type for registration token(s) argument: ' +
         JSON.stringify(invalidRegistrationToken), () => {
-        expect(() => {
-          messagingService[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
-        }).to.throw(invalidRegistrationTokensArgumentError);
-      });
+          expect(() => {
+            messagingService[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
+          }).to.throw(invalidRegistrationTokensArgumentError);
+        });
     });
 
     it('should throw given no registration token(s) argument', () => {
@@ -2710,7 +2710,7 @@ describe('Messaging', () => {
 
     const invalidTopics = [null, NaN, 0, 1, true, false, [], ['a', 1], {}, { a: 1 }, _.noop];
     invalidTopics.forEach((invalidTopic) => {
-      it(`should throw given invalid type for topic argument: ${ JSON.stringify(invalidTopic) }`, () => {
+      it(`should throw given invalid type for topic argument: ${JSON.stringify(invalidTopic)}`, () => {
         expect(() => {
           messagingService[methodName](mocks.messaging.registrationToken, invalidTopic as string);
         }).to.throw(invalidTopicArgumentError);
@@ -2731,7 +2731,7 @@ describe('Messaging', () => {
 
     const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
     topicsWithInvalidCharacters.forEach((invalidTopic) => {
-      it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
+      it(`should be rejected given topic argument which has invalid characters: ${invalidTopic}`, () => {
         return messagingService[methodName](mocks.messaging.registrationToken, invalidTopic)
           .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
       });
@@ -2783,7 +2783,7 @@ describe('Messaging', () => {
     });
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
-      it(`should be rejected given a ${ statusCode } text server response`, () => {
+      it(`should be rejected given a ${statusCode} text server response`, () => {
         mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
         disableRetries(messaging);
 
@@ -2816,226 +2816,226 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid registration token and topic (topic name not prefixed ' +
-       'with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+      'with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messagingService[methodName](
-        mocks.messaging.registrationToken,
-        mocks.messaging.topic,
-      );
-    });
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topic,
+        );
+      });
 
     it('should be fulfilled given a valid registration token and topic (topic name prefixed ' +
-       'with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+      'with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messagingService[methodName](
-        mocks.messaging.registrationToken,
-        mocks.messaging.topicWithPrefix,
-      );
-    });
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topicWithPrefix,
+        );
+      });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name not ' +
-       'prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
+      'prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
-      return messagingService[methodName](
-        [
-          mocks.messaging.registrationToken + '0',
-          mocks.messaging.registrationToken + '1',
-          mocks.messaging.registrationToken + '2',
-        ],
-        mocks.messaging.topic,
-      );
-    });
+        return messagingService[methodName](
+          [
+            mocks.messaging.registrationToken + '0',
+            mocks.messaging.registrationToken + '1',
+            mocks.messaging.registrationToken + '2',
+          ],
+          mocks.messaging.topic,
+        );
+      });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name ' +
-       'prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
+      'prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
-      return messagingService[methodName](
-        [
-          mocks.messaging.registrationToken + '0',
-          mocks.messaging.registrationToken + '1',
-          mocks.messaging.registrationToken + '2',
-        ],
-        mocks.messaging.topicWithPrefix,
-      );
-    });
+        return messagingService[methodName](
+          [
+            mocks.messaging.registrationToken + '0',
+            mocks.messaging.registrationToken + '1',
+            mocks.messaging.registrationToken + '2',
+          ],
+          mocks.messaging.topicWithPrefix,
+        );
+      });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+      '(topic name not prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messagingService[methodName](
-        mocks.messaging.registrationToken,
-        mocks.messaging.topic,
-      ).should.eventually.deep.equal({
-        failureCount: 0,
-        successCount: 1,
-        errors: [],
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topic,
+        ).should.eventually.deep.equal({
+          failureCount: 0,
+          successCount: 1,
+          errors: [],
+        });
       });
-    });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+      '(topic name prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messagingService[methodName](
-        mocks.messaging.registrationToken,
-        mocks.messaging.topicWithPrefix,
-      ).should.eventually.deep.equal({
-        failureCount: 0,
-        successCount: 1,
-        errors: [],
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topicWithPrefix,
+        ).should.eventually.deep.equal({
+          failureCount: 0,
+          successCount: 1,
+          errors: [],
+        });
       });
-    });
 
     it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name not prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
+      'and topic (topic name not prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
-      return messagingService[methodName](
-        [
+        return messagingService[methodName](
+          [
+            mocks.messaging.registrationToken + '0',
+            mocks.messaging.registrationToken + '1',
+            mocks.messaging.registrationToken + '2',
+          ],
+          mocks.messaging.topic,
+        ).then((response: MessagingTopicManagementResponse) => {
+          expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
+          expect(response.failureCount).to.equal(2);
+          expect(response.successCount).to.equal(1);
+          expect(response.errors).to.have.length(2);
+          expect(response.errors[0]).to.have.keys(['index', 'error']);
+          expect(response.errors[0].index).to.equal(1);
+          expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+          expect(response.errors[1]).to.have.keys(['index', 'error']);
+          expect(response.errors[1].index).to.equal(2);
+          expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+        });
+      });
+
+    it('should be fulfilled with the server response given an array of registration tokens ' +
+      'and topic (topic name prefixed with "/topics/")', () => {
+        mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
+
+        return messagingService[methodName](
+          [
+            mocks.messaging.registrationToken + '0',
+            mocks.messaging.registrationToken + '1',
+            mocks.messaging.registrationToken + '2',
+          ],
+          mocks.messaging.topicWithPrefix,
+        ).then((response: MessagingTopicManagementResponse) => {
+          expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
+          expect(response.failureCount).to.equal(2);
+          expect(response.successCount).to.equal(1);
+          expect(response.errors).to.have.length(2);
+          expect(response.errors[0]).to.have.keys(['index', 'error']);
+          expect(response.errors[0].index).to.equal(1);
+          expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+          expect(response.errors[1]).to.have.keys(['index', 'error']);
+          expect(response.errors[1].index).to.equal(2);
+          expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+        });
+      });
+
+    it('should set the appropriate request data given a single registration token and topic ' +
+      '(topic name not prefixed with "/topics/")', () => {
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
+            return messagingService[methodName](
+              mocks.messaging.registrationToken,
+              mocks.messaging.topic,
+            );
+          })
+          .then(() => {
+            const expectedReq = {
+              to: mocks.messaging.topicWithPrefix,
+              registration_tokens: [mocks.messaging.registrationToken],
+            };
+            expect(httpsRequestStub).to.have.been.calledOnce;
+            expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
+          });
+      });
+
+    it('should set the appropriate request data given a single registration token and topic ' +
+      '(topic name prefixed with "/topics/")', () => {
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
+            return messagingService[methodName](
+              mocks.messaging.registrationToken,
+              mocks.messaging.topicWithPrefix,
+            );
+          })
+          .then(() => {
+            const expectedReq = {
+              to: mocks.messaging.topicWithPrefix,
+              registration_tokens: [mocks.messaging.registrationToken],
+            };
+            expect(httpsRequestStub).to.have.been.calledOnce;
+            expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
+          });
+      });
+
+    it('should set the appropriate request data given an array of registration tokens and ' +
+      'topic (topic name not prefixed with "/topics/")', () => {
+        const registrationTokens = [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
           mocks.messaging.registrationToken + '2',
-        ],
-        mocks.messaging.topic,
-      ).then((response: MessagingTopicManagementResponse) => {
-        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
-        expect(response.failureCount).to.equal(2);
-        expect(response.successCount).to.equal(1);
-        expect(response.errors).to.have.length(2);
-        expect(response.errors[0]).to.have.keys(['index', 'error']);
-        expect(response.errors[0].index).to.equal(1);
-        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
-        expect(response.errors[1]).to.have.keys(['index', 'error']);
-        expect(response.errors[1].index).to.equal(2);
-        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+        ];
+
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
+            return messagingService[methodName](
+              registrationTokens,
+              mocks.messaging.topic,
+            );
+          })
+          .then(() => {
+            const expectedReq = {
+              to: mocks.messaging.topicWithPrefix,
+              registration_tokens: registrationTokens,
+            };
+            expect(httpsRequestStub).to.have.been.calledOnce;
+            expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
+          });
       });
-    });
 
-    it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name prefixed with "/topics/")', () => {
-      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
-
-      return messagingService[methodName](
-        [
+    it('should set the appropriate request data given an array of registration tokens and ' +
+      'topic (topic name prefixed with "/topics/")', () => {
+        const registrationTokens = [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
           mocks.messaging.registrationToken + '2',
-        ],
-        mocks.messaging.topicWithPrefix,
-      ).then((response: MessagingTopicManagementResponse) => {
-        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
-        expect(response.failureCount).to.equal(2);
-        expect(response.successCount).to.equal(1);
-        expect(response.errors).to.have.length(2);
-        expect(response.errors[0]).to.have.keys(['index', 'error']);
-        expect(response.errors[0].index).to.equal(1);
-        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
-        expect(response.errors[1]).to.have.keys(['index', 'error']);
-        expect(response.errors[1].index).to.equal(2);
-        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+        ];
+
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
+            return messagingService[methodName](
+              registrationTokens,
+              mocks.messaging.topicWithPrefix,
+            );
+          })
+          .then(() => {
+            const expectedReq = {
+              to: mocks.messaging.topicWithPrefix,
+              registration_tokens: registrationTokens,
+            };
+            expect(httpsRequestStub).to.have.been.calledOnce;
+            expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
+          });
       });
-    });
-
-    it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
-      // Wait for the initial getToken() call to complete before stubbing https.request.
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messagingService[methodName](
-            mocks.messaging.registrationToken,
-            mocks.messaging.topic,
-          );
-        })
-        .then(() => {
-          const expectedReq = {
-            to: mocks.messaging.topicWithPrefix,
-            registration_tokens: [mocks.messaging.registrationToken],
-          };
-          expect(httpsRequestStub).to.have.been.calledOnce;
-          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
-        });
-    });
-
-    it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
-      // Wait for the initial getToken() call to complete before stubbing https.request.
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messagingService[methodName](
-            mocks.messaging.registrationToken,
-            mocks.messaging.topicWithPrefix,
-          );
-        })
-        .then(() => {
-          const expectedReq = {
-            to: mocks.messaging.topicWithPrefix,
-            registration_tokens: [mocks.messaging.registrationToken],
-          };
-          expect(httpsRequestStub).to.have.been.calledOnce;
-          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
-        });
-    });
-
-    it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name not prefixed with "/topics/")', () => {
-      const registrationTokens = [
-        mocks.messaging.registrationToken + '0',
-        mocks.messaging.registrationToken + '1',
-        mocks.messaging.registrationToken + '2',
-      ];
-
-      // Wait for the initial getToken() call to complete before stubbing https.request.
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messagingService[methodName](
-            registrationTokens,
-            mocks.messaging.topic,
-          );
-        })
-        .then(() => {
-          const expectedReq = {
-            to: mocks.messaging.topicWithPrefix,
-            registration_tokens: registrationTokens,
-          };
-          expect(httpsRequestStub).to.have.been.calledOnce;
-          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
-        });
-    });
-
-    it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name prefixed with "/topics/")', () => {
-      const registrationTokens = [
-        mocks.messaging.registrationToken + '0',
-        mocks.messaging.registrationToken + '1',
-        mocks.messaging.registrationToken + '2',
-      ];
-
-      // Wait for the initial getToken() call to complete before stubbing https.request.
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messagingService[methodName](
-            registrationTokens,
-            mocks.messaging.topicWithPrefix,
-          );
-        })
-        .then(() => {
-          const expectedReq = {
-            to: mocks.messaging.topicWithPrefix,
-            registration_tokens: registrationTokens,
-          };
-          expect(httpsRequestStub).to.have.been.calledOnce;
-          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
-        });
-    });
   }
 
   describe('subscribeToTopic()', () => {

@@ -38,7 +38,7 @@ import {
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
 import { UserImportBuilder } from '../../../src/auth/user-import-builder';
-import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
 import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
 import { expectUserImportResult } from './user-import-builder.spec';
@@ -1015,7 +1015,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given an invalid ID token', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ID_TOKEN,
+          authClientErrorCode.INVALID_ID_TOKEN,
         );
 
         const requestHandler = handler.init(mockApp);
@@ -1028,7 +1028,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given an invalid duration', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+          authClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
         );
 
         const requestHandler = handler.init(mockApp);
@@ -1041,7 +1041,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given a duration less than minimum allowed', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+          authClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
         );
         const outOfBoundDuration = 60 * 1000 * 5 - 1;
 
@@ -1055,7 +1055,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given a duration greater than maximum allowed', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+          authClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
         );
         // Add more than a second since this value is Math.floor()'ed
         const outOfBoundDuration = 60 * 60 * 1000 * 24 * 14 + 1001;
@@ -1074,7 +1074,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             message: 'INVALID_ID_TOKEN',
           },
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_ID_TOKEN);
         const data = { idToken: 'invalid-token', validDuration: durationInMs / 1000 };
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
@@ -1120,7 +1120,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#GetAccountInfoResponse',
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const data = { email: ['user@example.com'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
@@ -1160,7 +1160,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#GetAccountInfoResponse',
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const data = { localId: ['uid'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
@@ -1232,7 +1232,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given an invalid phoneNumber', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_PHONE_NUMBER);
+          authClientErrorCode.INVALID_PHONE_NUMBER);
 
         const stub = sinon.stub(HttpClient.prototype, 'send');
         stubs.push(stub);
@@ -1250,7 +1250,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#GetAccountInfoResponse',
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const data = {
           phoneNumber: ['+11234567890'],
         };
@@ -1443,7 +1443,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should throw on invalid options without making an underlying API call', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_HASH_ALGORITHM,
+          authClientErrorCode.INVALID_HASH_ALGORITHM,
           'Unsupported hash algorithm provider "invalid".',
         );
         const invalidOptions = {
@@ -1463,7 +1463,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should throw when 1001 UserImportRecords are provided', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+          authClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
           'A maximum of 1000 users can be imported at once.',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send');
@@ -1490,7 +1490,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const mismatchIndex = 34;
           const mismatchTenantId = 'MISMATCHING-TENANT-ID';
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.MISMATCHING_TENANT_ID,
+            authClientErrorCode.MISMATCHING_TENANT_ID,
             `UserRecord of index "${mismatchIndex}" has mismatching tenant ID "${mismatchTenantId}"`,
           );
           const stub = sinon.stub(HttpClient.prototype, 'send');
@@ -1585,8 +1585,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           successCount: 0,
           failureCount: 2,
           errors: [
-            { index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
-            { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
+            { index: 0, error: new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER) },
+            { index: 1, error: new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL) },
           ],
         };
         const stub = sinon.stub(HttpClient.prototype, 'send');
@@ -1713,79 +1713,79 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           successCount: 0,
           failureCount: testUsers.length,
           errors: [
-            { index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME) },
-            { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID) },
-            { index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
-            { index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
-            { index: 4, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED) },
-            { index: 5, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL) },
-            { index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD) },
-            { index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_CREATION_TIME) },
-            { index: 8, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_LAST_SIGN_IN_TIME) },
+            { index: 0, error: new FirebaseAuthError(authClientErrorCode.INVALID_DISPLAY_NAME) },
+            { index: 1, error: new FirebaseAuthError(authClientErrorCode.INVALID_UID) },
+            { index: 2, error: new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL) },
+            { index: 3, error: new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER) },
+            { index: 4, error: new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL_VERIFIED) },
+            { index: 5, error: new FirebaseAuthError(authClientErrorCode.INVALID_PHOTO_URL) },
+            { index: 6, error: new FirebaseAuthError(authClientErrorCode.INVALID_DISABLED_FIELD) },
+            { index: 7, error: new FirebaseAuthError(authClientErrorCode.INVALID_CREATION_TIME) },
+            { index: 8, error: new FirebaseAuthError(authClientErrorCode.INVALID_LAST_SIGN_IN_TIME) },
             {
               index: 9,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.FORBIDDEN_CLAIM,
+                authClientErrorCode.FORBIDDEN_CLAIM,
                 'Developer claim "aud" is reserved and cannot be specified.',
               ),
             },
-            { index: 10, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH) },
-            { index: 11, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT) },
+            { index: 10, error: new FirebaseAuthError(authClientErrorCode.INVALID_PASSWORD_HASH) },
+            { index: 11, error: new FirebaseAuthError(authClientErrorCode.INVALID_PASSWORD_SALT) },
             {
               index: 12,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_UID,
+                authClientErrorCode.INVALID_UID,
                 'The provider "uid" for "google.com" must be a valid non-empty string.',
               ),
             },
             {
               index: 13,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_DISPLAY_NAME,
+                authClientErrorCode.INVALID_DISPLAY_NAME,
                 'The provider "displayName" for "google.com" must be a valid string.',
               ),
             },
             {
               index: 14,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_EMAIL,
+                authClientErrorCode.INVALID_EMAIL,
                 'The provider "email" for "google.com" must be a valid email string.',
               ),
             },
             {
               index: 15,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_PHOTO_URL,
+                authClientErrorCode.INVALID_PHOTO_URL,
                 'The provider "photoURL" for "google.com" must be a valid URL string.',
               ),
             },
-            { index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID) },
-            { index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID) },
+            { index: 16, error: new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID) },
+            { index: 17, error: new FirebaseAuthError(authClientErrorCode.INVALID_UID) },
             {
               index: 18,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_UID,
+                authClientErrorCode.INVALID_UID,
                 'The second factor "uid" must be a valid non-empty string.',
               ),
             },
             {
               index: 19,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_DISPLAY_NAME,
+                authClientErrorCode.INVALID_DISPLAY_NAME,
                 'The second factor "displayName" for "mfaUid1" must be a valid string.',
               ),
             },
             {
               index: 20,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+                authClientErrorCode.INVALID_ENROLLMENT_TIME,
                 'The second factor "enrollmentTime" for "mfaUid2" must be a valid UTC date string.',
               ),
             },
             {
               index: 21,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_PHONE_NUMBER,
+                authClientErrorCode.INVALID_PHONE_NUMBER,
                 'The second factor "phoneNumber" for "mfaUid3" must be a non-empty ' +
                 'E.164 standard compliant identifier string.',
               ),
@@ -1793,7 +1793,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             {
               index: 22,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
+                authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
                 `Unsupported second factor "${JSON.stringify(testUsers[22].multiFactor.enrolledFactors[0])}" provided.`,
               ),
             },
@@ -1817,7 +1817,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         });
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'An internal error has occurred. Raw server response: ' +
           `"${JSON.stringify(expectedServerError.response.data)}"`,
         );
@@ -1897,7 +1897,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           'Required "maxResults" must be a positive integer that does not ' +
           'exceed 1000.',
         );
@@ -1912,7 +1912,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
       it('should be rejected given an invalid next page token', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_PAGE_TOKEN,
+          authClientErrorCode.INVALID_PAGE_TOKEN,
         );
 
         const requestHandler = handler.init(mockApp);
@@ -2272,7 +2272,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters such as email', () => {
         // Expected error when an invalid email is provided.
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL);
         const requestHandler = handler.init(mockApp);
         // Send update request with invalid email.
         return requestHandler.updateExistingAccount(uid, invalidData)
@@ -2294,7 +2294,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor uid',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_UID,
+            authClientErrorCode.INVALID_UID,
             'The second factor "uid" must be a valid non-empty string.',
           ),
           secondFactor: {
@@ -2307,7 +2307,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor display name',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_DISPLAY_NAME,
+            authClientErrorCode.INVALID_DISPLAY_NAME,
             'The second factor "displayName" for "enrolledSecondFactor1" must be a valid string.',
           ),
           secondFactor: {
@@ -2320,7 +2320,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor phone number',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_PHONE_NUMBER,
+            authClientErrorCode.INVALID_PHONE_NUMBER,
             'The second factor "phoneNumber" for "enrolledSecondFactor1" must be a non-empty ' +
             'E.164 standard compliant identifier string.'),
           secondFactor: {
@@ -2333,7 +2333,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor enrollment time',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+            authClientErrorCode.INVALID_ENROLLMENT_TIME,
             'The second factor "enrollmentTime" for "enrolledSecondFactor1" must be a valid ' +
             'UTC date string.'),
           secondFactor: {
@@ -2347,7 +2347,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor type',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
+            authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
             `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
           secondFactor: unsupportedSecondFactor,
         },
@@ -2375,7 +2375,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         (dataWithModifiedTenantId as any).tenantId = 'MODIFIED-TENANT-ID';
         // Expected error when a tenant ID is provided.
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"tenantId" is an invalid "UpdateRequest" property.',
         );
         const requestHandler = handler.init(mockApp);
@@ -2391,7 +2391,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters such as phoneNumber', () => {
         // Expected error when an invalid phone number is provided.
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER);
         const requestHandler = handler.init(mockApp);
         // Send update request with invalid phone number.
         return requestHandler.updateExistingAccount(uid, invalidPhoneNumberData)
@@ -2480,7 +2480,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters such as uid', () => {
         // Expected error when an invalid uid is provided.
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_UID);
         const requestHandler = handler.init(mockApp);
         // Send request with invalid uid.
         return requestHandler.setCustomUserClaims('', claims)
@@ -2495,7 +2495,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given invalid parameters such as customClaims', () => {
         // Expected error when invalid claims are provided.
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           'CustomUserClaims argument must be an object or null.',
         );
         const requestHandler = handler.init(mockApp);
@@ -2512,7 +2512,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given customClaims with blacklisted claims', () => {
         // Expected error when invalid claims are provided.
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.FORBIDDEN_CLAIM,
+          authClientErrorCode.FORBIDDEN_CLAIM,
           'Developer claim "aud" is reserved and cannot be specified.',
         );
         const requestHandler = handler.init(mockApp);
@@ -2588,7 +2588,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected given an invalid uid', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_UID);
         const invalidUid: any = { localId: uid };
 
         const requestHandler = handler.init(mockApp);
@@ -2730,7 +2730,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given invalid parameters such as email', () => {
           // Expected error when an invalid email is provided.
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL);
           const requestHandler = handler.init(mockApp);
           // Create new account with invalid email.
           return requestHandler.createNewAccount(invalidData)
@@ -2778,7 +2778,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'unsupported second factor uid',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ARGUMENT,
+              authClientErrorCode.INVALID_ARGUMENT,
               '"uid" is not supported when adding second factors via "createUser()"',
             ),
             secondFactor: {
@@ -2791,7 +2791,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'invalid second factor display name',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_DISPLAY_NAME,
+              authClientErrorCode.INVALID_DISPLAY_NAME,
               'The second factor "displayName" for "+16505557348" must be a valid string.',
             ),
             secondFactor: {
@@ -2803,7 +2803,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'invalid second factor phone number',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_PHONE_NUMBER,
+              authClientErrorCode.INVALID_PHONE_NUMBER,
               'The second factor "phoneNumber" for "invalid" must be a non-empty ' +
               'E.164 standard compliant identifier string.'),
             secondFactor: {
@@ -2815,7 +2815,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'unsupported second factor enrollment time',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ARGUMENT,
+              authClientErrorCode.INVALID_ARGUMENT,
               '"enrollmentTime" is not supported when adding second factors via "createUser()"'),
             secondFactor: {
               phoneNumber: '+16505557348',
@@ -2827,7 +2827,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'invalid second factor type',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
+              authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
               `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
             secondFactor: unsupportedSecondFactor,
           },
@@ -2857,7 +2857,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         it('should be rejected given tenantId in CreateRequest', () => {
           // Expected error when a tenantId is provided.
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             '"tenantId" is an invalid "CreateRequest" property.');
           const validDataWithTenantId = deepCopy(validData);
           (validDataWithTenantId as any).tenantId = TENANT_ID;
@@ -2875,7 +2875,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given invalid parameters such as phoneNumber', () => {
           // Expected error when an invalid phone number is provided.
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER);
           const requestHandler = handler.init(mockApp);
           // Create new account with invalid phone number.
           return requestHandler.createNewAccount(invalidPhoneNumberData)
@@ -2889,7 +2889,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected when the backend returns a user exists error', () => {
           // Expected error when the uid already exists.
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.UID_ALREADY_EXISTS);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.UID_ALREADY_EXISTS);
           const expectedResult = utils.errorFrom({
             error: {
               message: 'DUPLICATE_LOCAL_ID',
@@ -2913,7 +2913,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected when the backend returns an email exists error', () => {
           // Expected error when the email already exists.
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.EMAIL_ALREADY_EXISTS);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.EMAIL_ALREADY_EXISTS);
           const expectedResult = utils.errorFrom({
             error: {
               message: 'EMAIL_EXISTS',
@@ -3014,7 +3014,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         it('should be rejected given invalid parameters such as email', () => {
           // Expected error when an invalid email is provided.
           const expectedError =
-            new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+            new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL);
           const requestHandler = handler.init(mockApp);
           // Send create new account request with invalid data.
           return requestHandler.createNewAccount(invalidData)
@@ -3028,7 +3028,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         it('should be rejected given invalid parameters such as phone number', () => {
           // Expected error when an invalid phone number is provided.
           const expectedError =
-            new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+            new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER);
           const requestHandler = handler.init(mockApp);
           // Send create new account request with invalid data.
           return requestHandler.createNewAccount(invalidPhoneNumberData)
@@ -3182,7 +3182,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given requestType: VERIFY_AND_CHANGE and no new Email address', () => {
         const requestHandler = handler.init(mockApp);
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '`newEmail` is required when `requestType` === \'VERIFY_AND_CHANGE_EMAIL\'',
         )
 
@@ -3197,7 +3197,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid email', () => {
         const invalidEmail = 'invalid';
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL);
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('PASSWORD_RESET', invalidEmail, actionCodeSettings)
@@ -3211,7 +3211,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid new email', () => {
         const invalidNewEmail = 'invalid';
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_NEW_EMAIL);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_NEW_EMAIL);
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('VERIFY_AND_CHANGE_EMAIL', email, actionCodeSettings, invalidNewEmail)
@@ -3226,7 +3226,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given an invalid request type', () => {
         const invalidRequestType = 'invalid';
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"invalid" is not a supported email action request type.',
         );
 
@@ -3243,7 +3243,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given an invalid ActionCodeSettings object', () => {
         const invalidActionCodeSettings = 'invalid' as any;
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings" must be a non-null object.',
         );
 
@@ -3259,7 +3259,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected when the response does not contain a link', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to create the email action link');
         const requestData = deepExtend({
           requestType: 'VERIFY_EMAIL',
@@ -3333,7 +3333,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.getOAuthIdpConfig(invalidProviderId as any)
@@ -3346,7 +3346,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected given a backend error', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
         const expectedServerError = utils.errorFrom({
           error: {
             message: 'CONFIGURATION_NOT_FOUND',
@@ -3433,7 +3433,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           'Required "maxResults" must be a positive integer that does not ' +
           'exceed 100.',
         );
@@ -3449,7 +3449,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid next page token', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_PAGE_TOKEN,
+          authClientErrorCode.INVALID_PAGE_TOKEN,
         );
 
         const requestHandler = handler.init(mockApp);
@@ -3510,7 +3510,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.deleteOAuthIdpConfig(invalidProviderId as any)
@@ -3523,7 +3523,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected given a backend error', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
         const expectedServerError = utils.errorFrom({
           error: {
             message: 'CONFIGURATION_NOT_FOUND',
@@ -3615,7 +3615,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"OIDCAuthProviderConfig.issuer" must be a valid URL string.',
         );
         const invalidOptions: OIDCAuthProviderConfig = deepCopy(configOptions);
@@ -3632,7 +3632,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected when the backend returns a response missing name', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to create new OIDC configuration',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -3655,7 +3655,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             message: 'INVALID_CONFIG',
           },
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
         stubs.push(stub);
 
@@ -3800,7 +3800,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.updateOAuthIdpConfig(invalidProviderId as any, configOptions)
@@ -3814,7 +3814,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"OIDCAuthProviderConfig.issuer" must be a valid URL string.',
         );
         const invalidOptions: OIDCUpdateAuthProviderRequest = deepCopy(configOptions);
@@ -3832,7 +3832,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected when the backend returns a response missing name', () => {
         const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -3856,7 +3856,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             message: 'INVALID_CONFIG',
           },
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
         stubs.push(stub);
 
@@ -3897,7 +3897,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.getInboundSamlConfig(invalidProviderId as any)
@@ -3910,7 +3910,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected given a backend error', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
         const expectedServerError = utils.errorFrom({
           error: {
             message: 'CONFIGURATION_NOT_FOUND',
@@ -3993,7 +3993,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           'Required "maxResults" must be a positive integer that does not ' +
           'exceed 100.',
         );
@@ -4009,7 +4009,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid next page token', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_PAGE_TOKEN,
+          authClientErrorCode.INVALID_PAGE_TOKEN,
         );
 
         const requestHandler = handler.init(mockApp);
@@ -4068,7 +4068,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.deleteInboundSamlConfig(invalidProviderId as any)
@@ -4081,7 +4081,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected given a backend error', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
         const expectedServerError = utils.errorFrom({
           error: {
             message: 'CONFIGURATION_NOT_FOUND',
@@ -4152,7 +4152,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"SAMLAuthProviderConfig.callbackURL" must be a valid URL string.',
         );
         const invalidOptions: SAMLAuthProviderConfig = deepCopy(configOptions);
@@ -4169,7 +4169,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected when the backend returns a response missing name', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to create new SAML configuration',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -4192,7 +4192,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             message: 'INVALID_CONFIG',
           },
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
         stubs.push(stub);
 
@@ -4344,7 +4344,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.updateInboundSamlConfig(invalidProviderId as any, configOptions)
@@ -4358,7 +4358,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given invalid parameters', () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"SAMLAuthProviderConfig.ssoURL" must be a valid URL string.',
         );
         const invalidOptions: SAMLUpdateAuthProviderRequest = deepCopy(configOptions);
@@ -4376,7 +4376,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected when the backend returns a response missing name', () => {
         const expectedPath = path + `?updateMask=${fullUpadateMask}`;
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
+          authClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to update SAML configuration',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -4400,7 +4400,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             message: 'INVALID_CONFIG',
           },
         });
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
         stubs.push(stub);
 
@@ -4440,7 +4440,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
-            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+            const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.getTenant(invalidTenantId as any)
@@ -4453,7 +4453,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
 
         it('should be rejected given a backend error', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.TENANT_NOT_FOUND);
           const expectedServerError = utils.errorFrom({
             error: {
               message: 'TENANT_NOT_FOUND',
@@ -4536,7 +4536,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given an invalid maxResults', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             'Required "maxResults" must be a positive non-zero number that does not ' +
             'exceed the allowed 1000.',
           );
@@ -4552,7 +4552,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given an invalid next page token', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_PAGE_TOKEN,
+            authClientErrorCode.INVALID_PAGE_TOKEN,
           );
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
@@ -4610,7 +4610,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
-            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+            const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.deleteTenant(invalidTenantId as any)
@@ -4623,7 +4623,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
 
         it('should be rejected given a backend error', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.TENANT_NOT_FOUND);
           const expectedServerError = utils.errorFrom({
             error: {
               message: 'TENANT_NOT_FOUND',
@@ -4692,7 +4692,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given invalid parameters', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             '"EmailSignInConfig" must be a non-null object.',
           );
           const invalidOptions = deepCopy(tenantOptions);
@@ -4709,7 +4709,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected when the backend returns a response missing name', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to create new tenant',
           );
           const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -4727,7 +4727,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected when the backend returns a response missing tenant ID in response name', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to create new tenant',
           );
           // Resource name should have /tenants/tenant-id in path. This should throw an error.
@@ -4752,7 +4752,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             },
           });
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'An internal error has occurred. Raw server response: ' +
             `"${JSON.stringify(expectedServerError.response.data)}"`,
           );
@@ -4864,7 +4864,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
-            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+            const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.updateTenant(invalidTenantId as any, tenantOptions)
@@ -4878,7 +4878,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         it('should be rejected given invalid parameters', () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             '"EmailSignInConfig" must be a non-null object.',
           );
           const invalidOptions = deepCopy(tenantOptions);
@@ -4897,7 +4897,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
             'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to update tenant',
           );
           const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -4918,7 +4918,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
             'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to update tenant',
           );
           // Resource name should have /tenants/tenant-id in path. This should throw an error.
@@ -4946,7 +4946,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             },
           });
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'An internal error has occurred. Raw server response: ' +
             `"${JSON.stringify(expectedServerError.response.data)}"`,
           );

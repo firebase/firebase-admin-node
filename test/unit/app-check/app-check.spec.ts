@@ -24,7 +24,8 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheck } from '../../../src/app-check/index';
-import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
+import { AppCheckApiClient } from '../../../src/app-check/app-check-api-client-internal';
+import { FirebaseAppCheckError } from '../../../src/app-check/error';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
 import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';

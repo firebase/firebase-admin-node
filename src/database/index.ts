@@ -126,4 +126,4 @@ function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
   return dbService.getDatabase(options.url);
 }
 
-export { FirebaseDatabaseError } from '../utils/error';
+export { FirebaseDatabaseError } from './error';

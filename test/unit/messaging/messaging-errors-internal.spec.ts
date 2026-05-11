@@ -22,7 +22,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { createFirebaseError } from '../../../src/messaging/messaging-errors-internal';
 import { RequestResponseError, RequestResponse } from '../../../src/utils/api-request';
-import { FirebaseMessagingError } from '../../../src/utils/error';
+import { FirebaseMessagingError } from '../../../src/messaging/error';
 
 chai.should();
 chai.use(sinonChai);

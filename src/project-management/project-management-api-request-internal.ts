@@ -20,8 +20,9 @@ import {
   AuthorizedHttpClient, RequestResponseError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
 import {
-  FirebaseProjectManagementError, ProjectManagementErrorCode, HttpResponse, toHttpResponse,
-} from '../utils/error';
+  FirebaseProjectManagementError, ProjectManagementErrorCode,
+} from './error';
+import { HttpResponse, toHttpResponse } from '../utils/error';
 import { getSdkVersion } from '../utils/index';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';

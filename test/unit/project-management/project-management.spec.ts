@@ -23,7 +23,7 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';
-import { FirebaseProjectManagementError } from '../../../src/utils/error';
+import { FirebaseProjectManagementError } from '../../../src/project-management/error';
 import * as mocks from '../../resources/mocks';
 import {
   AndroidApp, AppMetadata, AppPlatform, IosApp, ProjectManagement,

@@ -31,7 +31,7 @@ import {
 import { CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
-import { FirebaseAuthError } from '../../../src/utils/error';
+import { FirebaseAuthError } from '../../../src/auth/error';
 import * as utils from '../utils';
 
 chai.should();

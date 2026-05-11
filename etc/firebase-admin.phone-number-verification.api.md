@@ -25,8 +25,15 @@ export class PhoneNumberVerification {
     verifyToken(jwt: string): Promise<PhoneNumberVerificationToken>;
 }
 
-// @public (undocumented)
-export type PhoneNumberVerificationErrorCode = 'invalid-argument' | 'invalid-token' | 'expired-token';
+// @public
+export const PhoneNumberVerificationErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_TOKEN: "invalid-token";
+    readonly EXPIRED_TOKEN: "expired-token";
+};
+
+// @public
+export type PhoneNumberVerificationErrorCode = typeof PhoneNumberVerificationErrorCode[keyof typeof PhoneNumberVerificationErrorCode];
 
 // @public
 export interface PhoneNumberVerificationToken {

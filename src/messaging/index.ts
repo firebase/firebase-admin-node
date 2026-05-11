@@ -96,4 +96,7 @@ export function getMessaging(app?: App): Messaging {
   return firebaseApp.getOrInitService('messaging', (app) => new Messaging(app));
 }
 
-export { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
+export {
+  FirebaseMessagingError,
+  MessagingErrorCode,
+} from './error';

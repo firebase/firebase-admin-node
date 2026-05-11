@@ -17,7 +17,20 @@ export class AppCheck {
 }
 
 // @public
-export type AppCheckErrorCode = 'aborted' | 'invalid-argument' | 'invalid-credential' | 'internal-error' | 'permission-denied' | 'unauthenticated' | 'not-found' | 'app-check-token-expired' | 'unknown-error';
+export const AppCheckErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL: "internal-error";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly APP_CHECK_TOKEN_EXPIRED: "app-check-token-expired";
+    readonly UNKNOWN: "unknown-error";
+};
+
+// @public
+export type AppCheckErrorCode = typeof AppCheckErrorCode[keyof typeof AppCheckErrorCode];
 
 // @public
 export interface AppCheckToken {

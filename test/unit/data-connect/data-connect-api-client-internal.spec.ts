@@ -24,8 +24,11 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DATA_CONNECT_ERROR_CODE_MAPPING, DataConnectApiClient, FirebaseDataConnectError }
-  from '../../../src/data-connect/data-connect-api-client-internal';
+import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
+import {
+  FirebaseDataConnectError,
+  DATA_CONNECT_ERROR_CODE_MAPPING,
+} from '../../../src/data-connect/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';

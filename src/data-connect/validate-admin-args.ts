@@ -21,7 +21,7 @@ import { ConnectorConfig, OperationOptions } from './data-connect-api';
 import {
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError,
-} from './data-connect-api-client-internal';
+} from './error';
 
 /**
  * @internal

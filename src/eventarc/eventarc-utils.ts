@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseEventarcError } from './error';
 import { CloudEvent } from './cloudevent';
 import { v4 as uuid } from 'uuid';
 import * as validator from '../utils/validator';
@@ -24,25 +24,6 @@ import * as validator from '../utils/validator';
 // automatic attribute copy.
 const TOP_LEVEL_CE_ATTRS: string[] = 
     ['id', 'type', 'specversion', 'source', 'data', 'time', 'datacontenttype', 'subject'];
-
-/**
- * Eventarc client error codes and their default messages.
- */
-export type EventarcErrorCode = 'unknown-error' | 'invalid-argument'
-
-/**
- * Firebase Eventarc error code structure. This extends PrefixedFirebaseError.
- */
-export class FirebaseEventarcError extends PrefixedFirebaseError {
-  /**
-   * @param info - The error code info.
-   * @param message - The error message. If provided, this will override the default message.
-   */
-  constructor(info: ErrorInfo, message?: string) {
-    super('eventarc', info.code, message || info.message, info.httpResponse, info.cause);
-
-  }
-}
 
 export function toCloudEventProtoFormat(ce: CloudEvent): any {
   const source = ce.source ?? process.env.EVENTARC_CLOUD_EVENT_SOURCE;

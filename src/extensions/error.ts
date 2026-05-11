@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,30 @@
 import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Security Rules client error codes and their default messages.
+ * The constant mapping for valid Extensions client error codes.
  */
-export type SecurityRulesErrorCode =
-  'already-exists'
-  | 'authentication-error'
-  | 'internal-error'
-  | 'invalid-argument'
-  | 'invalid-server-response'
-  | 'not-found'
-  | 'resource-exhausted'
-  | 'service-unavailable'
-  | 'unknown-error';
+export const ExtensionsErrorCode = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  NOT_FOUND: 'not-found',
+  FORBIDDEN: 'forbidden',
+  INTERNAL_ERROR: 'internal-error',
+  UNKNOWN_ERROR: 'unknown-error',
+} as const;
 
-export class FirebaseSecurityRulesError extends PrefixedFirebaseError {
+/**
+ * The type definition for valid Extensions client error codes.
+ */
+export type ExtensionsErrorCode = typeof ExtensionsErrorCode[keyof typeof ExtensionsErrorCode];
+
+/**
+ * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
+ */
+export class FirebaseExtensionsError extends PrefixedFirebaseError {
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('security-rules', info.code, message || info.message, info.httpResponse, info.cause);
+    super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
   }
 }
