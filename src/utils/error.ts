@@ -127,7 +127,6 @@ export class FirebaseError extends Error implements FirebaseError {
     if (errorInfo.httpResponse !== undefined) {
       this.httpResponse = errorInfo.httpResponse;
     }
-
   }
 
   /** @returns The object representation of the error. */
@@ -176,7 +175,6 @@ export class PrefixedFirebaseError extends FirebaseError {
       errorInfo.cause = cause;
     }
     super(errorInfo);
-
   }
 
   /**
