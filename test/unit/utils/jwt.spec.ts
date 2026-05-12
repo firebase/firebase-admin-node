@@ -27,7 +27,7 @@ import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import {
-  ALGORITHM_RS256, DecodedToken, decodeJwt, EmulatorSignatureVerifier, JwksFetcher,
+  ALGORITHM_RS256, ALGORITHM_ES256, DecodedToken, decodeJwt, EmulatorSignatureVerifier, JwksFetcher,
   JwtErrorCode, PublicKeySignatureVerifier, UrlKeyFetcher, verifyJwtSignature
 } from '../../../src/utils/jwt';
 
@@ -240,7 +240,7 @@ describe('verifyJwtSignature', () => {
     const mockIdToken = mocks.generateIdToken();
 
     return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .should.eventually.be.fulfilled;
   });
 
@@ -259,7 +259,7 @@ describe('verifyJwtSignature', () => {
     const getKeyCallback = (_: any, callback: any): void => callback(null, mocks.keyPairs[0].public);
 
     return verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .should.eventually.be.fulfilled;
   });
 
@@ -279,13 +279,13 @@ describe('verifyJwtSignature', () => {
 
     // token should still be valid
     return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .then(() => {
         clock!.tick(1);
 
         // token should now be invalid
         return verifyJwtSignature(mockIdToken, mocks.keyPairs[0].public,
-          { algorithms: [ALGORITHM_RS256] })
+          { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
           .should.eventually.be.rejectedWith(
             'The provided token has expired. Get a fresh token from your client app and try again.'
           )
@@ -299,7 +299,7 @@ describe('verifyJwtSignature', () => {
       callback(new Error('key fetch failed.'));
 
     return verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .should.eventually.be.rejectedWith('key fetch failed.')
       .with.property('code', JwtErrorCode.KEY_FETCH_ERROR);
   });
@@ -310,7 +310,7 @@ describe('verifyJwtSignature', () => {
       callback(new Error('no-matching-kid-error'));
 
     return verifyJwtSignature(mockIdToken, getKeyCallback,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .should.eventually.be.rejectedWith('no-matching-kid-error')
       .with.property('code', JwtErrorCode.NO_MATCHING_KID);
   });
@@ -319,7 +319,7 @@ describe('verifyJwtSignature', () => {
     const mockIdToken = mocks.generateIdToken();
 
     return verifyJwtSignature(mockIdToken, mocks.keyPairs[1].public,
-      { algorithms: [ALGORITHM_RS256] })
+      { algorithms: [ALGORITHM_RS256, ALGORITHM_ES256] })
       .should.eventually.be.rejectedWith('invalid signature')
       .with.property('code', JwtErrorCode.INVALID_SIGNATURE);
   });

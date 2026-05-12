@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "13.6.0",
+  "version": "13.9.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -73,6 +73,9 @@
       "auth": [
         "lib/auth"
       ],
+      "phone-number-verification": [
+        "lib/phone-number-verification"
+      ],
       "eventarc": [
         "lib/eventarc"
       ],
@@ -133,6 +136,11 @@
       "types": "./lib/auth/index.d.ts",
       "require": "./lib/auth/index.js",
       "import": "./lib/esm/auth/index.js"
+    },
+    "./phone-number-verification": {
+      "types": "./lib/phone-number-verification/index.d.ts",
+      "require": "./lib/phone-number-verification/index.js",
+      "import": "./lib/esm/phone-number-verification/index.js"
     },
     "./database": {
       "types": "./lib/database/index.d.ts",
@@ -209,17 +217,16 @@
     "@fastify/busboy": "^3.0.0",
     "@firebase/database-compat": "^2.0.0",
     "@firebase/database-types": "^1.0.6",
-    "@types/node": "^22.8.7",
     "farmhash-modern": "^1.1.0",
     "fast-deep-equal": "^3.1.1",
-    "google-auth-library": "^9.14.2",
+    "google-auth-library": "^10.6.1",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^3.1.0",
     "uuid": "^11.0.2"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^7.11.0",
-    "@google-cloud/storage": "^7.14.0"
+    "@google-cloud/storage": "^7.19.0"
   },
   "devDependencies": {
     "@firebase/api-documenter": "^0.5.0",
@@ -236,13 +243,14 @@
     "@types/minimist": "^1.2.2",
     "@types/mocha": "^10.0.0",
     "@types/nock": "^11.1.0",
+    "@types/node": "^25.2.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^17.0.2",
     "@types/sinon-chai": "^3.0.0",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.16.1",
-    "@typescript-eslint/parser": "^7.16.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "bcrypt": "^6.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
@@ -270,7 +278,7 @@
     "sinon": "^18.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
-    "typescript": "5.5.4",
+    "typescript": "^5.7.3",
     "yargs": "^17.0.1"
   }
 }
