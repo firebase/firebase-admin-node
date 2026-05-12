@@ -23,7 +23,7 @@ import {
 import { PrefixedFirebaseError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { AppCheckToken, AppCheckTokenOptions } from './app-check-api'
+import { AppCheckToken, AppCheckTokenOptions } from './app-check-api';
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
@@ -84,7 +84,7 @@ export class AppCheckApiClient {
           'invalid-argument',
           '`jti` must be a string value.');
       }
-      if (options.jti !== '' && !options.limitedUse) {
+      if (!options.limitedUse) {
         throw new FirebaseAppCheckError(
           'invalid-argument',
           '`jti` cannot be specified without setting `limitedUse` to `true`.');
