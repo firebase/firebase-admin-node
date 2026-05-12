@@ -507,9 +507,10 @@ function validateExperimentExposurePercent(
   // Enforce public contract: numeric and within [0, 100].
   if (!validator.isNumber(exposurePercent) || !Number.isFinite(exposurePercent) ||
     exposurePercent < 0 || exposurePercent > 100) {
-    throw new FirebaseRemoteConfigError(
-      'invalid-argument',
-      `Experiment exposure percent must be between 0 and 100 (${parameterName})`);
+    throw new FirebaseRemoteConfigError({
+      code: 'invalid-argument',
+      message: `Experiment exposure percent must be between 0 and 100 (${parameterName})`
+    });
   }
 }
 
