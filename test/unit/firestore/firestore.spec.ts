@@ -26,9 +26,8 @@ import {
   ApplicationDefaultCredential,
   RefreshTokenCredential
 } from '../../../src/app/credential-internal';
-import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
+import { FirestoreService, getFirestoreOptions, DEFAULT_DATABASE_ID } from '../../../src/firestore/firestore-internal';
 import { getSdkVersion } from '../../../src/utils/index';
-import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
