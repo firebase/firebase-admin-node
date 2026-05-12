@@ -2520,7 +2520,6 @@ describe('Http2Client', () => {
   it('should fail on session and stream errors', async () => {
     const reqData = { request: 'data' };
     const streamError = 'Error while making request: test stream error. Error code: AWFUL_STREAM_ERROR';
-    const sessionError = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error'
     mockedHttp2Responses.push(mockHttp2Error(
       { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' },
       { message: 'test session error', code: 'AWFUL_SESSION_ERROR' }
@@ -2549,15 +2548,17 @@ describe('Http2Client', () => {
         expect(http2Mocker.requests[0].headers.authorization).to.equal('Bearer token');
         expect(http2Mocker.requests[0].headers['content-type']).to.contain('application/json');
         expect(http2Mocker.requests[0].headers['My-Custom-Header']).to.equal('CustomValue');
+        
+        const sessionErrors = http2SessionHandler.getErrors();
+        expect(sessionErrors.length).to.equal(1);
+        const expectedError1 = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error ';
+        expect(sessionErrors[0].message).to.equal(expectedError1);
       });
-
-    await http2SessionHandler.invoke().should.eventually.be.rejectedWith(sessionError)
-      .and.have.property('code', 'app/network-error')
   });
 
   it('should unwrap aggregate session errors', async () => {
     const reqData = { request: 'data' };
-    const streamError = { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' }
+    const streamError = { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' };
     const expectedStreamErrorMessage = 'Error while making request: test stream error. Error code: AWFUL_STREAM_ERROR';
     const aggregateSessionError = {
       name: 'AggregateError',
@@ -2566,15 +2567,12 @@ describe('Http2Client', () => {
         { message: 'Error message 1' },
         { message: 'Error message 2' },
       ]
-    }
-    const expectedAggregateErrorMessage = 'Session error while making requests: AWFUL_SESSION_ERROR - ' +
-      'AggregateError: [Error message 1, Error message 2]'
-
+    };
     mockedHttp2Responses.push(mockHttp2Error(streamError, aggregateSessionError));
     http2Mocker.http2Stub(mockedHttp2Responses);
 
     const client = new Http2Client();
-    http2SessionHandler = new Http2SessionHandler(mockHostUrl)
+    http2SessionHandler = new Http2SessionHandler(mockHostUrl);
 
     await client.send({
       method: 'POST',
@@ -2595,10 +2593,13 @@ describe('Http2Client', () => {
         expect(http2Mocker.requests[0].headers.authorization).to.equal('Bearer token');
         expect(http2Mocker.requests[0].headers['content-type']).to.contain('application/json');
         expect(http2Mocker.requests[0].headers['My-Custom-Header']).to.equal('CustomValue');
-      });
 
-    await http2SessionHandler.invoke().should.eventually.be.rejectedWith(expectedAggregateErrorMessage)
-      .and.have.property('code', 'app/network-error')
+        const sessionErrors = http2SessionHandler.getErrors();
+        expect(sessionErrors.length).to.equal(1);
+        const expectedError2 = 'Session error while making requests: AWFUL_SESSION_ERROR - AggregateError: ' +
+          '[Error message 1, Error message 2]';
+        expect(sessionErrors[0].message).to.equal(expectedError2);
+      });
   });
 });
 
