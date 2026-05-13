@@ -27,7 +27,7 @@ import {
   CustomSignalCondition,
   CustomSignalOperator,
 } from './remote-config-api';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 
 /**

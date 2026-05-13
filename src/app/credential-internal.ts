@@ -16,7 +16,7 @@
  */
 
 import fs = require('fs');
-import { createPrivateKey } from 'crypto';
+import { createPrivateKey } from 'node:crypto';
 
 import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute, AnyAuthClient } from 'google-auth-library'
 import { Agent } from 'http';
