@@ -34,6 +34,8 @@ const topic = 'mock-topic';
 
 const invalidTopic = 'topic-$%#^';
 
+const mockFid = 'mock-fid';
+
 const message: Message = {
   data: {
     foo: 'bar',
@@ -80,12 +82,24 @@ const message: Message = {
   topic: 'foo-bar',
 };
 
+const fidMessage: Message = {
+  data: message.data,
+  android: message.android,
+  apns: message.apns,
+  fid: mockFid,
+};
+
 describe('admin.messaging', () => {
   it('send(message, dryRun) returns a message ID', () => {
     return getMessaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
       });
+  });
+
+  it('send(message with fid, dryRun) fails with invalid-argument', () => {
+    return getMessaging().send(fidMessage, true)
+      .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
   });
 
   it('sendEach()', () => {
@@ -124,6 +138,45 @@ describe('admin.messaging', () => {
       data: message.data,
       android: message.android,
       tokens: ['not-a-token', 'also-not-a-token'],
+    };
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
+        });
+      });
+  });
+
+  it('sendEachForMulticast() with fids', () => {
+    const multicastMessage: MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      fids: ['not-a-fid', 'also-not-a-fid'],
+    };
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
+        });
+      });
+  });
+
+  it('sendEachForMulticast() with mixed tokens and fids', () => {
+    const multicastMessage: MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      tokens: ['not-a-token'],
+      fids: ['not-a-fid'],
     };
     return getMessaging().sendEachForMulticast(multicastMessage, true)
       .then((response) => {
