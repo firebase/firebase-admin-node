@@ -29,7 +29,7 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   Message,
   MessagingTopicManagementResponse, BatchResponse,
-  SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage,
+  SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage, FidMessage,
 } from '../../../src/messaging/index';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
@@ -317,13 +317,13 @@ describe('Messaging', () => {
     });
 
     const noTarget = [
-      {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' },
+      {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' }, { fid: null }, { fid: '' },
     ];
     noTarget.forEach((message) => {
       it(`should throw given message without target: ${JSON.stringify(message)}`, () => {
         expect(() => {
           messaging.send(message as any);
-        }).to.throw('Exactly one of topic, token or condition is required');
+        }).to.throw('Exactly one of fid, topic, token or condition is required');
       });
     });
 
@@ -332,12 +332,16 @@ describe('Messaging', () => {
       { token: 'a', condition: 'b' },
       { condition: 'a', topic: 'b' },
       { token: 'a', topic: 'b', condition: 'c' },
+      { fid: 'a', token: 'b' },
+      { fid: 'a', topic: 'b' },
+      { fid: 'a', condition: 'b' },
+      { fid: 'a', token: 'b', topic: 'c', condition: 'd' },
     ];
     multipleTargets.forEach((message) => {
       it(`should throw given message without target: ${JSON.stringify(message)}`, () => {
         expect(() => {
           messaging.send(message as any);
-        }).to.throw('Exactly one of topic, token or condition is required');
+        }).to.throw('Exactly one of fid, topic, token or condition is required');
       });
     });
 
@@ -362,6 +366,7 @@ describe('Messaging', () => {
     const targetMessages = [
       { token: 'mock-token' }, { topic: 'mock-topic' },
       { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
+      { fid: 'mock-fid' },
     ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
@@ -511,7 +516,7 @@ describe('Messaging', () => {
     it('should reject when a message is invalid', () => {
       const invalidMessage: Message = {} as any;
       messaging.sendEach([validMessage, invalidMessage])
-        .should.eventually.be.rejectedWith('Exactly one of topic, token or condition is required');
+        .should.eventually.be.rejectedWith('Exactly one of fid, topic, token or condition is required');
     });
 
     it('should reject a message when it does not pass local validation, but still try the other messages', () => {
@@ -707,17 +712,19 @@ describe('Messaging', () => {
         'projects/projec_id/messages/1',
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
+        'projects/projec_id/messages/4',
       ];
       const tokenMessage: TokenMessage = { token: 'test' };
       const topicMessage: TopicMessage = { topic: 'test' };
       const conditionMessage: ConditionMessage = { condition: 'test' };
-      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
+      const fidMessage: FidMessage = { fid: 'test' };
+      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage, fidMessage];
 
       messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
 
       return legacyMessaging.sendEach(messages)
         .then((response: BatchResponse) => {
-          expect(response.successCount).to.equal(3);
+          expect(response.successCount).to.equal(4);
           expect(response.failureCount).to.equal(0);
           response.responses.forEach((resp, idx) => {
             expect(resp.success).to.be.true;

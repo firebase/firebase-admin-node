@@ -29,6 +29,7 @@ import {
   CriticalSound as TCriticalSound,
   ConditionMessage as TConditionMessage,
   FcmOptions as TFcmOptions,
+  FidMessage as TFidMessage,
   LightSettings as TLightSettings,
   Message as TMessage,
   MessagingTopicManagementResponse as TMessagingTopicManagementResponse,
@@ -175,7 +176,14 @@ export namespace messaging {
   export type SendResponse = TSendResponse;
 
   /**
+   * Type alias to {@link firebase-admin.messaging#FidMessage}.
+   */
+  export type FidMessage = TFidMessage;
+
+  /**
    * Type alias to {@link firebase-admin.messaging#TokenMessage}.
+   *
+   * @deprecated Use {@link firebase-admin.messaging#FidMessage} instead.
    */
   export type TokenMessage = TTokenMessage;
 

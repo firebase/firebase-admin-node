@@ -42,6 +42,7 @@ export {
   CriticalSound,
   ConditionMessage,
   FcmOptions,
+  FidMessage,
   LightSettings,
   Message,
   MessagingTopicManagementResponse,

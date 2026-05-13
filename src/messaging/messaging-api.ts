@@ -26,6 +26,13 @@ export interface BaseMessage {
   fcmOptions?: FcmOptions;
 }
 
+export interface FidMessage extends BaseMessage {
+  fid: string;
+}
+
+/**
+ * @deprecated Use {@link FidMessage} instead.
+ */
 export interface TokenMessage extends BaseMessage {
   token: string;
 }
@@ -40,9 +47,9 @@ export interface ConditionMessage extends BaseMessage {
 
 /**
  * Payload for the {@link Messaging.send} operation. The payload contains all the fields
- * in the BaseMessage type, and exactly one of token, topic or condition.
+ * in the BaseMessage type, and exactly one of fid, token, topic or condition.
  */
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
+export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 /**
  * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields

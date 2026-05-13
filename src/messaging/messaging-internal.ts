@@ -58,11 +58,11 @@ export function validateMessage(message: Message): void {
     }
   }
 
-  const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
+  const targets = [anyMessage.fid, anyMessage.token, anyMessage.topic, anyMessage.condition];
   if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
-      'Exactly one of topic, token or condition is required');
+      'Exactly one of fid, topic, token or condition is required');
   }
 
   validateStringMap(message.data, 'data');
