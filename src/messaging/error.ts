@@ -17,7 +17,6 @@
 import { ErrorInfo, PrefixedFirebaseError, toHttpResponse } from '../utils/error';
 import { RequestResponseError } from '../utils/api-request';
 import { deepCopy } from '../utils/deep-copy';
-import { BatchResponse } from './messaging-api';
 
 /**
  * The constant mapping for valid Messaging client error codes.
@@ -291,28 +290,5 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('messaging', info.code, message || info.message, info.httpResponse, info.cause);
-  }
-}
-
-export class FirebaseMessagingSessionError extends FirebaseMessagingError {
-  public pendingBatchResponse?: Promise<BatchResponse>;
-  /**
-   * 
-   * @param info - The error code info.
-   * @param message - The error message. This will override the default message if provided.
-   * @param pendingBatchResponse - BatchResponse for pending messages when session error occured.
-   */
-  constructor(info: ErrorInfo, message?: string, pendingBatchResponse?: Promise<BatchResponse>) {
-    // Override default message if custom message provided.
-    super(info, message || info.message);
-    this.pendingBatchResponse = pendingBatchResponse;
-  }
-
-  /** @returns The object representation of the error. */
-  public toJSON(): object {
-    return {
-      ...super.toJSON(),
-      pendingBatchResponse: this.pendingBatchResponse,
-    };
   }
 }

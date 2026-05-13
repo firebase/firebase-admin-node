@@ -1368,12 +1368,13 @@ export class Http2SessionHandler {
       });
 
       this.http2Session.on('error', (error: any) => {
-        let errorMessage: any;
+        const codePart = error?.code ? `${error.code} - ` : '';
+        let errorMessage: string;
         if (error?.name === 'AggregateError' && Array.isArray(error.errors)) {
-          errorMessage = `Session error while making requests: ${error?.code} - ${error?.name}: ` +
+          errorMessage = `Session error while making requests: ${codePart}${error.name}: ` +
             `[${error.errors.map((e: any) => e.message).join(', ')}]`;
         } else {
-          errorMessage = `Session error while making requests: ${error?.code} - ${error?.message} `;
+          errorMessage = `Session error while making requests: ${codePart}${error?.message || 'Unknown error'}`;
         }
         const appError = new FirebaseAppError({
           code: AppErrorCode.NETWORK_ERROR,

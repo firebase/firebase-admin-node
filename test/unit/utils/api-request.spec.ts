@@ -2551,7 +2551,7 @@ describe('Http2Client', () => {
         
         const sessionErrors = http2SessionHandler.getErrors();
         expect(sessionErrors.length).to.equal(1);
-        const expectedError1 = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error ';
+        const expectedError1 = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error';
         expect(sessionErrors[0].message).to.equal(expectedError1);
       });
   });

@@ -148,6 +148,14 @@ export class FirebaseError extends Error implements FirebaseError {
         message: this.cause.message || String(this.cause),
         stack: this.cause.stack
       };
+      if ('errors' in this.cause && Array.isArray(this.cause.errors)) {
+        json.cause.errors = this.cause.errors.map((e: any) => {
+          if (e instanceof Error) {
+            return { name: e.name, message: e.message, stack: e.stack };
+          }
+          return String(e);
+        });
+      }
     }
     return json;
   }
