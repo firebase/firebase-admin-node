@@ -36,7 +36,14 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
-        node-version: 18.x
+        node-version: 22.x
+
+    # Java 21 is required by firebase-tools to run emulator-based integration tests
+    - name: Set up Java
+      uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
+      with:
+        distribution: 'temurin'
+        java-version: '21'
 
     - name: Install and build
       run: |
@@ -52,7 +59,7 @@ jobs:
 
     - name: Run emulator-based integration tests
       run: |
-        npm install -g firebase-tools@11.30.0
+        npm install -g firebase-tools@15.17.0
         firebase emulators:exec --project fake-project-id --only auth,database,firestore \
           'npx mocha test/integration/auth.spec.ts test/integration/database.spec.ts test/integration/firestore.spec.ts --slow 5000 --timeout 20000 --require ts-node/register'
 
