@@ -168,6 +168,12 @@ export interface FcmOptions {
     analyticsLabel?: string;
 }
 
+// @public (undocumented)
+export interface FidMessage extends BaseMessage {
+    // (undocumented)
+    fid: string;
+}
+
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -187,7 +193,7 @@ export interface LightSettings {
 }
 
 // @public
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
+export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 // @public
 export class Messaging {
@@ -329,8 +335,9 @@ export interface MessagingTopicManagementResponse {
 
 // @public
 export interface MulticastMessage extends BaseMessage {
-    // (undocumented)
-    tokens: string[];
+    fids?: string[];
+    // @deprecated
+    tokens?: string[];
 }
 
 // @public
@@ -366,7 +373,7 @@ export interface SendResponse {
     success: boolean;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface TokenMessage extends BaseMessage {
     // (undocumented)
     token: string;

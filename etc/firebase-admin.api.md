@@ -374,6 +374,8 @@ export namespace messaging {
     export type DataMessagePayload = DataMessagePayload;
     // Warning: (ae-forgotten-export) The symbol "FcmOptions" needs to be exported by the entry point default-namespace.d.ts
     export type FcmOptions = FcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "FidMessage" needs to be exported by the entry point default-namespace.d.ts
+    export type FidMessage = FidMessage;
     // Warning: (ae-forgotten-export) The symbol "LightSettings" needs to be exported by the entry point default-namespace.d.ts
     export type LightSettings = LightSettings;
     // Warning: (ae-forgotten-export) The symbol "Message" needs to be exported by the entry point default-namespace.d.ts
@@ -395,6 +397,8 @@ export namespace messaging {
     // Warning: (ae-forgotten-export) The symbol "SendResponse" needs to be exported by the entry point default-namespace.d.ts
     export type SendResponse = SendResponse;
     // Warning: (ae-forgotten-export) The symbol "TokenMessage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // @deprecated
     export type TokenMessage = TokenMessage;
     // Warning: (ae-forgotten-export) The symbol "TopicMessage" needs to be exported by the entry point default-namespace.d.ts
     export type TopicMessage = TopicMessage;
