@@ -16,6 +16,7 @@
  */
 
 import fs = require('fs');
+import { createPrivateKey } from 'crypto';
 
 import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute, AnyAuthClient } from 'google-auth-library'
 import { Agent } from 'http';
@@ -214,10 +215,9 @@ class ServiceAccount {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const forge = require('node-forge');
+    // Validate private key format using native crypto module
     try {
-      forge.pki.privateKeyFromPem(this.privateKey);
+      createPrivateKey(this.privateKey);
     } catch (error) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
