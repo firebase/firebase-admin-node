@@ -221,7 +221,13 @@
     "fast-deep-equal": "^3.1.1",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.0",
+<<<<<<< HEAD
     "jwks-rsa": "^3.1.0"
+=======
+    "jwks-rsa": "^4.0.1",
+    "node-forge": "^1.4.0",
+    "uuid": "^11.0.2"
+>>>>>>> 9d14495a (chore(deps): bump jwks-rsa to 4.0.1 (#3125))
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^8.6.0",
