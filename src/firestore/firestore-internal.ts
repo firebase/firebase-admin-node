@@ -23,6 +23,8 @@ import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
 import { App } from '../app';
 
+export const DEFAULT_DATABASE_ID = '(default)';
+
 /**
  * Settings to pass to the Firestore constructor.
  * 
