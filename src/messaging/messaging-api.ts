@@ -53,10 +53,20 @@ export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessag
 
 /**
  * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields
- * in the BaseMessage type, and a list of tokens.
+ * in the BaseMessage type, and a list of tokens and/or fids.
  */
 export interface MulticastMessage extends BaseMessage {
-  tokens: string[];
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids?: string[];
+
+  /**
+   * A list of registration tokens to target.
+   *
+   * @deprecated Use {@link MulticastMessage.fids} instead.
+   */
+  tokens?: string[];
 }
 
 /**

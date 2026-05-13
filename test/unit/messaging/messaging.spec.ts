@@ -317,7 +317,11 @@ describe('Messaging', () => {
     });
 
     const noTarget = [
-      {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' }, { fid: null }, { fid: '' },
+      {},
+      { token: null }, { token: '' },
+      { topic: null }, { topic: '' },
+      { condition: null }, { condition: '' },
+      { fid: null }, { fid: '' },
     ];
     noTarget.forEach((message) => {
       it(`should throw given message without target: ${JSON.stringify(message)}`, () => {
@@ -1014,20 +1018,43 @@ describe('Messaging', () => {
       }).to.throw('MulticastMessage must be a non-null object');
       expect(() => {
         messaging.sendEachForMulticast({} as any);
-      }).to.throw('tokens must be a non-empty array');
+      }).to.throw('Either tokens or fids must be a non-empty array');
       expect(() => {
         messaging.sendEachForMulticast({ tokens: [] });
       }).to.throw('tokens must be a non-empty array');
+      expect(() => {
+        messaging.sendEachForMulticast({ fids: [] });
+      }).to.throw('fids must be a non-empty array');
     });
 
-    it('should throw when called with more than 500 messages', () => {
+    it('should throw when called with more than 500 messages in total', () => {
       const tokens: string[] = [];
       for (let i = 0; i < 501; i++) {
         tokens.push(`token${i}`);
       }
       expect(() => {
         messaging.sendEachForMulticast({ tokens });
-      }).to.throw('tokens list must not contain more than 500 items');
+      }).to.throw('tokens and fids list must not contain more than 500 items in total');
+
+      const fids: string[] = [];
+      for (let i = 0; i < 501; i++) {
+        fids.push(`fid${i}`);
+      }
+      expect(() => {
+        messaging.sendEachForMulticast({ fids });
+      }).to.throw('tokens and fids list must not contain more than 500 items in total');
+
+      const mixedTokens: string[] = [];
+      const mixedFids: string[] = [];
+      for (let i = 0; i < 250; i++) {
+        mixedTokens.push(`token${i}`);
+      }
+      for (let i = 0; i < 251; i++) {
+        mixedFids.push(`fid${i}`);
+      }
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: mixedTokens, fids: mixedFids });
+      }).to.throw('tokens and fids list must not contain more than 500 items in total');
     });
 
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -1098,6 +1125,88 @@ describe('Messaging', () => {
       stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
       const tokens = ['a', 'b', 'c'];
       return messaging.sendEachForMulticast({ tokens }, true)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          expect(stub!.args[0][1]).to.be.true;
+          expect(stub!.args[0][2]).to.be.undefined;
+        });
+    });
+
+    it('should create multiple messages using fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const fids = ['f1', 'f2', 'f3'];
+      const multicast: MulticastMessage = {
+        fids,
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
+      };
+      return messaging.sendEachForMulticast(multicast)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(3);
+          expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
+          messages.forEach((message, idx) => {
+            expect((message as FidMessage).fid).to.equal(fids[idx]);
+            expect(message.android).to.deep.equal(multicast.android);
+            expect(message.apns).to.be.deep.equal(multicast.apns);
+            expect(message.data).to.be.deep.equal(multicast.data);
+            expect(message.notification).to.deep.equal(multicast.notification);
+            expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
+          });
+        });
+    });
+
+    it('should create multiple messages using mixed tokens and fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const tokens = ['t1', 't2'];
+      const fids = ['f1'];
+      const multicast: MulticastMessage = {
+        tokens,
+        fids,
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
+      };
+      return messaging.sendEachForMulticast(multicast)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(3);
+          expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
+
+          expect((messages[0] as TokenMessage).token).to.equal('t1');
+          expect((messages[1] as TokenMessage).token).to.equal('t2');
+          expect((messages[2] as FidMessage).fid).to.equal('f1');
+
+          messages.forEach((message) => {
+            expect(message.android).to.deep.equal(multicast.android);
+            expect(message.apns).to.be.deep.equal(multicast.apns);
+            expect(message.data).to.be.deep.equal(multicast.data);
+            expect(message.notification).to.deep.equal(multicast.notification);
+            expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
+          });
+        });
+    });
+
+    it('should pass dryRun argument through when using fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const fids = ['f1', 'f2', 'f3'];
+      return messaging.sendEachForMulticast({ fids }, true)
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;

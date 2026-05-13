@@ -297,18 +297,33 @@ export class Messaging {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
     }
-    if (!validator.isNonEmptyArray(copy.tokens)) {
+
+    const tokens: string[] = copy.tokens || [];
+    const fids: string[] = copy.fids || [];
+
+    if ('tokens' in copy && !validator.isNonEmptyArray(copy.tokens)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
     }
-    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
+    if ('fids' in copy && !validator.isNonEmptyArray(copy.fids)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a non-empty array');
+    }
+    if (tokens.length === 0 && fids.length === 0) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'Either tokens or fids must be a non-empty array');
     }
 
-    const messages: Message[] = copy.tokens.map((token) => {
-      return {
+    const totalLength = tokens.length + fids.length;
+    if (totalLength > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `tokens and fids list must not contain more than ${FCM_MAX_BATCH_SIZE} items in total`);
+    }
+
+    const messages: Message[] = [];
+    tokens.forEach((token) => {
+      messages.push({
         token,
         android: copy.android,
         apns: copy.apns,
@@ -316,8 +331,20 @@ export class Messaging {
         notification: copy.notification,
         webpush: copy.webpush,
         fcmOptions: copy.fcmOptions,
-      };
+      });
     });
+    fids.forEach((fid) => {
+      messages.push({
+        fid,
+        android: copy.android,
+        apns: copy.apns,
+        data: copy.data,
+        notification: copy.notification,
+        webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
+      });
+    });
+
     return this.sendEach(messages, dryRun);
   }
 
