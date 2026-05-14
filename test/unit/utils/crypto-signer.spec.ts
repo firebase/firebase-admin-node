@@ -57,7 +57,7 @@ describe('CryptoSigner', () => {
       const cert = new ServiceAccountCredential(mocks.certificateObject);
 
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const crypto = require('crypto');
+      const crypto = require('node:crypto');
       const rsa = crypto.createSign('RSA-SHA256');
       rsa.update(payload);
       const result = rsa.sign(cert.privateKey, 'base64');
@@ -104,8 +104,8 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/foo@project_id.iam.gserviceaccount.com:signBlob',
-        headers: { 
-          Authorization: `Bearer ${mockAccessToken}`, 
+        headers: {
+          Authorization: `Bearer ${mockAccessToken}`,
           'X-Goog-Api-Client': getMetricsHeader()
         },
         data: { payload: input.toString('base64') },
@@ -162,7 +162,7 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${mockAccessToken}`,
           'X-Goog-Api-Client': getMetricsHeader()
         },
