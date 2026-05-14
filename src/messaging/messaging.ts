@@ -23,6 +23,7 @@ import {
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
+import { getErrorCode, createFirebaseError } from './messaging-errors-internal';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 
 import {
@@ -34,52 +35,13 @@ import {
   // Legacy API types
   SendResponse,
 } from './messaging-api';
-import { Http2SessionHandler } from '../utils/api-request';
+import { Http2SessionHandler, RequestResponseError } from '../utils/api-request';
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
-const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
-const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
-const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 // Maximum messages that can be included in a batch request.
 const FCM_MAX_BATCH_SIZE = 500;
-
-/**
- * Maps a raw FCM server response to a `MessagingTopicManagementResponse` object.
- *
- * @param {object} response The raw FCM server response to map.
- *
- * @returns {MessagingTopicManagementResponse} The mapped `MessagingTopicManagementResponse` object.
- */
-function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
-  // Add the success and failure counts.
-  const result: MessagingTopicManagementResponse = {
-    successCount: 0,
-    failureCount: 0,
-    errors: [],
-  };
-
-  if ('results' in response) {
-    (response as any).results.forEach((tokenManagementResult: any, index: number) => {
-      // Map the FCM server's error strings to actual error objects.
-      if ('error' in tokenManagementResult) {
-        result.failureCount += 1;
-        const newError = FirebaseMessagingError.fromTopicManagementServerError(
-          tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error,
-        );
-
-        result.errors.push({
-          index,
-          error: newError,
-        });
-      } else {
-        result.successCount += 1;
-      }
-    });
-  }
-  return result;
-}
 
 
 /**
@@ -344,7 +306,7 @@ export class Messaging {
       registrationTokenOrTokens,
       topic,
       'subscribeToTopic',
-      FCM_TOPIC_MANAGEMENT_ADD_PATH,
+      '',
     );
   }
 
@@ -371,7 +333,7 @@ export class Messaging {
       registrationTokenOrTokens,
       topic,
       'unsubscribeFromTopic',
-      FCM_TOPIC_MANAGEMENT_REMOVE_PATH,
+      '',
     );
   }
 
@@ -413,7 +375,7 @@ export class Messaging {
     registrationTokenOrTokens: string | string[],
     topic: string,
     methodName: string,
-    path: string,
+    _path: string,
   ): Promise<MessagingTopicManagementResponse> {
     this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
     this.validateTopicType(topic, methodName);
@@ -434,17 +396,88 @@ export class Messaging {
           registrationTokensArray = [registrationTokenOrTokens as string];
         }
 
-        const request = {
-          to: topic,
-          registration_tokens: registrationTokensArray,
-        };
+        return utils.findProjectId(this.app).then((projectId) => {
+          if (!validator.isNonEmptyString(projectId)) {
+            throw new FirebaseMessagingError(
+              MessagingClientErrorCode.INVALID_ARGUMENT,
+              'Failed to determine project ID for Messaging. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+            );
+          }
 
-        return this.messagingRequestHandler.invokeRequestHandler(
-          FCM_TOPIC_MANAGEMENT_HOST, path, request,
-        );
-      })
-      .then((response) => {
-        return mapRawResponseToTopicManagementResponse(response);
+          const topicName = topic.replace(/^\/topics\//, '');
+          const isSubscribe = methodName === 'subscribeToTopic';
+          const httpMethod = isSubscribe ? 'POST' : 'DELETE';
+
+          const http2SessionHandler = new Http2SessionHandler('https://fcm.googleapis.com');
+
+          let settledPromise: Promise<PromiseSettledResult<any>[]>;
+          return new Promise<MessagingTopicManagementResponse>((resolve, reject) => {
+            http2SessionHandler.invoke().catch((error) => {
+              reject(new FirebaseMessagingSessionError(error, undefined, undefined));
+            });
+
+            const requests = registrationTokensArray.map(async (registrationId) => {
+              let requestPath = `/v1/projects/${projectId}/registrations/${registrationId}/topicSubscriptions`;
+              if (isSubscribe) {
+                requestPath += `?topic_name=${topicName}`;
+              } else {
+                requestPath += `/${topicName}?allow_missing=true`;
+              }
+              return this.messagingRequestHandler.invokeHttp2RequestHandler(
+                'fcm.googleapis.com',
+                requestPath,
+                httpMethod,
+                isSubscribe ? {} : undefined,
+                http2SessionHandler
+              );
+            });
+
+            settledPromise = Promise.allSettled(requests);
+            settledPromise.then((results) => {
+              if (results.length > 0 && results.every((r) => r.status === 'rejected')) {
+                const firstReason = (results[0] as PromiseRejectedResult).reason;
+                if (firstReason instanceof RequestResponseError) {
+                  reject(createFirebaseError(firstReason));
+                } else {
+                  reject(firstReason);
+                }
+                return;
+              }
+
+              const response: MessagingTopicManagementResponse = {
+                successCount: 0,
+                failureCount: 0,
+                errors: [],
+              };
+
+              results.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                  response.successCount += 1;
+                } else {
+                  response.failureCount += 1;
+                  const err = result.reason;
+                  const errorCode = err.response?.isJson() ? getErrorCode(err.response.data) : null;
+                  const errorMessage = err.response?.isJson() ? err.response.data?.error?.message : err.message;
+                  const newError = FirebaseMessagingError.fromTopicManagementServerError(
+                    errorCode || 'UNKNOWN',
+                    errorMessage,
+                    err.response?.isJson() ? err.response.data : undefined
+                  );
+                  response.errors.push({
+                    index,
+                    error: newError,
+                  });
+                }
+              });
+
+              resolve(response);
+            });
+          }).finally(() => {
+            http2SessionHandler.close();
+          });
+        });
       });
   }
 
