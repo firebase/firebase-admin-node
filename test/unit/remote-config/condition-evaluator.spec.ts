@@ -26,9 +26,8 @@ import {
   NamedCondition,
   OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
-import { v4 as uuidv4 } from 'uuid';
 import { clone } from 'lodash';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 const expect = chai.expect;
 
@@ -907,7 +906,7 @@ describe('ConditionEvaluator', () => {
             ...clone(condition),
             seed: 'seed'
           };
-          const context = { randomizationId: uuidv4() }
+          const context = { randomizationId: crypto.randomUUID() }
           if (conditionEvaluator.evaluateConditions([{
             name: 'is_enabled',
             condition: { percent: clonedCondition }
