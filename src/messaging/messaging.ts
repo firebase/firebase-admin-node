@@ -298,8 +298,10 @@ export class Messaging {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
     }
 
-    const tokens: string[] = copy.tokens || [];
-    const fids: string[] = copy.fids || [];
+    const { tokens, fids, ...baseMessage } = copy;
+
+    const tokenList: string[] = tokens || [];
+    const fidList: string[] = fids || [];
 
     if ('tokens' in copy && !validator.isArray(copy.tokens)) {
       throw new FirebaseMessagingError(
@@ -309,22 +311,21 @@ export class Messaging {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a valid array');
     }
-    if (tokens.length === 0 && fids.length === 0) {
+    if (tokenList.length === 0 && fidList.length === 0) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'Either tokens or fids must be a non-empty array');
     }
 
-    const totalLength = tokens.length + fids.length;
+    const totalLength = tokenList.length + fidList.length;
     if (totalLength > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
         `The total number of tokens and fids must not exceed ${FCM_MAX_BATCH_SIZE}.`);
     }
 
-    const { tokens: _, fids: __, ...baseMessage } = copy;
     const messages: Message[] = [
-      ...tokens.map((token) => ({ ...baseMessage, token } as Message)),
-      ...fids.map((fid) => ({ ...baseMessage, fid } as Message)),
+      ...tokenList.map((token) => ({ ...baseMessage, token } as Message)),
+      ...fidList.map((fid) => ({ ...baseMessage, fid } as Message)),
     ];
 
     return this.sendEach(messages, dryRun);
