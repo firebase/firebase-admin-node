@@ -1349,7 +1349,7 @@ export abstract class AbstractAuthRequestHandler {
     if (customUserClaims === null) {
       customUserClaims = {};
     }
-    // Construct custom user attribute editting request.
+    // Construct custom user attribute editing request.
     const request: any = {
       localId: uid,
       customAttributes: JSON.stringify(customUserClaims),
@@ -1405,6 +1405,14 @@ export abstract class AbstractAuthRequestHandler {
             'providersToUnlink of properties argument must be an array of strings.');
         }
       });
+    } else if ((typeof properties.customUserClaims !== 'undefined') 
+      && !validator.isObject(properties.customUserClaims)) {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'customUserClaims of properties argument must be an object, null, or undefined.',
+        ),
+      );
     }
 
     // Build the setAccountInfo request.
@@ -1469,6 +1477,16 @@ export abstract class AbstractAuthRequestHandler {
     if (typeof request.disabled !== 'undefined') {
       request.disableUser = request.disabled;
       delete request.disabled;
+    }
+    // Rewrite customClaims to customAttributes
+    if (typeof request.customUserClaims !== 'undefined') {
+      if (request.customUserClaims === null) {
+        // Delete operation. Replace null with an empty object.
+        request.customAttributes = JSON.stringify({});
+      } else {
+        request.customAttributes = JSON.stringify(request.customUserClaims);
+      }
+      delete request.customUserClaims;
     }
     // Construct mfa related user data.
     if (validator.isNonNullObject(request.multiFactor)) {
