@@ -15,7 +15,7 @@
  */
 
 import * as url from 'url';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
