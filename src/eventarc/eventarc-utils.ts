@@ -18,8 +18,7 @@
 import { PrefixedFirebaseError } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 import * as validator from '../utils/validator';
-// TODO: remove import in next major (v14)
-import * as crypto from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // List of CloudEvent properties that are handled "by hand" and should be skipped by
 // automatic attribute copy.
@@ -51,7 +50,7 @@ export function toCloudEventProtoFormat(ce: CloudEvent): any {
   }
   const out: Record<string, any> = {
     '@type': 'type.googleapis.com/io.cloudevents.v1.CloudEvent',
-    'id': ce.id ?? crypto.randomUUID(),
+    'id': ce.id ?? randomUUID(),
     'type': ce.type,
     'specVersion': ce.specversion ?? '1.0',
     'source': source

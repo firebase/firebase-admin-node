@@ -27,7 +27,7 @@ import {
   OneOfCondition,
 } from '../../../src/remote-config/remote-config-api';
 import { clone } from 'lodash';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 const expect = chai.expect;
 
