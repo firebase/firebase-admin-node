@@ -168,9 +168,8 @@ export interface FcmOptions {
     analyticsLabel?: string;
 }
 
-// @public (undocumented)
+// @public
 export interface FidMessage extends BaseMessage {
-    // (undocumented)
     fid: string;
 }
 
@@ -337,7 +336,7 @@ export interface MessagingTopicManagementResponse {
 export interface MulticastMessage extends BaseMessage {
     fids?: string[];
     // @deprecated
-    tokens?: string[];
+    tokens: string[];
 }
 
 // @public

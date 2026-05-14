@@ -26,7 +26,13 @@ export interface BaseMessage {
   fcmOptions?: FcmOptions;
 }
 
+/**
+ * Interface representing a message that targets a Firebase Installation ID (FID).
+ */
 export interface FidMessage extends BaseMessage {
+  /**
+   * The Firebase Installation ID (FID) to which the message should be sent.
+   */
   fid: string;
 }
 
@@ -66,7 +72,7 @@ export interface MulticastMessage extends BaseMessage {
    *
    * @deprecated Use {@link MulticastMessage.fids} instead.
    */
-  tokens?: string[];
+  tokens: string[];
 }
 
 /**

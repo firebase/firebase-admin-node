@@ -156,6 +156,7 @@ describe('admin.messaging', () => {
     const multicastMessage: MulticastMessage = {
       data: message.data,
       android: message.android,
+      tokens: [],
       fids: ['not-a-fid', 'also-not-a-fid'],
     };
     return getMessaging().sendEachForMulticast(multicastMessage, true)

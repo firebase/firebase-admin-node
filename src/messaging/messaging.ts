@@ -301,13 +301,13 @@ export class Messaging {
     const tokens: string[] = copy.tokens || [];
     const fids: string[] = copy.fids || [];
 
-    if ('tokens' in copy && !validator.isNonEmptyArray(copy.tokens)) {
+    if ('tokens' in copy && !validator.isArray(copy.tokens)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a valid array');
     }
-    if ('fids' in copy && !validator.isNonEmptyArray(copy.fids)) {
+    if ('fids' in copy && !validator.isArray(copy.fids)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a non-empty array');
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a valid array');
     }
     if (tokens.length === 0 && fids.length === 0) {
       throw new FirebaseMessagingError(
@@ -318,32 +318,14 @@ export class Messaging {
     if (totalLength > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens and fids list must not contain more than ${FCM_MAX_BATCH_SIZE} items in total`);
+        `The total number of tokens and fids must not exceed ${FCM_MAX_BATCH_SIZE}.`);
     }
 
-    const messages: Message[] = [];
-    tokens.forEach((token) => {
-      messages.push({
-        token,
-        android: copy.android,
-        apns: copy.apns,
-        data: copy.data,
-        notification: copy.notification,
-        webpush: copy.webpush,
-        fcmOptions: copy.fcmOptions,
-      });
-    });
-    fids.forEach((fid) => {
-      messages.push({
-        fid,
-        android: copy.android,
-        apns: copy.apns,
-        data: copy.data,
-        notification: copy.notification,
-        webpush: copy.webpush,
-        fcmOptions: copy.fcmOptions,
-      });
-    });
+    const { tokens: _, fids: __, ...baseMessage } = copy;
+    const messages: Message[] = [
+      ...tokens.map((token) => ({ ...baseMessage, token } as Message)),
+      ...fids.map((fid) => ({ ...baseMessage, fid } as Message)),
+    ];
 
     return this.sendEach(messages, dryRun);
   }
