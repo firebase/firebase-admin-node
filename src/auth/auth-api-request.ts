@@ -1152,8 +1152,10 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   public getAccountInfoByFederatedUid(providerId: string, rawId: string): Promise<object> {
-    if (!validator.isNonEmptyString(providerId) || !validator.isNonEmptyString(rawId)) {
+    if (!validator.isNonEmptyString(providerId)) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    } else if (!validator.isNonEmptyString(rawId)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
     }
 
     const request = {
