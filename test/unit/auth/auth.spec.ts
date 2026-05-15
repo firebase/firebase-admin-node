@@ -1397,10 +1397,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .with.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected given an invalid provider uid', () => {
+      it('should be rejected given an invalid uid', () => {
         expect(() => auth.getUserByProviderUid('id', ''))
           .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-provider-id');
+          .with.property('code', 'auth/invalid-uid');
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
