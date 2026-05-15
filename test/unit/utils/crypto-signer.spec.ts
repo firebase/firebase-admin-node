@@ -56,7 +56,6 @@ describe('CryptoSigner', () => {
       const payload = Buffer.from('test');
       const cert = new ServiceAccountCredential(mocks.certificateObject);
 
-       
       const crypto = require('crypto');
       const rsa = crypto.createSign('RSA-SHA256');
       rsa.update(payload);

@@ -21,7 +21,6 @@ export declare function firestore(app?: App): _firestore.Firestore;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace firestore {
-   
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import v1beta1 = _firestore.v1beta1;
   export import v1 = _firestore.v1;

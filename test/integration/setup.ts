@@ -22,7 +22,6 @@ import {
   App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
 } from '../../lib/app/index'
 
- 
 const chalk = require('chalk');
 
 export let databaseUrl: string;

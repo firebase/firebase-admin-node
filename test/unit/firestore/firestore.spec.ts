@@ -43,7 +43,6 @@ describe('Firestore', () => {
     + 'credentials. Must initialize the SDK with a certificate credential or application default '
     + 'credentials to use Cloud Firestore API.';
 
-   
   const sdkVersion = getSdkVersion();
   const defaultCredentialApps = [
     {

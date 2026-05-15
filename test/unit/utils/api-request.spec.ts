@@ -403,7 +403,6 @@ describe('HttpClient', () => {
     const client = new HttpClient();
     const httpAgent = new Agent();
 
-     
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
@@ -2650,7 +2649,6 @@ describe('AuthorizedHttpClient', () => {
       const options = mockApp.options;
       options.httpAgent = new Agent();
 
-       
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);

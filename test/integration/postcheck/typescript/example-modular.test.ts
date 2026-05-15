@@ -33,8 +33,6 @@ import { getStorage, Storage } from 'firebase-admin/storage';
 
 import { Bucket } from '@google-cloud/storage';
 
-
- 
 const serviceAccount = require('../mock.key.json');
 
 describe('Modular API', () => {

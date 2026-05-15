@@ -26,7 +26,7 @@ let sdkVersion: string;
 // TODO: Move to firebase-admin/app as an internal member.
 export function getSdkVersion(): string {
   if (!sdkVersion) {
-    const { version } = require('../../package.json');  
+    const { version } = require('../../package.json');
     sdkVersion = version;
   }
   return sdkVersion;

@@ -22,7 +22,6 @@ import {
 } from '../../lib/database/index';
 import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl, isEmulator } from './setup';
 
- 
 const chalk = require('chalk');
 
 chai.should();

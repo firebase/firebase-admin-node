@@ -37,7 +37,7 @@ import {
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-const chalk = require('chalk');  
+const chalk = require('chalk');
 
 chai.should();
 chai.use(sinonChai);

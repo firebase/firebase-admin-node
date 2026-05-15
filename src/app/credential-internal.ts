@@ -214,7 +214,6 @@ class ServiceAccount {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
-     
     const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);

@@ -22,7 +22,6 @@ import { Firestore } from '@google-cloud/firestore';
 
 import * as admin from 'firebase-admin';
 
- 
 const serviceAccount = require('../mock.key.json');
 
 describe('Legacy API', () => {

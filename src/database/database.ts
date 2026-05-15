@@ -124,7 +124,6 @@ export class DatabaseService {
 
     let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
-       
       const rtdb = require('@firebase/database-compat/standalone');
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
@@ -150,7 +149,6 @@ export class DatabaseService {
     return db;
   }
 
-   
   private onTokenChange(_: string): void {
     const token = this.firebaseApp.INTERNAL.getCachedToken();
     if (token) {

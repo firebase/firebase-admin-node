@@ -21,7 +21,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 import fs = require('fs');
 import path = require('path');
 
- 
 const chalk = require('chalk');
 
 chai.should();

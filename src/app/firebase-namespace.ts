@@ -134,7 +134,6 @@ export class FirebaseNamespace {
       return this.ensureApp(app).database();
     };
 
-     
     return Object.assign(fn, require('@firebase/database-compat/standalone'));
   }
 
@@ -171,7 +170,6 @@ export class FirebaseNamespace {
       return this.ensureApp(app).firestore();
     };
 
-     
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);
