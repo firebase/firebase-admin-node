@@ -34,7 +34,7 @@ import { getStorage, Storage } from 'firebase-admin/storage';
 import { Bucket } from '@google-cloud/storage';
 
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const serviceAccount = require('../mock.key.json');
 
 describe('Modular API', () => {

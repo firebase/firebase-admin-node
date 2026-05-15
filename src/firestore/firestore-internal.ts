@@ -114,7 +114,7 @@ export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSetti
 
   const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const sdkVersion = utils.getSdkVersion();
   const preferRest = firestoreSettings?.preferRest;
   if (credential instanceof ServiceAccountCredential) {

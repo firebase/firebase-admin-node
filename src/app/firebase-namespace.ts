@@ -134,7 +134,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).database();
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     return Object.assign(fn, require('@firebase/database-compat/standalone'));
   }
 
@@ -171,7 +171,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).firestore();
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);

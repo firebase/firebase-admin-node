@@ -22,7 +22,7 @@ import {
 } from '../../lib/database/index';
 import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl, isEmulator } from './setup';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const chalk = require('chalk');
 
 chai.should();

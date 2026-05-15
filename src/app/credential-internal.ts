@@ -214,7 +214,7 @@ class ServiceAccount {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);

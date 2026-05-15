@@ -185,7 +185,7 @@ describe('firebase-admin/app', () => {
 
   describe('SDK_VERSION', () => {
     it('should indicate the current version of the SDK', () => {
-      const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const { version } = require('../../../package.json');  
       expect(SDK_VERSION).to.equal(version);
     });
   });

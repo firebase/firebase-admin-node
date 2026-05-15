@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import fs = require('fs');
 import path = require('path');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const chalk = require('chalk');
 
 chai.should();

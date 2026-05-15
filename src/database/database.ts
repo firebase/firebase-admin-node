@@ -124,7 +124,7 @@ export class DatabaseService {
 
     let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       const rtdb = require('@firebase/database-compat/standalone');
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
@@ -150,7 +150,7 @@ export class DatabaseService {
     return db;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   private onTokenChange(_: string): void {
     const token = this.firebaseApp.INTERNAL.getCachedToken();
     if (token) {
