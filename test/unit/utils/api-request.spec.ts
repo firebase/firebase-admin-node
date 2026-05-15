@@ -1101,7 +1101,10 @@ describe('HttpClient', () => {
   });
 
   it('should wait when retry-after expressed as a timestamp', () => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({
+      toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
+      shouldClearNativeTimers: true
+    });
     clock.setSystemTime(1000);
     const timestamp = new Date(clock.now + 30 * 1000);
 
