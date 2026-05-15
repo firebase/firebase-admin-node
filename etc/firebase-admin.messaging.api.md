@@ -211,6 +211,7 @@ export const MessagingErrorCode: {
     readonly INVALID_PACKAGE_NAME: "invalid-package-name";
     readonly DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded";
     readonly TOPICS_MESSAGE_RATE_EXCEEDED: "topics-message-rate-exceeded";
+    readonly TOPICS_SUBSCRIPTION_RATE_EXCEEDED: "topics-subscription-rate-exceeded";
     readonly MESSAGE_RATE_EXCEEDED: "message-rate-exceeded";
     readonly THIRD_PARTY_AUTH_ERROR: "third-party-auth-error";
     readonly TOO_MANY_TOPICS: "too-many-topics";
