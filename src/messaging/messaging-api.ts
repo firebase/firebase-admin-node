@@ -58,7 +58,7 @@ export interface ConditionMessage extends BaseMessage {
 export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the {@link Messaging.sendEachForMulticast} method.
+ * Payload for the `sendEachForMulticast` method.
  *
  * @deprecated Use {@link FidMulticastMessage} instead.
  */
@@ -76,7 +76,7 @@ export interface MulticastMessage extends BaseMessage {
 }
 
 /**
- * Payload for the {@link Messaging.sendEachForMulticast} method containing only FIDs.
+ * Payload for the `sendEachForMulticast` method containing only FIDs.
  */
 export interface FidMulticastMessage extends BaseMessage {
   /**
@@ -1034,7 +1034,7 @@ export interface MessagingTopicManagementResponse {
 
 /**
  * Interface representing the server response from the
- * {@link Messaging.sendEach} and {@link Messaging.sendEachForMulticast} methods.
+ * {@link Messaging.sendEach} and `sendEachForMulticast` methods.
  */
 export interface BatchResponse {
 

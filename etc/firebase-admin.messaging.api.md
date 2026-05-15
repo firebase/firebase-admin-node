@@ -173,6 +173,11 @@ export interface FidMessage extends BaseMessage {
     fid: string;
 }
 
+// @public
+export interface FidMulticastMessage extends BaseMessage {
+    fids: string[];
+}
+
 // Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -201,7 +206,9 @@ export class Messaging {
     enableLegacyHttpTransport(): void;
     send(message: Message, dryRun?: boolean): Promise<string>;
     sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    // @deprecated
     sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+    sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
 }
@@ -332,7 +339,7 @@ export interface MessagingTopicManagementResponse {
     successCount: number;
 }
 
-// @public
+// @public @deprecated
 export interface MulticastMessage extends BaseMessage {
     fids?: string[];
     // @deprecated
