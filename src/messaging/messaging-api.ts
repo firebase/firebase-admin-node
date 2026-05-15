@@ -58,21 +58,31 @@ export interface ConditionMessage extends BaseMessage {
 export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields
- * in the BaseMessage type, and a list of tokens and/or fids.
+ * Payload for the {@link Messaging.sendEachForMulticast} method.
+ *
+ * @deprecated Use {@link FidMulticastMessage} instead.
  */
 export interface MulticastMessage extends BaseMessage {
   /**
    * A list of Firebase Installation IDs (FIDs) to target.
    */
   fids?: string[];
-
   /**
    * A list of registration tokens to target.
    *
-   * @deprecated Use {@link MulticastMessage.fids} instead.
+   * @deprecated Use `fids` in {@link FidMulticastMessage} instead.
    */
   tokens: string[];
+}
+
+/**
+ * Payload for the {@link Messaging.sendEachForMulticast} method containing only FIDs.
+ */
+export interface FidMulticastMessage extends BaseMessage {
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids: string[];
 }
 
 /**

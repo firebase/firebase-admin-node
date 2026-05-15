@@ -16,7 +16,7 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
+import { Message, MulticastMessage, FidMulticastMessage, getMessaging } from '../../lib/messaging/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -153,10 +153,9 @@ describe('admin.messaging', () => {
   });
 
   it('sendEachForMulticast() with fids', () => {
-    const multicastMessage: MulticastMessage = {
+    const multicastMessage: FidMulticastMessage = {
       data: message.data,
       android: message.android,
-      tokens: [],
       fids: ['not-a-fid', 'also-not-a-fid'],
     };
     return getMessaging().sendEachForMulticast(multicastMessage, true)

@@ -30,6 +30,7 @@ import {
   ConditionMessage as TConditionMessage,
   FcmOptions as TFcmOptions,
   FidMessage as TFidMessage,
+  FidMulticastMessage as TFidMulticastMessage,
   LightSettings as TLightSettings,
   Message as TMessage,
   MessagingTopicManagementResponse as TMessagingTopicManagementResponse,
@@ -162,8 +163,15 @@ export namespace messaging {
 
   /**
    * Type alias to {@link firebase-admin.messaging#MulticastMessage}.
+   *
+   * @deprecated Use {@link firebase-admin.messaging#FidMulticastMessage} instead.
    */
   export type MulticastMessage = TMulticastMessage;
+
+  /**
+   * Type alias to {@link firebase-admin.messaging#FidMulticastMessage}.
+   */
+  export type FidMulticastMessage = TFidMulticastMessage;
 
   /**
    * Type alias to {@link firebase-admin.messaging#Notification}.

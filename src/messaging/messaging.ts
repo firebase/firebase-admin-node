@@ -27,6 +27,7 @@ import { FirebaseMessagingRequestHandler } from './messaging-api-request-interna
 
 import {
   BatchResponse,
+  FidMulticastMessage,
   Message,
   MessagingTopicManagementResponse,
   MulticastMessage,
@@ -274,25 +275,47 @@ export class Messaging {
   }
 
   /**
-   * Sends the given multicast message to all the FCM registration tokens
+   * Sends the given multicast message to all the FCM registration tokens or fids
    * specified in it.
    *
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
-   * return value corresponds to the order of tokens in the `MulticastMessage`.
+   * return value corresponds to the order of tokens/fids in the `MulticastMessage`.
    * An error from this method or a `BatchResponse` with all failures indicates a total
-   * failure, meaning that the messages in the list could be sent. Partial failures or
-   * failures are only indicated by a `BatchResponse` return value.
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
    *
-   * @param message - A multicast message
-   *   containing up to 500 tokens.
+   * @deprecated Use the overload accepting {@link FidMulticastMessage} instead.
+   *
+   * @param message - A multicast message containing up to 500 tokens and/or fids.
    * @param dryRun - Whether to send the message in the dry-run
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
-  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
-    const copy: MulticastMessage = deepCopy(message);
+  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  /**
+   * Sends the given multicast message to all the FCM fids specified in it.
+   *
+   * This method uses the {@link Messaging.sendEach} API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the
+   * return value corresponds to the order of fids in the `FidMulticastMessage`.
+   * An error from this method or a `BatchResponse` with all failures indicates a total
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
+   *
+   * @param message - A multicast message containing up to 500 fids.
+   * @param dryRun - Whether to send the message in the dry-run (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the send operation.
+   */
+  public sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  public sendEachForMulticast(
+    message: MulticastMessage | FidMulticastMessage,
+    dryRun?: boolean,
+  ): Promise<BatchResponse> {
+    const copy: any = deepCopy(message);
     if (!validator.isNonNullObject(copy)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');

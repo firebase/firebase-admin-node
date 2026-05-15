@@ -29,7 +29,8 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   Message,
   MessagingTopicManagementResponse, BatchResponse,
-  SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage, FidMessage,
+  SendResponse, MulticastMessage, FidMulticastMessage, Messaging,
+  TokenMessage, TopicMessage, ConditionMessage, FidMessage,
 } from '../../../src/messaging/index';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
@@ -1142,8 +1143,7 @@ describe('Messaging', () => {
     it('should create multiple messages using fids', () => {
       stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
       const fids = ['f1', 'f2', 'f3'];
-      const multicast: MulticastMessage = {
-        tokens: [],
+      const multicast: FidMulticastMessage = {
         fids,
         android: { ttl: 100 },
         apns: { payload: { aps: { badge: 42 } } },
@@ -1245,7 +1245,7 @@ describe('Messaging', () => {
     it('should pass dryRun argument through when using fids', () => {
       stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
       const fids = ['f1', 'f2', 'f3'];
-      return messaging.sendEachForMulticast({ tokens: [], fids }, true)
+      return messaging.sendEachForMulticast({ fids }, true)
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
