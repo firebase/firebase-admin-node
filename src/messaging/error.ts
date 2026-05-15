@@ -115,9 +115,9 @@ export const messagingClientErrorCode: { readonly [K in keyof typeof MessagingEr
   },
   TOPICS_SUBSCRIPTION_RATE_EXCEEDED: {
     code: MessagingErrorCode.TOPICS_SUBSCRIPTION_RATE_EXCEEDED,
-    message: 'The rate of subscription requests to a particular topic is too ' +
-      'high. Reduce the number of requests sent for this topic, and do not immediately retry subscribing ' +
-      'to this topic.',
+    message: 'The rate of subscription management requests to a particular topic is too ' +
+      'high. Reduce the number of requests sent for this topic, and do not immediately retry the ' +
+      'request for this topic.',
   },
   MESSAGE_RATE_EXCEEDED: {
     code: MessagingErrorCode.MESSAGE_RATE_EXCEEDED,
