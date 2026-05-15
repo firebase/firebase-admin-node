@@ -129,7 +129,7 @@ class DefaultRequestResponse implements RequestResponse {
   public readonly text?: string;
 
   private readonly parsedData: any;
-  private readonly parseError: Error;
+  private readonly parseError!: Error;
   private readonly request: string;
 
   /**
@@ -146,7 +146,7 @@ class DefaultRequestResponse implements RequestResponse {
       this.parsedData = JSON.parse(resp.data);
     } catch (err) {
       this.parsedData = undefined;
-      this.parseError = err;
+      this.parseError = err as Error;
     }
     this.request = `${resp.config.method} ${resp.config.url}`;
   }
@@ -284,7 +284,7 @@ function validateRetryConfig(retry: RetryConfig): void {
 }
 
 export class RequestClient {
-  protected readonly retry: RetryConfig;
+  protected readonly retry!: RetryConfig;
 
   constructor(retry: RetryConfig | null = defaultRetryConfig()) {
     if (retry) {
@@ -564,11 +564,11 @@ export function parseHttpResponse(
  * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
 class AsyncRequestCall {
-  protected resolve: (_: any) => void;
-  protected reject: (_: any) => void;
-  protected options: https.RequestOptions;
+  protected resolve!: (_: any) => void;
+  protected reject!: (_: any) => void;
+  protected options!: https.RequestOptions;
   protected entity: Buffer | undefined;
-  protected promise: Promise<LowLevelResponse>;
+  protected promise!: Promise<LowLevelResponse>;
 
   constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) {}
 
@@ -715,7 +715,7 @@ class AsyncRequestCall {
  * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
  */
 class AsyncHttpCall extends AsyncRequestCall {
-  private readonly httpConfigImpl: HttpRequestConfigImpl;
+  private readonly httpConfigImpl!: HttpRequestConfigImpl;
 
   /**
    * Sends an HTTP request based on the provided configuration.
@@ -816,7 +816,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 }
 
 class AsyncHttp2Call extends AsyncRequestCall {
-  private readonly http2ConfigImpl: Http2RequestConfigImpl
+  private readonly http2ConfigImpl!: Http2RequestConfigImpl
 
   /**
    * Sends an HTTP2 request based on the provided configuration.
@@ -1156,8 +1156,8 @@ export class AuthorizedHttp2Client extends Http2Client {
  * @constructor
  */
 export class ApiSettings {
-  private requestValidator: ApiCallbackFunction;
-  private responseValidator: ApiCallbackFunction;
+  private requestValidator!: ApiCallbackFunction;
+  private responseValidator!: ApiCallbackFunction;
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
@@ -1233,12 +1233,12 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
   private numTries = 0;
   private completed = false;
 
-  private masterTimer: NodeJS.Timeout;
-  private repollTimer: NodeJS.Timeout;
+  private masterTimer!: NodeJS.Timeout;
+  private repollTimer!: NodeJS.Timeout;
 
   private pollCallback?: () => Promise<T>;
-  private resolve: (result: T) => void;
-  private reject: (err: object) => void;
+  private resolve!: (result: T) => void;
+  private reject!: (err: object) => void;
 
   constructor(
       private readonly initialPollingDelayMillis: number = 1000,
@@ -1325,10 +1325,10 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 
 export class Http2SessionHandler {
 
-  private http2Session: http2.ClientHttp2Session
-  protected promise: Promise<void>
-  protected resolve: () => void;
-  protected reject: (_: any) => void;
+  private http2Session!: http2.ClientHttp2Session
+  protected promise!: Promise<void>
+  protected resolve!: () => void;
+  protected reject!: (_: any) => void;
 
   constructor(url: string){
     this.promise = new Promise((resolve, reject) => {

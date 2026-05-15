@@ -69,7 +69,7 @@ export class TenantAwareAuth extends BaseAuth {
    * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
    * generation APIs, etc will only be applied within the scope of this tenant.
    */
-  public readonly tenantId: string;
+  public readonly tenantId!: string;
 
   /**
    * The TenantAwareAuth class constructor.

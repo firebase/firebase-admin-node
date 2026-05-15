@@ -121,7 +121,7 @@ export function createFirebaseTokenGenerator(app: App,
     const signer = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
     return new FirebaseTokenGenerator(signer, tenantId);
   } catch (err) {
-    throw handleCryptoSignerError(err);
+    throw handleCryptoSignerError(err as Error);
   }
 }
 

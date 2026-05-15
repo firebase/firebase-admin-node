@@ -52,7 +52,7 @@ export class FirebaseInstallationsRequestHandler {
   private readonly host: string = FIREBASE_IID_HOST;
   private readonly timeout: number = FIREBASE_IID_TIMEOUT;
   private readonly httpClient: AuthorizedHttpClient;
-  private path: string;
+  private path!: string;
 
   /**
    * @param app - The app used to fetch access tokens to sign API requests.

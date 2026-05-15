@@ -51,7 +51,7 @@ export class AppCheck {
     try {
       this.tokenGenerator = new AppCheckTokenGenerator(cryptoSignerFromApp(app));
     } catch (err) {
-      throw appCheckErrorFromCryptoSignerError(err);
+      throw appCheckErrorFromCryptoSignerError(err as Error);
     }
     this.appCheckTokenVerifier = new AppCheckTokenVerifier(app);
   }

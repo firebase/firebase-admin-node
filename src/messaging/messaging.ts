@@ -87,7 +87,7 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
  */
 export class Messaging {
 
-  private urlPath: string;
+  private urlPath!: string;
   private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
   private useLegacyTransport = false;

@@ -50,7 +50,7 @@ interface KeyFetcher {
 }
 
 export class JwksFetcher implements KeyFetcher {
-  private publicKeys: { [key: string]: string };
+  private publicKeys!: { [key: string]: string };
   private publicKeysExpireAt = 0;
   private client: jwks.JwksClient;
 
@@ -99,7 +99,7 @@ export class JwksFetcher implements KeyFetcher {
  * Class to fetch public keys from a client certificates URL.
  */
 export class UrlKeyFetcher implements KeyFetcher {
-  private publicKeys: { [key: string]: string };
+  private publicKeys!: { [key: string]: string };
   private publicKeysExpireAt = 0;
 
   constructor(private clientCertUrl: string, private readonly httpAgent?: Agent) {

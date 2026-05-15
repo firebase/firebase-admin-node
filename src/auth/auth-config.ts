@@ -1337,7 +1337,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly issuer: string;
   public readonly clientId: string;
   public readonly clientSecret?: string;
-  public readonly responseType: OAuthResponseType;
+  public readonly responseType?: OAuthResponseType;
 
   /**
    * Converts a client side request to a OIDCConfigServerRequest which is the format

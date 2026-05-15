@@ -100,7 +100,7 @@ export abstract class MultiFactorInfo {
   /**
    * The ID of the enrolled second factor. This ID is unique to the user.
    */
-  public readonly uid: string;
+  public readonly uid!: string;
 
   /**
    * The optional display name of the enrolled second factor.
@@ -112,7 +112,7 @@ export abstract class MultiFactorInfo {
    * For SMS second factors, this is `phone`.
    * For TOTP second factors, this is `totp`.
    */
-  public readonly factorId: string;
+  public readonly factorId!: string;
 
   /**
    * The optional date the second factor was enrolled, formatted as a UTC string.
@@ -215,7 +215,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   /**
    * The phone number associated with a phone second factor.
    */
-  public readonly phoneNumber: string;
+  public readonly phoneNumber!: string;
 
   /**
    * Initializes the PhoneMultiFactorInfo object using the server side response.
@@ -269,7 +269,7 @@ export class TotpMultiFactorInfo extends MultiFactorInfo {
   /**
    * `TotpInfo` struct associated with a second factor
    */
-  public readonly totpInfo: TotpInfo;
+  public readonly totpInfo!: TotpInfo;
 
   /**
    * Initializes the `TotpMultiFactorInfo` object using the server side response.
@@ -317,7 +317,7 @@ export class MultiFactorSettings {
    * List of second factors enrolled with the current user.
    * Currently only phone and TOTP second factors are supported.
    */
-  public enrolledFactors: MultiFactorInfo[];
+  public enrolledFactors!: MultiFactorInfo[];
 
   /**
    * Initializes the `MultiFactor` object using the server side or JWT format response.
@@ -365,12 +365,12 @@ export class UserMetadata {
   /**
    * The date the user was created, formatted as a UTC string.
    */
-  public readonly creationTime: string;
+  public readonly creationTime!: string;
 
   /**
    * The date the user last signed in, formatted as a UTC string.
    */
-  public readonly lastSignInTime: string;
+  public readonly lastSignInTime!: string;
 
   /**
    * The time at which the user was last active (ID token refreshed),
@@ -419,32 +419,32 @@ export class UserInfo {
   /**
    * The user identifier for the linked provider.
    */
-  public readonly uid: string;
+  public readonly uid!: string;
 
   /**
    * The display name for the linked provider.
    */
-  public readonly displayName: string;
+  public readonly displayName!: string;
 
   /**
    * The email for the linked provider.
    */
-  public readonly email: string;
+  public readonly email!: string;
 
   /**
    * The photo URL for the linked provider.
    */
-  public readonly photoURL: string;
+  public readonly photoURL!: string;
 
   /**
    * The linked provider ID (for example, "google.com" for the Google provider).
    */
-  public readonly providerId: string;
+  public readonly providerId!: string;
 
   /**
    * The phone number for the linked provider.
    */
-  public readonly phoneNumber: string;
+  public readonly phoneNumber!: string;
 
 
   /**
@@ -494,7 +494,7 @@ export class UserRecord {
   /**
    * The user's `uid`.
    */
-  public readonly uid: string;
+  public readonly uid!: string;
 
   /**
    * The user's primary email, if set.
@@ -504,7 +504,7 @@ export class UserRecord {
   /**
    * Whether or not the user's primary email is verified.
    */
-  public readonly emailVerified: boolean;
+  public readonly emailVerified!: boolean;
 
   /**
    * The user's display name.
@@ -525,17 +525,17 @@ export class UserRecord {
    * Whether or not the user is disabled: `true` for disabled; `false` for
    * enabled.
    */
-  public readonly disabled: boolean;
+  public readonly disabled!: boolean;
 
   /**
    * Additional metadata about the user.
    */
-  public readonly metadata: UserMetadata;
+  public readonly metadata!: UserMetadata;
 
   /**
    * An array of providers (for example, Google, Facebook) linked to the user.
    */
-  public readonly providerData: UserInfo[];
+  public readonly providerData!: UserInfo[];
 
   /**
    * The user's hashed password (base64-encoded), only if Firebase Auth hashing
