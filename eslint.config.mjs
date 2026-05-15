@@ -26,7 +26,6 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.mocha,
       },
     },
     rules: {
@@ -128,6 +127,14 @@ export default tseslint.config(
         }
       ],
     }
+  },
+  {
+    files: ['test/**/*.ts', 'test/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.mocha,
+      },
+    },
   },
   {
     ignores: [
