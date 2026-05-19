@@ -605,7 +605,7 @@ class AsyncRequestCall {
   protected handleMultipartResponse(
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const busboy = require('@fastify/busboy');
     const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
@@ -806,7 +806,7 @@ class AsyncHttpCall extends AsyncRequestCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const zlib: typeof zlibmod = require('zlib');
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete res.headers['content-encoding'];
@@ -914,7 +914,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (headers['content-encoding'] && encodings.indexOf(headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const zlib: typeof zlibmod = require('zlib');
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete headers['content-encoding'];

@@ -18,10 +18,10 @@
     "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
     "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
     "test:coverage": "nyc npm run test:unit",
-    "lint:src": "eslint src/ --ext .ts",
-    "lint:src:fix": "eslint src/ --ext .ts --fix",
-    "lint:test": "eslint test/ --ext .ts",
-    "lint:test:fix": "eslint test/ --ext .ts --fix",
+    "lint:src": "eslint src/",
+    "lint:src:fix": "eslint src/ --fix",
+    "lint:test": "eslint test/",
+    "lint:test:fix": "eslint test/ --fix",
     "apidocs": "run-s api-extractor:local api-documenter",
     "api-extractor": "node generate-reports.js",
     "api-extractor:local": "npm run build && node generate-reports.js --local",
@@ -234,6 +234,7 @@
     "@google-cloud/storage": "^7.19.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@firebase/api-documenter": "^0.5.0",
     "@firebase/app-compat": "^0.5.12",
     "@firebase/auth-compat": "^0.6.6",
@@ -262,8 +263,9 @@
     "chalk": "^4.1.1",
     "child-process-promise": "^2.2.1",
     "del": "^6.0.0",
-    "eslint": "^8.56.0",
+    "eslint": "^10.3.0",
     "firebase-token-generator": "^2.0.0",
+    "globals": "^17.6.0",
     "gulp": "^5.0.0",
     "gulp-filter": "^7.0.0",
     "gulp-header": "^2.0.9",
@@ -283,6 +285,7 @@
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.59.3",
     "yargs": "^17.0.1"
   }
 }
