@@ -22,7 +22,6 @@ import {
   App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
 } from '../../lib/app/index'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
 
 export let databaseUrl: string;
