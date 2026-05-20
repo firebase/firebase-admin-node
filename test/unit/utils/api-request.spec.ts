@@ -95,9 +95,13 @@ function mockRequestWithError(err: any): nock.Scope {
   let errorInstance: Error;
   if (err instanceof Error) {
     errorInstance = err;
+  } else if (typeof err === 'string') {
+    errorInstance = new Error(err);
   } else {
-    errorInstance = new Error(err.message || 'Test network error');
-    Object.assign(errorInstance, err);
+    errorInstance = new Error(err?.message || 'Test network error');
+    if (err && typeof err === 'object') {
+      Object.assign(errorInstance, err);
+    }
   }
   return nock('https://' + mockHost)
     .get(mockPath)
