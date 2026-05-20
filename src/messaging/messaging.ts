@@ -281,6 +281,7 @@ export class Messaging {
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
    * return value corresponds to the order of tokens/fids in the `MulticastMessage`.
+   * If both `tokens` and `fids` are provided, `tokens` are processed first, followed by `fids`.
    * An error from this method or a `BatchResponse` with all failures indicates a total
    * failure, meaning that the messages in the list could not be sent. Partial failures
    * are only indicated by a `BatchResponse` return value.
