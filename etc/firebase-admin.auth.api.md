@@ -351,10 +351,10 @@ export interface EmailSignInProviderConfig {
     passwordRequired?: boolean;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseAuthError extends PrefixedFirebaseError {
+export class FirebaseAuthError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }

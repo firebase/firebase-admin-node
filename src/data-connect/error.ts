@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /** @const {Record<string, DataConnectErrorCode>} Data Connect server to client error code mapping. */
 export const DATA_CONNECT_ERROR_CODE_MAPPING: Record<string, DataConnectErrorCode> = {
@@ -50,14 +50,22 @@ export const DataConnectErrorCode = {
 export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
 
 /**
- * Firebase Data Connect error type. This extends PrefixedFirebaseError.
+ * Firebase Data Connect error type. This extends FirebaseError.
  */
-export class FirebaseDataConnectError extends PrefixedFirebaseError {
+export class FirebaseDataConnectError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'data-connect';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('data-connect', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `data-connect/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Firebase Firestore error code structure. This extends PrefixedFirebaseError.
+ * Firebase Firestore error code structure. This extends FirebaseError.
  */
-export class FirebaseFirestoreError extends PrefixedFirebaseError {
+export class FirebaseFirestoreError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'firestore';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default
@@ -27,6 +30,11 @@ export class FirebaseFirestoreError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('firestore', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `firestore/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

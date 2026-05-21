@@ -25,7 +25,7 @@ import {
 } from '../utils/api-request';
 import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils';
-import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
 import { CloudEvent } from './cloudevent';
 
 const EVENTARC_API = 'https://eventarcpublishing.googleapis.com/v1';
@@ -120,8 +120,8 @@ export class EventarcApiClient {
       });
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 

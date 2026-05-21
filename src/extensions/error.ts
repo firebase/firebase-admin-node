@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Extensions client error codes.
@@ -33,14 +33,22 @@ export const ExtensionsErrorCode = {
 export type ExtensionsErrorCode = typeof ExtensionsErrorCode[keyof typeof ExtensionsErrorCode];
 
 /**
- * Firebase Extensions error code structure. This extends PrefixedFirebaseError.
+ * Firebase Extensions error code structure. This extends FirebaseError.
  */
-export class FirebaseExtensionsError extends PrefixedFirebaseError {
+export class FirebaseExtensionsError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'Extensions';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('Extensions', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `Extensions/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

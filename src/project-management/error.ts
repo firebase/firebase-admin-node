@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Project Management client error codes.
@@ -37,15 +37,23 @@ export const ProjectManagementErrorCode = {
 export type ProjectManagementErrorCode = typeof ProjectManagementErrorCode[keyof typeof ProjectManagementErrorCode];
 
 /**
- * Firebase project management error code structure. This extends PrefixedFirebaseError.
+ * Firebase project management error code structure. This extends FirebaseError.
  */
-export class FirebaseProjectManagementError extends PrefixedFirebaseError {
+export class FirebaseProjectManagementError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'project-management';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('project-management', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `project-management/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

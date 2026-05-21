@@ -90,10 +90,10 @@ export interface FetchResponseData {
     status: number;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
+export class FirebaseRemoteConfigError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }

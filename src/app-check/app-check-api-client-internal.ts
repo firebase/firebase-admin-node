@@ -20,7 +20,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
 import { FirebaseAppCheckError, AppCheckErrorCode, APP_CHECK_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -166,8 +166,8 @@ export class AppCheckApiClient {
       });
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 

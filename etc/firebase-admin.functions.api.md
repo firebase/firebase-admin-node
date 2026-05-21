@@ -23,10 +23,10 @@ export interface DelayDelivery {
 // @public
 export type DeliverySchedule = DelayDelivery | AbsoluteDelivery;
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseFunctionsError extends PrefixedFirebaseError {
+export class FirebaseFunctionsError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }

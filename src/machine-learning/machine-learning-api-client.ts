@@ -19,7 +19,7 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, ExponentialBackoffPoller
 } from '../utils/api-request';
-import { PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './error';
@@ -381,8 +381,8 @@ export class MachineLearningApiClient {
       });
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 

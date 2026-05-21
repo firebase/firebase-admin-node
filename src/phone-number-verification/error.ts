@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Phone Number Verification client error codes.
@@ -34,13 +34,21 @@ export type PhoneNumberVerificationErrorCode =
 export const FPNV_ERROR_CODE_MAPPING = PhoneNumberVerificationErrorCode;
 
 /**
- * Firebase Phone Number Verification error code structure. This extends `PrefixedFirebaseError`.
+ * Firebase Phone Number Verification error code structure. This extends `FirebaseError`.
  *
  * @param info - The error code info.
  * @param message - The error message. If provided, this will override the default message.
  */
-export class FirebasePhoneNumberVerificationError extends PrefixedFirebaseError {
+export class FirebasePhoneNumberVerificationError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'phone-number-verification';
+
   constructor(info: ErrorInfo, message?: string) {
-    super('phone-number-verification', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `phone-number-verification/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

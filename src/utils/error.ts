@@ -103,6 +103,15 @@ export interface FirebaseError {
   cause?: Error;
 
   /**
+   * Allows the error type to be checked without needing to know implementation details
+   * of the code prefixing.
+   *
+   * @param code - The non-prefixed error code to test against.
+   * @returns True if the code matches, false otherwise.
+   */
+  hasCode(code: string): boolean;
+
+  /**
    * Returns a JSON-serializable object representation of this error.
    *
    * @returns A JSON-serializable representation of this object.
@@ -115,6 +124,9 @@ export interface FirebaseError {
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class FirebaseError extends Error implements FirebaseError {
+  /** @internal */
+  protected readonly codePrefix?: string;
+
   /**
    * @param errorInfo - The error information (code and message).
    */
@@ -127,6 +139,20 @@ export class FirebaseError extends Error implements FirebaseError {
     if (errorInfo.httpResponse !== undefined) {
       this.httpResponse = errorInfo.httpResponse;
     }
+  }
+
+  /**
+   * Allows the error type to be checked without needing to know implementation details
+   * of the code prefixing.
+   *
+   * @param code - The non-prefixed error code to test against.
+   * @returns True if the code matches, false otherwise.
+   */
+  public hasCode(code: string): boolean {
+    if (this.codePrefix !== undefined) {
+      return `${this.codePrefix}/${code}` === this.code;
+    }
+    return code === this.code;
   }
 
   /** @returns The object representation of the error. */
@@ -158,41 +184,5 @@ export class FirebaseError extends Error implements FirebaseError {
       }
     }
     return json;
-  }
-}
-
-/**
- * A FirebaseError with a prefix in front of the error code.
- */
-export class PrefixedFirebaseError extends FirebaseError {
-  /**
-   * @param codePrefix - The prefix to apply to the error code.
-   * @param code - The error code.
-   * @param message - The error message.
-   * @internal
-   */
-  constructor(private codePrefix: string, code: string, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    const errorInfo: ErrorInfo = {
-      code: `${codePrefix}/${code}`,
-      message,
-    };
-    if (httpResponse !== undefined) {
-      errorInfo.httpResponse = httpResponse;
-    }
-    if (cause !== undefined) {
-      errorInfo.cause = cause;
-    }
-    super(errorInfo);
-  }
-
-  /**
-   * Allows the error type to be checked without needing to know implementation details
-   * of the code prefixing.
-   *
-   * @param code - The non-prefixed error code to test against.
-   * @returns True if the code matches, false otherwise.
-   */
-  public hasCode(code: string): boolean {
-    return `${this.codePrefix}/${code}` === this.code;
   }
 }

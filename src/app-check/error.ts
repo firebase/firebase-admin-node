@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /** @const {Record<string, AppCheckErrorCode>} App Check server to client error code mapping. */
 export const APP_CHECK_ERROR_CODE_MAPPING: Record<string, AppCheckErrorCode> = {
@@ -49,14 +49,22 @@ export const AppCheckErrorCode = {
 export type AppCheckErrorCode = typeof AppCheckErrorCode[keyof typeof AppCheckErrorCode];
 
 /**
- * Firebase App Check error type. This extends PrefixedFirebaseError.
+ * Firebase App Check error type. This extends FirebaseError.
  */
-export class FirebaseAppCheckError extends PrefixedFirebaseError {
+export class FirebaseAppCheckError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'app-check';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('app-check', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `app-check/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }
