@@ -681,7 +681,10 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.text).to.equal('');
-      expect(() => { resp.data; }).to.throw('HTTP response missing data.');
+      expect(() => { resp.data; })
+        .to.throw('Error while parsing response data')
+        .and.to.have.property('cause')
+        .that.has.property('message', 'HTTP response missing data.');
       expect(resp.isJson()).to.be.false;
     });
   });
