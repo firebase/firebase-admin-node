@@ -169,10 +169,8 @@ export const refreshToken = {
 };
 
 // Randomly generated JSON Web Key Sets that do not correspond to anything related to Firebase.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const jwksResponse = require('./mock.jwks.json');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
@@ -355,7 +353,6 @@ export class Http2Mocker {
     return (requestHeaders: http2.OutgoingHttpHeaders) => {
       // Create a mock ClientHttp2Stream to return
       const mockStream = new stream.Readable({
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         read() {} 
       }) as http2.ClientHttp2Stream;
 

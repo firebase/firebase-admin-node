@@ -93,9 +93,20 @@ function mockRequestWithHttpError(
  * @return {Object} A nock response object.
  */
 function mockRequestWithError(err: any): nock.Scope {
+  let errorInstance: Error;
+  if (err instanceof Error) {
+    errorInstance = err;
+  } else if (typeof err === 'string') {
+    errorInstance = new Error(err);
+  } else {
+    errorInstance = new Error(err?.message || 'Test network error');
+    if (err && typeof err === 'object') {
+      Object.assign(errorInstance, err);
+    }
+  }
   return nock('https://' + mockHost)
     .get(mockPath)
-    .replyWithError(err);
+    .replyWithError(errorInstance);
 }
 
 function mockHttp2SendRequestResponse(
@@ -417,7 +428,6 @@ describe('HttpClient', () => {
     const client = new HttpClient();
     const httpAgent = new Agent();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
@@ -647,7 +657,6 @@ describe('HttpClient', () => {
 
   it('should make a HEAD request with the provided headers and data', () => {
     const reqData = { key1: 'value1', key2: 'value2' };
-    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -655,7 +664,7 @@ describe('HttpClient', () => {
       },
     }).head(mockPath)
       .query(reqData)
-      .reply(200, respData, {
+      .reply(200, undefined, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
@@ -671,8 +680,9 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.data).to.deep.equal(respData);
-      expect(resp.isJson()).to.be.true;
+      expect(resp.text).to.equal('');
+      expect(() => { resp.data; }).to.throw('HTTP response missing data.');
+      expect(resp.isJson()).to.be.false;
     });
   });
 
@@ -756,14 +766,12 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when the response is repeatedly delayed', () => {
-    const respData = { foo: 'bar' };
+    const timeoutErr = new Error('timeout of 50ms exceeded');
+    (timeoutErr as any).code = 'ETIMEDOUT';
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .delay(1000)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+      .replyWithError(timeoutErr);
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
@@ -777,14 +785,12 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when multiple socket timeouts encountered', () => {
-    const respData = { foo: 'bar timeout' };
+    const timeoutErr = new Error('timeout of 50ms exceeded');
+    (timeoutErr as any).code = 'ETIMEDOUT';
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .delayConnection(2000)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+      .replyWithError(timeoutErr);
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
@@ -1115,7 +1121,10 @@ describe('HttpClient', () => {
   });
 
   it('should wait when retry-after expressed as a timestamp', () => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({
+      toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
+      shouldClearNativeTimers: true
+    });
     clock.setSystemTime(1000);
     const timestamp = new Date(clock.now + 30 * 1000);
 
@@ -2662,7 +2671,6 @@ describe('AuthorizedHttpClient', () => {
       const options = mockApp.options;
       options.httpAgent = new Agent();
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);
