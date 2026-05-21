@@ -16,7 +16,6 @@
 
 import { App } from '../app';
 import { getStorage } from '../storage/index';
-import { FirebaseError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
@@ -64,8 +63,8 @@ export class MachineLearning {
    */
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseError({
-        code: 'machine-learning/invalid-argument',
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
         message: 'First argument passed to admin.machineLearning() must be a ' +
             'valid Firebase app instance.',
       });

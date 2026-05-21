@@ -113,6 +113,17 @@ export { Firestore }
 export { FirestoreDataConverter }
 
 // @public
+export const FirestoreErrorCode: {
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly MISSING_DEPENDENCIES: "missing-dependencies";
+};
+
+// @public
+export type FirestoreErrorCode = typeof FirestoreErrorCode[keyof typeof FirestoreErrorCode];
+
+// @public
 export interface FirestoreSettings {
     preferRest?: boolean;
 }

@@ -21,6 +21,15 @@ export interface Database extends FirebaseDatabase {
     setRules(source: string | Buffer | object): Promise<void>;
 }
 
+// @public
+export const DatabaseErrorCode: {
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+};
+
+// @public
+export type DatabaseErrorCode = typeof DatabaseErrorCode[keyof typeof DatabaseErrorCode];
+
 export { DataSnapshot }
 
 // @public

@@ -17,6 +17,19 @@
 import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
+ * The constant mapping for valid Database client error codes.
+ */
+export const DatabaseErrorCode = {
+  INTERNAL_ERROR: 'internal-error',
+  INVALID_ARGUMENT: 'invalid-argument',
+} as const;
+
+/**
+ * The type definition for valid Database client error codes.
+ */
+export type DatabaseErrorCode = typeof DatabaseErrorCode[keyof typeof DatabaseErrorCode];
+
+/**
  * Firebase Database error code structure. This extends FirebaseError.
  */
 export class FirebaseDatabaseError extends FirebaseError {

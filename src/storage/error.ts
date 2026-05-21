@@ -17,40 +17,38 @@
 import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * The constant mapping for valid Firestore client error codes.
+ * The constant mapping for valid Storage client error codes.
  */
-export const FirestoreErrorCode = {
-  FAILED_PRECONDITION: 'failed-precondition',
+export const StorageErrorCode = {
   INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
+  INVALID_EMULATOR_HOST: 'invalid-emulator-host',
   MISSING_DEPENDENCIES: 'missing-dependencies',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  NO_DOWNLOAD_TOKEN: 'no-download-token',
 } as const;
 
 /**
- * The type definition for valid Firestore client error codes.
+ * The type definition for valid Storage client error codes.
  */
-export type FirestoreErrorCode = typeof FirestoreErrorCode[keyof typeof FirestoreErrorCode];
+export type StorageErrorCode = typeof StorageErrorCode[keyof typeof StorageErrorCode];
 
 /**
- * Firebase Firestore error code structure. This extends FirebaseError.
+ * Firebase Storage error code structure. This extends FirebaseError.
  */
-export class FirebaseFirestoreError extends FirebaseError {
+export class FirebaseStorageError extends FirebaseError {
   /** @internal */
-  protected readonly codePrefix = 'firestore';
+  protected readonly codePrefix = 'storage';
 
   /**
    * @param info - The error code info.
-   * @param message - The error message. This will override the default
-   *     message if provided.
+   * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    // Override default message if custom message provided.
     super({
-      code: `firestore/${info.code}`,
+      code: `storage/${info.code}`,
       message: message || info.message,
       httpResponse: info.httpResponse,
       cause: info.cause,
     });
   }
 }
-
