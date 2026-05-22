@@ -103,11 +103,15 @@ export interface FirebaseError {
   cause?: Error;
 
   /**
-   * Allows the error type to be checked without needing to know implementation details
-   * of the code prefixing.
+   * Checks if this error matches the specified error code.
    *
-   * @param code - The non-prefixed error code to test against.
-   * @returns True if the code matches, false otherwise.
+   * This method enables checking the error type without needing to account for
+   * service-specific code prefixes. For example, if this error has the code
+   * `"auth/invalid-uid"`, calling `err.hasCode('invalid-uid')` or
+   * `err.hasCode('auth/invalid-uid')` will both return `true`.
+   *
+   * @param code - The error code to test against (either non-prefixed or fully qualified).
+   * @returns True if the error code matches, false otherwise.
    */
   hasCode(code: string): boolean;
 
@@ -141,18 +145,12 @@ export class FirebaseError extends Error implements FirebaseError {
     }
   }
 
-  /**
-   * Allows the error type to be checked without needing to know implementation details
-   * of the code prefixing.
-   *
-   * @param code - The non-prefixed error code to test against.
-   * @returns True if the code matches, false otherwise.
-   */
+  /** {@inheritDoc FirebaseError.hasCode} */
   public hasCode(code: string): boolean {
-    if (this.codePrefix !== undefined) {
-      return `${this.codePrefix}/${code}` === this.code;
+    if (this.code === code) {
+      return true;
     }
-    return code === this.code;
+    return this.codePrefix != null && this.code === `${this.codePrefix}/${code}`;
   }
 
   /** @returns The object representation of the error. */
