@@ -37,7 +37,7 @@ import {
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
+const chalk = require('chalk');
 
 chai.should();
 chai.use(sinonChai);
@@ -908,14 +908,14 @@ describe('admin.auth', () => {
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
 
-      let userRecord = await getAuth().updateUser(updateUser.uid, {
+      await getAuth().updateUser(updateUser.uid, {
         phoneNumber: '+15555550001',
         providerToLink: {
           providerId: 'google.com',
           uid: googleFederatedUid,
         },
       });
-      userRecord = await getAuth().updateUser(updateUser.uid, {
+      let userRecord = await getAuth().updateUser(updateUser.uid, {
         providerToLink: {
           providerId: 'facebook.com',
           uid: facebookFederatedUid,

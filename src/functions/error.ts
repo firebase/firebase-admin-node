@@ -16,7 +16,7 @@
 
 import { FirebaseError, ErrorInfo } from '../utils/error';
 
-/** @const {Record<string, FunctionsErrorCode>} Functions server to client error code mapping. */
+/** @const {Record<string, FunctionsErrorCode>} Cloud Functions server to client error code mapping. */
 export const FUNCTIONS_ERROR_CODE_MAPPING: Record<string, FunctionsErrorCode> = {
   ABORTED: 'aborted',
   INVALID_ARGUMENT: 'invalid-argument',
@@ -30,7 +30,7 @@ export const FUNCTIONS_ERROR_CODE_MAPPING: Record<string, FunctionsErrorCode> = 
 };
 
 /**
- * The constant mapping for valid Functions client error codes.
+ * The constant mapping for valid Cloud Functions client error codes.
  */
 export const FunctionsErrorCode = {
   ABORTED: 'aborted',
@@ -46,12 +46,12 @@ export const FunctionsErrorCode = {
 } as const;
 
 /**
- * The type definition for valid Functions client error codes.
+ * The type definition for valid Cloud Functions client error codes.
  */
 export type FunctionsErrorCode = typeof FunctionsErrorCode[keyof typeof FunctionsErrorCode];
 
 /**
- * Firebase Functions error code structure. This extends FirebaseError.
+ * Cloud Functions error code structure. This extends FirebaseError.
  */
 export class FirebaseFunctionsError extends FirebaseError {
   /** @internal */
