@@ -30,7 +30,7 @@ export const EventarcErrorCode = {
 export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
 
 /**
- * Firebase Eventarc error code structure. This extends FirebaseError.
+ * Firebase Eventarc error code structure. This extends `FirebaseError`.
  */
 export class FirebaseEventarcError extends FirebaseError {
   /** @internal */

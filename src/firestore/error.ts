@@ -32,7 +32,7 @@ export const FirestoreErrorCode = {
 export type FirestoreErrorCode = typeof FirestoreErrorCode[keyof typeof FirestoreErrorCode];
 
 /**
- * Firebase Firestore error code structure. This extends FirebaseError.
+ * Firebase Firestore error code structure. This extends `FirebaseError`.
  */
 export class FirebaseFirestoreError extends FirebaseError {
   /** @internal */

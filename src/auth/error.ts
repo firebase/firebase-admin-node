@@ -647,7 +647,7 @@ const AUTH_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof AuthErrorCode> = {
 };
 
 /**
- * Firebase Auth error code structure. This extends FirebaseError.
+ * Firebase Auth error code structure. This extends `FirebaseError`.
  */
 export class FirebaseAuthError extends FirebaseError {
   /** @internal */

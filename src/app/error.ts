@@ -17,7 +17,7 @@
 import { ErrorInfo, FirebaseError } from '../utils/error';
 
 /**
- * Firebase App error code structure. This extends FirebaseError.
+ * Firebase App error code structure. This extends `FirebaseError`.
  */
 export class FirebaseAppError extends FirebaseError {
   /** @internal */

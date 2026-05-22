@@ -33,7 +33,7 @@ export const ExtensionsErrorCode = {
 export type ExtensionsErrorCode = typeof ExtensionsErrorCode[keyof typeof ExtensionsErrorCode];
 
 /**
- * Firebase Extensions error code structure. This extends FirebaseError.
+ * Firebase Extensions error code structure. This extends `FirebaseError`.
  */
 export class FirebaseExtensionsError extends FirebaseError {
   /** @internal */

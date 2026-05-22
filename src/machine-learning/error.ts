@@ -44,6 +44,9 @@ export const MachineLearningErrorCode = {
  */
 export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
+/**
+ * Firebase Machine Learning error code structure. This extends `FirebaseError`.
+ */
 export class FirebaseMachineLearningError extends FirebaseError {
   /** @internal */
   protected readonly codePrefix = 'machine-learning';

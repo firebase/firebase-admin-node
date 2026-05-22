@@ -30,7 +30,7 @@ export const DatabaseErrorCode = {
 export type DatabaseErrorCode = typeof DatabaseErrorCode[keyof typeof DatabaseErrorCode];
 
 /**
- * Firebase Database error code structure. This extends FirebaseError.
+ * Firebase Database error code structure. This extends `FirebaseError`.
  */
 export class FirebaseDatabaseError extends FirebaseError {
   /** @internal */

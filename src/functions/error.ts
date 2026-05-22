@@ -51,7 +51,7 @@ export const FunctionsErrorCode = {
 export type FunctionsErrorCode = typeof FunctionsErrorCode[keyof typeof FunctionsErrorCode];
 
 /**
- * Cloud Functions error code structure. This extends FirebaseError.
+ * Cloud Functions error code structure. This extends `FirebaseError`.
  */
 export class FirebaseFunctionsError extends FirebaseError {
   /** @internal */

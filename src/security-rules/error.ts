@@ -36,6 +36,9 @@ export const SecurityRulesErrorCode = {
  */
 export type SecurityRulesErrorCode = typeof SecurityRulesErrorCode[keyof typeof SecurityRulesErrorCode];
 
+/**
+ * Firebase Security Rules error code structure. This extends `FirebaseError`.
+ */
 export class FirebaseSecurityRulesError extends FirebaseError {
   /** @internal */
   protected readonly codePrefix = 'security-rules';

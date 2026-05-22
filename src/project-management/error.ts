@@ -37,7 +37,7 @@ export const ProjectManagementErrorCode = {
 export type ProjectManagementErrorCode = typeof ProjectManagementErrorCode[keyof typeof ProjectManagementErrorCode];
 
 /**
- * Firebase project management error code structure. This extends FirebaseError.
+ * Firebase project management error code structure. This extends `FirebaseError`.
  */
 export class FirebaseProjectManagementError extends FirebaseError {
   /** @internal */

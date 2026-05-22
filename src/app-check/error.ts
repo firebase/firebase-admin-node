@@ -49,7 +49,7 @@ export const AppCheckErrorCode = {
 export type AppCheckErrorCode = typeof AppCheckErrorCode[keyof typeof AppCheckErrorCode];
 
 /**
- * Firebase App Check error type. This extends FirebaseError.
+ * Firebase App Check error code structure. This extends `FirebaseError`.
  */
 export class FirebaseAppCheckError extends FirebaseError {
   /** @internal */

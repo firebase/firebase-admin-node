@@ -33,7 +33,7 @@ export const StorageErrorCode = {
 export type StorageErrorCode = typeof StorageErrorCode[keyof typeof StorageErrorCode];
 
 /**
- * Firebase Storage error code structure. This extends FirebaseError.
+ * Firebase Storage error code structure. This extends `FirebaseError`.
  */
 export class FirebaseStorageError extends FirebaseError {
   /** @internal */

@@ -50,7 +50,7 @@ export const DataConnectErrorCode = {
 export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
 
 /**
- * Firebase Data Connect error type. This extends FirebaseError.
+ * Firebase Data Connect error code structure. This extends `FirebaseError`.
  */
 export class FirebaseDataConnectError extends FirebaseError {
   /** @internal */

@@ -8,7 +8,7 @@ import { Agent } from 'http';
 
 // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export class FirebaseMachineLearningError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);

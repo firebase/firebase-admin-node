@@ -54,7 +54,7 @@ export const installationsClientErrorCode: { readonly [K in keyof typeof Install
 };
 
 /**
- * Firebase Installations service error code structure. This extends `FirebaseError`.
+ * Firebase Installations error code structure. This extends `FirebaseError`.
  */
 export class FirebaseInstallationsError extends FirebaseError {
   /** @internal */

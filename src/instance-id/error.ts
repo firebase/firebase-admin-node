@@ -45,7 +45,7 @@ export const instanceIdClientErrorCode: { readonly [K in keyof typeof InstanceId
 };
 
 /**
- * Firebase Instance ID service error code structure. This extends `FirebaseError`.
+ * Firebase Instance ID error code structure. This extends `FirebaseError`.
  */
 export class FirebaseInstanceIdError extends FirebaseError {
   /** @internal */

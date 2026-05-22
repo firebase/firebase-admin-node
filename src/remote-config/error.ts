@@ -54,7 +54,7 @@ export const RemoteConfigErrorCode = {
 export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
 /**
- * Firebase Remote Config error code structure. This extends FirebaseError.
+ * Firebase Remote Config error code structure. This extends `FirebaseError`.
  */
 export class FirebaseRemoteConfigError extends FirebaseError {
   /** @internal */
