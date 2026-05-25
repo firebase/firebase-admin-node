@@ -35,7 +35,7 @@ function loadConfig() {
 }
 
 function validate(config) {
-  for (const param in config) {
+  for (const param of Object.keys(config)) {
     if (optionalFields.includes(param)) {
       continue;
     }
