@@ -53,12 +53,6 @@ export {
   WebpushConfig,
   WebpushFcmOptions,
   WebpushNotification,
-
-  // Legacy APIs
-  DataMessagePayload,
-  MessagingOptions,
-  MessagingPayload,
-  NotificationMessagePayload,
 } from './messaging-api';
 
 /**

@@ -40,12 +40,6 @@ import {
   WebpushConfig as TWebpushConfig,
   WebpushFcmOptions as TWebpushFcmOptions,
   WebpushNotification as TWebpushNotification,
-
-  // Legacy APIs
-  DataMessagePayload as TDataMessagePayload,
-  MessagingOptions as TMessagingOptions,
-  MessagingPayload as TMessagingPayload,
-  NotificationMessagePayload as TNotificationMessagePayload,
 } from './messaging-api';
 
 /**
@@ -198,26 +192,4 @@ export namespace messaging {
    * Type alias to {@link firebase-admin.messaging#WebpushNotification}.
    */
   export type WebpushNotification = TWebpushNotification;
-
-  // Legacy APIs
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#DataMessagePayload}.
-   */
-  export type DataMessagePayload = TDataMessagePayload;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingOptions}.
-   */
-  export type MessagingOptions = TMessagingOptions;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#MessagingPayload}.
-   */
-  export type MessagingPayload = TMessagingPayload;
-
-  /**
-   * Type alias to {@link firebase-admin.messaging#NotificationMessagePayload}.
-   */
-  export type NotificationMessagePayload = TNotificationMessagePayload;
 }
