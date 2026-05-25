@@ -158,12 +158,6 @@ export interface CriticalSound {
 }
 
 // @public
-export interface DataMessagePayload {
-    // (undocumented)
-    [key: string]: string;
-}
-
-// @public
 export interface FcmOptions {
     analyticsLabel?: string;
 }
@@ -301,25 +295,6 @@ export class MessagingClientErrorCode {
 }
 
 // @public
-export interface MessagingOptions {
-    // (undocumented)
-    [key: string]: any | undefined;
-    collapseKey?: string;
-    contentAvailable?: boolean;
-    dryRun?: boolean;
-    mutableContent?: boolean;
-    priority?: string;
-    restrictedPackageName?: string;
-    timeToLive?: number;
-}
-
-// @public
-export interface MessagingPayload {
-    data?: DataMessagePayload;
-    notification?: NotificationMessagePayload;
-}
-
-// @public
 export interface MessagingTopicManagementResponse {
     // Warning: (ae-forgotten-export) The symbol "FirebaseArrayIndexError" needs to be exported by the entry point index.d.ts
     errors: FirebaseArrayIndexError[];
@@ -338,24 +313,6 @@ export interface Notification {
     body?: string;
     imageUrl?: string;
     title?: string;
-}
-
-// @public
-export interface NotificationMessagePayload {
-    // (undocumented)
-    [key: string]: string | undefined;
-    badge?: string;
-    body?: string;
-    bodyLocArgs?: string;
-    bodyLocKey?: string;
-    clickAction?: string;
-    color?: string;
-    icon?: string;
-    sound?: string;
-    tag?: string;
-    title?: string;
-    titleLocArgs?: string;
-    titleLocKey?: string;
 }
 
 // @public
