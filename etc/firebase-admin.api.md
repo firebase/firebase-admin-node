@@ -395,8 +395,6 @@ export namespace messaging {
     export type ConditionMessage = ConditionMessage;
     // Warning: (ae-forgotten-export) The symbol "CriticalSound" needs to be exported by the entry point default-namespace.d.ts
     export type CriticalSound = CriticalSound;
-    // Warning: (ae-forgotten-export) The symbol "DataMessagePayload" needs to be exported by the entry point default-namespace.d.ts
-    export type DataMessagePayload = DataMessagePayload;
     // Warning: (ae-forgotten-export) The symbol "FcmOptions" needs to be exported by the entry point default-namespace.d.ts
     export type FcmOptions = FcmOptions;
     // Warning: (ae-forgotten-export) The symbol "LightSettings" needs to be exported by the entry point default-namespace.d.ts
@@ -405,18 +403,12 @@ export namespace messaging {
     export type Message = Message;
     // Warning: (ae-forgotten-export) The symbol "Messaging" needs to be exported by the entry point default-namespace.d.ts
     export type Messaging = Messaging;
-    // Warning: (ae-forgotten-export) The symbol "MessagingOptions" needs to be exported by the entry point default-namespace.d.ts
-    export type MessagingOptions = MessagingOptions;
-    // Warning: (ae-forgotten-export) The symbol "MessagingPayload" needs to be exported by the entry point default-namespace.d.ts
-    export type MessagingPayload = MessagingPayload;
     // Warning: (ae-forgotten-export) The symbol "MessagingTopicManagementResponse" needs to be exported by the entry point default-namespace.d.ts
     export type MessagingTopicManagementResponse = MessagingTopicManagementResponse;
     // Warning: (ae-forgotten-export) The symbol "MulticastMessage" needs to be exported by the entry point default-namespace.d.ts
     export type MulticastMessage = MulticastMessage;
     // Warning: (ae-forgotten-export) The symbol "Notification" needs to be exported by the entry point default-namespace.d.ts
     export type Notification = Notification;
-    // Warning: (ae-forgotten-export) The symbol "NotificationMessagePayload" needs to be exported by the entry point default-namespace.d.ts
-    export type NotificationMessagePayload = NotificationMessagePayload;
     // Warning: (ae-forgotten-export) The symbol "SendResponse" needs to be exported by the entry point default-namespace.d.ts
     export type SendResponse = SendResponse;
     // Warning: (ae-forgotten-export) The symbol "TokenMessage" needs to be exported by the entry point default-namespace.d.ts
