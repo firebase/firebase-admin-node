@@ -20,7 +20,7 @@ import fs = require('fs');
 import { Credentials as GoogleAuthCredentials, GoogleAuth, Compute, AnyAuthClient } from 'google-auth-library'
 import { Agent } from 'http';
 import { Credential, GoogleOAuthAccessToken } from './credential';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCode, FirebaseAppError } from './error';
 import * as util from '../utils/validator';
 
 const SCOPES = [
@@ -94,10 +94,10 @@ export class ApplicationDefaultCredential implements Credential {
       return (this.authClient as Compute).fetchIdToken(audience);
     }
     else {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Credentials type should be Compute Engine Credentials.',
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Credentials type should be Compute Engine Credentials.'
+      });
     }
   }
 
@@ -182,19 +182,20 @@ class ServiceAccount {
       return new ServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse service account json file: ' + error,
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: `Failed to parse service account json file: ${(error as Error).message}`,
+        cause: error,
+      });
     }
   }
 
   constructor(json: object) {
     if (!util.isNonNullObject(json)) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Service account must be an object.',
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Service account must be an object.'
+      });
     }
 
     copyAttr(this, json, 'projectId', 'project_id');
@@ -211,16 +212,18 @@ class ServiceAccount {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+      throw new FirebaseAppError({ code: AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
     }
 
     const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);
     } catch (error) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse private key: ' + error);
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Failed to parse private key.',
+        cause: error,
+      });
     }
   }
 }
@@ -291,10 +294,11 @@ class RefreshToken {
       RefreshToken.validateFromJSON(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse refresh token file: ' + error,
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Failed to parse refresh token file.',
+        cause: error,
+      });
     }
   }
 
@@ -319,7 +323,7 @@ class RefreshToken {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+      throw new FirebaseAppError({ code: AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
     }
   }
 }
@@ -388,10 +392,11 @@ class ImpersonatedServiceAccount {
       ImpersonatedServiceAccount.validateFromJSON(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse impersonated service account file: ' + error,
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Failed to parse impersonated service account file.',
+        cause: error,
+      });
     }
   }
 
@@ -412,7 +417,7 @@ class ImpersonatedServiceAccount {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+      throw new FirebaseAppError({ code: AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
     }
   }
 }
@@ -467,10 +472,10 @@ function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent)
 
   if (typeof keyFile === 'object') {
     if (!util.isNonNullObject(keyFile)) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Service account must be an object.',
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_CREDENTIAL,
+        message: 'Service account must be an object.'
+      });
     }
     copyAttr(keyFile, keyFile, 'project_id', 'projectId');
     copyAttr(keyFile, keyFile, 'private_key', 'privateKey');
@@ -489,15 +494,15 @@ function populateCredential(credentials?: GoogleAuthCredentials): GoogleOAuthAcc
   const expiryDate = credentials?.expiry_date;
 
   if (typeof accessToken !== 'string')
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      'Failed to parse Google auth credential: access_token must be a non empty string.',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCode.INVALID_CREDENTIAL,
+      message: 'Failed to parse Google auth credential: access_token must be a non empty string.'
+    });
   if (typeof expiryDate !== 'number')
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      'Failed to parse Google auth credential: Invalid expiry_date.',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCode.INVALID_CREDENTIAL,
+      message: 'Failed to parse Google auth credential: Invalid expiry_date.'
+    });
 
   return {
     ...credentials,

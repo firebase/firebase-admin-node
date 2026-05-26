@@ -77,6 +77,15 @@ export default defineConfig([
           "format": ["camelCase", "UPPER_CASE"]
         },
         {
+          "selector": "variable",
+          "modifiers": ["const"],
+          "format": ["PascalCase", "camelCase", "UPPER_CASE"],
+          "filter": {
+            "regex": "ErrorCode$", // Matches only if it ends exactly with ErrorCode
+            "match": true,
+          },
+        },
+        {
           "selector": "parameter",
           "format": ["camelCase"],
           "leadingUnderscore": "allow"

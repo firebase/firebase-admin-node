@@ -24,7 +24,8 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheck } from '../../../src/app-check/index';
-import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
+import { AppCheckApiClient } from '../../../src/app-check/app-check-api-client-internal';
+import { FirebaseAppCheckError } from '../../../src/app-check/error';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
 import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
@@ -34,7 +35,7 @@ const expect = chai.expect;
 
 describe('AppCheck', () => {
 
-  const INTERNAL_ERROR = new FirebaseAppCheckError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseAppCheckError({ code: 'internal-error', message: 'message' });
   const APP_ID = '1:1234:android:1234';
   const TEST_TOKEN_TO_EXCHANGE = 'signed-custom-token';
 
