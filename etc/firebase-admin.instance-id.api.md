@@ -10,6 +10,8 @@ import { Agent } from 'http';
 //
 // @public
 export class FirebaseInstanceIdError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -23,15 +25,16 @@ export class InstanceId {
     deleteInstanceId(instanceId: string): Promise<void>;
 }
 
-// Warning: (ae-forgotten-export) The symbol "InstallationsClientErrorCode" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export class InstanceIdClientErrorCode extends InstallationsClientErrorCode {
-    // (undocumented)
-    static INVALID_INSTANCE_ID: {
-        code: string;
-        message: string;
-    };
-}
+// @public
+export const InstanceIdErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_INSTALLATION_ID: "invalid-installation-id";
+    readonly API_ERROR: "api-error";
+    readonly INVALID_INSTANCE_ID: "invalid-instance-id";
+};
+
+// @public
+export type InstanceIdErrorCode = typeof InstanceIdErrorCode[keyof typeof InstanceIdErrorCode];
 
 ```

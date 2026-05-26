@@ -17,7 +17,8 @@
 
 import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
-import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
+import { installationsClientErrorCode, FirebaseInstallationsError } from './error';
+import { toHttpResponse } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError,
 } from '../utils/api-request';
@@ -33,7 +34,7 @@ const FIREBASE_IID_PATH = '/v1/';
 const FIREBASE_IID_TIMEOUT = 10000;
 
 /** HTTP error codes raised by the backend server. */
-const ERROR_CODES: {[key: number]: string} = {
+const ERROR_CODES: { [key: number]: string; } = {
   400: 'Malformed installation ID argument.',
   401: 'Request not authorized.',
   403: 'Project does not match installation ID or the client does not have sufficient privileges.',
@@ -66,7 +67,7 @@ export class FirebaseInstallationsRequestHandler {
   public deleteInstallation(fid: string): Promise<void> {
     if (!validator.isNonEmptyString(fid)) {
       return Promise.reject(new FirebaseInstallationsError(
-        InstallationsClientErrorCode.INVALID_INSTALLATION_ID,
+        installationsClientErrorCode.INVALID_INSTALLATION_ID,
         'Installation ID must be a non-empty string.',
       ));
     }
@@ -100,7 +101,12 @@ export class FirebaseInstallationsRequestHandler {
           const template: string = ERROR_CODES[response.status];
           const message: string = template ?
             `Installation ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
-          throw new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR, message);
+          throw new FirebaseInstallationsError({
+            ...installationsClientErrorCode.API_ERROR,
+            message,
+            httpResponse: toHttpResponse(response),
+            cause: err,
+          });
         }
         // In case of timeouts and other network errors, the HttpClient returns a
         // FirebaseError wrapped in the response. Simply throw it here.
@@ -118,7 +124,7 @@ export class FirebaseInstallationsRequestHandler {
         if (!validator.isNonEmptyString(projectId)) {
           // Assert for an explicit projct ID (either via AppOptions or the cert itself).
           throw new FirebaseInstallationsError(
-            InstallationsClientErrorCode.INVALID_PROJECT_ID,
+            installationsClientErrorCode.INVALID_PROJECT_ID,
             'Failed to determine project ID for Installations. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',

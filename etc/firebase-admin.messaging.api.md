@@ -162,10 +162,12 @@ export interface FcmOptions {
     analyticsLabel?: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseMessagingError extends PrefixedFirebaseError {
+export class FirebaseMessagingError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -196,103 +198,30 @@ export class Messaging {
 }
 
 // @public
-export class MessagingClientErrorCode {
-    // (undocumented)
-    static AUTHENTICATION_ERROR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static DEVICE_MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INTERNAL_ERROR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_DATA_PAYLOAD_KEY: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_OPTIONS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PACKAGE_NAME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PAYLOAD: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_RECIPIENT: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_REGISTRATION_TOKEN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISMATCHED_CREDENTIAL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static PAYLOAD_SIZE_LIMIT_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static REGISTRATION_TOKEN_NOT_REGISTERED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static SERVER_UNAVAILABLE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static THIRD_PARTY_AUTH_ERROR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static TOO_MANY_TOPICS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static TOPICS_MESSAGE_RATE_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNKNOWN_ERROR: {
-        code: string;
-        message: string;
-    };
-}
+export const MessagingErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_RECIPIENT: "invalid-recipient";
+    readonly INVALID_PAYLOAD: "invalid-payload";
+    readonly INVALID_DATA_PAYLOAD_KEY: "invalid-data-payload-key";
+    readonly PAYLOAD_SIZE_LIMIT_EXCEEDED: "payload-size-limit-exceeded";
+    readonly INVALID_OPTIONS: "invalid-options";
+    readonly INVALID_REGISTRATION_TOKEN: "invalid-registration-token";
+    readonly REGISTRATION_TOKEN_NOT_REGISTERED: "registration-token-not-registered";
+    readonly MISMATCHED_CREDENTIAL: "mismatched-credential";
+    readonly INVALID_PACKAGE_NAME: "invalid-package-name";
+    readonly DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded";
+    readonly TOPICS_MESSAGE_RATE_EXCEEDED: "topics-message-rate-exceeded";
+    readonly MESSAGE_RATE_EXCEEDED: "message-rate-exceeded";
+    readonly THIRD_PARTY_AUTH_ERROR: "third-party-auth-error";
+    readonly TOO_MANY_TOPICS: "too-many-topics";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly SERVER_UNAVAILABLE: "server-unavailable";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type MessagingErrorCode = typeof MessagingErrorCode[keyof typeof MessagingErrorCode];
 
 // @public
 export interface MessagingTopicManagementResponse {
@@ -317,7 +246,6 @@ export interface Notification {
 
 // @public
 export interface SendResponse {
-    // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
     error?: FirebaseError;
     messageId?: string;
     success: boolean;

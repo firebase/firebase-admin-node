@@ -17,6 +17,22 @@ export class AppCheck {
 }
 
 // @public
+export const AppCheckErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL: "internal-error";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly APP_CHECK_TOKEN_EXPIRED: "app-check-token-expired";
+    readonly UNKNOWN: "unknown-error";
+};
+
+// @public
+export type AppCheckErrorCode = typeof AppCheckErrorCode[keyof typeof AppCheckErrorCode];
+
+// @public
 export interface AppCheckToken {
     token: string;
     ttlMillis: number;
@@ -39,6 +55,14 @@ export interface DecodedAppCheckToken {
     iat: number;
     iss: string;
     sub: string;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseAppCheckError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public

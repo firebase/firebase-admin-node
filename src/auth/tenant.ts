@@ -16,7 +16,7 @@
 
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
@@ -258,7 +258,7 @@ export class Tenant {
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         `"${label}" must be a valid non-null object.`,
       );
     }
@@ -266,7 +266,7 @@ export class Tenant {
     for (const key in request) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           `"${key}" is not a valid ${label} parameter.`,
         );
       }
@@ -275,7 +275,7 @@ export class Tenant {
     if (typeof request.displayName !== 'undefined' &&
         !validator.isNonEmptyString(request.displayName)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         `"${label}.displayName" must be a valid non-empty string.`,
       );
     }
@@ -291,7 +291,7 @@ export class Tenant {
     } else if (request.testPhoneNumbers === null && createRequest) {
       // null allowed only for update operations.
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         `"${label}.testPhoneNumbers" must be a non-null object.`,
       );
     }
@@ -330,7 +330,7 @@ export class Tenant {
     const tenantId = Tenant.getTenantIdFromResourceName(response.name);
     if (!tenantId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid tenant response',
       );
     }

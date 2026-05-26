@@ -56,483 +56,106 @@ export class Auth extends BaseAuth {
 }
 
 // @public
-export class AuthClientErrorCode {
-    // (undocumented)
-    static AUTH_BLOCKING_TOKEN_EXPIRED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static BILLING_NOT_ENABLED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static CLAIMS_TOO_LARGE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static CONFIGURATION_EXISTS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static CONFIGURATION_NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static EMAIL_ALREADY_EXISTS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static EMAIL_NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static FORBIDDEN_CLAIM: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static ID_TOKEN_EXPIRED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static ID_TOKEN_REVOKED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INSUFFICIENT_PERMISSION: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INTERNAL_ERROR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_ARGUMENT: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_CLAIMS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_CONFIG: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_CONTINUE_URI: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_CREATION_TIME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_CREDENTIAL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_DISABLED_FIELD: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_DISPLAY_NAME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_DYNAMIC_LINK_DOMAIN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_EMAIL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_EMAIL_VERIFIED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_ENROLLED_FACTORS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_ENROLLMENT_TIME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_ALGORITHM: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_BLOCK_SIZE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_DERIVED_KEY_LENGTH: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_KEY: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_MEMORY_COST: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_PARALLELIZATION: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_ROUNDS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HASH_SALT_SEPARATOR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_HOSTING_LINK_DOMAIN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_ID_TOKEN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_LAST_SIGN_IN_TIME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_NAME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_NEW_EMAIL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_OAUTH_CLIENT_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_OAUTH_RESPONSETYPE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PAGE_TOKEN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PASSWORD: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PASSWORD_HASH: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PASSWORD_SALT: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PHONE_NUMBER: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PHOTO_URL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PROJECT_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PROVIDER_DATA: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PROVIDER_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_PROVIDER_UID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_RECAPTCHA_ACTION: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_RECAPTCHA_ENFORCEMENT_STATE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_SESSION_COOKIE_DURATION: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_TENANT_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_TENANT_TYPE: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_TESTING_PHONE_NUMBER: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_TOKENS_VALID_AFTER_TIME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_UID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static INVALID_USER_IMPORT: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MAXIMUM_USER_COUNT_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISMATCHING_TENANT_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_ANDROID_PACKAGE_NAME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_CONFIG: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_CONTINUE_URI: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_DISPLAY_NAME: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_EMAIL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_HASH_ALGORITHM: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_IOS_BUNDLE_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_ISSUER: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_OAUTH_CLIENT_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_OAUTH_CLIENT_SECRET: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_PROVIDER_ID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_SAML_RELYING_PARTY_CONFIG: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static MISSING_UID: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static OPERATION_NOT_ALLOWED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static PHONE_NUMBER_ALREADY_EXISTS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static PROJECT_NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static QUOTA_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static RECAPTCHA_NOT_ENABLED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static SECOND_FACTOR_LIMIT_EXCEEDED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static SECOND_FACTOR_UID_ALREADY_EXISTS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static SESSION_COOKIE_EXPIRED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static SESSION_COOKIE_REVOKED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static TENANT_NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UID_ALREADY_EXISTS: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNAUTHORIZED_DOMAIN: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNSUPPORTED_FIRST_FACTOR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNSUPPORTED_SECOND_FACTOR: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNSUPPORTED_TENANT_OPERATION: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static UNVERIFIED_EMAIL: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static USER_DISABLED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static USER_NOT_DISABLED: {
-        code: string;
-        message: string;
-    };
-    // (undocumented)
-    static USER_NOT_FOUND: {
-        code: string;
-        message: string;
-    };
-}
+export const AuthErrorCode: {
+    readonly AUTH_BLOCKING_TOKEN_EXPIRED: "auth-blocking-token-expired";
+    readonly BILLING_NOT_ENABLED: "billing-not-enabled";
+    readonly CLAIMS_TOO_LARGE: "claims-too-large";
+    readonly CONFIGURATION_EXISTS: "configuration-exists";
+    readonly CONFIGURATION_NOT_FOUND: "configuration-not-found";
+    readonly ID_TOKEN_EXPIRED: "id-token-expired";
+    readonly INVALID_ARGUMENT: "argument-error";
+    readonly INVALID_CONFIG: "invalid-config";
+    readonly EMAIL_ALREADY_EXISTS: "email-already-exists";
+    readonly EMAIL_NOT_FOUND: "email-not-found";
+    readonly FORBIDDEN_CLAIM: "reserved-claim";
+    readonly INVALID_ID_TOKEN: "invalid-id-token";
+    readonly ID_TOKEN_REVOKED: "id-token-revoked";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_CLAIMS: "invalid-claims";
+    readonly INVALID_CONTINUE_URI: "invalid-continue-uri";
+    readonly INVALID_CREATION_TIME: "invalid-creation-time";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INVALID_DISABLED_FIELD: "invalid-disabled-field";
+    readonly INVALID_DISPLAY_NAME: "invalid-display-name";
+    readonly INVALID_DYNAMIC_LINK_DOMAIN: "invalid-dynamic-link-domain";
+    readonly INVALID_HOSTING_LINK_DOMAIN: "invalid-hosting-link-domain";
+    readonly INVALID_EMAIL_VERIFIED: "invalid-email-verified";
+    readonly INVALID_EMAIL: "invalid-email";
+    readonly INVALID_NEW_EMAIL: "invalid-new-email";
+    readonly INVALID_ENROLLED_FACTORS: "invalid-enrolled-factors";
+    readonly INVALID_ENROLLMENT_TIME: "invalid-enrollment-time";
+    readonly INVALID_HASH_ALGORITHM: "invalid-hash-algorithm";
+    readonly INVALID_HASH_BLOCK_SIZE: "invalid-hash-block-size";
+    readonly INVALID_HASH_DERIVED_KEY_LENGTH: "invalid-hash-derived-key-length";
+    readonly INVALID_HASH_KEY: "invalid-hash-key";
+    readonly INVALID_HASH_MEMORY_COST: "invalid-hash-memory-cost";
+    readonly INVALID_HASH_PARALLELIZATION: "invalid-hash-parallelization";
+    readonly INVALID_HASH_ROUNDS: "invalid-hash-rounds";
+    readonly INVALID_HASH_SALT_SEPARATOR: "invalid-hash-salt-separator";
+    readonly INVALID_LAST_SIGN_IN_TIME: "invalid-last-sign-in-time";
+    readonly INVALID_NAME: "invalid-name";
+    readonly INVALID_OAUTH_CLIENT_ID: "invalid-oauth-client-id";
+    readonly INVALID_PAGE_TOKEN: "invalid-page-token";
+    readonly INVALID_PASSWORD: "invalid-password";
+    readonly INVALID_PASSWORD_HASH: "invalid-password-hash";
+    readonly INVALID_PASSWORD_SALT: "invalid-password-salt";
+    readonly INVALID_PHONE_NUMBER: "invalid-phone-number";
+    readonly INVALID_PHOTO_URL: "invalid-photo-url";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_PROVIDER_DATA: "invalid-provider-data";
+    readonly INVALID_PROVIDER_ID: "invalid-provider-id";
+    readonly INVALID_PROVIDER_UID: "invalid-provider-uid";
+    readonly INVALID_OAUTH_RESPONSETYPE: "invalid-oauth-responsetype";
+    readonly INVALID_SESSION_COOKIE_DURATION: "invalid-session-cookie-duration";
+    readonly INVALID_TENANT_ID: "invalid-tenant-id";
+    readonly INVALID_TENANT_TYPE: "invalid-tenant-type";
+    readonly INVALID_TESTING_PHONE_NUMBER: "invalid-testing-phone-number";
+    readonly INVALID_UID: "invalid-uid";
+    readonly INVALID_USER_IMPORT: "invalid-user-import";
+    readonly INVALID_TOKENS_VALID_AFTER_TIME: "invalid-tokens-valid-after-time";
+    readonly MISMATCHING_TENANT_ID: "mismatching-tenant-id";
+    readonly MISSING_ANDROID_PACKAGE_NAME: "missing-android-package-name";
+    readonly MISSING_CONFIG: "missing-config";
+    readonly MISSING_CONTINUE_URI: "missing-continue-uri";
+    readonly MISSING_DISPLAY_NAME: "missing-display-name";
+    readonly MISSING_EMAIL: "missing-email";
+    readonly MISSING_IOS_BUNDLE_ID: "missing-ios-bundle-id";
+    readonly MISSING_ISSUER: "missing-issuer";
+    readonly MISSING_HASH_ALGORITHM: "missing-hash-algorithm";
+    readonly MISSING_OAUTH_CLIENT_ID: "missing-oauth-client-id";
+    readonly MISSING_OAUTH_CLIENT_SECRET: "missing-oauth-client-secret";
+    readonly MISSING_PROVIDER_ID: "missing-provider-id";
+    readonly MISSING_SAML_RELYING_PARTY_CONFIG: "missing-saml-relying-party-config";
+    readonly MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED: "test-phone-number-limit-exceeded";
+    readonly MAXIMUM_USER_COUNT_EXCEEDED: "maximum-user-count-exceeded";
+    readonly MISSING_UID: "missing-uid";
+    readonly OPERATION_NOT_ALLOWED: "operation-not-allowed";
+    readonly PHONE_NUMBER_ALREADY_EXISTS: "phone-number-already-exists";
+    readonly PROJECT_NOT_FOUND: "project-not-found";
+    readonly INSUFFICIENT_PERMISSION: "insufficient-permission";
+    readonly QUOTA_EXCEEDED: "quota-exceeded";
+    readonly SECOND_FACTOR_LIMIT_EXCEEDED: "second-factor-limit-exceeded";
+    readonly SECOND_FACTOR_UID_ALREADY_EXISTS: "second-factor-uid-already-exists";
+    readonly SESSION_COOKIE_EXPIRED: "session-cookie-expired";
+    readonly SESSION_COOKIE_REVOKED: "session-cookie-revoked";
+    readonly TENANT_NOT_FOUND: "tenant-not-found";
+    readonly UID_ALREADY_EXISTS: "uid-already-exists";
+    readonly UNAUTHORIZED_DOMAIN: "unauthorized-continue-uri";
+    readonly UNSUPPORTED_FIRST_FACTOR: "unsupported-first-factor";
+    readonly UNSUPPORTED_SECOND_FACTOR: "unsupported-second-factor";
+    readonly UNSUPPORTED_TENANT_OPERATION: "unsupported-tenant-operation";
+    readonly UNVERIFIED_EMAIL: "unverified-email";
+    readonly USER_NOT_FOUND: "user-not-found";
+    readonly NOT_FOUND: "not-found";
+    readonly USER_DISABLED: "user-disabled";
+    readonly USER_NOT_DISABLED: "user-not-disabled";
+    readonly INVALID_RECAPTCHA_ACTION: "invalid-recaptcha-action";
+    readonly INVALID_RECAPTCHA_ENFORCEMENT_STATE: "invalid-recaptcha-enforcement-state";
+    readonly RECAPTCHA_NOT_ENABLED: "recaptcha-not-enabled";
+};
+
+// @public
+export type AuthErrorCode = typeof AuthErrorCode[keyof typeof AuthErrorCode];
 
 // @public
 export type AuthFactorType = 'phone';
@@ -728,10 +351,12 @@ export interface EmailSignInProviderConfig {
     passwordRequired?: boolean;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseAuthError extends PrefixedFirebaseError {
+export class FirebaseAuthError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public
