@@ -220,4 +220,4 @@ export function initializeFirestore(
   return firestoreService.initializeDatabase(databaseId, settings);
 }
 
-export { FirebaseFirestoreError } from './error';
+export { FirestoreErrorCode, FirebaseFirestoreError } from './error';

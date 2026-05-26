@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /** @const {Record<string, RemoteConfigErrorCode>} Remote Config server to client error code mapping. */
 export const ERROR_CODE_MAPPING: Record<string, RemoteConfigErrorCode> = {
@@ -54,14 +54,22 @@ export const RemoteConfigErrorCode = {
 export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
 /**
- * Firebase Remote Config error code structure. This extends PrefixedFirebaseError.
+ * Firebase Remote Config error code structure. This extends `FirebaseError`.
  */
-export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
+export class FirebaseRemoteConfigError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'remote-config';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('remote-config', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `remote-config/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

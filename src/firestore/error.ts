@@ -14,12 +14,30 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * Firebase Firestore error code structure. This extends PrefixedFirebaseError.
+ * The constant mapping for valid Firestore client error codes.
  */
-export class FirebaseFirestoreError extends PrefixedFirebaseError {
+export const FirestoreErrorCode = {
+  FAILED_PRECONDITION: 'failed-precondition',
+  INVALID_ARGUMENT: 'invalid-argument',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  MISSING_DEPENDENCIES: 'missing-dependencies',
+} as const;
+
+/**
+ * The type definition for valid Firestore client error codes.
+ */
+export type FirestoreErrorCode = typeof FirestoreErrorCode[keyof typeof FirestoreErrorCode];
+
+/**
+ * Firebase Firestore error code structure. This extends `FirebaseError`.
+ */
+export class FirebaseFirestoreError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'firestore';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default
@@ -27,6 +45,12 @@ export class FirebaseFirestoreError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('firestore', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `firestore/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }
+

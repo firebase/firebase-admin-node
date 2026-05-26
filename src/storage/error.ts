@@ -17,35 +17,35 @@
 import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
- * The constant mapping for valid Phone Number Verification client error codes.
+ * The constant mapping for valid Storage client error codes.
  */
-export const PhoneNumberVerificationErrorCode = {
+export const StorageErrorCode = {
   INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_TOKEN: 'invalid-token',
-  EXPIRED_TOKEN: 'expired-token',
+  INVALID_EMULATOR_HOST: 'invalid-emulator-host',
+  MISSING_DEPENDENCIES: 'missing-dependencies',
+  INVALID_CREDENTIAL: 'invalid-credential',
+  NO_DOWNLOAD_TOKEN: 'no-download-token',
 } as const;
 
 /**
- * The type definition for valid Phone Number Verification client error codes.
+ * The type definition for valid Storage client error codes.
  */
-export type PhoneNumberVerificationErrorCode =
-  typeof PhoneNumberVerificationErrorCode[keyof typeof PhoneNumberVerificationErrorCode];
-
-export const FPNV_ERROR_CODE_MAPPING = PhoneNumberVerificationErrorCode;
+export type StorageErrorCode = typeof StorageErrorCode[keyof typeof StorageErrorCode];
 
 /**
- * Firebase Phone Number Verification error code structure. This extends `FirebaseError`.
- *
- * @param info - The error code info.
- * @param message - The error message. If provided, this will override the default message.
+ * Firebase Storage error code structure. This extends `FirebaseError`.
  */
-export class FirebasePhoneNumberVerificationError extends FirebaseError {
+export class FirebaseStorageError extends FirebaseError {
   /** @internal */
-  protected readonly codePrefix = 'phone-number-verification';
+  protected readonly codePrefix = 'storage';
 
+  /**
+   * @param info - The error code info.
+   * @param message - The error message. If provided, this will override the default message.
+   */
   constructor(info: ErrorInfo, message?: string) {
     super({
-      code: `phone-number-verification/${info.code}`,
+      code: `storage/${info.code}`,
       message: message || info.message,
       httpResponse: info.httpResponse,
       cause: info.cause,

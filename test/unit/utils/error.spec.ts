@@ -44,6 +44,8 @@ describe('FirebaseError', () => {
     expect(error.message).to.be.equal(message);
     expect(error instanceof FirebaseError).to.be.true;
     expect(error instanceof Error).to.be.true;
+    expect(error.hasCode(code)).to.be.true;
+    expect(error.hasCode('non-existent')).to.be.false;
   });
 
   it('should initialize correctly with httpResponse and cause', () => {
@@ -112,6 +114,8 @@ describe('FirebaseAuthError', () => {
     expect(error.message).to.be.equal('message');
     expect(error instanceof FirebaseAuthError).to.be.true;
     expect(error instanceof FirebaseError).to.be.true;
+    expect(error.hasCode('code')).to.be.true;
+    expect(error.hasCode('wrong-code')).to.be.false;
   });
 
   it('should initialize successfully with a message specified', () => {
@@ -263,6 +267,8 @@ describe('FirebaseMessagingError', () => {
     expect(error.message).to.be.equal('message');
     expect(error instanceof FirebaseMessagingError).to.be.true;
     expect(error instanceof FirebaseError).to.be.true;
+    expect(error.hasCode('code')).to.be.true;
+    expect(error.hasCode('invalid-code')).to.be.false;
   });
 
   it('should initialize successfully with a message specified', () => {

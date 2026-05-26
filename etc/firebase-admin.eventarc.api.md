@@ -52,10 +52,10 @@ export const EventarcErrorCode: {
 // @public
 export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseEventarcError extends PrefixedFirebaseError {
+export class FirebaseEventarcError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }

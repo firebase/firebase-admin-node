@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Machine Learning client error codes.
@@ -44,7 +44,13 @@ export const MachineLearningErrorCode = {
  */
 export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
-export class FirebaseMachineLearningError extends PrefixedFirebaseError {
+/**
+ * Firebase Machine Learning error code structure. This extends `FirebaseError`.
+ */
+export class FirebaseMachineLearningError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'machine-learning';
+
   /** @internal */
   public static fromOperationError(code: number, message: string): FirebaseMachineLearningError {
     switch (code) {
@@ -73,6 +79,11 @@ export class FirebaseMachineLearningError extends PrefixedFirebaseError {
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('machine-learning', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `machine-learning/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

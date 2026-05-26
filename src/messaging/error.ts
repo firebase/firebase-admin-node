@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ErrorInfo, PrefixedFirebaseError, toHttpResponse } from '../utils/error';
+import { ErrorInfo, FirebaseError, toHttpResponse } from '../utils/error';
 import { RequestResponseError } from '../utils/api-request';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -215,9 +215,12 @@ const TOPIC_MGT_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErro
 };
 
 /**
- * Firebase Messaging error code structure. This extends `PrefixedFirebaseError`.
+ * Firebase Messaging error code structure. This extends `FirebaseError`.
  */
-export class FirebaseMessagingError extends PrefixedFirebaseError {
+export class FirebaseMessagingError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'messaging';
+
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -289,6 +292,11 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('messaging', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `messaging/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

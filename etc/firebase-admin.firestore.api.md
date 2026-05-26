@@ -100,10 +100,10 @@ export { FieldValue }
 
 export { Filter }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseFirestoreError extends PrefixedFirebaseError {
+export class FirebaseFirestoreError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }
@@ -111,6 +111,17 @@ export class FirebaseFirestoreError extends PrefixedFirebaseError {
 export { Firestore }
 
 export { FirestoreDataConverter }
+
+// @public
+export const FirestoreErrorCode: {
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly MISSING_DEPENDENCIES: "missing-dependencies";
+};
+
+// @public
+export type FirestoreErrorCode = typeof FirestoreErrorCode[keyof typeof FirestoreErrorCode];
 
 // @public
 export interface FirestoreSettings {

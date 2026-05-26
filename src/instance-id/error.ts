@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 import { installationsClientErrorCode } from '../installations/error';
 
 /**
@@ -45,9 +45,12 @@ export const instanceIdClientErrorCode: { readonly [K in keyof typeof InstanceId
 };
 
 /**
- * Firebase Instance ID service error code structure. This extends `PrefixedFirebaseError`.
+ * Firebase Instance ID error code structure. This extends `FirebaseError`.
  */
-export class FirebaseInstanceIdError extends PrefixedFirebaseError {
+export class FirebaseInstanceIdError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'instance-id';
+
   /**
    * 
    * @param info - The error code info.
@@ -56,6 +59,11 @@ export class FirebaseInstanceIdError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('instance-id', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `instance-id/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

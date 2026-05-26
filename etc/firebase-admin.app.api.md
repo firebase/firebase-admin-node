@@ -63,10 +63,8 @@ export interface ErrorInfo {
     message: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
-//
 // @public
-export class FirebaseAppError extends PrefixedFirebaseError {
+export class FirebaseAppError extends FirebaseError {
     constructor(info: ErrorInfo, message?: string);
 }
 
@@ -80,6 +78,7 @@ export interface FirebaseArrayIndexError {
 export interface FirebaseError {
     cause?: Error;
     code: string;
+    hasCode(code: string): boolean;
     httpResponse?: HttpResponse;
     message: string;
     stack?: string;

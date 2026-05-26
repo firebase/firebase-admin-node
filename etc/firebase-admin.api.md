@@ -238,6 +238,7 @@ export interface FirebaseArrayIndexError {
 export interface FirebaseError {
     cause?: Error;
     code: string;
+    hasCode(code: string): boolean;
     httpResponse?: HttpResponse;
     message: string;
     stack?: string;

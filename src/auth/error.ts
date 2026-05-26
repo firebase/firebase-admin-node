@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, toHttpResponse, ErrorInfo } from '../utils/error';
+import { FirebaseError, toHttpResponse, ErrorInfo } from '../utils/error';
 import { RequestResponseError } from '../utils/api-request';
 import { deepCopy } from '../utils/deep-copy';
 
@@ -647,9 +647,12 @@ const AUTH_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof AuthErrorCode> = {
 };
 
 /**
- * Firebase Auth error code structure. This extends PrefixedFirebaseError.
+ * Firebase Auth error code structure. This extends `FirebaseError`.
  */
-export class FirebaseAuthError extends PrefixedFirebaseError {
+export class FirebaseAuthError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'auth';
+
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -689,7 +692,11 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('auth', info.code, message || info.message, info.httpResponse, info.cause);
-
+    super({
+      code: `auth/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

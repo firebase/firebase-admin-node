@@ -16,7 +16,7 @@
  */
 
 import { App } from '../app';
-import { FirebaseError } from '../utils/error';
+import { FirebaseStorageError } from './error';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
 import * as utils from '../utils/index';
@@ -39,8 +39,8 @@ export class Storage {
    */
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseError({
-        code: 'storage/invalid-argument',
+      throw new FirebaseStorageError({
+        code: 'invalid-argument',
         message: 'First argument passed to admin.storage() must be a valid Firebase app instance.',
       });
     }
@@ -49,8 +49,8 @@ export class Storage {
       const firebaseStorageEmulatorHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
 
       if (firebaseStorageEmulatorHost.match(/https?:\/\//)) {
-        throw new FirebaseError({
-          code: 'storage/invalid-emulator-host',
+        throw new FirebaseStorageError({
+          code: 'invalid-emulator-host',
           message: 'FIREBASE_STORAGE_EMULATOR_HOST should not contain a protocol (http or https).',
         });
       }
@@ -62,8 +62,8 @@ export class Storage {
     try {
       storage = require('@google-cloud/storage').Storage;
     } catch (err) {
-      throw new FirebaseError({
-        code: 'storage/missing-dependencies',
+      throw new FirebaseStorageError({
+        code: 'missing-dependencies',
         message: 'Failed to import the Cloud Storage client library for Node.js. '
           + 'Make sure to install the "@google-cloud/storage" npm package. '
           + `Original error: ${err}`,
@@ -86,8 +86,8 @@ export class Storage {
       // Try to use the Google application default credentials.
       this.storageClient = new storage();
     } else {
-      throw new FirebaseError({
-        code: 'storage/invalid-credential',
+      throw new FirebaseStorageError({
+        code: 'invalid-credential',
         message: 'Failed to initialize Google Cloud Storage client with the available credential. ' +
           'Must initialize the SDK with a certificate credential or application default credentials ' +
           'to use Cloud Storage API.',
@@ -110,8 +110,8 @@ export class Storage {
     if (validator.isNonEmptyString(bucketName)) {
       return this.storageClient.bucket(bucketName);
     }
-    throw new FirebaseError({
-      code: 'storage/invalid-argument',
+    throw new FirebaseStorageError({
+      code: 'invalid-argument',
       message: 'Bucket name not specified or invalid. Specify a valid bucket name via the ' +
                 'storageBucket option when initializing the app, or specify the bucket name ' +
                 'explicitly when calling the getBucket() method.',

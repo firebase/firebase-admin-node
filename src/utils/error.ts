@@ -103,6 +103,19 @@ export interface FirebaseError {
   cause?: Error;
 
   /**
+   * Checks if this error matches the specified error code.
+   *
+   * This method enables checking the error type without needing to account for
+   * service-specific code prefixes. For example, if this error has the code
+   * `"auth/invalid-uid"`, calling `err.hasCode('invalid-uid')` or
+   * `err.hasCode('auth/invalid-uid')` will both return `true`.
+   *
+   * @param code - The error code to test against (either non-prefixed or fully qualified).
+   * @returns True if the error code matches, false otherwise.
+   */
+  hasCode(code: string): boolean;
+
+  /**
    * Returns a JSON-serializable object representation of this error.
    *
    * @returns A JSON-serializable representation of this object.
@@ -115,6 +128,9 @@ export interface FirebaseError {
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class FirebaseError extends Error implements FirebaseError {
+  /** @internal */
+  protected readonly codePrefix?: string;
+
   /**
    * @param errorInfo - The error information (code and message).
    */
@@ -127,6 +143,14 @@ export class FirebaseError extends Error implements FirebaseError {
     if (errorInfo.httpResponse !== undefined) {
       this.httpResponse = errorInfo.httpResponse;
     }
+  }
+
+  /** {@inheritDoc FirebaseError.hasCode} */
+  public hasCode(code: string): boolean {
+    if (this.code === code) {
+      return true;
+    }
+    return this.codePrefix != null && this.code === `${this.codePrefix}/${code}`;
   }
 
   /** @returns The object representation of the error. */
@@ -158,41 +182,5 @@ export class FirebaseError extends Error implements FirebaseError {
       }
     }
     return json;
-  }
-}
-
-/**
- * A FirebaseError with a prefix in front of the error code.
- */
-export class PrefixedFirebaseError extends FirebaseError {
-  /**
-   * @param codePrefix - The prefix to apply to the error code.
-   * @param code - The error code.
-   * @param message - The error message.
-   * @internal
-   */
-  constructor(private codePrefix: string, code: string, message: string, httpResponse?: HttpResponse, cause?: Error) {
-    const errorInfo: ErrorInfo = {
-      code: `${codePrefix}/${code}`,
-      message,
-    };
-    if (httpResponse !== undefined) {
-      errorInfo.httpResponse = httpResponse;
-    }
-    if (cause !== undefined) {
-      errorInfo.cause = cause;
-    }
-    super(errorInfo);
-  }
-
-  /**
-   * Allows the error type to be checked without needing to know implementation details
-   * of the code prefixing.
-   *
-   * @param code - The non-prefixed error code to test against.
-   * @returns True if the code matches, false otherwise.
-   */
-  public hasCode(code: string): boolean {
-    return `${this.codePrefix}/${code}` === this.code;
   }
 }

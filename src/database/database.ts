@@ -18,7 +18,7 @@ import { URL } from 'url';
 import * as path from 'path';
 
 import { FirebaseDatabase } from '@firebase/database-types';
-import { FirebaseDatabaseError } from './error';
+import { DatabaseErrorCode, FirebaseDatabaseError } from './error';
 import { AppErrorCode, FirebaseAppError } from '../app/error';
 import { toHttpResponse } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
@@ -297,7 +297,7 @@ class DatabaseRulesClient {
   private handleError(err: Error): Error {
     if (err instanceof RequestResponseError) {
       return new FirebaseDatabaseError({
-        code: AppErrorCode.INTERNAL_ERROR,
+        code: DatabaseErrorCode.INTERNAL_ERROR,
         message: this.getErrorMessage(err),
         httpResponse: toHttpResponse(err.response),
         cause: err,

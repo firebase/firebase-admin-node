@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { PrefixedFirebaseError, ErrorInfo } from '../utils/error';
+import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Eventarc client error codes.
@@ -30,14 +30,22 @@ export const EventarcErrorCode = {
 export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
 
 /**
- * Firebase Eventarc error code structure. This extends PrefixedFirebaseError.
+ * Firebase Eventarc error code structure. This extends `FirebaseError`.
  */
-export class FirebaseEventarcError extends PrefixedFirebaseError {
+export class FirebaseEventarcError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'eventarc';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. If provided, this will override the default message.
    */
   constructor(info: ErrorInfo, message?: string) {
-    super('eventarc', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `eventarc/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }

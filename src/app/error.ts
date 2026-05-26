@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-import { ErrorInfo, PrefixedFirebaseError } from '../utils/error';
+import { ErrorInfo, FirebaseError } from '../utils/error';
 
 /**
- * Firebase App error code structure. This extends PrefixedFirebaseError.
+ * Firebase App error code structure. This extends `FirebaseError`.
  */
-export class FirebaseAppError extends PrefixedFirebaseError {
+export class FirebaseAppError extends FirebaseError {
+  /** @internal */
+  protected readonly codePrefix = 'app';
+
   /**
    * @param info - The error code info.
    * @param message - The error message. This will override the default message if provided.
    */
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super('app', info.code, message || info.message, info.httpResponse, info.cause);
+    super({
+      code: `app/${info.code}`,
+      message: message || info.message,
+      httpResponse: info.httpResponse,
+      cause: info.cause,
+    });
   }
 }
 
@@ -51,5 +59,3 @@ export const AppErrorCode = {
  * The type definition for valid App client error codes.
  */
 export type AppErrorCode = typeof AppErrorCode[keyof typeof AppErrorCode];
-
-

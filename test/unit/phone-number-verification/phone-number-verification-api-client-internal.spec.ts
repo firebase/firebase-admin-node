@@ -26,7 +26,7 @@ import {
   FirebasePhoneNumberVerificationError,
   FPNV_ERROR_CODE_MAPPING
 } from '../../../src/phone-number-verification/error';
-import { PrefixedFirebaseError, FirebaseError } from '../../../src/utils/error';
+import { FirebaseError } from '../../../src/utils/error';
 
 const FPNV_PREFIX = 'phone-number-verification';
 
@@ -58,11 +58,10 @@ describe('FPNV Constants and Error Class', () => {
     const testCode = FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN;
     const testMessage = 'The provided token is malformed or invalid.';
 
-    it('should correctly extend PrefixedFirebaseError', () => {
+    it('should correctly extend FirebaseError', () => {
       const error = new FirebasePhoneNumberVerificationError({ code: testCode, message: testMessage });
 
       expect(error).to.be.an.instanceOf(FirebasePhoneNumberVerificationError);
-      expect(error).to.be.an.instanceOf(PrefixedFirebaseError);
       expect(error).to.be.an.instanceOf(FirebaseError);
       expect(error).to.be.an.instanceOf(Error);
     });
