@@ -34,6 +34,7 @@ export const MessagingErrorCode = {
   INVALID_PACKAGE_NAME: 'invalid-package-name',
   DEVICE_MESSAGE_RATE_EXCEEDED: 'device-message-rate-exceeded',
   TOPICS_MESSAGE_RATE_EXCEEDED: 'topics-message-rate-exceeded',
+  TOPICS_SUBSCRIPTION_RATE_EXCEEDED: 'topics-subscription-rate-exceeded',
   MESSAGE_RATE_EXCEEDED: 'message-rate-exceeded',
   THIRD_PARTY_AUTH_ERROR: 'third-party-auth-error',
   TOO_MANY_TOPICS: 'too-many-topics',
@@ -111,6 +112,12 @@ export const messagingClientErrorCode: { readonly [K in keyof typeof MessagingEr
     message: 'The rate of messages to subscribers to a particular topic is too ' +
       'high. Reduce the number of messages sent for this topic, and do not immediately retry sending ' +
       'to this topic.',
+  },
+  TOPICS_SUBSCRIPTION_RATE_EXCEEDED: {
+    code: MessagingErrorCode.TOPICS_SUBSCRIPTION_RATE_EXCEEDED,
+    message: 'The rate of subscription management requests to a particular topic is too ' +
+      'high. Reduce the number of requests sent for this topic, and do not immediately retry the ' +
+      'request.',
   },
   MESSAGE_RATE_EXCEEDED: {
     code: MessagingErrorCode.MESSAGE_RATE_EXCEEDED,
@@ -207,7 +214,7 @@ const TOPIC_MGT_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErro
   NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
   TOO_MANY_TOPICS: 'TOO_MANY_TOPICS',
-  RESOURCE_EXHAUSTED: 'TOO_MANY_TOPICS',
+  RESOURCE_EXHAUSTED: 'TOPICS_SUBSCRIPTION_RATE_EXCEEDED',
   PERMISSION_DENIED: 'AUTHENTICATION_ERROR',
   DEADLINE_EXCEEDED: 'SERVER_UNAVAILABLE',
   INTERNAL: 'INTERNAL_ERROR',
