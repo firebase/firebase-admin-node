@@ -29,26 +29,9 @@ import * as mocks from '../../resources/mocks';
 import { GoogleOAuthAccessToken } from '../../../src/app/index';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseApp, FirebaseAccessToken } from '../../../src/app/firebase-app';
-import { FirebaseNamespace } from '../../../src/app/firebase-namespace';
-import { AppStore, FIREBASE_CONFIG_VAR } from '../../../src/app/lifecycle';
-import {
-  auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
-} from '../../../src/firebase-namespace-api';
+import { AppStore, FIREBASE_CONFIG_VAR, initializeApp, defaultAppStore } from '../../../src/app/lifecycle';
 import { FirebaseAppError, AppErrorCode } from '../../../src/app/error';
 
-import Auth = auth.Auth;
-import Database = database.Database;
-import Messaging = messaging.Messaging;
-import MachineLearning = machineLearning.MachineLearning;
-import Storage = storage.Storage;
-import Firestore = firestore.Firestore;
-import Installations = installations.Installations;
-import InstanceId = instanceId.InstanceId;
-import ProjectManagement = projectManagement.ProjectManagement;
-import SecurityRules = securityRules.SecurityRules;
-import RemoteConfig = remoteConfig.RemoteConfig;
-import AppCheck = appCheck.AppCheck;
 
 chai.should();
 chai.use(sinonChai);
@@ -75,7 +58,6 @@ describe('FirebaseApp', () => {
   let mockApp: FirebaseApp;
   let clock: sinon.SinonFakeTimers;
   let getTokenStub: sinon.SinonStub;
-  let firebaseNamespace: FirebaseNamespace;
   let firebaseConfigVar: string | undefined;
 
   beforeEach(() => {
@@ -87,7 +69,6 @@ describe('FirebaseApp', () => {
     clock = sinon.useFakeTimers(1000);
     firebaseConfigVar = process.env[FIREBASE_CONFIG_VAR];
     delete process.env[FIREBASE_CONFIG_VAR];
-    firebaseNamespace = new FirebaseNamespace();
     mockApp = new FirebaseApp(mocks.appOptions, mocks.appName);
   });
 
@@ -101,6 +82,7 @@ describe('FirebaseApp', () => {
     }
 
     deleteSpy.resetHistory();
+    return defaultAppStore.clearAllApps();
   });
 
   describe('#name', () => {
@@ -164,7 +146,7 @@ describe('FirebaseApp', () => {
 
     it('should ignore the config file when options is not null', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      const app = initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.undefined;
       expect(app.options.projectId).to.be.undefined;
@@ -174,7 +156,7 @@ describe('FirebaseApp', () => {
     it('should throw when the environment variable points to non existing file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
       try {
-        firebaseNamespace.initializeApp();
+        initializeApp();
         expect.fail('Should have failed');
       } catch (err: any) {
         expect(err).to.be.instanceOf(FirebaseAppError);
@@ -186,7 +168,7 @@ describe('FirebaseApp', () => {
     it('should throw when the environment variable contains bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
       try {
-        firebaseNamespace.initializeApp();
+        initializeApp();
         expect.fail('Should have failed');
       } catch (err: any) {
         expect(err).to.be.instanceOf(FirebaseAppError);
@@ -198,7 +180,7 @@ describe('FirebaseApp', () => {
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
       try {
-        firebaseNamespace.initializeApp();
+        initializeApp();
         expect.fail('Should have failed');
       } catch (err: any) {
         expect(err).to.be.instanceOf(FirebaseAppError);
@@ -210,7 +192,7 @@ describe('FirebaseApp', () => {
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
       try {
-        firebaseNamespace.initializeApp();
+        initializeApp();
         expect.fail('Should have failed');
       } catch (err: any) {
         expect(err).to.be.instanceOf(FirebaseAppError);
@@ -221,7 +203,7 @@ describe('FirebaseApp', () => {
 
     it('should ignore a bad config key in the config file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.undefined;
@@ -234,7 +216,7 @@ describe('FirebaseApp', () => {
           "notAValidKeyValue": "The key value here is not valid.",
           "projectId": "hipster-chat-mock"
         }`;
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.undefined;
@@ -243,7 +225,7 @@ describe('FirebaseApp', () => {
 
     it('should not throw when the config file has a bad key and the config file is unused', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      const app = initializeApp(mocks.appOptionsWithOverride, mocks.appName);
       expect(app.options.projectId).to.equal('project_id');
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
@@ -256,7 +238,7 @@ describe('FirebaseApp', () => {
           "notAValidKeyValue": "The key value here is not valid.",
           "projectId": "hipster-chat-mock"
         }`;
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      const app = initializeApp(mocks.appOptionsWithOverride, mocks.appName);
       expect(app.options.projectId).to.equal('project_id');
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
@@ -265,7 +247,7 @@ describe('FirebaseApp', () => {
 
     it('should use explicitly specified options when available and ignore the config file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const app = initializeApp(mocks.appOptions, mocks.appName);
       expect(app.options.credential).to.be.instanceOf(ServiceAccountCredential);
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
@@ -275,14 +257,14 @@ describe('FirebaseApp', () => {
 
     it('should not throw if some fields are missing', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_partial.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
+      const app = initializeApp(mocks.appOptionsAuthDB, mocks.appName);
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.be.undefined;
       expect(app.options.storageBucket).to.be.undefined;
     });
 
     it('should not throw when the config environment variable is not set, and some options are present', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      const app = initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(app.options.credential).to.be.instanceOf(ServiceAccountCredential);
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
@@ -292,14 +274,14 @@ describe('FirebaseApp', () => {
     it('should not throw if initializeApp invoked with the same options', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
       expect(() => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
-        const app2 = firebaseNamespace.initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+        const app = initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
+        const app2 = initializeApp(mocks.appOptionsWithoutCredential, mocks.appName);
         expect(app2).to.equal(app);
       }).to.not.throw();
     });
 
     it('should init with application default creds when no options provided and env variable is not set', () => {
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
@@ -308,7 +290,7 @@ describe('FirebaseApp', () => {
 
     it('should init with application default creds when no options provided and env variable is an empty json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{}';
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
@@ -317,7 +299,7 @@ describe('FirebaseApp', () => {
 
     it('should init when no init arguments are provided and config var points to a file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
@@ -332,7 +314,7 @@ describe('FirebaseApp', () => {
         "projectId": "hipster-chat-mock",
         "storageBucket": "hipster-chat.appspot.mock"
       }`;
-      const app = firebaseNamespace.initializeApp();
+      const app = initializeApp();
       expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
@@ -360,387 +342,20 @@ describe('FirebaseApp', () => {
     });
 
     it('should call delete() on each service\'s internals', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const app = initializeApp(mocks.appOptions, mocks.appName);
       const svc1 = new TestService();
       const svc2 = new TestService();
       (app as any).ensureService_(mocks.serviceName, () => svc1);
       (app as any).ensureService_(mocks.serviceName + '2', () => svc2);
 
-      return app.delete().then(() => {
+      return (app as FirebaseApp).delete().then(() => {
         expect(svc1.deleted).to.be.true;
         expect(svc2.deleted).to.be.true;
       });
     });
   });
 
-  describe('auth()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      return app.delete().then(() => {
-        expect(() => {
-          return app.auth();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the Auth namespace', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const authNamespace: Auth = app.auth();
-      expect(authNamespace).not.be.null;
-    });
-
-    it('should return a cached version of Auth on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const serviceNamespace1: Auth = app.auth();
-      const serviceNamespace2: Auth = app.auth();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
-    });
-  });
-
-  describe('messaging()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.messaging();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the Messaging namespace', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const fcmNamespace: Messaging = app.messaging();
-      expect(fcmNamespace).not.be.null;
-    });
-
-    it('should return a cached version of Messaging on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const serviceNamespace1: Messaging = app.messaging();
-      const serviceNamespace2: Messaging = app.messaging();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
-    });
-  });
-
-  describe('machineLearning()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.machineLearning();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the machineLearning client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const machineLearning: MachineLearning = app.machineLearning();
-      expect(machineLearning).to.not.be.null;
-    });
-
-    it('should return a cached version of MachineLearning on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: MachineLearning = app.machineLearning();
-      const service2: MachineLearning = app.machineLearning();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('database()', () => {
-    afterEach(() => {
-      try {
-        firebaseNamespace.app(mocks.appName).delete();
-      } catch (e) {
-        // ignore
-      }
-    });
-
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.database();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the Database', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db: Database = app.database();
-      expect(db).not.be.null;
-    });
-
-    it('should return the Database for different apps', () => {
-      const app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName + '-other');
-      const db1: Database = app1.database();
-      const db2: Database = app2.database();
-      expect(db1).to.not.deep.equal(db2);
-      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
-      expect(db2.ref().toString()).to.equal('https://databasename.firebaseio.com/');
-      return app2.delete();
-    });
-
-    it('should throw when databaseURL is not set', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      expect(() => {
-        app.database();
-      }).to.throw('Can\'t determine Firebase Database URL.');
-    });
-
-    it('should return a cached version of Database on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db1: Database = app.database();
-      const db2: Database = app.database();
-      const db3: Database = app.database(mocks.appOptions.databaseURL);
-      expect(db1).to.equal(db2);
-      expect(db1).to.equal(db3);
-      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
-    });
-
-    it('should return a Database instance for the specified URL', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db1: Database = app.database();
-      const db2: Database = app.database('https://other-database.firebaseio.com');
-      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
-      expect(db2.ref().toString()).to.equal('https://other-database.firebaseio.com/');
-    });
-
-    const invalidArgs = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-    invalidArgs.forEach((url) => {
-      it(`should throw given invalid URL argument: ${JSON.stringify(url)}`, () => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-        expect(() => {
-          (app as any).database(url);
-        }).to.throw('Database URL must be a valid, non-empty URL string.');
-      });
-    });
-
-    const invalidUrls = ['a', 'foo', 'google.com'];
-    invalidUrls.forEach((url) => {
-      it(`should throw given invalid URL string: '${url}'`, () => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-        expect(() => {
-          app.database(url);
-        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. ' +
-                    'Please use https://<YOUR FIREBASE>.firebaseio.com');
-      });
-    });
-  });
-
-  describe('storage()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.storage();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the Storage namespace', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const gcsNamespace: Storage = app.storage();
-      expect(gcsNamespace).not.be.null;
-    });
-
-    it('should return a cached version of Storage on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const serviceNamespace1: Storage = app.storage();
-      const serviceNamespace2: Storage = app.storage();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
-    });
-  });
-
-  describe('firestore()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.firestore();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the Firestore client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const fs: Firestore = app.firestore();
-      expect(fs).not.be.null;
-    });
-
-    it('should return a cached version of Firestore on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: Firestore = app.firestore();
-      const service2: Firestore = app.firestore();
-      expect(service1).to.deep.equal(service2);
-    });
-  });
-
-  describe('installations()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.installations();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the InstanceId client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const fis: Installations = app.installations();
-      expect(fis).not.be.null;
-    });
-
-    it('should return a cached version of InstanceId on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: Installations = app.installations();
-      const service2: Installations = app.installations();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('instanceId()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.instanceId();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the InstanceId client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const iid: InstanceId = app.instanceId();
-      expect(iid).not.be.null;
-    });
-
-    it('should return a cached version of InstanceId on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: InstanceId = app.instanceId();
-      const service2: InstanceId = app.instanceId();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('projectManagement()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.projectManagement();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the projectManagement client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const projectManagement: ProjectManagement = app.projectManagement();
-      expect(projectManagement).to.not.be.null;
-    });
-
-    it('should return a cached version of ProjectManagement on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: ProjectManagement = app.projectManagement();
-      const service2: ProjectManagement = app.projectManagement();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('securityRules()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.securityRules();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the securityRules client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const securityRules: SecurityRules = app.securityRules();
-      expect(securityRules).to.not.be.null;
-    });
-
-    it('should return a cached version of SecurityRules on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: SecurityRules = app.securityRules();
-      const service2: SecurityRules = app.securityRules();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('remoteConfig()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.remoteConfig();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the RemoteConfig client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const remoteConfig: RemoteConfig = app.remoteConfig();
-      expect(remoteConfig).to.not.be.null;
-    });
-
-    it('should return a cached version of RemoteConfig on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: RemoteConfig = app.remoteConfig();
-      const service2: RemoteConfig = app.remoteConfig();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('appCheck()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.appCheck();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the AppCheck client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const appCheck: AppCheck = app.appCheck();
-      expect(appCheck).to.not.be.null;
-    });
-
-    it('should return a cached version of AppCheck on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: AppCheck = app.appCheck();
-      const service2: AppCheck = app.appCheck();
-      expect(service1).to.equal(service2);
-    });
-  });
 
   describe('INTERNAL.getToken()', () => {
 
