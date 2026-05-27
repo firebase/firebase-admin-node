@@ -117,9 +117,10 @@ export interface SessionCookieOptions {
  * @internal
  */
 export function createFirebaseTokenGenerator(app: App,
-  tenantId?: string): FirebaseTokenGenerator {
+  tenantId?: string, isEmulator?: boolean): FirebaseTokenGenerator {
   try {
-    const signer = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+    const shouldEmulate = isEmulator !== undefined ? isEmulator : useEmulator();
+    const signer = shouldEmulate ? new EmulatedSigner() : cryptoSignerFromApp(app);
     return new FirebaseTokenGenerator(signer, tenantId);
   } catch (err) {
     throw handleCryptoSignerError(err);
@@ -139,6 +140,7 @@ export abstract class BaseAuth {
   protected readonly authBlockingTokenVerifier: FirebaseTokenVerifier;
   /** @internal */
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
+  private readonly emulatorMode: boolean;
 
   /**
    * The BaseAuth class constructor.
@@ -155,6 +157,8 @@ export abstract class BaseAuth {
     app: App,
     /** @internal */ protected readonly authRequestHandler: AbstractAuthRequestHandler,
     tokenGenerator?: FirebaseTokenGenerator) {
+    this.emulatorMode = !!this.authRequestHandler.emulatorHostValue;
+
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
@@ -211,7 +215,7 @@ export abstract class BaseAuth {
    *   promise.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
-    const isEmulator = useEmulator();
+    const isEmulator = this.emulatorMode;
     return this.idTokenVerifier.verifyJWT(idToken, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -717,7 +721,7 @@ export abstract class BaseAuth {
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
-    const isEmulator = useEmulator();
+    const isEmulator = this.emulatorMode;
     return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -1095,10 +1099,10 @@ export abstract class BaseAuth {
   /** @alpha */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
-    token: string,  
+    token: string,
     audience?: string
   ): Promise<DecodedAuthBlockingToken> {
-    const isEmulator = useEmulator();
+    const isEmulator = this.emulatorMode;
     return this.authBlockingTokenVerifier._verifyAuthBlockingToken(token, isEmulator, audience)
       .then((decodedAuthBlockingToken: DecodedAuthBlockingToken) => {
         return decodedAuthBlockingToken;
