@@ -79,7 +79,7 @@ export class ServiceAccountSigner implements CryptoSigner {
    * @inheritDoc
    */
   public sign(buffer: Buffer): Promise<Buffer> {
-    const crypto = require('node:crypto'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const crypto = require('node:crypto');
     const sign = crypto.createSign('RSA-SHA256');
     sign.update(buffer);
     return Promise.resolve(sign.sign(this.credential.privateKey));

@@ -26,6 +26,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { UserRefreshClient } from 'google-auth-library';
 
 import * as mocks from '../../resources/mocks';
 
@@ -68,11 +69,16 @@ describe('Credential', () => {
 
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
-    oldProcessEnv = process.env;
+    oldProcessEnv = { ...process.env };
   });
 
   afterEach(() => {
-    process.env = oldProcessEnv;
+    for (const key of Object.keys(process.env)) {
+      if (!(key in oldProcessEnv)) {
+        delete process.env[key];
+      }
+    }
+    Object.assign(process.env, oldProcessEnv);
   });
 
   describe('ServiceAccountCredential', () => {
@@ -310,7 +316,7 @@ describe('Credential', () => {
       expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
     });
 
-    it('should return a RefreshTokenCredential with gcloud login', () => {
+    it('should return a RefreshTokenCredential with gcloud login', async () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
         console.log(
@@ -319,7 +325,12 @@ describe('Credential', () => {
         return;
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      expect((getApplicationDefault())).to.be.an.instanceof(RefreshTokenCredential);
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
+
+      process.env.GOOGLE_CLOUD_PROJECT = 'mock-project';
+      const client = await (c as any).googleAuth.getClient();
+      expect(client).to.be.an.instanceof(UserRefreshClient);
     });
 
     it('should return a MetadataServiceCredential as a last resort', () => {
@@ -345,7 +356,7 @@ describe('Credential', () => {
       expect(isApplicationDefault(c)).to.be.true;
     });
 
-    it('should return true for credential loaded from gcloud SDK', () => {
+    it('should return true for credential loaded from gcloud SDK', async () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
         console.log(
@@ -355,7 +366,12 @@ describe('Credential', () => {
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       const c = getApplicationDefault();
-      expect(c).to.be.an.instanceof(RefreshTokenCredential);
+      expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
+
+      process.env.GOOGLE_CLOUD_PROJECT = 'mock-project';
+      const client = await (c as any).googleAuth.getClient();
+      expect(client).to.be.an.instanceof(UserRefreshClient);
+
       expect(isApplicationDefault(c)).to.be.true;
     });
 
