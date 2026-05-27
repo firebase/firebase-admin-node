@@ -97,9 +97,9 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('send(message with fid, dryRun) fails with invalid-argument', () => {
+  it('send(message with fid, dryRun) fails with registration-token-not-registered', () => {
     return getMessaging().send(fidMessage, true)
-      .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+      .should.eventually.be.rejected.and.have.property('code', 'messaging/registration-token-not-registered');
   });
 
   it('sendEach()', () => {
@@ -166,7 +166,7 @@ describe('admin.messaging', () => {
         response.responses.forEach((resp) => {
           expect(resp.success).to.be.false;
           expect(resp.messageId).to.be.undefined;
-          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
+          expect(resp.error).to.have.property('code', 'messaging/registration-token-not-registered');
         });
       });
   });
@@ -183,11 +183,17 @@ describe('admin.messaging', () => {
         expect(response.responses.length).to.equal(2);
         expect(response.successCount).to.equal(0);
         expect(response.failureCount).to.equal(2);
-        response.responses.forEach((resp) => {
-          expect(resp.success).to.be.false;
-          expect(resp.messageId).to.be.undefined;
-          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
-        });
+
+        expect(response.responses[0].success).to.be.false;
+        expect(response.responses[0].messageId).to.be.undefined;
+        expect(response.responses[0].error).to.have.property('code', 'messaging/invalid-argument');
+
+        expect(response.responses[1].success).to.be.false;
+        expect(response.responses[1].messageId).to.be.undefined;
+        expect(response.responses[1].error).to.have.property(
+          'code',
+          'messaging/registration-token-not-registered',
+        );
       });
   });
 
