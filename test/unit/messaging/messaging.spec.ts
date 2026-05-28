@@ -425,6 +425,26 @@ describe('Messaging', () => {
         .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
+    it('should fail when the backend server returns a detailed error for a FID target', () => {
+      const resp = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      };
+      mockedRequests.push(mockSendError(404, 'json', resp));
+      return messaging.send(
+        { fid: 'mock-fid' },
+      ).should.eventually.be.rejectedWith('test error message')
+        .and.have.property('code', 'messaging/installation-id-not-registered');
+    });
+
     ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
       it(`should map ${errorCode} to third party auth error`, () => {
         const resp = {

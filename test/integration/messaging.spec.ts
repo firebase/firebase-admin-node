@@ -97,9 +97,9 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('send(message with fid, dryRun) fails with registration-token-not-registered', () => {
+  it('send(message with fid, dryRun) fails with installation-id-not-registered', () => {
     return getMessaging().send(fidMessage, true)
-      .should.eventually.be.rejected.and.have.property('code', 'messaging/registration-token-not-registered');
+      .should.eventually.be.rejected.and.have.property('code', 'messaging/installation-id-not-registered');
   });
 
   it('sendEach()', () => {
@@ -166,7 +166,7 @@ describe('admin.messaging', () => {
         response.responses.forEach((resp) => {
           expect(resp.success).to.be.false;
           expect(resp.messageId).to.be.undefined;
-          expect(resp.error).to.have.property('code', 'messaging/registration-token-not-registered');
+          expect(resp.error).to.have.property('code', 'messaging/installation-id-not-registered');
         });
       });
   });
@@ -192,7 +192,7 @@ describe('admin.messaging', () => {
         expect(response.responses[1].messageId).to.be.undefined;
         expect(response.responses[1].error).to.have.property(
           'code',
-          'messaging/registration-token-not-registered',
+          'messaging/installation-id-not-registered',
         );
       });
   });

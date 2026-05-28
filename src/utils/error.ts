@@ -857,6 +857,12 @@ export class MessagingClientErrorCode {
       'token can be unregistered for a variety of reasons. See the error documentation for more ' +
       'details. Remove this registration token and stop using it to send messages.',
   };
+  public static INSTALLATION_ID_NOT_REGISTERED = {
+    code: 'installation-id-not-registered',
+    message: 'The provided installation ID is not registered. A previously valid installation ' +
+      'ID can be unregistered for a variety of reasons. See the error documentation for more ' +
+      'details. Remove this installation ID and stop using it to send messages.',
+  };
   public static MISMATCHED_CREDENTIAL = {
     code: 'mismatched-credential',
     message: 'The credential used to authenticate this SDK does not have permission to send ' +
@@ -1130,6 +1136,7 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   THIRD_PARTY_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
   UNAVAILABLE: 'SERVER_UNAVAILABLE',
   UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  UNREGISTERED_FID: 'INSTALLATION_ID_NOT_REGISTERED',
   UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
 };
 

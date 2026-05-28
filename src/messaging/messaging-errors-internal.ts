@@ -29,8 +29,22 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
   if (err.response.isJson()) {
     // For JSON responses, map the server response to a client-side error.
     const json = err.response.data;
-    const errorCode = getErrorCode(json);
+    let errorCode = getErrorCode(json);
     const errorMessage = getErrorMessage(json);
+    if (errorCode === 'UNREGISTERED' || errorCode === 'NOT_FOUND') {
+      let requestData = err.response.config && err.response.config.data;
+      if (typeof requestData === 'string') {
+        try {
+          requestData = JSON.parse(requestData);
+        } catch (e) {
+          // Ignore parsing errors.
+        }
+      }
+      const messageObj = requestData && requestData.message;
+      if (messageObj && typeof messageObj.fid === 'string') {
+        errorCode = 'UNREGISTERED_FID';
+      }
+    }
     return FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
   }
 
