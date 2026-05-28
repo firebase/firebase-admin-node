@@ -33,9 +33,10 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
     const errorMessage = getErrorMessage(json);
     if (errorCode === 'UNREGISTERED' || errorCode === 'NOT_FOUND') {
       let requestData = err.response.config && err.response.config.data;
-      if (typeof requestData === 'string') {
+      if (requestData && (typeof requestData === 'string' || Buffer.isBuffer(requestData))) {
         try {
-          requestData = JSON.parse(requestData);
+          const strData = typeof requestData === 'string' ? requestData : requestData.toString('utf-8');
+          requestData = JSON.parse(strData);
         } catch (e) {
           // Ignore parsing errors.
         }

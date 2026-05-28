@@ -324,17 +324,18 @@ export class Messaging {
 
     const { tokens, fids, ...baseMessage } = copy;
 
-    const tokenList: string[] = tokens || [];
-    const fidList: string[] = fids || [];
-
-    if ('tokens' in copy && !validator.isArray(copy.tokens)) {
+    if (tokens !== undefined && !validator.isArray(tokens)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a valid array');
     }
-    if ('fids' in copy && !validator.isArray(copy.fids)) {
+    if (fids !== undefined && !validator.isArray(fids)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a valid array');
     }
+
+    const tokenList: string[] = tokens || [];
+    const fidList: string[] = fids || [];
+
     if (tokenList.length === 0 && fidList.length === 0) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'Either tokens or fids must be a non-empty array');

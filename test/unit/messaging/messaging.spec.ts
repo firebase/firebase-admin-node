@@ -1224,6 +1224,18 @@ describe('Messaging', () => {
         });
     });
 
+    it('should handle explicitly undefined tokens or fids gracefully without throwing', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      return messaging.sendEachForMulticast({ fids: ['f1'], tokens: undefined } as any)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(1);
+          expect((messages[0] as FidMessage).fid).to.equal('f1');
+        });
+    });
+
     it('should create multiple messages using mixed tokens and fids', () => {
       stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
       const tokens = ['t1', 't2'];
