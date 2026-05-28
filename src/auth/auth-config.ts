@@ -231,7 +231,43 @@ export interface UserProvider {
  * Interface representing the properties to set on a new user record to be
  * created.
  */
-export interface CreateRequest extends UpdateRequest {
+export interface CreateRequest {
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled;
+   * `false` for enabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * The user's display name.
+   */
+  displayName?: string;
+
+  /**
+   * The user's primary email.
+   */
+  email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  emailVerified?: boolean;
+
+  /**
+   * The user's unhashed password.
+   */
+  password?: string;
+
+  /**
+   * The user's primary phone number.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The user's photo URL.
+   */
+  photoURL?: string;
 
   /**
    * The user's `uid`.
@@ -242,11 +278,6 @@ export interface CreateRequest extends UpdateRequest {
    * The user's multi-factor related properties.
    */
   multiFactor?: MultiFactorCreateSettings;
-
-  /**
-   * The user's primary phone number.
-   */
-  phoneNumber?: string;
 }
 
 /**

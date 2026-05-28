@@ -232,8 +232,15 @@ export interface CreatePhoneMultiFactorInfoRequest extends BaseCreateMultiFactor
 }
 
 // @public
-export interface CreateRequest extends UpdateRequest {
+export interface CreateRequest {
+    disabled?: boolean;
+    displayName?: string;
+    email?: string;
+    emailVerified?: boolean;
     multiFactor?: MultiFactorCreateSettings;
+    password?: string;
+    phoneNumber?: string;
+    photoURL?: string;
     uid?: string;
 }
 
