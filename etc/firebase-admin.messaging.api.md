@@ -226,6 +226,11 @@ export class MessagingClientErrorCode {
         message: string;
     };
     // (undocumented)
+    static INSTALLATION_ID_NOT_REGISTERED: {
+        code: string;
+        message: string;
+    };
+    // (undocumented)
     static INTERNAL_ERROR: {
         code: string;
         message: string;
