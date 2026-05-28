@@ -2035,6 +2035,11 @@ export abstract class AbstractAuthRequestHandler {
 /** Instantiates the getConfig endpoint settings. */
 const GET_PROJECT_CONFIG = new ApiSettings('/config', 'GET')
   .setResponseValidator((response: RequestResponse) => {
+    // The Auth emulator does not populate the resource `name` field on the
+    // project config response, so skip the assertion when running against it.
+    if (useEmulator()) {
+      return;
+    }
     const data = response.data;
     // Response should always contain at least the config name.
     if (!validator.isNonEmptyString(data?.name)) {
@@ -2049,6 +2054,11 @@ const GET_PROJECT_CONFIG = new ApiSettings('/config', 'GET')
 /** Instantiates the updateConfig endpoint settings. */
 const UPDATE_PROJECT_CONFIG = new ApiSettings('/config?updateMask={updateMask}', 'PATCH')
   .setResponseValidator((response: RequestResponse) => {
+    // The Auth emulator does not populate the resource `name` field on the
+    // project config response, so skip the assertion when running against it.
+    if (useEmulator()) {
+      return;
+    }
     const data = response.data;
     // Response should always contain at least the config name.
     if (!validator.isNonEmptyString(data?.name)) {
