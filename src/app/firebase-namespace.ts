@@ -19,7 +19,7 @@ import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  installations, projectManagement, securityRules , remoteConfig, AppOptions,
+  installations, projectManagement, securityRules, remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getSdkVersion } from '../utils/index';
@@ -351,7 +351,6 @@ function extendApp(app: AppCore): App {
     const fn = require('../firestore/index').getFirestore;
     return fn(app);
   };
-
 
   result.installations = () => {
     const fn = require('../installations/index').getInstallations;

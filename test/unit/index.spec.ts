@@ -68,14 +68,6 @@ import './firestore/index.spec';
 import './installations/installations.spec';
 import './installations/installations-request-handler.spec';
 
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
 // ProjectManagement
 import './project-management/index.spec';
 import './project-management/project-management.spec';
