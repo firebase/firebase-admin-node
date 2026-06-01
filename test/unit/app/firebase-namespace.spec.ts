@@ -50,11 +50,10 @@ import { getSdkVersion } from '../../../src/utils/index';
 
 import {
   app, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
+  installations, projectManagement, securityRules, remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
 import { AppCheck as AppCheckImpl } from '../../../src/app-check/app-check';
 import { Auth as AuthImpl } from '../../../src/auth/auth';
-import { InstanceId as InstanceIdImpl } from '../../../src/instance-id/instance-id';
 import { Installations as InstallationsImpl } from '../../../src/installations/installations';
 import { MachineLearning as MachineLearningImpl } from '../../../src/machine-learning/machine-learning';
 import { Messaging as MessagingImpl } from '../../../src/messaging/messaging';
@@ -71,7 +70,6 @@ import Auth = auth.Auth;
 import Database = database.Database;
 import Firestore = firestore.Firestore;
 import Installations = installations.Installations;
-import InstanceId = instanceId.InstanceId;
 import MachineLearning = machineLearning.MachineLearning;
 import Messaging = messaging.Messaging;
 import ProjectManagement = projectManagement.ProjectManagement;
@@ -655,46 +653,6 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.initializeApp(mocks.appOptions);
       const service1: Installations = firebaseNamespace.installations();
       const service2: Installations = firebaseNamespace.installations();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('#instanceId()', () => {
-    it('should throw when called before initializing an app', () => {
-      expect(() => {
-        firebaseNamespace.instanceId();
-      }).to.throw(DEFAULT_APP_NOT_FOUND);
-    });
-
-    it('should throw when default app is not initialized', () => {
-      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      expect(() => {
-        firebaseNamespace.instanceId();
-      }).to.throw(DEFAULT_APP_NOT_FOUND);
-    });
-
-    it('should return a valid namespace when the default app is initialized', () => {
-      const app: App = firebaseNamespace.initializeApp(mocks.appOptions);
-      const iid: InstanceId = firebaseNamespace.instanceId();
-      expect(iid).to.not.be.null;
-      expect(iid.app).to.be.deep.equal(app);
-    });
-
-    it('should return a valid namespace when the named app is initialized', () => {
-      const app: App = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      const iid: InstanceId = firebaseNamespace.instanceId(app);
-      expect(iid).to.not.be.null;
-      expect(iid.app).to.be.deep.equal(app);
-    });
-
-    it('should return a reference to InstanceId type', () => {
-      expect(firebaseNamespace.instanceId.InstanceId).to.be.deep.equal(InstanceIdImpl);
-    });
-
-    it('should return a cached version of InstanceId on subsequent calls', () => {
-      firebaseNamespace.initializeApp(mocks.appOptions);
-      const service1: InstanceId = firebaseNamespace.instanceId();
-      const service2: InstanceId = firebaseNamespace.instanceId();
       expect(service1).to.equal(service2);
     });
   });

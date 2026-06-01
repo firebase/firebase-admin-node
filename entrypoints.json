@@ -44,10 +44,6 @@
     "typings": "./lib/installations/index.d.ts",
     "dist": "./lib/installations/index.js"
   },
-  "firebase-admin/instance-id": {
-    "typings": "./lib/instance-id/index.d.ts",
-    "dist": "./lib/instance-id/index.js"
-  },
   "firebase-admin/messaging": {
     "typings": "./lib/messaging/index.d.ts",
     "dist": "./lib/messaging/index.js"

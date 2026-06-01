@@ -97,9 +97,6 @@
       "installations": [
         "lib/installations"
       ],
-      "instance-id": [
-        "lib/instance-id"
-      ],
       "machine-learning": [
         "lib/machine-learning"
       ],
@@ -176,11 +173,6 @@
       "types": "./lib/installations/index.d.ts",
       "require": "./lib/installations/index.js",
       "import": "./lib/esm/installations/index.js"
-    },
-    "./instance-id": {
-      "types": "./lib/instance-id/index.d.ts",
-      "require": "./lib/instance-id/index.js",
-      "import": "./lib/esm/instance-id/index.js"
     },
     "./machine-learning": {
       "types": "./lib/machine-learning/index.d.ts",

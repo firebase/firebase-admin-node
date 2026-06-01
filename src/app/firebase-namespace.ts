@@ -19,7 +19,7 @@ import { App as AppCore } from './core';
 import { AppStore, defaultAppStore } from './lifecycle';
 import {
   app, appCheck, auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules , remoteConfig, AppOptions,
+  installations, projectManagement, securityRules , remoteConfig, AppOptions,
 } from '../firebase-namespace-api';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getSdkVersion } from '../utils/index';
@@ -30,7 +30,6 @@ import Auth = auth.Auth;
 import Database = database.Database;
 import Firestore = firestore.Firestore;
 import Installations = installations.Installations;
-import InstanceId = instanceId.InstanceId;
 import MachineLearning = machineLearning.MachineLearning;
 import Messaging = messaging.Messaging;
 import ProjectManagement = projectManagement.ProjectManagement;
@@ -218,18 +217,6 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Gets the `InstanceId` service namespace. The returned namespace can be used to get the
-   * `Instance` service for the default app or an explicitly specified app.
-   */
-  get instanceId(): FirebaseServiceNamespace<InstanceId> {
-    const fn: FirebaseServiceNamespace<InstanceId> = (app?: App) => {
-      return this.ensureApp(app).instanceId();
-    };
-    const instanceId = require('../instance-id/instance-id').InstanceId;
-    return Object.assign(fn, { InstanceId: instanceId });
-  }
-
-  /**
    * Gets the `ProjectManagement` service namespace. The returned namespace can be used to get the
    * `ProjectManagement` service for the default app or an explicitly specified app.
    */
@@ -365,10 +352,6 @@ function extendApp(app: AppCore): App {
     return fn(app);
   };
 
-  result.instanceId = () => {
-    const fn = require('../instance-id/index').getInstanceId;
-    return fn(app);
-  }
 
   result.installations = () => {
     const fn = require('../installations/index').getInstallations;

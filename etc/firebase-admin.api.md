@@ -28,8 +28,6 @@ export namespace app {
         firestore(): firestore.Firestore;
         // (undocumented)
         installations(): installations.Installations;
-        // @deprecated (undocumented)
-        instanceId(): instanceId.InstanceId;
         // (undocumented)
         machineLearning(): machineLearning.MachineLearning;
         // (undocumented)
@@ -334,15 +332,6 @@ export function installations(app?: App): installations.Installations;
 export namespace installations {
     // Warning: (ae-forgotten-export) The symbol "Installations" needs to be exported by the entry point default-namespace.d.ts
     export type Installations = Installations;
-}
-
-// @public
-export function instanceId(app?: App): instanceId.InstanceId;
-
-// @public (undocumented)
-export namespace instanceId {
-    // Warning: (ae-forgotten-export) The symbol "InstanceId" needs to be exported by the entry point default-namespace.d.ts
-    export type InstanceId = InstanceId;
 }
 
 // @public

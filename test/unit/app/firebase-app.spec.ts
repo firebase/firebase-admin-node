@@ -33,7 +33,7 @@ import { FirebaseNamespace } from '../../../src/app/firebase-namespace';
 import { AppStore, FIREBASE_CONFIG_VAR } from '../../../src/app/lifecycle';
 import {
   auth, messaging, machineLearning, storage, firestore, database,
-  instanceId, installations, projectManagement, securityRules, remoteConfig, appCheck,
+  installations, projectManagement, securityRules, remoteConfig, appCheck,
 } from '../../../src/firebase-namespace-api';
 import { FirebaseAppError, AppErrorCode } from '../../../src/app/error';
 
@@ -44,7 +44,6 @@ import MachineLearning = machineLearning.MachineLearning;
 import Storage = storage.Storage;
 import Firestore = firestore.Firestore;
 import Installations = installations.Installations;
-import InstanceId = instanceId.InstanceId;
 import ProjectManagement = projectManagement.ProjectManagement;
 import SecurityRules = securityRules.SecurityRules;
 import RemoteConfig = remoteConfig.RemoteConfig;
@@ -608,32 +607,6 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const service1: Installations = app.installations();
       const service2: Installations = app.installations();
-      expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('instanceId()', () => {
-    it('should throw if the app has already been deleted', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return app.instanceId();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the InstanceId client', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const iid: InstanceId = app.instanceId();
-      expect(iid).not.be.null;
-    });
-
-    it('should return a cached version of InstanceId on subsequent calls', () => {
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const service1: InstanceId = app.instanceId();
-      const service2: InstanceId = app.instanceId();
       expect(service1).to.equal(service2);
     });
   });

@@ -23,7 +23,6 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 import { getDatabase, getDatabaseWithUrl, ServerValue } from 'firebase-admin/database';
 import { getFirestore, DocumentReference, Firestore, FieldValue } from 'firebase-admin/firestore';
 import { getFunctions } from 'firebase-admin/functions';
-import { getInstanceId, InstanceId } from 'firebase-admin/instance-id';
 import { getMachineLearning, MachineLearning } from 'firebase-admin/machine-learning';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { getProjectManagement, ProjectManagement } from 'firebase-admin/project-management';
@@ -115,11 +114,6 @@ describe('ESM entry points', () => {
     const fn = getFunctions(app);
     expect(fn).to.be.not.undefined;
     expect(typeof fn.taskQueue).to.equal('function');
-  });
-
-  it('Should return an InstanceId client', () => {
-    const client = getInstanceId(app);
-    expect(client).to.be.instanceOf(InstanceId);
   });
 
   it('Should return a MachineLearning client', () => {

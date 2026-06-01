@@ -76,10 +76,6 @@ import './installations/installations-request-handler.spec';
 import './installations/installations.spec';
 import './installations/installations-request-handler.spec';
 
-// InstanceId
-import './instance-id/index.spec';
-import './instance-id/instance-id.spec';
-
 // ProjectManagement
 import './project-management/index.spec';
 import './project-management/project-management.spec';
