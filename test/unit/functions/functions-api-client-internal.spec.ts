@@ -140,50 +140,46 @@ describe('FunctionsApiClient', () => {
 
       delete process.env.CLOUD_TASKS_EMULATOR_HOST;
 
-      const prodStub = sinon
+      const sendStub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
-      stubs.push(prodStub);
+      stubs.push(sendStub);
 
       await prodClient.delete('mock-task', FUNCTION_NAME);
-      expect(prodStub).to.have.been.calledWith({
+      await emulatorClient.delete('mock-task', FUNCTION_NAME);
+
+      expect(sendStub).to.have.been.calledTwice;
+      expect(sendStub.firstCall).to.have.been.calledWith({
         method: 'DELETE',
         url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
         headers: EXPECTED_HEADERS,
       });
-
-      prodStub.restore();
-
-      const emulatorStub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({}, 200));
-      stubs.push(emulatorStub);
-
-      await emulatorClient.delete('mock-task', FUNCTION_NAME);
-      expect(emulatorStub).to.have.been.calledWith({
+      expect(sendStub.secondCall).to.have.been.calledWith({
         method: 'DELETE',
         url: CLOUD_TASKS_URL_EMULATOR.concat('/', 'mock-task'),
         headers: EXPECTED_HEADERS_EMULATOR,
       });
     });
 
-    it('should ignore empty string CLOUD_TASKS_EMULATOR_HOST', async () => {
-      process.env.CLOUD_TASKS_EMULATOR_HOST = '';
-      const emptyHostClient = new FunctionsApiClient(app);
-      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+    for (const hostVal of ['', '   ']) {
+      it(`should ignore CLOUD_TASKS_EMULATOR_HOST when set to "${hostVal}"`, async () => {
+        process.env.CLOUD_TASKS_EMULATOR_HOST = hostVal;
+        const emptyHostClient = new FunctionsApiClient(app);
+        delete process.env.CLOUD_TASKS_EMULATOR_HOST;
 
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({}, 200));
-      stubs.push(stub);
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom({}, 200));
+        stubs.push(stub);
 
-      await emptyHostClient.delete('mock-task', FUNCTION_NAME);
-      expect(stub).to.have.been.calledWith({
-        method: 'DELETE',
-        url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
-        headers: EXPECTED_HEADERS,
+        await emptyHostClient.delete('mock-task', FUNCTION_NAME);
+        expect(stub).to.have.been.calledWith({
+          method: 'DELETE',
+          url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+          headers: EXPECTED_HEADERS,
+        });
       });
-    });
+    }
   });
 
   describe('enqueue', () => {

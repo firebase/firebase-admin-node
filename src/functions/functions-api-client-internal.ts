@@ -57,7 +57,8 @@ export class FunctionsApiClient {
         message: 'First argument passed to getFunctions() must be a valid Firebase app instance.'
       });
     }
-    this.emulatorHost = process.env.CLOUD_TASKS_EMULATOR_HOST;
+    const emulatorHost = process.env.CLOUD_TASKS_EMULATOR_HOST?.trim();
+    this.emulatorHost = emulatorHost || undefined;
     this.httpClient = new FunctionsHttpClient(app as FirebaseApp, this.emulatorHost);
   }
   /**
