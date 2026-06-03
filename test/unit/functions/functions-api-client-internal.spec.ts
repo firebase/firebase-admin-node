@@ -130,6 +130,60 @@ describe('FunctionsApiClient', () => {
       expect(() => new FunctionsApiClient(null as unknown as FirebaseApp))
         .to.throw('First argument passed to getFunctions() must be a valid Firebase app instance.');
     });
+
+    it('should cache CLOUD_TASKS_EMULATOR_HOST at construction time', async () => {
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+      const prodClient = new FunctionsApiClient(app);
+
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      const emulatorClient = new FunctionsApiClient(app);
+
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+
+      const prodStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(prodStub);
+
+      await prodClient.delete('mock-task', FUNCTION_NAME);
+      expect(prodStub).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS,
+      });
+
+      prodStub.restore();
+
+      const emulatorStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(emulatorStub);
+
+      await emulatorClient.delete('mock-task', FUNCTION_NAME);
+      expect(emulatorStub).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL_EMULATOR.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS_EMULATOR,
+      });
+    });
+
+    it('should ignore empty string CLOUD_TASKS_EMULATOR_HOST', async () => {
+      process.env.CLOUD_TASKS_EMULATOR_HOST = '';
+      const emptyHostClient = new FunctionsApiClient(app);
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+
+      await emptyHostClient.delete('mock-task', FUNCTION_NAME);
+      expect(stub).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS,
+      });
+    });
   });
 
   describe('enqueue', () => {
@@ -529,6 +583,7 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -550,6 +605,7 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       return apiClient.enqueue({}, FUNCTION_NAME)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -569,7 +625,6 @@ describe('FunctionsApiClient', () => {
         projectId: 'test-project',
         serviceAccountId: ''
       });
-      apiClient = new FunctionsApiClient(app);
 
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
       expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
@@ -578,6 +633,7 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -631,6 +687,7 @@ describe('FunctionsApiClient', () => {
 
     it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', async () => {
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));

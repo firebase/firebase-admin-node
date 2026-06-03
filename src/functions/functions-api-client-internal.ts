@@ -46,6 +46,7 @@ const DEFAULT_LOCATION = 'us-central1';
  */
 export class FunctionsApiClient {
   private readonly httpClient: HttpClient;
+  private readonly emulatorHost?: string;
   private projectId?: string;
   private accountId?: string;
 
@@ -56,7 +57,8 @@ export class FunctionsApiClient {
         message: 'First argument passed to getFunctions() must be a valid Firebase app instance.'
       });
     }
-    this.httpClient = new FunctionsHttpClient(app as FirebaseApp);
+    this.emulatorHost = process.env.CLOUD_TASKS_EMULATOR_HOST;
+    this.httpClient = new FunctionsHttpClient(app as FirebaseApp, this.emulatorHost);
   }
   /**
    * Deletes a task from a queue.
@@ -103,7 +105,7 @@ export class FunctionsApiClient {
     }
 
     try {
-      const serviceUrl = tasksEmulatorUrl(resources)?.concat('/', id)
+      const serviceUrl = tasksEmulatorUrl(resources, this.emulatorHost)?.concat('/', id)
         ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
       const request: HttpRequestConfig = {
         method: 'DELETE',
@@ -165,7 +167,7 @@ export class FunctionsApiClient {
     const task = this.validateTaskOptions(data, resources, opts);
     try {
       const serviceUrl =
-        tasksEmulatorUrl(resources) ??
+        tasksEmulatorUrl(resources, this.emulatorHost) ??
         await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
 
       const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
@@ -347,7 +349,7 @@ export class FunctionsApiClient {
   }
 
   private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
-    const defaultUrl = process.env.CLOUD_TASKS_EMULATOR_HOST ?
+    const defaultUrl = this.emulatorHost ?
       ''
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
 
@@ -368,7 +370,7 @@ export class FunctionsApiClient {
         const account = await this.getServiceAccount();
         task.httpRequest.oidcToken = { serviceAccountEmail: account };
       } catch (e) {
-        if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+        if (this.emulatorHost) {
           task.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
         } else {
           throw e;
@@ -408,8 +410,12 @@ export class FunctionsApiClient {
  * when communicating with the Emulator.
  */
 class FunctionsHttpClient extends AuthorizedHttpClient {
+  constructor(app: FirebaseApp, private readonly emulatorHost?: string) {
+    super(app);
+  }
+
   protected getToken(): Promise<string> {
-    if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+    if (this.emulatorHost) {
       return Promise.resolve('owner');
     }
     return super.getToken();
@@ -448,9 +454,9 @@ export interface Task {
   };
 }
 
-function tasksEmulatorUrl(resources: utils.ParsedResource): string | undefined {
-  if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
-    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${resources.resourceId}/tasks`;
+function tasksEmulatorUrl(resources: utils.ParsedResource, emulatorHost?: string): string | undefined {
+  if (emulatorHost) {
+    return `http://${emulatorHost}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${resources.resourceId}/tasks`;
   }
   return undefined;
 }
