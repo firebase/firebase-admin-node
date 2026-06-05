@@ -46,7 +46,7 @@ import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import {
   UserImportRecord, OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest, UserIdentifier, UpdateRequest, UpdateMultiFactorInfoRequest,
-  CreateTenantRequest, UpdateTenantRequest,
+  CreateTenantRequest, UpdateTenantRequest, UpdateProjectConfigRequest,
 } from '../../../src/auth/index';
 
 chai.should();
@@ -957,6 +957,50 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               headers: expectedHeadersEmulator,
               timeout,
             });
+          });
+      });
+
+      it('should keep using emulator after env var is deleted', () => {
+        const emulatorHost = 'localhost:9099';
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = emulatorHost;
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `http://${emulatorHost}/identitytoolkit.googleapis.com${path}`,
+              data,
+              headers: expectedHeadersEmulator,
+              timeout,
+            });
+          });
+      });
+
+      it('should not use emulator when env var is set after initialization', () => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `https://${host}${path}`,
+              data,
+              headers: expectedHeaders,
+              timeout,
+            });
+            delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
           });
       });
     });
@@ -4417,6 +4461,131 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     });
 
     if (handler.supportsTenantManagement) {
+      describe('getProjectConfig', () => {
+        const path = '/v2/projects/project_id/config';
+        const method = 'GET';
+        const expectedResult = utils.responseFrom({
+          name: 'projects/project_id/config',
+        });
+
+        afterEach(() => {
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        });
+
+        it('should be fulfilled with the project config response', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.getProjectConfig()
+            .then((result) => {
+              expect(result).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+            });
+        });
+
+        it('should be rejected when the response is missing the name field', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.getProjectConfig()
+            .then(() => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.have.property('code', 'auth/internal-error');
+              expect(error.message).to.equal('INTERNAL ASSERT FAILED: Unable to get project config');
+            });
+        });
+
+        it('should be fulfilled when the response is missing the name field and the emulator is running', () => {
+          const emulatorHost = 'localhost:9099';
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = emulatorHost;
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.getProjectConfig()
+            .then((result) => {
+              expect(result).to.deep.equal({});
+              expect(stub).to.have.been.calledOnce.and.calledWith({
+                method,
+                url: `http://${emulatorHost}/identitytoolkit.googleapis.com${path}`,
+                headers: expectedHeadersEmulator,
+                data: {},
+                timeout,
+              });
+            });
+        });
+      });
+
+      describe('updateProjectConfig', () => {
+        const path = '/v2/projects/project_id/config';
+        const method = 'PATCH';
+        const validRequest: UpdateProjectConfigRequest = {
+          smsRegionConfig: {
+            allowlistOnly: {
+              allowedRegions: ['AC', 'AD'],
+            },
+          },
+        };
+        const expectedPath = path + '?updateMask=smsRegionConfig.allowlistOnly.allowedRegions';
+        const expectedResult = utils.responseFrom({
+          name: 'projects/project_id/config',
+        });
+
+        afterEach(() => {
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        });
+
+        it('should be fulfilled with the updated project config response', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateProjectConfig(validRequest)
+            .then((result) => {
+              expect(result).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParams(expectedPath, method, validRequest));
+            });
+        });
+
+        it('should be rejected when the response is missing the name field', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateProjectConfig(validRequest)
+            .then(() => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.have.property('code', 'auth/internal-error');
+              expect(error.message).to.equal('INTERNAL ASSERT FAILED: Unable to update project config');
+            });
+        });
+
+        it('should be fulfilled when the response is missing the name field and the emulator is running', () => {
+          const emulatorHost = 'localhost:9099';
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = emulatorHost;
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateProjectConfig(validRequest)
+            .then((result) => {
+              expect(result).to.deep.equal({});
+              expect(stub).to.have.been.calledOnce.and.calledWith({
+                method,
+                url: `http://${emulatorHost}/identitytoolkit.googleapis.com${expectedPath}`,
+                headers: expectedHeadersEmulator,
+                data: validRequest,
+                timeout,
+              });
+            });
+        });
+      });
+
       describe('getTenant', () => {
         const path = '/v2/projects/project_id/tenants/tenant-id';
         const method = 'GET';
