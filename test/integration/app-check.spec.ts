@@ -15,7 +15,7 @@
  */
 
 import * as _ from 'lodash';
-import * as admin from '../../lib/index';
+import { getAppCheck, AppCheckToken } from '../../lib/app-check/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import fs = require('fs');
@@ -47,7 +47,7 @@ describe('admin.appCheck', () => {
       if (!appId) {
         this.skip();
       }
-      return admin.appCheck().createToken(appId as string)
+      return getAppCheck().createToken(appId as string)
         .then((token) => {
           expect(token).to.have.keys(['token', 'ttlMillis']);
           expect(token.token).to.be.a('string').and.to.not.be.empty;
@@ -60,7 +60,7 @@ describe('admin.appCheck', () => {
       if (!appId) {
         this.skip();
       }
-      return admin.appCheck().createToken(appId as string, { limitedUse: true })
+      return getAppCheck().createToken(appId as string, { limitedUse: true })
         .then((token) => {
           expect(token).to.have.keys(['token', 'ttlMillis']);
           expect(token.token).to.be.a('string').and.to.not.be.empty;
@@ -73,7 +73,7 @@ describe('admin.appCheck', () => {
       if (!appId) {
         this.skip();
       }
-      return admin.appCheck().createToken(appId as string, { ttlMillis: 1800000 })
+      return getAppCheck().createToken(appId as string, { ttlMillis: 1800000 })
         .then((token) => {
           expect(token).to.have.keys(['token', 'ttlMillis']);
           expect(token.token).to.be.a('string').and.to.not.be.empty;
@@ -84,35 +84,35 @@ describe('admin.appCheck', () => {
 
     it('should propagate API errors', () => {
       // rejects with invalid-argument when appId is incorrect
-      return admin.appCheck().createToken('incorrect-app-id')
+      return getAppCheck().createToken('incorrect-app-id')
         .should.eventually.be.rejected.and.have.property('code', 'app-check/invalid-argument');
     });
 
     const invalidAppIds = ['', null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
     invalidAppIds.forEach((invalidAppId) => {
       it(`should throw given an invalid appId: ${JSON.stringify(invalidAppId)}`, () => {
-        expect(() => admin.appCheck().createToken(invalidAppId as any))
+        expect(() => getAppCheck().createToken(invalidAppId as any))
           .to.throw('appId` must be a non-empty string.');
       });
     });
   });
 
   describe('verifyToken', () => {
-    let validToken: admin.appCheck.AppCheckToken;
+    let validToken: AppCheckToken;
 
     before(async () => {
       if (!appId) {
         return;
       }
       // obtain a valid app check token
-      validToken = await admin.appCheck().createToken(appId as string);
+      validToken = await getAppCheck().createToken(appId as string);
     });
 
     it('should succeed with a decoded verifed token response', function() {
       if (!appId) {
         this.skip();
       }
-      return admin.appCheck().verifyToken(validToken.token)
+      return getAppCheck().verifyToken(validToken.token)
         .then((verifedToken) => {
           expect(verifedToken).to.have.keys(['token', 'appId']);
           expect(verifedToken.token).to.include.keys(['iss', 'sub', 'aud', 'exp', 'iat', 'app_id']);
@@ -122,8 +122,9 @@ describe('admin.appCheck', () => {
 
     it('should propagate API errors', () => {
       // rejects with invalid-argument when the token is invalid
-      return admin.appCheck().verifyToken('invalid-token')
+      return getAppCheck().verifyToken('invalid-token')
         .should.eventually.be.rejected.and.have.property('code', 'app-check/invalid-argument');
     });
   });
 });
+

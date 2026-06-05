@@ -16,11 +16,9 @@
  */
 
 // General
-import './firebase.spec';
 import './app/credential-internal.spec';
 import './app/index.spec';
 import './app/firebase-app.spec';
-import './app/firebase-namespace.spec';
 
 // Utilities
 import './utils/index.spec';

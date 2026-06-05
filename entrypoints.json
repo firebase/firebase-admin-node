@@ -1,7 +1,6 @@
 {
   "firebase-admin": {
-    "legacy": true,
-    "typings": "./lib/default-namespace.d.ts",
+    "typings": "./lib/index.d.ts",
     "dist": "./lib/index.js"
   },
   "firebase-admin/app": {

@@ -27,7 +27,7 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import * as sinon from 'sinon';
 
-import { AppOptions } from '../../src/firebase-namespace-api';
+import { AppOptions } from '../../src/app/index';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 import { ApplicationDefaultCredential } from '../../src/app/credential-internal';

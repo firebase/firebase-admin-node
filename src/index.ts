@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firebase from './default-namespace';
+import { getSdkVersion } from './utils';
 
 // Only Node.js has a process variable that is of [[Class]] process
 const processGlobal = typeof process !== 'undefined' ? process : 0;
@@ -35,4 +35,14 @@ https://firebase.google.com/docs/web/setup
   console.error(message);
 }
 
-export = firebase;
+export { App, AppOptions, FirebaseArrayIndexError } from './app/core';
+export { initializeApp, getApp, getApps, deleteApp } from './app/lifecycle';
+
+export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './app/credential';
+export { applicationDefault, cert, refreshToken } from './app/credential-factory';
+
+export { FirebaseError, ErrorInfo, HttpResponse } from './utils/error';
+export { FirebaseAppError, AppErrorCode } from './app/error';
+
+export const SDK_VERSION = getSdkVersion();
+
