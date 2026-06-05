@@ -459,7 +459,7 @@ describe('FirebaseApp', () => {
       return Promise.all([promise1, promise2]).then((tokens) => {
         expect(tokens[0]).to.equal(tokens[1]);
         expect(getTokenStub).to.have.been.calledOnce;
-      })
+      });
     });
 
     it('Includes the original error in exception', async () => {
@@ -471,7 +471,7 @@ describe('FirebaseApp', () => {
       getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
       const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
         + ' failed to fetch a valid Google OAuth2 access token with the following error: "Something went wrong".';
-      
+
       try {
         await mockApp.INTERNAL.getToken(true);
         expect.fail('Should have failed');
@@ -495,7 +495,7 @@ describe('FirebaseApp', () => {
         + ' make sure the key ID for your key file is still present at '
         + 'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate a new key file '
         + 'at https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
-      
+
       try {
         await mockApp.INTERNAL.getToken(true);
         expect.fail('Should have failed');
