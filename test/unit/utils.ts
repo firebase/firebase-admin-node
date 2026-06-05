@@ -18,7 +18,7 @@
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import * as mocks from '../resources/mocks';
-import { AppOptions } from '../../src/firebase-namespace-api';
+import { AppOptions } from '../../src/app/index';
 import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/app/firebase-app';
 import { RequestResponseError, RequestResponse } from '../../src/utils/api-request';
 
