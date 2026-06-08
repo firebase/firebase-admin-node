@@ -56,7 +56,7 @@ var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declarati
 
 // Include dom libraries during test compilation since we use some web SDK
 // libraries in our tests.
-var buildTest = ts.createProject('tsconfig.json', { lib: ['es2018', 'dom'] });
+var buildTest = ts.createProject('tsconfig.json', { lib: ['es2021', 'dom'] });
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
