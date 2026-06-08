@@ -253,7 +253,7 @@ export function initializeApp(options?: AppOptions, appName: string = DEFAULT_AP
 
 /**
  * Returns an existing {@link App} instance for the provided name. If no name
- * is provided the the default app name is used.
+ * is provided the default app name is used.
  *
  * @param appName - Optional name of the `App` instance.
  *

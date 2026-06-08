@@ -132,6 +132,4 @@ export interface ServiceAccount {
     projectId?: string;
 }
 
-// (No @packageDocumentation comment for this package)
-
 ```

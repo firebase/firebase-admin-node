@@ -35,6 +35,12 @@ https://firebase.google.com/docs/web/setup
   console.error(message);
 }
 
+/**
+ * Firebase App and SDK initialization.
+ *
+ * @packageDocumentation
+ */
+
 export { App, AppOptions, FirebaseArrayIndexError } from './app/core';
 export { initializeApp, getApp, getApps, deleteApp } from './app/lifecycle';
 
