@@ -6,6 +6,14 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseSecurityRulesError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -55,5 +63,21 @@ export class SecurityRules {
     releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
     releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
 }
+
+// @public
+export const SecurityRulesErrorCode: {
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_SERVER_RESPONSE: "invalid-server-response";
+    readonly NOT_FOUND: "not-found";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly SERVICE_UNAVAILABLE: "service-unavailable";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type SecurityRulesErrorCode = typeof SecurityRulesErrorCode[keyof typeof SecurityRulesErrorCode];
 
 ```

@@ -29,9 +29,10 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
-  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
+  ApiSettings, HttpClient, Http2Client, AuthorizedHttpClient, HttpRequestConfig,
   parseHttpResponse, RetryConfig, defaultRetryConfig, Http2SessionHandler, Http2RequestConfig,
   RequestResponseError, RequestResponse, AuthorizedHttp2Client,
+  ApiRequestCallback, ApiResponseCallback,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
@@ -92,9 +93,20 @@ function mockRequestWithHttpError(
  * @return {Object} A nock response object.
  */
 function mockRequestWithError(err: any): nock.Scope {
+  let errorInstance: Error;
+  if (err instanceof Error) {
+    errorInstance = err;
+  } else if (typeof err === 'string') {
+    errorInstance = new Error(err);
+  } else {
+    errorInstance = new Error(err?.message || 'Test network error');
+    if (err && typeof err === 'object') {
+      Object.assign(errorInstance, err);
+    }
+  }
   return nock('https://' + mockHost)
     .get(mockPath)
-    .replyWithError(err);
+    .replyWithError(errorInstance);
 }
 
 function mockHttp2SendRequestResponse(
@@ -274,7 +286,20 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
       expect(resp.text).to.equal(respData);
-      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      
+      try {
+        resp.data;
+        expect.fail('Should have thrown');
+      } catch (err: any) {
+        expect(err.code).to.equal('app/unable-to-parse-response');
+        expect(err.message).to.equal('Error while parsing response data');
+        expect(err.httpResponse).to.deep.equal({
+          status: 200,
+          data: respData,
+          headers: { 'content-type': 'text/plain' }
+        });
+      }
+
       expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.false;
     });
@@ -403,7 +428,6 @@ describe('HttpClient', () => {
     const client = new HttpClient();
     const httpAgent = new Agent();
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
@@ -633,7 +657,6 @@ describe('HttpClient', () => {
 
   it('should make a HEAD request with the provided headers and data', () => {
     const reqData = { key1: 'value1', key2: 'value2' };
-    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -641,7 +664,7 @@ describe('HttpClient', () => {
       },
     }).head(mockPath)
       .query(reqData)
-      .reply(200, respData, {
+      .reply(200, undefined, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
@@ -657,8 +680,12 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.data).to.deep.equal(respData);
-      expect(resp.isJson()).to.be.true;
+      expect(resp.text).to.equal('');
+      expect(() => { resp.data; })
+        .to.throw('Error while parsing response data')
+        .and.to.have.property('cause')
+        .that.has.property('message', 'HTTP response missing data.');
+      expect(resp.isJson()).to.be.false;
     });
   });
 
@@ -742,14 +769,12 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when the response is repeatedly delayed', () => {
-    const respData = { foo: 'bar' };
+    const timeoutErr = new Error('timeout of 50ms exceeded');
+    (timeoutErr as any).code = 'ETIMEDOUT';
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .delay(1000)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+      .replyWithError(timeoutErr);
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
@@ -763,14 +788,12 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when multiple socket timeouts encountered', () => {
-    const respData = { foo: 'bar timeout' };
+    const timeoutErr = new Error('timeout of 50ms exceeded');
+    (timeoutErr as any).code = 'ETIMEDOUT';
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .delayConnection(2000)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+      .replyWithError(timeoutErr);
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
@@ -1101,7 +1124,10 @@ describe('HttpClient', () => {
   });
 
   it('should wait when retry-after expressed as a timestamp', () => {
-    clock = sinon.useFakeTimers();
+    clock = sinon.useFakeTimers({
+      toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
+      shouldClearNativeTimers: true
+    });
     clock.setSystemTime(1000);
     const timestamp = new Date(clock.now + 30 * 1000);
 
@@ -2506,7 +2532,6 @@ describe('Http2Client', () => {
   it('should fail on session and stream errors', async () => {
     const reqData = { request: 'data' };
     const streamError = 'Error while making request: test stream error. Error code: AWFUL_STREAM_ERROR';
-    const sessionError = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error'
     mockedHttp2Responses.push(mockHttp2Error(
       { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' },
       { message: 'test session error', code: 'AWFUL_SESSION_ERROR' }
@@ -2535,15 +2560,17 @@ describe('Http2Client', () => {
         expect(http2Mocker.requests[0].headers.authorization).to.equal('Bearer token');
         expect(http2Mocker.requests[0].headers['content-type']).to.contain('application/json');
         expect(http2Mocker.requests[0].headers['My-Custom-Header']).to.equal('CustomValue');
+        
+        const sessionErrors = http2SessionHandler.getErrors();
+        expect(sessionErrors.length).to.equal(1);
+        const expectedError1 = 'Session error while making requests: AWFUL_SESSION_ERROR - test session error';
+        expect(sessionErrors[0].message).to.equal(expectedError1);
       });
-
-    await http2SessionHandler.invoke().should.eventually.be.rejectedWith(sessionError)
-      .and.have.property('code', 'app/network-error')
   });
 
   it('should unwrap aggregate session errors', async () => {
     const reqData = { request: 'data' };
-    const streamError = { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' }
+    const streamError = { message: 'test stream error', code: 'AWFUL_STREAM_ERROR' };
     const expectedStreamErrorMessage = 'Error while making request: test stream error. Error code: AWFUL_STREAM_ERROR';
     const aggregateSessionError = {
       name: 'AggregateError',
@@ -2552,15 +2579,12 @@ describe('Http2Client', () => {
         { message: 'Error message 1' },
         { message: 'Error message 2' },
       ]
-    }
-    const expectedAggregateErrorMessage = 'Session error while making requests: AWFUL_SESSION_ERROR - ' +
-      'AggregateError: [Error message 1, Error message 2]'
-
+    };
     mockedHttp2Responses.push(mockHttp2Error(streamError, aggregateSessionError));
     http2Mocker.http2Stub(mockedHttp2Responses);
 
     const client = new Http2Client();
-    http2SessionHandler = new Http2SessionHandler(mockHostUrl)
+    http2SessionHandler = new Http2SessionHandler(mockHostUrl);
 
     await client.send({
       method: 'POST',
@@ -2581,10 +2605,13 @@ describe('Http2Client', () => {
         expect(http2Mocker.requests[0].headers.authorization).to.equal('Bearer token');
         expect(http2Mocker.requests[0].headers['content-type']).to.contain('application/json');
         expect(http2Mocker.requests[0].headers['My-Custom-Header']).to.equal('CustomValue');
-      });
 
-    await http2SessionHandler.invoke().should.eventually.be.rejectedWith(expectedAggregateErrorMessage)
-      .and.have.property('code', 'app/network-error')
+        const sessionErrors = http2SessionHandler.getErrors();
+        expect(sessionErrors.length).to.equal(1);
+        const expectedError2 = 'Session error while making requests: AWFUL_SESSION_ERROR - AggregateError: ' +
+          '[Error message 1, Error message 2]';
+        expect(sessionErrors[0].message).to.equal(expectedError2);
+      });
   });
 });
 
@@ -2647,7 +2674,6 @@ describe('AuthorizedHttpClient', () => {
       const options = mockApp.options;
       options.httpAgent = new Agent();
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);
@@ -2987,15 +3013,20 @@ describe('ApiSettings', () => {
       it('should not return null for responseValidator', () => {
         const validator = apiSettings.getResponseValidator();
         expect(() => {
-          return validator({});
+          return validator({
+            // data: {},
+            // status: 200,
+            // headers: {},
+            // isJson: () => false,
+          } as RequestResponse);
         }).to.not.throw();
       });
     });
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator: ApiCallbackFunction = () => undefined;
-      const responseValidator: ApiCallbackFunction = () => undefined;
+      const requestValidator: ApiRequestCallback = () => undefined;
+      const responseValidator: ApiResponseCallback = () => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {

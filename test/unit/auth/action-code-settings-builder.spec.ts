@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
-import { AuthClientErrorCode } from '../../../src/utils/error';
+import { authClientErrorCode } from '../../../src/auth/error';
 
 
 chai.should();
@@ -75,7 +75,7 @@ describe('ActionCodeSettingsBuilder', () => {
           dynamicLinkDomain: 'custom.page.link',
           linkDomain: TEST_LINK_DOMAIN,
         } as any);
-      }).to.throw(AuthClientErrorCode.MISSING_CONTINUE_URI.message);
+      }).to.throw(authClientErrorCode.MISSING_CONTINUE_URI.message);
     });
 
     const invalidUrls = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -85,7 +85,7 @@ describe('ActionCodeSettingsBuilder', () => {
           return new ActionCodeSettingsBuilder({
             url,
           } as any);
-        }).to.throw(AuthClientErrorCode.INVALID_CONTINUE_URI.message);
+        }).to.throw(authClientErrorCode.INVALID_CONTINUE_URI.message);
       });
     });
 
@@ -110,7 +110,7 @@ describe('ActionCodeSettingsBuilder', () => {
             handleCodeInApp: true,
             dynamicLinkDomain: domain,
           } as any);
-        }).to.throw(AuthClientErrorCode.INVALID_DYNAMIC_LINK_DOMAIN.message);
+        }).to.throw(authClientErrorCode.INVALID_DYNAMIC_LINK_DOMAIN.message);
       });
     });
 
@@ -124,7 +124,7 @@ describe('ActionCodeSettingsBuilder', () => {
             handleCodeInApp: true,
             linkDomain: domain,
           } as any);
-        }).to.throw(AuthClientErrorCode.INVALID_HOSTING_LINK_DOMAIN.message);
+        }).to.throw(authClientErrorCode.INVALID_HOSTING_LINK_DOMAIN.message);
       });
     });
 
@@ -148,7 +148,7 @@ describe('ActionCodeSettingsBuilder', () => {
           handleCodeInApp: true,
           iOS: {},
         } as any);
-      }).to.throw(AuthClientErrorCode.MISSING_IOS_BUNDLE_ID.message);
+      }).to.throw(authClientErrorCode.MISSING_IOS_BUNDLE_ID.message);
     });
 
     const invalidBundleIds = [null, NaN, 0, 1, true, false, '', ['com.example.ios'], _.noop];
@@ -184,7 +184,7 @@ describe('ActionCodeSettingsBuilder', () => {
           handleCodeInApp: true,
           android: {},
         } as any);
-      }).to.throw(AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
+      }).to.throw(authClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
     });
 
     const invalidPackageNames = [null, NaN, 0, 1, true, false, '', ['com.example.android'], _.noop];

@@ -24,7 +24,7 @@ import { File } from '@google-cloud/storage';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Storage } from './storage';
-import { FirebaseError } from '../utils/error';
+import { FirebaseStorageError } from './error';
 import { getFirebaseMetadata } from './utils';
 
 export { Storage } from './storage';
@@ -77,8 +77,8 @@ export async function getDownloadURL(file: File): Promise<string> {
       'https://firebasestorage.googleapis.com') + '/v0';
   const { downloadTokens } = await getFirebaseMetadata(endpoint, file);
   if (!downloadTokens) {
-    throw new FirebaseError({
-      code: 'storage/no-download-token',
+    throw new FirebaseStorageError({
+      code: 'no-download-token',
       message:
         'No download token available. Please create one in the Firebase Console.',
     });
@@ -88,3 +88,9 @@ export async function getDownloadURL(file: File): Promise<string> {
     file.name
   )}?alt=media&token=${token}`;
 }
+
+export {
+  FirebaseStorageError,
+  StorageErrorCode,
+} from './error';
+

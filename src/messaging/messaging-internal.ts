@@ -15,7 +15,7 @@
  */
 
 import { renameProperties, transformMillisecondsToSecondsString } from '../utils/index';
-import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
+import { messagingClientErrorCode, FirebaseMessagingError } from './error';
 import * as validator from '../utils/validator';
 
 import {
@@ -42,7 +42,7 @@ export const BLACKLISTED_OPTIONS_KEYS = [
 export function validateMessage(message: Message): void {
   if (!validator.isNonNullObject(message)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
   }
 
   const anyMessage = message as any;
@@ -54,14 +54,14 @@ export function validateMessage(message: Message): void {
     // Checks for illegal characters and empty string.
     if (!/^[a-zA-Z0-9-_.~%]+$/.test(anyMessage.topic)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'Malformed topic name');
+        messagingClientErrorCode.INVALID_PAYLOAD, 'Malformed topic name');
     }
   }
 
   const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
   if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'Exactly one of topic, token or condition is required');
   }
 
@@ -84,12 +84,12 @@ function validateStringMap(map: { [key: string]: any } | undefined, label: strin
     return;
   } else if (!validator.isNonNullObject(map)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
+      messagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
   }
   Object.keys(map).forEach((key) => {
     if (!validator.isString(map[key])) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must only contain string values`);
+        messagingClientErrorCode.INVALID_PAYLOAD, `${label} must only contain string values`);
     }
   });
 }
@@ -104,7 +104,7 @@ function validateWebpushConfig(config: WebpushConfig | undefined): void {
     return;
   } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'webpush must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'webpush must be a non-null object');
   }
   validateStringMap(config.headers, 'webpush.headers');
   validateStringMap(config.data, 'webpush.data');
@@ -121,7 +121,7 @@ function validateApnsConfig(config: ApnsConfig | undefined): void {
     return;
   } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
   }
   validateApnsLiveActivityToken(config.liveActivityToken);
   validateStringMap(config.headers, 'apns.headers');
@@ -140,12 +140,12 @@ function validateApnsLiveActivityToken(liveActivityToken: ApnsConfig['liveActivi
     return;
   } else if (!validator.isString(liveActivityToken)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.liveActivityToken must be a string value',
     );
   } else if (!validator.isNonEmptyString(liveActivityToken)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.liveActivityToken must be a non-empty string',
     );
   }
@@ -161,19 +161,19 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined): void {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
   if (typeof fcmOptions.imageUrl !== 'undefined' &&
     !validator.isURL(fcmOptions.imageUrl)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'imageUrl must be a valid URL string');
   }
 
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
 
   const propertyMappings: { [key: string]: string } = {
@@ -182,7 +182,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined): void {
   Object.keys(propertyMappings).forEach((key) => {
     if (key in fcmOptions && propertyMappings[key] in fcmOptions) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         `Multiple specifications for ${key} in ApnsFcmOptions`);
     }
   });
@@ -199,12 +199,12 @@ function validateFcmOptions(fcmOptions: FcmOptions | undefined): void {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
 }
 
@@ -218,12 +218,12 @@ function validateNotification(notification: Notification | undefined): void {
     return;
   } else if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
   }
 
   if (typeof notification.imageUrl !== 'undefined' && !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
   }
 
   const propertyMappings: { [key: string]: string } = {
@@ -232,7 +232,7 @@ function validateNotification(notification: Notification | undefined): void {
   Object.keys(propertyMappings).forEach((key) => {
     if (key in notification && propertyMappings[key] in notification) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         `Multiple specifications for ${key} in Notification`);
     }
   });
@@ -249,7 +249,7 @@ function validateApnsPayload(payload: ApnsPayload | undefined): void {
     return;
   } else if (!validator.isNonNullObject(payload)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload must be a non-null object');
   }
   validateAps(payload.aps);
 }
@@ -265,7 +265,7 @@ function validateAps(aps: Aps): void {
     return;
   } else if (!validator.isNonNullObject(aps)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload.aps must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload.aps must be a non-null object');
   }
   validateApsAlert(aps.alert);
   validateApsSound(aps.sound);
@@ -278,7 +278,7 @@ function validateAps(aps: Aps): void {
   Object.keys(propertyMappings).forEach((key) => {
     if (key in aps && propertyMappings[key] in aps) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in Aps`);
+        messagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in Aps`);
     }
   });
   renameProperties(aps, propertyMappings);
@@ -307,25 +307,25 @@ function validateApsSound(sound: string | CriticalSound | undefined): void {
     return;
   } else if (!validator.isNonNullObject(sound)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.sound must be a non-empty string or a non-null object');
   }
 
   if (!validator.isNonEmptyString(sound.name)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.sound.name must be a non-empty string');
   }
   const volume = sound.volume;
   if (typeof volume !== 'undefined') {
     if (!validator.isNumber(volume)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         'apns.payload.aps.sound.volume must be a number');
     }
     if (volume < 0 || volume > 1) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         'apns.payload.aps.sound.volume must be in the interval [0, 1]');
     }
   }
@@ -353,7 +353,7 @@ function validateApsAlert(alert: string | ApsAlert | undefined): void {
     return;
   } else if (!validator.isNonNullObject(alert)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert must be a string or a non-null object');
   }
 
@@ -361,19 +361,19 @@ function validateApsAlert(alert: string | ApsAlert | undefined): void {
   if (validator.isNonEmptyArray(apsAlert.locArgs) &&
     !validator.isNonEmptyString(apsAlert.locKey)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.locKey is required when specifying locArgs');
   }
   if (validator.isNonEmptyArray(apsAlert.titleLocArgs) &&
     !validator.isNonEmptyString(apsAlert.titleLocKey)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
   }
   if (validator.isNonEmptyArray(apsAlert.subtitleLocArgs) &&
     !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.subtitleLocKey is required when specifying subtitleLocArgs');
   }
 
@@ -402,13 +402,13 @@ function validateAndroidConfig(config: AndroidConfig | undefined): void {
     return;
   } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'android must be a non-null object');
   }
 
   if (typeof config.ttl !== 'undefined') {
     if (!validator.isNumber(config.ttl) || config.ttl < 0) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         'TTL must be a non-negative duration in milliseconds');
     }
     const duration: string = transformMillisecondsToSecondsString(config.ttl);
@@ -440,36 +440,36 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
     return;
   } else if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'android.notification must be a non-null object');
   }
 
   if (typeof notification.color !== 'undefined' && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
   }
   if (validator.isNonEmptyArray(notification.bodyLocArgs) &&
     !validator.isNonEmptyString(notification.bodyLocKey)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.bodyLocKey is required when specifying bodyLocArgs');
   }
   if (validator.isNonEmptyArray(notification.titleLocArgs) &&
     !validator.isNonEmptyString(notification.titleLocKey)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.titleLocKey is required when specifying titleLocArgs');
   }
   if (typeof notification.imageUrl !== 'undefined' &&
     !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.imageUrl must be a valid URL string');
   }
 
   if (typeof notification.eventTimestamp !== 'undefined') {
     if (!(notification.eventTimestamp instanceof Date)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.eventTimestamp must be a valid `Date` object');
+        messagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.eventTimestamp must be a valid `Date` object');
     }
     // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
     const zuluTimestamp = notification.eventTimestamp.toISOString();
@@ -479,14 +479,14 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
   if (typeof notification.vibrateTimingsMillis !== 'undefined') {
     if (!validator.isNonEmptyArray(notification.vibrateTimingsMillis)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
+        messagingClientErrorCode.INVALID_PAYLOAD,
         'android.notification.vibrateTimingsMillis must be a non-empty array of numbers');
     }
     const vibrateTimings: string[] = [];
     notification.vibrateTimingsMillis.forEach((value) => {
       if (!validator.isNumber(value) || value < 0) {
         throw new FirebaseMessagingError(
-          MessagingClientErrorCode.INVALID_PAYLOAD,
+          messagingClientErrorCode.INVALID_PAYLOAD,
           'android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
       }
       const duration = transformMillisecondsToSecondsString(value);
@@ -545,12 +545,12 @@ function validateLightSettings(lightSettings?: LightSettings): void {
     return;
   } else if (!validator.isNonNullObject(lightSettings)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
   }
 
   if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
   }
   const durationOn = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
@@ -558,7 +558,7 @@ function validateLightSettings(lightSettings?: LightSettings): void {
 
   if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
   }
   const durationOff = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
@@ -567,14 +567,14 @@ function validateLightSettings(lightSettings?: LightSettings): void {
   if (!validator.isString(lightSettings.color) ||
     (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color))) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
+      messagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
   }
   const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
   const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
   if (!rgb || rgb.length < 4) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INTERNAL_ERROR,
+      messagingClientErrorCode.INTERNAL_ERROR,
       'regex to extract rgba values from ' + colorString + ' failed.');
   }
   const color = {
@@ -602,11 +602,11 @@ function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined): v
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+      messagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
 }
