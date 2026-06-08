@@ -82,5 +82,5 @@ export interface PhoneNumberVerificationToken {
 export {
   PhoneNumberVerificationErrorCode,
   FirebasePhoneNumberVerificationError,
-} from './phone-number-verification-api-client-internal';
+} from './error';
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import { App, deleteApp, getApp, initializeApp } from '../../lib/app/index';
 import { getAuth } from '../../lib/auth/index';
 import { expect } from 'chai';
@@ -53,23 +52,9 @@ describe('admin', () => {
       expect(firebaseRtdb).to.be.undefined;
     });
 
-    it('loads RTDB when calling admin.database', () => {
-      const rtdbNamespace = admin.database;
-      expect(rtdbNamespace).to.not.be.null;
-      const firebaseRtdb = require.cache[require.resolve('@firebase/database-compat/standalone')];
-      expect(firebaseRtdb).to.not.be.undefined;
-    });
-
     it('does not load Firestore by default', () => {
       const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
       expect(gcloud).to.be.undefined;
-    });
-
-    it('loads Firestore when calling admin.firestore', () => {
-      const firestoreNamespace = admin.firestore;
-      expect(firestoreNamespace).to.not.be.null;
-      const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
-      expect(gcloud).to.not.be.undefined;
     });
 
     after(() => {
@@ -79,51 +64,6 @@ describe('admin', () => {
       });
       return deleteApp(lazyLoadingApp);
     })
-  });
-});
-
-describe('admin.app', () => {
-  it('admin.app() returns the default App', () => {
-    const app = admin.app();
-    expect(app).to.deep.equal(defaultApp);
-    expect(app.name).to.equal('[DEFAULT]');
-    expect(app.options.databaseURL).to.equal(databaseUrl);
-    expect(app.options.databaseAuthVariableOverride).to.be.undefined;
-    expect(app.options.storageBucket).to.equal(storageBucket);
-  });
-
-  it('admin.app("null") returns the App named "null"', () => {
-    const app = admin.app('null');
-    expect(app).to.deep.equal(nullApp);
-    expect(app.name).to.equal('null');
-    expect(app.options.databaseURL).to.equal(databaseUrl);
-    expect(app.options.databaseAuthVariableOverride).to.be.null;
-    expect(app.options.storageBucket).to.equal(storageBucket);
-  });
-
-  it('admin.app("nonNull") returns the App named "nonNull"', () => {
-    const app = admin.app('nonNull');
-    expect(app).to.deep.equal(nonNullApp);
-    expect(app.name).to.equal('nonNull');
-    expect(app.options.databaseURL).to.equal(databaseUrl);
-    expect((app.options.databaseAuthVariableOverride as any).uid).to.be.ok;
-    expect(app.options.storageBucket).to.equal(storageBucket);
-  });
-
-  it('namespace services are attached to the default App', () => {
-    const app = admin.app();
-    expect(admin.auth(app).app).to.deep.equal(app);
-    expect(admin.database(app).app).to.deep.equal(app);
-    expect(admin.messaging(app).app).to.deep.equal(app);
-    expect(admin.storage(app).app).to.deep.equal(app);
-  });
-
-  it('namespace services are attached to the named App', () => {
-    const app = admin.app('null');
-    expect(admin.auth(app).app).to.deep.equal(app);
-    expect(admin.database(app).app).to.deep.equal(app);
-    expect(admin.messaging(app).app).to.deep.equal(app);
-    expect(admin.storage(app).app).to.deep.equal(app);
   });
 });
 
@@ -155,12 +95,12 @@ describe('getApp', () => {
     expect(app.options.storageBucket).to.equal(storageBucket);
   });
 
-  it('namespace services are attached to the default App', () => {
+  it('modular services are attached to the default App', () => {
     const app = getApp();
     expect(getAuth(app).app).to.deep.equal(app);
   });
 
-  it('namespace services are attached to the named App', () => {
+  it('modular services are attached to the named App', () => {
     const app = getApp('null');
     expect(getAuth(app).app).to.deep.equal(app);
   });

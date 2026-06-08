@@ -18,7 +18,9 @@ import { URL } from 'url';
 import * as path from 'path';
 
 import { FirebaseDatabase } from '@firebase/database-types';
-import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { DatabaseErrorCode, FirebaseDatabaseError } from './error';
+import { AppErrorCode, FirebaseAppError } from '../app/error';
+import { toHttpResponse } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database-compat/standalone';
 
 import { App } from '../app';
@@ -124,7 +126,6 @@ export class DatabaseService {
 
     let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const rtdb = require('@firebase/database-compat/standalone');
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
@@ -150,7 +151,6 @@ export class DatabaseService {
     return db;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onTokenChange(_: string): void {
     const token = this.firebaseApp.INTERNAL.getCachedToken();
     if (token) {
@@ -225,7 +225,10 @@ class DatabaseRulesClient {
     return this.httpClient.send(req)
       .then((resp) => {
         if (!resp.text) {
-          throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+          throw new FirebaseAppError({
+            code: AppErrorCode.INTERNAL_ERROR,
+            message: 'HTTP response missing data.'
+          });
         }
         return resp.text;
       })
@@ -294,8 +297,10 @@ class DatabaseRulesClient {
   private handleError(err: Error): Error {
     if (err instanceof RequestResponseError) {
       return new FirebaseDatabaseError({
-        code: AppErrorCodes.INTERNAL_ERROR,
+        code: DatabaseErrorCode.INTERNAL_ERROR,
         message: this.getErrorMessage(err),
+        httpResponse: toHttpResponse(err.response),
+        cause: err,
       });
     }
     return err;
@@ -304,7 +309,7 @@ class DatabaseRulesClient {
   private getErrorMessage(err: RequestResponseError): string {
     const intro = 'Error while accessing security rules';
     try {
-      const body: { error?: string } = err.response.data;
+      const body: { error?: string; } = err.response.data;
       if (body && body.error) {
         return `${intro}: ${body.error.trim()}`;
       }

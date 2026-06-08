@@ -8,6 +8,14 @@ import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
 import { File as File_2 } from '@google-cloud/storage';
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseStorageError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // @public
 export function getDownloadURL(file: File_2): Promise<string>;
 
@@ -22,5 +30,17 @@ class Storage_2 {
     bucket(name?: string): Bucket;
 }
 export { Storage_2 as Storage }
+
+// @public
+export const StorageErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_EMULATOR_HOST: "invalid-emulator-host";
+    readonly MISSING_DEPENDENCIES: "missing-dependencies";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly NO_DOWNLOAD_TOKEN: "no-download-token";
+};
+
+// @public
+export type StorageErrorCode = typeof StorageErrorCode[keyof typeof StorageErrorCode];
 
 ```

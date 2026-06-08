@@ -16,13 +16,13 @@
  */
 
 import { FirebaseApp } from '../app/firebase-app';
-import { AppErrorCodes, FirebaseAppError } from './error';
+import { toHttpResponse } from './error';
+import { AppErrorCode, FirebaseAppError } from '../app/error';
 import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
 import http2 = require('http2');
-import url = require('url');
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
@@ -31,8 +31,10 @@ import { getMetricsHeader } from '../utils/index';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
-/** API callback function type definition. */
-export type ApiCallbackFunction = (data: object) => void;
+/** API request callback function type definition. */
+export type ApiRequestCallback = (data: any) => void;
+/** API response callback function type definition. */
+export type ApiResponseCallback = (response: RequestResponse) => void;
 
 /**
  * Base configuration for constructing a new request.
@@ -41,7 +43,7 @@ export interface BaseRequestConfig {
   method: HttpMethod;
   /** Target URL of the request. Should be a well-formed URL including protocol, hostname, port and path. */
   url: string;
-  headers?: {[key: string]: string};
+  headers?: { [key: string]: string; };
   data?: string | object | Buffer | null;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
@@ -61,7 +63,7 @@ export interface Http2RequestConfig extends BaseRequestConfig {
   http2SessionHandler: Http2SessionHandler;
 }
 
-type RequestConfig = HttpRequestConfig | Http2RequestConfig
+type RequestConfig = HttpRequestConfig | Http2RequestConfig;
 
 /**
  * Represents an HTTP or HTTP/2 response received from a remote server.
@@ -94,15 +96,15 @@ interface LowLevelHttpResponse extends BaseLowLevelResponse {
   config: HttpRequestConfig;
 }
 
-type IncomingHttp2Headers = http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader
+type IncomingHttp2Headers = http2.IncomingHttpHeaders & http2.IncomingHttpStatusHeader;
 
 interface LowLevelHttp2Response extends BaseLowLevelResponse {
-  headers: IncomingHttp2Headers
+  headers: IncomingHttp2Headers;
   request: http2.ClientHttp2Stream | null;
   config: Http2RequestConfig;
 }
 
-type LowLevelResponse = LowLevelHttpResponse | LowLevelHttp2Response
+type LowLevelResponse = LowLevelHttpResponse | LowLevelHttp2Response;
 
 interface BaseLowLevelError extends Error {
   code?: string;
@@ -120,7 +122,7 @@ interface LowLevelHttp2Error extends BaseLowLevelError {
   response?: LowLevelHttp2Response;
 }
 
-type LowLevelError = LowLevelHttpError | LowLevelHttp2Error
+type LowLevelError = LowLevelHttpError | LowLevelHttp2Error;
 
 class DefaultRequestResponse implements RequestResponse {
 
@@ -130,7 +132,6 @@ class DefaultRequestResponse implements RequestResponse {
 
   private readonly parsedData: any;
   private readonly parseError: Error;
-  private readonly request: string;
 
   /**
    * Constructs a new `RequestResponse` from the given `LowLevelResponse`.
@@ -141,26 +142,25 @@ class DefaultRequestResponse implements RequestResponse {
     this.text = resp.data;
     try {
       if (!resp.data) {
-        throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+        throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'HTTP response missing data.' });
       }
       this.parsedData = JSON.parse(resp.data);
     } catch (err) {
       this.parsedData = undefined;
       this.parseError = err;
     }
-    this.request = `${resp.config.method} ${resp.config.url}`;
   }
 
   get data(): any {
     if (this.isJson()) {
       return this.parsedData;
     }
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      `Error while parsing response data: "${ this.parseError.toString() }". Raw server ` +
-      `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
-      `request: "${ this.request }."`,
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Error while parsing response data',
+      cause: this.parseError as Error,
+      httpResponse: toHttpResponse(this)
+    });
   }
 
   public isJson(): boolean {
@@ -185,17 +185,17 @@ class MultipartRequestResponse implements RequestResponse {
   }
 
   get text(): string {
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      'Unable to parse multipart payload as text',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Unable to parse multipart payload as text'
+    });
   }
 
   get data(): any {
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      'Unable to parse multipart payload as JSON',
-    );
+    throw new FirebaseAppError({
+      code: AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+      message: 'Unable to parse multipart payload as JSON'
+    });
   }
 
   public isJson(): boolean {
@@ -258,28 +258,34 @@ export function defaultRetryConfig(): RetryConfig {
  */
 function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_ARGUMENT, 'maxRetries must be a non-negative integer');
+    throw new FirebaseAppError({
+      code: AppErrorCode.INVALID_ARGUMENT,
+      message: 'maxRetries must be a non-negative integer'
+    });
   }
 
   if (typeof retry.backOffFactor !== 'undefined') {
     if (!validator.isNumber(retry.backOffFactor) || retry.backOffFactor < 0) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_ARGUMENT, 'backOffFactor must be a non-negative number');
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_ARGUMENT,
+        message: 'backOffFactor must be a non-negative number'
+      });
     }
   }
 
   if (!validator.isNumber(retry.maxDelayInMillis) || retry.maxDelayInMillis < 0) {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_ARGUMENT, 'maxDelayInMillis must be a non-negative integer');
+    throw new FirebaseAppError({
+      code: AppErrorCode.INVALID_ARGUMENT,
+      message: 'maxDelayInMillis must be a non-negative integer'
+    });
   }
 
   if (typeof retry.statusCodes !== 'undefined' && !validator.isArray(retry.statusCodes)) {
-    throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'statusCodes must be an array');
+    throw new FirebaseAppError({ code: AppErrorCode.INVALID_ARGUMENT, message: 'statusCodes must be an array' });
   }
 
   if (typeof retry.ioErrorCodes !== 'undefined' && !validator.isArray(retry.ioErrorCodes)) {
-    throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'ioErrorCodes must be an array');
+    throw new FirebaseAppError({ code: AppErrorCode.INVALID_ARGUMENT, message: 'ioErrorCodes must be an array' });
   }
 }
 
@@ -288,7 +294,7 @@ export class RequestClient {
 
   constructor(retry: RetryConfig | null = defaultRetryConfig()) {
     if (retry) {
-      this.retry = retry
+      this.retry = retry;
       validateRetryConfig(this.retry);
     }
   }
@@ -379,7 +385,7 @@ export class RequestClient {
     }
 
     if (!this.retry) {
-      throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Expected this.retry to exist.');
+      throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'Expected this.retry to exist.' });
     }
 
     const backOffFactor = this.retry.backOffFactor || 0;
@@ -391,7 +397,7 @@ export class RequestClient {
 export class HttpClient extends RequestClient {
 
   constructor(retry?: RetryConfig | null) {
-    super(retry)
+    super(retry);
   }
 
   /**
@@ -439,13 +445,17 @@ export class HttpClient extends RequestClient {
         }
 
         if (err.code === 'ETIMEDOUT') {
-          throw new FirebaseAppError(
-            AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+          throw new FirebaseAppError({
+            code: AppErrorCode.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
         }
-        throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+        throw new FirebaseAppError({
+          code: AppErrorCode.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
       });
   }
 }
@@ -501,13 +511,17 @@ export class Http2Client extends RequestClient {
         }
 
         if (err.code === 'ETIMEDOUT') {
-          throw new FirebaseAppError(
-            AppErrorCodes.NETWORK_TIMEOUT,
-            `Error while making request: ${err.message}.`);
+          throw new FirebaseAppError({
+            code: AppErrorCode.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
         }
-        throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making request: ${err.message}. Error code: ${err.code}`);
+        throw new FirebaseAppError({
+          code: AppErrorCode.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
       });
   }
 }
@@ -530,7 +544,7 @@ export function parseHttpResponse(
   const statusLine: string = headerLines[0];
   const status: string = statusLine.trim().split(/\s/)[1];
 
-  const headers: {[key: string]: string} = {};
+  const headers: { [key: string]: string; } = {};
   headerLines.slice(1).forEach((line) => {
     const colonPos = line.indexOf(':');
     const name = line.substring(0, colonPos).trim().toLowerCase();
@@ -554,7 +568,7 @@ export function parseHttpResponse(
     request: null,
   };
   if (!validator.isNumber(lowLevelResponse.status)) {
-    throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Malformed HTTP status line.');
+    throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'Malformed HTTP status line.' });
   }
   return new DefaultRequestResponse(lowLevelResponse);
 }
@@ -570,7 +584,7 @@ class AsyncRequestCall {
   protected entity: Buffer | undefined;
   protected promise: Promise<LowLevelResponse>;
 
-  constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) {}
+  constructor(private readonly configImpl: HttpRequestConfigImpl | Http2RequestConfigImpl) { }
 
   /**
    * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
@@ -586,13 +600,13 @@ class AsyncRequestCall {
     }
 
     const segments: string[] = contentType.split(';');
-    const emptyObject: {[key: string]: string} = {};
+    const emptyObject: { [key: string]: string; } = {};
     const headerParams = segments.slice(1)
       .map((segment) => segment.trim().split('='))
       .reduce((curr, params) => {
         // Parse key=value pairs in the content-type header into properties of an object.
         if (params.length === 2) {
-          const keyValuePair: {[key: string]: string} = {};
+          const keyValuePair: { [key: string]: string; } = {};
           keyValuePair[params[0]] = params[1];
           return Object.assign(curr, keyValuePair);
         }
@@ -605,7 +619,7 @@ class AsyncRequestCall {
   protected handleMultipartResponse(
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const busboy = require('@fastify/busboy'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const busboy = require('@fastify/busboy');
     const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
@@ -726,7 +740,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 
   private constructor(config: HttpRequestConfig) {
     const httpConfigImpl = new HttpRequestConfigImpl(config);
-    super(httpConfigImpl)
+    super(httpConfigImpl);
     try {
       this.httpConfigImpl = httpConfigImpl;
       this.options = this.httpConfigImpl.buildRequestOptions();
@@ -778,9 +792,10 @@ class AsyncHttpCall extends AsyncRequestCall {
     }
 
     if (!res.statusCode) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INTERNAL_ERROR,
-        'Expected a statusCode on the response from a ClientRequest');
+      throw new FirebaseAppError({
+        code: AppErrorCode.INTERNAL_ERROR,
+        message: 'Expected a statusCode on the response from a ClientRequest'
+      });
     }
 
     const response: LowLevelResponse = {
@@ -806,7 +821,7 @@ class AsyncHttpCall extends AsyncRequestCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const zlib: typeof zlibmod = require('zlib');
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete res.headers['content-encoding'];
@@ -816,7 +831,7 @@ class AsyncHttpCall extends AsyncRequestCall {
 }
 
 class AsyncHttp2Call extends AsyncRequestCall {
-  private readonly http2ConfigImpl: Http2RequestConfigImpl
+  private readonly http2ConfigImpl: Http2RequestConfigImpl;
 
   /**
    * Sends an HTTP2 request based on the provided configuration.
@@ -827,7 +842,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 
   private constructor(config: Http2RequestConfig) {
     const http2ConfigImpl = new Http2RequestConfigImpl(config);
-    super(http2ConfigImpl)
+    super(http2ConfigImpl);
     try {
       this.http2ConfigImpl = http2ConfigImpl;
       this.options = this.http2ConfigImpl.buildRequestOptions();
@@ -879,15 +894,16 @@ class AsyncHttp2Call extends AsyncRequestCall {
     req.end(this.entity);
   }
 
-  private handleHttp2Response(headers: IncomingHttp2Headers, stream: http2.ClientHttp2Stream): void{
+  private handleHttp2Response(headers: IncomingHttp2Headers, stream: http2.ClientHttp2Stream): void {
     if (stream.aborted) {
       return;
     }
 
     if (!headers[':status']) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INTERNAL_ERROR,
-        'Expected a statusCode on the response from a ClientRequest');
+      throw new FirebaseAppError({
+        code: AppErrorCode.INTERNAL_ERROR,
+        message: 'Expected a statusCode on the response from a ClientRequest'
+      });
     }
 
     const response: LowLevelHttp2Response = {
@@ -914,7 +930,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (headers['content-encoding'] && encodings.indexOf(headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const zlib: typeof zlibmod = require('zlib');
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete headers['content-encoding'];
@@ -929,7 +945,7 @@ class AsyncHttp2Call extends AsyncRequestCall {
 class BaseRequestConfigImpl implements BaseRequestConfig {
 
   constructor(protected readonly config: RequestConfig) {
-    this.config = config
+    this.config = config;
   }
 
   get method(): HttpMethod {
@@ -940,7 +956,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
     return this.config.url;
   }
 
-  get headers(): {[key: string]: string} | undefined {
+  get headers(): { [key: string]: string; } | undefined {
     return this.config.headers;
   }
 
@@ -974,23 +990,23 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
     return data;
   }
 
-  protected buildUrl(): url.UrlWithStringQuery {
+  protected buildUrl(): URL {
     const fullUrl: string = this.urlWithProtocol();
+    const parsedUrl = new URL(fullUrl);
     if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
-      return url.parse(fullUrl);
+      return parsedUrl;
     }
     if (!validator.isObject(this.data)) {
       throw new Error(`${this.method} requests cannot have a body`);
     }
-    // Parse URL and append data to query string.
-    const parsedUrl = new url.URL(fullUrl);
+    // Append data to query string.
     const dataObj = this.data as {[key: string]: string};
     for (const key in dataObj) {
       if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
       }
     }
-    return url.parse(parsedUrl.toString());
+    return parsedUrl;
   }
 
   protected urlWithProtocol(): string {
@@ -1017,7 +1033,7 @@ class BaseRequestConfigImpl implements BaseRequestConfig {
 class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequestConfig {
 
   constructor(private readonly httpConfig: HttpRequestConfig) {
-    super(httpConfig)
+    super(httpConfig);
   }
 
   get httpAgent(): http.Agent | undefined {
@@ -1027,7 +1043,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
-    let port: string | null = parsed.port;
+    let port: string = parsed.port;
     if (!port) {
       const isHttps = protocol === 'https:';
       port = isHttps ? '443' : '80';
@@ -1037,7 +1053,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
       protocol,
       hostname: parsed.hostname,
       port,
-      path: parsed.path,
+      path: `${parsed.pathname}${parsed.search}`,
       method: this.method,
       agent: this.httpAgent,
       headers: Object.assign({}, this.headers),
@@ -1051,7 +1067,7 @@ class HttpRequestConfigImpl extends BaseRequestConfigImpl implements HttpRequest
 class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2RequestConfig {
 
   constructor(private readonly http2Config: Http2RequestConfig) {
-    super(http2Config)
+    super(http2Config);
   }
 
   get http2SessionHandler(): Http2SessionHandler {
@@ -1065,7 +1081,7 @@ class Http2RequestConfigImpl extends BaseRequestConfigImpl implements Http2Reque
 
     return {
       protocol,
-      path: parsed.path,
+      path: `${parsed.pathname}${parsed.search}`,
       method: this.method,
       headers: Object.assign({}, this.headers),
     };
@@ -1099,7 +1115,7 @@ export class AuthorizedHttpClient extends HttpClient {
       }
 
       if (!requestCopy.headers['X-Goog-Api-Client']) {
-        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader();
       }
 
       return super.send(requestCopy);
@@ -1134,13 +1150,13 @@ export class AuthorizedHttp2Client extends Http2Client {
         requestCopy.headers['x-goog-user-project'] = quotaProjectId;
       }
 
-      if (!requestCopy.headers['X-Goog-Api-Client']) { 
-        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader()
+      if (!requestCopy.headers['X-Goog-Api-Client']) {
+        requestCopy.headers['X-Goog-Api-Client'] = getMetricsHeader();
       }
 
       return super.send(requestCopy);
     });
-  } 
+  }
 
   protected getToken(): Promise<string> {
     return this.app.INTERNAL.getToken()
@@ -1156,8 +1172,8 @@ export class AuthorizedHttp2Client extends Http2Client {
  * @constructor
  */
 export class ApiSettings {
-  private requestValidator: ApiCallbackFunction;
-  private responseValidator: ApiCallbackFunction;
+  private requestValidator: ApiRequestCallback;
+  private responseValidator: ApiResponseCallback;
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
@@ -1178,14 +1194,14 @@ export class ApiSettings {
    * @param requestValidator - The request validator.
    * @returns The current API settings instance.
    */
-  public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setRequestValidator(requestValidator: ApiRequestCallback | null): ApiSettings {
+    const nullFunction: ApiRequestCallback = () => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
 
   /** @returns The request validator. */
-  public getRequestValidator(): ApiCallbackFunction {
+  public getRequestValidator(): ApiRequestCallback {
     return this.requestValidator;
   }
 
@@ -1193,14 +1209,14 @@ export class ApiSettings {
    * @param responseValidator - The response validator.
    * @returns The current API settings instance.
    */
-  public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: ApiCallbackFunction = () => undefined;
+  public setResponseValidator(responseValidator: ApiResponseCallback | null): ApiSettings {
+    const nullFunction: ApiResponseCallback = () => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }
 
   /** @returns The response validator. */
-  public getResponseValidator(): ApiCallbackFunction {
+  public getResponseValidator(): ApiResponseCallback {
     return this.responseValidator;
   }
 }
@@ -1241,9 +1257,9 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
   private reject: (err: object) => void;
 
   constructor(
-      private readonly initialPollingDelayMillis: number = 1000,
-      private readonly maxPollingDelayMillis: number = 10000,
-      private readonly masterTimeoutMillis: number = 60000) {
+    private readonly initialPollingDelayMillis: number = 1000,
+    private readonly maxPollingDelayMillis: number = 10000,
+    private readonly masterTimeoutMillis: number = 60000) {
     super();
   }
 
@@ -1289,7 +1305,7 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 
         if (!result) {
           this.repollTimer =
-                setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
+            setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
           this.numTries++;
           return;
         }
@@ -1325,71 +1341,64 @@ export class ExponentialBackoffPoller<T> extends EventEmitter {
 
 export class Http2SessionHandler {
 
-  private http2Session: http2.ClientHttp2Session
-  protected promise: Promise<void>
-  protected resolve: () => void;
-  protected reject: (_: any) => void;
+  private http2Session: http2.ClientHttp2Session;
+  private sessionErrors: Error[] = [];
 
-  constructor(url: string){
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-      this.http2Session = this.createSession(url)
-    });
+  constructor(url: string) {
+    this.createSession(url);
   }
 
   public createSession(url: string): http2.ClientHttp2Session {
-    if (!this.http2Session || this.isClosed ) {
+    if (!this.http2Session || this.isCurrentSessionClosed) {
+      this.sessionErrors = [];
       const opts: http2.SecureClientSessionOptions = {
         // Set local max concurrent stream limit to respect backend limit
         peerMaxConcurrentStreams: 100,
         ALPNProtocols: ['h2']
-      }
-      const http2Session = http2.connect(url, opts)
+      };
+      this.http2Session = http2.connect(url, opts);
 
-      http2Session.on('goaway', (errorCode, _, opaqueData) => {
-        this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
-        ));
-      })
-
-      http2Session.on('error', (error: any) => {
-        let errorMessage: any;
-        if (error.name == 'AggregateError' && error.errors) {
-          errorMessage = `Session error while making requests: ${error.code} - ${error.name}: ` +
-            `[${error.errors.map((e: any) => e.message).join(', ')}]`
-        } else {
-          errorMessage = `Session error while making requests: ${error.code} - ${error.message} `
-        }
-        this.reject(new FirebaseAppError(
-          AppErrorCodes.NETWORK_ERROR,
-          errorMessage
-        ));
-      })
-
-      http2Session.on('close', () => {
-        // Resolve current promise
-        this.resolve()
+      this.http2Session.on('goaway', (errorCode, _, opaqueData) => {
+        const error = new FirebaseAppError({
+          code: AppErrorCode.NETWORK_ERROR,
+          message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
+        });
+        this.sessionErrors.push(error);
       });
-      return http2Session
+
+      this.http2Session.on('error', (error: any) => {
+        const codePart = error?.code ? `${error.code} - ` : '';
+        let errorMessage: string;
+        if (error?.name === 'AggregateError' && Array.isArray(error.errors)) {
+          errorMessage = `Session error while making requests: ${codePart}${error.name}: ` +
+            `[${error.errors.map((e: any) => e.message).join(', ')}]`;
+        } else {
+          errorMessage = `Session error while making requests: ${codePart}${error?.message || 'Unknown error'}`;
+        }
+        const appError = new FirebaseAppError({
+          code: AppErrorCode.NETWORK_ERROR,
+          message: errorMessage,
+          cause: error,
+        });
+        this.sessionErrors.push(appError);
+      });
     }
-    return this.http2Session
+    return this.http2Session;
   }
 
-  public invoke(): Promise<void> {
-    return this.promise
+  public getErrors(): Error[] {
+    return this.sessionErrors;
   }
 
   get session(): http2.ClientHttp2Session {
-    return this.http2Session
+    return this.http2Session;
   }
 
-  get isClosed(): boolean {
-    return this.http2Session.closed
+  get isCurrentSessionClosed(): boolean {
+    return !!this.http2Session?.closed;
   }
 
   public close(): void {
-    this.http2Session.close()
+    this.http2Session?.close();
   }
 }

@@ -16,7 +16,8 @@
  */
 
 import { App } from '../app';
-import { FirebaseFunctionsError, FunctionsApiClient } from './functions-api-client-internal';
+import { FunctionsApiClient } from './functions-api-client-internal';
+import { FirebaseFunctionsError } from './error';
 import { TaskOptions } from './functions-api';
 import * as validator from '../utils/validator';
 
@@ -75,19 +76,22 @@ export class TaskQueue<Args = Record<string, any>> {
   constructor(private readonly functionName: string, private readonly client: FunctionsApiClient,
     private readonly extensionId?: string) {
     if (!validator.isNonEmptyString(functionName)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument',
-        '`functionName` must be a non-empty string.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: '`functionName` must be a non-empty string.'
+      });
     }
     if (!validator.isNonNullObject(client) || !('enqueue' in client)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument',
-        'Must provide a valid FunctionsApiClient instance to create a new TaskQueue.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'Must provide a valid FunctionsApiClient instance to create a new TaskQueue.'
+      });
     }
     if (typeof extensionId !== 'undefined' && !validator.isString(extensionId)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument',
-        '`extensionId` must be a string.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: '`extensionId` must be a string.'
+      });
     }
   }
 

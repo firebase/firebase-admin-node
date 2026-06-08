@@ -21,7 +21,7 @@ import { ConnectorConfig, OperationOptions } from './data-connect-api';
 import {
   DATA_CONNECT_ERROR_CODE_MAPPING,
   FirebaseDataConnectError,
-} from './data-connect-api-client-internal';
+} from './error';
 
 /**
  * @internal
@@ -82,10 +82,10 @@ export function _validateAdminArgs<Variables extends object>(
   }
 
   if (!dcInstance || (!realVars && validateVars)) {
-    throw new FirebaseDataConnectError(
-      DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-      'Variables required.'
-    );
+    throw new FirebaseDataConnectError({
+      code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+      message: 'Variables required.'
+    });
   }
   return { dc: dcInstance, vars: realVars, options: realOptions };
 }
