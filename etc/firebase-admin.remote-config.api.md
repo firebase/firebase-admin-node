@@ -90,6 +90,14 @@ export interface FetchResponseData {
     status: number;
 }
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseRemoteConfigError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -209,6 +217,24 @@ export interface RemoteConfigCondition {
     name: string;
     tagColor?: TagColor;
 }
+
+// @public
+export const RemoteConfigErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly NOT_FOUND: "not-found";
+    readonly OUT_OF_RANGE: "out-of-range";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
 // @public
 export class RemoteConfigFetchResponse {

@@ -21,6 +21,15 @@ export interface Database extends FirebaseDatabase {
     setRules(source: string | Buffer | object): Promise<void>;
 }
 
+// @public
+export const DatabaseErrorCode: {
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+};
+
+// @public
+export type DatabaseErrorCode = typeof DatabaseErrorCode[keyof typeof DatabaseErrorCode];
+
 export { DataSnapshot }
 
 // @public
@@ -32,6 +41,8 @@ export { EventType }
 //
 // @public
 export class FirebaseDatabaseError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts

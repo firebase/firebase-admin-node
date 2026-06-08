@@ -23,6 +23,14 @@ export interface DelayDelivery {
 // @public
 export type DeliverySchedule = DelayDelivery | AbsoluteDelivery;
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseFunctionsError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // @public
 export class Functions {
     // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -31,6 +39,23 @@ export class Functions {
     readonly app: App;
     taskQueue<Args = Record<string, any>>(functionName: string, extensionId?: string): TaskQueue<Args>;
 }
+
+// @public
+export const FunctionsErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly TASK_ALREADY_EXISTS: "task-already-exists";
+};
+
+// @public
+export type FunctionsErrorCode = typeof FunctionsErrorCode[keyof typeof FunctionsErrorCode];
 
 // @public
 export function getFunctions(app?: App): Functions;

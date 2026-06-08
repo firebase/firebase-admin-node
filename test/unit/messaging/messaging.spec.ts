@@ -35,7 +35,6 @@ import {
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
-import { FirebaseMessagingSessionError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -83,10 +82,10 @@ function mockSendRequest(messageId = 'projects/projec_id/messages/message_id'): 
 function mockHttp2SendRequestResponse(messageId = 'projects/projec_id/messages/message_id'): mocks.MockHttp2Response {
   return {
     headers: {
-      ':status': 200, 
+      ':status': 200,
     },
     data: Buffer.from(JSON.stringify({ name: `${messageId}` })),
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockSendError(
@@ -120,14 +119,14 @@ function mockHttp2SendRequestError(
       'content-type': contentType
     },
     data: Buffer.from(response)
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
-function mockHttp2Error(streamError?: any, sessionError?:any): mocks.MockHttp2Response {
+function mockHttp2Error(streamError?: any, sessionError?: any): mocks.MockHttp2Response {
   return {
     streamError: streamError,
     sessionError: sessionError
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockErrorResponse(
@@ -213,14 +212,14 @@ describe('Messaging', () => {
   let messaging: Messaging;
   let legacyMessaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
-  let mockedHttp2Responses: mocks.MockHttp2Response[] = []
+  let mockedHttp2Responses: mocks.MockHttp2Response[] = [];
   const http2Mocker: mocks.Http2Mocker = new mocks.Http2Mocker();
   let httpsRequestStub: sinon.SinonStub;
   let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
-  let messagingService: { [key: string]: any };
-  let nullAccessTokenMessagingService: { [key: string]: any };
+  let messagingService: { [key: string]: any; };
+  let nullAccessTokenMessagingService: { [key: string]: any; };
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
@@ -252,7 +251,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-    http2Mocker.done()
+    http2Mocker.done();
     mockedHttp2Responses = [];
     getTokenStub.restore();
     return mockApp.delete();
@@ -549,7 +548,7 @@ describe('Messaging', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([invalidMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -572,7 +571,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -591,7 +590,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       const message = {
         token: 'a',
         android: {
@@ -625,7 +624,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -650,8 +649,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -667,7 +666,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
+      'returns null access tokens', () => {
       return nullAccessTokenMessaging.sendEach(
         [validMessage, validMessage],
       ).then((response: BatchResponse) => {
@@ -695,8 +694,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -745,7 +744,7 @@ describe('Messaging', () => {
       const fidMessage: FidMessage = { fid: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage, fidMessage];
 
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
 
       return legacyMessaging.sendEach(messages)
         .then((response: BatchResponse) => {
@@ -766,8 +765,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], false)
         .then((response: BatchResponse) => {
@@ -788,8 +787,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       const message = {
         token: 'a',
@@ -826,8 +825,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -855,9 +854,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -875,7 +874,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
+      'returns null access tokens using HTTP/2', () => {
       return nullAccessTokenMessaging.sendEach(
         [validMessage, validMessage], false).then((response: BatchResponse) => {
         expect(response.failureCount).to.equal(2);
@@ -903,9 +902,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -931,7 +930,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage, validMessage], false
@@ -945,29 +944,74 @@ describe('Messaging', () => {
       });
     });
 
-    it('should throw error with BatchResponse promise on session error event using HTTP/2', () => {
-      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'))
-      const sessionError = 'MOCK_SESSION_ERROR'
+    it('should be fulfilled with a BatchResponse containing session errors when session fails using HTTP/2', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'));
+      const sessionError = 'MOCK_SESSION_ERROR';
       mockedHttp2Responses.push(mockHttp2Error(
         new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
         new Error(sessionError)
       ));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage], true
-      ).catch(async (error: FirebaseMessagingSessionError) => {
-        expect(error.code).to.equal('messaging/app/network-error');
-        expect(error.pendingBatchResponse).to.not.be.undefined;
-        await error.pendingBatchResponse?.then((response: BatchResponse) => {
-          expect(http2Mocker.requests.length).to.equal(2);
-          expect(response.failureCount).to.equal(1);
-          const responses = response.responses;
-          checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
-          checkSendResponseFailure(responses[1], 'app/network-error');
-        })
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        const responses = response.responses;
+        checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
+        checkSendResponseFailure(
+          responses[1],
+          'messaging/unknown-error',
+          sessionError
+        );
+        expect(responses[1].error!.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
+        expect(responses[1].error!.cause!.constructor.name).to.equal('AggregateError');
+        const cause = responses[1].error!.cause as any;
+        expect(cause.errors).to.be.an.instanceOf(Array);
+        expect(cause.errors.length).to.equal(2);
+        expect(cause.errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect(cause.errors[1].message).to.contain(sessionError);
       });
-    })
+    });
+
+    it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur' +
+      ' using HTTP/2', () => {
+      const sessionError1 = 'MOCK_SESSION_ERROR_1';
+      const sessionError2 = 'MOCK_SESSION_ERROR_2';
+
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_1'),
+        new Error(sessionError1)
+      ));
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_2'),
+        new Error(sessionError2)
+      ));
+
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messaging.sendEach(
+        [validMessage, validMessage], true
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.failureCount).to.equal(2);
+
+        const failure = response.responses[0];
+        expect(failure.success).to.be.false;
+        expect(failure.error!.code).to.equal('messaging/unknown-error');
+
+        const cause = failure.error!.cause;
+        expect(cause).to.not.be.undefined;
+        expect(cause!.constructor.name).to.equal('AggregateError');
+        expect((cause as any).errors).to.be.an.instanceOf(Array);
+        expect((cause as any).errors.length).to.equal(3);
+        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect((cause as any).errors[1].message).to.contain(sessionError1);
+        expect((cause as any).errors[2].message).to.contain(sessionError2);
+      });
+    });
 
     // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types using HTTP/2', () => {
@@ -981,11 +1025,11 @@ describe('Messaging', () => {
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(messages, false)
-        .then ((response: BatchResponse) => {
+        .then((response: BatchResponse) => {
           expect(http2Mocker.requests.length).to.equal(3);
           expect(response.successCount).to.equal(3);
           expect(response.failureCount).to.equal(0);
@@ -1292,7 +1336,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1317,7 +1361,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1348,8 +1392,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1365,7 +1409,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
+      'returns null access tokens', () => {
       return nullAccessTokenMessaging.sendEachForMulticast(
         { tokens: ['a', 'a'] },
       ).then((response: BatchResponse) => {
@@ -1393,8 +1437,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1435,8 +1479,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1461,8 +1505,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1493,9 +1537,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1511,7 +1555,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
+      'returns null access tokens using HTTP/2', () => {
       return nullAccessTokenMessaging.sendEachForMulticast(
         { tokens: ['a', 'a'] }, false
       ).then((response: BatchResponse) => {
@@ -1539,9 +1583,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1565,7 +1609,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast(
         { tokens: ['a', 'a', 'a'] }, false
       ).then((response: BatchResponse) => {
@@ -1596,7 +1640,7 @@ describe('Messaging', () => {
 
     const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
-      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+      it(`should throw given an invalid ttl: ${ttl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1611,7 +1655,7 @@ describe('Messaging', () => {
 
     const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1627,7 +1671,7 @@ describe('Messaging', () => {
     });
 
     invalidImages.forEach((imageUrl) => {
-      it(`should throw given an invalid imageUrl: ${ imageUrl }`, () => {
+      it(`should throw given an invalid imageUrl: ${imageUrl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1673,7 +1717,7 @@ describe('Messaging', () => {
     const invalidVibrateTimings = [[null, 500], [-100]];
     invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
       const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
-      it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+      it(`should throw given an null or negative vibrateTimingsMillis: ${vibrateTimingsMillis}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1703,7 +1747,7 @@ describe('Messaging', () => {
     });
 
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1912,14 +1956,14 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false]
+    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false];
     invalidApnsLiveActivityTokens.forEach((arg) => {
       it(`should throw given invalid apns live activity token: ${JSON.stringify(arg)}`, () => {
         expect(() => {
           messaging.send({ apns: { liveActivityToken: arg }, topic: 'test' });
         }).to.throw('apns.liveActivityToken must be a string value');
       });
-    })
+    });
 
     it('should throw given empty apns live activity token', () => {
       expect(() => {
@@ -2603,7 +2647,7 @@ describe('Messaging', () => {
         req: {
           apns: {
             liveActivityToken: 'live-activity-token',
-            headers:{
+            headers: {
               'apns-priority': '10'
             },
             payload: {
@@ -2628,7 +2672,7 @@ describe('Messaging', () => {
         expectedReq: {
           apns: {
             live_activity_token: 'live-activity-token',
-            headers:{
+            headers: {
               'apns-priority': '10'
             },
             payload: {
@@ -2656,7 +2700,7 @@ describe('Messaging', () => {
         req: {
           apns: {
             liveActivityToken: 'live-activity-token',
-            headers:{
+            headers: {
               'apns-priority': '10'
             },
             payload: {
@@ -2678,7 +2722,7 @@ describe('Messaging', () => {
         expectedReq: {
           apns: {
             live_activity_token: 'live-activity-token',
-            headers:{
+            headers: {
               'apns-priority': '10'
             },
             payload: {
@@ -2703,7 +2747,7 @@ describe('Messaging', () => {
         req: {
           apns: {
             liveActivityToken: 'live-activity-token',
-            'headers':{
+            'headers': {
               'apns-priority': '10'
             },
             payload: {
@@ -2726,7 +2770,7 @@ describe('Messaging', () => {
         expectedReq: {
           apns: {
             live_activity_token: 'live-activity-token',
-            'headers':{
+            'headers': {
               'apns-priority': '10'
             },
             payload: {
@@ -2853,7 +2897,7 @@ describe('Messaging', () => {
 
     const invalidTopics = [null, NaN, 0, 1, true, false, [], ['a', 1], {}, { a: 1 }, _.noop];
     invalidTopics.forEach((invalidTopic) => {
-      it(`should throw given invalid type for topic argument: ${ JSON.stringify(invalidTopic) }`, () => {
+      it(`should throw given invalid type for topic argument: ${JSON.stringify(invalidTopic)}`, () => {
         expect(() => {
           messagingService[methodName](mocks.messaging.registrationToken, invalidTopic as string);
         }).to.throw(invalidTopicArgumentError);
@@ -2874,7 +2918,7 @@ describe('Messaging', () => {
 
     const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
     topicsWithInvalidCharacters.forEach((invalidTopic) => {
-      it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
+      it(`should be rejected given topic argument which has invalid characters: ${invalidTopic}`, () => {
         return messagingService[methodName](mocks.messaging.registrationToken, invalidTopic)
           .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
       });
@@ -2926,7 +2970,7 @@ describe('Messaging', () => {
     });
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
-      it(`should be rejected given a ${ statusCode } text server response`, () => {
+      it(`should be rejected given a ${statusCode} text server response`, () => {
         mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
         disableRetries(messaging);
 
@@ -2959,7 +3003,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid registration token and topic (topic name not prefixed ' +
-       'with "/topics/")', () => {
+      'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2969,7 +3013,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid registration token and topic (topic name prefixed ' +
-       'with "/topics/")', () => {
+      'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2979,7 +3023,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name not ' +
-       'prefixed with "/topics/")', () => {
+      'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
       return messagingService[methodName](
@@ -2993,7 +3037,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name ' +
-       'prefixed with "/topics/")', () => {
+      'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
       return messagingService[methodName](
@@ -3007,7 +3051,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
+      '(topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -3021,7 +3065,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
+      '(topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -3035,7 +3079,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name not prefixed with "/topics/")', () => {
+      'and topic (topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
       return messagingService[methodName](
@@ -3060,7 +3104,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name prefixed with "/topics/")', () => {
+      'and topic (topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
       return messagingService[methodName](
@@ -3085,7 +3129,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
+      '(topic name not prefixed with "/topics/")', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
@@ -3106,7 +3150,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
+      '(topic name prefixed with "/topics/")', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
@@ -3127,7 +3171,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name not prefixed with "/topics/")', () => {
+      'topic (topic name not prefixed with "/topics/")', () => {
       const registrationTokens = [
         mocks.messaging.registrationToken + '0',
         mocks.messaging.registrationToken + '1',
@@ -3154,7 +3198,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name prefixed with "/topics/")', () => {
+      'topic (topic name prefixed with "/topics/")', () => {
       const registrationTokens = [
         mocks.messaging.registrationToken + '0',
         mocks.messaging.registrationToken + '1',

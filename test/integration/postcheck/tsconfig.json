@@ -11,6 +11,6 @@
     ]
   },
   "files": [
-    "./typescript/example.ts"
+    "./typescript/example-modular.test.ts"
   ]
 }

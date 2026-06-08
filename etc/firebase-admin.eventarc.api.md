@@ -44,6 +44,23 @@ export class Eventarc {
 }
 
 // @public
+export const EventarcErrorCode: {
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+};
+
+// @public
+export type EventarcErrorCode = typeof EventarcErrorCode[keyof typeof EventarcErrorCode];
+
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseEventarcError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
+// @public
 export function getEventarc(app?: App): Eventarc;
 
 ```

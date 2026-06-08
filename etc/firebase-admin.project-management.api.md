@@ -41,10 +41,12 @@ export enum AppPlatform {
     PLATFORM_UNKNOWN = "PLATFORM_UNKNOWN"
 }
 
-// Warning: (ae-forgotten-export) The symbol "PrefixedFirebaseError" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
-export class FirebaseProjectManagementError extends PrefixedFirebaseError {
+export class FirebaseProjectManagementError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -83,8 +85,21 @@ export class ProjectManagement {
     shaCertificate(shaHash: string): ShaCertificate;
 }
 
-// @public (undocumented)
-export type ProjectManagementErrorCode = 'already-exists' | 'authentication-error' | 'internal-error' | 'invalid-argument' | 'invalid-project-id' | 'invalid-server-response' | 'not-found' | 'service-unavailable' | 'unknown-error';
+// @public
+export const ProjectManagementErrorCode: {
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_PROJECT_ID: "invalid-project-id";
+    readonly INVALID_SERVER_RESPONSE: "invalid-server-response";
+    readonly NOT_FOUND: "not-found";
+    readonly SERVICE_UNAVAILABLE: "service-unavailable";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type ProjectManagementErrorCode = typeof ProjectManagementErrorCode[keyof typeof ProjectManagementErrorCode];
 
 // @public
 export class ShaCertificate {
