@@ -78,6 +78,11 @@ export interface MulticastMessage extends BaseMessage {
 
 /**
  * Payload for the `sendEachForMulticast` method containing only FIDs.
+ *
+ * @remarks
+ * Note: This is a temporary interface. In the next major version, this will be
+ * renamed back to `MulticastMessage` once the old token-based `MulticastMessage`
+ * is fully deprecated and removed.
  */
 export interface FidMulticastMessage extends BaseMessage {
   /**
