@@ -30,6 +30,7 @@ export const MessagingErrorCode = {
   INVALID_OPTIONS: 'invalid-options',
   INVALID_REGISTRATION_TOKEN: 'invalid-registration-token',
   REGISTRATION_TOKEN_NOT_REGISTERED: 'registration-token-not-registered',
+  INSTALLATION_ID_NOT_REGISTERED: 'installation-id-not-registered',
   MISMATCHED_CREDENTIAL: 'mismatched-credential',
   INVALID_PACKAGE_NAME: 'invalid-package-name',
   DEVICE_MESSAGE_RATE_EXCEEDED: 'device-message-rate-exceeded',
@@ -90,6 +91,12 @@ export const messagingClientErrorCode: { readonly [K in keyof typeof MessagingEr
       'previously valid registration token can be unregistered for a variety of reasons. See the ' +
       'error documentation for more details. Remove this registration token and stop using it to ' +
       'send messages.',
+  },
+  INSTALLATION_ID_NOT_REGISTERED: {
+    code: MessagingErrorCode.INSTALLATION_ID_NOT_REGISTERED,
+    message: 'The provided installation ID is not registered. A previously valid installation ' +
+      'ID can be unregistered for a variety of reasons. See the error documentation for more ' +
+      'details. Remove this installation ID and stop using it to send messages.',
   },
   MISMATCHED_CREDENTIAL: {
     code: MessagingErrorCode.MISMATCHED_CREDENTIAL,
@@ -202,6 +209,7 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErro
   THIRD_PARTY_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
   UNAVAILABLE: 'SERVER_UNAVAILABLE',
   UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  UNREGISTERED_FID: 'INSTALLATION_ID_NOT_REGISTERED',
   UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
 };
 

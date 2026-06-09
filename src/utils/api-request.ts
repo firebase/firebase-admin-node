@@ -77,6 +77,8 @@ export interface RequestResponse {
   readonly data?: any;
   /** For multipart responses, the payloads of individual parts. */
   readonly multipart?: Buffer[];
+  /** Optional request config used to send this request. */
+  readonly config?: any;
   /**
    * Indicates if the response content is JSON-formatted or not. If true, data field can be used
    * to retrieve the content as a parsed JSON object.
@@ -129,6 +131,7 @@ class DefaultRequestResponse implements RequestResponse {
   public readonly status: number;
   public readonly headers: any;
   public readonly text?: string;
+  public readonly config?: RequestConfig;
 
   private readonly parsedData: any;
   private readonly parseError: Error;
@@ -140,6 +143,7 @@ class DefaultRequestResponse implements RequestResponse {
     this.status = resp.status;
     this.headers = resp.headers;
     this.text = resp.data;
+    this.config = resp.config;
     try {
       if (!resp.data) {
         throw new FirebaseAppError({ code: AppErrorCode.INTERNAL_ERROR, message: 'HTTP response missing data.' });
@@ -177,11 +181,13 @@ class MultipartRequestResponse implements RequestResponse {
   public readonly status: number;
   public readonly headers: any;
   public readonly multipart?: Buffer[];
+  public readonly config?: any;
 
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
     this.headers = resp.headers;
     this.multipart = resp.multipart;
+    this.config = resp.config;
   }
 
   get text(): string {
