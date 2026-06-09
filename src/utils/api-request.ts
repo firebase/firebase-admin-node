@@ -1375,7 +1375,7 @@ export class Http2SessionHandler {
       this.http2Session.on('error', (error: any) => {
         const codePart = error?.code ? `${error.code} - ` : '';
         let errorMessage: string;
-        if (error?.name === 'AggregateError' && Array.isArray(error.errors)) {
+        if ((error instanceof AggregateError || error?.name === 'AggregateError') && Array.isArray(error.errors)) {
           errorMessage = `Session error while making requests: ${codePart}${error.name}: ` +
             `[${error.errors.map((e: any) => e.message).join(', ')}]`;
         } else {

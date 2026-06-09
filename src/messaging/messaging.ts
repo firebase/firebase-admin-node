@@ -252,11 +252,9 @@ export class Messaging {
         if (sessionErrors.length > 0) {
           // Combine the original stream error and all session errors
           const allErrors = [result.reason, ...sessionErrors];
-          // TODO: AggregateError is supported in Node 18+ but only included in the ES2021+ 
-          // We use (global as any).AggregateError as a workaround to access it in ES2020.
-          const cause = new (global as any).AggregateError(allErrors, 'Stream failure and session failures occurred');
+          const cause = new AggregateError(allErrors, 'Stream failure and session failures occurred');
 
-          const streamMessage = result.reason.message || 'Unknown stream error';
+          const streamMessage = result.reason?.message || 'Unknown stream error';
           const sessionMessage = `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`;
 
           error = new FirebaseMessagingError({
