@@ -774,6 +774,22 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.cause).to.equal(expectedQueryError);
       }
     });
+
+    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
+      const data = { id: 'key1', name: 'Fred', status: 'ACTIVE' };
+      const expectedMutation = `
+      mutation($data: TestTable_Data! @allow(fields: "id name status")) {
+        testTable_insert(data: $data)
+      }`;
+      const expectedOptions = {
+        variables: { data }
+      };
+      await apiClient.insert(tableName, data);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(
+        normalizeGraphQLString(expectedMutation),
+        expectedOptions
+      );
+    });
   });
 
   // --- INSERT MANY TESTS ---
@@ -866,6 +882,25 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.cause).to.equal(expectedQueryError);
       }
     });
+
+    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
+      const data = [
+        { id: 'key1', name: 'Fred', status: 'ACTIVE' },
+        { id: 'key2', name: 'Bob', tags: ['cool'] }
+      ];
+      const expectedMutation = `
+      mutation($data: [TestTable_Data! @allow(fields: "id name status tags")]!) {
+        testTable_insertMany(data: $data)
+      }`;
+      const expectedOptions = {
+        variables: { data }
+      };
+      await apiClient.insertMany(tableName, data);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(
+        normalizeGraphQLString(expectedMutation),
+        expectedOptions
+      );
+    });
   });
 
   // --- UPSERT TESTS ---
@@ -934,6 +969,22 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
         expect(err.cause).to.equal(expectedQueryError);
       }
+    });
+
+    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
+      const data = { id: 'key1', name: 'Fred', status: 'ACTIVE' };
+      const expectedMutation = `
+      mutation($data: TestTable_Data! @allow(fields: "id name status")) {
+        testTable_upsert(data: $data)
+      }`;
+      const expectedOptions = {
+        variables: { data }
+      };
+      await apiClient.upsert(tableName, data);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(
+        normalizeGraphQLString(expectedMutation),
+        expectedOptions
+      );
     });
   });
 
@@ -1023,6 +1074,25 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
         expect(err.cause).to.equal(expectedQueryError);
       }
+    });
+
+    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
+      const data = [
+        { id: 'key1', name: 'Fred', status: 'ACTIVE' },
+        { id: 'key2', name: 'Bob', tags: ['cool'] }
+      ];
+      const expectedMutation = `
+      mutation($data: [TestTable_Data! @allow(fields: "id name status tags")]!) {
+        testTable_upsertMany(data: $data)
+      }`;
+      const expectedOptions = {
+        variables: { data }
+      };
+      await apiClient.upsertMany(tableName, data);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(
+        normalizeGraphQLString(expectedMutation),
+        expectedOptions
+      );
     });
   });
 
