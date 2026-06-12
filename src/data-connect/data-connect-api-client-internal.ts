@@ -423,12 +423,47 @@ export class DataConnectApiClient {
     });
   }
 
-  private formatTableName(tableName: string): string {
-    // Format tableName: first character to lowercase
-    if (tableName && tableName.length > 0) {
-      return tableName.charAt(0).toLowerCase() + tableName.slice(1);
+  /**
+   * Generates both capitalized and camel-cased variations of a table name.
+   * Capitalization matches the schema types, and camel-case matches mutations.
+   */
+  private getTableNames(tableName: string): { capitalized: string; formatted: string } {
+    if (!tableName || tableName.length === 0) {
+      return { capitalized: tableName, formatted: tableName };
     }
-    return tableName;
+    const capitalized = tableName.charAt(0).toUpperCase() + tableName.slice(1);
+    const formatted = tableName.charAt(0).toLowerCase() + tableName.slice(1);
+    return { capitalized, formatted };
+  }
+
+  /**
+   * Extracts all defined property keys from an object as a space-separated string.
+   * Used to build the `@allow(fields: ...)` mutation directive for single operations.
+   */
+  private getObjectKeys(data: Record<string, unknown> | object): string {
+    return Object.keys(data)
+      .filter(key => (data as Record<string, unknown>)[key] !== undefined)
+      .join(' ');
+  }
+
+  /**
+   * Extracts the union of all defined property keys across an array of objects
+   * as a space-separated string. Used to build the `@allow(fields: ...)` mutation
+   * directive for bulk operations.
+   */
+  private getArrayObjectsKeys(data: Array<unknown>): string {
+    const allKeys = new Set<string>();
+    for (const element of data) {
+      if (validator.isNonNullObject(element)) {
+        const record = element as Record<string, unknown>;
+        Object.keys(record).forEach(key => {
+          if (record[key] !== undefined) {
+            allKeys.add(key);
+          }
+        });
+      }
+    }
+    return Array.from(allKeys).join(' ');
   }
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
@@ -471,14 +506,9 @@ export class DataConnectApiClient {
     }
 
     try {
-      const capitalizedTable = tableName.charAt(0).toUpperCase() + tableName.slice(1);
-      const formattedTableName = this.formatTableName(tableName);
-
-      const keys = Object.keys(data)
-        .filter(key => (data as Record<string, unknown>)[key] !== undefined)
-        .join(' ');
-
-      const mutation = `mutation($data: ${capitalizedTable}_Data! @allow(fields: "${keys}")) { ${formattedTableName}_insert(data: $data) }`;
+      const { capitalized, formatted } = this.getTableNames(tableName);
+      const keys = this.getObjectKeys(data);
+      const mutation = `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) { ${formatted}_insert(data: $data) }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -512,23 +542,9 @@ export class DataConnectApiClient {
     }
 
     try {
-      const capitalizedTable = tableName.charAt(0).toUpperCase() + tableName.slice(1);
-      const formattedTableName = this.formatTableName(tableName);
-
-      const allKeys = new Set<string>();
-      for (const element of data) {
-        if (validator.isNonNullObject(element)) {
-          const record = element as Record<string, unknown>;
-          Object.keys(record).forEach(key => {
-            if (record[key] !== undefined) {
-              allKeys.add(key);
-            }
-          });
-        }
-      }
-      const keys = Array.from(allKeys).join(' ');
-
-      const mutation = `mutation($data: [${capitalizedTable}_Data! @allow(fields: "${keys}")]!) { ${formattedTableName}_insertMany(data: $data) }`;
+      const { capitalized, formatted } = this.getTableNames(tableName);
+      const keys = this.getArrayObjectsKeys(data);
+      const mutation = `mutation($data: [${capitalized}_Data! @allow(fields: "${keys}")]!) { ${formatted}_insertMany(data: $data) }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -569,14 +585,9 @@ export class DataConnectApiClient {
     }
 
     try {
-      const capitalizedTable = tableName.charAt(0).toUpperCase() + tableName.slice(1);
-      const formattedTableName = this.formatTableName(tableName);
-
-      const keys = Object.keys(data)
-        .filter(key => (data as Record<string, unknown>)[key] !== undefined)
-        .join(' ');
-
-      const mutation = `mutation($data: ${capitalizedTable}_Data! @allow(fields: "${keys}")) { ${formattedTableName}_upsert(data: $data) }`;
+      const { capitalized, formatted } = this.getTableNames(tableName);
+      const keys = this.getObjectKeys(data);
+      const mutation = `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) { ${formatted}_upsert(data: $data) }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -610,23 +621,9 @@ export class DataConnectApiClient {
     }
 
     try {
-      const capitalizedTable = tableName.charAt(0).toUpperCase() + tableName.slice(1);
-      const formattedTableName = this.formatTableName(tableName);
-
-      const allKeys = new Set<string>();
-      for (const element of data) {
-        if (validator.isNonNullObject(element)) {
-          const record = element as Record<string, unknown>;
-          Object.keys(record).forEach(key => {
-            if (record[key] !== undefined) {
-              allKeys.add(key);
-            }
-          });
-        }
-      }
-      const keys = Array.from(allKeys).join(' ');
-
-      const mutation = `mutation($data: [${capitalizedTable}_Data! @allow(fields: "${keys}")]!) { ${formattedTableName}_upsertMany(data: $data) }`;
+      const { capitalized, formatted } = this.getTableNames(tableName);
+      const keys = this.getArrayObjectsKeys(data);
+      const mutation = `mutation($data: [${capitalized}_Data! @allow(fields: "${keys}")]!) { ${formatted}_upsertMany(data: $data) }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
