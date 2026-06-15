@@ -23,3 +23,6 @@ docgen/markdown/
 
 # Dataconnect integration test artifacts should not be checked in
 test/integration/dataconnect/dataconnect/.dataconnect
+test/integration/dataconnect/dataconnect-debug.log
+test/integration/dataconnect/firebase-debug.log
+test/integration/dataconnect/pglite-debug.log
