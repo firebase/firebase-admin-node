@@ -21,7 +21,12 @@ import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
 import { FirebaseError, toHttpResponse } from '../utils/error';
-import { FirebaseDataConnectError, DataConnectErrorCode, DATA_CONNECT_ERROR_CODE_MAPPING } from './error';
+import {
+  FirebaseDataConnectError,
+  DataConnectErrorCode,
+  DATA_CONNECT_ERROR_CODE_MAPPING,
+  GRPC_STATUS_CODE_TO_STRING
+} from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -409,10 +414,19 @@ export class DataConnectApiClient {
       });
     }
 
-    const error: ServerError = (response.data as ErrorResponse).error || {};
+    const data = response.data as any;
+    const error: ServerError = (validator.isNonNullObject(data) && validator.isNonNullObject(data.error))
+      ? data.error
+      : (validator.isNonNullObject(data) ? data : {});
+        
+    let status = error.status;
+    if (!status && validator.isNumber(error.code)) {
+      status = GRPC_STATUS_CODE_TO_STRING[error.code as number];
+    }
+
     let code: DataConnectErrorCode = DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN;
-    if (error.status && error.status in DATA_CONNECT_ERROR_CODE_MAPPING) {
-      code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
+    if (status && status in DATA_CONNECT_ERROR_CODE_MAPPING) {
+      code = DATA_CONNECT_ERROR_CODE_MAPPING[status];
     }
     const message = error.message || 'Unknown server error';
     return new FirebaseDataConnectError({
@@ -663,10 +677,6 @@ function emulatorHost(): string | undefined {
  */
 export function useEmulator(): boolean {
   return !!emulatorHost();
-}
-
-interface ErrorResponse {
-  error?: ServerError;
 }
 
 interface ServerError {
