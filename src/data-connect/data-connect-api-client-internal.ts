@@ -522,7 +522,10 @@ export class DataConnectApiClient {
     try {
       const { capitalized, formatted } = this.getTableNames(tableName);
       const keys = this.getObjectKeys(data);
-      const mutation = `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) { ${formatted}_insert(data: $data) }`;
+      const mutation = 
+        `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
+          ${formatted}_insert(data: $data)
+        }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -558,7 +561,10 @@ export class DataConnectApiClient {
     try {
       const { capitalized, formatted } = this.getTableNames(tableName);
       const keys = this.getArrayObjectsKeys(data);
-      const mutation = `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) { ${formatted}_insertMany(data: $data) }`;
+      const mutation = 
+        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
+          ${formatted}_insertMany(data: $data)
+        }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -601,7 +607,10 @@ export class DataConnectApiClient {
     try {
       const { capitalized, formatted } = this.getTableNames(tableName);
       const keys = this.getObjectKeys(data);
-      const mutation = `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) { ${formatted}_upsert(data: $data) }`;
+      const mutation = 
+        `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
+          ${formatted}_upsert(data: $data)
+        }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
@@ -637,7 +646,10 @@ export class DataConnectApiClient {
     try {
       const { capitalized, formatted } = this.getTableNames(tableName);
       const keys = this.getArrayObjectsKeys(data);
-      const mutation = `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) { ${formatted}_upsertMany(data: $data) }`;
+      const mutation = 
+        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
+          ${formatted}_upsertMany(data: $data)
+        }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
         .catch(this.handleBulkImportErrors);
