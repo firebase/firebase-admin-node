@@ -415,8 +415,10 @@ export class DataConnectApiClient {
     }
 
     const data = response.data as any;
-    const error: ServerError = (validator.isNonNullObject(data) && 'error' in data) ? data.error : data || {};
-    
+    const error: ServerError = (validator.isNonNullObject(data) && validator.isNonNullObject(data.error))
+      ? data.error
+      : (validator.isNonNullObject(data) ? data : {});
+        
     let status = error.status;
     if (!status && validator.isNumber(error.code)) {
       status = GRPC_STATUS_CODE_TO_STRING[error.code as number];
