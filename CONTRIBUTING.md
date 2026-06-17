@@ -150,9 +150,19 @@ And then:
     'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
 ```
 
-Currently, only the Auth, Database, and Firestore test suites work. Some test
-cases will be automatically skipped due to lack of emulator support. The section
-below covers how to run the full test suite against an actual Firebase project.
+Currently, only the Auth, Database, and Firestore test suites work. Some test cases
+will be automatically skipped due to lack of emulator support. 
+
+You can also run the Data Connect test suite against the emulators using the same command,
+but with a config file specific to Data Connect emulator testing:
+
+```bash
+  firebase emulators:exec \
+    --project fake-project-id --only dataconnect --config test/integration/dataconnect/firebase.json \
+    'npx mocha \"test/integration/data-connect.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
+```
+
+The section below covers how to run the full test suite against an actual Firebase project.
 
 #### Integration Tests with an actual Firebase project
 

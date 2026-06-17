@@ -21,6 +21,10 @@ firebase-admin-*.tgz
 
 docgen/markdown/
 
-# Dataconnect integration test artifacts should not be checked in
+# Integration test artifacts should not be checked in
+**/database-debug.log
+**/firestore-debug.log
 test/integration/dataconnect/dataconnect/.dataconnect
-test/integration/dataconnect/*.log
+**/dataconnect-debug.log
+**/pglite-debug.log
+
