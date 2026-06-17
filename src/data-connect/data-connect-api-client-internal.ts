@@ -441,13 +441,13 @@ export class DataConnectApiClient {
    * Generates both capitalized and camel-cased variations of a table name.
    * Capitalization matches the schema types, and camel-case matches mutations.
    */
-  private getTableNames(tableName: string): { capitalized: string; formatted: string } {
+  private getTableNames(tableName: string): { capitalized: string; camelCase: string } {
     if (!tableName || tableName.length === 0) {
-      return { capitalized: tableName, formatted: tableName };
+      return { capitalized: tableName, camelCase: tableName };
     }
     const capitalized = tableName.charAt(0).toUpperCase() + tableName.slice(1);
-    const formatted = tableName.charAt(0).toLowerCase() + tableName.slice(1);
-    return { capitalized, formatted };
+    const camelCase = tableName.charAt(0).toLowerCase() + tableName.slice(1);
+    return { capitalized, camelCase };
   }
 
   /**
@@ -481,7 +481,7 @@ export class DataConnectApiClient {
   }
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
-    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
+    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
         message: `${err.message}. Make sure that your table name passed in matches the type name in your `
@@ -520,11 +520,11 @@ export class DataConnectApiClient {
     }
 
     try {
-      const { capitalized, formatted } = this.getTableNames(tableName);
+      const { capitalized, camelCase } = this.getTableNames(tableName);
       const keys = this.getObjectKeys(data);
-      const mutation = 
+      const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
-          ${formatted}_insert(data: $data)
+          ${camelCase}_insert(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
@@ -559,11 +559,11 @@ export class DataConnectApiClient {
     }
 
     try {
-      const { capitalized, formatted } = this.getTableNames(tableName);
+      const { capitalized, camelCase } = this.getTableNames(tableName);
       const keys = this.getArrayObjectsKeys(data);
-      const mutation = 
+      const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
-          ${formatted}_insertMany(data: $data)
+          ${camelCase}_insertMany(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
@@ -605,11 +605,11 @@ export class DataConnectApiClient {
     }
 
     try {
-      const { capitalized, formatted } = this.getTableNames(tableName);
+      const { capitalized, camelCase } = this.getTableNames(tableName);
       const keys = this.getObjectKeys(data);
-      const mutation = 
+      const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
-          ${formatted}_upsert(data: $data)
+          ${camelCase}_upsert(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
@@ -644,11 +644,11 @@ export class DataConnectApiClient {
     }
 
     try {
-      const { capitalized, formatted } = this.getTableNames(tableName);
+      const { capitalized, camelCase } = this.getTableNames(tableName);
       const keys = this.getArrayObjectsKeys(data);
-      const mutation = 
+      const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
-          ${formatted}_upsertMany(data: $data)
+          ${camelCase}_upsertMany(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
