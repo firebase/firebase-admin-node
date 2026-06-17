@@ -25,7 +25,7 @@ import {
   FirebaseDataConnectError,
   DataConnectErrorCode,
   DATA_CONNECT_ERROR_CODE_MAPPING,
-  GRPC_STATUS_CODE_TO_STRING
+  EMULATOR_GRPC_STATUS_CODE_TO_STRING
 } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -421,7 +421,7 @@ export class DataConnectApiClient {
         
     let status = error.status;
     if (!status && validator.isNumber(error.code)) {
-      status = GRPC_STATUS_CODE_TO_STRING[error.code as number];
+      status = EMULATOR_GRPC_STATUS_CODE_TO_STRING[error.code as number];
     }
 
     let code: DataConnectErrorCode = DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN;

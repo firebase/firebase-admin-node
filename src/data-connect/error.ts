@@ -71,10 +71,12 @@ export class FirebaseDataConnectError extends FirebaseError {
 }
 
 /**
- * Mappings from gRPC status codes to their string equivalents.
+ * Mappings from gRPC status codes to their string equivalents. Used to convert
+ * error codes from the emulator into the codes and statuses matching errors
+ * from production.
  * @internal
  */
-export const GRPC_STATUS_CODE_TO_STRING: Record<number, string> = {
+export const EMULATOR_GRPC_STATUS_CODE_TO_STRING: Record<number, string> = {
   1: 'CANCELLED',
   2: 'UNKNOWN',
   3: 'INVALID_ARGUMENT',
