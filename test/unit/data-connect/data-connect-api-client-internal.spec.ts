@@ -179,6 +179,27 @@ describe('DataConnectApiClient', () => {
           .and.have.property('cause', expected.cause);
       });
 
+      it('should reject when a gRPC-to-HTTP transcoded error response is received', () => {
+        const grpcError = {
+          code: 7,
+          message: 'Permission denied',
+        };
+        const mockErr = utils.errorFrom(grpcError, 403);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'permission-denied',
+          message: 'Permission denied',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
       it('should reject with unknown-error when error code is not present', () => {
         const mockErr = utils.errorFrom({}, 404);
         sandbox
