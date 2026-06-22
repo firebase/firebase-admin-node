@@ -307,12 +307,12 @@ export class RemoteConfigApiClient {
       });
   }
 
-  private sendServerPutRequest(
+  private sendPutRequestInternal(
+    path: string,
     template: RemoteConfigTemplate,
     etag: string,
     validateOnly?: boolean
   ): Promise<RequestResponse> {
-    let path = 'namespaces/firebase-server/remoteConfig';
     if (validateOnly) {
       path += '?validate_only=true';
     }
@@ -333,30 +333,20 @@ export class RemoteConfigApiClient {
       });
   }
 
+  private sendServerPutRequest(
+    template: RemoteConfigTemplate,
+    etag: string,
+    validateOnly?: boolean
+  ): Promise<RequestResponse> {
+    return this.sendPutRequestInternal('namespaces/firebase-server/remoteConfig', template, etag, validateOnly);
+  }
+
   private sendPutRequest(
     template: RemoteConfigTemplate,
     etag: string,
     validateOnly?: boolean
   ): Promise<RequestResponse> {
-    let path = 'remoteConfig';
-    if (validateOnly) {
-      path += '?validate_only=true';
-    }
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'PUT',
-          url: `${url}/${path}`,
-          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': etag },
-          data: {
-            conditions: template.conditions,
-            parameters: template.parameters,
-            parameterGroups: template.parameterGroups,
-            version: template.version,
-          }
-        };
-        return this.httpClient.send(request);
-      });
+    return this.sendPutRequestInternal('remoteConfig', template, etag, validateOnly);
   }
 
   private getUrl(): Promise<string> {
