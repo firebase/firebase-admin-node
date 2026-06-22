@@ -235,7 +235,7 @@
     "@types/minimist": "^1.2.2",
     "@types/mocha": "^10.0.0",
     "@types/nock": "^11.1.0",
-    "@types/node": "^25.7.0",
+    "@types/node": "^26.0.0",
     "@types/request": "^2.47.0",
     "@types/request-promise": "^4.1.41",
     "@types/sinon": "^21.0.1",
