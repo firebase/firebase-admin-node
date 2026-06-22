@@ -68,41 +68,11 @@ export class RemoteConfigApiClient {
   }
 
   public getTemplate(): Promise<RemoteConfigTemplate> {
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.getTemplateInternal('remoteConfig');
   }
 
   public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.getTemplateInternal('remoteConfig', versionNumber);
   }
 
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
@@ -120,7 +90,10 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean; }): Promise<RemoteConfigTemplate> {
+  public publishTemplate(
+    template: RemoteConfigTemplate,
+    options?: { force: boolean; }
+  ): Promise<RemoteConfigTemplate> {
     template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force === true) {
@@ -138,45 +111,11 @@ export class RemoteConfigApiClient {
   }
 
   public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url: `${url}/remoteConfig:rollback`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.rollbackInternal('remoteConfig:rollback', versionNumber);
   }
 
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
-    if (typeof options !== 'undefined') {
-      options = this.validateListVersionsOptions(options);
-    }
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig:listVersions`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: options
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return resp.data;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.listVersionsInternal('remoteConfig:listVersions', options);
   }
 
   public getServerTemplate(): Promise<ServerTemplateData> {
@@ -198,41 +137,11 @@ export class RemoteConfigApiClient {
   }
 
   public getServerConfigTemplate(): Promise<RemoteConfigTemplate> {
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/namespaces/firebase-server/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.getTemplateInternal('namespaces/firebase-server/remoteConfig');
   }
 
   public getServerConfigTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/namespaces/firebase-server/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
+    return this.getTemplateInternal('namespaces/firebase-server/remoteConfig', versionNumber);
   }
 
   public validateServerConfigTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
@@ -266,12 +175,50 @@ export class RemoteConfigApiClient {
   }
 
   public rollbackServerConfigTemplate(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    return this.rollbackInternal('namespaces/firebase-server/remoteConfig:rollback', versionNumber);
+  }
+
+  public listServerConfigVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    return this.listVersionsInternal('namespaces/firebase-server/remoteConfig:listVersions', options);
+  }
+
+  private getTemplateInternal(
+    path: string,
+    versionNumber?: number | string
+  ): Promise<RemoteConfigTemplate> {
+    const data = typeof versionNumber !== 'undefined'
+      ? { versionNumber: this.validateVersionNumber(versionNumber) }
+      : undefined;
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/${path}`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+        };
+        if (typeof data !== 'undefined') {
+          request.data = data;
+        }
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  private rollbackInternal(
+    path: string,
+    versionNumber: number | string
+  ): Promise<RemoteConfigTemplate> {
     const data = { versionNumber: this.validateVersionNumber(versionNumber) };
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
-          url: `${url}/namespaces/firebase-server/remoteConfig:rollback`,
+          url: `${url}/${path}`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
           data
         };
@@ -285,7 +232,10 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public listServerConfigVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+  private listVersionsInternal(
+    path: string,
+    options?: ListVersionsOptions
+  ): Promise<ListVersionsResult> {
     if (typeof options !== 'undefined') {
       options = this.validateListVersionsOptions(options);
     }
@@ -293,7 +243,7 @@ export class RemoteConfigApiClient {
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
-          url: `${url}/namespaces/firebase-server/remoteConfig:listVersions`,
+          url: `${url}/${path}`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
           data: options
         };
