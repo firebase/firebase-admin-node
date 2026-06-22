@@ -28,6 +28,7 @@ import { FirebaseMessagingRequestHandler } from './messaging-api-request-interna
 
 import {
   BatchResponse,
+  FidMulticastMessage,
   Message,
   MessagingTopicManagementResponse,
   MulticastMessage,
@@ -274,50 +275,84 @@ export class Messaging {
   }
 
   /**
-   * Sends the given multicast message to all the FCM registration tokens
+   * Sends the given multicast message to all the FCM registration tokens or fids
    * specified in it.
    *
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
-   * return value corresponds to the order of tokens in the `MulticastMessage`.
+   * return value corresponds to the order of tokens/fids in the `MulticastMessage`.
+   * If both `tokens` and `fids` are provided, `tokens` are processed first, followed by `fids`.
    * An error from this method or a `BatchResponse` with all failures indicates a total
-   * failure, meaning that the messages in the list could be sent. Partial failures or
-   * failures are only indicated by a `BatchResponse` return value.
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
    *
-   * @param message - A multicast message
-   *   containing up to 500 tokens.
+   * @deprecated Use the overload accepting {@link FidMulticastMessage} instead.
+   *
+   * @param message - A multicast message containing up to 500 tokens and/or fids.
    * @param dryRun - Whether to send the message in the dry-run
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
-  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
-    const copy: MulticastMessage = deepCopy(message);
+  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  /**
+   * Sends the given multicast message to all the FCM fids specified in it.
+   *
+   * This method uses the {@link Messaging.sendEach} API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the
+   * return value corresponds to the order of fids in the `FidMulticastMessage`.
+   * An error from this method or a `BatchResponse` with all failures indicates a total
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
+   *
+   * @param message - A multicast message containing up to 500 fids.
+   * @param dryRun - Whether to send the message in the dry-run (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the send operation.
+   */
+  public sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  public sendEachForMulticast(
+    message: MulticastMessage | FidMulticastMessage,
+    dryRun?: boolean,
+  ): Promise<BatchResponse> {
+    const copy: any = deepCopy(message);
     if (!validator.isNonNullObject(copy)) {
       throw new FirebaseMessagingError(
         messagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
     }
-    if (!validator.isNonEmptyArray(copy.tokens)) {
+
+    const { tokens, fids, ...baseMessage } = copy;
+
+    if (tokens !== undefined && !validator.isArray(tokens)) {
       throw new FirebaseMessagingError(
-        messagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a valid array');
     }
-    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
+    if (fids !== undefined && !validator.isArray(fids)) {
       throw new FirebaseMessagingError(
-        messagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+        messagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a valid array');
     }
 
-    const messages: Message[] = copy.tokens.map((token) => {
-      return {
-        token,
-        android: copy.android,
-        apns: copy.apns,
-        data: copy.data,
-        notification: copy.notification,
-        webpush: copy.webpush,
-        fcmOptions: copy.fcmOptions,
-      };
-    });
+    const tokenList: string[] = tokens || [];
+    const fidList: string[] = fids || [];
+
+    if (tokenList.length === 0 && fidList.length === 0) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT, 'Either tokens or fids must be a non-empty array');
+    }
+
+    const totalLength = tokenList.length + fidList.length;
+    if (totalLength > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT,
+        `The total number of tokens and fids must not exceed ${FCM_MAX_BATCH_SIZE}.`);
+    }
+
+    const messages: Message[] = [
+      ...tokenList.map((token) => ({ ...baseMessage, token } as Message)),
+      ...fidList.map((fid) => ({ ...baseMessage, fid } as Message)),
+    ];
+
     return this.sendEach(messages, dryRun);
   }
 
