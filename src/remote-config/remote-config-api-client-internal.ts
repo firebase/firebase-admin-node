@@ -197,6 +197,142 @@ export class RemoteConfigApiClient {
       });
   }
 
+  public getServerConfigTemplate(): Promise<RemoteConfigTemplate> {
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/namespaces/firebase-server/remoteConfig`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public getServerConfigTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/namespaces/firebase-server/remoteConfig`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public validateServerConfigTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    template = this.validateInputRemoteConfigTemplate(template);
+    return this.sendServerPutRequest(template, template.etag, true)
+      .then((resp) => {
+        this.validateEtag(resp.headers['etag']);
+        return this.toRemoteConfigTemplate(resp, template.etag);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public publishServerConfigTemplate(
+    template: RemoteConfigTemplate,
+    options?: { force: boolean; }
+  ): Promise<RemoteConfigTemplate> {
+    template = this.validateInputRemoteConfigTemplate(template);
+    let ifMatch: string = template.etag;
+    if (options && options.force === true) {
+      ifMatch = '*';
+    }
+    return this.sendServerPutRequest(template, ifMatch)
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public rollbackServerConfigTemplate(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/namespaces/firebase-server/remoteConfig:rollback`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public listServerConfigVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    if (typeof options !== 'undefined') {
+      options = this.validateListVersionsOptions(options);
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/namespaces/firebase-server/remoteConfig:listVersions`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: options
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return resp.data;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  private sendServerPutRequest(
+    template: RemoteConfigTemplate,
+    etag: string,
+    validateOnly?: boolean
+  ): Promise<RequestResponse> {
+    let path = 'namespaces/firebase-server/remoteConfig';
+    if (validateOnly) {
+      path += '?validate_only=true';
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'PUT',
+          url: `${url}/${path}`,
+          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': etag },
+          data: {
+            conditions: template.conditions,
+            parameters: template.parameters,
+            parameterGroups: template.parameterGroups,
+            version: template.version,
+          }
+        };
+        return this.httpClient.send(request);
+      });
+  }
+
   private sendPutRequest(
     template: RemoteConfigTemplate,
     etag: string,
