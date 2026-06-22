@@ -148,6 +148,9 @@ export class RemoteConfigApiClient {
     template = this.validateInputRemoteConfigTemplate(template);
     return this.sendServerPutRequest(template, template.etag, true)
       .then((resp) => {
+        // validating a template returns an etag with the suffix -0 means that your update
+        // was successfully validated. We set the etag back to the original etag of the template
+        // to allow future operations.
         this.validateEtag(resp.headers['etag']);
         return this.toRemoteConfigTemplate(resp, template.etag);
       })
@@ -163,6 +166,8 @@ export class RemoteConfigApiClient {
     template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force === true) {
+      // setting `If-Match: *` forces the Remote Config template to be updated
+      // and circumvent the ETag, and the protection from that it provides.
       ifMatch = '*';
     }
     return this.sendServerPutRequest(template, ifMatch)
