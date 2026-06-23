@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,7 +185,7 @@ describe('firebase-admin/app', () => {
 
   describe('SDK_VERSION', () => {
     it('should indicate the current version of the SDK', () => {
-      const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const { version } = require('../../../package.json');
       expect(SDK_VERSION).to.equal(version);
     });
   });

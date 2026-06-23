@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,8 +56,7 @@ describe('CryptoSigner', () => {
       const payload = Buffer.from('test');
       const cert = new ServiceAccountCredential(mocks.certificateObject);
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const crypto = require('crypto');
+      const crypto = require('node:crypto');
       const rsa = crypto.createSign('RSA-SHA256');
       rsa.update(payload);
       const result = rsa.sign(cert.privateKey, 'base64');
@@ -104,8 +103,8 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/foo@project_id.iam.gserviceaccount.com:signBlob',
-        headers: { 
-          Authorization: `Bearer ${mockAccessToken}`, 
+        headers: {
+          Authorization: `Bearer ${mockAccessToken}`,
           'X-Goog-Api-Client': getMetricsHeader()
         },
         data: { payload: input.toString('base64') },
@@ -162,7 +161,7 @@ describe('CryptoSigner', () => {
       const signRequest = {
         method: 'POST',
         url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
-        headers: { 
+        headers: {
           Authorization: `Bearer ${mockAccessToken}`,
           'X-Goog-Api-Client': getMetricsHeader()
         },

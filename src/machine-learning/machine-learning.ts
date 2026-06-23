@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 import { App } from '../app';
 import { getStorage } from '../storage/index';
-import { FirebaseError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
@@ -24,7 +23,7 @@ import {
   MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions,
   ListModelsOptions, ModelOptions,
 } from './machine-learning-api-client';
-import { FirebaseMachineLearningError } from './machine-learning-utils';
+import { FirebaseMachineLearningError } from './error';
 
 /** Response object for a listModels operation. */
 export interface ListModelsResult {
@@ -64,8 +63,8 @@ export class MachineLearning {
    */
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseError({
-        code: 'machine-learning/invalid-argument',
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
         message: 'First argument passed to admin.machineLearning() must be a ' +
             'valid Firebase app instance.',
       });
@@ -163,9 +162,10 @@ export class MachineLearning {
     return this.client.listModels(options)
       .then((resp) => {
         if (!validator.isNonNullObject(resp)) {
-          throw new FirebaseMachineLearningError(
-            'invalid-argument',
-            `Invalid ListModels response: ${JSON.stringify(resp)}`);
+          throw new FirebaseMachineLearningError({
+            code: 'invalid-argument',
+            message: `Invalid ListModels response: ${JSON.stringify(resp)}`
+          });
         }
         let models: Model[] = [];
         if (resp.models) {
@@ -205,9 +205,11 @@ export class MachineLearning {
           return modelOptions;
         })
         .catch((err: Error) => {
-          throw new FirebaseMachineLearningError(
-            'internal-error',
-            `Error during signing upload url: ${err.message}`);
+          throw new FirebaseMachineLearningError({
+            code: 'internal-error',
+            message: `Error during signing upload url: ${err.message}`,
+            cause: err,
+          });
         });
     }
     return Promise.resolve(modelOptions);
@@ -220,9 +222,10 @@ export class MachineLearning {
     const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
     const matches = gcsRegex.exec(unsignedUrl);
     if (!matches) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument',
-        `Invalid unsigned url: ${unsignedUrl}`);
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-argument',
+        message: `Invalid unsigned url: ${unsignedUrl}`
+      });
     }
     const bucketName = matches[1];
     const blobName = matches[2];
@@ -384,9 +387,10 @@ export class Model {
     !validator.isNonEmptyString(model.updateTime) ||
     !validator.isNonEmptyString(model.displayName) ||
     !validator.isNonEmptyString(model.etag)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-server-response',
-        `Invalid Model response: ${JSON.stringify(model)}`);
+      throw new FirebaseMachineLearningError({
+        code: 'invalid-server-response',
+        message: `Invalid Model response: ${JSON.stringify(model)}`
+      });
     }
     const tmpModel = deepCopy(model);
 

@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,15 @@
  * limitations under the License.
  */
 
-import { FirebaseFirestoreError } from '../utils/error';
+import { FirebaseFirestoreError } from './error';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Firestore, Settings } from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
 import { App } from '../app';
+
+export const DEFAULT_DATABASE_ID = '(default)';
 
 /**
  * Settings to pass to the Firestore constructor.
@@ -112,7 +114,6 @@ export function getFirestoreOptions(app: App, firestoreSettings?: FirestoreSetti
 
   const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const sdkVersion = utils.getSdkVersion();
   const preferRest = firestoreSettings?.preferRest;
   if (credential instanceof ServiceAccountCredential) {
@@ -165,8 +166,8 @@ function initFirestore(app: App, databaseId: string, firestoreSettings?: Firesto
     throw new FirebaseFirestoreError({
       code: 'missing-dependencies',
       message: 'Failed to import the Cloud Firestore client library for Node.js. '
-        + 'Make sure to install the "@google-cloud/firestore" npm package. '
-        + `Original error: ${err}`,
+        + 'Make sure to install the "@google-cloud/firestore" npm package.',
+      cause: err as Error,
     });
   }
 

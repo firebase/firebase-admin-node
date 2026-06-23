@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { Bucket, File } from '@google-cloud/storage';
 import { projectId } from './setup';
 import { getDownloadURL, getStorage } from '../../lib/storage/index';
 import { getFirebaseMetadata } from '../../src/storage/utils';
-import { FirebaseError } from '../../src/utils/error';
+import { FirebaseStorageError } from '../../src/storage/error';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -58,8 +58,8 @@ describe('admin.storage', () => {
     );
     if (!metadata.downloadTokens) {
       expect(getDownloadURL(currentRef)).to.eventually.throw(
-        new FirebaseError({
-          code: 'storage/invalid-argument',
+        new FirebaseStorageError({
+          code: 'invalid-argument',
           message:
             'Bucket name not specified or invalid. Specify a valid bucket name via the ' +
             'storageBucket option when initializing the app, or specify the bucket name ' +

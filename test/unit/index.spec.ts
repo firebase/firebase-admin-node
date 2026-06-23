@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
  */
 
 // General
-import './firebase.spec';
 import './app/credential-internal.spec';
 import './app/index.spec';
 import './app/firebase-app.spec';
-import './app/firebase-namespace.spec';
 
 // Utilities
 import './utils/index.spec';
@@ -68,18 +66,6 @@ import './firestore/index.spec';
 import './installations/installations.spec';
 import './installations/installations-request-handler.spec';
 
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
-// InstanceId
-import './instance-id/index.spec';
-import './instance-id/instance-id.spec';
-
 // ProjectManagement
 import './project-management/index.spec';
 import './project-management/project-management.spec';
@@ -117,3 +103,16 @@ import './functions/functions-api-client-internal.spec';
 // Extensions
 import './extensions/extensions.spec';
 import './extensions/extensions-api-client-internal.spec';
+
+// Data Connect
+import './data-connect/index.spec';
+import './data-connect/data-connect-api-client-internal.spec';
+import './data-connect/data-connect.spec';
+import './data-connect/validate-admin-args.spec';
+
+// Phone Number Verification
+import './phone-number-verification/index.spec';
+import './phone-number-verification/phone-number-verification-api-client-internal.spec';
+import './phone-number-verification/phone-number-verification.spec';
+import './phone-number-verification/token-verifier.spec'
+

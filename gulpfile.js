@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declarati
 
 // Include dom libraries during test compilation since we use some web SDK
 // libraries in our tests.
-var buildTest = ts.createProject('tsconfig.json', { lib: ['es2018', 'dom'] });
+var buildTest = ts.createProject('tsconfig.json', { lib: ['es2021', 'dom'] });
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
@@ -105,14 +105,7 @@ gulp.task('compile_test', function() {
     .pipe(buildTest())
 });
 
-gulp.task('copyTypings', function() {
-  return gulp.src(['src/index.d.ts', 'src/default-namespace.d.ts'])
-    // Add header
-    .pipe(header(banner))
-    .pipe(gulp.dest(paths.build))
-});
-
-gulp.task('compile_all', gulp.series('compile', 'copyTypings', 'compile_test'));
+gulp.task('compile_all', gulp.series('compile', 'compile_test'));
 
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
@@ -120,7 +113,7 @@ gulp.task('watch', function() {
 });
 
 // Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyTypings'));
+gulp.task('build', gulp.series('cleanup', 'compile'));
 
 // Default task
 gulp.task('default', gulp.series('build'));

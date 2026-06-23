@@ -48,6 +48,35 @@ export type DefaultConfig = {
 export type EvaluationContext = UserProvidedSignals & PredefinedSignals;
 
 // @public
+export interface ExperimentParameterValue {
+    experimentValue: ExperimentValue;
+}
+
+// @public
+export interface ExperimentValue {
+    experimentId: string;
+    exposurePercent?: number;
+    variantValue: ExperimentVariantValue[];
+}
+
+// @public
+export interface ExperimentVariantExplicitValue {
+    noChange?: never;
+    value: string;
+    variantId: string;
+}
+
+// @public
+export interface ExperimentVariantNoChange {
+    noChange: true;
+    value?: never;
+    variantId: string;
+}
+
+// @public
+export type ExperimentVariantValue = ExperimentVariantExplicitValue | ExperimentVariantNoChange;
+
+// @public
 export interface ExplicitParameterValue {
     value: string;
 }
@@ -59,6 +88,14 @@ export interface FetchResponseData {
     };
     eTag?: string;
     status: number;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseRemoteConfigError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
@@ -143,6 +180,16 @@ export enum PercentConditionOperator {
 }
 
 // @public
+export interface PersonalizationParameterValue {
+    personalizationValue: PersonalizationValue;
+}
+
+// @public
+export interface PersonalizationValue {
+    personalizationId: string;
+}
+
+// @public
 export type PredefinedSignals = {
     randomizationId?: string;
 };
@@ -172,6 +219,24 @@ export interface RemoteConfigCondition {
 }
 
 // @public
+export const RemoteConfigErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly NOT_FOUND: "not-found";
+    readonly OUT_OF_RANGE: "out-of-range";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly UNKNOWN_ERROR: "unknown-error";
+};
+
+// @public
+export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
+
+// @public
 export class RemoteConfigFetchResponse {
     constructor(app: App, serverConfig: ServerConfig, requestEtag?: string);
     // (undocumented)
@@ -197,7 +262,7 @@ export interface RemoteConfigParameterGroup {
 }
 
 // @public
-export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue | RolloutParameterValue | PersonalizationParameterValue | ExperimentParameterValue;
 
 // @public
 export interface RemoteConfigTemplate {
@@ -217,6 +282,18 @@ export interface RemoteConfigUser {
     email: string;
     imageUrl?: string;
     name?: string;
+}
+
+// @public
+export interface RolloutParameterValue {
+    rolloutValue: RolloutValue;
+}
+
+// @public
+export interface RolloutValue {
+    percent: number;
+    rolloutId: string;
+    value: string;
 }
 
 // @public

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const core = require('@actions/core');
-const formData = require('form-data');
-const Mailgun = require('mailgun.js');
+import * as core from '@actions/core';
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
 
 const mailgun = new Mailgun(formData);
 const optionalFields = ['cc', 'text', 'html'];
@@ -35,7 +35,7 @@ function loadConfig() {
 }
 
 function validate(config) {
-  for (param in config) {
+  for (const param of Object.keys(config)) {
     if (optionalFields.includes(param)) {
       continue;
     }

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { clone } from 'lodash';
-import * as admin from '../../lib/index';
+import { getApp } from '../../lib/app/index';
 import {
   DocumentReference, DocumentSnapshot, FieldValue, Firestore, FirestoreDataConverter,
   QueryDocumentSnapshot, Timestamp, getFirestore, initializeFirestore, setLogFunction,
@@ -48,18 +48,7 @@ describe('admin.firestore', () => {
   });
 
   it('initializeFirestore returns a Firestore client', () => {
-    const firestore: Firestore = initializeFirestore(admin.app());
-    expect(firestore).to.not.be.undefined;
-  });
-
-  it('admin.firestore() returns a Firestore client', () => {
-    const firestore: admin.firestore.Firestore = admin.firestore();
-    expect(firestore).to.not.be.undefined;
-    expect(firestore).to.equal(getFirestore());
-  });
-
-  it('app.firestore() returns a Firestore client', () => {
-    const firestore: admin.firestore.Firestore = admin.app().firestore();
+    const firestore: Firestore = initializeFirestore(getApp());
     expect(firestore).to.not.be.undefined;
   });
 
@@ -96,44 +85,6 @@ describe('admin.firestore', () => {
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
-  });
-
-  it('admin.firestore.CollectionReference type is defined', () => {
-    expect(typeof admin.firestore.CollectionReference).to.be.not.undefined;
-  });
-
-  it('admin.firestore.FieldPath type is defined', () => {
-    expect(typeof admin.firestore.FieldPath).to.be.not.undefined;
-  });
-
-  it('admin.firestore.FieldValue type is defined', () => {
-    expect(typeof admin.firestore.FieldValue).to.be.not.undefined;
-  });
-
-  it('admin.firestore.Filter type is defined', () => {
-    expect(typeof admin.firestore.Filter).to.be.not.undefined;
-  });
-
-  it('admin.firestore.GeoPoint type is defined', () => {
-    expect(typeof admin.firestore.GeoPoint).to.be.not.undefined;
-  });
-
-  it('admin.firestore.Timestamp type is defined', () => {
-    const now = admin.firestore.Timestamp.now();
-    expect(typeof now.seconds).to.equal('number');
-    expect(typeof now.nanoseconds).to.equal('number');
-  });
-
-  it('admin.firestore.WriteBatch type is defined', () => {
-    expect(typeof admin.firestore.WriteBatch).to.be.not.undefined;
-  });
-
-  it('admin.firestore.WriteResult type is defined', () => {
-    expect(typeof admin.firestore.WriteResult).to.be.not.undefined;
-  });
-
-  it('admin.firestore.GrpcStatus type is defined', () => {
-    expect(typeof admin.firestore.GrpcStatus).to.be.not.undefined;
   });
 
   it('supports operations with custom type converters', () => {

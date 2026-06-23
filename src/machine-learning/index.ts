@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,3 +71,5 @@ export function getMachineLearning(app?: App): MachineLearning {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('machineLearning', (app) => new MachineLearning(app));
 }
+
+export { FirebaseMachineLearningError, MachineLearningErrorCode } from './error';

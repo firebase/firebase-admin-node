@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import {
   CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner
 } from '../../../src/utils/crypto-signer';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
-import { FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
+import { FirebaseAppCheckError } from '../../../src/app-check/error';
 import * as utils from '../utils';
 
 chai.should();
@@ -335,8 +335,7 @@ describe('AppCheckTokenGenerator', () => {
         expect(appCheckError).to.be.an.instanceof(FirebaseAppCheckError);
         expect(appCheckError).to.have.property('code', 'app-check/unknown-error');
         expect(appCheckError).to.have.property('message',
-          'Error returned from server while signing a custom token: '+
-          '{"status":500,"headers":{},"data":{"error":{}},"text":"{\\"error\\":{}}"}');
+          'Error returned from server while signing a custom token: Unknown server error');
       });
 
       it('should convert CryptoSignerError HttpError with no errorcode to FirebaseAppCheckError', () => {
@@ -349,7 +348,7 @@ describe('AppCheckTokenGenerator', () => {
         expect(appCheckError).to.be.an.instanceof(FirebaseAppCheckError);
         expect(appCheckError).to.have.property('code', 'app-check/internal-error');
         expect(appCheckError).to.have.property('message',
-          'Error returned from server: null.');
+          'Error returned from server.');
       });
     });
   });

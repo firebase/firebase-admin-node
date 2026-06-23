@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2022 Google Inc.
+ * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,3 +63,5 @@ export function getEventarc(app?: App): Eventarc {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('eventarc', (app) => new Eventarc(app));
 }
+
+export { FirebaseEventarcError, EventarcErrorCode } from './error';

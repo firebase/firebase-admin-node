@@ -1,5 +1,5 @@
 /*!
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,4 +62,7 @@ export function getInstallations(app?: App): Installations {
   return firebaseApp.getOrInitService('installations', (app) => new Installations(app));
 }
 
-export { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
+export {
+  FirebaseInstallationsError,
+  InstallationsErrorCode,
+} from './error';

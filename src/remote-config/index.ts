@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,15 @@ export {
   PredefinedSignals,
   RemoteConfigCondition,
   RemoteConfigParameter,
+  ExperimentParameterValue,
+  ExperimentValue,
+  ExperimentVariantExplicitValue,
+  ExperimentVariantNoChange,
+  ExperimentVariantValue,
+  PersonalizationParameterValue,
+  PersonalizationValue,
+  RolloutParameterValue,
+  RolloutValue,
   RemoteConfigParameterGroup,
   RemoteConfigParameterValue,
   RemoteConfigTemplate,
@@ -97,3 +106,5 @@ export function getRemoteConfig(app?: App): RemoteConfig {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('remoteConfig', (app) => new RemoteConfig(app));
 }
+
+export { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './error';

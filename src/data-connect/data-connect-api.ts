@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2024 Google Inc.
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,15 @@ export interface ConnectorConfig {
    * Service ID of the Data Connect service.
    */
   serviceId: string;
+
+  /**
+   * Name of the Data Connect connector.
+   */
+  connector?: string;
 }
 
 /**
- * Interface representing GraphQL response.
+ * Interface representing ExecuteGraphQL response.
  */
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
   /**
@@ -43,7 +48,17 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 }
 
 /**
- * Interface representing GraphQL options.
+ * Interface representing ExecuteOperation response.
+ */
+export interface ExecuteOperationResponse<GraphqlResponse> {
+  /**
+   * Data payload of the GraphQL response.
+   */
+  data: GraphqlResponse;
+}
+
+/**
+ * Interface representing GraphQL options for executing arbitrary GraphQL operations.
  */
 export interface GraphqlOptions<Variables> {
   /**
@@ -52,10 +67,23 @@ export interface GraphqlOptions<Variables> {
   variables?: Variables;
 
   /**
-   * The name of the GraphQL operation. Required only if `query` contains multiple operations.
+   * The name of the GraphQL operation.
+   * Required for operations that interact with services, such as executeGraphql, if 
+   * `query` contains multiple operations.
    */
   operationName?: string;
 
+  /**
+   * If set, impersonate a request with given Firebase Auth context and evaluate the auth
+   * policies on the operation. If omitted, bypass any defined auth policies.
+   */
+  impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
+}
+
+/**
+ * Interface representing options for executing defined operations.
+ */
+export interface OperationOptions {
   /**
    * If set, impersonate a request with given Firebase Auth context and evaluate the auth
    * policies on the operation. If omitted, bypass any defined auth policies.

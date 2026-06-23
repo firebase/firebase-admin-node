@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { UserRefreshClient } from 'google-auth-library';
 
 import * as mocks from '../../resources/mocks';
 
@@ -37,6 +38,7 @@ import {
   getApplicationDefault, isApplicationDefault, ImpersonatedServiceAccountCredential, ApplicationDefaultCredential
 } from '../../../src/app/credential-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import { FirebaseAppError } from '../../../src/app/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -67,11 +69,16 @@ describe('Credential', () => {
 
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
-    oldProcessEnv = process.env;
+    oldProcessEnv = { ...process.env };
   });
 
   afterEach(() => {
-    process.env = oldProcessEnv;
+    for (const key of Object.keys(process.env)) {
+      if (!(key in oldProcessEnv)) {
+        delete process.env[key];
+      }
+    }
+    Object.assign(process.env, oldProcessEnv);
   });
 
   describe('ServiceAccountCredential', () => {
@@ -84,19 +91,37 @@ describe('Credential', () => {
     });
 
     it('should throw if called with the path to a non-existent file', () => {
-      expect(() => new ServiceAccountCredential('invalid-file'))
-        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+      try {
+        new ServiceAccountCredential('invalid-file');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.have.property('code', 'ENOENT');
+      }
     });
 
     it('should throw if called with the path to an invalid file', () => {
       const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
-      expect(() => new ServiceAccountCredential(invalidPath))
-        .to.throw('Failed to parse service account json file: SyntaxError');
+      try {
+        new ServiceAccountCredential(invalidPath);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.be.instanceOf(SyntaxError);
+      }
     });
 
     it('should throw if called with an empty string path', () => {
-      expect(() => new ServiceAccountCredential(''))
-        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+      try {
+        new ServiceAccountCredential('');
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseAppError);
+        expect(err.message).to.match(/^Failed to parse service account json file: /);
+        expect(err.cause).to.have.property('code', 'ENOENT');
+      }
     });
 
     it('should throw given an object without a "project_id" property', () => {
@@ -291,7 +316,7 @@ describe('Credential', () => {
       expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
     });
 
-    it('should return a RefreshTokenCredential with gcloud login', () => {
+    it('should return a RefreshTokenCredential with gcloud login', async () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
         console.log(
@@ -300,7 +325,12 @@ describe('Credential', () => {
         return;
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      expect((getApplicationDefault())).to.be.an.instanceof(RefreshTokenCredential);
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
+
+      process.env.GOOGLE_CLOUD_PROJECT = 'mock-project';
+      const client = await (c as any).googleAuth.getClient();
+      expect(client).to.be.an.instanceof(UserRefreshClient);
     });
 
     it('should return a MetadataServiceCredential as a last resort', () => {
@@ -326,7 +356,7 @@ describe('Credential', () => {
       expect(isApplicationDefault(c)).to.be.true;
     });
 
-    it('should return true for credential loaded from gcloud SDK', () => {
+    it('should return true for credential loaded from gcloud SDK', async () => {
       if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
         // tslint:disable-next-line:no-console
         console.log(
@@ -336,7 +366,12 @@ describe('Credential', () => {
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       const c = getApplicationDefault();
-      expect(c).to.be.an.instanceof(RefreshTokenCredential);
+      expect(c).to.be.an.instanceof(ApplicationDefaultCredential);
+
+      process.env.GOOGLE_CLOUD_PROJECT = 'mock-project';
+      const client = await (c as any).googleAuth.getClient();
+      expect(client).to.be.an.instanceof(UserRefreshClient);
+
       expect(isApplicationDefault(c)).to.be.true;
     });
 

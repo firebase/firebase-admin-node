@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,12 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   Message,
   MessagingTopicManagementResponse, BatchResponse,
-  SendResponse, MulticastMessage, Messaging, TokenMessage, TopicMessage, ConditionMessage,
+  SendResponse, MulticastMessage, FidMulticastMessage, Messaging,
+  TokenMessage, TopicMessage, ConditionMessage, FidMessage,
 } from '../../../src/messaging/index';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 import * as utils from '../utils';
-import { FirebaseMessagingSessionError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -82,10 +82,10 @@ function mockSendRequest(messageId = 'projects/projec_id/messages/message_id'): 
 function mockHttp2SendRequestResponse(messageId = 'projects/projec_id/messages/message_id'): mocks.MockHttp2Response {
   return {
     headers: {
-      ':status': 200, 
+      ':status': 200,
     },
     data: Buffer.from(JSON.stringify({ name: `${messageId}` })),
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockSendError(
@@ -119,14 +119,14 @@ function mockHttp2SendRequestError(
       'content-type': contentType
     },
     data: Buffer.from(response)
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
-function mockHttp2Error(streamError?: any, sessionError?:any): mocks.MockHttp2Response {
+function mockHttp2Error(streamError?: any, sessionError?: any): mocks.MockHttp2Response {
   return {
     streamError: streamError,
     sessionError: sessionError
-  } as mocks.MockHttp2Response
+  } as mocks.MockHttp2Response;
 }
 
 function mockErrorResponse(
@@ -212,14 +212,14 @@ describe('Messaging', () => {
   let messaging: Messaging;
   let legacyMessaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
-  let mockedHttp2Responses: mocks.MockHttp2Response[] = []
+  let mockedHttp2Responses: mocks.MockHttp2Response[] = [];
   const http2Mocker: mocks.Http2Mocker = new mocks.Http2Mocker();
   let httpsRequestStub: sinon.SinonStub;
   let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
-  let messagingService: { [key: string]: any };
-  let nullAccessTokenMessagingService: { [key: string]: any };
+  let messagingService: { [key: string]: any; };
+  let nullAccessTokenMessagingService: { [key: string]: any; };
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
@@ -251,7 +251,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-    http2Mocker.done()
+    http2Mocker.done();
     mockedHttp2Responses = [];
     getTokenStub.restore();
     return mockApp.delete();
@@ -317,13 +317,17 @@ describe('Messaging', () => {
     });
 
     const noTarget = [
-      {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' },
+      {},
+      { token: null }, { token: '' },
+      { topic: null }, { topic: '' },
+      { condition: null }, { condition: '' },
+      { fid: null }, { fid: '' },
     ];
     noTarget.forEach((message) => {
       it(`should throw given message without target: ${JSON.stringify(message)}`, () => {
         expect(() => {
           messaging.send(message as any);
-        }).to.throw('Exactly one of topic, token or condition is required');
+        }).to.throw('Exactly one of fid, topic, token or condition is required');
       });
     });
 
@@ -332,12 +336,16 @@ describe('Messaging', () => {
       { token: 'a', condition: 'b' },
       { condition: 'a', topic: 'b' },
       { token: 'a', topic: 'b', condition: 'c' },
+      { fid: 'a', token: 'b' },
+      { fid: 'a', topic: 'b' },
+      { fid: 'a', condition: 'b' },
+      { fid: 'a', token: 'b', topic: 'c', condition: 'd' },
     ];
     multipleTargets.forEach((message) => {
       it(`should throw given message without target: ${JSON.stringify(message)}`, () => {
         expect(() => {
           messaging.send(message as any);
-        }).to.throw('Exactly one of topic, token or condition is required');
+        }).to.throw('Exactly one of fid, topic, token or condition is required');
       });
     });
 
@@ -362,6 +370,7 @@ describe('Messaging', () => {
     const targetMessages = [
       { token: 'mock-token' }, { topic: 'mock-topic' },
       { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
+      { fid: 'mock-fid' },
     ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
@@ -413,6 +422,26 @@ describe('Messaging', () => {
         { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
+    it('should fail when the backend server returns a detailed error for a FID target', () => {
+      const resp = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      };
+      mockedRequests.push(mockSendError(404, 'json', resp));
+      return messaging.send(
+        { fid: 'mock-fid' },
+      ).should.eventually.be.rejectedWith('test error message')
+        .and.have.property('code', 'messaging/installation-id-not-registered');
     });
 
     ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
@@ -511,7 +540,7 @@ describe('Messaging', () => {
     it('should reject when a message is invalid', () => {
       const invalidMessage: Message = {} as any;
       messaging.sendEach([validMessage, invalidMessage])
-        .should.eventually.be.rejectedWith('Exactly one of topic, token or condition is required');
+        .should.eventually.be.rejectedWith('Exactly one of fid, topic, token or condition is required');
     });
 
     it('should reject a message when it does not pass local validation, but still try the other messages', () => {
@@ -519,7 +548,7 @@ describe('Messaging', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([invalidMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -542,7 +571,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage])
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -561,7 +590,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       const message = {
         token: 'a',
         android: {
@@ -595,7 +624,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
@@ -620,8 +649,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(400, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -637,7 +666,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
+      'returns null access tokens', () => {
       return nullAccessTokenMessaging.sendEach(
         [validMessage, validMessage],
       ).then((response: BatchResponse) => {
@@ -665,8 +694,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(error => mockedRequests.push(mockSendError(404, 'json', error)));
       return legacyMessaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -707,17 +736,19 @@ describe('Messaging', () => {
         'projects/projec_id/messages/1',
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
+        'projects/projec_id/messages/4',
       ];
       const tokenMessage: TokenMessage = { token: 'test' };
       const topicMessage: TopicMessage = { topic: 'test' };
       const conditionMessage: ConditionMessage = { condition: 'test' };
-      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
+      const fidMessage: FidMessage = { fid: 'test' };
+      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage, fidMessage];
 
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
 
       return legacyMessaging.sendEach(messages)
         .then((response: BatchResponse) => {
-          expect(response.successCount).to.equal(3);
+          expect(response.successCount).to.equal(4);
           expect(response.failureCount).to.equal(0);
           response.responses.forEach((resp, idx) => {
             expect(resp.success).to.be.true;
@@ -734,8 +765,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], false)
         .then((response: BatchResponse) => {
@@ -756,8 +787,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       const message = {
         token: 'a',
@@ -794,8 +825,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -823,9 +854,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -843,7 +874,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
+      'returns null access tokens using HTTP/2', () => {
       return nullAccessTokenMessaging.sendEach(
         [validMessage, validMessage], false).then((response: BatchResponse) => {
         expect(response.failureCount).to.equal(2);
@@ -871,9 +902,9 @@ describe('Messaging', () => {
         },
       ];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach([validMessage, validMessage], true)
         .then((response: BatchResponse) => {
@@ -899,7 +930,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage, validMessage], false
@@ -913,29 +944,74 @@ describe('Messaging', () => {
       });
     });
 
-    it('should throw error with BatchResponse promise on session error event using HTTP/2', () => {
-      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'))
-      const sessionError = 'MOCK_SESSION_ERROR'
+    it('should be fulfilled with a BatchResponse containing session errors when session fails using HTTP/2', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/messages/1'));
+      const sessionError = 'MOCK_SESSION_ERROR';
       mockedHttp2Responses.push(mockHttp2Error(
         new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
         new Error(sessionError)
       ));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(
         [validMessage, validMessage], true
-      ).catch(async (error: FirebaseMessagingSessionError) => {
-        expect(error.code).to.equal('messaging/app/network-error');
-        expect(error.pendingBatchResponse).to.not.be.undefined;
-        await error.pendingBatchResponse?.then((response: BatchResponse) => {
-          expect(http2Mocker.requests.length).to.equal(2);
-          expect(response.failureCount).to.equal(1);
-          const responses = response.responses;
-          checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
-          checkSendResponseFailure(responses[1], 'app/network-error');
-        })
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        const responses = response.responses;
+        checkSendResponseSuccess(responses[0], 'projects/projec_id/messages/1');
+        checkSendResponseFailure(
+          responses[1],
+          'messaging/unknown-error',
+          sessionError
+        );
+        expect(responses[1].error!.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
+        expect(responses[1].error!.cause!.constructor.name).to.equal('AggregateError');
+        const cause = responses[1].error!.cause as any;
+        expect(cause.errors).to.be.an.instanceOf(Array);
+        expect(cause.errors.length).to.equal(2);
+        expect(cause.errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect(cause.errors[1].message).to.contain(sessionError);
       });
-    })
+    });
+
+    it('should be fulfilled with a BatchResponse containing AggregateError when multiple session errors occur' +
+      ' using HTTP/2', () => {
+      const sessionError1 = 'MOCK_SESSION_ERROR_1';
+      const sessionError2 = 'MOCK_SESSION_ERROR_2';
+
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_1'),
+        new Error(sessionError1)
+      ));
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_2'),
+        new Error(sessionError2)
+      ));
+
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messaging.sendEach(
+        [validMessage, validMessage], true
+      ).then((response: BatchResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.failureCount).to.equal(2);
+
+        const failure = response.responses[0];
+        expect(failure.success).to.be.false;
+        expect(failure.error!.code).to.equal('messaging/unknown-error');
+
+        const cause = failure.error!.cause;
+        expect(cause).to.not.be.undefined;
+        expect(cause!.constructor.name).to.equal('AggregateError');
+        expect((cause as any).errors).to.be.an.instanceOf(Array);
+        expect((cause as any).errors.length).to.equal(3);
+        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect((cause as any).errors[1].message).to.contain(sessionError1);
+        expect((cause as any).errors[2].message).to.contain(sessionError2);
+      });
+    });
 
     // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types using HTTP/2', () => {
@@ -949,11 +1025,11 @@ describe('Messaging', () => {
       const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
 
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messaging.sendEach(messages, false)
-        .then ((response: BatchResponse) => {
+        .then((response: BatchResponse) => {
           expect(http2Mocker.requests.length).to.equal(3);
           expect(response.successCount).to.equal(3);
           expect(response.failureCount).to.equal(0);
@@ -1001,26 +1077,55 @@ describe('Messaging', () => {
       stub = null;
     });
 
-    it('should throw given no messages', () => {
+    it('should throw given invalid multicast messages or missing required properties', () => {
       expect(() => {
         messaging.sendEachForMulticast(undefined as any);
       }).to.throw('MulticastMessage must be a non-null object');
       expect(() => {
         messaging.sendEachForMulticast({} as any);
-      }).to.throw('tokens must be a non-empty array');
+      }).to.throw('Either tokens or fids must be a non-empty array');
       expect(() => {
-        messaging.sendEachForMulticast({ tokens: [] });
-      }).to.throw('tokens must be a non-empty array');
+        messaging.sendEachForMulticast({ fids: [] } as any);
+      }).to.throw('Either tokens or fids must be a non-empty array');
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: 'invalid' as any });
+      }).to.throw('tokens must be a valid array');
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: [], fids: 'invalid' as any });
+      }).to.throw('fids must be a valid array');
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: [], fids: [] });
+      }).to.throw('Either tokens or fids must be a non-empty array');
     });
 
-    it('should throw when called with more than 500 messages', () => {
+    it('should throw when called with more than 500 messages in total', () => {
       const tokens: string[] = [];
       for (let i = 0; i < 501; i++) {
         tokens.push(`token${i}`);
       }
       expect(() => {
         messaging.sendEachForMulticast({ tokens });
-      }).to.throw('tokens list must not contain more than 500 items');
+      }).to.throw('The total number of tokens and fids must not exceed 500.');
+
+      const fids: string[] = [];
+      for (let i = 0; i < 501; i++) {
+        fids.push(`fid${i}`);
+      }
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: [], fids });
+      }).to.throw('The total number of tokens and fids must not exceed 500.');
+
+      const mixedTokens: string[] = [];
+      const mixedFids: string[] = [];
+      for (let i = 0; i < 250; i++) {
+        mixedTokens.push(`token${i}`);
+      }
+      for (let i = 0; i < 251; i++) {
+        mixedFids.push(`fid${i}`);
+      }
+      expect(() => {
+        messaging.sendEachForMulticast({ tokens: mixedTokens, fids: mixedFids });
+      }).to.throw('The total number of tokens and fids must not exceed 500.');
     });
 
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -1099,13 +1204,139 @@ describe('Messaging', () => {
         });
     });
 
+    it('should create multiple messages using fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const fids = ['f1', 'f2', 'f3'];
+      const multicast: FidMulticastMessage = {
+        fids,
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
+      };
+      return messaging.sendEachForMulticast(multicast)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(3);
+          expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
+          messages.forEach((message, idx) => {
+            expect((message as FidMessage).fid).to.equal(fids[idx]);
+            expect(message.android).to.deep.equal(multicast.android);
+            expect(message.apns).to.be.deep.equal(multicast.apns);
+            expect(message.data).to.be.deep.equal(multicast.data);
+            expect(message.notification).to.deep.equal(multicast.notification);
+            expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
+          });
+        });
+    });
+
+    it('should create multiple messages using only fids when tokens is omitted at runtime', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const fids = ['f1', 'f2', 'f3'];
+      const multicast = {
+        fids,
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
+      };
+      return messaging.sendEachForMulticast(multicast as any)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(3);
+          expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
+          messages.forEach((message, idx) => {
+            expect((message as FidMessage).fid).to.equal(fids[idx]);
+            expect(message.android).to.deep.equal(multicast.android);
+            expect(message.apns).to.be.deep.equal(multicast.apns);
+            expect(message.data).to.be.deep.equal(multicast.data);
+            expect(message.notification).to.deep.equal(multicast.notification);
+            expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
+          });
+        });
+    });
+
+    it('should handle explicitly undefined tokens or fids gracefully without throwing', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      return messaging.sendEachForMulticast({ fids: ['f1'], tokens: undefined } as any)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(1);
+          expect((messages[0] as FidMessage).fid).to.equal('f1');
+        });
+    });
+
+    it('should create multiple messages using mixed tokens and fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const tokens = ['t1', 't2'];
+      const fids = ['f1'];
+      const multicast: MulticastMessage = {
+        tokens,
+        fids,
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
+      };
+      return messaging.sendEachForMulticast(multicast)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          const messages: Message[] = stub!.args[0][0];
+          expect(messages.length).to.equal(3);
+          expect(stub!.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][2]).to.be.undefined;
+
+          expect((messages[0] as TokenMessage).token).to.equal('t1');
+          expect((messages[1] as TokenMessage).token).to.equal('t2');
+          expect((messages[2] as FidMessage).fid).to.equal('f1');
+
+          messages.forEach((message) => {
+            expect(message.android).to.deep.equal(multicast.android);
+            expect(message.apns).to.be.deep.equal(multicast.apns);
+            expect(message.data).to.be.deep.equal(multicast.data);
+            expect(message.notification).to.deep.equal(multicast.notification);
+            expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
+          });
+        });
+    });
+
+    it('should pass dryRun argument through when using fids', () => {
+      stub = sinon.stub(messaging, 'sendEach').resolves(mockResponse);
+      const fids = ['f1', 'f2', 'f3'];
+      return messaging.sendEachForMulticast({ fids }, true)
+        .then((response: BatchResponse) => {
+          expect(response).to.deep.equal(mockResponse);
+          expect(stub).to.have.been.calledOnce;
+          expect(stub!.args[0][1]).to.be.true;
+          expect(stub!.args[0][2]).to.be.undefined;
+        });
+    });
+
     it('should be fulfilled with a BatchResponse given valid message', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1130,7 +1361,7 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
       return legacyMessaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1161,8 +1392,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1178,7 +1409,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens', () => {
+      'returns null access tokens', () => {
       return nullAccessTokenMessaging.sendEachForMulticast(
         { tokens: ['a', 'a'] },
       ).then((response: BatchResponse) => {
@@ -1206,8 +1437,8 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)))
-      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)))
+      messageIds.forEach(id => mockedRequests.push(mockSendRequest(id)));
+      errors.forEach(err => mockedRequests.push(mockSendError(400, 'json', err)));
       return legacyMessaging.sendEachForMulticast({ tokens: ['a', 'b'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1248,8 +1479,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1274,8 +1505,8 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({
         tokens: ['a', 'b', 'c'],
         android: { ttl: 100 },
@@ -1306,9 +1537,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b', 'c'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
@@ -1324,7 +1555,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with a BatchResponse for all failures given an app which ' +
-       'returns null access tokens using HTTP/2', () => {
+      'returns null access tokens using HTTP/2', () => {
       return nullAccessTokenMessaging.sendEachForMulticast(
         { tokens: ['a', 'a'] }, false
       ).then((response: BatchResponse) => {
@@ -1352,9 +1583,9 @@ describe('Messaging', () => {
           },
         },
       ];
-      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)))
-      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)))
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      messageIds.forEach(id => mockedHttp2Responses.push(mockHttp2SendRequestResponse(id)));
+      errors.forEach(error => mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', error)));
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast({ tokens: ['a', 'b'] }, false)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
@@ -1378,7 +1609,7 @@ describe('Messaging', () => {
       mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', error));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'json', { error: 'test error message2' }));
       mockedHttp2Responses.push(mockHttp2SendRequestError(400, 'text', 'foo bar'));
-      http2Mocker.http2Stub(mockedHttp2Responses)
+      http2Mocker.http2Stub(mockedHttp2Responses);
       return messaging.sendEachForMulticast(
         { tokens: ['a', 'a', 'a'] }, false
       ).then((response: BatchResponse) => {
@@ -1409,7 +1640,7 @@ describe('Messaging', () => {
 
     const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
-      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+      it(`should throw given an invalid ttl: ${ttl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1424,7 +1655,7 @@ describe('Messaging', () => {
 
     const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1440,7 +1671,7 @@ describe('Messaging', () => {
     });
 
     invalidImages.forEach((imageUrl) => {
-      it(`should throw given an invalid imageUrl: ${ imageUrl }`, () => {
+      it(`should throw given an invalid imageUrl: ${imageUrl}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1486,7 +1717,7 @@ describe('Messaging', () => {
     const invalidVibrateTimings = [[null, 500], [-100]];
     invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
       const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
-      it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+      it(`should throw given an null or negative vibrateTimingsMillis: ${vibrateTimingsMillis}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1516,7 +1747,7 @@ describe('Messaging', () => {
     });
 
     invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
+      it(`should throw given an invalid color: ${color}`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
@@ -1725,6 +1956,21 @@ describe('Messaging', () => {
       });
     });
 
+    const invalidApnsLiveActivityTokens: any[] = [null, NaN, 0, 1, true, false];
+    invalidApnsLiveActivityTokens.forEach((arg) => {
+      it(`should throw given invalid apns live activity token: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({ apns: { liveActivityToken: arg }, topic: 'test' });
+        }).to.throw('apns.liveActivityToken must be a string value');
+      });
+    });
+
+    it('should throw given empty apns live activity token', () => {
+      expect(() => {
+        messaging.send({ apns: { liveActivityToken: '' }, topic: 'test' });
+      }).to.throw('apns.liveActivityToken must be a non-empty string');
+    });
+
     const invalidApnsPayloads: any[] = [null, '', 'payload', true, 1.23];
     invalidApnsPayloads.forEach((payload) => {
       it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
@@ -1884,6 +2130,8 @@ describe('Messaging', () => {
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
             directBootOk: true,
+            bandwidthConstrainedOk: true,
+            restrictedSatelliteOk: true,
             notification: {
               clickAction: 'test.click.action',
               titleLocKey: 'title.loc.key',
@@ -1912,6 +2160,8 @@ describe('Messaging', () => {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
             direct_boot_ok: true,
+            bandwidth_constrained_ok: true,
+            restricted_satellite_ok: true,
             notification: {
               click_action: 'test.click.action',
               title_loc_key: 'title.loc.key',
@@ -1968,6 +2218,8 @@ describe('Messaging', () => {
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
             directBootOk: true,
+            bandwidthConstrainedOk: true,
+            restrictedSatelliteOk: true,
             ttl: 5,
             data: {
               k1: 'v1',
@@ -2016,6 +2268,8 @@ describe('Messaging', () => {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
             direct_boot_ok: true,
+            bandwidth_constrained_ok: true,
+            restricted_satellite_ok: true,
             ttl: '0.005000000s', // 5 ms = 5,000,000 ns
             data: {
               k1: 'v1',
@@ -2388,6 +2642,155 @@ describe('Messaging', () => {
           },
         },
       },
+      {
+        label: 'APNS Start LiveActivity',
+        req: {
+          apns: {
+            liveActivityToken: 'live-activity-token',
+            headers: {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                event: 'start',
+                'content-state': {
+                  'demo': 1
+                },
+                'attributes-type': 'DemoAttributes',
+                'attributes': {
+                  'demoAttribute': 1,
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            live_activity_token: 'live-activity-token',
+            headers: {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                event: 'start',
+                'content-state': {
+                  'demo': 1
+                },
+                'attributes-type': 'DemoAttributes',
+                'attributes': {
+                  'demoAttribute': 1,
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS Update LiveActivity',
+        req: {
+          apns: {
+            liveActivityToken: 'live-activity-token',
+            headers: {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                event: 'update',
+                'content-state': {
+                  'test1': 100,
+                  'test2': 'demo'
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            live_activity_token: 'live-activity-token',
+            headers: {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                event: 'update',
+                'content-state': {
+                  'test1': 100,
+                  'test2': 'demo'
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS End LiveActivity',
+        req: {
+          apns: {
+            liveActivityToken: 'live-activity-token',
+            'headers': {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                'dismissal-date': 1746475860808 + 60,
+                event: 'end',
+                'content-state': {
+                  'test1': 100,
+                  'test2': 'demo'
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            live_activity_token: 'live-activity-token',
+            'headers': {
+              'apns-priority': '10'
+            },
+            payload: {
+              aps: {
+                timestamp: 1746475860808,
+                'dismissal-date': 1746475860808 + 60,
+                event: 'end',
+                'content-state': {
+                  'test1': 100,
+                  'test2': 'demo'
+                },
+                'alert': {
+                  'title': 'test title',
+                  'body': 'test body'
+                }
+              },
+            },
+          },
+        },
+      },
     ];
 
     validMessages.forEach((config) => {
@@ -2404,6 +2807,7 @@ describe('Messaging', () => {
           .then(() => {
             const expectedReq = config.expectedReq || config.req;
             expectedReq.token = 'mock-token';
+
             expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith({
               method: 'POST',
               data: { message: expectedReq },
@@ -2493,7 +2897,7 @@ describe('Messaging', () => {
 
     const invalidTopics = [null, NaN, 0, 1, true, false, [], ['a', 1], {}, { a: 1 }, _.noop];
     invalidTopics.forEach((invalidTopic) => {
-      it(`should throw given invalid type for topic argument: ${ JSON.stringify(invalidTopic) }`, () => {
+      it(`should throw given invalid type for topic argument: ${JSON.stringify(invalidTopic)}`, () => {
         expect(() => {
           messagingService[methodName](mocks.messaging.registrationToken, invalidTopic as string);
         }).to.throw(invalidTopicArgumentError);
@@ -2514,7 +2918,7 @@ describe('Messaging', () => {
 
     const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
     topicsWithInvalidCharacters.forEach((invalidTopic) => {
-      it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
+      it(`should be rejected given topic argument which has invalid characters: ${invalidTopic}`, () => {
         return messagingService[methodName](mocks.messaging.registrationToken, invalidTopic)
           .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
       });
@@ -2566,7 +2970,7 @@ describe('Messaging', () => {
     });
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
-      it(`should be rejected given a ${ statusCode } text server response`, () => {
+      it(`should be rejected given a ${statusCode} text server response`, () => {
         mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
         disableRetries(messaging);
 
@@ -2599,7 +3003,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid registration token and topic (topic name not prefixed ' +
-       'with "/topics/")', () => {
+      'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2609,7 +3013,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid registration token and topic (topic name prefixed ' +
-       'with "/topics/")', () => {
+      'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2619,7 +3023,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name not ' +
-       'prefixed with "/topics/")', () => {
+      'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
       return messagingService[methodName](
@@ -2633,7 +3037,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled given a valid array of registration tokens and topic (topic name ' +
-       'prefixed with "/topics/")', () => {
+      'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
       return messagingService[methodName](
@@ -2647,7 +3051,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
+      '(topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2661,7 +3065,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
+      '(topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
       return messagingService[methodName](
@@ -2675,7 +3079,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name not prefixed with "/topics/")', () => {
+      'and topic (topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
       return messagingService[methodName](
@@ -2700,7 +3104,7 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with the server response given an array of registration tokens ' +
-       'and topic (topic name prefixed with "/topics/")', () => {
+      'and topic (topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
       return messagingService[methodName](
@@ -2725,7 +3129,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name not prefixed with "/topics/")', () => {
+      '(topic name not prefixed with "/topics/")', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
@@ -2746,7 +3150,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given a single registration token and topic ' +
-       '(topic name prefixed with "/topics/")', () => {
+      '(topic name prefixed with "/topics/")', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
@@ -2767,7 +3171,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name not prefixed with "/topics/")', () => {
+      'topic (topic name not prefixed with "/topics/")', () => {
       const registrationTokens = [
         mocks.messaging.registrationToken + '0',
         mocks.messaging.registrationToken + '1',
@@ -2794,7 +3198,7 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given an array of registration tokens and ' +
-       'topic (topic name prefixed with "/topics/")', () => {
+      'topic (topic name prefixed with "/topics/")', () => {
       const registrationTokens = [
         mocks.messaging.registrationToken + '0',
         mocks.messaging.registrationToken + '1',

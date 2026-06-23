@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ let sdkVersion: string;
 // TODO: Move to firebase-admin/app as an internal member.
 export function getSdkVersion(): string {
   if (!sdkVersion) {
-    const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const { version } = require('../../package.json');
     sdkVersion = version;
   }
   return sdkVersion;

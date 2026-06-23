@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import * as sinon from 'sinon';
 
-import { AppOptions } from '../../src/firebase-namespace-api';
+import { AppOptions } from '../../src/app/index';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 import { ApplicationDefaultCredential } from '../../src/app/credential-internal';
@@ -57,10 +57,15 @@ export const storageBucket = 'bucketName.appspot.com';
 
 export const credential = cert(path.resolve(__dirname, './mock.key.json'));
 
-export const appOptions: AppOptions = {
-  credential,
+export const appOptionsWithoutCredential: AppOptions = {
   databaseURL,
-  storageBucket,
+  storageBucket
+};
+
+export const appOptions: AppOptions = {
+  ...appOptionsWithoutCredential,
+  credential
+
 };
 
 export const appOptionsWithOverride: AppOptions = {
@@ -164,10 +169,8 @@ export const refreshToken = {
 };
 
 // Randomly generated JSON Web Key Sets that do not correspond to anything related to Firebase.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const jwksResponse = require('./mock.jwks.json');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
@@ -350,7 +353,6 @@ export class Http2Mocker {
     return (requestHeaders: http2.OutgoingHttpHeaders) => {
       // Create a mock ClientHttp2Stream to return
       const mockStream = new stream.Readable({
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         read() {} 
       }) as http2.ClientHttp2Stream;
 

@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,19 @@ export interface BaseMessage {
   fcmOptions?: FcmOptions;
 }
 
+/**
+ * Interface representing a message that targets a Firebase Installation ID (FID).
+ */
+export interface FidMessage extends BaseMessage {
+  /**
+   * The Firebase Installation ID (FID) to which the message should be sent.
+   */
+  fid: string;
+}
+
+/**
+ * @deprecated Use {@link FidMessage} instead.
+ */
 export interface TokenMessage extends BaseMessage {
   token: string;
 }
@@ -40,16 +53,42 @@ export interface ConditionMessage extends BaseMessage {
 
 /**
  * Payload for the {@link Messaging.send} operation. The payload contains all the fields
- * in the BaseMessage type, and exactly one of token, topic or condition.
+ * in the BaseMessage type, and exactly one of fid, token (deprecated, use fid instead),
+ * topic or condition.
  */
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
+export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields
- * in the BaseMessage type, and a list of tokens.
+ * Payload for the `sendEachForMulticast` method.
+ *
+ * @deprecated Use {@link FidMulticastMessage} instead.
  */
 export interface MulticastMessage extends BaseMessage {
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids?: string[];
+  /**
+   * A list of registration tokens to target.
+   *
+   * @deprecated Use `fids` in {@link FidMulticastMessage} instead.
+   */
   tokens: string[];
+}
+
+/**
+ * Payload for the `sendEachForMulticast` method containing only FIDs.
+ *
+ * @remarks
+ * Note: This is a temporary interface. In the next major version, this will be
+ * renamed back to `MulticastMessage` once the old token-based `MulticastMessage`
+ * is fully deprecated and removed.
+ */
+export interface FidMulticastMessage extends BaseMessage {
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids: string[];
 }
 
 /**
@@ -242,6 +281,10 @@ export interface WebpushNotification {
  */
 export interface ApnsConfig {
   /**
+   * APN `pushToStartToken` or `pushToken` to start or update live activities.
+   */
+  liveActivityToken?: string;
+  /**
    * A collection of APNs headers. Header values must be strings.
    */
   headers?: { [key: string]: string };
@@ -424,6 +467,18 @@ export interface AndroidConfig {
   * the app while the device is in direct boot mode.
   */
   directBootOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a bandwidth constrained network.
+   */
+  bandwidthConstrainedOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to  
+   * the app while the device is on a restricted satellite network.
+   */
+  restrictedSatelliteOk?: boolean;
 }
 
 /**
@@ -650,309 +705,6 @@ export interface AndroidFcmOptions {
   analyticsLabel?: string;
 }
 
-/**
- * Interface representing an FCM legacy API data message payload. Data
- * messages let developers send up to 4KB of custom key-value pairs. The
- * keys and values must both be strings. Keys can be any custom string,
- * except for the following reserved strings:
- *
- * <ul>
- *   <li><code>from</code></li>
- *   <li>Anything starting with <code>google.</code></li>
- * </ul>
- *
- * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
- * for code samples and detailed documentation.
- */
-export interface DataMessagePayload {
-  [key: string]: string;
-}
-
-/**
- * Interface representing an FCM legacy API notification message payload.
- * Notification messages let developers send up to 4KB of predefined
- * key-value pairs. Accepted keys are outlined below.
- *
- * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
- * for code samples and detailed documentation.
- */
-export interface NotificationMessagePayload {
-
-  /**
-   * Identifier used to replace existing notifications in the notification drawer.
-   *
-   * If not specified, each request creates a new notification.
-   *
-   * If specified and a notification with the same tag is already being shown,
-   * the new notification replaces the existing one in the notification drawer.
-   *
-   * **Platforms:** Android
-   */
-  tag?: string;
-
-  /**
-   * The notification's body text.
-   *
-   * **Platforms:** iOS, Android, Web
-   */
-  body?: string;
-
-  /**
-   * The notification's icon.
-   *
-   * **Android:** Sets the notification icon to `myicon` for drawable resource
-   * `myicon`. If you don't send this key in the request, FCM displays the
-   * launcher icon specified in your app manifest.
-   *
-   * **Web:** The URL to use for the notification's icon.
-   *
-   * **Platforms:** Android, Web
-   */
-  icon?: string;
-
-  /**
-   * The value of the badge on the home screen app icon.
-   *
-   * If not specified, the badge is not changed.
-   *
-   * If set to `0`, the badge is removed.
-   *
-   * **Platforms:** iOS
-   */
-  badge?: string;
-
-  /**
-   * The notification icon's color, expressed in `#rrggbb` format.
-   *
-   * **Platforms:** Android
-   */
-  color?: string;
-
-  /**
-   * The sound to be played when the device receives a notification. Supports
-   * "default" for the default notification sound of the device or the filename of a
-   * sound resource bundled in the app.
-   * Sound files must reside in `/res/raw/`.
-   *
-   * **Platforms:** Android
-   */
-  sound?: string;
-
-  /**
-   * The notification's title.
-   *
-   * **Platforms:** iOS, Android, Web
-   */
-  title?: string;
-
-  /**
-   * The key to the body string in the app's string resources to use to localize
-   * the body text to the user's current localization.
-   *
-   * **iOS:** Corresponds to `loc-key` in the APNs payload. See
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
-   * Payload Key Reference} and
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
-   * Localizing the Content of Your Remote Notifications} for more information.
-   *
-   * **Android:** See
-   * {@link http://developer.android.com/guide/topics/resources/string-resource.html | String Resources}
-   * for more information.
-   *
-   * **Platforms:** iOS, Android
-   */
-  bodyLocKey?: string;
-
-  /**
-   * Variable string values to be used in place of the format specifiers in
-   * `body_loc_key` to use to localize the body text to the user's current
-   * localization.
-   *
-   * The value should be a stringified JSON array.
-   *
-   * **iOS:** Corresponds to `loc-args` in the APNs payload. See
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
-   * Payload Key Reference} and
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
-   * Localizing the Content of Your Remote Notifications} for more information.
-   *
-   * **Android:** See
-   * {@link http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling |
-   * Formatting and Styling} for more information.
-   *
-   * **Platforms:** iOS, Android
-   */
-  bodyLocArgs?: string;
-
-  /**
-   * Action associated with a user click on the notification. If specified, an
-   * activity with a matching Intent Filter is launched when a user clicks on the
-   * notification.
-   *
-   *   * **Platforms:** Android
-   */
-  clickAction?: string;
-
-  /**
-   * The key to the title string in the app's string resources to use to localize
-   * the title text to the user's current localization.
-   *
-   * **iOS:** Corresponds to `title-loc-key` in the APNs payload. See
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
-   * Payload Key Reference} and
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
-   * Localizing the Content of Your Remote Notifications} for more information.
-   *
-   * **Android:** See
-   * {@link http://developer.android.com/guide/topics/resources/string-resource.html | String Resources}
-   * for more information.
-   *
-   * **Platforms:** iOS, Android
-   */
-  titleLocKey?: string;
-
-  /**
-   * Variable string values to be used in place of the format specifiers in
-   * `title_loc_key` to use to localize the title text to the user's current
-   * localization.
-   *
-   * The value should be a stringified JSON array.
-   *
-   * **iOS:** Corresponds to `title-loc-args` in the APNs payload. See
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html |
-   * Payload Key Reference} and
-   * {@link https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9 |
-   * Localizing the Content of Your Remote Notifications} for more information.
-   *
-   * **Android:** See
-   * {@link http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling |
-   * Formatting and Styling} for more information.
-   *
-   * **Platforms:** iOS, Android
-   */
-  titleLocArgs?: string;
-  [key: string]: string | undefined;
-}
-
-/**
- * Interface representing a Firebase Cloud Messaging message payload. One or
- * both of the `data` and `notification` keys are required.
- *
- * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
- * for code samples and detailed documentation.
- */
-export interface MessagingPayload {
-
-  /**
-   * The data message payload.
-   */
-  data?: DataMessagePayload;
-
-  /**
-   * The notification message payload.
-   */
-  notification?: NotificationMessagePayload;
-}
-
-/**
- * Interface representing the options that can be provided when sending a
- * message via the FCM legacy APIs.
- *
- * See {@link https://firebase.google.com/docs/cloud-messaging/send-message | Build send requests}
- * for code samples and detailed documentation.
- */
-export interface MessagingOptions {
-
-  /**
-   * Whether or not the message should actually be sent. When set to `true`,
-   * allows developers to test a request without actually sending a message. When
-   * set to `false`, the message will be sent.
-   *
-   * **Default value:** `false`
-   */
-  dryRun?: boolean;
-
-  /**
-   * The priority of the message. Valid values are `"normal"` and `"high".` On
-   * iOS, these correspond to APNs priorities `5` and `10`.
-   *
-   * By default, notification messages are sent with high priority, and data
-   * messages are sent with normal priority. Normal priority optimizes the client
-   * app's battery consumption and should be used unless immediate delivery is
-   * required. For messages with normal priority, the app may receive the message
-   * with unspecified delay.
-   *
-   * When a message is sent with high priority, it is sent immediately, and the
-   * app can wake a sleeping device and open a network connection to your server.
-   *
-   * For more information, see
-   * {@link https://firebase.google.com/docs/cloud-messaging/concept-options#setting-the-priority-of-a-message |
-   * Setting the priority of a message}.
-   *
-   * **Default value:** `"high"` for notification messages, `"normal"` for data
-   * messages
-   */
-  priority?: string;
-
-  /**
-   * How long (in seconds) the message should be kept in FCM storage if the device
-   * is offline. The maximum time to live supported is four weeks, and the default
-   * value is also four weeks. For more information, see
-   * {@link https://firebase.google.com/docs/cloud-messaging/concept-options#ttl | Setting the lifespan of a message}.
-   *
-   * **Default value:** `2419200` (representing four weeks, in seconds)
-   */
-  timeToLive?: number;
-
-  /**
-   * String identifying a group of messages (for example, "Updates Available")
-   * that can be collapsed, so that only the last message gets sent when delivery
-   * can be resumed. This is used to avoid sending too many of the same messages
-   * when the device comes back online or becomes active.
-   *
-   * There is no guarantee of the order in which messages get sent.
-   *
-   * A maximum of four different collapse keys is allowed at any given time. This
-   * means FCM server can simultaneously store four different
-   * send-to-sync messages per client app. If you exceed this number, there is no
-   * guarantee which four collapse keys the FCM server will keep.
-   *
-   * **Default value:** None
-   */
-  collapseKey?: string;
-
-  /**
-   * On iOS, use this field to represent `mutable-content` in the APNs payload.
-   * When a notification is sent and this is set to `true`, the content of the
-   * notification can be modified before it is displayed, using a
-   * {@link https://developer.apple.com/reference/usernotifications/unnotificationserviceextension |
-   * Notification Service app extension}.
-   *
-   * On Android and Web, this parameter will be ignored.
-   *
-   * **Default value:** `false`
-   */
-  mutableContent?: boolean;
-
-  /**
-   * On iOS, use this field to represent `content-available` in the APNs payload.
-   * When a notification or data message is sent and this is set to `true`, an
-   * inactive client app is awoken. On Android, data messages wake the app by
-   * default. On Chrome, this flag is currently not supported.
-   *
-   * **Default value:** `false`
-   */
-  contentAvailable?: boolean;
-
-  /**
-   * The package name of the application which the registration tokens must match
-   * in order to receive the message.
-   *
-   * **Default value:** None
-   */
-  restrictedPackageName?: string;
-  [key: string]: any | undefined;
-}
 
 /**
  * Interface representing the server response from the
@@ -985,7 +737,7 @@ export interface MessagingTopicManagementResponse {
 
 /**
  * Interface representing the server response from the
- * {@link Messaging.sendEach} and {@link Messaging.sendEachForMulticast} methods.
+ * {@link Messaging.sendEach} and `sendEachForMulticast` methods.
  */
 export interface BatchResponse {
 

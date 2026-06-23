@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019 Google Inc.
+ * Copyright 2019 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 
 import { RequestResponseError } from '../utils/api-request';
-import { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
+import { FirebaseMessagingError, messagingClientErrorCode } from './error';
+import { toHttpResponse } from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**
@@ -29,35 +30,52 @@ export function createFirebaseError(err: RequestResponseError): FirebaseMessagin
   if (err.response.isJson()) {
     // For JSON responses, map the server response to a client-side error.
     const json = err.response.data;
-    const errorCode = getErrorCode(json);
+    let errorCode = getErrorCode(json);
     const errorMessage = getErrorMessage(json);
-    return FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
+    if (errorCode === 'UNREGISTERED' || errorCode === 'NOT_FOUND') {
+      let requestData = err.response.config && err.response.config.data;
+      if (requestData && (typeof requestData === 'string' || Buffer.isBuffer(requestData))) {
+        try {
+          const strData = typeof requestData === 'string' ? requestData : requestData.toString('utf-8');
+          requestData = JSON.parse(strData);
+        } catch (e) {
+          // Ignore parsing errors.
+        }
+      }
+      const messageObj = requestData && requestData.message;
+      if (messageObj && typeof messageObj.fid === 'string') {
+        errorCode = 'UNREGISTERED_FID';
+      }
+    }
+    return FirebaseMessagingError.fromServerError(errorCode, errorMessage, err);
   }
 
   // Non-JSON response
   let error: {code: string; message: string};
   switch (err.response.status) {
   case 400:
-    error = MessagingClientErrorCode.INVALID_ARGUMENT;
+    error = messagingClientErrorCode.INVALID_ARGUMENT;
     break;
   case 401:
   case 403:
-    error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
+    error = messagingClientErrorCode.AUTHENTICATION_ERROR;
     break;
   case 500:
-    error = MessagingClientErrorCode.INTERNAL_ERROR;
+    error = messagingClientErrorCode.INTERNAL_ERROR;
     break;
   case 503:
-    error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
+    error = messagingClientErrorCode.SERVER_UNAVAILABLE;
     break;
   default:
     // Treat non-JSON responses with unexpected status codes as unknown errors.
-    error = MessagingClientErrorCode.UNKNOWN_ERROR;
+    error = messagingClientErrorCode.UNKNOWN_ERROR;
   }
   return new FirebaseMessagingError({
     code: error.code,
     message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
       `${ err.response.status }.`,
+    httpResponse: toHttpResponse(err.response),
+    cause: err,
   });
 }
 

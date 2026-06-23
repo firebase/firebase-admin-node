@@ -20,3 +20,7 @@ test/resources/appid.txt
 firebase-admin-*.tgz
 
 docgen/markdown/
+
+# Dataconnect integration test artifacts should not be checked in
+test/integration/dataconnect/dataconnect/.dataconnect
+test/integration/dataconnect/*.log

@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,10 @@ import * as mocks from '../../resources/mocks';
 import { Installations } from '../../../src/installations/installations';
 import { FirebaseInstallationsRequestHandler } from '../../../src/installations/installations-request-handler';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../../../src/utils/error';
+import {
+  FirebaseInstallationsError,
+  installationsClientErrorCode,
+} from '../../../src/installations/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -127,7 +130,7 @@ describe('Installations', () => {
 
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
-    const expectedError = new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR);
+    const expectedError = new FirebaseInstallationsError(installationsClientErrorCode.API_ERROR);
     const testInstallationId = 'test-iid';
 
     afterEach(() => {

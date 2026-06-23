@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseFunctionsError, FunctionsErrorCode, FUNCTIONS_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { TaskOptions } from './functions-api';
@@ -45,16 +46,20 @@ const DEFAULT_LOCATION = 'us-central1';
  */
 export class FunctionsApiClient {
   private readonly httpClient: HttpClient;
+  private readonly emulatorHost?: string;
   private projectId?: string;
   private accountId?: string;
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument',
-        'First argument passed to getFunctions() must be a valid Firebase app instance.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'First argument passed to getFunctions() must be a valid Firebase app instance.'
+      });
     }
-    this.httpClient = new FunctionsHttpClient(app as FirebaseApp);
+    const emulatorHost = process.env.CLOUD_TASKS_EMULATOR_HOST?.trim();
+    this.emulatorHost = emulatorHost || undefined;
+    this.httpClient = new FunctionsHttpClient(app as FirebaseApp, this.emulatorHost);
   }
   /**
    * Deletes a task from a queue.
@@ -65,34 +70,43 @@ export class FunctionsApiClient {
    */
   public async delete(id: string, functionName: string, extensionId?: string): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'Function name must be a non empty string');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'Function name must be a non empty string'
+      });
     }
     if (!validator.isTaskId(id)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
-      + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.'
+      });
     }
 
     let resources: utils.ParsedResource;
     try {
       resources = utils.parseResourceName(functionName, 'functions');
     } catch (err) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'Function name must be a single string or a qualified resource name');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'Function name must be a single string or a qualified resource name',
+        cause: err as Error,
+      });
     }
     resources.projectId = resources.projectId || await this.getProjectId();
     resources.locationId = resources.locationId || DEFAULT_LOCATION;
     if (!validator.isNonEmptyString(resources.resourceId)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'No valid function name specified to enqueue tasks for.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'No valid function name specified to enqueue tasks for.'
+      });
     }
     if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
       resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
     }
 
     try {
-      const serviceUrl = tasksEmulatorUrl(resources)?.concat('/', id)
+      const serviceUrl = tasksEmulatorUrl(resources, this.emulatorHost)?.concat('/', id)
         ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
       const request: HttpRequestConfig = {
         method: 'DELETE',
@@ -123,22 +137,29 @@ export class FunctionsApiClient {
    */
   public async enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'Function name must be a non empty string');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'Function name must be a non empty string'
+      });
     }
 
     let resources: utils.ParsedResource;
     try {
       resources = utils.parseResourceName(functionName, 'functions');
     } catch (err) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'Function name must be a single string or a qualified resource name');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'Function name must be a single string or a qualified resource name',
+        cause: err as Error,
+      });
     }
     resources.projectId = resources.projectId || await this.getProjectId();
     resources.locationId = resources.locationId || DEFAULT_LOCATION;
     if (!validator.isNonEmptyString(resources.resourceId)) {
-      throw new FirebaseFunctionsError(
-        'invalid-argument', 'No valid function name specified to enqueue tasks for.');
+      throw new FirebaseFunctionsError({
+        code: 'invalid-argument',
+        message: 'No valid function name specified to enqueue tasks for.'
+      });
     }
     if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
       resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
@@ -147,7 +168,7 @@ export class FunctionsApiClient {
     const task = this.validateTaskOptions(data, resources, opts);
     try {
       const serviceUrl =
-        tasksEmulatorUrl(resources) ??
+        tasksEmulatorUrl(resources, this.emulatorHost) ??
         await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
 
       const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
@@ -163,7 +184,12 @@ export class FunctionsApiClient {
     } catch (err: unknown) {
       if (err instanceof RequestResponseError) {
         if (err.response.status === 409) {
-          throw new FirebaseFunctionsError('task-already-exists', `A task with ID ${opts?.id} already exists`);
+          throw new FirebaseFunctionsError({
+            code: 'task-already-exists',
+            message: `A task with ID ${opts?.id} already exists`,
+            httpResponse: toHttpResponse(err.response),
+            cause: err,
+          });
         } else {
           throw this.toFirebaseError(err);
         }
@@ -206,11 +232,12 @@ export class FunctionsApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseFunctionsError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseFunctionsError({
+            code: 'unknown-error',
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
@@ -224,10 +251,11 @@ export class FunctionsApiClient {
     return utils.findServiceAccountEmail(this.app)
       .then((accountId) => {
         if (!validator.isNonEmptyString(accountId)) {
-          throw new FirebaseFunctionsError(
-            'unknown-error',
-            'Failed to determine service account. Initialize the '
-            + 'SDK with service account credentials or set service account ID as an app option.');
+          throw new FirebaseFunctionsError({
+            code: 'unknown-error',
+            message: 'Failed to determine service account. Initialize the '
+              + 'SDK with service account credentials or set service account ID as an app option.'
+          });
         }
         this.accountId = accountId;
         return accountId;
@@ -251,25 +279,32 @@ export class FunctionsApiClient {
 
     if (typeof opts !== 'undefined') {
       if (!validator.isNonNullObject(opts)) {
-        throw new FirebaseFunctionsError(
-          'invalid-argument', 'TaskOptions must be a non-null object');
+        throw new FirebaseFunctionsError({
+          code: 'invalid-argument',
+          message: 'TaskOptions must be a non-null object'
+        });
       }
       if ('scheduleTime' in opts && 'scheduleDelaySeconds' in opts) {
-        throw new FirebaseFunctionsError(
-          'invalid-argument', 'Both scheduleTime and scheduleDelaySeconds are provided. '
-        + 'Only one value should be set.');
+        throw new FirebaseFunctionsError({
+          code: 'invalid-argument',
+          message: 'Both scheduleTime and scheduleDelaySeconds are provided. Only one value should be set.'
+        });
       }
       if ('scheduleTime' in opts && typeof opts.scheduleTime !== 'undefined') {
         if (!(opts.scheduleTime instanceof Date)) {
-          throw new FirebaseFunctionsError(
-            'invalid-argument', 'scheduleTime must be a valid Date object.');
+          throw new FirebaseFunctionsError({
+            code: 'invalid-argument',
+            message: 'scheduleTime must be a valid Date object.'
+          });
         }
         task.scheduleTime = opts.scheduleTime.toISOString();
       }
       if ('scheduleDelaySeconds' in opts && typeof opts.scheduleDelaySeconds !== 'undefined') {
         if (!validator.isNumber(opts.scheduleDelaySeconds) || opts.scheduleDelaySeconds < 0) {
-          throw new FirebaseFunctionsError(
-            'invalid-argument', 'scheduleDelaySeconds must be a non-negative duration in seconds.');
+          throw new FirebaseFunctionsError({
+            code: 'invalid-argument',
+            message: 'scheduleDelaySeconds must be a non-negative duration in seconds.'
+          });
         }
         const date = new Date();
         date.setSeconds(date.getSeconds() + opts.scheduleDelaySeconds);
@@ -278,17 +313,21 @@ export class FunctionsApiClient {
       if (typeof opts.dispatchDeadlineSeconds !== 'undefined') {
         if (!validator.isNumber(opts.dispatchDeadlineSeconds) || opts.dispatchDeadlineSeconds < 15
           || opts.dispatchDeadlineSeconds > 1800) {
-          throw new FirebaseFunctionsError(
-            'invalid-argument', 'dispatchDeadlineSeconds must be a non-negative duration in seconds '
-          + 'and must be in the range of 15s to 30 mins.');
+          throw new FirebaseFunctionsError({
+            code: 'invalid-argument',
+            message: 'dispatchDeadlineSeconds must be a non-negative duration in seconds '
+              + 'and must be in the range of 15s to 30 mins.'
+          });
         }
         task.dispatchDeadline = `${opts.dispatchDeadlineSeconds}s`;
       }
       if ('id' in opts && typeof opts.id !== 'undefined') {
         if (!validator.isTaskId(opts.id)) {
-          throw new FirebaseFunctionsError(
-            'invalid-argument', 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
-          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+          throw new FirebaseFunctionsError({
+            code: 'invalid-argument',
+            message: 'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+              + 'hyphens (-), or underscores (_). The maximum length is 500 characters.'
+          });
         }
         const resourcePath = utils.formatString(CLOUD_TASKS_API_RESOURCE_PATH, {
           projectId: resources.projectId,
@@ -299,8 +338,10 @@ export class FunctionsApiClient {
       }
       if (typeof opts.uri !== 'undefined') {
         if (!validator.isURL(opts.uri)) {
-          throw new FirebaseFunctionsError(
-            'invalid-argument', 'uri must be a valid URL string.');
+          throw new FirebaseFunctionsError({
+            code: 'invalid-argument',
+            message: 'uri must be a valid URL string.'
+          });
         }
         task.httpRequest.url = opts.uri;
       }
@@ -309,7 +350,7 @@ export class FunctionsApiClient {
   }
 
   private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
-    const defaultUrl = process.env.CLOUD_TASKS_EMULATOR_HOST ?
+    const defaultUrl = this.emulatorHost ?
       ''
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
 
@@ -330,7 +371,7 @@ export class FunctionsApiClient {
         const account = await this.getServiceAccount();
         task.httpRequest.oidcToken = { serviceAccountEmail: account };
       } catch (e) {
-        if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+        if (this.emulatorHost) {
           task.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
         } else {
           throw e;
@@ -340,25 +381,28 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseFunctionsError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      return new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: toHttpResponse(response),
+        cause: err
+      });
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
+    const error: FunctionsApiError = (response.data as ErrorResponse).error || {};
     let code: FunctionsErrorCode = 'unknown-error';
     if (error.status && error.status in FUNCTIONS_ERROR_CODE_MAPPING) {
       code = FUNCTIONS_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseFunctionsError(code, message);
+    const message = error.message || 'Unknown server error';
+    return new FirebaseFunctionsError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 }
 
@@ -367,8 +411,12 @@ export class FunctionsApiClient {
  * when communicating with the Emulator.
  */
 class FunctionsHttpClient extends AuthorizedHttpClient {
+  constructor(app: FirebaseApp, private readonly emulatorHost?: string) {
+    super(app);
+  }
+
   protected getToken(): Promise<string> {
-    if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
+    if (this.emulatorHost) {
       return Promise.resolve('owner');
     }
     return super.getToken();
@@ -376,10 +424,10 @@ class FunctionsHttpClient extends AuthorizedHttpClient {
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: FunctionsApiError;
 }
 
-interface Error {
+interface FunctionsApiError {
   code?: number;
   message?: string;
   status?: string;
@@ -407,52 +455,9 @@ export interface Task {
   };
 }
 
-export const FUNCTIONS_ERROR_CODE_MAPPING: { [key: string]: FunctionsErrorCode } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  FAILED_PRECONDITION: 'failed-precondition',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-};
-
-export type FunctionsErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'failed-precondition'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'task-already-exists';
-
-/**
- * Firebase Functions error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
- */
-export class FirebaseFunctionsError extends PrefixedFirebaseError {
-  constructor(code: FunctionsErrorCode, message: string) {
-    super('functions', code, message);
-
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseFunctionsError.prototype;
-  }
-}
-
-function tasksEmulatorUrl(resources: utils.ParsedResource): string | undefined {
-  if (process.env.CLOUD_TASKS_EMULATOR_HOST) {
-    return `http://${process.env.CLOUD_TASKS_EMULATOR_HOST}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${resources.resourceId}/tasks`;
+function tasksEmulatorUrl(resources: utils.ParsedResource, emulatorHost?: string): string | undefined {
+  if (emulatorHost) {
+    return `http://${emulatorHost}/projects/${resources.projectId}/locations/${resources.locationId}/queues/${resources.resourceId}/tasks`;
   }
   return undefined;
 }

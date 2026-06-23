@@ -2,15 +2,15 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2020",
+    "target": "es2021",
     "noImplicitAny": false,
-    "lib": ["es2020"],
+    "lib": ["es2021"],
     "outDir": "lib",
     "typeRoots": [
       "node_modules/@types"
     ]
   },
   "files": [
-    "./typescript/example.ts"
+    "./typescript/example-modular.test.ts"
   ]
 }

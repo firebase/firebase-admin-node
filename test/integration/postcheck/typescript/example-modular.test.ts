@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 import { getDatabase, getDatabaseWithUrl, Database, ServerValue } from 'firebase-admin/database';
 import { getFirestore, DocumentReference, Firestore, FieldValue } from 'firebase-admin/firestore';
 import { getFunctions, Functions } from 'firebase-admin/functions';
-import { getInstanceId, InstanceId } from 'firebase-admin/instance-id';
 import { getMachineLearning, MachineLearning } from 'firebase-admin/machine-learning';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { getProjectManagement, ProjectManagement } from 'firebase-admin/project-management';
@@ -33,8 +32,6 @@ import { getStorage, Storage } from 'firebase-admin/storage';
 
 import { Bucket } from '@google-cloud/storage';
 
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('../mock.key.json');
 
 describe('Modular API', () => {
@@ -121,11 +118,6 @@ describe('Modular API', () => {
     const fn: Functions = getFunctions(app);
     expect(fn).to.be.not.undefined;
     expect(typeof fn.taskQueue).to.equal('function');
-  });
-
-  it('Should return an InstanceId client', () => {
-    const client = getInstanceId(app);
-    expect(client).to.be.instanceOf(InstanceId);
   });
 
   it('Should return a MachineLearning client', () => {

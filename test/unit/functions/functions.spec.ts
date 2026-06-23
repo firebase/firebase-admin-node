@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2022 Google Inc.
+ * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FunctionsApiClient, FirebaseFunctionsError } from '../../../src/functions/functions-api-client-internal';
+import { FunctionsApiClient } from '../../../src/functions/functions-api-client-internal';
+import { FirebaseFunctionsError } from '../../../src/functions/error';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Functions, TaskQueue } from '../../../src/functions/functions';
 
@@ -110,7 +111,7 @@ describe('Functions', () => {
 });
 
 describe('TaskQueue', () => {
-  const INTERNAL_ERROR = new FirebaseFunctionsError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseFunctionsError({ code: 'internal-error', message: 'message' });
   const FUNCTION_NAME = 'function-name';
 
   let taskQueue: TaskQueue;

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import {
   App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
 } from '../../lib/app/index'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
 
 export let databaseUrl: string;

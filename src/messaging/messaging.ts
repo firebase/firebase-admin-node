@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 
 import { App } from '../app';
 import { deepCopy } from '../utils/deep-copy';
-import { 
-  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError, FirebaseMessagingSessionError
-} from '../utils/error';
+import {
+  messagingClientErrorCode, FirebaseMessagingError
+} from './error';
+import { ErrorInfo } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
@@ -27,6 +28,7 @@ import { FirebaseMessagingRequestHandler } from './messaging-api-request-interna
 
 import {
   BatchResponse,
+  FidMulticastMessage,
   Message,
   MessagingTopicManagementResponse,
   MulticastMessage,
@@ -98,7 +100,7 @@ export class Messaging {
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
+        messagingClientErrorCode.INVALID_ARGUMENT,
         'First argument passed to admin.messaging() must be a valid Firebase app instance.',
       );
     }
@@ -152,11 +154,11 @@ export class Messaging {
     validateMessage(copy);
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: { message: Message; validate_only?: boolean } = { message: copy };
+        const request: { message: Message; validate_only?: boolean; } = { message: copy };
         if (dryRun) {
           request.validate_only = true;
         }
@@ -196,73 +198,72 @@ export class Messaging {
     const copy: Message[] = deepCopy(messages);
     if (!validator.isNonEmptyArray(copy)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
     if (copy.length > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
+        messagingClientErrorCode.INVALID_ARGUMENT,
         `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+        messagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
     const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`);
 
     return this.getUrlPath()
       .then((urlPath) => {
-        if (http2SessionHandler) {
-          let sendResponsePromise: Promise<PromiseSettledResult<SendResponse>[]>;
-          return new Promise((resolve: (result: PromiseSettledResult<SendResponse>[]) => void, reject) => {
-            // Start session listeners
-            http2SessionHandler.invoke().catch((error) => {
-              const pendingBatchResponse = 
-                sendResponsePromise ? sendResponsePromise.then(this.parseSendResponses) : undefined;
-              reject(new FirebaseMessagingSessionError(error, undefined, pendingBatchResponse));
-            });
-
-            // Start making requests
-            const requests: Promise<SendResponse>[] = copy.map(async (message) => {
-              validateMessage(message);
-              const request: { message: Message; validate_only?: boolean; } = { message };
-              if (dryRun) {
-                request.validate_only = true;
-              }
-              return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
-                FCM_SEND_HOST, urlPath, request, http2SessionHandler);
-            });
-
-            // Resolve once all requests have completed
-            sendResponsePromise = Promise.allSettled(requests);
-            sendResponsePromise.then(resolve);
-          });
-        } else {
-          const requests: Promise<SendResponse>[] = copy.map(async (message) => {
-            validateMessage(message);
-            const request: { message: Message; validate_only?: boolean; } = { message };
-            if (dryRun) {
-              request.validate_only = true;
-            }
+        const requests: Promise<SendResponse>[] = copy.map(async (message) => {
+          validateMessage(message);
+          const request: { message: Message; validate_only?: boolean; } = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          if (http2SessionHandler) {
+            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(
+              FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+          } else {
             return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(
               FCM_SEND_HOST, urlPath, request);
-          });
-          return Promise.allSettled(requests);
-        }
+          }
+        });
+        return Promise.allSettled(requests);
       })
-      .then(this.parseSendResponses)
+      .then((results) => {
+        const sessionErrors = http2SessionHandler ? http2SessionHandler.getErrors() : [];
+        return this.parseSendResponses(results, sessionErrors);
+      })
       .finally(() => {
         http2SessionHandler?.close();
       });
   }
 
-  private parseSendResponses(results: PromiseSettledResult<SendResponse>[]): BatchResponse {
+  private parseSendResponses(
+    results: PromiseSettledResult<SendResponse>[],
+    sessionErrors: Error[] = []
+  ): BatchResponse {
     const responses: SendResponse[] = [];
     results.forEach(result => {
       if (result.status === 'fulfilled') {
         responses.push(result.value);
       } else { // rejected
-        responses.push({ success: false, error: result.reason });
+        let error = result.reason;
+        if (sessionErrors.length > 0) {
+          // Combine the original stream error and all session errors
+          const allErrors = [result.reason, ...sessionErrors];
+          const cause = new AggregateError(allErrors, 'Stream failure and session failures occurred');
+
+          const streamMessage = result.reason?.message || 'Unknown stream error';
+          const sessionMessage = `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`;
+
+          error = new FirebaseMessagingError({
+            code: messagingClientErrorCode.UNKNOWN_ERROR.code,
+            message: `${streamMessage}${sessionMessage}`,
+            cause: cause
+          });
+        }
+        responses.push({ success: false, error });
       }
     });
     const successCount: number = responses.filter((resp) => resp.success).length;
@@ -274,50 +275,84 @@ export class Messaging {
   }
 
   /**
-   * Sends the given multicast message to all the FCM registration tokens
+   * Sends the given multicast message to all the FCM registration tokens or fids
    * specified in it.
    *
    * This method uses the {@link Messaging.sendEach} API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the
-   * return value corresponds to the order of tokens in the `MulticastMessage`.
+   * return value corresponds to the order of tokens/fids in the `MulticastMessage`.
+   * If both `tokens` and `fids` are provided, `tokens` are processed first, followed by `fids`.
    * An error from this method or a `BatchResponse` with all failures indicates a total
-   * failure, meaning that the messages in the list could be sent. Partial failures or
-   * failures are only indicated by a `BatchResponse` return value.
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
    *
-   * @param message - A multicast message
-   *   containing up to 500 tokens.
+   * @deprecated Use the overload accepting {@link FidMulticastMessage} instead.
+   *
+   * @param message - A multicast message containing up to 500 tokens and/or fids.
    * @param dryRun - Whether to send the message in the dry-run
    *   (validation only) mode.
    * @returns A Promise fulfilled with an object representing the result of the
    *   send operation.
    */
-  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
-    const copy: MulticastMessage = deepCopy(message);
+  public sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  /**
+   * Sends the given multicast message to all the FCM fids specified in it.
+   *
+   * This method uses the {@link Messaging.sendEach} API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the
+   * return value corresponds to the order of fids in the `FidMulticastMessage`.
+   * An error from this method or a `BatchResponse` with all failures indicates a total
+   * failure, meaning that the messages in the list could not be sent. Partial failures
+   * are only indicated by a `BatchResponse` return value.
+   *
+   * @param message - A multicast message containing up to 500 fids.
+   * @param dryRun - Whether to send the message in the dry-run (validation only) mode.
+   * @returns A Promise fulfilled with an object representing the result of the send operation.
+   */
+  public sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+
+  public sendEachForMulticast(
+    message: MulticastMessage | FidMulticastMessage,
+    dryRun?: boolean,
+  ): Promise<BatchResponse> {
+    const copy: any = deepCopy(message);
     if (!validator.isNonNullObject(copy)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
-    }
-    if (!validator.isNonEmptyArray(copy.tokens)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
-    }
-    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+        messagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
     }
 
-    const messages: Message[] = copy.tokens.map((token) => {
-      return {
-        token,
-        android: copy.android,
-        apns: copy.apns,
-        data: copy.data,
-        notification: copy.notification,
-        webpush: copy.webpush,
-        fcmOptions: copy.fcmOptions,
-      };
-    });
+    const { tokens, fids, ...baseMessage } = copy;
+
+    if (tokens !== undefined && !validator.isArray(tokens)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a valid array');
+    }
+    if (fids !== undefined && !validator.isArray(fids)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT, 'fids must be a valid array');
+    }
+
+    const tokenList: string[] = tokens || [];
+    const fidList: string[] = fids || [];
+
+    if (tokenList.length === 0 && fidList.length === 0) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT, 'Either tokens or fids must be a non-empty array');
+    }
+
+    const totalLength = tokenList.length + fidList.length;
+    if (totalLength > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_ARGUMENT,
+        `The total number of tokens and fids must not exceed ${FCM_MAX_BATCH_SIZE}.`);
+    }
+
+    const messages: Message[] = [
+      ...tokenList.map((token) => ({ ...baseMessage, token } as Message)),
+      ...fidList.map((fid) => ({ ...baseMessage, fid } as Message)),
+    ];
+
     return this.sendEach(messages, dryRun);
   }
 
@@ -385,7 +420,7 @@ export class Messaging {
         if (!validator.isNonEmptyString(projectId)) {
           // Assert for an explicit project ID (either via AppOptions or the cert itself).
           throw new FirebaseMessagingError(
-            MessagingClientErrorCode.INVALID_ARGUMENT,
+            messagingClientErrorCode.INVALID_ARGUMENT,
             'Failed to determine project ID for Messaging. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
@@ -458,7 +493,7 @@ export class Messaging {
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
       !validator.isNonEmptyString(registrationTokenOrTokens)) {
@@ -481,7 +516,7 @@ export class Messaging {
   private validateRegistrationTokens(
     registrationTokenOrTokens: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (validator.isArray(registrationTokenOrTokens)) {
       // Validate the array contains no more than 1,000 registration tokens.
@@ -516,7 +551,7 @@ export class Messaging {
   private validateTopicType(
     topic: string | string[],
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyString(topic)) {
       throw new FirebaseMessagingError(
@@ -537,7 +572,7 @@ export class Messaging {
   private validateTopic(
     topic: string,
     methodName: string,
-    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+    errorInfo: ErrorInfo = messagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isTopic(topic)) {
       throw new FirebaseMessagingError(

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   UserImportBuilder, ValidatorFunction, UploadAccountRequest,
 } from '../../../src/auth/user-import-builder';
-import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 import { toWebSafeBase64 } from '../../../src/utils';
 import {
   UpdatePhoneMultiFactorInfoRequest, UserImportResult, UserImportRecord,
@@ -55,7 +55,7 @@ describe('UserImportBuilder', () => {
     // Simulate a validation error is thrown for a specific user.
     if (request.localId === '5678') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_PHONE_NUMBER,
+        authClientErrorCode.INVALID_PHONE_NUMBER,
       );
     }
   };
@@ -176,7 +176,7 @@ describe('UserImportBuilder', () => {
     invalidUserImportOptions.forEach((invalidOption) => {
       it(`should throw when non-object ${JSON.stringify(invalidOption)} UserImportOptions is provided`, () => {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"UserImportOptions" are required when importing users with passwords.',
         );
         expect(() =>  {
@@ -187,7 +187,7 @@ describe('UserImportBuilder', () => {
 
     it('should throw when an empty hash algorithm is provided', () => {
       const expectedError = new FirebaseAuthError(
-        AuthClientErrorCode.MISSING_HASH_ALGORITHM,
+        authClientErrorCode.MISSING_HASH_ALGORITHM,
         '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
       expect(() =>  {
@@ -197,7 +197,7 @@ describe('UserImportBuilder', () => {
 
     it('should throw when an invalid hash algorithm is provided', () => {
       const expectedError = new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_HASH_ALGORITHM,
+        authClientErrorCode.INVALID_HASH_ALGORITHM,
         'Unsupported hash algorithm provider "invalid".',
       );
       const invalidOptions = {
@@ -226,7 +226,7 @@ describe('UserImportBuilder', () => {
         invalidKeys.forEach((key) => {
           it(`should throw when non-Buffer ${JSON.stringify(key)} hash key is provided`, () => {
             const expectedError = new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_HASH_KEY,
+              authClientErrorCode.INVALID_HASH_KEY,
               'A non-empty "hash.key" byte buffer must be provided for ' +
               `hash algorithm ${algorithm}.`,
             );
@@ -289,7 +289,7 @@ describe('UserImportBuilder', () => {
         invalidRounds.forEach((rounds) => {
           it(`should throw when ${JSON.stringify(rounds)} rounds provided`, () => {
             const expectedError = new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_HASH_ROUNDS,
+              authClientErrorCode.INVALID_HASH_ROUNDS,
               `A valid "hash.rounds" number between ${minRounds} and ${maxRounds} must be provided for ` +
               `hash algorithm ${algorithm}.`,
             );
@@ -334,7 +334,7 @@ describe('UserImportBuilder', () => {
       invalidKeys.forEach((key) => {
         it(`should throw when ${JSON.stringify(key)} key provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_KEY,
+            authClientErrorCode.INVALID_HASH_KEY,
             'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -355,7 +355,7 @@ describe('UserImportBuilder', () => {
       invalidRounds.forEach((rounds) => {
         it(`should throw when ${JSON.stringify(rounds)} rounds provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_ROUNDS,
+            authClientErrorCode.INVALID_HASH_ROUNDS,
             'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -376,7 +376,7 @@ describe('UserImportBuilder', () => {
       invalidMemoryCost.forEach((memoryCost) => {
         it(`should throw when ${JSON.stringify(memoryCost)} memoryCost provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
+            authClientErrorCode.INVALID_HASH_MEMORY_COST,
             'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -397,7 +397,7 @@ describe('UserImportBuilder', () => {
       invalidSaltSeparator.forEach((saltSeparator) => {
         it(`should throw when ${JSON.stringify(saltSeparator)} saltSeparator provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
+            authClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
             '"hash.saltSeparator" must be a byte buffer.',
           );
           const invalidOptions = {
@@ -465,7 +465,7 @@ describe('UserImportBuilder', () => {
       invalidMemoryCost.forEach((memoryCost) => {
         it(`should throw when ${JSON.stringify(memoryCost)} memoryCost provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
+            authClientErrorCode.INVALID_HASH_MEMORY_COST,
             'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -487,7 +487,7 @@ describe('UserImportBuilder', () => {
       invalidParallelization.forEach((parallelization) => {
         it(`should throw when ${JSON.stringify(parallelization)} parallelization provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
+            authClientErrorCode.INVALID_HASH_MEMORY_COST,
             'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -509,7 +509,7 @@ describe('UserImportBuilder', () => {
       invalidBlockSize.forEach((blockSize) => {
         it(`should throw when ${JSON.stringify(blockSize)} blockSize provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
+            authClientErrorCode.INVALID_HASH_BLOCK_SIZE,
             'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -531,7 +531,7 @@ describe('UserImportBuilder', () => {
       invalidDerivedKeyLength.forEach((derivedKeyLength) => {
         it(`should throw when ${JSON.stringify(derivedKeyLength)} dkLen provided`, () => {
           const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
+            authClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
             'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
@@ -741,7 +741,7 @@ describe('UserImportBuilder', () => {
             // Index should match server error index.
             index: 1,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_USER_IMPORT,
+              authClientErrorCode.INVALID_USER_IMPORT,
               'Some error occurred!',
             ),
           },
@@ -760,7 +760,7 @@ describe('UserImportBuilder', () => {
         successCount: 3,
         failureCount: 1,
         errors: [
-          { index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
+          { index: 2, error: new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER) },
         ],
       };
       // userRequestValidatorWithError will throw on the 3rd user (index = 2).
@@ -780,9 +780,9 @@ describe('UserImportBuilder', () => {
       const userRequestValidatorWithMultipleErrors: ValidatorFunction = (request) => {
         // Simulate a validation error is thrown for specific users.
         if (request.localId === 'USER2') {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+          throw new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL);
         } else if (request.localId === 'USER4') {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+          throw new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER);
         }
       };
 
@@ -836,39 +836,39 @@ describe('UserImportBuilder', () => {
         failureCount: 8,
         errors: [
           // Client side detected error.
-          { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
+          { index: 1, error: new FirebaseAuthError(authClientErrorCode.INVALID_EMAIL) },
           // Server side detected error.
           {
             index: 2,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_USER_IMPORT,
+              authClientErrorCode.INVALID_USER_IMPORT,
               'Some error occurred in USER3!',
             ),
           },
           // Client side detected error.
-          { index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
+          { index: 3, error: new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER) },
           // Server side detected error.
           {
             index: 5,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_USER_IMPORT,
+              authClientErrorCode.INVALID_USER_IMPORT,
               'Another error occurred in USER6!',
             ),
           },
           // Client side errors.
-          { index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH) },
-          { index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT) },
+          { index: 6, error: new FirebaseAuthError(authClientErrorCode.INVALID_PASSWORD_HASH) },
+          { index: 7, error: new FirebaseAuthError(authClientErrorCode.INVALID_PASSWORD_SALT) },
           {
             index: 8,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+              authClientErrorCode.INVALID_ENROLLMENT_TIME,
               'The second factor "enrollmentTime" for "enrollmentId1" must be a valid ' +
               'UTC date string.'),
           },
           {
             index: 9,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
+              authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
               `Unsupported second factor "${JSON.stringify(testUsers[9].multiFactor!.enrolledFactors[0])}" provided.`),
           },
         ],

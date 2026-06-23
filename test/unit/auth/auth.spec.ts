@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 
 import * as validator from '../../../src/utils/validator';
 import { DecodedAuthBlockingToken, FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
@@ -375,6 +375,46 @@ AUTH_CONFIGS.forEach((testConfig) => {
           expect(tenantManager1).to.equal(tenantManager2);
         });
       });
+
+      describe('authForTenant() emulator isolation', () => {
+        afterEach(() => {
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        });
+
+        it('should not use emulator for tenant auth when env var set after Auth init', async () => {
+          // Initialize Auth WITHOUT the emulator env var.
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+          const noEmulatorAuth = new Auth(mocks.app());
+
+          // Set the env var AFTER Auth initialization.
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+
+          // Lazily create tenant auth — should inherit non-emulator mode.
+          const tenantAuth = noEmulatorAuth.tenantManager().authForTenant('tenant1');
+          const token = await tenantAuth.createCustomToken('uid1');
+          const decoded = jwt.decode(token, { complete: true });
+
+          // Token should be signed (not emulator-style unsigned).
+          expect(decoded).to.have.property('header').that.has.property('alg').that.does.not.equal('none');
+        });
+
+        it('should use emulator for tenant auth when env var set before Auth init', async () => {
+          // Initialize Auth WITH the emulator env var.
+          process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
+          const emulatorAuth = new Auth(mocks.app());
+
+          // Delete the env var AFTER Auth initialization.
+          delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+          // Lazily create tenant auth — should inherit emulator mode.
+          const tenantAuth = emulatorAuth.tenantManager().authForTenant('tenant1');
+          const token = await tenantAuth.createCustomToken('uid1');
+          const decoded = jwt.decode(token, { complete: true });
+
+          // Token should be unsigned (emulator-style).
+          expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+        });
+      });
     }
 
     describe('createCustomToken()', () => {
@@ -497,7 +537,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('should reject when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
+          authClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
         // Restore verifyIdToken stub.
         stub.restore();
         // Simulate ID token is invalid.
@@ -650,7 +690,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .rejects(expectedError);
         stubs.push(getUserStub);
@@ -689,7 +729,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected with checkRevoked set to true using an invalid ID token', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CREDENTIAL);
         // Restore verifyIdToken stub.
         stub.restore();
         // Simulate ID token is invalid.
@@ -709,7 +749,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       if (testConfig.Auth === TenantAwareAuth) {
         it('should be rejected with ID token missing tenant ID', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
           stub.restore();
           // Simulate JWT does not contain tenant ID.
@@ -726,7 +766,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected with ID token containing mismatching tenant ID', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
           stub.restore();
           // Simulate JWT does not contain matching tenant ID.
@@ -788,7 +828,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('should reject when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
+          authClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
         // Restore verifySessionCookie stub.
         stub.restore();
         // Simulate session cookie is invalid.
@@ -894,7 +934,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
           .rejects(expectedError);
         stubs.push(getUserStub);
@@ -980,7 +1020,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected with checkRevoked set to true using an invalid session cookie', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CREDENTIAL);
         // Restore verifySessionCookie stub.
         stub.restore();
         // Simulate session cookie is invalid.
@@ -1000,7 +1040,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       if (testConfig.Auth === TenantAwareAuth) {
         it('should be rejected with session cookie missing tenant ID', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
           stub.restore();
           // Simulate JWT does not contain tenant ID..
@@ -1017,7 +1057,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected with ID token containing mismatching tenant ID', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          const expectedError = new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
           stub.restore();
           // Simulate JWT does not contain matching tenant ID..
@@ -1080,7 +1120,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('should reject when underlying idTokenVerifier._verifyAuthBlockingToken() rejects', () =>  {
         const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase Auth Blocking token failed');
+          authClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase Auth Blocking token failed');
         // Restore _verifyAuthBlockingToken stub.
         stub.restore();
         // Simulate Auth Blocking token is invalid.
@@ -1135,7 +1175,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1214,7 +1254,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1293,7 +1333,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1374,7 +1414,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1562,7 +1602,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('deleteUser()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
       const expectedDeleteAccountResult = { kind: 'identitytoolkit#DeleteAccountResponse' };
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
@@ -1700,10 +1740,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
       const expectedError = new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'Unable to create the user record provided.');
       const unableToCreateUserError = new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'Unable to create the user record provided.');
       const propertiesToCreate = {
         displayName: expectedUserRecord.displayName,
@@ -1793,7 +1833,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const createUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'createNewAccount')
           .resolves(uid);
         // Stub getAccountInfoByUid to throw user not found error.
-        const userNotFoundError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const userNotFoundError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         const getUserStub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByUid')
           .rejects(userNotFoundError);
         stubs.push(createUserStub);
@@ -1837,7 +1877,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
       const propertiesToEdit = {
         displayName: expectedUserRecord.displayName,
         photoURL: expectedUserRecord.photoURL,
@@ -2258,7 +2298,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
     describe('setCustomUserClaims()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
       const customClaims = {
         admin: true,
         groupId: '123456',
@@ -2359,7 +2399,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     describe('listUsers()', () => {
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR);
       const pageToken = 'PAGE_TOKEN';
       const maxResult = 500;
       const downloadAccountResponse: any = {
@@ -2502,7 +2542,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
     describe('revokeRefreshTokens()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
       // Stubs used to simulate underlying api calls.
       let stubs: sinon.SinonStub[] = [];
       beforeEach(() => {
@@ -2590,11 +2630,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
         },
       };
       const expectedUserImportResultError =
-          new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+          new FirebaseAuthError(authClientErrorCode.INVALID_PHONE_NUMBER);
       const expectedOptionsError =
-          new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_ALGORITHM);
+          new FirebaseAuthError(authClientErrorCode.INVALID_HASH_ALGORITHM);
       const expectedServerError =
-          new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+          new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR);
       const expectedUserImportResult = {
         successCount: 1,
         failureCount: 1,
@@ -2706,7 +2746,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const idToken = 'ID_TOKEN';
       const options = { expiresIn: 60 * 60 * 24 * 1000 };
       const sessionCookie = 'SESSION_COOKIE';
-      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+      const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_ID_TOKEN);
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
       if (!expectedUserRecord.tokensValidAfterTime) {
@@ -2892,7 +2932,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const expectedLink = 'https://custom.page.link?link=' +
             encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +
             '&apn=com.example.android&ibi=com.example.ios';
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.USER_NOT_FOUND);
         // Stubs used to simulate underlying api calls.
         let stubs: sinon.SinonStub[] = [];
         afterEach(() => {
@@ -3090,7 +3130,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           issuer: 'https://oidc.com/issuer',
         };
         const expectedConfig = new OIDCConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
 
         it('should resolve with an OIDCConfig on success', () => {
           // Stub getOAuthIdpConfig to return expected result.
@@ -3144,7 +3184,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           enabled: true,
         };
         const expectedConfig = new SAMLConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
 
         it('should resolve with a SAMLConfig on success', () => {
           // Stub getInboundSamlConfig to return expected result.
@@ -3218,7 +3258,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       describe('using OIDC type filter', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR);
         const pageToken = 'PAGE_TOKEN';
         const maxResults = 50;
         const filterOptions: AuthProviderConfigFilter = {
@@ -3313,7 +3353,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       describe('using SAML type filter', () => {
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INTERNAL_ERROR);
         const pageToken = 'PAGE_TOKEN';
         const maxResults = 50;
         const filterOptions: AuthProviderConfigFilter = {
@@ -3453,7 +3493,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       describe('using OIDC configurations', () => {
         const providerId = 'oidc.provider';
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
 
         it('should resolve with void on success', () => {
           // Stub deleteOAuthIdpConfig to resolve.
@@ -3488,7 +3528,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       describe('using SAML configurations', () => {
         const providerId = 'saml.provider';
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.CONFIGURATION_NOT_FOUND);
 
         it('should resolve with void on success', () => {
           // Stub deleteInboundSamlConfig to resolve.
@@ -3598,7 +3638,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           issuer: 'https://oidc.com/issuer',
         };
         const expectedConfig = new OIDCConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
 
         it('should resolve with an OIDCConfig on updateOAuthIdpConfig request success', () => {
           // Stub updateOAuthIdpConfig to return expected server response.
@@ -3664,7 +3704,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           enabled: true,
         };
         const expectedConfig = new SAMLConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
 
         it('should resolve with a SAMLConfig on updateInboundSamlConfig request success', () => {
           // Stub updateInboundSamlConfig to return expected server response.
@@ -3764,7 +3804,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           issuer: 'https://oidc.com/issuer',
         };
         const expectedConfig = new OIDCConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
 
         it('should resolve with an OIDCConfig on createOAuthIdpConfig request success', () => {
           // Stub createOAuthIdpConfig to return expected server response.
@@ -3831,7 +3871,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           enabled: true,
         };
         const expectedConfig = new SAMLConfig(serverResponse);
-        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+        const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
 
         it('should resolve with a SAMLConfig on createInboundSamlConfig request success', () => {
           // Stub createInboundSamlConfig to return expected server response.
@@ -3973,6 +4013,65 @@ AUTH_CONFIGS.forEach((testConfig) => {
         await expect(mockAuth.verifyIdToken(unsignedToken))
           .to.be.rejectedWith(errorMessage);
       });
+
+      it('verifyIdToken() should still work after env var is deleted', () => {
+        const uid = userRecord.uid;
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          header: {},
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince,
+        }, 'secret');
+
+        // Delete the env var after init; emulator mode should persist.
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return mockAuth.verifyIdToken(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Should still behave as emulator (force revocation check).
+            expect(error).to.have.property('code', 'auth/id-token-revoked');
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
+
+      it('verifySessionCookie() should still work after env var is deleted', () => {
+        const uid = userRecord.uid;
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince,
+        }, 'secret');
+
+        // Delete the env var after init; emulator mode should persist.
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+        return mockAuth.verifySessionCookie(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.have.property('code', 'auth/session-cookie-revoked');
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
     });
   });
+
+
 });

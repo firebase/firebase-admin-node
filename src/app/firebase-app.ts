@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { Credential } from './credential';
 import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppErrorCode, FirebaseAppError } from './error';
 
 const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
 
@@ -69,12 +69,12 @@ export class FirebaseAppInternals {
         if (!validator.isNonNullObject(result) ||
           typeof result.expires_in !== 'number' ||
           typeof result.access_token !== 'string') {
-          throw new FirebaseAppError(
-            AppErrorCodes.INVALID_CREDENTIAL,
-            `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
-            'tokens must be an object with the "expires_in" (number) and "access_token" ' +
+          throw new FirebaseAppError({
+            code: AppErrorCode.INVALID_CREDENTIAL,
+            message: `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
+              'tokens must be an object with the "expires_in" (number) and "access_token" ' +
             '(string) properties.',
-          );
+          });
         }
 
         const token = {
@@ -110,7 +110,11 @@ export class FirebaseAppInternals {
           'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
         }
 
-        throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+        throw new FirebaseAppError({
+          code: AppErrorCode.INVALID_CREDENTIAL,
+          message: errorMessage,
+          cause: error as Error
+        });
       })
       .finally(() => {
         this.isRefreshing = false;
@@ -118,7 +122,7 @@ export class FirebaseAppInternals {
   }
 
   private shouldRefresh(): boolean {
-    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS) 
+    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS)
       && !this.isRefreshing;
   }
 
@@ -157,32 +161,36 @@ export class FirebaseApp implements App {
   private options_: AppOptions;
   private services_: {[name: string]: unknown} = {};
   private isDeleted_ = false;
+  private autoInit_ = false;
+  private customCredential_ = true;
 
-  constructor(options: AppOptions, name: string, private readonly appStore?: AppStore) {
+  constructor(options: AppOptions, name: string, autoInit: boolean = false, private readonly appStore?: AppStore) {
     this.name_ = name;
     this.options_ = deepCopy(options);
+    this.autoInit_ = autoInit;
 
     if (!validator.isNonNullObject(this.options_)) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
-        `app named "${this.name_}". Options must be a non-null object.`,
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_APP_OPTIONS,
+        message: 'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
+          `app named "${this.name_}". Options must be a non-null object.`
+      });
     }
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
+      this.customCredential_ = false;
       this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
     const credential = this.options_.credential;
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
-        `app named "${this.name_}". The "credential" property must be an object which implements ` +
-        'the Credential interface.',
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.INVALID_APP_OPTIONS,
+        message: 'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
+          `app named "${this.name_}". The "credential" property must be an object which implements ` +
+          'the Credential interface.'
+      });
     }
 
     this.INTERNAL = new FirebaseAppInternals(credential);
@@ -213,6 +221,25 @@ export class FirebaseApp implements App {
    */
   public getOrInitService<T>(name: string, init: (app: FirebaseApp) => T): T {
     return this.ensureService_(name, () => init(this));
+  }
+
+  /**
+   * Returns `true` if this app was initialized with auto-initialization.
+   * 
+   * @internal
+   */
+  public autoInit(): boolean {
+    return this.autoInit_;
+  }
+
+  /**
+   * Returns `true` if the `FirebaseApp` instance was initialized with a custom
+   * `Credential`.
+   * 
+   * @internal
+   */
+  public customCredential() : boolean {
+    return this.customCredential_;
   }
 
   /**
@@ -256,10 +283,10 @@ export class FirebaseApp implements App {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private checkDestroyed_(): void {
     if (this.isDeleted_) {
-      throw new FirebaseAppError(
-        AppErrorCodes.APP_DELETED,
-        `Firebase app named "${this.name_}" has already been deleted.`,
-      );
+      throw new FirebaseAppError({
+        code: AppErrorCode.APP_DELETED,
+        message: `Firebase app named "${this.name_}" has already been deleted.`
+      });
     }
   }
 }

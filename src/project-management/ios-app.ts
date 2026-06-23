@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseProjectManagementError } from '../utils/error';
+import { FirebaseProjectManagementError } from './error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
 import { AppMetadata, AppPlatform } from './app-metadata';
@@ -52,8 +52,10 @@ export class IosApp {
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'appId must be a non-empty string.');
+      throw new FirebaseProjectManagementError({
+        code: 'invalid-argument',
+        message: 'appId must be a non-empty string.'
+      });
     }
 
     this.resourceName = `projects/-/iosApps/${appId}`;

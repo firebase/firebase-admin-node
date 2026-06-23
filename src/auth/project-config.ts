@@ -1,5 +1,5 @@
 /*!
- * Copyright 2022 Google Inc.
+ * Copyright 2022 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import * as validator from '../utils/validator';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 import {
   SmsRegionsAuthConfig,
   SmsRegionConfig,
@@ -150,7 +150,7 @@ export class ProjectConfig {
   private static validate(request: UpdateProjectConfigRequest): void {
     if (!validator.isNonNullObject(request)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"UpdateProjectConfigRequest" must be a valid non-null object.',
       );
     }
@@ -166,7 +166,7 @@ export class ProjectConfig {
     for (const key in request) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           `"${key}" is not a valid UpdateProjectConfigRequest parameter.`,
         );
       }

@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ interface Obj {
 
 describe('SDK_VERSION', () => {
   it('utils index should retrieve the SDK_VERSION from package.json', () => {
-    const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const { version } = require('../../../package.json');
     expect(getSdkVersion()).to.equal(version);
   });
 });

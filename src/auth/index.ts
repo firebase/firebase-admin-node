@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,5 +170,5 @@ export {
 
 export {
   FirebaseAuthError,
-  AuthClientErrorCode,
-} from '../utils/error';
+  AuthErrorCode,
+} from './error';

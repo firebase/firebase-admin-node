@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { FirebaseProjectManagementError } from '../../../src/utils/error';
+import { FirebaseProjectManagementError } from '../../../src/project-management/error';
 import * as mocks from '../../resources/mocks';
 import { AppPlatform, IosApp, IosAppMetadata } from '../../../src/project-management/index';
 
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const EXPECTED_ERROR = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
 describe('IosApp', () => {
   // Stubs used to simulate underlying api calls.
@@ -79,7 +79,7 @@ describe('IosApp', () => {
   });
 
   describe('getMetadata', () => {
-    const expectedError = new FirebaseProjectManagementError('internal-error', 'message');
+    const expectedError = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
     const VALID_IOS_APP_METADATA_API_RESPONSE = {
       name: 'test-resource-name',

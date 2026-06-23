@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 import * as url from 'url';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -37,7 +37,7 @@ import {
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
+const chalk = require('chalk');
 
 chai.should();
 chai.use(sinonChai);
@@ -908,14 +908,14 @@ describe('admin.auth', () => {
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
 
-      let userRecord = await getAuth().updateUser(updateUser.uid, {
+      await getAuth().updateUser(updateUser.uid, {
         phoneNumber: '+15555550001',
         providerToLink: {
           providerId: 'google.com',
           uid: googleFederatedUid,
         },
       });
-      userRecord = await getAuth().updateUser(updateUser.uid, {
+      let userRecord = await getAuth().updateUser(updateUser.uid, {
         providerToLink: {
           providerId: 'facebook.com',
           uid: facebookFederatedUid,
@@ -3548,6 +3548,8 @@ async function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> 
   }
   return getAuth().deleteUsers(uids);
 }
+
+
 
 /**
  * Asserts actual object is equal to expected object while ignoring key order.

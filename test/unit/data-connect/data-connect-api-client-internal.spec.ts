@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2024 Google Inc.
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,16 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DataConnectApiClient, FirebaseDataConnectError }
-  from '../../../src/data-connect/data-connect-api-client-internal';
+import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
+import {
+  FirebaseDataConnectError,
+  DATA_CONNECT_ERROR_CODE_MAPPING,
+} from '../../../src/data-connect/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ConnectorConfig } from '../../../src/data-connect';
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils';
+import { OperationOptions } from '../../../src/data-connect/data-connect-api';
+import { toHttpResponse } from '../../../src/utils/error';
 
 describe('DataConnectApiClient', () => {
 
@@ -42,6 +47,18 @@ describe('DataConnectApiClient', () => {
 
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'X-Goog-Api-Client': getMetricsHeader(),
+  };
+
+  const EXPECTED_HEADERS_WITH_GEN = {
+    'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
+    'X-Goog-Api-Client': getMetricsHeader() + ' admin-js/gen',
+  };
+
+  const EMULATOR_EXPECTED_HEADERS = {
+    'Authorization': 'Bearer owner',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
   };
@@ -63,6 +80,7 @@ describe('DataConnectApiClient', () => {
   const connectorConfig: ConnectorConfig = {
     location: 'us-west2',
     serviceId: 'my-service',
+    connector: 'my-connector',
   };
 
   const clientWithoutProjectId = new DataConnectApiClient(
@@ -107,80 +125,126 @@ describe('DataConnectApiClient', () => {
   });
 
   describe('executeGraphql', () => {
-    it('should reject when project id is not available', () => {
-      return clientWithoutProjectId.executeGraphql('query', {})
-        .should.eventually.be.rejectedWith(noProjectId);
-    });
+    describe('should reject with an appropriate error response on failure', () => {
+      it('should reject when project id is not available', () => {
+        return clientWithoutProjectId.executeGraphql('query', {})
+          .should.eventually.be.rejectedWith(noProjectId);
+      });
 
-    it('should throw an error if query is not a non-empty string', async () => {
-      await expect(apiClient.executeGraphql('')).to.be.rejectedWith(
-        FirebaseDataConnectError,
-        '`query` must be a non-empty string.'
-      );
-      await expect(apiClient.executeGraphql(undefined as any)).to.be.rejectedWith(
-        FirebaseDataConnectError,
-        '`query` must be a non-empty string.'
-      );
-    });
-
-    const invalidQueries = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
-    invalidQueries.forEach((invalidQuery) => {
-      it('should throw given a non-string query: ' + JSON.stringify(invalidQuery), async () => {
-        await expect(apiClient.executeGraphql(invalidQuery as any)).to.be.rejectedWith(
+      it('should throw an error if query is not a non-empty string', async () => {
+        await expect(apiClient.executeGraphql('')).to.be.rejectedWith(
+          FirebaseDataConnectError,
+          '`query` must be a non-empty string.'
+        );
+        await expect(apiClient.executeGraphql(undefined as any)).to.be.rejectedWith(
           FirebaseDataConnectError,
           '`query` must be a non-empty string.'
         );
       });
-    });
 
-    const invalidOptions = [null, NaN, 0, 1, true, false, [], _.noop];
-    invalidOptions.forEach((invalidOption) => {
-      it('should throw given an invalid options object: ' + JSON.stringify(invalidOption), async () => {
-        await expect(apiClient.executeGraphql('query', invalidOption as any)).to.be.rejectedWith(
-          FirebaseDataConnectError,
-          'GraphqlOptions must be a non-null object'
-        );
+      const invalidQueries = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
+      invalidQueries.forEach((invalidQuery) => {
+        it('should throw given a non-string query: ' + JSON.stringify(invalidQuery), async () => {
+          await expect(apiClient.executeGraphql(invalidQuery as any)).to.be.rejectedWith(
+            FirebaseDataConnectError,
+            '`query` must be a non-empty string.'
+          );
+        });
+      });
+
+      const invalidOptions = [null, NaN, 0, 1, true, false, [], _.noop];
+      invalidOptions.forEach((invalidOption) => {
+        it('should throw given an invalid options object: ' + JSON.stringify(invalidOption), async () => {
+          await expect(apiClient.executeGraphql('query', invalidOption as any)).to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'GraphqlOptions must be a non-null object'
+          );
+        });
+      });
+
+      it('should reject when a full platform error response is received', () => {
+        const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'not-found',
+          message: 'Requested entity not found',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject when a gRPC-to-HTTP transcoded error response is received', () => {
+        const grpcError = {
+          code: 7,
+          message: 'Permission denied',
+        };
+        const mockErr = utils.errorFrom(grpcError, 403);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'permission-denied',
+          message: 'Permission denied',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject with unknown-error when error code is not present', () => {
+        const mockErr = utils.errorFrom({}, 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unknown server error: {}',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject with unknown-error for non-json response', () => {
+        const mockErr = utils.errorFrom('not json', 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unexpected response with status: 404 and body: not json',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject when rejected with a FirebaseDataConnectError', () => {
+        const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(expected);
+        return apiClient.executeGraphql('query', {})
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
 
-    it('should reject when a full platform error response is received', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
-      const expected = new FirebaseDataConnectError('not-found', 'Requested entity not found');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject with unknown-error when error code is not present', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
-      const expected = new FirebaseDataConnectError('unknown-error', 'Unknown server error: {}');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject with unknown-error for non-json response', () => {
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
-      const expected = new FirebaseDataConnectError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should reject when rejected with a FirebaseDataConnectError', () => {
-      const expected = new FirebaseDataConnectError('internal-error', 'socket hang up');
-      sandbox
-        .stub(HttpClient.prototype, 'send')
-        .rejects(expected);
-      return apiClient.executeGraphql('query', {})
-        .should.eventually.be.rejected.and.deep.include(expected);
-    });
-
-    it('should resolve with the GraphQL response on success', () => {
+    it('should resolve with the GraphQL response on success', async () => {
       interface UsersResponse {
         users: [
           user: {
@@ -193,6 +257,382 @@ describe('DataConnectApiClient', () => {
       const stub = sandbox
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      const resp = await apiClient.executeGraphql<UsersResponse, unknown>('query', {});
+      expect(resp.data.users).to.be.not.empty;
+      expect(resp.data.users[0].name).to.be.not.undefined;
+      expect(resp.data.users[0].address).to.be.not.undefined;
+      expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+        headers: EXPECTED_HEADERS,
+        data: { query: 'query' }
+      });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      await apiClient.executeGraphql('query', {});
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { query: 'query' }
+      });
+    });
+  });
+
+  describe('executeQuery', () => {
+    const unauthenticatedOptions: OperationOptions = { impersonate: { unauthenticated: true } };
+    const authenticatedOptions: OperationOptions = { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
+
+    describe('should reject with an appropriate error response on failure', () => {
+      it('should reject when no operationName is provided', () => {
+        apiClient.executeQuery( '', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+        apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+      });
+
+      it('should reject when project id is not available', () => {
+        clientWithoutProjectId.executeQuery(
+          'unauthenticated query', 
+          undefined, 
+          unauthenticatedOptions
+        ).should.eventually.be.rejectedWith(noProjectId);
+      });
+
+      it('should reject when no connectorId is provided', () => {
+        apiClient = new DataConnectApiClient(
+          { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
+          app
+        );
+        apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejectedWith(
+            `The 'connectorConfig.connector' field used to instantiate your Data Connect
+          instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+      });
+
+      it('should reject when a full platform error response is received', () => {
+        const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'not-found',
+          message: 'Requested entity not found',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject with unknown-error when error code is not present', () => {
+        const mockErr = utils.errorFrom({}, 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unknown server error: {}',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject with unknown-error for non-json response', () => {
+        const mockErr = utils.errorFrom('not json', 404);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+        const expected = new FirebaseDataConnectError({
+          code: 'unknown-error',
+          message: 'Unexpected response with status: 404 and body: not json',
+          httpResponse: toHttpResponse(mockErr.response),
+          cause: mockErr
+        });
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected
+          .and.deep.include(expected)
+          .and.have.property('cause', expected.cause);
+      });
+
+      it('should reject when rejected with a FirebaseDataConnectError', () => {
+        const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(expected);
+        return apiClient.executeQuery('unauthenticated query', undefined, unauthenticatedOptions)
+          .should.eventually.be.rejected.and.deep.include(expected);
+      });
+    });
+
+    describe('should resolve with the GraphQL response on success', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+      it('for an unauthenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeQuery<UsersResponse, undefined>(
+          'unauthenticated query', 
+          undefined, 
+          unauthenticatedOptions
+        );
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'unauthenticated query', 
+            extensions: unauthenticatedOptions
+          }
+        });
+      });
+
+      it('for an authenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeQuery<UsersResponse, undefined>(
+          'authenticated query', 
+          undefined, 
+          authenticatedOptions
+        );
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'authenticated query', 
+            extensions: { impersonate: authenticatedOptions.impersonate }
+          }
+        });
+      });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      await apiClient.executeQuery(
+        'unauthenticated query', 
+        undefined, 
+        unauthenticatedOptions
+      );
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { 
+          operationName: 'unauthenticated query', 
+          extensions: unauthenticatedOptions
+        }
+      });
+    });
+  });
+
+  const unauthenticatedOptions: OperationOptions = 
+    { impersonate: { unauthenticated: true } };
+  const authenticatedOptions: OperationOptions = 
+    { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
+
+  describe('executeMutation', () => {
+    it('should reject when no operationName is provided', () => {
+      apiClient.executeMutation('', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+      apiClient.executeMutation(undefined as unknown as string, undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
+    });
+
+    it('should reject when project id is not available', () => {
+      clientWithoutProjectId.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should reject when no connectorId is provided', () => {
+      apiClient = new DataConnectApiClient(
+        { location: connectorConfig.location, serviceId: connectorConfig.serviceId },
+        app
+      );
+      apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejectedWith(
+          `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(mockErr);
+      const expected = new FirebaseDataConnectError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(mockErr);
+      const expected = new FirebaseDataConnectError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(mockErr);
+      const expected = new FirebaseDataConnectError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
+    });
+
+    it('should reject when rejected with a FirebaseDataConnectError', () => {
+      const expected = new FirebaseDataConnectError({ code: 'internal-error', message: 'socket hang up' });
+      sandbox
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      return apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    describe('should resolve with the GraphQL response on success', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+
+      it('for an unauthenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>(
+          'unauthenticated mutation', undefined, unauthenticatedOptions
+        )
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'unauthenticated mutation', 
+            extensions: unauthenticatedOptions
+          }
+        });
+      });
+
+      it('for an authenticated request', async () => {
+        const stub = sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+        const resp = await apiClient.executeMutation<UsersResponse, undefined>(
+          'authenticated mutation', undefined, authenticatedOptions
+        );
+        expect(resp.data.users).to.be.not.empty;
+        expect(resp.data.users[0].name).to.be.not.undefined;
+        expect(resp.data.users[0].address).to.be.not.undefined;
+        expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'POST',
+          url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+          headers: EXPECTED_HEADERS,
+          data: { 
+            operationName: 'authenticated mutation', 
+            extensions: authenticatedOptions
+          }
+        });
+      });
+    });
+
+    it('should use DATA_CONNECT_EMULATOR_HOST if set', async () => {
+      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
+      await apiClient.executeMutation('unauthenticated mutation', undefined, unauthenticatedOptions);
+      expect(stub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
+        headers: EMULATOR_EXPECTED_HEADERS,
+        data: { 
+          operationName: 'unauthenticated mutation', 
+          extensions: unauthenticatedOptions
+        }
+      });
+    });
+    it('should use gen headers if set on success', () => {
+      interface UsersResponse {
+        users: [
+          user: {
+            id: string;
+            name: string;
+            address: string;
+          }
+        ];
+      }
+      apiClient.setIsUsingGen(true);
+      const stub = sandbox
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
       return apiClient.executeGraphql<UsersResponse, unknown>('query', {})
         .then((resp) => {
           expect(resp.data.users).to.be.not.empty;
@@ -201,27 +641,466 @@ describe('DataConnectApiClient', () => {
           expect(resp.data.users).to.deep.equal(TEST_RESPONSE.data.users);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `https://firebasedataconnect.googleapis.com/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EXPECTED_HEADERS,
+            url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
+            headers: EXPECTED_HEADERS_WITH_GEN,
             data: { query: 'query' }
           });
+          apiClient.setIsUsingGen(false);
+        });
+    });
+  });
+});
+
+describe('DataConnectApiClient CRUD helpers', () => {
+  let mockApp: FirebaseApp;
+  let apiClient: DataConnectApiClient;
+  let apiClientQueryError: DataConnectApiClient;
+  let executeGraphqlStub: sinon.SinonStub;
+
+  const connectorConfig: ConnectorConfig = {
+    location: 'us-west1',
+    serviceId: 'my-crud-service',
+    connector: 'my-crud-connector',
+  };
+
+  const mockOptions = {
+    credential: new mocks.MockCredential(),
+    projectId: 'test-project-crud',
+  };
+
+  const tableName = 'TestTable';
+  const formatedTableName = 'testTable';
+
+  const dataWithUndefined = {
+    genre: 'Action',
+    title: 'Die Hard',
+    ratings: null,
+    director: {
+      name: undefined,
+      age: undefined
+    },
+    notes: undefined,
+    releaseYear: undefined,
+    extras: [1, undefined, 'hello', undefined, { a: 1, b: undefined }]
+  };
+
+  const tableNames = ['movie', 'Movie', 'MOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'ToyBox', 'TOYBOX'];
+  const formatedTableNames = ['movie', 'movie', 'mOVIE', 'mOvIE', 'toybox', 'toyBox', 'toyBOX', 'toyBox', 'tOYBOX'];
+
+  const serverErrorString = 'Server error response';
+  const additionalErrorMessageForBulkImport =
+    'Make sure that your table name passed in matches the type name in your GraphQL schema file.';
+
+  const expectedQueryError = new FirebaseDataConnectError({
+    code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+    message: serverErrorString
+  });
+
+  // Helper function to normalize GraphQL strings
+  const normalizeGraphQLString = (str: string): string => {
+    return str
+      .replace(/\s*\n\s*/g, '\n') // Remove leading/trailing whitespace around newlines
+      .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
+      .trim();                    // Remove leading/trailing whitespace from the whole string
+  };
+
+  beforeEach(() => {
+    mockApp = mocks.appWithOptions(mockOptions);
+    apiClient = new DataConnectApiClient(connectorConfig, mockApp);
+    apiClientQueryError = new DataConnectApiClient(connectorConfig, mockApp);
+    // Stub the instance's executeGraphql method
+    executeGraphqlStub = sinon.stub(apiClient, 'executeGraphql').resolves({ data: {} });
+    sinon.stub(apiClientQueryError, 'executeGraphql').rejects(expectedQueryError);
+  });
+
+  afterEach(() => {
+    sinon.restore();
+    return mockApp.delete();
+  });
+
+  // --- INSERT TESTS ---
+  describe('insert()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_insert(data: { name: "a" }) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.insert(tableName, { name: 'a' });
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
         });
     });
 
-    it('should use DATA_CONNECT_EMULATOR_HOST if set', () => {
-      process.env.DATA_CONNECT_EMULATOR_HOST = 'localhost:9399';
-      const stub = sandbox
-        .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(TEST_RESPONSE, 200));
-      return apiClient.executeGraphql('query', {})
-        .then(() => {
-          expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'POST',
-            url: `http://localhost:9399/v1alpha/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}:executeGraphql`,
-            headers: EXPECTED_HEADERS,
-            data: { query: 'query' }
-          });
+    it('should call executeGraphql with the correct mutation for simple data', async () => {
+      const simpleData = { name: 'test', value: 123 };
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_insert(data: {
+        name: "test",
+        value: 123
+        })
+      }`;
+      await apiClient.insert(tableName, simpleData);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for complex data', async () => {
+      const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
+      const expectedMutation = `
+      mutation { 
+      ${formatedTableName}_insert(data: {
+        id: "abc", active: true, scores: [10, 20],
+        info: { nested: "yes/no \\"quote\\" \\\\slash\\\\" } 
+        }) 
+      }`;
+      await apiClient.insert(tableName, complexData);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_insert(data: {
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+        })
+      }`;
+      await apiClient.insert(tableName, dataWithUndefined);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.insert('', { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
+    });
+
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      await expect(apiClient.insert(tableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
+    });
+
+    it('should throw FirebaseDataConnectError for array data', async() => {
+      await expect(apiClient.insert(tableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
+    });
+    
+    it('should amend the message for query errors', async () => {
+      try {
+        await apiClientQueryError.insert(tableName, { data: 1 });
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
+    });
+  });
+
+  // --- INSERT MANY TESTS ---
+  describe('insertMany()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_insertMany(data: [{ name: "a" }]) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.insertMany(tableName, [{ name: 'a' }]);
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
         });
+    });
+
+    it('should call executeGraphql with the correct mutation for simple data array', async () => {
+      const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
+      const expectedMutation = `
+      mutation { 
+      ${formatedTableName}_insertMany(data: [{ name: "test1" }, { name: "test2", value: 456 }]) }`;
+      await apiClient.insertMany(tableName, simpleDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for complex data array', async () => {
+      const complexDataArray = [
+        { id: 'a', active: true, info: { nested: 'n1 "quote"' } },
+        { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
+      ];
+      const expectedMutation = `
+      mutation { 
+      ${formatedTableName}_insertMany(data: 
+      [{ id: "a", active: true, info: { nested: "n1 \\"quote\\"" } }, { id: "b", scores: [1, 2], 
+        info: { nested: "n2/\\\\" } }]) }`;
+      await apiClient.insertMany(tableName, complexDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
+      const dataArray = [
+        dataWithUndefined,
+        dataWithUndefined
+      ]
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_insertMany(data: [{
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+      },
+      {
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+      }])
+      }`;
+      await apiClient.insertMany(tableName, dataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.insertMany('', [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
+    });
+
+    it('should throw FirebaseDataConnectError for null data', () => {
+      expect(apiClient.insertMany(tableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError for empty array data', () => {
+      expect(apiClient.insertMany(tableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError for non-array data', () => {
+      expect(apiClient.insertMany(tableName, { data: 1 } as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
+    });
+
+    it('should amend the message for query errors', async () => {
+      try {
+        await apiClientQueryError.insertMany(tableName, [{ data: 1 }]);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
+    });
+  });
+
+  // --- UPSERT TESTS ---
+  describe('upsert()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsert(data: { name: "a" }) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.upsert(tableName, { name: 'a' });
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
+    it('should call executeGraphql with the correct mutation for simple data', async () => {
+      const simpleData = { id: 'key1', value: 'updated' };
+      const expectedMutation = `mutation { ${formatedTableName}_upsert(data: { id: "key1", value: "updated" }) }`;
+      await apiClient.upsert(tableName, simpleData);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
+    });
+
+    it('should call executeGraphql with the correct mutation for complex data', async () => {
+      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
+      const expectedMutation = `
+      mutation { ${formatedTableName}_upsert(data: 
+      { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
+      await apiClient.upsert(tableName, complexData);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_upsert(data: {
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+        })
+      }`;
+      await apiClient.upsert(tableName, dataWithUndefined);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      await expect(apiClient.upsert('', { data: 1 }))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
+    });
+
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      await expect(apiClient.upsert(tableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
+    });
+
+    it('should throw FirebaseDataConnectError for array data', async () => {
+      await expect(apiClient.upsert(tableName, [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single upsert./);
+    });
+
+    it('should amend the message for query errors', async () => {
+      try {
+        await apiClientQueryError.upsert(tableName, { data: 1 });
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
+    });
+  });
+
+  // --- UPSERT MANY TESTS ---
+  describe('upsertMany()', () => {
+    tableNames.forEach((tableName, index) => {
+      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsertMany(data: [{ name: "a" }]) }`;
+      it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
+        async () => {
+          await apiClient.upsertMany(tableName, [{ name: 'a' }]);
+          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+        });
+    });
+
+    it('should call executeGraphql with the correct mutation for simple data array', async () => {
+      const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
+      const expectedMutation = `
+      mutation { ${formatedTableName}_upsertMany(data: [{ id: "k1" }, { id: "k2", value: 99 }]) }`;
+      await apiClient.upsertMany(tableName, simpleDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for complex data array', async () => {
+      const complexDataArray = [
+        { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
+        { id: 'y', scores: [null, 2] }
+      ];
+      const expectedMutation = `
+      mutation { ${formatedTableName}_upsertMany(data: 
+      [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
+      await apiClient.upsertMany(tableName, complexDataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
+      const dataArray = [
+        dataWithUndefined,
+        dataWithUndefined
+      ]
+      const expectedMutation = `
+      mutation {
+      ${formatedTableName}_upsertMany(data: [{
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+      },
+      {
+        genre: "Action",
+        title: "Die Hard",
+        ratings: null,
+        director: {},
+        extras: [1, null, "hello", null, { a: 1 }]
+      }])
+      }`;
+      await apiClient.upsertMany(tableName, dataArray);
+      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+    });
+
+    it('should throw FirebaseDataConnectError for invalid tableName', async () => {
+      expect(apiClient.upsertMany('', [{ data: 1 }]))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
+    });
+
+    it('should throw FirebaseDataConnectError for null data', async () => {
+      expect(apiClient.upsertMany(tableName, null as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError for empty array data', async () => {
+      expect(apiClient.upsertMany(tableName, []))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError for non-array data', async () => {
+      await expect(apiClient.upsertMany(tableName, { data: 1 } as any))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
+    });
+
+    it('should amend the message for query errors', async () => {
+      try {
+        await apiClientQueryError.upsertMany(tableName, [{ data: 1 }]);
+        expect.fail('Should have failed');
+      } catch (err: any) {
+        expect(err).to.be.instanceOf(FirebaseDataConnectError);
+        expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
+        expect(err.cause).to.equal(expectedQueryError);
+      }
+    });
+  });
+
+  describe('String serialization', () => {
+    it('should correctly escape special characters in strings during insert', async () => {
+      const data = {
+        content: 'Line 1\nLine 2',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Line 1\nLine 2"`);
+    });
+
+    it('should correctly escape backslash', async () => {
+      const data = {
+        content: 'Backslash \\',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Backslash \\"`);
+    });
+
+    it('should correctly escape double quotes', async () => {
+      const data = {
+        content: 'Quote "test"',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Quote \"test\""`);
+    });
+
+    it('should correctly escape tab character', async () => {
+      const data = {
+        content: 'Tab\tCharacter',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include(String.raw`content: "Tab\tCharacter"`);
+    });
+
+    it('should correctly handle emojis', async () => {
+      const data = {
+        content: 'Emoji 😊',
+      };
+
+      await apiClient.insert(tableName, data);
+      const callArgs = executeGraphqlStub.firstCall.args[0];
+
+      expect(callArgs).to.include('content: "Emoji 😊"');
     });
   });
 });

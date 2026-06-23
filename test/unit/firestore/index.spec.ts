@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
 import { getFirestore, initializeFirestore, Firestore } from '../../../src/firestore/index';
-import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
+import { DEFAULT_DATABASE_ID } from '../../../src/firestore/firestore-internal';
 
 chai.should();
 chai.use(sinonChai);

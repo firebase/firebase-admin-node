@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AppCheck } from '../../../src/app-check/index';
-import { AppCheckApiClient, FirebaseAppCheckError } from '../../../src/app-check/app-check-api-client-internal';
+import { AppCheckApiClient } from '../../../src/app-check/app-check-api-client-internal';
+import { FirebaseAppCheckError } from '../../../src/app-check/error';
 import { AppCheckTokenGenerator } from '../../../src/app-check/token-generator';
 import { HttpClient } from '../../../src/utils/api-request';
 import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
@@ -34,7 +35,7 @@ const expect = chai.expect;
 
 describe('AppCheck', () => {
 
-  const INTERNAL_ERROR = new FirebaseAppCheckError('internal-error', 'message');
+  const INTERNAL_ERROR = new FirebaseAppCheckError({ code: 'internal-error', message: 'message' });
   const APP_ID = '1:1234:android:1234';
   const TEST_TOKEN_TO_EXCHANGE = 'signed-custom-token';
 
@@ -166,6 +167,35 @@ describe('AppCheck', () => {
         .then((token) => {
           expect(token.token).equals('token');
           expect(token.ttlMillis).equals(3000);
+        });
+    });
+
+    it('should resolve with AppCheckToken on success with limitedUse', () => {
+      const response = { token: 'token', ttlMillis: 3000 };
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { limitedUse: true })
+        .then((token) => {
+          expect(token.token).equals('token');
+          expect(token.ttlMillis).equals(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith(sinon.match.string, APP_ID, { limitedUse: true });
+        });
+    });
+
+    it('should resolve with AppCheckToken on success with limitedUse and jti', () => {
+      const response = { token: 'token', ttlMillis: 3000 };
+      const stub = sinon
+        .stub(AppCheckApiClient.prototype, 'exchangeToken')
+        .resolves(response);
+      stubs.push(stub);
+      return appCheck.createToken(APP_ID, { limitedUse: true, jti: 'test-jti' })
+        .then((token) => {
+          expect(token.token).equals('token');
+          expect(token.ttlMillis).equals(3000);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.string, APP_ID, { limitedUse: true, jti: 'test-jti' });
         });
     });
   });

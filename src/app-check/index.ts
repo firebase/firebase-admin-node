@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,3 +68,5 @@ export function getAppCheck(app?: App): AppCheck {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('appCheck', (app) => new AppCheck(app));
 }
+
+export { FirebaseAppCheckError, AppCheckErrorCode } from './error';

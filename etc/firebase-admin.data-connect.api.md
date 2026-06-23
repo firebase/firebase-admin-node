@@ -13,6 +13,7 @@ export type AuthClaims = Partial<DecodedIdToken>;
 
 // @public
 export interface ConnectorConfig {
+    connector?: string;
     location: string;
     serviceId: string;
 }
@@ -25,15 +26,50 @@ export class DataConnect {
     readonly app: App;
     // (undocumented)
     readonly connectorConfig: ConnectorConfig;
-    // @beta
     executeGraphql<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
-    // @beta
     executeGraphqlRead<GraphqlResponse, Variables>(query: string, options?: GraphqlOptions<Variables>): Promise<ExecuteGraphqlResponse<GraphqlResponse>>;
+    executeMutation<Data>(name: string, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeMutation<Data, Variables>(name: string, variables: Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeQuery<Data>(name: string, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    executeQuery<Data, Variables>(name: string, variables: Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<Data>>;
+    insert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
+    insertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
+    upsert<GraphQlResponse, Variables extends object>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
+    upsertMany<GraphQlResponse, Variables extends Array<unknown>>(tableName: string, variables: Variables): Promise<ExecuteGraphqlResponse<GraphQlResponse>>;
 }
+
+// @public
+export const DataConnectErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL: "internal-error";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly UNKNOWN: "unknown-error";
+    readonly QUERY_ERROR: "query-error";
+};
+
+// @public
+export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
 
 // @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
     data: GraphqlResponse;
+}
+
+// @public
+export interface ExecuteOperationResponse<GraphqlResponse> {
+    data: GraphqlResponse;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseDataConnectError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public
@@ -56,6 +92,11 @@ export interface ImpersonateAuthenticated {
 export interface ImpersonateUnauthenticated {
     authClaims?: never;
     unauthenticated: true;
+}
+
+// @public
+export interface OperationOptions {
+    impersonate?: ImpersonateAuthenticated | ImpersonateUnauthenticated;
 }
 
 ```

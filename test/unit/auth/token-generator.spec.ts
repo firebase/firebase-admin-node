@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2017 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import {
 import { CryptoSignerError, CryptoSignerErrorCode, ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
-import { FirebaseAuthError } from '../../../src/utils/error';
+import { FirebaseAuthError } from '../../../src/auth/error';
 import * as utils from '../utils';
 
 chai.should();
@@ -360,7 +360,7 @@ describe('FirebaseTokenGenerator', () => {
       const authError = handleCryptoSignerError(cryptoError);
       expect(authError).to.be.an.instanceof(FirebaseAuthError);
       expect(authError).to.have.property('code', 'auth/internal-error');
-      expect(authError).to.have.property('message', 'server error.; Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how to use and troubleshoot this feature. Raw server response: "{"error":{"message":"server error."}}"');
+      expect(authError).to.have.property('message', 'server error.; Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how to use and troubleshoot this feature.');
     });
 
     it('should convert CryptoSignerError HttpError with no errorcode to FirebaseAuthError', () => {

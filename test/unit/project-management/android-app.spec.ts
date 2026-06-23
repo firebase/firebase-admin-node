@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2018 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { FirebaseProjectManagementError } from '../../../src/utils/error';
+import { FirebaseProjectManagementError } from '../../../src/project-management/error';
 import * as mocks from '../../resources/mocks';
 import {
   AndroidApp, AndroidAppMetadata, AppPlatform, ShaCertificate,
@@ -33,7 +33,7 @@ import {
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const EXPECTED_ERROR = new FirebaseProjectManagementError({ code: 'internal-error', message: 'message' });
 
 const VALID_SHA_1_HASH = '0123456789abcdefABCDEF012345678901234567';
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';

@@ -1,7 +1,6 @@
 {
   "firebase-admin": {
-    "legacy": true,
-    "typings": "./lib/default-namespace.d.ts",
+    "typings": "./lib/index.d.ts",
     "dist": "./lib/index.js"
   },
   "firebase-admin/app": {
@@ -15,6 +14,10 @@
   "firebase-admin/auth": {
     "typings": "./lib/auth/index.d.ts",
     "dist": "./lib/auth/index.js"
+  },
+  "firebase-admin/phone-number-verification": {
+    "typings": "./lib/phone-number-verification/index.d.ts",
+    "dist": "./lib/phone-number-verification/index.js"
   },
   "firebase-admin/database": {
     "typings": "./lib/database/index.d.ts",
@@ -39,10 +42,6 @@
   "firebase-admin/installations": {
     "typings": "./lib/installations/index.d.ts",
     "dist": "./lib/installations/index.js"
-  },
-  "firebase-admin/instance-id": {
-    "typings": "./lib/instance-id/index.d.ts",
-    "dist": "./lib/instance-id/index.js"
   },
   "firebase-admin/messaging": {
     "typings": "./lib/messaging/index.d.ts",

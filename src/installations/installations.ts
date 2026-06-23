@@ -1,5 +1,5 @@
 /*!
- * Copyright 2021 Google Inc.
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 import { App } from '../app/index';
-import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
+import { installationsClientErrorCode, FirebaseInstallationsError } from './error';
 import { FirebaseInstallationsRequestHandler } from './installations-request-handler';
 import * as validator from '../utils/validator';
 
@@ -35,7 +35,7 @@ export class Installations {
   constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstallationsError(
-        InstallationsClientErrorCode.INVALID_ARGUMENT,
+        installationsClientErrorCode.INVALID_ARGUMENT,
         'First argument passed to admin.installations() must be a valid Firebase app instance.',
       );
     }

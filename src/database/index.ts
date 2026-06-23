@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,4 +126,4 @@ function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
   return dbService.getDatabase(options.url);
 }
 
-export { FirebaseDatabaseError } from '../utils/error';
+export { DatabaseErrorCode, FirebaseDatabaseError } from './error';

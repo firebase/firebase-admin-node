@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import {
   ModelResponse,
   OperationResponse
 } from '../../../src/machine-learning/machine-learning-api-client';
-import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
+import { FirebaseMachineLearningError } from '../../../src/machine-learning/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { MachineLearning, Model, ModelOptions } from '../../../src/machine-learning/index';
 
@@ -40,7 +40,7 @@ describe('MachineLearning', () => {
   const PROJECT_NUMBER = '987654';
   const OPERATION_ID = '456789';
   const OPERATION_NAME = `projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`
-  const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
+  const EXPECTED_ERROR = new FirebaseMachineLearningError({ code: 'internal-error', message: 'message' });
   const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
   const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
   const MODEL_RESPONSE: {
