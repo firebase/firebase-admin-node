@@ -8,7 +8,7 @@ import { Agent } from 'http';
 
 // @public
 export interface AbsoluteDelivery {
-    // @alpha (undocumented)
+    // (undocumented)
     scheduleDelaySeconds?: never;
     scheduleTime?: Date;
 }
@@ -16,7 +16,7 @@ export interface AbsoluteDelivery {
 // @public
 export interface DelayDelivery {
     scheduleDelaySeconds?: number;
-    // @alpha (undocumented)
+    // (undocumented)
     scheduleTime?: never;
 }
 
