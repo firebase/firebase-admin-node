@@ -227,7 +227,7 @@ export function generateIdToken(overrides?: object, claims?: object, secret?: st
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as any,
   }, overrides);
 
   const payload = {
@@ -255,7 +255,7 @@ export function generateAuthBlockingToken(overrides?: object, claims?: object, s
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as any,
   }, overrides);
 
   const payload = {
@@ -282,7 +282,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as any,
   }, overrides);
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
@@ -303,7 +303,7 @@ export function generateAppCheckToken(overrides?: object): string {
     algorithm: ALGORITHM,
     header: {
       kid: jwksResponse.keys[0].kid,
-    },
+    } as any,
   }, overrides);
 
   return jwt.sign(developerClaims, jwksKeyPair.private, options);
