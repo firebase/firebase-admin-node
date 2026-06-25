@@ -100,6 +100,10 @@ interface ConnectorsUrlParams extends ServicesUrlParams {
   connectorId: string;
 }
 
+interface FieldNode {
+  children: Map<string, FieldNode>;
+}
+
 /**
  * Class that facilitates sending requests to the Firebase Data Connect backend API.
  *
@@ -451,33 +455,50 @@ export class DataConnectApiClient {
   }
 
   /**
-   * Extracts all defined property keys from an object as a space-separated string.
-   * Used to build the `@allow(fields: ...)` mutation directive for single operations.
+   * Extracts property keys from an object or array of objects as a space-separated string,
+   * including recursively nested object/array fields for the `@allow(fields: ...)` directive.
+   * Leverages a hierarchical tree to deduplicate and merge fields.
    */
-  private getObjectKeys(data: Record<string, unknown> | object): string {
-    return Object.keys(data)
-      .filter(key => (data as Record<string, unknown>)[key] !== undefined)
-      .join(' ');
+  private getFieldsString(data: unknown): string {
+    const root: FieldNode = { children: new Map() };
+    this.mergeFieldsIntoTree(data, root);
+    return this.serializeFieldNode(root);
   }
 
-  /**
-   * Extracts the union of all defined property keys across an array of objects
-   * as a space-separated string. Used to build the `@allow(fields: ...)` mutation
-   * directive for bulk operations.
-   */
-  private getArrayObjectsKeys(data: Array<unknown>): string {
-    const allKeys = new Set<string>();
-    for (const element of data) {
-      if (validator.isNonNullObject(element)) {
-        const record = element as Record<string, unknown>;
-        Object.keys(record).forEach(key => {
-          if (record[key] !== undefined) {
-            allKeys.add(key);
-          }
-        });
+  private mergeFieldsIntoTree(data: unknown, node: FieldNode): void {
+    if (validator.isArray(data)) {
+      for (const item of data) {
+        this.mergeFieldsIntoTree(item, node);
+      }
+    } else if (validator.isNonNullObject(data) && !(data instanceof Date)) {
+      const record = data as Record<string, unknown>;
+      for (const [key, val] of Object.entries(record)) {
+        if (val === undefined) {
+          continue;
+        }
+        let childNode = node.children.get(key);
+        if (!childNode) {
+          childNode = { children: new Map() };
+          node.children.set(key, childNode);
+        }
+        this.mergeFieldsIntoTree(val, childNode);
       }
     }
-    return Array.from(allKeys).join(' ');
+  }
+
+  private serializeFieldNode(node: FieldNode): string {
+    const parts: string[] = [];
+    const sortedKeys = Array.from(node.children.keys()).sort((a, b) => a.localeCompare(b));
+    for (const key of sortedKeys) {
+      const childNode = node.children.get(key)!;
+      if (childNode.children.size > 0) {
+        const nestedString = this.serializeFieldNode(childNode);
+        parts.push(`${key} { ${nestedString} }`);
+      } else {
+        parts.push(key);
+      }
+    }
+    return parts.join(' ');
   }
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
@@ -521,7 +542,7 @@ export class DataConnectApiClient {
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getObjectKeys(data);
+      const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
           ${camelCase}_insert(data: $data)
@@ -557,10 +578,16 @@ export class DataConnectApiClient {
         message: '`data` must be a non-empty array for insertMany.',
       });
     }
+    if (data.length > 10000) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` array exceeds the maximum limit of 10,000 items.'
+      });
+    }
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getArrayObjectsKeys(data);
+      const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
           ${camelCase}_insertMany(data: $data)
@@ -606,7 +633,7 @@ export class DataConnectApiClient {
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getObjectKeys(data);
+      const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
           ${camelCase}_upsert(data: $data)
@@ -642,10 +669,16 @@ export class DataConnectApiClient {
         message: '`data` must be a non-empty array for upsertMany.'
       });
     }
+    if (data.length > 10000) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` array exceeds the maximum limit of 10,000 items.'
+      });
+    }
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getArrayObjectsKeys(data);
+      const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
           ${camelCase}_upsertMany(data: $data)

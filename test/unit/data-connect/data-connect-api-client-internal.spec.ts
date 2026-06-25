@@ -699,9 +699,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
   // Helper function to normalize GraphQL strings
   const normalizeGraphQLString = (str: string): string => {
     return str
-      .replace(/\n/g, '')         // Remove newlines
-      .replace(/\s+/g, ' ')       // Replace multiple spaces with a single space
-      .trim();                    // Remove leading/trailing whitespace from the whole string
+      .replace(/\s*\n\s*/g, ' ')            // Replace newline and surrounding spaces with a single space
+      .replace(/\s+/g, ' ')                 // Collapse multiple spaces to a single space
+      .replace(/\s*([(){},:"'])\s*/g, '$1') // Remove all spaces surrounding structural characters
+      .trim();                              // Remove leading/trailing whitespace from the whole string
   };
 
   /**
@@ -765,7 +766,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for complex data', async () => {
       const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
       const expectedMutation =
-        `mutation($data: TestTable_Data! @allow(fields: "id active scores info")) {
+        `mutation($data: TestTable_Data! @allow(fields: "active id info { nested } scores")) {
           ${formatedTableName}_insert(data: $data)
         }`;
       await apiClient.insert(tableName, complexData);
@@ -774,7 +775,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
     it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
       const expectedMutation =
-        `mutation($data: TestTable_Data! @allow(fields: "genre title ratings director extras")) {
+        `mutation($data: TestTable_Data! @allow(fields: "director extras { a } genre ratings title")) {
           ${formatedTableName}_insert(data: $data)
         }`;
       await apiClient.insert(tableName, dataWithUndefined);
@@ -819,6 +820,27 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await apiClient.insert(tableName, data);
       expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
     });
+
+    it('should recursively extract deep nested object/array fields in @allow directive', async () => {
+      const deepData = {
+        id: '123',
+        customerId: 'c1',
+        total: 100,
+        tags: ['a', 'b'],
+        products_on_order: [
+          { id: 'p1', name: 'Product 1', price: 9.99, categories: [{ id: 'cat1', name: 'Category 1' }] }
+        ]
+      };
+      const expectedMutation = `
+        mutation(
+          $data: TestTable_Data!
+          @allow(fields: "customerId id products_on_order { categories { id name } id name price } tags total"))
+        {
+          testTable_insert(data: $data)
+        }`;
+      await apiClient.insert(tableName, deepData);
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: deepData } });
+    });
   });
 
   // --- INSERT MANY TESTS ---
@@ -852,7 +874,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
       ];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "id active info scores")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "active id info { nested } scores")) {
           ${formatedTableName}_insertMany(data: $data)
         }`;
       await apiClient.insertMany(tableName, complexDataArray);
@@ -865,7 +887,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         dataWithUndefined
       ];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "genre title ratings director extras")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "director extras { a } genre ratings title")) {
           ${formatedTableName}_insertMany(data: $data)
         }`;
       await apiClient.insertMany(tableName, dataArray);
@@ -890,6 +912,12 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should throw FirebaseDataConnectError for non-array data', () => {
       expect(apiClient.insertMany(tableName, { data: 1 } as any))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError if the data array length exceeds 10,000', async () => {
+      const oversizedArray = new Array(10001).fill({ name: 'a' });
+      await expect(apiClient.insertMany(tableName, oversizedArray))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` array exceeds the maximum limit of 10,000 items./);
     });
 
     it('should amend the message for query errors', async () => {
@@ -917,6 +945,68 @@ describe('DataConnectApiClient CRUD helpers', () => {
       };
       await apiClient.insertMany(tableName, data);
       expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
+    });
+
+    // eslint-disable-next-line max-len
+    it('should coalesce different object shapes in a bulk array into a single union of fields in @allow directive', async () => {
+      const dataArray = [
+        {
+          id: '1',
+          name: 'Item 1',
+          metadata: {
+            tags: ['new', 'sale'],
+            dimensions: { width: 10, height: 20 }
+          }
+        },
+        {
+          id: '2',
+          price: 19.99,
+          metadata: {
+            dimensions: { depth: 5 },
+            manufacturer: { name: 'M1', location: { country: 'US' } }
+          }
+        },
+        {
+          id: '3',
+          name: 'Item 3',
+          metadata: {
+            tags: ['promo'],
+            manufacturer: { location: { city: 'SF' } }
+          }
+        }
+      ];
+
+      const expectedMutation = `
+        mutation(
+          $data: [TestTable_Data!]!
+          @allow(
+            fields: "
+              id 
+              metadata { 
+                dimensions { 
+                  depth 
+                  height 
+                  width
+                } 
+                manufacturer { 
+                  location { 
+                    city 
+                    country
+                  } 
+                  name
+                } 
+                tags 
+              } 
+              name 
+              price
+            "
+          )
+        ) {
+          ${formatedTableName}_insertMany(data: $data)
+        }`;
+
+      await apiClient.insertMany(tableName, dataArray);
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataArray } });
     });
   });
 
@@ -948,7 +1038,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for complex data', async () => {
       const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
       const expectedMutation = `
-        mutation($data: TestTable_Data! @allow(fields: "id active items detail")) {
+        mutation($data: TestTable_Data! @allow(fields: "active detail { status } id items")) {
           ${formatedTableName}_upsert(data: $data)
         }`;
       await apiClient.upsert(tableName, complexData);
@@ -957,7 +1047,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
     it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
       const expectedMutation = `
-        mutation($data: TestTable_Data! @allow(fields: "genre title ratings director extras")) {
+        mutation($data: TestTable_Data! @allow(fields: "director extras { a } genre ratings title")) {
           ${formatedTableName}_upsert(data: $data)
         }`;
       await apiClient.upsert(tableName, dataWithUndefined);
@@ -1035,7 +1125,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         { id: 'y', scores: [null, 2] }
       ];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "id active info scores")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "active id info { nested } scores")) {
           ${formatedTableName}_upsertMany(data: $data)
         }`;
       await apiClient.upsertMany(tableName, complexDataArray);
@@ -1048,7 +1138,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         dataWithUndefined
       ];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "genre title ratings director extras")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "director extras { a } genre ratings title")) {
           ${formatedTableName}_upsertMany(data: $data)
         }`;
       await apiClient.upsertMany(tableName, dataArray);
@@ -1073,6 +1163,12 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should throw FirebaseDataConnectError for non-array data', async () => {
       await expect(apiClient.upsertMany(tableName, { data: 1 } as any))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
+    });
+
+    it('should throw FirebaseDataConnectError if the data array length exceeds 10,000', async () => {
+      const oversizedArray = new Array(10001).fill({ name: 'a' });
+      await expect(apiClient.upsertMany(tableName, oversizedArray))
+        .to.be.rejectedWith(FirebaseDataConnectError, /`data` array exceeds the maximum limit of 10,000 items./);
     });
 
     it('should amend the message for query errors', async () => {
