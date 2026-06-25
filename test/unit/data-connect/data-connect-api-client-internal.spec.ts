@@ -738,6 +738,72 @@ describe('DataConnectApiClient CRUD helpers', () => {
     return mockApp.delete();
   });
 
+  // --- GET FIELDS STRING TESTS ---
+  describe('getFieldsString()', () => {
+    it('should extract keys from a simple object sorted alphabetically', () => {
+      const data = { name: 'test', value: 123 };
+      const fields = apiClient['getFieldsString'](data);
+      expect(fields).to.equal('name value');
+    });
+
+    it('should recursively extract deep nested object fields sorted alphabetically', () => {
+      const data = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
+      const fields = apiClient['getFieldsString'](data);
+      expect(fields).to.equal('active id info { nested } scores');
+    });
+
+    it('should recursively extract deep nested object/array fields in @allow directive format', () => {
+      const deepData = {
+        id: '123',
+        customerId: 'c1',
+        total: 100,
+        tags: ['a', 'b'],
+        products_on_order: [
+          { id: 'p1', name: 'Product 1', price: 9.99, categories: [{ id: 'cat1', name: 'Category 1' }] }
+        ]
+      };
+      const fields = apiClient['getFieldsString'](deepData);
+      expect(fields).to.equal('customerId id products_on_order { categories { id name } id name price } tags total');
+    });
+
+    it('should skip undefined fields and handle nulls/empty objects', () => {
+      const fields = apiClient['getFieldsString'](dataWithUndefined);
+      expect(fields).to.equal('director extras { a } genre ratings title');
+    });
+
+    it('should coalesce different object shapes in a bulk array into a single union of fields', () => {
+      const dataArray = [
+        {
+          id: '1',
+          name: 'Item 1',
+          metadata: {
+            tags: ['new', 'sale'],
+            dimensions: { width: 10, height: 20 }
+          }
+        },
+        {
+          id: '2',
+          price: 19.99,
+          metadata: {
+            dimensions: { depth: 5 },
+            manufacturer: { name: 'M1', location: { country: 'US' } }
+          }
+        },
+        {
+          id: '3',
+          name: 'Item 3',
+          metadata: {
+            tags: ['promo'],
+            manufacturer: { location: { city: 'SF' } }
+          }
+        }
+      ];
+      const fields = apiClient['getFieldsString'](dataArray);
+      // eslint-disable-next-line max-len
+      expect(fields).to.equal('id metadata { dimensions { depth height width } manufacturer { location { city country } name } tags } name price');
+    });
+  });
+
   // --- INSERT TESTS ---
   describe('insert()', () => {
     tableNames.forEach((tableName, index) => {
@@ -763,25 +829,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
       expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleData } });
     });
 
-    it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
-      const expectedMutation =
-        `mutation($data: TestTable_Data! @allow(fields: "active id info { nested } scores")) {
-          ${formatedTableName}_insert(data: $data)
-        }`;
-      await apiClient.insert(tableName, complexData);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: complexData } });
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
-      const expectedMutation =
-        `mutation($data: TestTable_Data! @allow(fields: "director extras { a } genre ratings title")) {
-          ${formatedTableName}_insert(data: $data)
-        }`;
-      await apiClient.insert(tableName, dataWithUndefined);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataWithUndefined } });
-    });
-
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
       await expect(apiClient.insert('', { data: 1 }))
         .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
@@ -796,7 +843,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
       await expect(apiClient.insert(tableName, []))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
     });
-    
+
     it('should amend the message for query errors', async () => {
       try {
         await apiClientQueryError.insert(tableName, { data: 1 });
@@ -806,40 +853,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
         expect(err.cause).to.equal(expectedQueryError);
       }
-    });
-
-    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
-      const data = { id: 'key1', name: 'Fred', status: 'ACTIVE' };
-      const expectedMutation = `
-      mutation($data: TestTable_Data! @allow(fields: "id name status")) {
-        testTable_insert(data: $data)
-      }`;
-      const expectedOptions = {
-        variables: { data }
-      };
-      await apiClient.insert(tableName, data);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
-    });
-
-    it('should recursively extract deep nested object/array fields in @allow directive', async () => {
-      const deepData = {
-        id: '123',
-        customerId: 'c1',
-        total: 100,
-        tags: ['a', 'b'],
-        products_on_order: [
-          { id: 'p1', name: 'Product 1', price: 9.99, categories: [{ id: 'cat1', name: 'Category 1' }] }
-        ]
-      };
-      const expectedMutation = `
-        mutation(
-          $data: TestTable_Data!
-          @allow(fields: "customerId id products_on_order { categories { id name } id name price } tags total"))
-        {
-          testTable_insert(data: $data)
-        }`;
-      await apiClient.insert(tableName, deepData);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: deepData } });
     });
   });
 
@@ -866,32 +879,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         }`;
       await apiClient.insertMany(tableName, simpleDataArray);
       expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleDataArray } });
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data array', async () => {
-      const complexDataArray = [
-        { id: 'a', active: true, info: { nested: 'n1 "quote"' } },
-        { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
-      ];
-      const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "active id info { nested } scores")) {
-          ${formatedTableName}_insertMany(data: $data)
-        }`;
-      await apiClient.insertMany(tableName, complexDataArray);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: complexDataArray } });
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
-      const dataArray = [
-        dataWithUndefined,
-        dataWithUndefined
-      ];
-      const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "director extras { a } genre ratings title")) {
-          ${formatedTableName}_insertMany(data: $data)
-        }`;
-      await apiClient.insertMany(tableName, dataArray);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataArray } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -930,84 +917,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.cause).to.equal(expectedQueryError);
       }
     });
-
-    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
-      const data = [
-        { id: 'key1', name: 'Fred', status: 'ACTIVE' },
-        { id: 'key2', name: 'Bob', tags: ['cool'] }
-      ];
-      const expectedMutation = `
-      mutation($data: [TestTable_Data!]! @allow(fields: "id name status tags")) {
-        testTable_insertMany(data: $data)
-      }`;
-      const expectedOptions = {
-        variables: { data }
-      };
-      await apiClient.insertMany(tableName, data);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
-    });
-
-    // eslint-disable-next-line max-len
-    it('should coalesce different object shapes in a bulk array into a single union of fields in @allow directive', async () => {
-      const dataArray = [
-        {
-          id: '1',
-          name: 'Item 1',
-          metadata: {
-            tags: ['new', 'sale'],
-            dimensions: { width: 10, height: 20 }
-          }
-        },
-        {
-          id: '2',
-          price: 19.99,
-          metadata: {
-            dimensions: { depth: 5 },
-            manufacturer: { name: 'M1', location: { country: 'US' } }
-          }
-        },
-        {
-          id: '3',
-          name: 'Item 3',
-          metadata: {
-            tags: ['promo'],
-            manufacturer: { location: { city: 'SF' } }
-          }
-        }
-      ];
-
-      const expectedMutation = `
-        mutation(
-          $data: [TestTable_Data!]!
-          @allow(
-            fields: "
-              id 
-              metadata { 
-                dimensions { 
-                  depth 
-                  height 
-                  width
-                } 
-                manufacturer { 
-                  location { 
-                    city 
-                    country
-                  } 
-                  name
-                } 
-                tags 
-              } 
-              name 
-              price
-            "
-          )
-        ) {
-          ${formatedTableName}_insertMany(data: $data)
-        }`;
-
-      await apiClient.insertMany(tableName, dataArray);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataArray } });
-    });
   });
 
   // --- UPSERT TESTS ---
@@ -1035,25 +944,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
       expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleData } });
     });
 
-    it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
-      const expectedMutation = `
-        mutation($data: TestTable_Data! @allow(fields: "active detail { status } id items")) {
-          ${formatedTableName}_upsert(data: $data)
-        }`;
-      await apiClient.upsert(tableName, complexData);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: complexData } });
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
-      const expectedMutation = `
-        mutation($data: TestTable_Data! @allow(fields: "director extras { a } genre ratings title")) {
-          ${formatedTableName}_upsert(data: $data)
-        }`;
-      await apiClient.upsert(tableName, dataWithUndefined);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataWithUndefined } });
-    });
-
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
       await expect(apiClient.upsert('', { data: 1 }))
         .to.be.rejectedWith(FirebaseDataConnectError, /`tableName` must be a non-empty string./);
@@ -1078,19 +968,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
         expect(err.cause).to.equal(expectedQueryError);
       }
-    });
-
-    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
-      const data = { id: 'key1', name: 'Fred', status: 'ACTIVE' };
-      const expectedMutation = `
-      mutation($data: TestTable_Data! @allow(fields: "id name status")) {
-        testTable_upsert(data: $data)
-      }`;
-      const expectedOptions = {
-        variables: { data }
-      };
-      await apiClient.upsert(tableName, data);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
     });
   });
 
@@ -1117,32 +994,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         }`;
       await apiClient.upsertMany(tableName, simpleDataArray);
       expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleDataArray } });
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data array', async () => {
-      const complexDataArray = [
-        { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
-        { id: 'y', scores: [null, 2] }
-      ];
-      const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "active id info { nested } scores")) {
-          ${formatedTableName}_upsertMany(data: $data)
-        }`;
-      await apiClient.upsertMany(tableName, complexDataArray);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: complexDataArray } });
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
-      const dataArray = [
-        dataWithUndefined,
-        dataWithUndefined
-      ];
-      const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "director extras { a } genre ratings title")) {
-          ${formatedTableName}_upsertMany(data: $data)
-        }`;
-      await apiClient.upsertMany(tableName, dataArray);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: dataArray } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -1180,22 +1031,6 @@ describe('DataConnectApiClient CRUD helpers', () => {
         expect(err.message).to.equal(`${serverErrorString}. ${additionalErrorMessageForBulkImport}`);
         expect(err.cause).to.equal(expectedQueryError);
       }
-    });
-
-    it('should call executeGraphql with variables and @allow directive for enums and other fields', async () => {
-      const data = [
-        { id: 'key1', name: 'Fred', status: 'ACTIVE' },
-        { id: 'key2', name: 'Bob', tags: ['cool'] }
-      ];
-      const expectedMutation = `
-      mutation($data: [TestTable_Data!]! @allow(fields: "id name status tags")) {
-        testTable_upsertMany(data: $data)
-      }`;
-      const expectedOptions = {
-        variables: { data }
-      };
-      await apiClient.upsertMany(tableName, data);
-      expectNormalizedExecuteGraphqlCall(expectedMutation, expectedOptions);
     });
   });
 

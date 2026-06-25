@@ -520,43 +520,7 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
-    if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`tableName` must be a non-empty string.'
-      });
-    }
-    if (validator.isArray(data)) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be an object, not an array, for single insert. For arrays, please use '
-          + '`insertMany` function.'
-      });
-    }
-    if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be a non-null object.'
-      });
-    }
-
-    try {
-      const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getFieldsString(data);
-      const mutation =
-        `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
-          ${camelCase}_insert(data: $data)
-        }`;
-
-      return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
-        .catch(this.handleBulkImportErrors);
-    } catch (e: any) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        message: `Failed to construct insert mutation: ${e.message}`,
-        cause: e,
-      });
-    }
+    return this.executeSingleMutation<GraphQlResponse, Variables>(tableName, data, 'insert');
   }
 
   /**
@@ -566,42 +530,7 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
-    if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`tableName` must be a non-empty string.'
-      });
-    }
-    if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be a non-empty array for insertMany.',
-      });
-    }
-    if (data.length > 10000) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` array exceeds the maximum limit of 10,000 items.'
-      });
-    }
-
-    try {
-      const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getFieldsString(data);
-      const mutation =
-        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
-          ${camelCase}_insertMany(data: $data)
-        }`;
-
-      return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
-        .catch(this.handleBulkImportErrors);
-    } catch (e: any) {
-      throw new FirebaseDataConnectError({
-        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        message: `Failed to construct insertMany mutation: ${e.message}`,
-        cause: e,
-      });
-    }
+    return this.executeBulkMutation<GraphQlResponse, Variables>(tableName, data, 'insertMany');
   }
 
   /**
@@ -610,6 +539,24 @@ export class DataConnectApiClient {
   public async upsert<GraphQlResponse, Variables extends object>(
     tableName: string,
     data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.executeSingleMutation<GraphQlResponse, Variables>(tableName, data, 'upsert');
+  }
+
+  /**
+   * Insert multiple rows into the specified table, or update them if they already exist.
+   */
+  public async upsertMany<GraphQlResponse, Variables extends Array<unknown>>(
+    tableName: string,
+    data: Variables,
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.executeBulkMutation<GraphQlResponse, Variables>(tableName, data, 'upsertMany');
+  }
+
+  private async executeSingleMutation<GraphQlResponse, Variables extends object>(
+    tableName: string,
+    data: Variables,
+    operationType: 'insert' | 'upsert'
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError({
@@ -620,8 +567,8 @@ export class DataConnectApiClient {
     if (validator.isArray(data)) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be an object, not an array, for single upsert. For arrays, please use '
-          + '`upsertMany` function.'
+        message: `\`data\` must be an object, not an array, for single ${operationType}.\
+          For arrays, please use \`${operationType}Many\` function.`
       });
     }
     if (!validator.isNonNullObject(data)) {
@@ -636,7 +583,7 @@ export class DataConnectApiClient {
       const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
-          ${camelCase}_upsert(data: $data)
+          ${camelCase}_${operationType}(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
@@ -644,18 +591,16 @@ export class DataConnectApiClient {
     } catch (e: any) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        message: `Failed to construct upsert mutation: ${e.message}`,
+        message: `Failed to construct ${operationType} mutation: ${e.message}`,
         cause: e,
       });
     }
   }
 
-  /**
-   * Insert multiple rows into the specified table, or update them if they already exist.
-   */
-  public async upsertMany<GraphQlResponse, Variables extends Array<unknown>>(
+  private async executeBulkMutation<GraphQlResponse, Variables extends Array<unknown>>(
     tableName: string,
     data: Variables,
+    operationType: 'insertMany' | 'upsertMany'
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
       throw new FirebaseDataConnectError({
@@ -666,7 +611,7 @@ export class DataConnectApiClient {
     if (!validator.isNonEmptyArray(data)) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` must be a non-empty array for upsertMany.'
+        message: `\`data\` must be a non-empty array for ${operationType}.`
       });
     }
     if (data.length > 10000) {
@@ -681,7 +626,7 @@ export class DataConnectApiClient {
       const keys = this.getFieldsString(data);
       const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
-          ${camelCase}_upsertMany(data: $data)
+          ${camelCase}_${operationType}(data: $data)
         }`;
 
       return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
@@ -689,7 +634,7 @@ export class DataConnectApiClient {
     } catch (e: any) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        message: `Failed to construct upsertMany mutation: ${e.message}`,
+        message: `Failed to construct ${operationType} mutation: ${e.message}`,
         cause: e,
       });
     }
