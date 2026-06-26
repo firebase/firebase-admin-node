@@ -483,7 +483,9 @@ export class DataConnectApiClient {
           childNode = { children: new Map() };
           node.children.set(key, childNode);
         }
-        this.mergeFieldsIntoTree(val, childNode);
+        if (key.includes('_on_')) {
+          this.mergeFieldsIntoTree(val, childNode);
+        }
       }
     }
   }
