@@ -24,9 +24,10 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { 
-  ALLOW_DIRECTIVE_MAX_COUNT, 
-  DataConnectApiClient
+import {
+  ALLOW_DIRECTIVE_MAX_COUNT,
+  DataConnectApiClient,
+  getFieldsString
 } from '../../../src/data-connect/data-connect-api-client-internal';
 import {
   FirebaseDataConnectError,
@@ -294,7 +295,7 @@ describe('DataConnectApiClient', () => {
 
     describe('should reject with an appropriate error response on failure', () => {
       it('should reject when no operationName is provided', () => {
-        apiClient.executeQuery( '', undefined, unauthenticatedOptions)
+        apiClient.executeQuery('', undefined, unauthenticatedOptions)
           .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
         apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
           .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
@@ -302,8 +303,8 @@ describe('DataConnectApiClient', () => {
 
       it('should reject when project id is not available', () => {
         clientWithoutProjectId.executeQuery(
-          'unauthenticated query', 
-          undefined, 
+          'unauthenticated query',
+          undefined,
           unauthenticatedOptions
         ).should.eventually.be.rejectedWith(noProjectId);
       });
@@ -395,8 +396,8 @@ describe('DataConnectApiClient', () => {
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
         const resp = await apiClient.executeQuery<UsersResponse, undefined>(
-          'unauthenticated query', 
-          undefined, 
+          'unauthenticated query',
+          undefined,
           unauthenticatedOptions
         );
         expect(resp.data.users).to.be.not.empty;
@@ -407,8 +408,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'unauthenticated query', 
+          data: {
+            operationName: 'unauthenticated query',
             extensions: unauthenticatedOptions
           }
         });
@@ -419,8 +420,8 @@ describe('DataConnectApiClient', () => {
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
         const resp = await apiClient.executeQuery<UsersResponse, undefined>(
-          'authenticated query', 
-          undefined, 
+          'authenticated query',
+          undefined,
           authenticatedOptions
         );
         expect(resp.data.users).to.be.not.empty;
@@ -431,8 +432,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'authenticated query', 
+          data: {
+            operationName: 'authenticated query',
             extensions: { impersonate: authenticatedOptions.impersonate }
           }
         });
@@ -445,25 +446,25 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
       await apiClient.executeQuery(
-        'unauthenticated query', 
-        undefined, 
+        'unauthenticated query',
+        undefined,
         unauthenticatedOptions
       );
       expect(stub).to.have.been.calledOnce.and.calledWith({
         method: 'POST',
         url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
         headers: EMULATOR_EXPECTED_HEADERS,
-        data: { 
-          operationName: 'unauthenticated query', 
+        data: {
+          operationName: 'unauthenticated query',
           extensions: unauthenticatedOptions
         }
       });
     });
   });
 
-  const unauthenticatedOptions: OperationOptions = 
+  const unauthenticatedOptions: OperationOptions =
     { impersonate: { unauthenticated: true } };
-  const authenticatedOptions: OperationOptions = 
+  const authenticatedOptions: OperationOptions =
     { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
   describe('executeMutation', () => {
@@ -576,8 +577,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'unauthenticated mutation', 
+          data: {
+            operationName: 'unauthenticated mutation',
             extensions: unauthenticatedOptions
           }
         });
@@ -598,8 +599,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'authenticated mutation', 
+          data: {
+            operationName: 'authenticated mutation',
             extensions: authenticatedOptions
           }
         });
@@ -616,8 +617,8 @@ describe('DataConnectApiClient', () => {
         method: 'POST',
         url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
         headers: EMULATOR_EXPECTED_HEADERS,
-        data: { 
-          operationName: 'unauthenticated mutation', 
+        data: {
+          operationName: 'unauthenticated mutation',
           extensions: unauthenticatedOptions
         }
       });
@@ -743,67 +744,95 @@ describe('DataConnectApiClient CRUD helpers', () => {
 
   // --- GET FIELDS STRING TESTS ---
   describe('getFieldsString()', () => {
-    it('should extract keys from a simple object sorted alphabetically', () => {
-      const data = { name: 'test', value: 123 };
-      const fields = apiClient['getFieldsString'](data);
-      expect(fields).to.equal('name value');
-    });
+    describe('single object', () => {
+      it('should extract keys from a simple object sorted alphabetically', () => {
+        const data = { name: 'test', value: 123 };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('name value');
+      });
 
-    it('should recursively extract deep nested object fields sorted alphabetically', () => {
-      const data = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
-      const fields = apiClient['getFieldsString'](data);
-      expect(fields).to.equal('active id info { nested } scores');
-    });
+      it('should recursively extract nested object fields for objects with _on_ field names', () => {
+        const data = { 
+          id: 'abc', 
+          active: true, 
+          scores: [10, 20], 
+          info_on_test: { nested: 'yes/no "quote" \\slash\\' }
+        };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('active id info_on_test { nested } scores');
+      });
 
-    it('should recursively extract deep nested object/array fields in @allow directive format', () => {
-      const deepData = {
-        id: '123',
-        customerId: 'c1',
-        total: 100,
-        tags: ['a', 'b'],
-        products_on_order: [
-          { id: 'p1', name: 'Product 1', price: 9.99, categories: [{ id: 'cat1', name: 'Category 1' }] }
-        ]
-      };
-      const fields = apiClient['getFieldsString'](deepData);
-      expect(fields).to.equal('customerId id products_on_order { categories { id name } id name price } tags total');
-    });
-
-    it('should skip undefined fields and handle nulls/empty objects', () => {
-      const fields = apiClient['getFieldsString'](dataWithUndefined);
-      expect(fields).to.equal('director extras { a } genre ratings title');
-    });
-
-    it('should coalesce different object shapes in a bulk array into a single union of fields', () => {
-      const dataArray = [
-        {
+      it('should recursively extract deep nested object/array fields for objects with _on_ field names', () => {
+        const deepData = {
           id: '1',
-          name: 'Item 1',
-          metadata: {
-            tags: ['new', 'sale'],
-            dimensions: { width: 10, height: 20 }
+          tags_on_item: { name: 'Tag1', count: 1, colors_on_tag: { primary: 'red', secondary: 'red' } },
+        };
+        const fields = getFieldsString(deepData);
+        expect(fields).to.equal('id tags_on_item { colors_on_tag { primary secondary } count name }');
+      });
+
+      it('should skip undefined fields and handle nulls/empty objects', () => {
+        const fields = getFieldsString(dataWithUndefined);
+        expect(fields).to.equal('director extras genre ratings title');
+      });
+    });
+    
+    describe('array of objects', () => {
+      it('should extract and coalesce keys from simple objects sorted alphabetically', () => {
+        const dataArray = [
+          { name: 'test' },
+          { value: 123 },
+          { name: 'another', other: true }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('name other value');
+      });
+
+      it('should extract and coalesce different object shapes in a bulk array into a single union of fields', () => {
+        const dataArray = [
+          {
+            id: '1',
+            name: 'Item 1',
+          },
+          {
+            id: '2',
+            price: 19.99,
+          },
+          {
+            id: '3',
+            name: 'Item 3',
           }
-        },
-        {
-          id: '2',
-          price: 19.99,
-          metadata: {
-            dimensions: { depth: 5 },
-            manufacturer: { name: 'M1', location: { country: 'US' } }
-          }
-        },
-        {
-          id: '3',
-          name: 'Item 3',
-          metadata: {
-            tags: ['promo'],
-            manufacturer: { location: { city: 'SF' } }
-          }
-        }
-      ];
-      const fields = apiClient['getFieldsString'](dataArray);
-      // eslint-disable-next-line max-len
-      expect(fields).to.equal('id metadata { dimensions { depth height width } manufacturer { location { city country } name } tags } name price');
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('id name price');
+      });
+
+      it('should recursively extract and coalesce nested object fields for objects with _on_ field names', () => {
+        const dataArray = [
+          { id: 'abc', active: true, info_on_test: { nested: 'yes' } },
+          { scores: [10, 20], info_on_test: { other: 123 } }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('active id info_on_test { nested other } scores');
+      });
+
+      it('should recursively coalesce deep nested fields for objects with _on_ names', () => {
+        const dataArray = [
+          { id: '1', tags_on_item: { name: 'Tag1', colors_on_tag: { primary: 'red' } } },
+          { tags_on_item: { count: 1, colors_on_tag: { secondary: 'blue' } } }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('id tags_on_item { colors_on_tag { primary secondary } count name }');
+      });
+
+      it('should skip undefined fields and handle nulls/empty objects across multiple objects in array', () => {
+        const dataArray = [
+          dataWithUndefined,
+          { notes: 'actual note', releaseYear: 2024, genre: undefined }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('director extras genre notes ratings releaseYear title');
+      });
     });
   });
 
@@ -842,7 +871,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
     });
 
-    it('should throw FirebaseDataConnectError for array data', async() => {
+    it('should throw FirebaseDataConnectError for array data', async () => {
       await expect(apiClient.insert(tableName, []))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
     });

@@ -456,54 +456,7 @@ export class DataConnectApiClient {
     return { capitalized, camelCase };
   }
 
-  /**
-   * Extracts property keys from an object or array of objects as a space-separated string,
-   * including recursively nested object/array fields for the `@allow(fields: ...)` directive.
-   * Leverages a hierarchical tree to deduplicate and merge fields.
-   */
-  private getFieldsString(data: unknown): string {
-    const root: FieldNode = { children: new Map() };
-    this.mergeFieldsIntoTree(data, root);
-    return this.serializeFieldNode(root);
-  }
 
-  private mergeFieldsIntoTree(data: unknown, node: FieldNode): void {
-    if (validator.isArray(data)) {
-      for (const item of data) {
-        this.mergeFieldsIntoTree(item, node);
-      }
-    } else if (validator.isNonNullObject(data) && !(data instanceof Date)) {
-      const record = data as Record<string, unknown>;
-      for (const [key, val] of Object.entries(record)) {
-        if (val === undefined) {
-          continue;
-        }
-        let childNode = node.children.get(key);
-        if (!childNode) {
-          childNode = { children: new Map() };
-          node.children.set(key, childNode);
-        }
-        if (key.includes('_on_')) {
-          this.mergeFieldsIntoTree(val, childNode);
-        }
-      }
-    }
-  }
-
-  private serializeFieldNode(node: FieldNode): string {
-    const parts: string[] = [];
-    const sortedKeys = Array.from(node.children.keys()).sort((a, b) => a.localeCompare(b));
-    for (const key of sortedKeys) {
-      const childNode = node.children.get(key)!;
-      if (childNode.children.size > 0) {
-        const nestedString = this.serializeFieldNode(childNode);
-        parts.push(`${key} { ${nestedString} }`);
-      } else {
-        parts.push(key);
-      }
-    }
-    return parts.join(' ');
-  }
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
     if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`) {
@@ -584,7 +537,7 @@ export class DataConnectApiClient {
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getFieldsString(data);
+      const keys = getFieldsString(data);
       const mutation =
         `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
           ${camelCase}_${operationType}(data: $data)
@@ -627,7 +580,7 @@ export class DataConnectApiClient {
 
     try {
       const { capitalized, camelCase } = this.getTableNames(tableName);
-      const keys = this.getFieldsString(data);
+      const keys = getFieldsString(data);
       const mutation =
         `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${camelCase}_${operationType}(data: $data)
@@ -677,4 +630,56 @@ interface ServerError {
   code?: number;
   message?: string;
   status?: string;
+}
+
+/**
+ * Extracts property keys from an object or array of objects as a space-separated string,
+ * including recursively nested object/array fields for the `@allow(fields: ...)` directive.
+ * Leverages a hierarchical tree to deduplicate and merge fields.
+ *
+ * @internal
+ */
+export function getFieldsString(data: unknown): string {
+  const root: FieldNode = { children: new Map() };
+  mergeFieldsIntoTree(data, root);
+  return serializeFieldNode(root);
+}
+
+function mergeFieldsIntoTree(data: unknown, node: FieldNode): void {
+  if (validator.isArray(data)) {
+    data.forEach((item) => mergeFieldsIntoTree(item, node));
+    return;
+  }
+  if (!validator.isNonNullObject(data) || data instanceof Date) {
+    return;
+  }
+  const record = data as Record<string, unknown>;
+  for (const [key, val] of Object.entries(record)) {
+    if (val === undefined) {
+      continue;
+    }
+    let childNode = node.children.get(key);
+    if (!childNode) {
+      childNode = { children: new Map() };
+      node.children.set(key, childNode);
+    }
+    if (key.includes('_on_')) {
+      mergeFieldsIntoTree(val, childNode);
+    }
+  }
+}
+
+function serializeFieldNode(node: FieldNode): string {
+  const parts: string[] = [];
+  const sortedKeys = Array.from(node.children.keys()).sort((a, b) => a.localeCompare(b));
+  for (const key of sortedKeys) {
+    const childNode = node.children.get(key)!;
+    if (childNode.children.size > 0) {
+      const nestedString = serializeFieldNode(childNode);
+      parts.push(`${key} { ${nestedString} }`);
+    } else {
+      parts.push(key);
+    }
+  }
+  return parts.join(' ');
 }
