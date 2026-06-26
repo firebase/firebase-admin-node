@@ -67,6 +67,8 @@ const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
 const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
+/** @internal The maximum number of items allowed in the @allow directive's maxCount argument. */
+export const ALLOW_DIRECTIVE_MAX_COUNT = 10_000;
 
 function getHeaders(isUsingGen: boolean): { [key: string]: string } {
   const headerValue = {
@@ -614,10 +616,10 @@ export class DataConnectApiClient {
         message: `\`data\` must be a non-empty array for ${operationType}.`
       });
     }
-    if (data.length > 10000) {
+    if (data.length > ALLOW_DIRECTIVE_MAX_COUNT) {
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: '`data` array exceeds the maximum limit of 10,000 items.'
+        message: `\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.`
       });
     }
 
@@ -625,7 +627,7 @@ export class DataConnectApiClient {
       const { capitalized, camelCase } = this.getTableNames(tableName);
       const keys = this.getFieldsString(data);
       const mutation =
-        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}")) {
+        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${camelCase}_${operationType}(data: $data)
         }`;
 

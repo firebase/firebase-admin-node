@@ -24,7 +24,10 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
+import { 
+  ALLOW_DIRECTIVE_MAX_COUNT, 
+  DataConnectApiClient
+} from '../../../src/data-connect/data-connect-api-client-internal';
 import {
   FirebaseDataConnectError,
   DATA_CONNECT_ERROR_CODE_MAPPING,
@@ -64,8 +67,8 @@ describe('DataConnectApiClient', () => {
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
-  + 'account credentials or set project ID as an app option. Alternatively, set the '
-  + 'GOOGLE_CLOUD_PROJECT environment variable.';
+    + 'account credentials or set project ID as an app option. Alternatively, set the '
+    + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
   const TEST_RESPONSE = {
     data: {
@@ -861,7 +864,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     tableNames.forEach((tableName, index) => {
       const capitalizedTable = capitalize(formatedTableNames[index]);
       const expectedMutation = `
-        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name")) {
+        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${formatedTableNames[index]}_insertMany(data: $data)
         }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
@@ -874,7 +877,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "name value")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "name value", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${formatedTableName}_insertMany(data: $data)
         }`;
       await apiClient.insertMany(tableName, simpleDataArray);
@@ -901,10 +904,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
 
-    it('should throw FirebaseDataConnectError if the data array length exceeds 10,000', async () => {
-      const oversizedArray = new Array(10001).fill({ name: 'a' });
+    // eslint-disable-next-line max-len
+    it(`should throw FirebaseDataConnectError if the data array length exceeds ${ALLOW_DIRECTIVE_MAX_COUNT}`, async () => {
+      const oversizedArray = new Array(ALLOW_DIRECTIVE_MAX_COUNT + 1).fill({ name: 'a' });
       await expect(apiClient.insertMany(tableName, oversizedArray))
-        .to.be.rejectedWith(FirebaseDataConnectError, /`data` array exceeds the maximum limit of 10,000 items./);
+        .to.be.rejectedWith(
+          FirebaseDataConnectError,
+          new RegExp(`^\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.$`)
+        );
     });
 
     it('should amend the message for query errors', async () => {
@@ -976,7 +983,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     tableNames.forEach((tableName, index) => {
       const capitalizedTable = capitalize(formatedTableNames[index]);
       const expectedMutation = `
-        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name")) {
+        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${formatedTableNames[index]}_upsertMany(data: $data)
         }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
@@ -989,7 +996,7 @@ describe('DataConnectApiClient CRUD helpers', () => {
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
       const expectedMutation = `
-        mutation($data: [TestTable_Data!]! @allow(fields: "id value")) {
+        mutation($data: [TestTable_Data!]! @allow(fields: "id value", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
           ${formatedTableName}_upsertMany(data: $data)
         }`;
       await apiClient.upsertMany(tableName, simpleDataArray);
@@ -1016,10 +1023,14 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
     });
 
-    it('should throw FirebaseDataConnectError if the data array length exceeds 10,000', async () => {
-      const oversizedArray = new Array(10001).fill({ name: 'a' });
+    // eslint-disable-next-line max-len
+    it(`should throw FirebaseDataConnectError if the data array length exceeds ${ALLOW_DIRECTIVE_MAX_COUNT}`, async () => {
+      const oversizedArray = new Array(ALLOW_DIRECTIVE_MAX_COUNT + 1).fill({ name: 'a' });
       await expect(apiClient.upsertMany(tableName, oversizedArray))
-        .to.be.rejectedWith(FirebaseDataConnectError, /`data` array exceeds the maximum limit of 10,000 items./);
+        .to.be.rejectedWith(
+          FirebaseDataConnectError,
+          new RegExp(`^\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.$`)
+        );
     });
 
     it('should amend the message for query errors', async () => {
