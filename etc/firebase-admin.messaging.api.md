@@ -162,6 +162,16 @@ export interface FcmOptions {
     analyticsLabel?: string;
 }
 
+// @public
+export interface FidMessage extends BaseMessage {
+    fid: string;
+}
+
+// @public
+export interface FidMulticastMessage extends BaseMessage {
+    fids: string[];
+}
+
 // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -183,7 +193,7 @@ export interface LightSettings {
 }
 
 // @public
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
+export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 // @public
 export class Messaging {
@@ -192,7 +202,9 @@ export class Messaging {
     enableLegacyHttpTransport(): void;
     send(message: Message, dryRun?: boolean): Promise<string>;
     sendEach(messages: Message[], dryRun?: boolean): Promise<BatchResponse>;
+    // @deprecated
     sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
+    sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
 }
@@ -207,6 +219,7 @@ export const MessagingErrorCode: {
     readonly INVALID_OPTIONS: "invalid-options";
     readonly INVALID_REGISTRATION_TOKEN: "invalid-registration-token";
     readonly REGISTRATION_TOKEN_NOT_REGISTERED: "registration-token-not-registered";
+    readonly INSTALLATION_ID_NOT_REGISTERED: "installation-id-not-registered";
     readonly MISMATCHED_CREDENTIAL: "mismatched-credential";
     readonly INVALID_PACKAGE_NAME: "invalid-package-name";
     readonly DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded";
@@ -232,9 +245,10 @@ export interface MessagingTopicManagementResponse {
     successCount: number;
 }
 
-// @public
+// @public @deprecated
 export interface MulticastMessage extends BaseMessage {
-    // (undocumented)
+    fids?: string[];
+    // @deprecated
     tokens: string[];
 }
 
@@ -252,7 +266,7 @@ export interface SendResponse {
     success: boolean;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface TokenMessage extends BaseMessage {
     // (undocumented)
     token: string;

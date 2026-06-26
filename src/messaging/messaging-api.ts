@@ -26,6 +26,19 @@ export interface BaseMessage {
   fcmOptions?: FcmOptions;
 }
 
+/**
+ * Interface representing a message that targets a Firebase Installation ID (FID).
+ */
+export interface FidMessage extends BaseMessage {
+  /**
+   * The Firebase Installation ID (FID) to which the message should be sent.
+   */
+  fid: string;
+}
+
+/**
+ * @deprecated Use {@link FidMessage} instead.
+ */
 export interface TokenMessage extends BaseMessage {
   token: string;
 }
@@ -40,16 +53,42 @@ export interface ConditionMessage extends BaseMessage {
 
 /**
  * Payload for the {@link Messaging.send} operation. The payload contains all the fields
- * in the BaseMessage type, and exactly one of token, topic or condition.
+ * in the BaseMessage type, and exactly one of fid, token (deprecated, use fid instead),
+ * topic or condition.
  */
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
+export type Message = FidMessage | TokenMessage | TopicMessage | ConditionMessage;
 
 /**
- * Payload for the {@link Messaging.sendEachForMulticast} method. The payload contains all the fields
- * in the BaseMessage type, and a list of tokens.
+ * Payload for the `sendEachForMulticast` method.
+ *
+ * @deprecated Use {@link FidMulticastMessage} instead.
  */
 export interface MulticastMessage extends BaseMessage {
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids?: string[];
+  /**
+   * A list of registration tokens to target.
+   *
+   * @deprecated Use `fids` in {@link FidMulticastMessage} instead.
+   */
   tokens: string[];
+}
+
+/**
+ * Payload for the `sendEachForMulticast` method containing only FIDs.
+ *
+ * @remarks
+ * Note: This is a temporary interface. In the next major version, this will be
+ * renamed back to `MulticastMessage` once the old token-based `MulticastMessage`
+ * is fully deprecated and removed.
+ */
+export interface FidMulticastMessage extends BaseMessage {
+  /**
+   * A list of Firebase Installation IDs (FIDs) to target.
+   */
+  fids: string[];
 }
 
 /**
@@ -698,7 +737,7 @@ export interface MessagingTopicManagementResponse {
 
 /**
  * Interface representing the server response from the
- * {@link Messaging.sendEach} and {@link Messaging.sendEachForMulticast} methods.
+ * {@link Messaging.sendEach} and `sendEachForMulticast` methods.
  */
 export interface BatchResponse {
 

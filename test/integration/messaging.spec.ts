@@ -16,7 +16,7 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { Message, MulticastMessage, getMessaging } from '../../lib/messaging/index';
+import { Message, MulticastMessage, FidMulticastMessage, getMessaging } from '../../lib/messaging/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -33,6 +33,8 @@ const registrationToken = 'fGw0qy4TGgk:APA91bGtWGjuhp4WRhHXgbabIYp1jxEKI08ofj_v1
 const topic = 'mock-topic';
 
 const invalidTopic = 'topic-$%#^';
+
+const mockFid = 'mock-fid';
 
 const message: Message = {
   data: {
@@ -80,12 +82,24 @@ const message: Message = {
   topic: 'foo-bar',
 };
 
+const fidMessage: Message = {
+  data: message.data,
+  android: message.android,
+  apns: message.apns,
+  fid: mockFid,
+};
+
 describe('admin.messaging', () => {
   it('send(message, dryRun) returns a message ID', () => {
     return getMessaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
       });
+  });
+
+  it('send(message with fid, dryRun) fails with installation-id-not-registered', () => {
+    return getMessaging().send(fidMessage, true)
+      .should.eventually.be.rejected.and.have.property('code', 'messaging/installation-id-not-registered');
   });
 
   it('sendEach()', () => {
@@ -135,6 +149,51 @@ describe('admin.messaging', () => {
           expect(resp.messageId).to.be.undefined;
           expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
         });
+      });
+  });
+
+  it('sendEachForMulticast() with fids', () => {
+    const multicastMessage: FidMulticastMessage = {
+      data: message.data,
+      android: message.android,
+      fids: ['not-a-fid', 'also-not-a-fid'],
+    };
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/installation-id-not-registered');
+        });
+      });
+  });
+
+  it('sendEachForMulticast() with mixed tokens and fids', () => {
+    const multicastMessage: MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      tokens: ['not-a-token'],
+      fids: ['not-a-fid'],
+    };
+    return getMessaging().sendEachForMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+
+        expect(response.responses[0].success).to.be.false;
+        expect(response.responses[0].messageId).to.be.undefined;
+        expect(response.responses[0].error).to.have.property('code', 'messaging/invalid-argument');
+
+        expect(response.responses[1].success).to.be.false;
+        expect(response.responses[1].messageId).to.be.undefined;
+        expect(response.responses[1].error).to.have.property(
+          'code',
+          'messaging/installation-id-not-registered',
+        );
       });
   });
 
