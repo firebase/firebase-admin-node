@@ -24,7 +24,11 @@ import {
 } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
-import { DataConnectApiClient } from '../../../src/data-connect/data-connect-api-client-internal';
+import {
+  ALLOW_DIRECTIVE_MAX_COUNT,
+  DataConnectApiClient,
+  getFieldsString
+} from '../../../src/data-connect/data-connect-api-client-internal';
 import {
   FirebaseDataConnectError,
   DATA_CONNECT_ERROR_CODE_MAPPING,
@@ -64,8 +68,8 @@ describe('DataConnectApiClient', () => {
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
-  + 'account credentials or set project ID as an app option. Alternatively, set the '
-  + 'GOOGLE_CLOUD_PROJECT environment variable.';
+    + 'account credentials or set project ID as an app option. Alternatively, set the '
+    + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
   const TEST_RESPONSE = {
     data: {
@@ -291,7 +295,7 @@ describe('DataConnectApiClient', () => {
 
     describe('should reject with an appropriate error response on failure', () => {
       it('should reject when no operationName is provided', () => {
-        apiClient.executeQuery( '', undefined, unauthenticatedOptions)
+        apiClient.executeQuery('', undefined, unauthenticatedOptions)
           .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
         apiClient.executeQuery(undefined as unknown as string, undefined, unauthenticatedOptions)
           .should.eventually.be.rejectedWith('`name` must be a non-empty string.');
@@ -299,8 +303,8 @@ describe('DataConnectApiClient', () => {
 
       it('should reject when project id is not available', () => {
         clientWithoutProjectId.executeQuery(
-          'unauthenticated query', 
-          undefined, 
+          'unauthenticated query',
+          undefined,
           unauthenticatedOptions
         ).should.eventually.be.rejectedWith(noProjectId);
       });
@@ -392,8 +396,8 @@ describe('DataConnectApiClient', () => {
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
         const resp = await apiClient.executeQuery<UsersResponse, undefined>(
-          'unauthenticated query', 
-          undefined, 
+          'unauthenticated query',
+          undefined,
           unauthenticatedOptions
         );
         expect(resp.data.users).to.be.not.empty;
@@ -404,8 +408,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'unauthenticated query', 
+          data: {
+            operationName: 'unauthenticated query',
             extensions: unauthenticatedOptions
           }
         });
@@ -416,8 +420,8 @@ describe('DataConnectApiClient', () => {
           .stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(TEST_RESPONSE, 200));
         const resp = await apiClient.executeQuery<UsersResponse, undefined>(
-          'authenticated query', 
-          undefined, 
+          'authenticated query',
+          undefined,
           authenticatedOptions
         );
         expect(resp.data.users).to.be.not.empty;
@@ -428,8 +432,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'authenticated query', 
+          data: {
+            operationName: 'authenticated query',
             extensions: { impersonate: authenticatedOptions.impersonate }
           }
         });
@@ -442,25 +446,25 @@ describe('DataConnectApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200));
       await apiClient.executeQuery(
-        'unauthenticated query', 
-        undefined, 
+        'unauthenticated query',
+        undefined,
         unauthenticatedOptions
       );
       expect(stub).to.have.been.calledOnce.and.calledWith({
         method: 'POST',
         url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateQuery`,
         headers: EMULATOR_EXPECTED_HEADERS,
-        data: { 
-          operationName: 'unauthenticated query', 
+        data: {
+          operationName: 'unauthenticated query',
           extensions: unauthenticatedOptions
         }
       });
     });
   });
 
-  const unauthenticatedOptions: OperationOptions = 
+  const unauthenticatedOptions: OperationOptions =
     { impersonate: { unauthenticated: true } };
-  const authenticatedOptions: OperationOptions = 
+  const authenticatedOptions: OperationOptions =
     { impersonate: { authClaims: { sub: 'authenticated-UUID' } } };
 
   describe('executeMutation', () => {
@@ -573,8 +577,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'unauthenticated mutation', 
+          data: {
+            operationName: 'unauthenticated mutation',
             extensions: unauthenticatedOptions
           }
         });
@@ -595,8 +599,8 @@ describe('DataConnectApiClient', () => {
           method: 'POST',
           url: `https://firebasedataconnect.googleapis.com/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
           headers: EXPECTED_HEADERS,
-          data: { 
-            operationName: 'authenticated mutation', 
+          data: {
+            operationName: 'authenticated mutation',
             extensions: authenticatedOptions
           }
         });
@@ -613,8 +617,8 @@ describe('DataConnectApiClient', () => {
         method: 'POST',
         url: `http://localhost:9399/v1/projects/test-project/locations/${connectorConfig.location}/services/${connectorConfig.serviceId}/connectors/${connectorConfig.connector}:impersonateMutation`,
         headers: EMULATOR_EXPECTED_HEADERS,
-        data: { 
-          operationName: 'unauthenticated mutation', 
+        data: {
+          operationName: 'unauthenticated mutation',
           extensions: unauthenticatedOptions
         }
       });
@@ -699,9 +703,29 @@ describe('DataConnectApiClient CRUD helpers', () => {
   // Helper function to normalize GraphQL strings
   const normalizeGraphQLString = (str: string): string => {
     return str
-      .replace(/\s*\n\s*/g, '\n') // Remove leading/trailing whitespace around newlines
-      .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
-      .trim();                    // Remove leading/trailing whitespace from the whole string
+      .replace(/\s*\n\s*/g, ' ')            // Replace newline and surrounding spaces with a single space
+      .replace(/\s+/g, ' ')                 // Collapse multiple spaces to a single space
+      .replace(/\s*([(){},:"'])\s*/g, '$1') // Remove all spaces surrounding structural characters
+      .trim();                              // Remove leading/trailing whitespace from the whole string
+  };
+
+  /**
+   * Helper function to normalize and validate the executeGraphql calls. Importantly,
+   * normalizes the actual input and the expected input to account for whitespace
+   * diffs.
+   */
+  function expectNormalizedExecuteGraphqlCall(
+    expectedQuery: string,
+    expectedVariables: Record<string, unknown>
+  ): void {
+    expect(executeGraphqlStub).to.have.been.calledOnce;
+    const call = executeGraphqlStub.getCall(0);
+    expect(normalizeGraphQLString(call.args[0])).to.equal(normalizeGraphQLString(expectedQuery));
+    expect(call.args[1]).to.deep.equal(expectedVariables);
+  }
+
+  const capitalize = (str: string): string => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
   beforeEach(() => {
@@ -718,56 +742,147 @@ describe('DataConnectApiClient CRUD helpers', () => {
     return mockApp.delete();
   });
 
+  // --- GET FIELDS STRING TESTS ---
+  describe('getFieldsString()', () => {
+    describe('single object', () => {
+      it('should extract keys from a simple object sorted alphabetically', () => {
+        const data = { name: 'test', value: 123 };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('name value');
+      });
+
+      it('should recursively extract nested object fields for objects with _on_ field names', () => {
+        const data = { 
+          id: 'abc', 
+          active: true, 
+          scores: [10, 20], 
+          info_on_test: { nested: 'yes/no "quote" \\slash\\' }
+        };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('active id info_on_test { nested } scores');
+      });
+
+      it('should recursively extract deep nested object/array fields for objects with _on_ field names', () => {
+        const deepData = {
+          id: '1',
+          tags_on_item: { name: 'Tag1', count: 1, colors_on_tag: { primary: 'red', secondary: 'red' } },
+        };
+        const fields = getFieldsString(deepData);
+        expect(fields).to.equal('id tags_on_item { colors_on_tag { primary secondary } count name }');
+      });
+
+      it('should skip undefined fields and handle nulls/empty objects', () => {
+        const fields = getFieldsString(dataWithUndefined);
+        expect(fields).to.equal('director extras genre ratings title');
+      });
+
+      it('should allow duplicate object references in different sibling branches (non-circular DAG)', () => {
+        const shared = { name: 'shared' };
+        const data = {
+          child1_on_foo: shared,
+          child2_on_bar: shared,
+        };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('child1_on_foo { name } child2_on_bar { name }');
+      });
+
+      it('should throw an error if a direct circular reference is detected', () => {
+        const data: any = { id: 'abc' };
+        data.direct_circular_on_reference = data;
+        expect(() => getFieldsString(data)).to.throw('Circular reference detected in input.');
+      });
+
+      it('should throw an error if an indirect circular reference is detected', () => {
+        const data: any = { id: 'abc' };
+        data.indirect_circular_on_reference = {
+          circular_on_reference: data,
+        };
+        expect(() => getFieldsString(data)).to.throw('Circular reference detected in input.');
+      });
+    });
+    
+    describe('array of objects', () => {
+      it('should extract and coalesce keys from simple objects sorted alphabetically', () => {
+        const dataArray = [
+          { name: 'test' },
+          { value: 123 },
+          { name: 'another', other: true }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('name other value');
+      });
+
+      it('should extract and coalesce different object shapes in a bulk array into a single union of fields', () => {
+        const dataArray = [
+          {
+            id: '1',
+            name: 'Item 1',
+          },
+          {
+            id: '2',
+            price: 19.99,
+          },
+          {
+            id: '3',
+            name: 'Item 3',
+          }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('id name price');
+      });
+
+      it('should recursively extract and coalesce nested object fields for objects with _on_ field names', () => {
+        const dataArray = [
+          { id: 'abc', active: true, info_on_test: { nested: 'yes' } },
+          { scores: [10, 20], info_on_test: { other: 123 } }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('active id info_on_test { nested other } scores');
+      });
+
+      it('should recursively coalesce deep nested fields for objects with _on_ names', () => {
+        const dataArray = [
+          { id: '1', tags_on_item: { name: 'Tag1', colors_on_tag: { primary: 'red' } } },
+          { tags_on_item: { count: 1, colors_on_tag: { secondary: 'blue' } } }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('id tags_on_item { colors_on_tag { primary secondary } count name }');
+      });
+
+      it('should skip undefined fields and handle nulls/empty objects across multiple objects in array', () => {
+        const dataArray = [
+          dataWithUndefined,
+          { notes: 'actual note', releaseYear: 2024, genre: undefined }
+        ];
+        const fields = getFieldsString(dataArray);
+        expect(fields).to.equal('director extras genre notes ratings releaseYear title');
+      });
+    });
+  });
+
   // --- INSERT TESTS ---
   describe('insert()', () => {
     tableNames.forEach((tableName, index) => {
-      const expectedMutation = `mutation { ${formatedTableNames[index]}_insert(data: { name: "a" }) }`;
+      const capitalizedTable = capitalize(formatedTableNames[index]);
+      const expectedMutation =
+        `mutation($data: ${capitalizedTable}_Data! @allow(fields: "name")) {
+          ${formatedTableNames[index]}_insert(data: $data)
+        }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
         async () => {
           await apiClient.insert(tableName, { name: 'a' });
-          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+          expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: { name: 'a' } } });
         });
     });
 
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { name: 'test', value: 123 };
-      const expectedMutation = `
-      mutation {
-      ${formatedTableName}_insert(data: {
-        name: "test",
-        value: 123
-        })
-      }`;
+      const expectedMutation =
+        `mutation($data: TestTable_Data! @allow(fields: "name value")) {
+          ${formatedTableName}_insert(data: $data)
+        }`;
       await apiClient.insert(tableName, simpleData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'abc', active: true, scores: [10, 20], info: { nested: 'yes/no "quote" \\slash\\' } };
-      const expectedMutation = `
-      mutation { 
-      ${formatedTableName}_insert(data: {
-        id: "abc", active: true, scores: [10, 20],
-        info: { nested: "yes/no \\"quote\\" \\\\slash\\\\" } 
-        }) 
-      }`;
-      await apiClient.insert(tableName, complexData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
-      const expectedMutation = `
-      mutation {
-      ${formatedTableName}_insert(data: {
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-        })
-      }`;
-      await apiClient.insert(tableName, dataWithUndefined);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleData } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -780,11 +895,11 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-null object./);
     });
 
-    it('should throw FirebaseDataConnectError for array data', async() => {
+    it('should throw FirebaseDataConnectError for array data', async () => {
       await expect(apiClient.insert(tableName, []))
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be an object, not an array, for single insert./);
     });
-    
+
     it('should amend the message for query errors', async () => {
       try {
         await apiClientQueryError.insert(tableName, { data: 1 });
@@ -800,61 +915,26 @@ describe('DataConnectApiClient CRUD helpers', () => {
   // --- INSERT MANY TESTS ---
   describe('insertMany()', () => {
     tableNames.forEach((tableName, index) => {
-      const expectedMutation = `mutation { ${formatedTableNames[index]}_insertMany(data: [{ name: "a" }]) }`;
+      const capitalizedTable = capitalize(formatedTableNames[index]);
+      const expectedMutation = `
+        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
+          ${formatedTableNames[index]}_insertMany(data: $data)
+        }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
         async () => {
           await apiClient.insertMany(tableName, [{ name: 'a' }]);
-          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+          expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: [{ name: 'a' }] } });
         });
     });
 
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ name: 'test1' }, { name: 'test2', value: 456 }];
       const expectedMutation = `
-      mutation { 
-      ${formatedTableName}_insertMany(data: [{ name: "test1" }, { name: "test2", value: 456 }]) }`;
+        mutation($data: [TestTable_Data!]! @allow(fields: "name value", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
+          ${formatedTableName}_insertMany(data: $data)
+        }`;
       await apiClient.insertMany(tableName, simpleDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data array', async () => {
-      const complexDataArray = [
-        { id: 'a', active: true, info: { nested: 'n1 "quote"' } },
-        { id: 'b', scores: [1, 2], info: { nested: 'n2/\\' } }
-      ];
-      const expectedMutation = `
-      mutation { 
-      ${formatedTableName}_insertMany(data: 
-      [{ id: "a", active: true, info: { nested: "n1 \\"quote\\"" } }, { id: "b", scores: [1, 2], 
-        info: { nested: "n2/\\\\" } }]) }`;
-      await apiClient.insertMany(tableName, complexDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
-      const dataArray = [
-        dataWithUndefined,
-        dataWithUndefined
-      ]
-      const expectedMutation = `
-      mutation {
-      ${formatedTableName}_insertMany(data: [{
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-      },
-      {
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-      }])
-      }`;
-      await apiClient.insertMany(tableName, dataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleDataArray } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -877,6 +957,16 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for insertMany./);
     });
 
+    // eslint-disable-next-line max-len
+    it(`should throw FirebaseDataConnectError if the data array length exceeds ${ALLOW_DIRECTIVE_MAX_COUNT}`, async () => {
+      const oversizedArray = new Array(ALLOW_DIRECTIVE_MAX_COUNT + 1).fill({ name: 'a' });
+      await expect(apiClient.insertMany(tableName, oversizedArray))
+        .to.be.rejectedWith(
+          FirebaseDataConnectError,
+          new RegExp(`^\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.$`)
+        );
+    });
+
     it('should amend the message for query errors', async () => {
       try {
         await apiClientQueryError.insertMany(tableName, [{ data: 1 }]);
@@ -892,43 +982,26 @@ describe('DataConnectApiClient CRUD helpers', () => {
   // --- UPSERT TESTS ---
   describe('upsert()', () => {
     tableNames.forEach((tableName, index) => {
-      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsert(data: { name: "a" }) }`;
+      const capitalizedTable = capitalize(formatedTableNames[index]);
+      const expectedMutation = `
+        mutation($data: ${capitalizedTable}_Data! @allow(fields: "name")) {
+          ${formatedTableNames[index]}_upsert(data: $data)
+        }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
         async () => {
           await apiClient.upsert(tableName, { name: 'a' });
-          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+          expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: { name: 'a' } } });
         });
     });
 
     it('should call executeGraphql with the correct mutation for simple data', async () => {
       const simpleData = { id: 'key1', value: 'updated' };
-      const expectedMutation = `mutation { ${formatedTableName}_upsert(data: { id: "key1", value: "updated" }) }`;
+      const expectedMutation = `
+        mutation($data: TestTable_Data! @allow(fields: "id value")) {
+          ${formatedTableName}_upsert(data: $data)
+        }`;
       await apiClient.upsert(tableName, simpleData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(expectedMutation);
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data', async () => {
-      const complexData = { id: 'key2', active: false, items: [1, null], detail: { status: 'done/\\' } };
-      const expectedMutation = `
-      mutation { ${formatedTableName}_upsert(data: 
-      { id: "key2", active: false, items: [1, null], detail: { status: "done/\\\\" } }) }`;
-      await apiClient.upsert(tableName, complexData);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null values', async () => {
-      const expectedMutation = `
-      mutation {
-      ${formatedTableName}_upsert(data: {
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-        })
-      }`;
-      await apiClient.upsert(tableName, dataWithUndefined);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleData } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -961,58 +1034,26 @@ describe('DataConnectApiClient CRUD helpers', () => {
   // --- UPSERT MANY TESTS ---
   describe('upsertMany()', () => {
     tableNames.forEach((tableName, index) => {
-      const expectedMutation = `mutation { ${formatedTableNames[index]}_upsertMany(data: [{ name: "a" }]) }`;
+      const capitalizedTable = capitalize(formatedTableNames[index]);
+      const expectedMutation = `
+        mutation($data: [${capitalizedTable}_Data!]! @allow(fields: "name", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
+          ${formatedTableNames[index]}_upsertMany(data: $data)
+        }`;
       it(`should use the formatted tableName in the gql query: "${tableName}" as "${formatedTableNames[index]}"`,
         async () => {
           await apiClient.upsertMany(tableName, [{ name: 'a' }]);
-          await expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+          expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: [{ name: 'a' }] } });
         });
     });
 
     it('should call executeGraphql with the correct mutation for simple data array', async () => {
       const simpleDataArray = [{ id: 'k1' }, { id: 'k2', value: 99 }];
       const expectedMutation = `
-      mutation { ${formatedTableName}_upsertMany(data: [{ id: "k1" }, { id: "k2", value: 99 }]) }`;
+        mutation($data: [TestTable_Data!]! @allow(fields: "id value", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
+          ${formatedTableName}_upsertMany(data: $data)
+        }`;
       await apiClient.upsertMany(tableName, simpleDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for complex data array', async () => {
-      const complexDataArray = [
-        { id: 'x', active: true, info: { nested: 'n1/\\"x' } },
-        { id: 'y', scores: [null, 2] }
-      ];
-      const expectedMutation = `
-      mutation { ${formatedTableName}_upsertMany(data: 
-      [{ id: "x", active: true, info: { nested: "n1/\\\\\\"x" } }, { id: "y", scores: [null, 2] }]) }`;
-      await apiClient.upsertMany(tableName, complexDataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
-    });
-
-    it('should call executeGraphql with the correct mutation for undefined and null', async () => {
-      const dataArray = [
-        dataWithUndefined,
-        dataWithUndefined
-      ]
-      const expectedMutation = `
-      mutation {
-      ${formatedTableName}_upsertMany(data: [{
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-      },
-      {
-        genre: "Action",
-        title: "Die Hard",
-        ratings: null,
-        director: {},
-        extras: [1, null, "hello", null, { a: 1 }]
-      }])
-      }`;
-      await apiClient.upsertMany(tableName, dataArray);
-      expect(executeGraphqlStub).to.have.been.calledOnceWithExactly(normalizeGraphQLString(expectedMutation));
+      expectNormalizedExecuteGraphqlCall(expectedMutation, { variables: { data: simpleDataArray } });
     });
 
     it('should throw FirebaseDataConnectError for invalid tableName', async () => {
@@ -1035,6 +1076,16 @@ describe('DataConnectApiClient CRUD helpers', () => {
         .to.be.rejectedWith(FirebaseDataConnectError, /`data` must be a non-empty array for upsertMany./);
     });
 
+    // eslint-disable-next-line max-len
+    it(`should throw FirebaseDataConnectError if the data array length exceeds ${ALLOW_DIRECTIVE_MAX_COUNT}`, async () => {
+      const oversizedArray = new Array(ALLOW_DIRECTIVE_MAX_COUNT + 1).fill({ name: 'a' });
+      await expect(apiClient.upsertMany(tableName, oversizedArray))
+        .to.be.rejectedWith(
+          FirebaseDataConnectError,
+          new RegExp(`^\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.$`)
+        );
+    });
+
     it('should amend the message for query errors', async () => {
       try {
         await apiClientQueryError.upsertMany(tableName, [{ data: 1 }]);
@@ -1048,48 +1099,48 @@ describe('DataConnectApiClient CRUD helpers', () => {
   });
 
   describe('String serialization', () => {
-    it('should correctly escape special characters in strings during insert', async () => {
+    it('should correctly handle special characters in strings during insert', async () => {
       const data = {
         content: 'Line 1\nLine 2',
       };
 
       await apiClient.insert(tableName, data);
-      const callArgs = executeGraphqlStub.firstCall.args[0];
+      const callOptions = executeGraphqlStub.firstCall.args[1];
 
-      expect(callArgs).to.include(String.raw`content: "Line 1\nLine 2"`);
+      expect(callOptions.variables.data.content).to.equal('Line 1\nLine 2');
     });
 
-    it('should correctly escape backslash', async () => {
+    it('should correctly handle backslash', async () => {
       const data = {
         content: 'Backslash \\',
       };
 
       await apiClient.insert(tableName, data);
-      const callArgs = executeGraphqlStub.firstCall.args[0];
+      const callOptions = executeGraphqlStub.firstCall.args[1];
 
-      expect(callArgs).to.include(String.raw`content: "Backslash \\"`);
+      expect(callOptions.variables.data.content).to.equal('Backslash \\');
     });
 
-    it('should correctly escape double quotes', async () => {
+    it('should correctly handle double quotes', async () => {
       const data = {
         content: 'Quote "test"',
       };
 
       await apiClient.insert(tableName, data);
-      const callArgs = executeGraphqlStub.firstCall.args[0];
+      const callOptions = executeGraphqlStub.firstCall.args[1];
 
-      expect(callArgs).to.include(String.raw`content: "Quote \"test\""`);
+      expect(callOptions.variables.data.content).to.equal('Quote "test"');
     });
 
-    it('should correctly escape tab character', async () => {
+    it('should correctly handle tab character', async () => {
       const data = {
         content: 'Tab\tCharacter',
       };
 
       await apiClient.insert(tableName, data);
-      const callArgs = executeGraphqlStub.firstCall.args[0];
+      const callOptions = executeGraphqlStub.firstCall.args[1];
 
-      expect(callArgs).to.include(String.raw`content: "Tab\tCharacter"`);
+      expect(callOptions.variables.data.content).to.equal('Tab\tCharacter');
     });
 
     it('should correctly handle emojis', async () => {
@@ -1098,9 +1149,10 @@ describe('DataConnectApiClient CRUD helpers', () => {
       };
 
       await apiClient.insert(tableName, data);
-      const callArgs = executeGraphqlStub.firstCall.args[0];
+      const callOptions = executeGraphqlStub.firstCall.args[1];
 
-      expect(callArgs).to.include('content: "Emoji 😊"');
+      expect(callOptions.variables.data.content).to.equal('Emoji 😊');
     });
   });
 });
+
