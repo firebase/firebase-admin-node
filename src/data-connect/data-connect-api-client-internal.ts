@@ -645,14 +645,18 @@ export function getFieldsString(data: unknown): string {
   return serializeFieldNode(root);
 }
 
-function mergeFieldsIntoTree(data: unknown, node: FieldNode): void {
+function mergeFieldsIntoTree(data: unknown, node: FieldNode, visited: Set<unknown> = new Set<unknown>()): void {
   if (validator.isArray(data)) {
-    data.forEach((item) => mergeFieldsIntoTree(item, node));
+    data.forEach((item) => mergeFieldsIntoTree(item, node, visited));
     return;
   }
   if (!validator.isNonNullObject(data) || data instanceof Date) {
     return;
   }
+  if (visited.has(data)) {
+    throw new Error('Circular reference detected in input.');
+  }
+  visited.add(data);
   const record = data as Record<string, unknown>;
   for (const [key, val] of Object.entries(record)) {
     if (val === undefined) {
@@ -664,9 +668,10 @@ function mergeFieldsIntoTree(data: unknown, node: FieldNode): void {
       node.children.set(key, childNode);
     }
     if (key.includes('_on_')) {
-      mergeFieldsIntoTree(val, childNode);
+      mergeFieldsIntoTree(val, childNode, visited);
     }
   }
+  visited.delete(data);
 }
 
 function serializeFieldNode(node: FieldNode): string {

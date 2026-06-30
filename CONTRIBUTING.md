@@ -153,8 +153,8 @@ And then:
 Currently, only the Auth, Database, and Firestore test suites work. Some test cases
 will be automatically skipped due to lack of emulator support. 
 
-You can also run the Data Connect test suite against the emulators using the same command,
-but you must run only the dataconnect tests, using a config file specific to Data Connect 
+**Note:** You can also run the Data Connect test suite against the emulators using the same command.
+However, you must isolate the Data Connect tests by using a configuration file specific to Data Connect
 emulator testing:
 
 ```bash

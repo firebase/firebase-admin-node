@@ -775,6 +775,30 @@ describe('DataConnectApiClient CRUD helpers', () => {
         const fields = getFieldsString(dataWithUndefined);
         expect(fields).to.equal('director extras genre ratings title');
       });
+
+      it('should allow duplicate object references in different sibling branches (non-circular DAG)', () => {
+        const shared = { name: 'shared' };
+        const data = {
+          child1_on_foo: shared,
+          child2_on_bar: shared,
+        };
+        const fields = getFieldsString(data);
+        expect(fields).to.equal('child1_on_foo { name } child2_on_bar { name }');
+      });
+
+      it('should throw an error if a direct circular reference is detected', () => {
+        const data: any = { id: 'abc' };
+        data.direct_circular_on_reference = data;
+        expect(() => getFieldsString(data)).to.throw('Circular reference detected in input.');
+      });
+
+      it('should throw an error if an indirect circular reference is detected', () => {
+        const data: any = { id: 'abc' };
+        data.indirect_circular_on_reference = {
+          circular_on_reference: data,
+        };
+        expect(() => getFieldsString(data)).to.throw('Circular reference detected in input.');
+      });
     });
     
     describe('array of objects', () => {
