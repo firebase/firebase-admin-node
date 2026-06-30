@@ -36,7 +36,13 @@ export class DataConnectService {
   }
 
   getDataConnect(connectorConfig: ConnectorConfig): DataConnect {
-    const id = `${connectorConfig.location}-${connectorConfig.serviceId}`;
+    const orderedConfig = Object.keys(connectorConfig)
+      .sort()
+      .reduce((obj, key) => {
+        obj[key] = connectorConfig[key as keyof ConnectorConfig];
+        return obj;
+      }, {} as Record<string, string | undefined>);
+    const id = JSON.stringify(orderedConfig);
     const dc = this.dataConnectInstances.get(id);
     if (typeof dc !== 'undefined') {
       return dc;
