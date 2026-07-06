@@ -1987,6 +1987,16 @@ describe('Messaging', () => {
       }).to.throw('Exactly one of remoteNotification or backgroundSync is required');
     });
 
+    it('should throw given androidV2 backgroundSync with extraneous properties', () => {
+      expect(() => {
+        messaging.send({
+          androidV2: {
+            backgroundSync: { foo: 'bar' },
+          } as any,
+          topic: 'test',
+        });
+      }).to.throw('androidV2.backgroundSync must be an empty object');
+    });
     it('should throw given androidV2 remoteNotification without notification', () => {
       expect(() => {
         messaging.send({

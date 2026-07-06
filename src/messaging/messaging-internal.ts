@@ -500,23 +500,19 @@ function validateAndroidConfigV2(config: AndroidConfigV2 | undefined): void {
         'androidV2.remoteNotification.useAsV1DataMessage must be a boolean');
     }
 
-    (config as any).remote_notification = {
-      mutable_content: remoteNotification.mutableContent,
-      notification: remoteNotification.notification,
-      use_as_v1_data_message: remoteNotification.useAsV1DataMessage,
-    };
+    renameProperties(remoteNotification, {
+      mutableContent: 'mutable_content',
+      useAsV1DataMessage: 'use_as_v1_data_message',
+    });
   } else if (hasBackgroundSync) {
     const backgroundSync = config.backgroundSync!;
-    if (!validator.isNonNullObject(backgroundSync)) {
+    if (!validator.isNonNullObject(backgroundSync) || Object.keys(backgroundSync).length > 0) {
       throw new FirebaseMessagingError(
         messagingClientErrorCode.INVALID_PAYLOAD,
-        'androidV2.backgroundSync must be a non-null object');
+        'androidV2.backgroundSync must be an empty object');
     }
-    (config as any).background_sync = {};
+    config.backgroundSync = {};
   }
-
-  delete (config as any).remoteNotification;
-  delete (config as any).backgroundSync;
 
   const propertyMappings = {
     collapseKey: 'collapse_key',
@@ -524,6 +520,8 @@ function validateAndroidConfigV2(config: AndroidConfigV2 | undefined): void {
     directBootOk: 'direct_boot_ok',
     bandwidthConstrainedOk: 'bandwidth_constrained_ok',
     restrictedSatelliteOk: 'restricted_satellite_ok',
+    remoteNotification: 'remote_notification',
+    backgroundSync: 'background_sync',
   };
   renameProperties(config, propertyMappings);
 }
