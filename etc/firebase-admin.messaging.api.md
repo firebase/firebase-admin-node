@@ -7,6 +7,15 @@
 import { Agent } from 'http';
 
 // @public
+export interface AndroidBackgroundSyncConfig extends AndroidConfigV2Base {
+    backgroundSync: AndroidBackgroundSyncMessage;
+    remoteNotification?: never;
+}
+
+// @public
+export type AndroidBackgroundSyncMessage = Record<string, never>;
+
+// @public
 export interface AndroidConfig {
     bandwidthConstrainedOk?: boolean;
     collapseKey?: string;
@@ -17,6 +26,23 @@ export interface AndroidConfig {
     fcmOptions?: AndroidFcmOptions;
     notification?: AndroidNotification;
     priority?: ('high' | 'normal');
+    restrictedPackageName?: string;
+    restrictedSatelliteOk?: boolean;
+    ttl?: number;
+}
+
+// @public
+export type AndroidConfigV2 = AndroidRemoteNotificationConfig | AndroidBackgroundSyncConfig;
+
+// @public
+export interface AndroidConfigV2Base {
+    bandwidthConstrainedOk?: boolean;
+    collapseKey?: string;
+    data?: {
+        [key: string]: string;
+    };
+    directBootOk?: boolean;
+    fcmOptions?: AndroidFcmOptions;
     restrictedPackageName?: string;
     restrictedSatelliteOk?: boolean;
     ttl?: number;
@@ -55,6 +81,49 @@ export interface AndroidNotification {
     titleLocKey?: string;
     vibrateTimingsMillis?: number[];
     visibility?: ('private' | 'public' | 'secret');
+}
+
+// @public
+export interface AndroidNotificationV2 {
+    body?: string;
+    bodyLocArgs?: string[];
+    bodyLocKey?: string;
+    channelId?: string;
+    clickAction?: string;
+    color?: string;
+    defaultLightSettings?: boolean;
+    defaultSound?: boolean;
+    defaultVibrateTimings?: boolean;
+    eventTime?: Date;
+    icon?: string;
+    id?: string;
+    imageUrl?: string;
+    lightSettings?: LightSettings;
+    localOnly?: boolean;
+    notificationCount?: number;
+    priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+    sound?: string;
+    sticky?: boolean;
+    tag?: string;
+    ticker?: string;
+    title?: string;
+    titleLocArgs?: string[];
+    titleLocKey?: string;
+    vibrateTimingsMillis?: number[];
+    visibility?: ('private' | 'public' | 'secret');
+}
+
+// @public
+export interface AndroidRemoteNotification {
+    mutableContent?: boolean;
+    notification: AndroidNotificationV2;
+    useAsV1DataMessage?: boolean;
+}
+
+// @public
+export interface AndroidRemoteNotificationConfig extends AndroidConfigV2Base {
+    backgroundSync?: never;
+    remoteNotification: AndroidRemoteNotification;
 }
 
 // @public
@@ -123,6 +192,8 @@ export interface ApsAlert {
 export interface BaseMessage {
     // (undocumented)
     android?: AndroidConfig;
+    // (undocumented)
+    androidV2?: AndroidConfigV2;
     // (undocumented)
     apns?: ApnsConfig;
     // (undocumented)
