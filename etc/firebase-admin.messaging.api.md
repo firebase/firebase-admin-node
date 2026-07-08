@@ -15,7 +15,7 @@ export interface AndroidBackgroundSyncConfig extends AndroidConfigV2Base {
 // @public
 export type AndroidBackgroundSyncMessage = Record<string, never>;
 
-// @public
+// @public @deprecated
 export interface AndroidConfig {
     bandwidthConstrainedOk?: boolean;
     collapseKey?: string;
@@ -24,6 +24,7 @@ export interface AndroidConfig {
     };
     directBootOk?: boolean;
     fcmOptions?: AndroidFcmOptions;
+    // @deprecated
     notification?: AndroidNotification;
     priority?: ('high' | 'normal');
     restrictedPackageName?: string;
@@ -53,7 +54,7 @@ export interface AndroidFcmOptions {
     analyticsLabel?: string;
 }
 
-// @public
+// @public @deprecated
 export interface AndroidNotification {
     body?: string;
     bodyLocArgs?: string[];
@@ -190,7 +191,7 @@ export interface ApsAlert {
 
 // @public (undocumented)
 export interface BaseMessage {
-    // (undocumented)
+    // @deprecated (undocumented)
     android?: AndroidConfig;
     // (undocumented)
     androidV2?: AndroidConfigV2;

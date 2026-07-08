@@ -20,6 +20,9 @@ import { FirebaseArrayIndexError, FirebaseError } from '../app/index';
 export interface BaseMessage {
   data?: { [key: string]: string; };
   notification?: Notification;
+  /**
+   * @deprecated Use {@link BaseMessage.androidV2} instead.
+   */
   android?: AndroidConfig;
   androidV2?: AndroidConfigV2;
   webpush?: WebpushConfig;
@@ -419,6 +422,8 @@ export interface ApnsFcmOptions {
 /**
  * Represents the Android-specific options that can be included in an
  * {@link Message}.
+ *
+ * @deprecated Use {@link AndroidConfigV2} instead.
  */
 export interface AndroidConfig {
 
@@ -455,6 +460,8 @@ export interface AndroidConfig {
 
   /**
    * Android notification to be included in the message.
+   * 
+   * @deprecated Use {@link AndroidNotificationV2} in {@link AndroidConfigV2} instead.
    */
   notification?: AndroidNotification;
 
@@ -485,6 +492,8 @@ export interface AndroidConfig {
 /**
   * Represents the Android-specific notification options that can be included in
   * {@link AndroidConfig}.
+  *
+  * @deprecated Use {@link AndroidNotificationV2} in {@link AndroidConfigV2} instead.
   */
 export interface AndroidNotification {
   /**
