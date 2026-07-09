@@ -220,8 +220,7 @@ export class FunctionsApiClient {
       return this.resolveResourceId(resourceId, { scope: 'current' });
     }
 
-    const scopeObj = scope as any;
-    switch (scopeObj.scope) {
+    switch (scope.scope) {
     case 'current': {
       const extInstanceId = process.env.EXT_INSTANCE_ID;
       if (validator.isNonEmptyString(extInstanceId)) {
@@ -243,18 +242,18 @@ export class FunctionsApiClient {
       return { resourceId };
     case 'extension':
       return {
-        resourceId: `ext-${scopeObj.instance}-${resourceId}`,
-        extensionOrKitId: scopeObj.instance,
+        resourceId: `ext-${scope.instance}-${resourceId}`,
+        extensionOrKitId: scope.instance,
       };
     case 'kit': // kit scope is secretly accepted for forward compatibility
       return {
-        resourceId: `kit-${scopeObj.instance}-${resourceId}`,
-        extensionOrKitId: scopeObj.instance,
+        resourceId: `kit-${scope.instance}-${resourceId}`,
+        extensionOrKitId: scope.instance,
       };
     case 'extensionOrKit':
       return {
-        resourceId: `ext-${scopeObj.instance}-${resourceId}`,
-        extensionOrKitId: scopeObj.instance,
+        resourceId: `ext-${scope.instance}-${resourceId}`,
+        extensionOrKitId: scope.instance,
       };
     default:
       return { resourceId };

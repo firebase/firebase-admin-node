@@ -818,9 +818,9 @@ describe('FunctionsApiClient', () => {
             expect(warnStub).to.have.been.calledOnce;
             expect(warnStub.firstCall.args[0]).to.equal(
               'Targeting your own extension or kit no longer requires a second parameter, ' +
-            'which can have peformance implications. Please change the call ' +
-            `taskQueue('${FUNCTION_NAME}', 'my-inst') to taskQueue('${FUNCTION_NAME}') ` +
-            `or taskQueue('${FUNCTION_NAME}', { scope: "self" })`
+              'which can have performance implications. Please change the call ' +
+              `taskQueue('${FUNCTION_NAME}', 'my-inst') to taskQueue('${FUNCTION_NAME}') ` +
+              `or taskQueue('${FUNCTION_NAME}', { scope: "current" })`
             );
           });
       });

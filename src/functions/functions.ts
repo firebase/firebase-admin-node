@@ -143,12 +143,6 @@ export class TaskQueue<Args = Record<string, any>> {
     }
 
     if (typeof extensionIdOrScope === 'string') {
-      if (!validator.isString(extensionIdOrScope)) {
-        throw new FirebaseFunctionsError({
-          code: 'invalid-argument',
-          message: '`extensionId` must be a string.'
-        });
-      }
       this.scope = extensionIdOrScope === ''
         ? { scope: 'current' }
         : { scope: 'extensionOrKit', instance: extensionIdOrScope };
@@ -193,9 +187,9 @@ export class TaskQueue<Args = Record<string, any>> {
         (this.scope as any).scope = 'kit';
         console.warn(
           'Targeting your own extension or kit no longer requires a second parameter, ' +
-          'which can have peformance implications. Please change the call ' +
+          'which can have performance implications. Please change the call ' +
           `taskQueue('${functionName}', '${instance}') to taskQueue('${functionName}') ` +
-          `or taskQueue('${functionName}', { scope: "self" })`
+          `or taskQueue('${functionName}', { scope: "current" })`
         );
       }
     }
@@ -291,9 +285,9 @@ export class TaskQueue<Args = Record<string, any>> {
       // Note: It is OK to warn about kits here because targeting a kit requires the kit to be deployed first.
       console.warn(
         'Targeting your own extension or kit no longer requires a second parameter, ' +
-        'which can have peformance implications. Please change the call ' +
+        'which can have performance implications. Please change the call ' +
         `taskQueue('${functionName}', '${instance}') to taskQueue('${functionName}') ` +
-        `or taskQueue('${functionName}', { scope: "self" })`
+        `or taskQueue('${functionName}', { scope: "current" })`
       );
     } else {
       console.warn(
