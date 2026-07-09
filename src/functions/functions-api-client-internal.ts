@@ -24,8 +24,16 @@ import { FirebaseError, toHttpResponse } from '../utils/error';
 import { FirebaseFunctionsError, FunctionsErrorCode, FUNCTIONS_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { TaskOptions } from './functions-api';
+import { TaskOptions, FunctionScope } from './functions-api';
 import { ApplicationDefaultCredential } from '../app/credential-internal';
+
+export type InternalFunctionScope = FunctionScope | {
+  scope: 'kit';
+  instance: string;
+} | {
+  scope: 'extensionOrKit';
+  instance: string;
+};
 
 const CLOUD_TASKS_API_RESOURCE_PATH = 'projects/{projectId}/locations/{locationId}/queues/{resourceId}/tasks';
 const CLOUD_TASKS_API_URL_FORMAT = 'https://cloudtasks.googleapis.com/v2/' + CLOUD_TASKS_API_RESOURCE_PATH;
@@ -66,9 +74,13 @@ export class FunctionsApiClient {
    *
    * @param id - The ID of the task to delete.
    * @param functionName - The function name of the queue.
-   * @param extensionId - Optional canonical ID of the extension.
+   * @param scope - Optional FunctionScope configuration.
    */
-  public async delete(id: string, functionName: string, extensionId?: string): Promise<void> {
+  public async delete(
+    id: string,
+    functionName: string,
+    scope?: InternalFunctionScope
+  ): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
       throw new FirebaseFunctionsError({
         code: 'invalid-argument',
@@ -101,13 +113,13 @@ export class FunctionsApiClient {
         message: 'No valid function name specified to enqueue tasks for.'
       });
     }
-    if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
-      resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
-    }
+
+    const { resourceId } = this.resolveResourceId(resources.resourceId, scope);
+    const targetResources = { ...resources, resourceId };
 
     try {
-      const serviceUrl = tasksEmulatorUrl(resources, this.emulatorHost)?.concat('/', id)
-        ?? await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
+      const serviceUrl = tasksEmulatorUrl(targetResources, this.emulatorHost)?.concat('/', id)
+        ?? await this.getUrl(targetResources, CLOUD_TASKS_API_URL_FORMAT.concat('/', id));
       const request: HttpRequestConfig = {
         method: 'DELETE',
         url: serviceUrl,
@@ -116,10 +128,6 @@ export class FunctionsApiClient {
       await this.httpClient.send(request);
     } catch (err: unknown) {
       if (err instanceof RequestResponseError) {
-        if (err.response.status === 404) {
-          // if no task with the provided ID exists, then ignore the delete.
-          return;
-        }
         throw this.toFirebaseError(err);
       } else {
         throw err;
@@ -132,10 +140,15 @@ export class FunctionsApiClient {
    *
    * @param data - The data payload of the task.
    * @param functionName - The functionName of the queue.
-   * @param extensionId - Optional canonical ID of the extension.
+   * @param scope - Optional FunctionScope configuration.
    * @param opts - Optional options when enqueuing a new task.
    */
-  public async enqueue(data: any, functionName: string, extensionId?: string, opts?: TaskOptions): Promise<void> {
+  public async enqueue(
+    data: any,
+    functionName: string,
+    scope?: InternalFunctionScope,
+    opts?: TaskOptions
+  ): Promise<void> {
     if (!validator.isNonEmptyString(functionName)) {
       throw new FirebaseFunctionsError({
         code: 'invalid-argument',
@@ -161,17 +174,17 @@ export class FunctionsApiClient {
         message: 'No valid function name specified to enqueue tasks for.'
       });
     }
-    if (typeof extensionId !== 'undefined' && validator.isNonEmptyString(extensionId)) {
-      resources.resourceId = `ext-${extensionId}-${resources.resourceId}`;
-    }
 
-    const task = this.validateTaskOptions(data, resources, opts);
+    const { resourceId, extensionOrKitId } = this.resolveResourceId(resources.resourceId, scope);
+    const targetResources = { ...resources, resourceId };
+
     try {
+      const task = this.validateTaskOptions(data, targetResources, opts);
       const serviceUrl =
-        tasksEmulatorUrl(resources, this.emulatorHost) ??
-        await this.getUrl(resources, CLOUD_TASKS_API_URL_FORMAT);
+        tasksEmulatorUrl(targetResources, this.emulatorHost) ??
+        await this.getUrl(targetResources, CLOUD_TASKS_API_URL_FORMAT);
 
-      const taskPayload = await this.updateTaskPayload(task, resources, extensionId);
+      const taskPayload = await this.updateTaskPayload(task, targetResources, extensionOrKitId);
       const request: HttpRequestConfig = {
         method: 'POST',
         url: serviceUrl,
@@ -196,6 +209,55 @@ export class FunctionsApiClient {
       } else {
         throw err;
       }
+    }
+  }
+
+  private resolveResourceId(
+    resourceId: string,
+    scope?: InternalFunctionScope
+  ): { resourceId: string; extensionOrKitId?: string } {
+    if (typeof scope === 'undefined') {
+      return this.resolveResourceId(resourceId, { scope: 'current' });
+    }
+
+    const scopeObj = scope as any;
+    switch (scopeObj.scope) {
+    case 'current': {
+      const extInstanceId = process.env.EXT_INSTANCE_ID;
+      if (validator.isNonEmptyString(extInstanceId)) {
+        return {
+          resourceId: `ext-${extInstanceId}-${resourceId}`,
+          extensionOrKitId: extInstanceId,
+        };
+      }
+      const kitInstanceId = process.env.KIT_INSTANCE_ID;
+      if (validator.isNonEmptyString(kitInstanceId)) {
+        return {
+          resourceId: `kit-${kitInstanceId}-${resourceId}`,
+          extensionOrKitId: kitInstanceId,
+        };
+      }
+      return { resourceId };
+    }
+    case 'global':
+      return { resourceId };
+    case 'extension':
+      return {
+        resourceId: `ext-${scopeObj.instance}-${resourceId}`,
+        extensionOrKitId: scopeObj.instance,
+      };
+    case 'kit': // kit scope is secretly accepted for forward compatibility
+      return {
+        resourceId: `kit-${scopeObj.instance}-${resourceId}`,
+        extensionOrKitId: scopeObj.instance,
+      };
+    case 'extensionOrKit':
+      return {
+        resourceId: `ext-${scopeObj.instance}-${resourceId}`,
+        extensionOrKitId: scopeObj.instance,
+      };
+    default:
+      return { resourceId };
     }
   }
 
@@ -349,7 +411,11 @@ export class FunctionsApiClient {
     return task;
   }
 
-  private async updateTaskPayload(task: Task, resources: utils.ParsedResource, extensionId?: string): Promise<Task> {
+  private async updateTaskPayload(
+    task: Task,
+    resources: utils.ParsedResource,
+    extensionOrKitId?: string
+  ): Promise<Task> {
     const defaultUrl = this.emulatorHost ?
       ''
       : await this.getUrl(resources, FIREBASE_FUNCTION_URL_FORMAT);
@@ -360,7 +426,7 @@ export class FunctionsApiClient {
 
     task.httpRequest.url = functionUrl;
     // When run from a deployed extension, we should be using ComputeEngineCredentials
-    if (validator.isNonEmptyString(extensionId) && this.app.options.credential
+    if (validator.isNonEmptyString(extensionOrKitId) && this.app.options.credential
     instanceof ApplicationDefaultCredential && await this.app.options.credential.isComputeEngineCredential()) {
       const idToken = await this.app.options.credential.getIDToken(functionUrl);
       task.httpRequest.headers = { ...task.httpRequest.headers, 'Authorization': `Bearer ${idToken}` };
