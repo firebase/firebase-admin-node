@@ -176,7 +176,7 @@ export class TaskQueue<Args = Record<string, any>> {
     if (this.scope.scope === 'extensionOrKit') {
       const instance = this.scope.instance;
       const extInstanceId = process.env.EXT_INSTANCE_ID;
-      const kitInstanceId = process.env.KIT_INSTANCE_ID;
+      const kitInstanceId = process.env.FIREBASE_KIT_INSTANCE_ID;
       if (validator.isNonEmptyString(extInstanceId) && extInstanceId === instance) {
         (this.scope as any).scope = 'extension';
         console.warn(
@@ -280,7 +280,7 @@ export class TaskQueue<Args = Record<string, any>> {
   }
 
   private logFallbackWarning(functionName: string, instance: string): void {
-    const kitInstanceId = process.env.KIT_INSTANCE_ID;
+    const kitInstanceId = process.env.FIREBASE_KIT_INSTANCE_ID;
     if (validator.isNonEmptyString(kitInstanceId) && kitInstanceId === instance) {
       // Note: It is OK to warn about kits here because targeting a kit requires the kit to be deployed first.
       console.warn(

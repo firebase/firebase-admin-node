@@ -719,7 +719,6 @@ describe('FunctionsApiClient', () => {
   describe('taskQueue scopes', () => {
     afterEach(() => {
       delete process.env.EXT_INSTANCE_ID;
-      delete process.env.KIT_INSTANCE_ID;
       delete process.env.FIREBASE_KIT_INSTANCE_ID;
     });
 
@@ -734,8 +733,8 @@ describe('FunctionsApiClient', () => {
         });
     });
 
-    it('should namespace function with kit- when scope is current and KIT_INSTANCE_ID is set', () => {
-      process.env.KIT_INSTANCE_ID = 'kit-inst';
+    it('should namespace function with kit- when scope is current and FIREBASE_KIT_INSTANCE_ID is set', () => {
+      process.env.FIREBASE_KIT_INSTANCE_ID = 'kit-inst';
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'current' })
@@ -801,29 +800,30 @@ describe('FunctionsApiClient', () => {
         });
     });
 
-    it('should warn with self-targeting warning and target kit directly if KIT_INSTANCE_ID matches the string',
-      () => {
-        process.env.KIT_INSTANCE_ID = 'my-inst';
-        const warnStub = sinon.stub(console, 'warn');
-        stubs.push(warnStub);
+    it('should warn with self-targeting warning and target kit directly if ' +
+      'FIREBASE_KIT_INSTANCE_ID matches the string',
+    () => {
+      process.env.FIREBASE_KIT_INSTANCE_ID = 'my-inst';
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
 
-        const sendStub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
-        stubs.push(sendStub);
+      const sendStub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(sendStub);
 
-        const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
-        return queue.enqueue({})
-          .then(() => {
-            expect(sendStub).to.have.been.calledOnce;
-            expect(sendStub.firstCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
-            expect(warnStub).to.have.been.calledOnce;
-            expect(warnStub.firstCall.args[0]).to.equal(
-              'Targeting your own extension or kit no longer requires a second parameter, ' +
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+      return queue.enqueue({})
+        .then(() => {
+          expect(sendStub).to.have.been.calledOnce;
+          expect(sendStub.firstCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
+          expect(warnStub).to.have.been.calledOnce;
+          expect(warnStub.firstCall.args[0]).to.equal(
+            'Targeting your own extension or kit no longer requires a second parameter, ' +
               'which can have performance implications. Please change the call ' +
               `taskQueue('${FUNCTION_NAME}', 'my-inst') to taskQueue('${FUNCTION_NAME}') ` +
               `or taskQueue('${FUNCTION_NAME}', { scope: "current" })`
-            );
-          });
-      });
+          );
+        });
+    });
 
     it('should warn with self-targeting warning and target extension directly if EXT_INSTANCE_ID matches the string',
       () => {
@@ -847,7 +847,8 @@ describe('FunctionsApiClient', () => {
           });
       });
 
-    it('should warn with kit legacy warning if kit fallback succeeds and KIT_INSTANCE_ID does not match', () => {
+    it('should warn with kit legacy warning if kit fallback succeeds and ' +
+      'FIREBASE_KIT_INSTANCE_ID does not match', () => {
       const warnStub = sinon.stub(console, 'warn');
       stubs.push(warnStub);
 

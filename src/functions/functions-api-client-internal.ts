@@ -229,7 +229,7 @@ export class FunctionsApiClient {
           extensionOrKitId: extInstanceId,
         };
       }
-      const kitInstanceId = process.env.KIT_INSTANCE_ID;
+      const kitInstanceId = process.env.FIREBASE_KIT_INSTANCE_ID;
       if (validator.isNonEmptyString(kitInstanceId)) {
         return {
           resourceId: `kit-${kitInstanceId}-${resourceId}`,
