@@ -24,7 +24,43 @@ import { ErrorInfo } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
-import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
+import { FirebaseMessagingRequestHandler, TopicSubscriptionResponse } from './messaging-api-request-internal';
+
+/**
+ * Runs a list of async tasks with a maximum concurrency limit.
+ *
+ * @param tasks - Array of functions that return a Promise.
+ * @param limit - Maximum number of tasks to run concurrently.
+ * @returns A Promise that resolves with an array of PromiseSettledResult in the same order as the tasks.
+ */
+async function runWithConcurrencyLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit = 100,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
+  let currentIndex = 0;
+
+  const worker = async (): Promise<void> => {
+    while (currentIndex < tasks.length) {
+      const index = currentIndex++;
+      try {
+        const value = await tasks[index]();
+        results[index] = { status: 'fulfilled', value };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    }
+  };
+
+  const workers: Promise<void>[] = [];
+  const workerCount = Math.min(limit, tasks.length);
+  for (let i = 0; i < workerCount; i++) {
+    workers.push(worker());
+  }
+
+  await Promise.all(workers);
+  return results;
+}
 
 import {
   BatchResponse,
@@ -90,6 +126,7 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 export class Messaging {
 
   private urlPath: string;
+  private projectId?: string;
   private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
   private useLegacyTransport = false;
@@ -371,14 +408,53 @@ export class Messaging {
    * @returns A promise fulfilled with the server's response after the device has been
    *   subscribed to the topic.
    */
+  /**
+   * Subscribes a device to an FCM topic.
+   *
+   * See {@link https://firebase.google.com/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the |
+   * Subscribe to a topic}
+   * for code samples and detailed documentation. Optionally, you can provide an
+   * array of tokens to subscribe multiple devices.
+   *
+   * @param registrationTokenOrTokens - A token or array of registration tokens
+   *   for the devices to subscribe to the topic.
+   * @param topic - The topic to which to subscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   subscribed to the topic.
+   */
   public subscribeToTopic(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequestV1(
+      registrationTokenOrTokens,
+      topic,
+      'subscribeToTopic',
+    );
+  }
+
+  /**
+   * Subscribes a device or list of devices to an FCM topic using the legacy Instance ID API.
+   * Served as a backup/legacy endpoint.
+   *
+   * @param registrationTokenOrTokens - A token or array of registration tokens
+   *   for the devices to subscribe to the topic.
+   * @param topic - The topic to which to subscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   subscribed to the topic.
+   *
+   * @deprecated Use {@link Messaging.subscribeToTopic} instead.
+   */
+  public subscribeToTopicLegacy(
     registrationTokenOrTokens: string | string[],
     topic: string,
   ): Promise<MessagingTopicManagementResponse> {
     return this.sendTopicManagementRequest(
       registrationTokenOrTokens,
       topic,
-      'subscribeToTopic',
+      'subscribeToTopicLegacy',
       FCM_TOPIC_MANAGEMENT_ADD_PATH,
     );
   }
@@ -391,7 +467,7 @@ export class Messaging {
    * for code samples and detailed documentation.  Optionally, you can provide an
    * array of tokens to unsubscribe multiple devices.
    *
-   * @param registrationTokens - A device registration token or an array of
+   * @param registrationTokenOrTokens - A device registration token or an array of
    *   device registration tokens to unsubscribe from the topic.
    * @param topic - The topic from which to unsubscribe.
    *
@@ -402,17 +478,41 @@ export class Messaging {
     registrationTokenOrTokens: string | string[],
     topic: string,
   ): Promise<MessagingTopicManagementResponse> {
-    return this.sendTopicManagementRequest(
+    return this.sendTopicManagementRequestV1(
       registrationTokenOrTokens,
       topic,
       'unsubscribeFromTopic',
+    );
+  }
+
+  /**
+   * Unsubscribes a device or list of devices from an FCM topic using the legacy Instance ID API.
+   * Served as a backup/legacy endpoint.
+   *
+   * @param registrationTokenOrTokens - A device registration token or an array of
+   *   device registration tokens to unsubscribe from the topic.
+   * @param topic - The topic from which to unsubscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   unsubscribed from the topic.
+   *
+   * @deprecated Use {@link Messaging.unsubscribeFromTopic} instead.
+   */
+  public unsubscribeFromTopicLegacy(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequest(
+      registrationTokenOrTokens,
+      topic,
+      'unsubscribeFromTopicLegacy',
       FCM_TOPIC_MANAGEMENT_REMOVE_PATH,
     );
   }
 
-  private getUrlPath(): Promise<string> {
-    if (this.urlPath) {
-      return Promise.resolve(this.urlPath);
+  private getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
     }
 
     return utils.findProjectId(this.app)
@@ -427,9 +527,133 @@ export class Messaging {
           );
         }
 
+        this.projectId = projectId;
+        return this.projectId;
+      });
+  }
+
+  private getUrlPath(): Promise<string> {
+    if (this.urlPath) {
+      return Promise.resolve(this.urlPath);
+    }
+
+    return this.getProjectId()
+      .then((projectId) => {
         this.urlPath = `/v1/projects/${projectId}/messages:send`;
         return this.urlPath;
       });
+  }
+
+  /**
+   * Helper method which sends and handles topic subscription management requests via FCM v1 API.
+   *
+   * @param registrationTokenOrTokens - The registration token or an array of
+   *     registration tokens to subscribe/unsubscribe.
+   * @param topic - The topic to subscribe/unsubscribe.
+   * @param methodName - The name of the original method called.
+   *
+   * @returns A Promise fulfilled with the parsed server response.
+   */
+  private sendTopicManagementRequestV1(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+    methodName: 'subscribeToTopic' | 'unsubscribeFromTopic',
+  ): Promise<MessagingTopicManagementResponse> {
+    this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
+    this.validateTopicType(topic, methodName);
+
+    const normalizedTopic = this.normalizeTopic(topic);
+
+    return Promise.resolve()
+      .then(() => {
+        this.validateRegistrationTokens(registrationTokenOrTokens, methodName);
+        this.validateTopic(normalizedTopic, methodName);
+
+        let registrationTokensArray: string[] = registrationTokenOrTokens as string[];
+        if (validator.isString(registrationTokenOrTokens)) {
+          registrationTokensArray = [registrationTokenOrTokens as string];
+        }
+
+        const topicName = normalizedTopic.replace(/^\/topics\//, '');
+        const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`);
+
+        return this.getProjectId().then((projectId) => {
+          if (http2SessionHandler) {
+            const tasks = registrationTokensArray.map((token) => async () => {
+              const path = methodName === 'subscribeToTopic'
+                ? `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions?topic_name=${encodeURIComponent(topicName)}`
+                : `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions/${encodeURIComponent(topicName)}?allow_missing=true`;
+              const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
+              return this.messagingRequestHandler.invokeHttp2RequestHandlerForTopicSubscriptionResponse(
+                FCM_SEND_HOST, path, methodName, requestData, http2SessionHandler,
+              );
+            });
+            return runWithConcurrencyLimit(tasks, 100);
+          } else {
+            const tasks = registrationTokensArray.map((token) => async () => {
+              const path = methodName === 'subscribeToTopic'
+                ? `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions?topic_name=${encodeURIComponent(topicName)}`
+                : `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions/${encodeURIComponent(topicName)}?allow_missing=true`;
+              const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
+              return this.messagingRequestHandler.invokeHttpRequestHandlerForTopicSubscriptionResponse(
+                FCM_SEND_HOST, path, methodName, requestData,
+              );
+            });
+            return runWithConcurrencyLimit(tasks, 100);
+          }
+        })
+          .then((results) => {
+            return this.parseTopicManagementResponses(results);
+          })
+          .finally(() => {
+            http2SessionHandler?.close();
+          });
+      });
+  }
+
+  private parseTopicManagementResponses(
+    results: PromiseSettledResult<TopicSubscriptionResponse>[],
+  ): MessagingTopicManagementResponse {
+    const response: MessagingTopicManagementResponse = {
+      successCount: 0,
+      failureCount: 0,
+      errors: [],
+    };
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        const tokenResponse = result.value;
+        if (tokenResponse.success) {
+          response.successCount += 1;
+        } else {
+          response.failureCount += 1;
+          const error = tokenResponse.error || FirebaseMessagingError.fromTopicManagementServerError(
+            'UNKNOWN_ERROR', 'Unknown error during topic management.',
+          );
+          response.errors.push({
+            index,
+            error,
+          });
+        }
+      } else {
+        response.failureCount += 1;
+        let error: FirebaseMessagingError;
+        if (result.reason instanceof FirebaseMessagingError) {
+          error = result.reason;
+        } else {
+          error = FirebaseMessagingError.fromTopicManagementServerError(
+            'UNKNOWN_ERROR',
+            result.reason?.message || result.reason?.toString() || 'Unknown error during topic management.',
+          );
+        }
+        response.errors.push({
+          index,
+          error,
+        });
+      }
+    });
+
+    return response;
   }
 
   /**
