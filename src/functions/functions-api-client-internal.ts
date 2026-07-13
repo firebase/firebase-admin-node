@@ -214,11 +214,8 @@ export class FunctionsApiClient {
 
   private resolveResourceId(
     resourceId: string,
-    scope?: InternalFunctionScope
+    scope: InternalFunctionScope = { scope: 'current' }
   ): { resourceId: string; extensionOrKitId?: string } {
-    if (typeof scope === 'undefined') {
-      return this.resolveResourceId(resourceId, { scope: 'current' });
-    }
 
     switch (scope.scope) {
     case 'current': {

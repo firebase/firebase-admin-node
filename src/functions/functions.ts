@@ -76,10 +76,10 @@ export class Functions {
     functionName: string,
     extensionIdOrScope: string | FunctionScope = { scope: 'current' }
   ): TaskQueue<Args> {
-    const scope: FunctionScope = typeof extensionIdOrScope === 'string'
+    const scope: InternalFunctionScope = typeof extensionIdOrScope === 'string'
       ? (extensionIdOrScope === ''
         ? { scope: 'current' }
-        : { scope: 'extensionOrKit' as any, instance: extensionIdOrScope })
+        : { scope: 'extensionOrKit', instance: extensionIdOrScope })
       : extensionIdOrScope;
     return new TaskQueue(functionName, this.client, scope);
   }
@@ -102,7 +102,7 @@ export class TaskQueue<Args = Record<string, any>> {
   constructor(
     functionName: string,
     client: FunctionsApiClient,
-    scope?: FunctionScope
+    scope?: FunctionScope | InternalFunctionScope
   );
   /**
    * @param functionName - The name of the function.
