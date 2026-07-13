@@ -2108,6 +2108,66 @@ describe('Messaging', () => {
       }).to.throw('androidV2.remoteNotification.notification.eventTime must be a valid `Date` object');
     });
 
+    it('should throw given androidV2 notification with invalid lightSettings color', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              lightSettings: {
+                color: 'invalid-color',
+                lightOnDurationMillis: 100,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
+    });
+
+    it('should throw given androidV2 notification with negative light on duration', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              lightSettings: {
+                color: '#aabbcc',
+                lightOnDurationMillis: -1,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+    });
+
+    it('should throw given androidV2 notification with negative light off duration', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              lightSettings: {
+                color: '#aabbcc',
+                lightOnDurationMillis: 100,
+                lightOffDurationMillis: -800,
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+    });
+
     invalidImages.forEach((imageUrl) => {
       it('should throw given invalid URL string for imageUrl', () => {
         expect(() => {

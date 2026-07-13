@@ -605,7 +605,7 @@ function validateAndroidNotificationV2(notification: AndroidNotificationV2 | und
     (notification as any).visibility = visibility;
   }
 
-  validateLightSettings(notification.lightSettings);
+  validateLightSettings(notification.lightSettings, 'androidV2.remoteNotification.notification');
 
   const propertyMappings = {
     clickAction: 'click_action',
@@ -710,7 +710,7 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
     (notification as any).visibility = visibility;
   }
 
-  validateLightSettings(notification.lightSettings);
+  validateLightSettings(notification.lightSettings, 'android.notification');
 
   const propertyMappings = {
     clickAction: 'click_action',
@@ -740,18 +740,18 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
  *
  * @param {LightSettings} lightSettings An object to be validated.
  */
-function validateLightSettings(lightSettings?: LightSettings): void {
+function validateLightSettings(lightSettings?: LightSettings, path: string = 'android.notification'): void {
   if (typeof lightSettings === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(lightSettings)) {
     throw new FirebaseMessagingError(
-      messagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
+      messagingClientErrorCode.INVALID_PAYLOAD, `${path}.lightSettings must be a non-null object`);
   }
 
   if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
     throw new FirebaseMessagingError(
       messagingClientErrorCode.INVALID_PAYLOAD,
-      'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+      `${path}.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds`);
   }
   const durationOn = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
   (lightSettings as any).lightOnDurationMillis = durationOn;
@@ -759,7 +759,7 @@ function validateLightSettings(lightSettings?: LightSettings): void {
   if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
     throw new FirebaseMessagingError(
       messagingClientErrorCode.INVALID_PAYLOAD,
-      'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+      `${path}.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds`);
   }
   const durationOff = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
   (lightSettings as any).lightOffDurationMillis = durationOff;
@@ -768,7 +768,7 @@ function validateLightSettings(lightSettings?: LightSettings): void {
     (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color))) {
     throw new FirebaseMessagingError(
       messagingClientErrorCode.INVALID_PAYLOAD,
-      'android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
+      `${path}.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format`);
   }
   const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
   const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
