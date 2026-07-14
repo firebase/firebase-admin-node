@@ -33,10 +33,25 @@ const config = require('./api-extractor.json');
 
 const tempConfigFile = 'api-extractor.tmp';
 
+// Regex to validate that the entrypoint name consists of safe alphanumeric, underscore,
+// and dash characters, optionally separated by single slashes.
+const ENTRY_POINT_REGEX = /^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/;
+
+// Regex to validate that the typing file path is a local relative declaration file path
+// inside the "./lib" directory.
+const TYPING_FILE_PATH_REGEX = /^\.\/lib\/[a-zA-Z0-9_\-\/]+\.d\.ts$/;
+
 async function generateReports() {
   const entryPoints = require('./entrypoints.json');
   for (const entryPoint in entryPoints) {
+    // Validate entryPoint to prevent path traversal
+    if (!ENTRY_POINT_REGEX.test(entryPoint)) {
+      throw new Error(`Invalid entryPoint format: ${entryPoint}`);
+    }
     const filePath = entryPoints[entryPoint].typings;
+    if (filePath.includes('..') || !TYPING_FILE_PATH_REGEX.test(filePath)) {
+      throw new Error(`Invalid typing file path: ${filePath}`);
+    }
     await generateReportForEntryPoint(entryPoint, filePath);
   }
 }
@@ -46,6 +61,9 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
   console.log('========================================================\n');
 
   const safeName = entryPoint.replace('/', '.');
+  if (safeName.includes('..') || safeName.includes('/') || safeName.includes('\\')) {
+    throw new Error(`Invalid safeName calculated: ${safeName}`);
+  }
   console.log('Updating configuration for entry point...');
   config.apiReport.reportFileName = `${safeName}.api.md`;
   config.mainEntryPointFilePath = filePath;
@@ -75,7 +93,12 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
     console.error(`API Extractor completed successfully`);
 
     // Strip @excludeFromDocs APIs from the generated docModel so they aren't documented in reference docs.
-    const apiJsonPath = path.resolve('temp', `${safeName}.api.json`);
+    const tempDir = path.resolve('temp');
+    const apiJsonPath = path.resolve(tempDir, `${safeName}.api.json`);
+    const relativePath = path.relative(tempDir, apiJsonPath);
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      throw new Error(`Path traversal detected: ${apiJsonPath}`);
+    }
     await stripHiddenDocsFromApiJson(apiJsonPath);
   } finally {
     await fs.unlink(tempConfigFile);
