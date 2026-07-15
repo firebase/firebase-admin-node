@@ -48,8 +48,12 @@ async function generateReports() {
     if (!ENTRY_POINT_REGEX.test(entryPoint)) {
       throw new Error(`Invalid entryPoint format: ${entryPoint}`);
     }
-    const filePath = entryPoints[entryPoint].typings;
-    if (filePath.includes('..') || !TYPING_FILE_PATH_REGEX.test(filePath)) {
+    const rawFilePath = entryPoints[entryPoint].typings;
+    if (!TYPING_FILE_PATH_REGEX.test(rawFilePath)) {
+      throw new Error(`Invalid typing file path: ${rawFilePath}`);
+    }
+    const filePath = path.normalize(rawFilePath);
+    if (filePath.includes('..')) {
       throw new Error(`Invalid typing file path: ${filePath}`);
     }
     await generateReportForEntryPoint(entryPoint, filePath);
@@ -60,7 +64,7 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
   console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
-  const safeName = entryPoint.replace(/\//g, '.');
+  const safeName = path.basename(entryPoint.replace(/\//g, '.'));
   if (safeName.includes('..') || safeName.includes('/') || safeName.includes('\\')) {
     throw new Error(`Invalid safeName calculated: ${safeName}`);
   }
