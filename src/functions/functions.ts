@@ -53,7 +53,7 @@ export class Functions {
    *     `{functionName}`
    * 
    * @param functionName - The name of the function.
-   * @param scope - Optional FunctionScope configuration. Only needed if targeting a scope other than the current one.
+   * @param scope - Optional `FunctionScope` configuration. Only needed if targeting a scope other than the current one.
    * @returns A promise that fulfills with a `TaskQueue`.
    */
   public taskQueue<Args = Record<string, any>>(
@@ -95,7 +95,7 @@ export class TaskQueue<Args = Record<string, any>> {
   /**
    * @param functionName - The name of the function.
    * @param client - The `FunctionsApiClient` instance.
-   * @param scope - Optional FunctionScope configuration. Only needed if targeting a scope other than the current one.
+   * @param scope - Optional `FunctionScope` configuration. Only needed if targeting a scope other than the current one.
    * @constructor
    * @internal
    */
@@ -120,7 +120,7 @@ export class TaskQueue<Args = Record<string, any>> {
   /**
    * @param functionName - The name of the function.
    * @param client - The `FunctionsApiClient` instance.
-   * @param extensionIdOrScope - Optional canonical ID of the extension or FunctionScope.
+   * @param extensionIdOrScope - Optional canonical ID of the extension or `FunctionScope`.
    * @constructor
    * @internal
    */

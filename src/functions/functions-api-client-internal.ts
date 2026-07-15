@@ -73,8 +73,8 @@ export class FunctionsApiClient {
    * Deletes a task from a queue.
    *
    * @param id - The ID of the task to delete.
-   * @param functionName - The function name of the queue.
-   * @param scope - Optional FunctionScope configuration.
+   * @param functionName - The name of the function associated with the queue.
+   * @param scope - Optional `FunctionScope` configuration.
    */
   public async delete(
     id: string,
@@ -139,8 +139,8 @@ export class FunctionsApiClient {
    * Creates a task and adds it to a queue.
    *
    * @param data - The data payload of the task.
-   * @param functionName - The functionName of the queue.
-   * @param scope - Optional FunctionScope configuration.
+   * @param functionName - The name of the function associated with the queue.
+   * @param scope - Optional `FunctionScope` configuration.
    * @param opts - Optional options when enqueuing a new task.
    */
   public async enqueue(
