@@ -60,7 +60,7 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
   console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
-  const safeName = entryPoint.replace('/', '.');
+  const safeName = entryPoint.replace(/\//g, '.');
   if (safeName.includes('..') || safeName.includes('/') || safeName.includes('\\')) {
     throw new Error(`Invalid safeName calculated: ${safeName}`);
   }
