@@ -33,10 +33,29 @@ const config = require('./api-extractor.json');
 
 const tempConfigFile = 'api-extractor.tmp';
 
+// Regex to validate that the entrypoint name consists of safe alphanumeric, underscore,
+// and dash characters, optionally separated by single slashes.
+const ENTRY_POINT_REGEX = /^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/;
+
+// Regex to validate that the typing file path is a local relative declaration file path
+// inside the "./lib" directory.
+const TYPING_FILE_PATH_REGEX = /^\.\/lib\/[a-zA-Z0-9_\-\/]+\.d\.ts$/;
+
 async function generateReports() {
   const entryPoints = require('./entrypoints.json');
   for (const entryPoint in entryPoints) {
-    const filePath = entryPoints[entryPoint].typings;
+    // Validate entryPoint to prevent path traversal
+    if (!ENTRY_POINT_REGEX.test(entryPoint)) {
+      throw new Error(`Invalid entryPoint format: ${entryPoint}`);
+    }
+    const rawFilePath = entryPoints[entryPoint].typings;
+    if (!TYPING_FILE_PATH_REGEX.test(rawFilePath)) {
+      throw new Error(`Invalid typing file path: ${rawFilePath}`);
+    }
+    const filePath = path.normalize(rawFilePath);
+    if (filePath.includes('..')) {
+      throw new Error(`Invalid typing file path: ${filePath}`);
+    }
     await generateReportForEntryPoint(entryPoint, filePath);
   }
 }
@@ -45,7 +64,10 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
   console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
-  const safeName = entryPoint.replace('/', '.');
+  const safeName = path.basename(entryPoint.replace(/\//g, '.'));
+  if (safeName.includes('..') || safeName.includes('/') || safeName.includes('\\')) {
+    throw new Error(`Invalid safeName calculated: ${safeName}`);
+  }
   console.log('Updating configuration for entry point...');
   config.apiReport.reportFileName = `${safeName}.api.md`;
   config.mainEntryPointFilePath = filePath;
@@ -73,8 +95,42 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
     }
 
     console.error(`API Extractor completed successfully`);
+
+    // Strip @excludeFromDocs APIs from the generated docModel so they aren't documented in reference docs.
+    const tempDir = path.resolve('temp');
+    const apiJsonPath = path.resolve(tempDir, `${safeName}.api.json`);
+    const relativePath = path.relative(tempDir, apiJsonPath);
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      throw new Error(`Path traversal detected: ${apiJsonPath}`);
+    }
+    await stripHiddenDocsFromApiJson(apiJsonPath);
   } finally {
     await fs.unlink(tempConfigFile);
+  }
+}
+
+async function stripHiddenDocsFromApiJson(apiJsonPath) {
+  if (!await fs.exists(apiJsonPath)) {
+    return;
+  }
+  const content = await fs.readFile(apiJsonPath, 'utf8');
+  const data = JSON.parse(content);
+
+  let removedCount = 0;
+  function removeHidden(node) {
+    if (node.members) {
+      const originalLength = node.members.length;
+      // Filter out any member whose docComment includes @excludeFromDocs
+      node.members = node.members.filter(m => !(m.docComment && /@excludeFromDocs\b/.test(m.docComment)));
+      removedCount += (originalLength - node.members.length);
+      node.members.forEach(removeHidden);
+    }
+  }
+
+  removeHidden(data);
+  if (removedCount > 0) {
+    console.log(`Removed ${removedCount} @excludeFromDocs items from ${path.basename(apiJsonPath)}`);
+    await fs.writeFile(apiJsonPath, JSON.stringify(data, null, 2));
   }
 }
 
