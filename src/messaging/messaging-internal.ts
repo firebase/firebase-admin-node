@@ -19,9 +19,9 @@ import { messagingClientErrorCode, FirebaseMessagingError } from './error';
 import * as validator from '../utils/validator';
 
 import {
-  AndroidConfig, AndroidFcmOptions, AndroidNotification, ApsAlert, ApnsConfig,
-  ApnsFcmOptions, ApnsPayload, Aps, CriticalSound, FcmOptions, LightSettings, Message,
-  Notification, WebpushConfig,
+  AndroidConfig, AndroidConfigV2, AndroidFcmOptions, AndroidNotification,
+  AndroidNotificationV2, ApsAlert, ApnsConfig, ApnsFcmOptions, ApnsPayload, Aps,
+  CriticalSound, FcmOptions, LightSettings, Message, Notification, WebpushConfig,
 } from './messaging-api';
 
 // Keys which are not allowed in the messaging data payload object.
@@ -65,8 +65,16 @@ export function validateMessage(message: Message): void {
       'Exactly one of fid, topic, token or condition is required');
   }
 
+  if (message.android && message.androidV2) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'Exactly one of android and androidV2 can be set. Please use ' +
+      'androidV2 instead of the legacy android field.');
+  }
+
   validateStringMap(message.data, 'data');
   validateAndroidConfig(message.android);
+  validateAndroidConfigV2(message.androidV2);
   validateWebpushConfig(message.webpush);
   validateApnsConfig(message.apns);
   validateFcmOptions(message.fcmOptions);
@@ -426,6 +434,198 @@ function validateAndroidConfig(config: AndroidConfig | undefined): void {
     restrictedSatelliteOk: 'restricted_satellite_ok',
   };
   renameProperties(config, propertyMappings);
+}
+
+/**
+ * Checks if the given AndroidConfigV2 object is valid. The object must have valid ttl, data,
+ * and messageType fields. If successful, transforms the input object by renaming keys to valid
+ * Android keys. Also transforms the ttl value to the format expected by FCM service.
+ *
+ * @param config - An object to be validated.
+ */
+function validateAndroidConfigV2(config: AndroidConfigV2 | undefined): void {
+  if (typeof config === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD, 'androidV2 must be a non-null object');
+  }
+
+  if (typeof config.ttl !== 'undefined') {
+    if (!validator.isNumber(config.ttl) || config.ttl < 0) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'TTL must be a non-negative duration in milliseconds');
+    }
+    const duration: string = transformMillisecondsToSecondsString(config.ttl);
+    (config as any).ttl = duration;
+  }
+  validateStringMap(config.data, 'androidV2.data');
+  validateAndroidFcmOptions(config.fcmOptions);
+
+  const hasRemoteNotification = typeof config.remoteNotification !== 'undefined';
+  const hasBackgroundSync = typeof config.backgroundSync !== 'undefined';
+
+  if (hasRemoteNotification === hasBackgroundSync) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'Exactly one of remoteNotification or backgroundSync is required');
+  }
+
+  if (hasRemoteNotification) {
+    const remoteNotification = config.remoteNotification!;
+    if (!validator.isNonNullObject(remoteNotification)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification must be a non-null object');
+    }
+
+    if (typeof remoteNotification.notification === 'undefined') {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification.notification is required');
+    }
+    validateAndroidNotificationV2(remoteNotification.notification);
+
+    if (typeof remoteNotification.mutableContent !== 'undefined'
+      && !validator.isBoolean(remoteNotification.mutableContent)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification.mutableContent must be a boolean');
+    }
+    if (typeof remoteNotification.useAsV1DataMessage !== 'undefined'
+      && !validator.isBoolean(remoteNotification.useAsV1DataMessage)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification.useAsV1DataMessage must be a boolean');
+    }
+
+    renameProperties(remoteNotification, {
+      mutableContent: 'mutable_content',
+      useAsV1DataMessage: 'use_as_v1_data_message',
+    });
+  } else if (hasBackgroundSync) {
+    const backgroundSync = config.backgroundSync!;
+    if (!validator.isNonNullObject(backgroundSync) || Object.keys(backgroundSync).length > 0) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.backgroundSync must be an empty object');
+    }
+    config.backgroundSync = {};
+  }
+
+  const propertyMappings = {
+    collapseKey: 'collapse_key',
+    restrictedPackageName: 'restricted_package_name',
+    directBootOk: 'direct_boot_ok',
+    bandwidthConstrainedOk: 'bandwidth_constrained_ok',
+    restrictedSatelliteOk: 'restricted_satellite_ok',
+    remoteNotification: 'remote_notification',
+    backgroundSync: 'background_sync',
+  };
+  renameProperties(config, propertyMappings);
+}
+
+/**
+ * Checks if the given AndroidNotificationV2 object is valid. The object must have valid color and
+ * localization parameters. If successful, transforms the input object by renaming keys to valid
+ * Android keys.
+ *
+ * @param {AndroidNotificationV2} notification An object to be validated.
+ */
+function validateAndroidNotificationV2(notification: AndroidNotificationV2 | undefined): void {
+  if (typeof notification === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(notification)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD, 'androidV2.remoteNotification.notification must be a non-null object');
+  }
+
+  if (typeof notification.color !== 'undefined' && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'androidV2.remoteNotification.notification.color must be in the form #RRGGBB');
+  }
+  if (validator.isNonEmptyArray(notification.bodyLocArgs) &&
+    !validator.isNonEmptyString(notification.bodyLocKey)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'androidV2.remoteNotification.notification.bodyLocKey is required when specifying bodyLocArgs');
+  }
+  if (validator.isNonEmptyArray(notification.titleLocArgs) &&
+    !validator.isNonEmptyString(notification.titleLocKey)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'androidV2.remoteNotification.notification.titleLocKey is required when specifying titleLocArgs');
+  }
+  if (typeof notification.imageUrl !== 'undefined' &&
+    !validator.isURL(notification.imageUrl)) {
+    throw new FirebaseMessagingError(
+      messagingClientErrorCode.INVALID_PAYLOAD,
+      'androidV2.remoteNotification.notification.imageUrl must be a valid URL string');
+  }
+  if (typeof notification.eventTime !== 'undefined') {
+    if (!(notification.eventTime instanceof Date)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification.notification.eventTime must be a valid `Date` object');
+    }
+    // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
+    const zuluTimestamp = notification.eventTime.toISOString();
+    (notification as any).eventTime = zuluTimestamp;
+  }
+
+  if (typeof notification.vibrateTimingsMillis !== 'undefined') {
+    if (!validator.isNonEmptyArray(notification.vibrateTimingsMillis)) {
+      throw new FirebaseMessagingError(
+        messagingClientErrorCode.INVALID_PAYLOAD,
+        'androidV2.remoteNotification.notification.vibrateTimingsMillis must be a non-empty array of numbers');
+    }
+    const vibrateTimings: string[] = [];
+    notification.vibrateTimingsMillis.forEach((value) => {
+      if (!validator.isNumber(value) || value < 0) {
+        throw new FirebaseMessagingError(
+          messagingClientErrorCode.INVALID_PAYLOAD,
+          'androidV2.remoteNotification.notification.vibrateTimingsMillis ' +
+          'must be non-negative durations in milliseconds');
+      }
+      const duration = transformMillisecondsToSecondsString(value);
+      vibrateTimings.push(duration);
+    });
+    (notification as any).vibrateTimingsMillis = vibrateTimings;
+  }
+
+  if (typeof notification.priority !== 'undefined') {
+    const priority = 'PRIORITY_' + notification.priority.toUpperCase();
+    (notification as any).priority = priority;
+  }
+
+  if (typeof notification.visibility !== 'undefined') {
+    const visibility = notification.visibility.toUpperCase();
+    (notification as any).visibility = visibility;
+  }
+
+  validateLightSettings(notification.lightSettings);
+
+  const propertyMappings = {
+    clickAction: 'click_action',
+    bodyLocKey: 'body_loc_key',
+    bodyLocArgs: 'body_loc_args',
+    titleLocKey: 'title_loc_key',
+    titleLocArgs: 'title_loc_args',
+    channelId: 'channel_id',
+    imageUrl: 'image',
+    eventTime: 'event_time',
+    localOnly: 'local_only',
+    priority: 'notification_priority',
+    vibrateTimingsMillis: 'vibrate_timings',
+    defaultVibrateTimings: 'default_vibrate_timings',
+    defaultSound: 'default_sound',
+    lightSettings: 'light_settings',
+    defaultLightSettings: 'default_light_settings',
+    notificationCount: 'notification_count',
+  };
+  renameProperties(notification, propertyMappings);
 }
 
 /**

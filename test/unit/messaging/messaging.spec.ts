@@ -1929,6 +1929,183 @@ describe('Messaging', () => {
           messaging.send({ apns: { fcmOptions: arg }, topic: 'test' });
         }).to.throw('fcmOptions must be a non-null object');
       });
+
+      it(`should throw given invalid androidV2 config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({ androidV2: arg, topic: 'test' });
+        }).to.throw('androidV2 must be a non-null object');
+      });
+
+      it(`should throw given invalid androidV2 notification: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({
+            androidV2: {
+              remoteNotification: {
+                notification: arg,
+              },
+            } as any,
+            topic: 'test',
+          });
+        }).to.throw('androidV2.remoteNotification.notification must be a non-null object');
+      });
+    });
+
+    it('should throw given both android and androidV2 config', () => {
+      expect(() => {
+        messaging.send({
+          android: {},
+          androidV2: {
+            remoteNotification: {
+              notification: {},
+            },
+          },
+          topic: 'test',
+        } as any);
+      }).to.throw(
+        'Exactly one of android and androidV2 can be set. Please use ' +
+        'androidV2 instead of the legacy android field.'
+      );
+    });
+
+    it('should throw given androidV2 missing both wrappers', () => {
+      expect(() => {
+        messaging.send({ androidV2: {} as any, topic: 'test' });
+      }).to.throw('Exactly one of remoteNotification or backgroundSync is required');
+    });
+
+    it('should throw given androidV2 containing both wrappers', () => {
+      expect(() => {
+        messaging.send({
+          androidV2: {
+            remoteNotification: {
+              notification: {},
+            },
+            backgroundSync: {},
+          } as any,
+          topic: 'test',
+        });
+      }).to.throw('Exactly one of remoteNotification or backgroundSync is required');
+    });
+
+    it('should throw given androidV2 backgroundSync with extraneous properties', () => {
+      expect(() => {
+        messaging.send({
+          androidV2: {
+            backgroundSync: { foo: 'bar' },
+          } as any,
+          topic: 'test',
+        });
+      }).to.throw('androidV2.backgroundSync must be an empty object');
+    });
+    it('should throw given androidV2 remoteNotification without notification', () => {
+      expect(() => {
+        messaging.send({
+          androidV2: {
+            remoteNotification: {
+              mutableContent: true,
+            },
+          } as any,
+          topic: 'test',
+        });
+      }).to.throw('androidV2.remoteNotification.notification is required');
+    });
+
+    it('should throw given androidV2 remoteNotification with invalid useAsV1DataMessage', () => {
+      expect(() => {
+        messaging.send({
+          androidV2: {
+            remoteNotification: {
+              notification: {},
+              useAsV1DataMessage: 'invalid',
+            },
+          } as any,
+          topic: 'test',
+        });
+      }).to.throw('androidV2.remoteNotification.useAsV1DataMessage must be a boolean');
+    });
+
+    it('should throw given androidV2 titleLocArgs without titleLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              titleLocArgs: ['foo'],
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given androidV2 bodyLocArgs without bodyLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              bodyLocArgs: ['foo'],
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    it('should throw given androidV2 notification with invalid vibrateTimingsMillis', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              vibrateTimingsMillis: [],
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'androidV2.remoteNotification.notification.vibrateTimingsMillis must be a non-empty array of numbers'
+      );
+    });
+
+    it('should throw given androidV2 notification with negative vibrateTimingsMillis', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              vibrateTimingsMillis: [-100],
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'androidV2.remoteNotification.notification.vibrateTimingsMillis must be non-negative durations in milliseconds'
+      );
+    });
+
+    it('should throw given androidV2 notification with invalid eventTime', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        androidV2: {
+          remoteNotification: {
+            notification: {
+              eventTime: 123456 as any,
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('androidV2.remoteNotification.notification.eventTime must be a valid `Date` object');
     });
 
     invalidImages.forEach((imageUrl) => {
@@ -2788,6 +2965,137 @@ describe('Messaging', () => {
                 }
               },
             },
+          },
+        },
+      },
+      {
+        label: 'Android Config V2 with Remote Notification',
+        req: {
+          androidV2: {
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            directBootOk: true,
+            bandwidthConstrainedOk: true,
+            restrictedSatelliteOk: true,
+            ttl: 5000,
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            remoteNotification: {
+              mutableContent: true,
+              useAsV1DataMessage: true,
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
+                sound: 'test.sound',
+                tag: 'test.tag',
+                id: 'test.id',
+                imageUrl: 'https://example.com/image.png',
+                clickAction: 'test.click.action',
+                titleLocKey: 'title.loc.key',
+                titleLocArgs: ['arg1', 'arg2'],
+                bodyLocKey: 'body.loc.key',
+                bodyLocArgs: ['arg1', 'arg2'],
+                channelId: 'test.channel',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'private',
+                eventTime: new Date('2019-10-20T12:00:00-06:30'),
+                localOnly: true,
+                priority: 'high',
+                vibrateTimingsMillis: [100, 50, 250],
+                defaultVibrateTimings: false,
+                defaultSound: true,
+                lightSettings: {
+                  color: '#AABBCC',
+                  lightOnDurationMillis: 200,
+                  lightOffDurationMillis: 300,
+                },
+                defaultLightSettings: false,
+                notificationCount: 1,
+              },
+            },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
+            },
+          },
+        },
+        expectedReq: {
+          androidV2: {
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            direct_boot_ok: true,
+            bandwidth_constrained_ok: true,
+            restricted_satellite_ok: true,
+            ttl: '5s',
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            remote_notification: {
+              mutable_content: true,
+              use_as_v1_data_message: true,
+              notification: {
+                title: 'test.title',
+                body: 'test.body',
+                icon: 'test.icon',
+                color: '#112233',
+                sound: 'test.sound',
+                tag: 'test.tag',
+                id: 'test.id',
+                image: 'https://example.com/image.png',
+                click_action: 'test.click.action',
+                title_loc_key: 'title.loc.key',
+                title_loc_args: ['arg1', 'arg2'],
+                body_loc_key: 'body.loc.key',
+                body_loc_args: ['arg1', 'arg2'],
+                channel_id: 'test.channel',
+                ticker: 'test.ticker',
+                sticky: true,
+                visibility: 'PRIVATE',
+                event_time: '2019-10-20T18:30:00.000Z',
+                local_only: true,
+                notification_priority: 'PRIORITY_HIGH',
+                vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+                default_vibrate_timings: false,
+                default_sound: true,
+                light_settings: {
+                  color: {
+                    red: 0.6666666666666666,
+                    green: 0.7333333333333333,
+                    blue: 0.8,
+                    alpha: 1,
+                  },
+                  light_on_duration: '0.200000000s',
+                  light_off_duration: '0.300000000s',
+                },
+                default_light_settings: false,
+                notification_count: 1,
+              },
+            },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
+            },
+          },
+        },
+      },
+      {
+        label: 'Android Config V2 with Background Sync',
+        req: {
+          androidV2: {
+            collapseKey: 'test.key',
+            ttl: 5000,
+            backgroundSync: {},
+          },
+        },
+        expectedReq: {
+          androidV2: {
+            collapse_key: 'test.key',
+            ttl: '5s',
+            background_sync: {},
           },
         },
       },
