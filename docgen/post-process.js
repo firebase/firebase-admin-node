@@ -20,9 +20,11 @@ const path = require('path');
 const readline = require('readline');
 
 async function main() {
-  await applyExtras();
-  await fixHomePage();
-  await fixTitles();
+  await Promise.all([
+    applyExtras(),
+    fixHomePage(),
+    fixTitles(),
+  ]);
 }
 
 /**
@@ -32,9 +34,7 @@ async function main() {
  */
 async function applyExtras() {
   const extras = await getExtraFiles();
-  for (const source of extras) {
-    await applyExtraContentFrom(source);
-  }
+  await Promise.all(extras.map(applyExtraContentFrom));
 }
 
 /**
@@ -60,9 +60,7 @@ async function fixHomePage() {
 async function fixTitles() {
   const markdownDir = path.join(__dirname, 'markdown');
   const files = await fs.readdir(markdownDir);
-  for (const file of files) {
-    await fixTitleOf(path.join(markdownDir, file));
-  }
+  await Promise.all(files.map((file) => fixTitleOf(path.join(markdownDir, file))));
 
   const tocFile = path.join(markdownDir, 'toc.yaml');
   await fixTocTitles(tocFile);
