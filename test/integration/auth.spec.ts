@@ -2399,30 +2399,24 @@ describe('admin.auth', () => {
     });
 
     describe('tenant deletion operations', () => {
-      it('deleteTenant() should successfully delete the provided tenant', () => {
+      it('deleteTenant() should successfully delete the provided tenant', async () => {
         const allTenantIds: string[] = [];
-        const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
-          return getAuth().tenantManager().listTenants(100, nextPageToken)
-            .then((result) => {
-              result.tenants.forEach((tenant) => {
-                tenantIds.push(tenant.tenantId);
-              });
-              if (result.pageToken) {
-                return listAllTenantIds(tenantIds, result.pageToken);
-              }
-            });
+        const listAllTenantIds = async (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+          const result = await getAuth().tenantManager().listTenants(100, nextPageToken);
+          result.tenants.forEach((tenant) => {
+            tenantIds.push(tenant.tenantId);
+          });
+          if (result.pageToken) {
+            await listAllTenantIds(tenantIds, result.pageToken);
+          }
         };
 
-        return getAuth().tenantManager().deleteTenant(createdTenantId)
-          .then(() => {
-            // Use listTenants() instead of getTenant() to check that the tenant
-            // is no longer present, because Auth Emulator implicitly creates the
-            // tenant in getTenant() when it is not found
-            return listAllTenantIds(allTenantIds);
-          })
-          .then(() => {
-            expect(allTenantIds).to.not.contain(createdTenantId);
-          });
+        await getAuth().tenantManager().deleteTenant(createdTenantId);
+        // Use listTenants() instead of getTenant() to check that the tenant
+        // is no longer present, because Auth Emulator implicitly creates the
+        // tenant in getTenant() when it is not found
+        await listAllTenantIds(allTenantIds);
+        expect(allTenantIds).to.not.contain(createdTenantId);
       });
     });
   });
