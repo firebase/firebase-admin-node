@@ -53,18 +53,24 @@ describe('DataConnectApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
+    'x-client-platform': 'node',
+    'x-client-version': getSdkVersion(),
   };
 
   const EXPECTED_HEADERS_WITH_GEN = {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader() + ' admin-js/gen',
+    'x-client-platform': 'node',
+    'x-client-version': getSdkVersion(),
   };
 
   const EMULATOR_EXPECTED_HEADERS = {
     'Authorization': 'Bearer owner',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
+    'x-client-platform': 'node',
+    'x-client-version': getSdkVersion(),
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
