@@ -20,7 +20,8 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient, RequestResponse
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
+import { FirebaseAppCheckError, AppCheckErrorCode, APP_CHECK_ERROR_CODE_MAPPING } from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AppCheckToken, AppCheckTokenOptions } from './app-check-api';
@@ -44,9 +45,10 @@ export class AppCheckApiClient {
 
   constructor(private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'First argument passed to admin.appCheck() must be a valid Firebase app instance.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'First argument passed to admin.appCheck() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
@@ -64,30 +66,35 @@ export class AppCheckApiClient {
     options?: AppCheckTokenOptions
   ): Promise<AppCheckToken> {
     if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`appId` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`appId` must be a non-empty string.'
+      });
     }
     if (!validator.isNonEmptyString(customToken)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`customToken` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`customToken` must be a non-empty string.'
+      });
     }
     if (typeof options?.limitedUse !== 'undefined' && !validator.isBoolean(options.limitedUse)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`limitedUse` must be a boolean value.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`limitedUse` must be a boolean value.'
+      });
     }
     if (typeof options?.jti !== 'undefined') {
       if (!validator.isString(options.jti)) {
-        throw new FirebaseAppCheckError(
-          'invalid-argument',
-          '`jti` must be a string value.');
+        throw new FirebaseAppCheckError({
+          code: 'invalid-argument',
+          message: '`jti` must be a string value.'
+        });
       }
       if (!options.limitedUse) {
-        throw new FirebaseAppCheckError(
-          'invalid-argument',
-          '`jti` cannot be specified without setting `limitedUse` to `true`.');
+        throw new FirebaseAppCheckError({
+          code: 'invalid-argument',
+          message: '`jti` cannot be specified without setting `limitedUse` to `true`.'
+        });
       }
     }
     return this.getUrl(appId)
@@ -114,9 +121,10 @@ export class AppCheckApiClient {
 
   public verifyReplayProtection(token: string): Promise<boolean> {
     if (!validator.isNonEmptyString(token)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        '`token` must be a non-empty string.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`token` must be a non-empty string.'
+      });
     }
     return this.getVerifyTokenUrl()
       .then((url) => {
@@ -131,8 +139,11 @@ export class AppCheckApiClient {
       .then((resp) => {
         if (typeof resp.data.alreadyConsumed !== 'undefined'
           && !validator.isBoolean(resp.data?.alreadyConsumed)) {
-          throw new FirebaseAppCheckError(
-            'invalid-argument', '`alreadyConsumed` must be a boolean value.');
+          throw new FirebaseAppCheckError({
+            code: 'invalid-argument',
+            message: '`alreadyConsumed` must be a boolean value.',
+            httpResponse: toHttpResponse(resp)
+          });
         }
         return resp.data.alreadyConsumed || false;
       })
@@ -171,36 +182,40 @@ export class AppCheckApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseAppCheckError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseAppCheckError({
+            code: 'unknown-error',
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
       });
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseAppCheckError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      return new FirebaseAppCheckError({
+        code: 'unknown-error',
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: toHttpResponse(response),
+        cause: err
+      });
     }
 
-    const error: Error = (response.data as ErrorResponse).error || {};
+    const error: AppCheckApiError = (response.data as ErrorResponse).error || {};
     let code: AppCheckErrorCode = 'unknown-error';
     if (error.status && error.status in APP_CHECK_ERROR_CODE_MAPPING) {
       code = APP_CHECK_ERROR_CODE_MAPPING[error.status];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseAppCheckError(code, message);
+    const message = error.message || 'Unknown server error';
+    return new FirebaseAppCheckError({ code, message, httpResponse: toHttpResponse(response), cause: err });
   }
 
   /**
@@ -217,7 +232,7 @@ export class AppCheckApiClient {
     return {
       token,
       ttlMillis
-    }
+    };
   }
 
   /**
@@ -232,8 +247,10 @@ export class AppCheckApiClient {
    */
   private stringToMilliseconds(duration: string): number {
     if (!validator.isNonEmptyString(duration) || !duration.endsWith('s')) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument', '`ttl` must be a valid duration string with the suffix `s`.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: '`ttl` must be a valid duration string with the suffix `s`.'
+      });
     }
     const seconds = duration.slice(0, -1);
     return Math.floor(Number(seconds) * 1000);
@@ -241,52 +258,11 @@ export class AppCheckApiClient {
 }
 
 interface ErrorResponse {
-  error?: Error;
+  error?: AppCheckApiError;
 }
 
-interface Error {
+interface AppCheckApiError {
   code?: number;
   message?: string;
   status?: string;
-}
-
-export const APP_CHECK_ERROR_CODE_MAPPING: { [key: string]: AppCheckErrorCode } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-};
-
-export type AppCheckErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'app-check-token-expired'
-  | 'unknown-error';
-
-/**
- * Firebase App Check error code structure. This extends PrefixedFirebaseError.
- *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
- */
-export class FirebaseAppCheckError extends PrefixedFirebaseError {
-  constructor(code: AppCheckErrorCode, message: string) {
-    super('app-check', code, message);
-
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseAppCheckError.prototype;
-  }
 }

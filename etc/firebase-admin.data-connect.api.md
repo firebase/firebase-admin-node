@@ -39,6 +39,22 @@ export class DataConnect {
 }
 
 // @public
+export const DataConnectErrorCode: {
+    readonly ABORTED: "aborted";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_CREDENTIAL: "invalid-credential";
+    readonly INTERNAL: "internal-error";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly UNAUTHENTICATED: "unauthenticated";
+    readonly NOT_FOUND: "not-found";
+    readonly UNKNOWN: "unknown-error";
+    readonly QUERY_ERROR: "query-error";
+};
+
+// @public
+export type DataConnectErrorCode = typeof DataConnectErrorCode[keyof typeof DataConnectErrorCode];
+
+// @public
 export interface ExecuteGraphqlResponse<GraphqlResponse> {
     data: GraphqlResponse;
 }
@@ -46,6 +62,14 @@ export interface ExecuteGraphqlResponse<GraphqlResponse> {
 // @public
 export interface ExecuteOperationResponse<GraphqlResponse> {
     data: GraphqlResponse;
+}
+
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseDataConnectError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
 }
 
 // @public

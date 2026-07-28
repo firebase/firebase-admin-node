@@ -20,7 +20,13 @@ import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpRequestConfig, HttpClient, RequestResponseError, AuthorizedHttpClient
 } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
+import { FirebaseError, toHttpResponse } from '../utils/error';
+import {
+  FirebaseDataConnectError,
+  DataConnectErrorCode,
+  DATA_CONNECT_ERROR_CODE_MAPPING,
+  EMULATOR_GRPC_STATUS_CODE_TO_STRING
+} from './error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { ConnectorConfig, ExecuteGraphqlResponse, GraphqlOptions, OperationOptions } from './data-connect-api';
@@ -61,6 +67,8 @@ const EXECUTE_GRAPH_QL_READ_ENDPOINT = 'executeGraphqlRead';
 const IMPERSONATE_QUERY_ENDPOINT = 'impersonateQuery';
 const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 
+/** @internal The maximum number of items allowed in the @allow directive's maxCount argument. */
+export const ALLOW_DIRECTIVE_MAX_COUNT = 10_000;
 
 function getHeaders(isUsingGen: boolean): { [key: string]: string } {
   const headerValue = {
@@ -94,6 +102,10 @@ interface ConnectorsUrlParams extends ServicesUrlParams {
   connectorId: string;
 }
 
+interface FieldNode {
+  children: Map<string, FieldNode>;
+}
+
 /**
  * Class that facilitates sending requests to the Firebase Data Connect backend API.
  *
@@ -106,9 +118,10 @@ export class DataConnectApiClient {
 
   constructor(private readonly connectorConfig: ConnectorConfig, private readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        'First argument passed to getDataConnect() must be a valid Firebase app instance.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'First argument passed to getDataConnect() must be a valid Firebase app instance.'
+      });
     }
     this.httpClient = new DataConnectHttpClient(app as FirebaseApp);
   }
@@ -165,15 +178,17 @@ export class DataConnectApiClient {
     options?: GraphqlOptions<Variables>,
   ): Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
     if (!validator.isNonEmptyString(query)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`query` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`query` must be a non-empty string.'
+      });
     }
     if (typeof options !== 'undefined') {
       if (!validator.isNonNullObject(options)) {
-        throw new FirebaseDataConnectError(
-          DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-          'GraphqlOptions must be a non-null object');
+        throw new FirebaseDataConnectError({
+          code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+          message: 'GraphqlOptions must be a non-null object'
+        });
       }
     }
     const data = {
@@ -242,17 +257,18 @@ export class DataConnectApiClient {
       typeof name === 'undefined' ||
       !validator.isNonEmptyString(name)
     ) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`name` must be a non-empty string.'
-      );
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`name` must be a non-empty string.'
+      });
     }
 
     if (this.connectorConfig.connector === undefined || this.connectorConfig.connector === '') {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        `The 'connectorConfig.connector' field used to instantiate your Data Connect
-        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: `The 'connectorConfig.connector' field used to instantiate your Data Connect
+        instance must be a non-empty string (the connectorId) when calling executeQuery or executeMutation.`
+      });
     }
 
     const data = {
@@ -348,11 +364,12 @@ export class DataConnectApiClient {
     return utils.findProjectId(this.app)
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseDataConnectError(
-            DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
-            'Failed to determine project ID. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.');
+          throw new FirebaseDataConnectError({
+            code: DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
+            message: 'Failed to determine project ID. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively, set the GOOGLE_CLOUD_PROJECT environment variable.'
+          });
         }
         this.projectId = projectId;
         return projectId;
@@ -377,92 +394,78 @@ export class DataConnectApiClient {
     const resp = await this.httpClient.send(request);
     if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
       const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR, allMessages);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        message: allMessages,
+        httpResponse: toHttpResponse(resp),
+      });
     }
     return Promise.resolve({
       data: resp.data.data as GraphqlResponse,
     });
   }
 
-  private toFirebaseError(err: RequestResponseError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
+  private toFirebaseError(err: RequestResponseError): FirebaseError {
+    if (err instanceof FirebaseError) {
       return err;
     }
 
     const response = err.response;
     if (!response.isJson()) {
-      return new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+      return new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN,
+        message: `Unexpected response with status: ${response.status} and body: ${response.text}`,
+        httpResponse: toHttpResponse(response),
+        cause: err
+      });
     }
 
-    const error: ServerError = (response.data as ErrorResponse).error || {};
-    let code: DataConnectErrorCode = DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN;
-    if (error.status && error.status in DATA_CONNECT_ERROR_CODE_MAPPING) {
-      code = DATA_CONNECT_ERROR_CODE_MAPPING[error.status];
+    const data = response.data as any;
+    const error: ServerError = (validator.isNonNullObject(data) && validator.isNonNullObject(data.error))
+      ? data.error
+      : (validator.isNonNullObject(data) ? data : {});
+        
+    let status = error.status;
+    if (!status && validator.isNumber(error.code)) {
+      status = EMULATOR_GRPC_STATUS_CODE_TO_STRING[error.code as number];
     }
-    const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseDataConnectError(code, message);
+
+    let code: DataConnectErrorCode = DATA_CONNECT_ERROR_CODE_MAPPING.UNKNOWN;
+    if (status && status in DATA_CONNECT_ERROR_CODE_MAPPING) {
+      code = DATA_CONNECT_ERROR_CODE_MAPPING[status];
+    }
+    const message = error.message || 'Unknown server error';
+    return new FirebaseDataConnectError({
+      code,
+      message,
+      httpResponse: toHttpResponse(response),
+      cause: err,
+    });
   }
 
   /**
-   * Converts JSON data into a GraphQL literal string.
-   * Handles nested objects, arrays, strings, numbers, and booleans.
-   * Ensures strings are properly escaped.
+   * Generates both capitalized and camel-cased variations of a table name.
+   * Capitalization matches the schema types, and camel-case matches mutations.
    */
-  private objectToString(data: unknown): string {
-    if (typeof data === 'string') {
-      return JSON.stringify(data);
+  private getTableNames(tableName: string): { capitalized: string; camelCase: string } {
+    if (!tableName || tableName.length === 0) {
+      return { capitalized: tableName, camelCase: tableName };
     }
-    if (typeof data === 'number' || typeof data === 'boolean' || data === null) {
-      return String(data);
-    }
-    if (validator.isArray(data)) {
-      const elements = data.map(item => this.objectToString(item)).join(', ');
-      return `[${elements}]`;
-    }
-    if (typeof data === 'object' && data !== null) {
-      // Filter out properties where the value is undefined BEFORE mapping
-      const kvPairs = Object.entries(data)
-        .filter(([, val]) => val !== undefined)
-        .map(([key, val]) => {
-          // GraphQL object keys are typically unquoted.
-          return `${key}: ${this.objectToString(val)}`;
-        });
-  
-      if (kvPairs.length === 0) {
-        return '{}'; // Represent an object with no defined properties as {}
-      }
-      return `{ ${kvPairs.join(', ')} }`;
-    }
-    
-    // If value is undefined (and not an object property, which is handled above,
-    // e.g., if objectToString(undefined) is called directly or for an array element)
-    // it should be represented as 'null'.
-    if (typeof data === 'undefined') {
-      return 'null';
-    }
-
-    // Fallback for any other types (e.g., Symbol, BigInt - though less common in GQL contexts)
-    // Consider how these should be handled or if an error should be thrown.
-    // For now, simple string conversion.
-    return String(data);
+    const capitalized = tableName.charAt(0).toUpperCase() + tableName.slice(1);
+    const camelCase = tableName.charAt(0).toLowerCase() + tableName.slice(1);
+    return { capitalized, camelCase };
   }
 
-  private formatTableName(tableName: string): string {
-    // Format tableName: first character to lowercase
-    if (tableName && tableName.length > 0) {
-      return tableName.charAt(0).toLowerCase() + tableName.slice(1);
-    }
-    return tableName;
-  }
+
 
   private handleBulkImportErrors(err: FirebaseDataConnectError): never {
-    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`){
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
-        `${err.message}. Make sure that your table name passed in matches the type name in your GraphQL schema file.`);
+    if (err.code === `data-connect/${DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR}`) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        message: `${err.message}. Make sure that your table name passed in matches the type name in your `
+          + 'GraphQL schema file.',
+        cause: err,
+      });
     }
     throw err;
   }
@@ -474,33 +477,7 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
-    if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
-    }
-    if (validator.isArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single insert. For arrays, please use `insertMany` function.');
-    }
-    if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-null object.');
-    }
-
-    try {
-      tableName = this.formatTableName(tableName);
-      const gqlDataString = this.objectToString(data);
-      const mutation = `mutation { ${tableName}_insert(data: ${gqlDataString}) }`;
-      // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
-    } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct insert mutation: ${e.message}`);
-    }
+    return this.executeSingleMutation<GraphQlResponse, Variables>(tableName, data, 'insert');
   }
 
   /**
@@ -510,27 +487,7 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
-    if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
-    }
-    if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-empty array for insertMany.');
-    }
-
-    try {
-      tableName = this.formatTableName(tableName);
-      const gqlDataString = this.objectToString(data);
-      const mutation = `mutation { ${tableName}_insertMany(data: ${gqlDataString}) }`;
-      // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
-    } catch (e: any) {
-      throw new FirebaseDataConnectError(DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct insertMany mutation: ${e.message}`);
-    }
+    return this.executeBulkMutation<GraphQlResponse, Variables>(tableName, data, 'insertMany');
   }
 
   /**
@@ -540,33 +497,7 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
-    if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
-    }
-    if (validator.isArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be an object, not an array, for single upsert. For arrays, please use `upsertMany` function.');
-    }
-    if (!validator.isNonNullObject(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-null object.');
-    }
-
-    try {
-      tableName = this.formatTableName(tableName);
-      const gqlDataString = this.objectToString(data);
-      const mutation = `mutation { ${tableName}_upsert(data: ${gqlDataString}) }`;
-      // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
-    } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct upsert mutation: ${e.message}`);
-    }
+    return this.executeSingleMutation<GraphQlResponse, Variables>(tableName, data, 'upsert');
   }
 
   /**
@@ -576,27 +507,93 @@ export class DataConnectApiClient {
     tableName: string,
     data: Variables,
   ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    return this.executeBulkMutation<GraphQlResponse, Variables>(tableName, data, 'upsertMany');
+  }
+
+  private async executeSingleMutation<GraphQlResponse, Variables extends object>(
+    tableName: string,
+    data: Variables,
+    operationType: 'insert' | 'upsert'
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
     if (!validator.isNonEmptyString(tableName)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`tableName` must be a non-empty string.');
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
     }
-    if (!validator.isNonEmptyArray(data)) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        '`data` must be a non-empty array for upsertMany.');
+    if (validator.isArray(data)) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: `\`data\` must be an object, not an array, for single ${operationType}.\
+          For arrays, please use \`${operationType}Many\` function.`
+      });
+    }
+    if (!validator.isNonNullObject(data)) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`data` must be a non-null object.'
+      });
     }
 
     try {
-      tableName = this.formatTableName(tableName);
-      const gqlDataString = this.objectToString(data);
-      const mutation = `mutation { ${tableName}_upsertMany(data: ${gqlDataString}) }`;
-      // Use internal executeGraphql
-      return this.executeGraphql<GraphQlResponse, Variables>(mutation).catch(this.handleBulkImportErrors);
+      const { capitalized, camelCase } = this.getTableNames(tableName);
+      const keys = getFieldsString(data);
+      const mutation =
+        `mutation($data: ${capitalized}_Data! @allow(fields: "${keys}")) {
+          ${camelCase}_${operationType}(data: $data)
+        }`;
+
+      return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
+        .catch(this.handleBulkImportErrors);
     } catch (e: any) {
-      throw new FirebaseDataConnectError(
-        DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
-        `Failed to construct upsertMany mutation: ${e.message}`);
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct ${operationType} mutation: ${e.message}`,
+        cause: e,
+      });
+    }
+  }
+
+  private async executeBulkMutation<GraphQlResponse, Variables extends Array<unknown>>(
+    tableName: string,
+    data: Variables,
+    operationType: 'insertMany' | 'upsertMany'
+  ): Promise<ExecuteGraphqlResponse<GraphQlResponse>> {
+    if (!validator.isNonEmptyString(tableName)) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: '`tableName` must be a non-empty string.'
+      });
+    }
+    if (!validator.isNonEmptyArray(data)) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: `\`data\` must be a non-empty array for ${operationType}.`
+      });
+    }
+    if (data.length > ALLOW_DIRECTIVE_MAX_COUNT) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: `\`data\` array exceeds the maximum limit of ${ALLOW_DIRECTIVE_MAX_COUNT} items.`
+      });
+    }
+
+    try {
+      const { capitalized, camelCase } = this.getTableNames(tableName);
+      const keys = getFieldsString(data);
+      const mutation =
+        `mutation($data: [${capitalized}_Data!]! @allow(fields: "${keys}", maxCount: ${ALLOW_DIRECTIVE_MAX_COUNT})) {
+          ${camelCase}_${operationType}(data: $data)
+        }`;
+
+      return this.executeGraphql<GraphQlResponse, { data: Variables }>(mutation, { variables: { data } })
+        .catch(this.handleBulkImportErrors);
+    } catch (e: any) {
+      throw new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.INTERNAL,
+        message: `Failed to construct ${operationType} mutation: ${e.message}`,
+        cause: e,
+      });
     }
   }
 }
@@ -629,54 +626,65 @@ export function useEmulator(): boolean {
   return !!emulatorHost();
 }
 
-interface ErrorResponse {
-  error?: ServerError;
-}
-
 interface ServerError {
   code?: number;
   message?: string;
   status?: string;
 }
 
-export const DATA_CONNECT_ERROR_CODE_MAPPING: { [key: string]: DataConnectErrorCode } = {
-  ABORTED: 'aborted',
-  INVALID_ARGUMENT: 'invalid-argument',
-  INVALID_CREDENTIAL: 'invalid-credential',
-  INTERNAL: 'internal-error',
-  PERMISSION_DENIED: 'permission-denied',
-  UNAUTHENTICATED: 'unauthenticated',
-  NOT_FOUND: 'not-found',
-  UNKNOWN: 'unknown-error',
-  QUERY_ERROR: 'query-error',
-};
-
-export type DataConnectErrorCode =
-  'aborted'
-  | 'invalid-argument'
-  | 'invalid-credential'
-  | 'internal-error'
-  | 'permission-denied'
-  | 'unauthenticated'
-  | 'not-found'
-  | 'unknown-error'
-  | 'query-error';
-
 /**
- * Firebase Data Connect error code structure. This extends PrefixedFirebaseError.
+ * Extracts property keys from an object or array of objects as a space-separated string,
+ * including recursively nested object/array fields for the `@allow(fields: ...)` directive.
+ * Leverages a hierarchical tree to deduplicate and merge fields.
  *
- * @param code - The error code.
- * @param message - The error message.
- * @constructor
+ * @internal
  */
-export class FirebaseDataConnectError extends PrefixedFirebaseError {
-  constructor(code: DataConnectErrorCode, message: string) {
-    super('data-connect', code, message);
+export function getFieldsString(data: unknown): string {
+  const root: FieldNode = { children: new Map() };
+  mergeFieldsIntoTree(data, root);
+  return serializeFieldNode(root);
+}
 
-    /* tslint:disable:max-line-length */
-    // Set the prototype explicitly. See the following link for more details:
-    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    /* tslint:enable:max-line-length */
-    (this as any).__proto__ = FirebaseDataConnectError.prototype;
+function mergeFieldsIntoTree(data: unknown, node: FieldNode, visited: Set<unknown> = new Set<unknown>()): void {
+  if (validator.isArray(data)) {
+    data.forEach((item) => mergeFieldsIntoTree(item, node, visited));
+    return;
   }
+  if (!validator.isNonNullObject(data) || data instanceof Date) {
+    return;
+  }
+  if (visited.has(data)) {
+    throw new Error('Circular reference detected in input.');
+  }
+  visited.add(data);
+  const record = data as Record<string, unknown>;
+  for (const [key, val] of Object.entries(record)) {
+    if (val === undefined) {
+      continue;
+    }
+    let childNode = node.children.get(key);
+    if (!childNode) {
+      childNode = { children: new Map() };
+      node.children.set(key, childNode);
+    }
+    if (key.includes('_on_')) {
+      mergeFieldsIntoTree(val, childNode, visited);
+    }
+  }
+  visited.delete(data);
+}
+
+function serializeFieldNode(node: FieldNode): string {
+  const parts: string[] = [];
+  const sortedKeys = Array.from(node.children.keys()).sort((a, b) => a.localeCompare(b));
+  for (const key of sortedKeys) {
+    const childNode = node.children.get(key)!;
+    if (childNode.children.size > 0) {
+      const nestedString = serializeFieldNode(childNode);
+      parts.push(`${key} { ${nestedString} }`);
+    } else {
+      parts.push(key);
+    }
+  }
+  return parts.join(' ');
 }

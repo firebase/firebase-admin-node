@@ -18,7 +18,8 @@
 import * as validator from '../utils/validator';
 
 import { App } from '../app';
-import { AppCheckApiClient, FirebaseAppCheckError } from './app-check-api-client-internal';
+import { AppCheckApiClient } from './app-check-api-client-internal';
+import { FirebaseAppCheckError } from './error';
 import {
   appCheckErrorFromCryptoSignerError, AppCheckTokenGenerator,
 } from './token-generator';
@@ -110,9 +111,10 @@ export class AppCheck {
       return;
     }
     if (!validator.isNonNullObject(options)) {
-      throw new FirebaseAppCheckError(
-        'invalid-argument',
-        'VerifyAppCheckTokenOptions must be a non-null object.');
+      throw new FirebaseAppCheckError({
+        code: 'invalid-argument',
+        message: 'VerifyAppCheckTokenOptions must be a non-null object.'
+      });
     }
   }
 }

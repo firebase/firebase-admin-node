@@ -25,9 +25,12 @@ import * as mocks from '../../resources/mocks';
 import { getSdkVersion, getMetricsHeader } from '../../../src/utils';
 
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { FirebaseFunctionsError, FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
+import { FunctionsApiClient, Task } from '../../../src/functions/functions-api-client-internal';
+import { TaskQueue } from '../../../src/functions/functions';
+import { FirebaseFunctionsError } from '../../../src/functions/error';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { toHttpResponse } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/app/error';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { EMULATED_SERVICE_ACCOUNT_DEFAULT } from '../../../src/functions/functions-api-client-internal';
 
@@ -128,6 +131,56 @@ describe('FunctionsApiClient', () => {
       expect(() => new FunctionsApiClient(null as unknown as FirebaseApp))
         .to.throw('First argument passed to getFunctions() must be a valid Firebase app instance.');
     });
+
+    it('should cache CLOUD_TASKS_EMULATOR_HOST at construction time', async () => {
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+      const prodClient = new FunctionsApiClient(app);
+
+      process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      const emulatorClient = new FunctionsApiClient(app);
+
+      delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+
+      const sendStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(sendStub);
+
+      await prodClient.delete('mock-task', FUNCTION_NAME);
+      await emulatorClient.delete('mock-task', FUNCTION_NAME);
+
+      expect(sendStub).to.have.been.calledTwice;
+      expect(sendStub.firstCall).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS,
+      });
+      expect(sendStub.secondCall).to.have.been.calledWith({
+        method: 'DELETE',
+        url: CLOUD_TASKS_URL_EMULATOR.concat('/', 'mock-task'),
+        headers: EXPECTED_HEADERS_EMULATOR,
+      });
+    });
+
+    for (const hostVal of ['', '   ']) {
+      it(`should ignore CLOUD_TASKS_EMULATOR_HOST when set to "${hostVal}"`, async () => {
+        process.env.CLOUD_TASKS_EMULATOR_HOST = hostVal;
+        const emptyHostClient = new FunctionsApiClient(app);
+        delete process.env.CLOUD_TASKS_EMULATOR_HOST;
+
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom({}, 200));
+        stubs.push(stub);
+
+        await emptyHostClient.delete('mock-task', FUNCTION_NAME);
+        expect(stub).to.have.been.calledWith({
+          method: 'DELETE',
+          url: CLOUD_TASKS_URL.concat('/', 'mock-task'),
+          headers: EXPECTED_HEADERS,
+        });
+      });
+    }
   });
 
   describe('enqueue', () => {
@@ -166,21 +219,21 @@ describe('FunctionsApiClient', () => {
 
     for (const invalidOption of [null, 'abc', '', [], true, 102, 1.2]) {
       it(`should throw if options is ${invalidOption}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '', invalidOption as any))
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, invalidOption as any))
           .to.eventually.throw('TaskOptions must be a non-null object');
       });
     }
 
     for (const invalidScheduleTime of [null, '', 'abc', 102, 1.2, [], {}, true, NaN]) {
       it(`should throw if scheduleTime is ${invalidScheduleTime}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '', { scheduleTime: invalidScheduleTime } as any))
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleTime: invalidScheduleTime } as any))
           .to.eventually.throw('scheduleTime must be a valid Date object.');
       });
     }
 
     for (const invalidScheduleDelaySeconds of [null, 'abc', '', [], {}, true, NaN, -1]) {
       it(`should throw if scheduleDelaySeconds is ${invalidScheduleDelaySeconds}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined,
           { scheduleDelaySeconds: invalidScheduleDelaySeconds } as any))
           .to.eventually.throw('scheduleDelaySeconds must be a non-negative duration in seconds.');
       });
@@ -188,7 +241,7 @@ describe('FunctionsApiClient', () => {
 
     for (const invalidDispatchDeadlineSeconds of [null, 'abc', '', [], {}, true, NaN, -1, 14, 1801]) {
       it(`should throw if dispatchDeadlineSeconds is ${invalidDispatchDeadlineSeconds}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined,
           { dispatchDeadlineSeconds: invalidDispatchDeadlineSeconds } as any))
           .to.eventually.throw('dispatchDeadlineSeconds must be a non-negative duration in seconds '
           + 'and must be in the range of 15s to 30 mins.');
@@ -197,7 +250,7 @@ describe('FunctionsApiClient', () => {
 
     for (const invalidUri of [null, '', 'a', 'foo', 'image.jpg', [], {}, true, NaN]) {
       it(`should throw given an invalid uri: ${invalidUri}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '',
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined,
           { uri: invalidUri } as any))
           .to.eventually.throw('uri must be a valid URL string.');
       });
@@ -205,7 +258,7 @@ describe('FunctionsApiClient', () => {
 
     for (const invalidTaskId of [1234, 'task!', 'id:0', '[1234]', '(1234)']) {
       it(`should throw given an invalid task ID: ${invalidTaskId}`, () => {
-        expect(apiClient.enqueue({}, FUNCTION_NAME, '', 
+        expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, 
         { id: invalidTaskId } as any ))
           .to.eventually.throw('id can contain only letters ([A-Za-z]), numbers ([0-9]), '
           + 'hyphens (-), or underscores (_). The maximum length is 500 characters.')
@@ -213,7 +266,7 @@ describe('FunctionsApiClient', () => {
     }
 
     it('should throw when both scheduleTime and scheduleDelaySeconds are provided', () => {
-      expect(apiClient.enqueue({}, FUNCTION_NAME, '', {
+      expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, {
         scheduleTime: new Date(),
         scheduleDelaySeconds: 1000
       } as any))
@@ -221,38 +274,61 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should reject when a full platform error response is received', () => {
+      const mockErr = utils.errorFrom(ERROR_RESPONSE, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError('not-found', 'Requested entity not found');
+      const expected = new FirebaseFunctionsError({
+        code: 'not-found',
+        message: 'Requested entity not found',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
+      const mockErr = utils.errorFrom({}, 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError('unknown-error', 'Unknown server error: {}');
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject with unknown-error for non-json response', () => {
+      const mockErr = utils.errorFrom('not json', 404);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom('not json', 404));
+        .rejects(mockErr);
       stubs.push(stub);
-      const expected = new FirebaseFunctionsError(
-        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unexpected response with status: 404 and body: not json',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
       return apiClient.enqueue({}, FUNCTION_NAME)
-        .should.eventually.be.rejected.and.deep.include(expected);
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const expected = new FirebaseAppError({ code: 'network-error', message: 'socket hang up' });
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
@@ -262,16 +338,21 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should reject when a task with the same ID exists', () => {
+      const mockErr = utils.errorFrom({}, 409);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 409));
+        .rejects(mockErr);
       stubs.push(stub);
-      expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })).to.eventually.throw(
-        new FirebaseFunctionsError(
-          'task-already-exists',
-          'A task with ID mock-task already exists'
-        )
-      )
+      const expected = new FirebaseFunctionsError({
+        code: 'task-already-exists',
+        message: 'A task with ID mock-task already exists',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'mock-task' })
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
 
     it('should resolve on success', () => {
@@ -347,7 +428,7 @@ describe('FunctionsApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
-      return apiClient.enqueue({}, FUNCTION_NAME, EXTENSION_ID)
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'extension', instance: EXTENSION_ID })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -408,7 +489,7 @@ describe('FunctionsApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
-      return apiClient.enqueue({}, FUNCTION_NAME, '', { scheduleTime })
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleTime })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -435,7 +516,7 @@ describe('FunctionsApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
-      return apiClient.enqueue({}, FUNCTION_NAME, '', { scheduleDelaySeconds })
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleDelaySeconds })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -457,7 +538,7 @@ describe('FunctionsApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
-      return apiClient.enqueue({}, FUNCTION_NAME, '', { dispatchDeadlineSeconds })
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { dispatchDeadlineSeconds })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -499,7 +580,8 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
-      return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
+      apiClient = new FunctionsApiClient(app);
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { uri: TEST_TASK_PAYLOAD.httpRequest.url })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -520,6 +602,7 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       return apiClient.enqueue({}, FUNCTION_NAME)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -539,7 +622,6 @@ describe('FunctionsApiClient', () => {
         projectId: 'test-project',
         serviceAccountId: ''
       });
-      apiClient = new FunctionsApiClient(app);
 
       const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
       expectedPayload.httpRequest.oidcToken = { serviceAccountEmail: EMULATED_SERVICE_ACCOUNT_DEFAULT };
@@ -548,7 +630,8 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
-      return apiClient.enqueue({}, FUNCTION_NAME, '', { uri: TEST_TASK_PAYLOAD.httpRequest.url })
+      apiClient = new FunctionsApiClient(app);
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { uri: TEST_TASK_PAYLOAD.httpRequest.url })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
@@ -601,6 +684,7 @@ describe('FunctionsApiClient', () => {
 
     it('should redirect to the emulator when CLOUD_TASKS_EMULATOR_HOST is set', async () => {
       process.env.CLOUD_TASKS_EMULATOR_HOST = CLOUD_TASKS_EMULATOR_HOST;
+      apiClient = new FunctionsApiClient(app);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({}, 200));
@@ -614,11 +698,228 @@ describe('FunctionsApiClient', () => {
     });
 
     it('should throw on non-404 HTTP errors', () => {
+      const mockErr = utils.errorFrom({}, 500);
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({}, 500));
+        .rejects(mockErr);
       stubs.push(stub);
-      expect(apiClient.delete('mock-task', FUNCTION_NAME)).to.eventually.throw(utils.errorFrom({}, 500));
+      const expected = new FirebaseFunctionsError({
+        code: 'unknown-error',
+        message: 'Unknown server error: {}',
+        httpResponse: toHttpResponse(mockErr.response),
+        cause: mockErr
+      });
+      return apiClient.delete('mock-task', FUNCTION_NAME)
+        .should.eventually.be.rejected
+        .and.deep.include(expected)
+        .and.have.property('cause', expected.cause);
     });
-  })
+  });
+
+  describe('taskQueue scopes', () => {
+    afterEach(() => {
+      delete process.env.EXT_INSTANCE_ID;
+      delete process.env.FIREBASE_KIT_INSTANCE_ID;
+    });
+
+    it('should namespace function with ext- when scope is current and EXT_INSTANCE_ID is set', () => {
+      process.env.EXT_INSTANCE_ID = 'ext-inst';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'current' })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/ext-ext-inst-function-name/tasks');
+        });
+    });
+
+    it('should namespace function with kit- when scope is current and FIREBASE_KIT_INSTANCE_ID is set', () => {
+      process.env.FIREBASE_KIT_INSTANCE_ID = 'kit-inst';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'current' })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/kit-kit-inst-function-name/tasks');
+        });
+    });
+
+    it('should not namespace function when scope is current and no env vars are set', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'current' })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/function-name/tasks');
+        });
+    });
+
+    it('should not namespace function when scope is global', () => {
+      process.env.EXT_INSTANCE_ID = 'ext-inst';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'global' })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/function-name/tasks');
+        });
+    });
+
+    it('should namespace function with ext- when scope is extension with custom instance', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'extension', instance: 'custom-ext' })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/ext-custom-ext-function-name/tasks');
+        });
+    });
+
+    it('should namespace function with kit- when scope is kit with custom instance', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, { scope: 'kit', instance: 'custom-kit' } as any)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/kit-custom-kit-function-name/tasks');
+        });
+    });
+
+    it('should succeed on first attempt and not warning when string extension parameter is used and succeeds', () => {
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+      return queue.enqueue({})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce;
+          expect(stub.firstCall.args[0].url).to.contain('/queues/ext-my-inst-function-name/tasks');
+          expect(warnStub).to.not.have.been.called;
+        });
+    });
+
+    it('should warn with self-targeting warning and target kit directly if ' +
+      'FIREBASE_KIT_INSTANCE_ID matches the string',
+    () => {
+      process.env.FIREBASE_KIT_INSTANCE_ID = 'my-inst';
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
+
+      const sendStub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+      stubs.push(sendStub);
+
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+      return queue.enqueue({})
+        .then(() => {
+          expect(sendStub).to.have.been.calledOnce;
+          expect(sendStub.firstCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
+          expect(warnStub).to.have.been.calledOnce;
+          expect(warnStub.firstCall.args[0]).to.equal(
+            'Targeting your own extension or kit no longer requires a second parameter, ' +
+              'which can have performance implications. Please change the call ' +
+              `taskQueue('${FUNCTION_NAME}', 'my-inst') to taskQueue('${FUNCTION_NAME}') ` +
+              `or taskQueue('${FUNCTION_NAME}', { scope: "current" })`
+          );
+        });
+    });
+
+    it('should warn with self-targeting warning and target extension directly if EXT_INSTANCE_ID matches the string',
+      () => {
+        process.env.EXT_INSTANCE_ID = 'my-inst';
+        const warnStub = sinon.stub(console, 'warn');
+        stubs.push(warnStub);
+
+        const sendStub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}, 200));
+        stubs.push(sendStub);
+
+        const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+        return queue.enqueue({})
+          .then(() => {
+            expect(sendStub).to.have.been.calledOnce;
+            expect(sendStub.firstCall.args[0].url).to.contain('/queues/ext-my-inst-function-name/tasks');
+            expect(warnStub).to.have.been.calledOnce;
+            expect(warnStub.firstCall.args[0]).to.equal(
+              'Targeting your own extension no longer requires a second parameter. ' +
+              `Please change the call taskQueue('${FUNCTION_NAME}', 'my-inst') to taskQueue('${FUNCTION_NAME}')`
+            );
+          });
+      });
+
+    it('should warn with kit legacy warning if kit fallback succeeds and ' +
+      'FIREBASE_KIT_INSTANCE_ID does not match', () => {
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
+
+      const sendStub = sinon.stub(HttpClient.prototype, 'send');
+      sendStub.onFirstCall().rejects(utils.errorFrom({}, 404));
+      sendStub.onSecondCall().resolves(utils.responseFrom({}, 200));
+      stubs.push(sendStub);
+
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+      return queue.enqueue({})
+        .then(() => {
+          expect(sendStub).to.have.been.calledTwice;
+          expect(sendStub.firstCall.args[0].url).to.contain('/queues/ext-my-inst-function-name/tasks');
+          expect(sendStub.secondCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
+          expect(warnStub).to.have.been.calledOnce;
+          expect(warnStub.firstCall.args[0]).to.equal(
+            'Targeting kit my-inst with the legacy extensions API, ' +
+            'which has performance implications. Please change the call ' +
+            `taskQueue('${FUNCTION_NAME}', 'my-inst') to ` +
+            `taskQueue('${FUNCTION_NAME}', { scope: "kit", instance: 'my-inst' })`
+          );
+        });
+    });
+
+    it('should propagate 404 error if both ext- and kit- attempts fail', () => {
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
+
+      const sendStub = sinon.stub(HttpClient.prototype, 'send');
+      sendStub.onFirstCall().rejects(utils.errorFrom({}, 404));
+      sendStub.onSecondCall().rejects(utils.errorFrom({}, 404));
+      stubs.push(sendStub);
+
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+      return queue.enqueue({})
+        .should.eventually.be.rejectedWith(FirebaseFunctionsError)
+        .then(() => {
+          expect(sendStub).to.have.been.calledTwice;
+          expect(warnStub).to.not.have.been.called;
+        });
+    });
+
+    it('should remember the kit fallback state and bypass ext- on subsequent enqueue calls', () => {
+
+      const queue = new TaskQueue(FUNCTION_NAME, apiClient, 'my-inst');
+
+      const sendStub = sinon.stub(HttpClient.prototype, 'send');
+      // First enqueue: ext- 404, kit- 200
+      sendStub.onFirstCall().rejects(utils.errorFrom({}, 404));
+      sendStub.onSecondCall().resolves(utils.responseFrom({}, 200));
+      // Second enqueue: kit- 200 (directly)
+      sendStub.onThirdCall().resolves(utils.responseFrom({}, 200));
+      stubs.push(sendStub);
+
+      const warnStub = sinon.stub(console, 'warn');
+      stubs.push(warnStub);
+
+      return queue.enqueue({})
+        .then(() => {
+          expect(sendStub).to.have.been.calledTwice;
+          expect(sendStub.firstCall.args[0].url).to.contain('/queues/ext-my-inst-function-name/tasks');
+          expect(sendStub.secondCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
+
+          return queue.enqueue({});
+        })
+        .then(() => {
+          expect(sendStub).to.have.been.calledThrice;
+          // Third call should target kit- directly without trying ext-
+          expect(sendStub.thirdCall.args[0].url).to.contain('/queues/kit-my-inst-function-name/tasks');
+          expect(warnStub).to.have.been.calledOnce; // warned only once (on the fallback)
+        });
+    });
+  });
 });

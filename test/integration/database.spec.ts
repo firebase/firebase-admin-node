@@ -16,13 +16,11 @@
 
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as admin from '../../lib/index';
 import {
   Database, DataSnapshot, EventType, Reference, ServerValue, getDatabase, getDatabaseWithUrl,
 } from '../../lib/database/index';
 import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl, isEmulator } from './setup';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
 
 chai.should();
@@ -57,17 +55,6 @@ describe('admin.database', () => {
     expect(db).to.not.be.undefined;
   });
 
-  it('admin.database() returns a database client', () => {
-    const db: admin.database.Database = admin.database();
-    expect(db).to.not.be.undefined;
-    expect(db).to.equal(getDatabase());
-  });
-
-  it('admin.database.ServerValue type is defined', () => {
-    const serverValue = admin.database.ServerValue;
-    expect(serverValue).to.not.be.null;
-  });
-
   it('default App is not blocked by security rules', () => {
     return getDatabase(defaultApp).ref('blocked').set(ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
@@ -80,7 +67,7 @@ describe('admin.database', () => {
       //     remove this once updating security rules through admin is in place.
       return this.skip();
     }
-    return getDatabase(nullApp).ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
+    return getDatabase(nullApp).ref('blocked').set(ServerValue.TIMESTAMP)
       .should.eventually.be.rejectedWith('PERMISSION_DENIED: Permission denied');
   });
 
@@ -140,12 +127,6 @@ describe('admin.database', () => {
     it('getDatabaseWithUrl(url) returns a Database client for URL', () => {
       const db: Database = getDatabaseWithUrl(databaseUrl);
       expect(db).to.not.be.undefined;
-    });
-
-    it('app.database(url) returns a Database client for URL', () => {
-      const db: Database = admin.app().database(databaseUrl);
-      expect(db).to.not.be.undefined;
-      expect(db).to.equal(getDatabaseWithUrl(databaseUrl));
     });
 
     it('set() completes successfully', () => {

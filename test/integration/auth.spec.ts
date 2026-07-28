@@ -37,7 +37,7 @@ import {
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 
-const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
+const chalk = require('chalk');
 
 chai.should();
 chai.use(sinonChai);
@@ -908,14 +908,14 @@ describe('admin.auth', () => {
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
 
-      let userRecord = await getAuth().updateUser(updateUser.uid, {
+      await getAuth().updateUser(updateUser.uid, {
         phoneNumber: '+15555550001',
         providerToLink: {
           providerId: 'google.com',
           uid: googleFederatedUid,
         },
       });
-      userRecord = await getAuth().updateUser(updateUser.uid, {
+      let userRecord = await getAuth().updateUser(updateUser.uid, {
         providerToLink: {
           providerId: 'facebook.com',
           uid: facebookFederatedUid,
@@ -2398,30 +2398,26 @@ describe('admin.auth', () => {
         });
     });
 
-    it('deleteTenant() should successfully delete the provided tenant', () => {
-      const allTenantIds: string[] = [];
-      const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
-        return getAuth().tenantManager().listTenants(100, nextPageToken)
-          .then((result) => {
-            result.tenants.forEach((tenant) => {
-              tenantIds.push(tenant.tenantId);
-            });
-            if (result.pageToken) {
-              return listAllTenantIds(tenantIds, result.pageToken);
-            }
+    describe('tenant deletion operations', () => {
+      it('deleteTenant() should successfully delete the provided tenant', async () => {
+        const allTenantIds: string[] = [];
+        const listAllTenantIds = async (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+          const result = await getAuth().tenantManager().listTenants(100, nextPageToken);
+          result.tenants.forEach((tenant) => {
+            tenantIds.push(tenant.tenantId);
           });
-      };
+          if (result.pageToken) {
+            await listAllTenantIds(tenantIds, result.pageToken);
+          }
+        };
 
-      return getAuth().tenantManager().deleteTenant(createdTenantId)
-        .then(() => {
-          // Use listTenants() instead of getTenant() to check that the tenant
-          // is no longer present, because Auth Emulator implicitly creates the
-          // tenant in getTenant() when it is not found
-          return listAllTenantIds(allTenantIds);
-        })
-        .then(() => {
-          expect(allTenantIds).to.not.contain(createdTenantId);
-        });
+        await getAuth().tenantManager().deleteTenant(createdTenantId);
+        // Use listTenants() instead of getTenant() to check that the tenant
+        // is no longer present, because Auth Emulator implicitly creates the
+        // tenant in getTenant() when it is not found
+        await listAllTenantIds(allTenantIds);
+        expect(allTenantIds).to.not.contain(createdTenantId);
+      });
     });
   });
 
@@ -3548,6 +3544,8 @@ async function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> 
   }
   return getAuth().deleteUsers(uids);
 }
+
+
 
 /**
  * Asserts actual object is equal to expected object while ignoring key order.

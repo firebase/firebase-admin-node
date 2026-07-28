@@ -27,8 +27,8 @@ import * as util from '../../../src/utils/index';
 import { PhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
 import {
   FirebasePhoneNumberTokenInfo,
-  FPNV_ERROR_CODE_MAPPING
 } from '../../../src/phone-number-verification/phone-number-verification-api-client-internal';
+import { FPNV_ERROR_CODE_MAPPING } from '../../../src/phone-number-verification/error';
 import * as mocks from '../../resources/mocks';
 
 chai.use(chaiAsPromised);

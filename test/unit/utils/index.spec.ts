@@ -35,7 +35,7 @@ interface Obj {
 
 describe('SDK_VERSION', () => {
   it('utils index should retrieve the SDK_VERSION from package.json', () => {
-    const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const { version } = require('../../../package.json');
     expect(getSdkVersion()).to.equal(version);
   });
 });

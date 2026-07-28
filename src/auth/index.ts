@@ -170,5 +170,5 @@ export {
 
 export {
   FirebaseAuthError,
-  AuthClientErrorCode,
-} from '../utils/error';
+  AuthErrorCode,
+} from './error';

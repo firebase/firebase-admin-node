@@ -16,7 +16,7 @@
 
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 /**
  * Interface representing base properties of a user-enrolled second factor for a
@@ -231,7 +231,43 @@ export interface UserProvider {
  * Interface representing the properties to set on a new user record to be
  * created.
  */
-export interface CreateRequest extends UpdateRequest {
+export interface CreateRequest {
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled;
+   * `false` for enabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * The user's display name.
+   */
+  displayName?: string;
+
+  /**
+   * The user's primary email.
+   */
+  email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  emailVerified?: boolean;
+
+  /**
+   * The user's unhashed password.
+   */
+  password?: string;
+
+  /**
+   * The user's primary phone number.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The user's photo URL.
+   */
+  photoURL?: string;
 
   /**
    * The user's `uid`.
@@ -605,7 +641,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"MultiFactorConfig" must be a non-null object.',
       );
     }
@@ -613,7 +649,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid MultiFactorConfig parameter.`,
         );
       }
@@ -623,7 +659,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         options.state !== 'ENABLED' &&
         options.state !== 'DISABLED') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".',
       );
     }
@@ -631,7 +667,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     if (typeof options.factorIds !== 'undefined') {
       if (!validator.isArray(options.factorIds)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".',
         );
       }
@@ -640,7 +676,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       options.factorIds.forEach((factorId) => {
         if (typeof AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[factorId] === 'undefined') {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${factorId}" is not a valid "AuthFactorType".`,
           );
         }
@@ -650,7 +686,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     if (typeof options.providerConfigs !== 'undefined') {
       if (!validator.isArray(options.providerConfigs)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"MultiFactorConfig.providerConfigs" must be an array of valid "MultiFactorProviderConfig."',
         );
       }
@@ -658,7 +694,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       options.providerConfigs.forEach((multiFactorProviderConfig) => {
         if (typeof multiFactorProviderConfig === 'undefined' || !validator.isObject(multiFactorProviderConfig)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${multiFactorProviderConfig}" is not a valid "MultiFactorProviderConfig" type.`
           )
         }
@@ -669,7 +705,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         for (const key in multiFactorProviderConfig) {
           if (!(key in validProviderConfigKeys)) {
             throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
+              authClientErrorCode.INVALID_CONFIG,
               `"${key}" is not a valid ProviderConfig parameter.`,
             );
           }
@@ -678,14 +714,14 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
           (multiFactorProviderConfig.state !== 'ENABLED' &&
             multiFactorProviderConfig.state !== 'DISABLED')) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             '"MultiFactorConfig.providerConfigs.state" must be either "ENABLED" or "DISABLED".',
           )
         }
         // Since TOTP is the only provider config available right now, not defining it will lead into an error
         if (typeof multiFactorProviderConfig.totpProviderConfig === 'undefined') {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             '"MultiFactorConfig.providerConfigs.totpProviderConfig" must be defined.'
           )
         }
@@ -695,7 +731,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         for (const key in multiFactorProviderConfig.totpProviderConfig) {
           if (!(key in validTotpProviderConfigKeys)) {
             throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CONFIG,
+              authClientErrorCode.INVALID_CONFIG,
               `"${key}" is not a valid TotpProviderConfig parameter.`,
             );
           }
@@ -704,7 +740,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         if (typeof adjIntervals !== 'undefined' &&
           (!Number.isInteger(adjIntervals) || adjIntervals < 0 || adjIntervals > 10)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             '"MultiFactorConfig.providerConfigs.totpProviderConfig.adjacentIntervals" must' +
             ' be a valid number between 0 and 10 (both inclusive).'
           )
@@ -724,7 +760,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
   constructor(response: MultiFactorAuthServerConfig) {
     if (typeof response.state === 'undefined') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
     }
     this.state = response.state;
@@ -744,7 +780,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
           (typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'undefined' &&
             typeof providerConfig.totpProviderConfig.adjacentIntervals !== 'number')) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
+            authClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
         }
         this.providerConfigs.push(providerConfig);
@@ -773,18 +809,18 @@ export function validateTestPhoneNumbers(
 ): void {
   if (!validator.isObject(testPhoneNumbers)) {
     throw new FirebaseAuthError(
-      AuthClientErrorCode.INVALID_ARGUMENT,
+      authClientErrorCode.INVALID_ARGUMENT,
       '"testPhoneNumbers" must be a map of phone number / code pairs.',
     );
   }
   if (Object.keys(testPhoneNumbers).length > MAXIMUM_TEST_PHONE_NUMBERS) {
-    throw new FirebaseAuthError(AuthClientErrorCode.MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED);
+    throw new FirebaseAuthError(authClientErrorCode.MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED);
   }
   for (const phoneNumber in testPhoneNumbers) {
     // Validate phone number.
     if (!validator.isPhoneNumber(phoneNumber)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
+        authClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
         `"${phoneNumber}" is not a valid E.164 standard compliant phone number.`
       );
     }
@@ -793,7 +829,7 @@ export function validateTestPhoneNumbers(
     if (!validator.isString(testPhoneNumbers[phoneNumber]) ||
         !/^[\d]{6}$/.test(testPhoneNumbers[phoneNumber])) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
+        authClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
         `"${testPhoneNumbers[phoneNumber]}" is not a valid 6 digit code string.`
       );
     }
@@ -860,7 +896,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"EmailSignInConfig" must be a non-null object.',
       );
     }
@@ -868,7 +904,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           `"${key}" is not a valid EmailSignInConfig parameter.`,
         );
       }
@@ -877,14 +913,14 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
     if (typeof options.enabled !== 'undefined' &&
         !validator.isBoolean(options.enabled)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"EmailSignInConfig.enabled" must be a boolean.',
       );
     }
     if (typeof options.passwordRequired !== 'undefined' &&
         !validator.isBoolean(options.passwordRequired)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"EmailSignInConfig.passwordRequired" must be a boolean.',
       );
     }
@@ -900,7 +936,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   constructor(response: {[key: string]: any}) {
     if (typeof response.allowPasswordSignup === 'undefined') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid email sign-in configuration response');
     }
     this.enabled = response.allowPasswordSignup;
@@ -1165,7 +1201,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig" must be a valid non-null object.',
       );
     }
@@ -1173,7 +1209,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid SAML config parameter.`,
         );
       }
@@ -1182,57 +1218,57 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     if (validator.isNonEmptyString(options.providerId)) {
       if (options.providerId.indexOf('saml.') !== 0) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_PROVIDER_ID,
+          authClientErrorCode.INVALID_PROVIDER_ID,
           '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
         );
       }
     } else if (!ignoreMissingFields) {
       // providerId is required and not provided correctly.
       throw new FirebaseAuthError(
-        !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
+        !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
       );
     }
     if (!(ignoreMissingFields && typeof options.idpEntityId === 'undefined') &&
         !validator.isNonEmptyString(options.idpEntityId)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.idpEntityId" must be a valid non-empty string.',
       );
     }
     if (!(ignoreMissingFields && typeof options.ssoURL === 'undefined') &&
         !validator.isURL(options.ssoURL)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.ssoURL" must be a valid URL string.',
       );
     }
     if (!(ignoreMissingFields && typeof options.rpEntityId === 'undefined') &&
         !validator.isNonEmptyString(options.rpEntityId)) {
       throw new FirebaseAuthError(
-        !options.rpEntityId ? AuthClientErrorCode.MISSING_SAML_RELYING_PARTY_CONFIG :
-          AuthClientErrorCode.INVALID_CONFIG,
+        !options.rpEntityId ? authClientErrorCode.MISSING_SAML_RELYING_PARTY_CONFIG :
+          authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.rpEntityId" must be a valid non-empty string.',
       );
     }
     if (!(ignoreMissingFields && typeof options.callbackURL === 'undefined') &&
         !validator.isURL(options.callbackURL)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.callbackURL" must be a valid URL string.',
       );
     }
     if (!(ignoreMissingFields && typeof options.x509Certificates === 'undefined') &&
         !validator.isArray(options.x509Certificates)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.x509Certificates" must be a valid array of X509 certificate strings.',
       );
     }
     (options.x509Certificates || []).forEach((cert: string) => {
       if (!validator.isNonEmptyString(cert)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"SAMLAuthProviderConfig.x509Certificates" must be a valid array of X509 certificate strings.',
         );
       }
@@ -1240,21 +1276,21 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     if (typeof (options as any).enableRequestSigning !== 'undefined' &&
         !validator.isBoolean((options as any).enableRequestSigning)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.enableRequestSigning" must be a boolean.',
       );
     }
     if (typeof options.enabled !== 'undefined' &&
         !validator.isBoolean(options.enabled)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.enabled" must be a boolean.',
       );
     }
     if (typeof options.displayName !== 'undefined' &&
         !validator.isString(options.displayName)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.displayName" must be a valid string.',
       );
     }
@@ -1277,14 +1313,14 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         !(validator.isString(response.name) &&
           SAMLConfig.getProviderIdFromResourceName(response.name))) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
     }
 
     const providerId = SAMLConfig.getProviderIdFromResourceName(response.name);
     if (!providerId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
     }
     this.providerId = providerId;
@@ -1418,7 +1454,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"OIDCAuthProviderConfig" must be a valid non-null object.',
       );
     }
@@ -1426,7 +1462,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid OIDC config parameter.`,
         );
       }
@@ -1435,48 +1471,48 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     if (validator.isNonEmptyString(options.providerId)) {
       if (options.providerId.indexOf('oidc.') !== 0) {
         throw new FirebaseAuthError(
-          !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
+          !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
           '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
         );
       }
     } else if (!ignoreMissingFields) {
       throw new FirebaseAuthError(
-        !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
+        !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
       );
     }
     if (!(ignoreMissingFields && typeof options.clientId === 'undefined') &&
         !validator.isNonEmptyString(options.clientId)) {
       throw new FirebaseAuthError(
-        !options.clientId ? AuthClientErrorCode.MISSING_OAUTH_CLIENT_ID : AuthClientErrorCode.INVALID_OAUTH_CLIENT_ID,
+        !options.clientId ? authClientErrorCode.MISSING_OAUTH_CLIENT_ID : authClientErrorCode.INVALID_OAUTH_CLIENT_ID,
         '"OIDCAuthProviderConfig.clientId" must be a valid non-empty string.',
       );
     }
     if (!(ignoreMissingFields && typeof options.issuer === 'undefined') &&
         !validator.isURL(options.issuer)) {
       throw new FirebaseAuthError(
-        !options.issuer ? AuthClientErrorCode.MISSING_ISSUER : AuthClientErrorCode.INVALID_CONFIG,
+        !options.issuer ? authClientErrorCode.MISSING_ISSUER : authClientErrorCode.INVALID_CONFIG,
         '"OIDCAuthProviderConfig.issuer" must be a valid URL string.',
       );
     }
     if (typeof options.enabled !== 'undefined' &&
         !validator.isBoolean(options.enabled)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"OIDCAuthProviderConfig.enabled" must be a boolean.',
       );
     }
     if (typeof options.displayName !== 'undefined' &&
         !validator.isString(options.displayName)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"OIDCAuthProviderConfig.displayName" must be a valid string.',
       );
     }
     if (typeof options.clientSecret !== 'undefined' &&
         !validator.isNonEmptyString(options.clientSecret)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"OIDCAuthProviderConfig.clientSecret" must be a valid string.',
       );
     }
@@ -1484,7 +1520,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       Object.keys(options.responseType).forEach((key) => {
         if (!(key in validResponseTypes)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid OAuthResponseType parameter.`,
           );
         }
@@ -1493,7 +1529,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       const idToken = options.responseType.idToken;
       if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
         );
       }
@@ -1501,14 +1537,14 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       if (typeof code !== 'undefined') {
         if (!validator.isBoolean(code)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
+            authClientErrorCode.INVALID_ARGUMENT,
             '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
           );
         }
         // If code flow is enabled, client secret must be provided.
         if (code && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
+            authClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
             'The OAuth configuration client secret is required to enable OIDC code flow.',
           );
         }
@@ -1519,7 +1555,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       // Only one of OAuth response types can be set to true.
       if (allKeys > 1 && enabledCount !== 1) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
+          authClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
           'Only exactly one OAuth responseType should be set to true.',
         );
       }
@@ -1540,14 +1576,14 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         !(validator.isString(response.name) &&
           OIDCConfig.getProviderIdFromResourceName(response.name))) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid OIDC configuration response');
     }
 
     const providerId = OIDCConfig.getProviderIdFromResourceName(response.name);
     if (!providerId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
     }
     this.providerId = providerId;
@@ -1649,7 +1685,7 @@ export class SmsRegionsAuthConfig {
   public static validate(options: SmsRegionConfig): void {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"SmsRegionConfig" must be a non-null object.',
       );
     }
@@ -1662,7 +1698,7 @@ export class SmsRegionsAuthConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid SmsRegionConfig parameter.`,
         );
       }
@@ -1671,7 +1707,7 @@ export class SmsRegionsAuthConfig {
     // validate mutual exclusiveness of allowByDefault and allowlistOnly
     if (typeof options.allowByDefault !== 'undefined' && typeof options.allowlistOnly !== 'undefined') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         'SmsRegionConfig cannot have both "allowByDefault" and "allowlistOnly" parameters.',
       );
     }
@@ -1683,7 +1719,7 @@ export class SmsRegionsAuthConfig {
       for (const key in options.allowByDefault) {
         if (!(key in allowByDefaultValidKeys)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid SmsRegionConfig.allowByDefault parameter.`,
           );
         }
@@ -1692,7 +1728,7 @@ export class SmsRegionsAuthConfig {
       if (typeof options.allowByDefault.disallowedRegions !== 'undefined'
         && !validator.isArray(options.allowByDefault.disallowedRegions)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"SmsRegionConfig.allowByDefault.disallowedRegions" must be a valid string array.',
         );
       }
@@ -1705,7 +1741,7 @@ export class SmsRegionsAuthConfig {
       for (const key in options.allowlistOnly) {
         if (!(key in allowListOnlyValidKeys)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid SmsRegionConfig.allowlistOnly parameter.`,
           );
         }
@@ -1715,7 +1751,7 @@ export class SmsRegionsAuthConfig {
       if (typeof options.allowlistOnly.allowedRegions !== 'undefined'
         && !validator.isArray(options.allowlistOnly.allowedRegions)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"SmsRegionConfig.allowlistOnly.allowedRegions" must be a valid string array.',
         );
       }
@@ -1941,7 +1977,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
 
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"RecaptchaConfig" must be a non-null object.',
       );
     }
@@ -1949,7 +1985,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid RecaptchaConfig parameter.`,
         );
       }
@@ -1959,7 +1995,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.emailPasswordEnforcementState !== 'undefined') {
       if (!validator.isNonEmptyString(options.emailPasswordEnforcementState)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"RecaptchaConfig.emailPasswordEnforcementState" must be a valid non-empty string.',
         );
       }
@@ -1968,7 +2004,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
         options.emailPasswordEnforcementState !== 'AUDIT' &&
         options.emailPasswordEnforcementState !== 'ENFORCE') {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.emailPasswordEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
         );
       }
@@ -1977,7 +2013,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.phoneEnforcementState !== 'undefined') {
       if (!validator.isNonEmptyString(options.phoneEnforcementState)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"RecaptchaConfig.phoneEnforcementState" must be a valid non-empty string.',
         );
       }
@@ -1986,7 +2022,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
         options.phoneEnforcementState !== 'AUDIT' &&
         options.phoneEnforcementState !== 'ENFORCE') {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.phoneEnforcementState" must be either "OFF", "AUDIT" or "ENFORCE".',
         );
       }
@@ -1996,7 +2032,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       // Validate array
       if (!validator.isArray(options.managedRules)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.managedRules" must be an array of valid "RecaptchaManagedRule".',
         );
       }
@@ -2009,7 +2045,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.useAccountDefender !== 'undefined') {
       if (!validator.isBoolean(options.useAccountDefender)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.useAccountDefender" must be a boolean value".',
         );
       }
@@ -2018,7 +2054,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.useSmsBotScore !== 'undefined') {
       if (!validator.isBoolean(options.useSmsBotScore)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.useSmsBotScore" must be a boolean value".',
         );
       }
@@ -2027,7 +2063,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.useSmsTollFraudProtection !== 'undefined') {
       if (!validator.isBoolean(options.useSmsTollFraudProtection)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.useSmsTollFraudProtection" must be a boolean value".',
         );
       }
@@ -2037,7 +2073,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
       // Validate array
       if (!validator.isArray(options.smsTollFraudManagedRules)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"RecaptchaConfig.smsTollFraudManagedRules" must be an array of valid "RecaptchaTollFraudManagedRule".',
         );
       }
@@ -2059,7 +2095,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     }
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"RecaptchaManagedRule" must be a non-null object.',
       );
     }
@@ -2067,7 +2103,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid RecaptchaManagedRule parameter.`,
         );
       }
@@ -2077,7 +2113,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.action !== 'undefined' &&
         options.action !== 'BLOCK') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"RecaptchaManagedRule.action" must be "BLOCK".',
       );
     }
@@ -2094,7 +2130,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     }
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"RecaptchaTollFraudManagedRule" must be a non-null object.',
       );
     }
@@ -2102,7 +2138,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid RecaptchaTollFraudManagedRule parameter.`,
         );
       }
@@ -2112,7 +2148,7 @@ export class RecaptchaAuthConfig implements RecaptchaConfig {
     if (typeof options.action !== 'undefined' &&
         options.action !== 'BLOCK') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"RecaptchaTollFraudManagedRule.action" must be "BLOCK".',
       );
     }
@@ -2162,7 +2198,7 @@ export class MobileLinksAuthConfig {
   public static validate(options: MobileLinksConfig): void {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"MobileLinksConfig" must be a non-null object.',
       );
     }
@@ -2174,7 +2210,7 @@ export class MobileLinksAuthConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid "MobileLinksConfig" parameter.`,
         );
       }
@@ -2184,7 +2220,7 @@ export class MobileLinksAuthConfig {
       && options.domain !== 'HOSTING_DOMAIN'
       && options.domain !== 'FIREBASE_DYNAMIC_LINK_DOMAIN') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"MobileLinksConfig.domain" must be either "HOSTING_DOMAIN" or "FIREBASE_DYNAMIC_LINK_DOMAIN".',
       );
     }
@@ -2314,7 +2350,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     };
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"PasswordPolicyConfig" must be a non-null object.',
       );
     }
@@ -2322,7 +2358,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid PasswordPolicyConfig parameter.`,
         );
       }
@@ -2332,7 +2368,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       !(options.enforcementState === 'ENFORCE' ||
       options.enforcementState === 'OFF')) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"PasswordPolicyConfig.enforcementState" must be either "ENFORCE" or "OFF".',
       );
     }
@@ -2340,7 +2376,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     if (typeof options.forceUpgradeOnSignin !== 'undefined') {
       if (!validator.isBoolean(options.forceUpgradeOnSignin)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.forceUpgradeOnSignin" must be a boolean.',
         );
       }
@@ -2349,7 +2385,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     if (typeof options.constraints !== 'undefined') {
       if (options.enforcementState === 'ENFORCE' && !validator.isNonNullObject(options.constraints)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints" must be a non-empty object.',
         );
       }
@@ -2367,7 +2403,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       for (const key in options.constraints) {
         if (!(key in validCharKeys)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             `"${key}" is not a valid PasswordPolicyConfig.constraints parameter.`,
           );
         }
@@ -2375,21 +2411,21 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       if (typeof options.constraints.requireUppercase !== 'undefined' &&
         !validator.isBoolean(options.constraints.requireUppercase)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.requireUppercase" must be a boolean.',
         );
       }
       if (typeof options.constraints.requireLowercase !== 'undefined' &&
         !validator.isBoolean(options.constraints.requireLowercase)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.requireLowercase" must be a boolean.',
         );
       }
       if (typeof options.constraints.requireNonAlphanumeric !== 'undefined' &&
         !validator.isBoolean(options.constraints.requireNonAlphanumeric)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.requireNonAlphanumeric"' +
             ' must be a boolean.',
         );
@@ -2397,7 +2433,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
       if (typeof options.constraints.requireNumeric !== 'undefined' &&
         !validator.isBoolean(options.constraints.requireNumeric)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.requireNumeric" must be a boolean.',
         );
       }
@@ -2405,14 +2441,14 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         options.constraints.minLength = 6;
       } else if (!validator.isNumber(options.constraints.minLength)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.minLength" must be a number.',
         );
       } else {
         if (!(options.constraints.minLength >= 6
           && options.constraints.minLength <= 30)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             '"PasswordPolicyConfig.constraints.minLength"' +
             ' must be an integer between 6 and 30, inclusive.',
           );
@@ -2422,14 +2458,14 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
         options.constraints.maxLength = 4096;
       } else if (!validator.isNumber(options.constraints.maxLength)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints.maxLength" must be a number.',
         );
       } else {
         if (!(options.constraints.maxLength >= options.constraints.minLength &&
           options.constraints.maxLength <= 4096)) {
           throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_CONFIG,
+            authClientErrorCode.INVALID_CONFIG,
             '"PasswordPolicyConfig.constraints.maxLength"' +
             ' must be greater than or equal to minLength and at max 4096.',
           );
@@ -2438,7 +2474,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
     } else {
       if (options.enforcementState === 'ENFORCE') {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           '"PasswordPolicyConfig.constraints" must be defined.',
         );
       }
@@ -2456,7 +2492,7 @@ export class PasswordPolicyAuthConfig implements PasswordPolicyConfig {
   constructor(response: PasswordPolicyAuthServerConfig) {
     if (typeof response.passwordPolicyEnforcementState === 'undefined') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid password policy configuration response');
     }
     this.enforcementState = response.passwordPolicyEnforcementState;
@@ -2525,7 +2561,7 @@ export class EmailPrivacyAuthConfig {
   public static validate(options: EmailPrivacyConfig): void {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"EmailPrivacyConfig" must be a non-null object.',
       );
     }
@@ -2537,7 +2573,7 @@ export class EmailPrivacyAuthConfig {
     for (const key in options) {
       if (!(key in validKeys)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CONFIG,
+          authClientErrorCode.INVALID_CONFIG,
           `"${key}" is not a valid "EmailPrivacyConfig" parameter.`,
         );
       }
@@ -2546,7 +2582,7 @@ export class EmailPrivacyAuthConfig {
     if (typeof options.enableImprovedEmailPrivacy !== 'undefined'
       && !validator.isBoolean(options.enableImprovedEmailPrivacy)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
+        authClientErrorCode.INVALID_CONFIG,
         '"EmailPrivacyConfig.enableImprovedEmailPrivacy" must be a valid boolean value.',
       );
     }

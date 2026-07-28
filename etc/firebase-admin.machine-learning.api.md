@@ -6,6 +6,14 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebaseMachineLearningError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // @public (undocumented)
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
     // (undocumented)
@@ -43,6 +51,30 @@ export class MachineLearning {
     unpublishModel(modelId: string): Promise<Model>;
     updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 }
+
+// @public
+export const MachineLearningErrorCode: {
+    readonly ALREADY_EXISTS: "already-exists";
+    readonly AUTHENTICATION_ERROR: "authentication-error";
+    readonly INTERNAL_ERROR: "internal-error";
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_SERVER_RESPONSE: "invalid-server-response";
+    readonly NOT_FOUND: "not-found";
+    readonly RESOURCE_EXHAUSTED: "resource-exhausted";
+    readonly SERVICE_UNAVAILABLE: "service-unavailable";
+    readonly UNKNOWN_ERROR: "unknown-error";
+    readonly CANCELLED: "cancelled";
+    readonly DEADLINE_EXCEEDED: "deadline-exceeded";
+    readonly PERMISSION_DENIED: "permission-denied";
+    readonly FAILED_PRECONDITION: "failed-precondition";
+    readonly ABORTED: "aborted";
+    readonly OUT_OF_RANGE: "out-of-range";
+    readonly DATA_LOSS: "data-loss";
+    readonly UNAUTHENTICATED: "unauthenticated";
+};
+
+// @public
+export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
 // @public
 export class Model {

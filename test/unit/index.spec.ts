@@ -16,11 +16,9 @@
  */
 
 // General
-import './firebase.spec';
 import './app/credential-internal.spec';
 import './app/index.spec';
 import './app/firebase-app.spec';
-import './app/firebase-namespace.spec';
 
 // Utilities
 import './utils/index.spec';
@@ -67,18 +65,6 @@ import './firestore/index.spec';
 // Installations
 import './installations/installations.spec';
 import './installations/installations-request-handler.spec';
-
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
-// Installations
-import './installations/installations.spec';
-import './installations/installations-request-handler.spec';
-
-// InstanceId
-import './instance-id/index.spec';
-import './instance-id/instance-id.spec';
 
 // ProjectManagement
 import './project-management/index.spec';

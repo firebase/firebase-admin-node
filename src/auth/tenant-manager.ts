@@ -17,7 +17,7 @@
 import * as validator from '../utils/validator';
 import { App } from '../app';
 import * as utils from '../utils/index';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 import { BaseAuth, createFirebaseTokenGenerator, SessionCookieOptions } from './base-auth';
 import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
@@ -76,12 +76,15 @@ export class TenantAwareAuth extends BaseAuth {
    *
    * @param app - The app that created this tenant.
    * @param tenantId - The corresponding tenant ID.
+   * @param emHost - Optional emulator host captured at init time.
    * @constructor
    * @internal
    */
-  constructor(app: App, tenantId: string) {
+  constructor(app: App, tenantId: string, emHost?: string | null) {
+    const emIsSet = emHost !== undefined;
     super(app, new TenantAwareAuthRequestHandler(
-      app, tenantId), createFirebaseTokenGenerator(app, tenantId));
+      app, tenantId, emHost), createFirebaseTokenGenerator(
+      app, tenantId, emIsSet ? !!emHost : undefined));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -93,7 +96,7 @@ export class TenantAwareAuth extends BaseAuth {
       .then((decodedClaims) => {
         // Validate tenant ID.
         if (decodedClaims.firebase.tenant !== this.tenantId) {
-          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          throw new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
         }
         return decodedClaims;
       });
@@ -106,11 +109,11 @@ export class TenantAwareAuth extends BaseAuth {
     idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Validate arguments before processing.
     if (!validator.isNonEmptyString(idToken)) {
-      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
+      return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_ID_TOKEN));
     }
     if (!validator.isNonNullObject(sessionCookieOptions) ||
         !validator.isNumber(sessionCookieOptions.expiresIn)) {
-      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+      return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
     }
     // This will verify the ID token and then match the tenant ID before creating the session cookie.
     return this.verifyIdToken(idToken)
@@ -127,7 +130,7 @@ export class TenantAwareAuth extends BaseAuth {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
       .then((decodedClaims) => {
         if (decodedClaims.firebase.tenant !== this.tenantId) {
-          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+          throw new FirebaseAuthError(authClientErrorCode.MISMATCHING_TENANT_ID);
         }
         return decodedClaims;
       });
@@ -148,6 +151,7 @@ export class TenantAwareAuth extends BaseAuth {
 export class TenantManager {
   private readonly authRequestHandler: AuthRequestHandler;
   private readonly tenantsMap: {[key: string]: TenantAwareAuth};
+  private readonly emulatorHost: string | undefined;
 
   /**
    * Initializes a TenantManager instance for a specified FirebaseApp.
@@ -159,6 +163,7 @@ export class TenantManager {
    */
   constructor(private readonly app: App) {
     this.authRequestHandler = new AuthRequestHandler(app);
+    this.emulatorHost = this.authRequestHandler.emulatorHostValue;
     this.tenantsMap = {};
   }
 
@@ -171,10 +176,10 @@ export class TenantManager {
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
     if (!validator.isNonEmptyString(tenantId)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
-      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);
+      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId, this.emulatorHost ?? null);
     }
     return this.tenantsMap[tenantId];
   }

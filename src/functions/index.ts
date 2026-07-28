@@ -31,6 +31,7 @@ export {
   DeliverySchedule,
   TaskOptions,
   TaskOptionsExperimental,
+  FunctionScope,
 } from './functions-api';
 export {
   Functions,
@@ -71,3 +72,5 @@ export function getFunctions(app?: App): Functions {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   return firebaseApp.getOrInitService('functions', (app) => new Functions(app));
 }
+
+export { FirebaseFunctionsError, FunctionsErrorCode } from './error';

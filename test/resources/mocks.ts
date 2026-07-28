@@ -27,7 +27,7 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import * as sinon from 'sinon';
 
-import { AppOptions } from '../../src/firebase-namespace-api';
+import { AppOptions } from '../../src/app/index';
 import { FirebaseApp } from '../../src/app/firebase-app';
 import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 import { ApplicationDefaultCredential } from '../../src/app/credential-internal';
@@ -169,10 +169,8 @@ export const refreshToken = {
 };
 
 // Randomly generated JSON Web Key Sets that do not correspond to anything related to Firebase.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const jwksResponse = require('./mock.jwks.json');
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
@@ -229,7 +227,7 @@ export function generateIdToken(overrides?: object, claims?: object, secret?: st
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as jwt.JwtHeader,
   }, overrides);
 
   const payload = {
@@ -257,7 +255,7 @@ export function generateAuthBlockingToken(overrides?: object, claims?: object, s
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as jwt.JwtHeader,
   }, overrides);
 
   const payload = {
@@ -284,7 +282,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
     algorithm: ALGORITHM,
     header: {
       kid: certificateObject.private_key_id,
-    },
+    } as jwt.JwtHeader,
   }, overrides);
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
@@ -305,7 +303,7 @@ export function generateAppCheckToken(overrides?: object): string {
     algorithm: ALGORITHM,
     header: {
       kid: jwksResponse.keys[0].kid,
-    },
+    } as jwt.JwtHeader,
   }, overrides);
 
   return jwt.sign(developerClaims, jwksKeyPair.private, options);
@@ -355,7 +353,6 @@ export class Http2Mocker {
     return (requestHeaders: http2.OutgoingHttpHeaders) => {
       // Create a mock ClientHttp2Stream to return
       const mockStream = new stream.Readable({
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
         read() {} 
       }) as http2.ClientHttp2Stream;
 

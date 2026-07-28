@@ -15,7 +15,7 @@
  */
 
 import * as validator from '../utils/validator';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 /**
  * This is the interface that defines the required continue/state URL with
@@ -147,17 +147,17 @@ export class ActionCodeSettingsBuilder {
   constructor(actionCodeSettings: ActionCodeSettings) {
     if (!validator.isNonNullObject(actionCodeSettings)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"ActionCodeSettings" must be a non-null object.',
       );
     }
     if (typeof actionCodeSettings.url === 'undefined') {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.MISSING_CONTINUE_URI,
+        authClientErrorCode.MISSING_CONTINUE_URI,
       );
     } else if (!validator.isURL(actionCodeSettings.url)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONTINUE_URI,
+        authClientErrorCode.INVALID_CONTINUE_URI,
       );
     }
     this.continueUrl = actionCodeSettings.url;
@@ -165,7 +165,7 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.handleCodeInApp !== 'undefined' &&
       !validator.isBoolean(actionCodeSettings.handleCodeInApp)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
+        authClientErrorCode.INVALID_ARGUMENT,
         '"ActionCodeSettings.handleCodeInApp" must be a boolean.',
       );
     }
@@ -174,7 +174,7 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.dynamicLinkDomain !== 'undefined' &&
       !validator.isNonEmptyString(actionCodeSettings.dynamicLinkDomain)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_DYNAMIC_LINK_DOMAIN,
+        authClientErrorCode.INVALID_DYNAMIC_LINK_DOMAIN,
       );
     }
     this.dynamicLinkDomain = actionCodeSettings.dynamicLinkDomain;
@@ -182,7 +182,7 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.linkDomain !== 'undefined' &&
       !validator.isNonEmptyString(actionCodeSettings.linkDomain)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_HOSTING_LINK_DOMAIN,
+        authClientErrorCode.INVALID_HOSTING_LINK_DOMAIN,
       );
     }
     this.linkDomain = actionCodeSettings.linkDomain;
@@ -190,16 +190,16 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.iOS !== 'undefined') {
       if (!validator.isNonNullObject(actionCodeSettings.iOS)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.iOS" must be a valid non-null object.',
         );
       } else if (typeof actionCodeSettings.iOS.bundleId === 'undefined') {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.MISSING_IOS_BUNDLE_ID,
+          authClientErrorCode.MISSING_IOS_BUNDLE_ID,
         );
       } else if (!validator.isNonEmptyString(actionCodeSettings.iOS.bundleId)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.iOS.bundleId" must be a valid non-empty string.',
         );
       }
@@ -209,28 +209,28 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.android !== 'undefined') {
       if (!validator.isNonNullObject(actionCodeSettings.android)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.android" must be a valid non-null object.',
         );
       } else if (typeof actionCodeSettings.android.packageName === 'undefined') {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME,
+          authClientErrorCode.MISSING_ANDROID_PACKAGE_NAME,
         );
       } else if (!validator.isNonEmptyString(actionCodeSettings.android.packageName)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.android.packageName" must be a valid non-empty string.',
         );
       } else if (typeof actionCodeSettings.android.minimumVersion !== 'undefined' &&
         !validator.isNonEmptyString(actionCodeSettings.android.minimumVersion)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.android.minimumVersion" must be a valid non-empty string.',
         );
       } else if (typeof actionCodeSettings.android.installApp !== 'undefined' &&
         !validator.isBoolean(actionCodeSettings.android.installApp)) {
         throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
+          authClientErrorCode.INVALID_ARGUMENT,
           '"ActionCodeSettings.android.installApp" must be a valid boolean.',
         );
       }

@@ -6,6 +6,14 @@
 
 import { Agent } from 'http';
 
+// Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
+//
+// @public
+export class FirebasePhoneNumberVerificationError extends FirebaseError {
+    // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
+    constructor(info: ErrorInfo, message?: string);
+}
+
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -16,6 +24,16 @@ export class PhoneNumberVerification {
     get app(): App;
     verifyToken(jwt: string): Promise<PhoneNumberVerificationToken>;
 }
+
+// @public
+export const PhoneNumberVerificationErrorCode: {
+    readonly INVALID_ARGUMENT: "invalid-argument";
+    readonly INVALID_TOKEN: "invalid-token";
+    readonly EXPIRED_TOKEN: "expired-token";
+};
+
+// @public
+export type PhoneNumberVerificationErrorCode = typeof PhoneNumberVerificationErrorCode[keyof typeof PhoneNumberVerificationErrorCode];
 
 // @public
 export interface PhoneNumberVerificationToken {

@@ -25,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
-import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 import { ProjectConfigManager } from '../../../src/auth/project-config-manager';
 import {
   ProjectConfig,
@@ -81,7 +81,7 @@ describe('ProjectConfigManager', () => {
 
   describe('getProjectConfig()', () => {
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
-    const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+    const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_CONFIG);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
@@ -152,7 +152,7 @@ describe('ProjectConfigManager', () => {
     };
     const expectedProjectConfig = new ProjectConfig(GET_CONFIG_RESPONSE);
     const expectedError = new FirebaseAuthError(
-      AuthClientErrorCode.INTERNAL_ERROR,
+      authClientErrorCode.INTERNAL_ERROR,
       'Unable to update the config provided.');
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];

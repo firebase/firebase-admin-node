@@ -19,12 +19,14 @@
 
 import { expect } from 'chai';
 import {
-  FirebasePhoneNumberVerificationError,
   JWKS_URL,
-  FPNV_TOKEN_INFO,
-  FPNV_ERROR_CODE_MAPPING
+  FPNV_TOKEN_INFO
 } from '../../../src/phone-number-verification/phone-number-verification-api-client-internal';
-import { PrefixedFirebaseError, FirebaseError } from '../../../src/utils/error';
+import {
+  FirebasePhoneNumberVerificationError,
+  FPNV_ERROR_CODE_MAPPING
+} from '../../../src/phone-number-verification/error';
+import { FirebaseError } from '../../../src/utils/error';
 
 const FPNV_PREFIX = 'phone-number-verification';
 
@@ -56,18 +58,17 @@ describe('FPNV Constants and Error Class', () => {
     const testCode = FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN;
     const testMessage = 'The provided token is malformed or invalid.';
 
-    it('should correctly extend PrefixedFirebaseError', () => {
-      const error = new FirebasePhoneNumberVerificationError(testCode, testMessage);
+    it('should correctly extend FirebaseError', () => {
+      const error = new FirebasePhoneNumberVerificationError({ code: testCode, message: testMessage });
 
       expect(error).to.be.an.instanceOf(FirebasePhoneNumberVerificationError);
-      expect(error).to.be.an.instanceOf(PrefixedFirebaseError);
       expect(error).to.be.an.instanceOf(FirebaseError);
       expect(error).to.be.an.instanceOf(Error);
     });
 
 
     it('should have the correct error properties on the instance', () => {
-      const error = new FirebasePhoneNumberVerificationError(testCode, testMessage);
+      const error = new FirebasePhoneNumberVerificationError({ code: testCode, message: testMessage });
 
       expect(error.code).to.equal(`${FPNV_PREFIX}/${testCode}`);
       expect(error.message).to.equal(testMessage);
@@ -77,7 +78,7 @@ describe('FPNV Constants and Error Class', () => {
       const codes = Object.values(FPNV_ERROR_CODE_MAPPING);
 
       codes.forEach(code => {
-        const error = new FirebasePhoneNumberVerificationError(code, `Test message for ${code}`);
+        const error = new FirebasePhoneNumberVerificationError({ code, message: `Test message for ${code}` });
         expect(error.code).to.equal(`${FPNV_PREFIX}/${code}`);
       });
     });

@@ -32,7 +32,7 @@ import { ServiceAccountSigner } from '../../../src/utils/crypto-signer';
 import * as verifier from '../../../src/auth/token-verifier';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { AuthClientErrorCode } from '../../../src/utils/error';
+import { authClientErrorCode } from '../../../src/auth/error';
 import { JwtError, JwtErrorCode, PublicKeySignatureVerifier } from '../../../src/utils/jwt';
 
 chai.should();
@@ -104,7 +104,7 @@ describe('FirebaseTokenVerifier', () => {
             verifyApiName: 'verifyToken()',
             jwtName: 'Important Token',
             shortName: 'token',
-            expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+            expiredErrorCode: authClientErrorCode.INVALID_ARGUMENT,
           },
           app,
         );
@@ -151,7 +151,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: invalidVerifyApiName as any,
               jwtName: 'Important Token',
               shortName: 'token',
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              expiredErrorCode: authClientErrorCode.INVALID_ARGUMENT,
             },
             app,
           );
@@ -171,7 +171,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: invalidJwtName as any,
               shortName: 'token',
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              expiredErrorCode: authClientErrorCode.INVALID_ARGUMENT,
             },
             app,
           );
@@ -191,7 +191,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              expiredErrorCode: authClientErrorCode.INVALID_ARGUMENT,
             },
             app,
           );

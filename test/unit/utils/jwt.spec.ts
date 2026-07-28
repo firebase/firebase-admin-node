@@ -599,7 +599,11 @@ describe('UrlKeyFetcher', () => {
       mockedRequests.push(mockFetchPublicKeys());
       mockedRequests.push(mockFetchPublicKeys());
 
-      clock = sinon.useFakeTimers(1000);
+      clock = sinon.useFakeTimers({
+        now: 1000,
+        toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
+        shouldClearNativeTimers: true
+      });
 
       return keyFetcher.fetchPublicKeys().then(() => {
         expect(https.request).to.have.been.calledOnce;
@@ -716,7 +720,11 @@ describe('JwksFetcher', () => {
       mockedRequests.push(mockFetchJsonWebKeys());
       mockedRequests.push(mockFetchJsonWebKeys());
 
-      clock = sinon.useFakeTimers(1000);
+      clock = sinon.useFakeTimers({
+        now: 1000,
+        toFake: ['Date', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'],
+        shouldClearNativeTimers: true
+      });
 
       return keyFetcher.fetchPublicKeys().then(() => {
         expect(https.request).to.have.been.calledOnce;

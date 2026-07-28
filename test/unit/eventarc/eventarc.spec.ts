@@ -27,10 +27,17 @@ import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import * as chai from 'chai';
 import chaiExclude from 'chai-exclude';
+import * as sinonChai from 'sinon-chai';
+import * as chaiAsPromised from 'chai-as-promised';
+
+chai.should();
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+chai.use(chaiExclude);
+
 import { getMetricsHeader, getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
-chai.use(chaiExclude);
 
 const TEST_EVENT1 : CloudEvent = {
   type: 'some.custom.event1',

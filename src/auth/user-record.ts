@@ -18,7 +18,7 @@
 import { deepCopy } from '../utils/deep-copy';
 import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { authClientErrorCode, FirebaseAuthError } from './error';
 
 /**
  * 'REDACTED', encoded as a base64 string.
@@ -188,7 +188,7 @@ export abstract class MultiFactorInfo {
     const factorId = response && this.getFactorId(response);
     if (!factorId || !response || !response.mfaEnrollmentId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     }
     utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
@@ -330,7 +330,7 @@ export class MultiFactorSettings {
     const parsedEnrolledFactors: MultiFactorInfo[] = [];
     if (!isNonNullObject(response)) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid multi-factor response');
     } else if (response.mfaInfo) {
       response.mfaInfo.forEach((factorResponse) => {
@@ -457,7 +457,7 @@ export class UserInfo {
     // Provider user id and provider id are required.
     if (!response.rawId || !response.providerId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user info response');
     }
 
@@ -592,7 +592,7 @@ export class UserRecord {
     // The Firebase user id is required.
     if (!response.localId) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
+        authClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user response');
     }
 

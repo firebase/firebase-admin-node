@@ -42,6 +42,8 @@ export {
   CriticalSound,
   ConditionMessage,
   FcmOptions,
+  FidMessage,
+  FidMulticastMessage,
   LightSettings,
   Message,
   MessagingTopicManagementResponse,
@@ -53,12 +55,6 @@ export {
   WebpushConfig,
   WebpushFcmOptions,
   WebpushNotification,
-
-  // Legacy APIs
-  DataMessagePayload,
-  MessagingOptions,
-  MessagingPayload,
-  NotificationMessagePayload,
 } from './messaging-api';
 
 /**
@@ -96,4 +92,7 @@ export function getMessaging(app?: App): Messaging {
   return firebaseApp.getOrInitService('messaging', (app) => new Messaging(app));
 }
 
-export { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
+export {
+  FirebaseMessagingError,
+  MessagingErrorCode,
+} from './error';

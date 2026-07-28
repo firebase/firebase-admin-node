@@ -26,9 +26,8 @@ import {
   ApplicationDefaultCredential,
   RefreshTokenCredential
 } from '../../../src/app/credential-internal';
-import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
+import { FirestoreService, getFirestoreOptions, DEFAULT_DATABASE_ID } from '../../../src/firestore/firestore-internal';
 import { getSdkVersion } from '../../../src/utils/index';
-import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -44,7 +43,6 @@ describe('Firestore', () => {
     + 'credentials. Must initialize the SDK with a certificate credential or application default '
     + 'credentials to use Cloud Firestore API.';
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const sdkVersion = getSdkVersion();
   const defaultCredentialApps = [
     {

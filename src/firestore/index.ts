@@ -23,8 +23,7 @@
 import { Firestore } from '@google-cloud/firestore';
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
-import { FirestoreService, FirestoreSettings } from './firestore-internal';
-import { DEFAULT_DATABASE_ID } from '@google-cloud/firestore/build/src/path';
+import { FirestoreService, FirestoreSettings, DEFAULT_DATABASE_ID } from './firestore-internal';
 
 export {
   AddPrefixToKeys,
@@ -221,4 +220,4 @@ export function initializeFirestore(
   return firestoreService.initializeDatabase(databaseId, settings);
 }
 
-export { FirebaseFirestoreError } from '../utils/error';
+export { FirestoreErrorCode, FirebaseFirestoreError } from './error';
