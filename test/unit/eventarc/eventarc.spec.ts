@@ -59,6 +59,8 @@ const TEST_EVENT2 : CloudEvent = {
 };
 const TEST_EVENT2_SERIALIZED = JSON.stringify(toCloudEventProtoFormat(TEST_EVENT2));
 
+const EMULATOR_HOST = 'http://127.0.0.1:9299';
+
 describe('eventarc', () => {
   let mockApp: FirebaseApp;
   let eventarc: Eventarc;
@@ -163,6 +165,77 @@ describe('eventarc', () => {
         method: 'POST',
         url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
         data: `{"events":[${TEST_EVENT1_SERIALIZED},${TEST_EVENT2_SERIALIZED}]}`,
+        headers: getExpectedHeaders(mockAccessToken)
+      });
+    });
+  });
+
+  describe('emulator host', () => {
+    let mockAccessToken: string;
+    let httpStub: sinon.SinonStub;
+    let accessTokenStub: sinon.SinonStub;
+
+    before(() => {
+      mockAccessToken = utils.generateRandomAccessToken();
+      accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
+    });
+
+    after(() => {
+      accessTokenStub?.restore();
+    });
+
+    afterEach(() => {
+      httpStub?.restore();
+      delete process.env.CLOUD_EVENTARC_EMULATOR_HOST;
+    });
+
+    it('is resolved at construction time', async () => {
+      delete process.env.CLOUD_EVENTARC_EMULATOR_HOST;
+      const prodChannel = eventarc.channel();
+
+      process.env.CLOUD_EVENTARC_EMULATOR_HOST = EMULATOR_HOST;
+      const emulatorChannel = eventarc.channel();
+
+      delete process.env.CLOUD_EVENTARC_EMULATOR_HOST;
+
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await prodChannel.publish(TEST_EVENT1);
+      await emulatorChannel.publish(TEST_EVENT1);
+
+      expect(httpStub).to.have.been.calledTwice;
+      expect(httpStub.firstCall).to.have.been.calledWith({
+        method: 'POST',
+        url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
+        data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
+        headers: getExpectedHeaders(mockAccessToken)
+      });
+      expect(httpStub.secondCall).to.have.been.calledWith({
+        method: 'POST',
+        url: `${EMULATOR_HOST}/projects/project_id/locations/us-central1/channels/firebase:publishEvents`,
+        data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
+        headers: getExpectedHeaders(mockAccessToken)
+      });
+    });
+
+    it('is not picked up by a channel created before it was set', async () => {
+      delete process.env.CLOUD_EVENTARC_EMULATOR_HOST;
+      const prodChannel = eventarc.channel();
+
+      process.env.CLOUD_EVENTARC_EMULATOR_HOST = EMULATOR_HOST;
+
+      httpStub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+
+      await prodChannel.publish(TEST_EVENT1);
+
+      expect(httpStub).to.have.been.calledOnce.and.calledWith({
+        method: 'POST',
+        url: 'https://eventarcpublishing.googleapis.com/v1/projects/project_id/locations/us-central1/channels/firebase:publishEvents',
+        data: `{"events":[${TEST_EVENT1_SERIALIZED}]}`,
         headers: getExpectedHeaders(mockAccessToken)
       });
     });
