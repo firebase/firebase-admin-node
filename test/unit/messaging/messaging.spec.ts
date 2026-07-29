@@ -2125,7 +2125,10 @@ describe('Messaging', () => {
       };
       expect(() => {
         messaging.send(message);
-      }).to.throw('androidV2.remoteNotification.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
+      }).to.throw(
+        'androidV2.remoteNotification.notification.lightSettings.color ' +
+        'must be in the form #RRGGBB or #RRGGBBAA format',
+      );
     });
 
     it('should throw given androidV2 notification with negative light on duration', () => {
@@ -2145,7 +2148,10 @@ describe('Messaging', () => {
       };
       expect(() => {
         messaging.send(message);
-      }).to.throw('androidV2.remoteNotification.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+      }).to.throw(
+        'androidV2.remoteNotification.notification.lightSettings.lightOnDurationMillis ' +
+        'must be a non-negative duration in milliseconds',
+      );
     });
 
     it('should throw given androidV2 notification with negative light off duration', () => {
@@ -2165,7 +2171,10 @@ describe('Messaging', () => {
       };
       expect(() => {
         messaging.send(message);
-      }).to.throw('androidV2.remoteNotification.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+      }).to.throw(
+        'androidV2.remoteNotification.notification.lightSettings.lightOffDurationMillis ' +
+        'must be a non-negative duration in milliseconds',
+      );
     });
 
     invalidImages.forEach((imageUrl) => {
