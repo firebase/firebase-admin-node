@@ -174,14 +174,21 @@ describe('eventarc', () => {
     let mockAccessToken: string;
     let httpStub: sinon.SinonStub;
     let accessTokenStub: sinon.SinonStub;
+    let originalEmulatorHost: string | undefined;
 
     before(() => {
       mockAccessToken = utils.generateRandomAccessToken();
       accessTokenStub = utils.stubGetAccessToken(mockAccessToken);
+      originalEmulatorHost = process.env.CLOUD_EVENTARC_EMULATOR_HOST;
     });
 
     after(() => {
       accessTokenStub?.restore();
+      if (originalEmulatorHost === undefined) {
+        delete process.env.CLOUD_EVENTARC_EMULATOR_HOST;
+      } else {
+        process.env.CLOUD_EVENTARC_EMULATOR_HOST = originalEmulatorHost;
+      }
     });
 
     afterEach(() => {
