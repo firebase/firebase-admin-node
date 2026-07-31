@@ -70,7 +70,14 @@ const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 /** @internal The maximum number of items allowed in the @allow directive's maxCount argument. */
 export const ALLOW_DIRECTIVE_MAX_COUNT = 10_000;
 
-function getHeaders(projectId: string, serviceId: string, isUsingGen: boolean): { [key: string]: string } {
+interface GetHeadersParameters {
+  projectId: string;
+  serviceId: string;
+  isUsingGen: boolean;
+}
+
+function getHeaders(parameters: GetHeadersParameters): { [key: string]: string } {
+  const { projectId, serviceId, isUsingGen } = parameters;
   const headerValue = {
     'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
     'X-Goog-Api-Client': utils.getMetricsHeader(),
@@ -391,7 +398,11 @@ export class DataConnectApiClient {
     const request: HttpRequestConfig = {
       method: 'POST',
       url,
-      headers: getHeaders(projectId, this.connectorConfig.serviceId, this.isUsingGen),
+      headers: getHeaders({
+        projectId,
+        serviceId: this.connectorConfig.serviceId,
+        isUsingGen: this.isUsingGen,
+      }),
       data,
     };
     const resp = await this.httpClient.send(request);
