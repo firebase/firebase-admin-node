@@ -54,6 +54,7 @@ describe('DataConnectApiClient', () => {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
     'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
   const EXPECTED_HEADERS_WITH_GEN = {
@@ -61,6 +62,7 @@ describe('DataConnectApiClient', () => {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader() + ' admin-js/gen',
     'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
   const EMULATOR_EXPECTED_HEADERS = {
@@ -68,6 +70,7 @@ describe('DataConnectApiClient', () => {
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
     'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
