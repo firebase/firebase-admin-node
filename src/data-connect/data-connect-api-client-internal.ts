@@ -74,6 +74,7 @@ function getHeaders(isUsingGen: boolean): { [key: string]: string } {
   const headerValue = {
     'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
     'X-Goog-Api-Client': utils.getMetricsHeader(),
+    'X-Client-Version': `node/${utils.getSdkVersion()}`,
   };
   if (isUsingGen) {
     headerValue['X-Goog-Api-Client'] += ' admin-js/gen';
