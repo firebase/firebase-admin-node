@@ -18,9 +18,13 @@
 import { FirebaseArrayIndexError, FirebaseError } from '../app/index';
 
 export interface BaseMessage {
-  data?: { [key: string]: string };
+  data?: { [key: string]: string; };
   notification?: Notification;
+  /**
+   * @deprecated Use {@link BaseMessage.androidV2} instead.
+   */
   android?: AndroidConfig;
+  androidV2?: AndroidConfigV2;
   webpush?: WebpushConfig;
   apns?: ApnsConfig;
   fcmOptions?: FcmOptions;
@@ -131,12 +135,12 @@ export interface WebpushConfig {
    * See {@link https://tools.ietf.org/html/rfc8030#section-5 | WebPush specification}
    * for supported headers.
    */
-  headers?: { [key: string]: string };
+  headers?: { [key: string]: string; };
 
   /**
    * A collection of data fields.
    */
-  data?: { [key: string]: string };
+  data?: { [key: string]: string; };
 
   /**
    * A WebPush notification payload to be included in the message.
@@ -287,7 +291,7 @@ export interface ApnsConfig {
   /**
    * A collection of APNs headers. Header values must be strings.
    */
-  headers?: { [key: string]: string };
+  headers?: { [key: string]: string; };
 
   /**
    * An APNs payload to be included in the message.
@@ -418,6 +422,8 @@ export interface ApnsFcmOptions {
 /**
  * Represents the Android-specific options that can be included in an
  * {@link Message}.
+ *
+ * @deprecated Use {@link AndroidConfigV2} instead.
  */
 export interface AndroidConfig {
 
@@ -450,10 +456,12 @@ export interface AndroidConfig {
    * be strings. When provided, overrides any data fields set on the top-level
    * {@link Message}.
    */
-  data?: { [key: string]: string };
+  data?: { [key: string]: string; };
 
   /**
    * Android notification to be included in the message.
+   * 
+   * @deprecated Use {@link AndroidNotificationV2} in {@link AndroidConfigV2} instead.
    */
   notification?: AndroidNotification;
 
@@ -469,13 +477,13 @@ export interface AndroidConfig {
   directBootOk?: boolean;
 
   /**
-   * A boolean indicating whether messages will be allowed to be delivered to  
+   * A boolean indicating whether messages will be allowed to be delivered to
    * the app while the device is on a bandwidth constrained network.
    */
   bandwidthConstrainedOk?: boolean;
 
   /**
-   * A boolean indicating whether messages will be allowed to be delivered to  
+   * A boolean indicating whether messages will be allowed to be delivered to
    * the app while the device is on a restricted satellite network.
    */
   restrictedSatelliteOk?: boolean;
@@ -484,6 +492,8 @@ export interface AndroidConfig {
 /**
   * Represents the Android-specific notification options that can be included in
   * {@link AndroidConfig}.
+  *
+  * @deprecated Use {@link AndroidNotificationV2} in {@link AndroidConfigV2} instead.
   */
 export interface AndroidNotification {
   /**
@@ -536,7 +546,6 @@ export interface AndroidNotification {
   /**
    * Key of the body string in the app's string resource to use to localize the
    * body text.
-   *
    */
   bodyLocKey?: string;
 
@@ -780,4 +789,319 @@ export interface SendResponse {
    * An error, if the message was not handed off to FCM successfully.
    */
   error?: FirebaseError;
+}
+
+/**
+ * Represents the Android-specific base configuration options (V2) that can be
+ * included in an {@link Message}.
+ */
+export interface AndroidConfigV2Base {
+  /**
+   * Collapse key for the message. Collapse key serves as an identifier for a
+   * group of messages that can be collapsed, so that only the last message gets
+   * sent when delivery can be resumed. A maximum of four different collapse keys
+   * may be active at any given time.
+   */
+  collapseKey?: string;
+
+  /**
+   * Time-to-live duration of the message in milliseconds.
+   */
+  ttl?: number;
+
+  /**
+   * Package name of the application where the registration tokens must match
+   * in order to receive the message.
+   */
+  restrictedPackageName?: string;
+
+  /**
+   * A collection of data fields to be included in the message. All values must
+   * be strings. When provided, overrides any data fields set on the top-level
+   * {@link Message}.
+   */
+  data?: {
+    [key: string]: string;
+  };
+
+  /**
+   * Options for features provided by the FCM SDK for Android.
+   */
+  fcmOptions?: AndroidFcmOptions;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to
+   * the app while the device is in direct boot mode.
+   */
+  directBootOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to
+   * the app while the device is on a bandwidth constrained network.
+   */
+  bandwidthConstrainedOk?: boolean;
+
+  /**
+   * A boolean indicating whether messages will be allowed to be delivered to
+   * the app while the device is on a restricted satellite network.
+   */
+  restrictedSatelliteOk?: boolean;
+}
+
+/**
+ * Represents the Android-specific remote notification configuration (V2) that can be
+ * included in an {@link Message}.
+ */
+export interface AndroidRemoteNotificationConfig extends AndroidConfigV2Base {
+  /**
+   * Options for a remote notification message.
+   */
+  remoteNotification: AndroidRemoteNotification;
+
+  /**
+   * Background sync options are forbidden when remoteNotification is present.
+   */
+  backgroundSync?: never;
+}
+
+/**
+ * Represents the Android-specific background sync configuration (V2) that can be
+ * included in an {@link Message}.
+ */
+export interface AndroidBackgroundSyncConfig extends AndroidConfigV2Base {
+  /**
+   * Options for a background sync message.
+   */
+  backgroundSync: AndroidBackgroundSyncMessage;
+
+  /**
+   * Remote notification options are forbidden when backgroundSync is present.
+   */
+  remoteNotification?: never;
+}
+
+/**
+ * Represents the Android-specific options (V2) that can be included in an
+ * {@link Message}.
+ */
+export type AndroidConfigV2 = AndroidRemoteNotificationConfig | AndroidBackgroundSyncConfig;
+
+/**
+ * Represents the Android-specific remote notification options (V2) that can be
+ * included in {@link AndroidRemoteNotificationConfig}.
+ */
+export interface AndroidRemoteNotification {
+  /**
+   * If set to true, the client can modify the notification payload.
+   */
+  mutableContent?: boolean;
+
+  /**
+   * Android notification to be included in the message.
+   */
+  notification: AndroidNotificationV2;
+
+  /**
+   * Controls how legacy V1 clients interpret a V2 remote notification.
+   *
+   * If set to `true`, tells legacy clients to omit the notification payload, and deliver
+   * the message as a data message. If `false` (default), the message is auto-translated
+   * into a legacy V1 notification message.
+   */
+  useAsV1DataMessage?: boolean;
+}
+
+/**
+ * Represents the Android-specific background sync options (V2) that can be
+ * included in {@link AndroidBackgroundSyncConfig}.
+ */
+export type AndroidBackgroundSyncMessage = Record<string, never>;
+
+/**
+ * Represents the Android-specific notification options (V2) that can be
+ * included in {@link AndroidRemoteNotification}.
+ */
+export interface AndroidNotificationV2 {
+  /**
+   * Title of the Android notification. When provided, overrides the title set via
+   * `admin.messaging.Notification`.
+   */
+  title?: string;
+
+  /**
+   * Body of the Android notification. When provided, overrides the body set via
+   * `admin.messaging.Notification`.
+   */
+  body?: string;
+
+  /**
+   * Icon resource for the Android notification.
+   */
+  icon?: string;
+
+  /**
+   * Notification icon color in `#rrggbb` format.
+   */
+  color?: string;
+
+  /**
+   * File name of the sound to be played when the device receives the
+   * notification.
+   */
+  sound?: string;
+
+  /**
+   * Notification tag. This is an identifier used to replace existing
+   * notifications in the notification drawer. If not specified, each request
+   * creates a new notification.
+   */
+  tag?: string;
+
+  /**
+   * Identifier of the notification.
+   */
+  id?: string;
+
+  /**
+   * Action associated with a user click on the notification. If specified, an
+   * activity with a matching Intent Filter is launched when a user clicks on the
+   * notification.
+   */
+  clickAction?: string;
+
+  /**
+   * Key of the body string in the app's string resource to use to localize the
+   * body text.
+   */
+  bodyLocKey?: string;
+
+  /**
+   * An array of resource keys that will be used in place of the format
+   * specifiers in `bodyLocKey`.
+   */
+  bodyLocArgs?: string[];
+
+  /**
+   * Key of the title string in the app's string resource to use to localize the
+   * title text.
+   */
+  titleLocKey?: string;
+
+  /**
+   * An array of resource keys that will be used in place of the format
+   * specifiers in `titleLocKey`.
+   */
+  titleLocArgs?: string[];
+
+  /**
+   * The Android notification channel ID (new in Android O). The app must create
+   * a channel with this channel ID before any notification with this channel ID
+   * can be received. If you don't send this channel ID in the request, or if the
+   * channel ID provided has not yet been created by the app, FCM uses the channel
+   * ID specified in the app manifest.
+   */
+  channelId?: string;
+
+  /**
+   * Sets the "ticker" text, which is sent to accessibility services. Prior to
+   * API level 21 (Lollipop), sets the text that is displayed in the status bar
+   * when the notification first arrives.
+   */
+  ticker?: string;
+
+  /**
+   * When set to `false` or unset, the notification is automatically dismissed when
+   * the user clicks it in the panel. When set to `true`, the notification persists
+   * even when the user clicks it.
+   */
+  sticky?: boolean;
+
+  /**
+   * For notifications that inform users about events with an absolute time reference, sets
+   * the time that the event in the notification occurred. Notifications
+   * in the panel are sorted by this time.
+   */
+  eventTime?: Date;
+
+  /**
+   * Sets whether or not this notification is relevant only to the current device.
+   * Some notifications can be bridged to other devices for remote display, such as
+   * a Wear OS watch. This hint can be set to recommend this notification not be bridged.
+   * See {@link https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging |
+   * Wear OS guides}.
+   */
+  localOnly?: boolean;
+
+  /**
+   * Sets the relative priority for this notification. Low-priority notifications
+   * may be hidden from the user in certain situations. Note this priority differs
+   * from `AndroidMessagePriority`. This priority is processed by the client after
+   * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept
+   * that controls when the message is delivered.
+   */
+  priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+
+  /**
+   * If set to `true`, use the Android framework's default sound for the notification.
+   * Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}.
+   */
+  defaultSound?: boolean;
+
+  /**
+   * If set to `true`, use the Android framework's default vibrate pattern for the
+   * notification. Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}. If `defaultVibrateTimings` is set to `true` and `vibrateTimingsMillis` is also set,
+   * the default value is used instead of the user-specified `vibrateTimingsMillis`.
+   */
+  defaultVibrateTimings?: boolean;
+
+  /**
+   * If set to `true`, use the Android framework's default LED light settings
+   * for the notification. Default values are specified in {@link https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml |
+   * config.xml}.
+   * If `default_light_settings` is set to `true` and `light_settings` is also set,
+   * the user-specified `light_settings` is used instead of the default value.
+   */
+  defaultLightSettings?: boolean;
+
+  /**
+   * Sets the vibration pattern to use. Pass in an array of milliseconds to
+   * turn the vibrator on or off. The first value indicates the duration to wait before
+   * turning the vibrator on. The next value indicates the duration to keep the
+   * vibrator on. Subsequent values alternate between duration to turn the vibrator
+   * off and to turn the vibrator on. If `vibrateTimingsMillis` is set and `defaultVibrateTimings`
+   * is set to `true`, the default value is used instead of the user-specified `vibrateTimingsMillis`.
+   */
+  vibrateTimingsMillis?: number[];
+
+  /**
+   * Sets the visibility of the notification. Must be either `private`, `public`,
+   * or `secret`. If unspecified, it remains undefined in the Admin SDK, and
+   * defers to the FCM backend's default mapping.
+   */
+  visibility?: ('private' | 'public' | 'secret');
+
+  /**
+   * Sets the number of items this notification represents. May be displayed as a
+   * badge count for Launchers that support badging. See {@link https://developer.android.com/training/notify-user/badges |
+   * NotificationBadge}.
+   * For example, this might be useful if you're using just one notification to
+   * represent multiple new messages but you want the count here to represent
+   * the number of total new messages. If zero or unspecified, systems
+   * that support badging use the default, which is to increment a number
+   * displayed on the long-press menu each time a new notification arrives.
+   */
+  notificationCount?: number;
+
+  /**
+   * Settings to control the notification's LED blinking rate and color if LED is
+   * available on the device. The total blinking time is controlled by the OS.
+   */
+  lightSettings?: LightSettings;
+
+  /**
+   * URL of an image to be displayed in the notification.
+   */
+  imageUrl?: string;
 }
