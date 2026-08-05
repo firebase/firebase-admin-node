@@ -152,6 +152,43 @@ export class FirebaseMessagingRequestHandler {
       });
   }
 
+  /**
+   * Invokes the HTTP/2 request handler for generic operations (e.g., topic subscriptions).
+   *
+   * @param host - The host to which to send the request.
+   * @param path - The path to which to send the request.
+   * @param method - The HTTP method to use.
+   * @param requestData - Optional request data.
+   * @param http2SessionHandler - The HTTP/2 session handler.
+   * @returns A promise that resolves with the response data.
+   */
+  public invokeHttp2RequestHandler(
+    host: string,
+    path: string,
+    method: HttpMethod,
+    requestData: object | undefined,
+    http2SessionHandler: Http2SessionHandler
+  ): Promise<object> {
+    const request: Http2RequestConfig = {
+      method,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: FIREBASE_MESSAGING_HEADERS,
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+      http2SessionHandler,
+    };
+    return this.http2Client.send(request).then((response) => {
+      if (!response.isJson()) {
+        throw new RequestResponseError(response);
+      }
+      const errorCode = getErrorCode(response.data);
+      if (errorCode) {
+        throw new RequestResponseError(response);
+      }
+      return response.data;
+    });
+  }
+
   private buildSendResponse(response: RequestResponse): SendResponse {
     const result: SendResponse = {
       success: response.status === 200,
