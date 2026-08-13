@@ -81,7 +81,7 @@ function getHeaders(parameters: GetHeadersParameters): { [key: string]: string }
   const headerValue = {
     'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
     'X-Goog-Api-Client': utils.getMetricsHeader(),
-    'X-Client-Version': `node/${utils.getSdkVersion()}`,
+    'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
     'X-Firebase-Sqlconnect-Affinity': `${projectId}${serviceId}`,
   };
   if (isUsingGen) {
