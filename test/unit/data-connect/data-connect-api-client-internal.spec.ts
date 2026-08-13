@@ -53,7 +53,7 @@ describe('DataConnectApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
-    'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
     'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
@@ -61,7 +61,7 @@ describe('DataConnectApiClient', () => {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader() + ' admin-js/gen',
-    'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
     'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
@@ -69,7 +69,7 @@ describe('DataConnectApiClient', () => {
     'Authorization': 'Bearer owner',
     'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'X-Goog-Api-Client': getMetricsHeader(),
-    'X-Client-Version': `node/${getSdkVersion()}`,
+    'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
     'X-Firebase-Sqlconnect-Affinity': 'test-projectmy-service',
   };
 
