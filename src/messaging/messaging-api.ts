@@ -1021,7 +1021,7 @@ export interface AndroidNotificationV2 {
    * the time that the event in the notification occurred. Notifications
    * in the panel are sorted by this time.
    */
-  eventTime?: Date;
+  eventTimestamp?: Date;
 
   /**
    * Sets whether or not this notification is relevant only to the current device.

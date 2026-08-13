@@ -564,15 +564,15 @@ function validateAndroidNotificationV2(notification: AndroidNotificationV2 | und
       messagingClientErrorCode.INVALID_PAYLOAD,
       'androidV2.remoteNotification.notification.imageUrl must be a valid URL string');
   }
-  if (typeof notification.eventTime !== 'undefined') {
-    if (!(notification.eventTime instanceof Date)) {
+  if (typeof notification.eventTimestamp !== 'undefined') {
+    if (!(notification.eventTimestamp instanceof Date)) {
       throw new FirebaseMessagingError(
         messagingClientErrorCode.INVALID_PAYLOAD,
-        'androidV2.remoteNotification.notification.eventTime must be a valid `Date` object');
+        'androidV2.remoteNotification.notification.eventTimestamp must be a valid `Date` object');
     }
     // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
-    const zuluTimestamp = notification.eventTime.toISOString();
-    (notification as any).eventTime = zuluTimestamp;
+    const zuluTimestamp = notification.eventTimestamp.toISOString();
+    (notification as any).eventTimestamp = zuluTimestamp;
   }
 
   if (typeof notification.vibrateTimingsMillis !== 'undefined') {
@@ -615,7 +615,7 @@ function validateAndroidNotificationV2(notification: AndroidNotificationV2 | und
     titleLocArgs: 'title_loc_args',
     channelId: 'channel_id',
     imageUrl: 'image',
-    eventTime: 'event_time',
+    eventTimestamp: 'event_time',
     localOnly: 'local_only',
     priority: 'notification_priority',
     vibrateTimingsMillis: 'vibrate_timings',

@@ -2092,20 +2092,20 @@ describe('Messaging', () => {
       );
     });
 
-    it('should throw given androidV2 notification with invalid eventTime', () => {
+    it('should throw given androidV2 notification with invalid eventTimestamp', () => {
       const message: Message = {
         condition: 'topic-name',
         androidV2: {
           remoteNotification: {
             notification: {
-              eventTime: 123456 as any,
+              eventTimestamp: 123456 as any,
             },
           },
         },
       };
       expect(() => {
         messaging.send(message);
-      }).to.throw('androidV2.remoteNotification.notification.eventTime must be a valid `Date` object');
+      }).to.throw('androidV2.remoteNotification.notification.eventTimestamp must be a valid `Date` object');
     });
 
     it('should throw given androidV2 notification with invalid lightSettings color', () => {
@@ -3072,7 +3072,7 @@ describe('Messaging', () => {
                 ticker: 'test.ticker',
                 sticky: true,
                 visibility: 'private',
-                eventTime: new Date('2019-10-20T12:00:00-06:30'),
+                eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
                 localOnly: true,
                 priority: 'high',
                 vibrateTimingsMillis: [100, 50, 250],
