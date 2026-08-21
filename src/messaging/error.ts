@@ -132,9 +132,13 @@ export const messagingClientErrorCode: { readonly [K in keyof typeof MessagingEr
   },
   THIRD_PARTY_AUTH_ERROR: {
     code: MessagingErrorCode.THIRD_PARTY_AUTH_ERROR,
-    message: 'A message targeted to an iOS device could not be sent because the ' +
-      'required APNs SSL certificate was not uploaded or has expired. Check the validity of your ' +
-      'development and production certificates.',
+    // The backend documents this code as "APNs certificate or web push auth key was invalid or
+    // missing", so the message names both, and the project settings where they are configured.
+    // The previous wording covered only an APNs SSL certificate, which does not fit APNs auth
+    // keys or Web Push.
+    message: 'The message could not be sent because the APNs certificate or auth key, or the ' +
+      'web push auth key, configured for your Firebase project was invalid or missing. Check ' +
+      'the APNs and web push credentials in your Firebase project settings.',
   },
   TOO_MANY_TOPICS: {
     code: MessagingErrorCode.TOO_MANY_TOPICS,
@@ -213,6 +217,22 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErro
   UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
 };
 
+/**
+ * @const {ReadonlySet<string>} Server error codes that name the provider credential explicitly.
+ *
+ * These all map to THIRD_PARTY_AUTH_ERROR and leave no doubt about which credential is at fault,
+ * so the canonical message can lead for them.
+ *
+ * `UNAUTHENTICATED` maps to the same client code but is deliberately absent. Without an FcmError
+ * detail it is the plain gateway rejection, which really can mean this SDK's own credential is
+ * bad, and prefixing APNs guidance there would point developers away from the actual fault.
+ */
+const PROVIDER_AUTH_SERVER_CODES: ReadonlySet<string> = new Set([
+  'THIRD_PARTY_AUTH_ERROR',
+  'APNS_AUTH_ERROR',
+  'InvalidApnsCredential',
+]);
+
 /** 
  * @const {Record<string, keyof typeof MessagingErrorCode>} Topic management (IID) 
  * server to client enum error codes. 
@@ -257,7 +277,17 @@ export class FirebaseMessagingError extends FirebaseError {
       clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode];
     }
     const error: ErrorInfo = deepCopy((messagingClientErrorCode as any)[clientCodeKey]);
-    error.message = message || error.message;
+    // The server message is normally the more specific of the two, so it wins. The exception is
+    // the codes above: for those the backend commonly sends the generic gateway text ("Request is
+    // missing required authentication credential. Expected OAuth 2 access token, ..."), which
+    // describes the caller's own credential while the fault is an APNs or web push credential on
+    // the project, so on its own it sends developers to audit their service account. Lead with the
+    // canonical message and keep the server text after it.
+    if (message && PROVIDER_AUTH_SERVER_CODES.has(serverErrorCode ?? '')) {
+      error.message = `${error.message} Server message: "${message}"`;
+    } else {
+      error.message = message || error.message;
+    }
 
     const rawData = serverError?.response?.data;
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawData !== 'undefined') {
