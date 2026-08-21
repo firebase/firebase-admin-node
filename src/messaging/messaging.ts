@@ -24,6 +24,7 @@ import { ErrorInfo } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
+import { getErrorCode, createFirebaseError } from './messaging-errors-internal';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 
 import {
@@ -36,7 +37,7 @@ import {
   // Legacy API types
   SendResponse,
 } from './messaging-api';
-import { Http2SessionHandler } from '../utils/api-request';
+import { Http2SessionHandler, RequestResponseError } from '../utils/api-request';
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -50,9 +51,9 @@ const FCM_MAX_BATCH_SIZE = 500;
 /**
  * Maps a raw FCM server response to a `MessagingTopicManagementResponse` object.
  *
- * @param {object} response The raw FCM server response to map.
+ * @param response - The raw FCM server response to map.
  *
- * @returns {MessagingTopicManagementResponse} The mapped `MessagingTopicManagementResponse` object.
+ * @returns The mapped `MessagingTopicManagementResponse` object.
  */
 function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
@@ -379,7 +380,6 @@ export class Messaging {
       registrationTokenOrTokens,
       topic,
       'subscribeToTopic',
-      FCM_TOPIC_MANAGEMENT_ADD_PATH,
     );
   }
 
@@ -406,6 +406,55 @@ export class Messaging {
       registrationTokenOrTokens,
       topic,
       'unsubscribeFromTopic',
+    );
+  }
+
+  /**
+   * Subscribes a device or list of devices to an FCM topic using the legacy Instance ID API.
+   * Served as a backup/legacy endpoint.
+   *
+   * @param registrationTokenOrTokens - A token or array of registration tokens
+   *   for the devices to subscribe to the topic.
+   * @param topic - The topic to which to subscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   subscribed to the topic.
+   *
+   * @deprecated Use {@link Messaging.subscribeToTopic} instead.
+   */
+  public subscribeToTopicLegacy(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequestLegacy(
+      registrationTokenOrTokens,
+      topic,
+      'subscribeToTopicLegacy',
+      FCM_TOPIC_MANAGEMENT_ADD_PATH,
+    );
+  }
+
+  /**
+   * Unsubscribes a device or list of devices from an FCM topic using the legacy Instance ID API.
+   * Served as a backup/legacy endpoint.
+   *
+   * @param registrationTokenOrTokens - A device registration token or an array of
+   *   device registration tokens to unsubscribe from the topic.
+   * @param topic - The topic from which to unsubscribe.
+   *
+   * @returns A promise fulfilled with the server's response after the device has been
+   *   unsubscribed from the topic.
+   *
+   * @deprecated Use {@link Messaging.unsubscribeFromTopic} instead.
+   */
+  public unsubscribeFromTopicLegacy(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequestLegacy(
+      registrationTokenOrTokens,
+      topic,
+      'unsubscribeFromTopicLegacy',
       FCM_TOPIC_MANAGEMENT_REMOVE_PATH,
     );
   }
@@ -439,12 +488,122 @@ export class Messaging {
    *     registration tokens to unsubscribe from the topic.
    * @param topic - The topic to which to subscribe.
    * @param methodName - The name of the original method called.
-   * @param path - The endpoint path to use for the request.
    *
    * @returns A Promise fulfilled with the parsed server
    *   response.
    */
   private sendTopicManagementRequest(
+    registrationTokenOrTokens: string | string[],
+    topic: string,
+    methodName: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
+    this.validateTopicType(topic, methodName);
+
+    // Prepend the topic with /topics/ if necessary.
+    topic = this.normalizeTopic(topic);
+
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the input arguments. Because we are now in a promise, any thrown
+        // error will cause this method to return a rejected promise.
+        this.validateRegistrationTokens(registrationTokenOrTokens, methodName);
+        this.validateTopic(topic, methodName);
+
+        // Ensure the registration token(s) input argument is an array.
+        let registrationTokensArray: string[] = registrationTokenOrTokens as string[];
+        if (validator.isString(registrationTokenOrTokens)) {
+          registrationTokensArray = [registrationTokenOrTokens as string];
+        }
+
+        return utils.findProjectId(this.app).then((projectId) => {
+          if (!validator.isNonEmptyString(projectId)) {
+            throw new FirebaseMessagingError(
+              messagingClientErrorCode.INVALID_ARGUMENT,
+              'Failed to determine project ID for Messaging. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+            );
+          }
+
+          const topicName = topic.replace(/^\/topics\//, '');
+          const isSubscribe = methodName === 'subscribeToTopic';
+          const httpMethod = isSubscribe ? 'POST' : 'DELETE';
+
+          const http2SessionHandler = new Http2SessionHandler('https://fcm.googleapis.com');
+
+          const requests = registrationTokensArray.map((registrationId) => {
+            let requestPath = `/v1/projects/${projectId}/registrations/${registrationId}/topicSubscriptions`;
+            if (isSubscribe) {
+              requestPath += `?topic_name=${topicName}`;
+            } else {
+              requestPath += `/${topicName}?allow_missing=true`;
+            }
+            return this.messagingRequestHandler.invokeHttp2RequestHandler(
+              'fcm.googleapis.com',
+              requestPath,
+              httpMethod,
+              isSubscribe ? {} : undefined,
+              http2SessionHandler
+            );
+          });
+
+          return Promise.allSettled(requests).then((results) => {
+            if (results.length > 0 && results.every((r) => r.status === 'rejected')) {
+              const firstReason = (results[0] as PromiseRejectedResult).reason;
+              if (firstReason instanceof RequestResponseError) {
+                throw createFirebaseError(firstReason);
+              } else {
+                throw firstReason;
+              }
+            }
+
+            const response: MessagingTopicManagementResponse = {
+              successCount: 0,
+              failureCount: 0,
+              errors: [],
+            };
+
+            results.forEach((result, index) => {
+              if (result.status === 'fulfilled') {
+                response.successCount += 1;
+              } else {
+                response.failureCount += 1;
+                const err = (result as PromiseRejectedResult).reason;
+                const errorCode = err.response?.isJson() ? getErrorCode(err.response.data) : null;
+                const errorMessage = err.response?.isJson() ? err.response.data?.error?.message : err.message;
+                const newError = FirebaseMessagingError.fromTopicManagementServerError(
+                  errorCode || 'UNKNOWN',
+                  errorMessage,
+                  err.response?.isJson() ? err.response.data : undefined
+                );
+                response.errors.push({
+                  index,
+                  error: newError,
+                });
+              }
+            });
+
+            return response;
+          }).finally(() => {
+            http2SessionHandler.close();
+          });
+        });
+      });
+  }
+
+  /**
+   * Helper method which sends and handles topic subscription management requests using the legacy Instance ID API.
+   *
+   * @param registrationTokenOrTokens - The registration token or an array of
+   *     registration tokens to unsubscribe from the topic.
+   * @param topic - The topic to which to subscribe.
+   * @param methodName - The name of the original method called.
+   * @param path - The endpoint path to use for the request.
+   *
+   * @returns A Promise fulfilled with the parsed server response.
+   */
+  private sendTopicManagementRequestLegacy(
     registrationTokenOrTokens: string | string[],
     topic: string,
     methodName: string,
