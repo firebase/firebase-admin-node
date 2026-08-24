@@ -164,6 +164,60 @@ describe('TaskQueue', () => {
         return new TaskQueue(FUNCTION_NAME, mockClient);
       }).not.to.throw();
     });
+
+    it('should not throw given a valid scope object: current', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'current' });
+      }).not.to.throw();
+    });
+
+    it('should not throw given a valid scope object: global', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'global' });
+      }).not.to.throw();
+    });
+
+    it('should not throw given a valid scope object: extension', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'extension', instance: 'my-ext' });
+      }).not.to.throw();
+    });
+
+    it('should not throw given a valid scope object: kit (secretly accepted)', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'kit', instance: 'my-kit' } as any);
+      }).not.to.throw();
+    });
+
+    it('should throw given an invalid scope object', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'invalid' } as any);
+      }).to.throw('`scope` must be one of "current", "global", or "extension".');
+    });
+
+    it('should throw if instance is missing for extension scope', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'extension' } as any);
+      }).to.throw('`instance` must be a non-empty string for scope "extension".');
+    });
+
+    it('should throw if instance is empty for extension scope', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'extension', instance: '' } as any);
+      }).to.throw('`instance` must be a non-empty string for scope "extension".');
+    });
+
+    it('should throw if instance is missing for kit scope', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, { scope: 'kit' } as any);
+      }).to.throw('`instance` must be a non-empty string for scope "kit".');
+    });
+
+    it('should throw if parameter is not a string or object', () => {
+      expect(() => {
+        return new TaskQueue(FUNCTION_NAME, mockClient, 123 as any);
+      }).to.throw('`extensionIdOrScope` must be a string or a FunctionScope object.');
+    });
   });
 
   describe('enqueue', () => {

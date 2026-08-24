@@ -108,3 +108,16 @@ export interface TaskOptionsExperimental {
  */
   uri?: string;
 }
+
+/**
+ * Type representing the scope of a function in a task queue.
+ */
+export type FunctionScope = {
+  scope: 'current';
+} | {
+  scope: 'global';
+} | {
+  scope: 'extension';
+  instance: string;
+};
+
