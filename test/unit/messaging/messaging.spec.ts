@@ -3379,6 +3379,20 @@ describe('Messaging', () => {
       });
     });
 
+    it('should handle JSON error response with null error property', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestError(500, 'json', { error: null }));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/unknown-error');
+      });
+    });
+
     it('should be fulfilled when legacy HTTP transport is enabled', () => {
       messagingService.enableLegacyHttpTransport();
       const token = encodeURIComponent(mocks.messaging.registrationToken);
