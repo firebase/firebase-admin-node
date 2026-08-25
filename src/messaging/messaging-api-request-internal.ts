@@ -266,7 +266,7 @@ export class FirebaseMessagingRequestHandler {
       }
       const errorMessage = (
         validator.isNonNullObject(json)
-        && 'error' in json
+        && validator.isNonNullObject((json as any).error)
         && validator.isNonEmptyString((json as any).error.message)
       ) ? (json as any).error.message : undefined;
       return {
