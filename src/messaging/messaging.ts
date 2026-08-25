@@ -580,9 +580,12 @@ export class Messaging {
         return this.getProjectId().then((projectId) => {
           if (http2SessionHandler) {
             const tasks = registrationTokensArray.map((token) => async () => {
+              const encodedToken = encodeURIComponent(token);
+              const encodedTopic = encodeURIComponent(topicName);
+              const basePath = `/v1/projects/${projectId}/registrations/${encodedToken}/topicSubscriptions`;
               const path = methodName === 'subscribeToTopic'
-                ? `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions?topic_name=${encodeURIComponent(topicName)}`
-                : `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions/${encodeURIComponent(topicName)}?allow_missing=true`;
+                ? `${basePath}?topic_name=${encodedTopic}`
+                : `${basePath}/${encodedTopic}?allow_missing=true`;
               const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
               return this.messagingRequestHandler.invokeHttp2RequestHandlerForTopicSubscriptionResponse(
                 FCM_SEND_HOST, path, methodName, requestData, http2SessionHandler,
@@ -591,9 +594,12 @@ export class Messaging {
             return runWithConcurrencyLimit(tasks, 100);
           } else {
             const tasks = registrationTokensArray.map((token) => async () => {
+              const encodedToken = encodeURIComponent(token);
+              const encodedTopic = encodeURIComponent(topicName);
+              const basePath = `/v1/projects/${projectId}/registrations/${encodedToken}/topicSubscriptions`;
               const path = methodName === 'subscribeToTopic'
-                ? `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions?topic_name=${encodeURIComponent(topicName)}`
-                : `/v1/projects/${projectId}/registrations/${encodeURIComponent(token)}/topicSubscriptions/${encodeURIComponent(topicName)}?allow_missing=true`;
+                ? `${basePath}?topic_name=${encodedTopic}`
+                : `${basePath}/${encodedTopic}?allow_missing=true`;
               const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
               return this.messagingRequestHandler.invokeHttpRequestHandlerForTopicSubscriptionResponse(
                 FCM_SEND_HOST, path, methodName, requestData,

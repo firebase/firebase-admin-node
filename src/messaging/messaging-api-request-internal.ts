@@ -220,7 +220,11 @@ export class FirebaseMessagingRequestHandler {
    * @returns A promise that resolves with the {@link TopicSubscriptionResponse}.
    */
   public invokeHttp2RequestHandlerForTopicSubscriptionResponse(
-    host: string, path: string, methodName: string, requestData: object | undefined, http2SessionHandler: Http2SessionHandler
+    host: string,
+    path: string,
+    methodName: string,
+    requestData: object | undefined,
+    http2SessionHandler: Http2SessionHandler,
   ): Promise<TopicSubscriptionResponse> {
     const request: Http2RequestConfig = {
       method: methodName === 'subscribeToTopic' ? 'POST' : 'DELETE',
@@ -260,9 +264,11 @@ export class FirebaseMessagingRequestHandler {
       if (methodName === 'subscribeToTopic' && (errorCode === 'ALREADY_EXISTS' || err.response.status === 409)) {
         return { success: true };
       }
-      const errorMessage = (validator.isNonNullObject(json) && 'error' in json && validator.isNonEmptyString((json as any).error.message))
-        ? (json as any).error.message
-        : undefined;
+      const errorMessage = (
+        validator.isNonNullObject(json)
+        && 'error' in json
+        && validator.isNonEmptyString((json as any).error.message)
+      ) ? (json as any).error.message : undefined;
       return {
         success: false,
         error: FirebaseMessagingError.fromTopicManagementServerError(
@@ -278,7 +284,7 @@ export class FirebaseMessagingRequestHandler {
       return { success: true };
     }
 
-    let serverErrorCode = 'UNKNOWN_ERROR';
+    let serverErrorCode: string;
     switch (err.response.status) {
     case 400:
       serverErrorCode = 'INVALID_ARGUMENT';

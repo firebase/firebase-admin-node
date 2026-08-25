@@ -167,7 +167,9 @@ function mockTopicSubscriptionRequest(
     mockedResults.push({ error: 'TOO_MANY_TOPICS' });
   }
 
-  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy')
+    ? FCM_TOPIC_MANAGEMENT_ADD_PATH
+    : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
 
   return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
     .post(path)
@@ -192,7 +194,9 @@ function mockTopicSubscriptionRequestWithError(
     contentType = 'text/html; charset=UTF-8';
   }
 
-  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy')
+    ? FCM_TOPIC_MANAGEMENT_ADD_PATH
+    : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
 
   return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
     .post(path)
@@ -3309,7 +3313,8 @@ describe('Messaging', () => {
     });
 
     it('should be fulfilled with server response given a single registration token and topic using HTTP/2', () => {
-      mockedHttp2Responses.push(mockHttp2SendRequestResponse('projects/projec_id/registrations/reg_token/topicSubscriptions/topic_name'));
+      const responsePath = 'projects/projec_id/registrations/reg_token/topicSubscriptions/topic_name';
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse(responsePath));
       http2Mocker.http2Stub(mockedHttp2Responses);
 
       return messagingService[methodName](
@@ -3324,7 +3329,9 @@ describe('Messaging', () => {
 
     it('should handle ALREADY_EXISTS (409) as success for subscribeToTopic', () => {
       if (methodName === 'subscribeToTopic') {
-        mockedHttp2Responses.push(mockHttp2SendRequestError(409, 'json', { error: { status: 'ALREADY_EXISTS', message: 'Already exists' } }));
+        mockedHttp2Responses.push(mockHttp2SendRequestError(409, 'json', {
+          error: { status: 'ALREADY_EXISTS', message: 'Already exists' },
+        }));
         http2Mocker.http2Stub(mockedHttp2Responses);
 
         return messagingService[methodName](
@@ -3335,7 +3342,9 @@ describe('Messaging', () => {
           expect(response.failureCount).to.equal(0);
         });
       } else {
-        mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', { error: { status: 'NOT_FOUND', message: 'Not found' } }));
+        mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', {
+          error: { status: 'NOT_FOUND', message: 'Not found' },
+        }));
         http2Mocker.http2Stub(mockedHttp2Responses);
 
         return messagingService[methodName](
@@ -3352,7 +3361,9 @@ describe('Messaging', () => {
     it('should be fulfilled with server response given multiple registration tokens and topic using HTTP/2', () => {
       const tokens = ['token_1', 'token_2', 'token_3'];
       mockedHttp2Responses.push(mockHttp2SendRequestResponse('1'));
-      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', { error: { status: 'NOT_FOUND', message: 'Not found' } }));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', {
+        error: { status: 'NOT_FOUND', message: 'Not found' },
+      }));
       mockedHttp2Responses.push(mockHttp2SendRequestResponse('3'));
       http2Mocker.http2Stub(mockedHttp2Responses);
 
@@ -3370,12 +3381,15 @@ describe('Messaging', () => {
 
     it('should be fulfilled when legacy HTTP transport is enabled', () => {
       messagingService.enableLegacyHttpTransport();
+      const token = encodeURIComponent(mocks.messaging.registrationToken);
+      const topic = encodeURIComponent(mocks.messaging.topic);
+      const basePath = `/v1/projects/project_id/registrations/${token}/topicSubscriptions`;
       const path = methodName === 'subscribeToTopic'
-        ? `/v1/projects/project_id/registrations/${encodeURIComponent(mocks.messaging.registrationToken)}/topicSubscriptions?topic_name=${encodeURIComponent(mocks.messaging.topic)}`
-        : `/v1/projects/project_id/registrations/${encodeURIComponent(mocks.messaging.registrationToken)}/topicSubscriptions/${encodeURIComponent(mocks.messaging.topic)}?allow_missing=true`;
+        ? `${basePath}?topic_name=${topic}`
+        : `${basePath}/${topic}?allow_missing=true`;
 
-      const scope = nock(`https://${FCM_SEND_HOST}:443`)
-        [methodName === 'subscribeToTopic' ? 'post' : 'delete'](path)
+      const nockInstance = nock(`https://${FCM_SEND_HOST}:443`);
+      const scope = (methodName === 'subscribeToTopic' ? nockInstance.post(path) : nockInstance.delete(path))
         .reply(200, {});
 
       return messagingService[methodName](
