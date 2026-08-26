@@ -577,8 +577,8 @@ export class Messaging {
         const topicName = normalizedTopic.replace(/^\/topics\//, '');
         const http2SessionHandler = this.useLegacyTransport ? undefined : new Http2SessionHandler(`https://${FCM_SEND_HOST}`);
 
-        return this.getProjectId().then((projectId) => {
-          if (http2SessionHandler) {
+        return this.getProjectId()
+          .then((projectId) => {
             const tasks = registrationTokensArray.map((token) => async () => {
               const encodedToken = encodeURIComponent(token);
               const encodedTopic = encodeURIComponent(topicName);
@@ -587,27 +587,18 @@ export class Messaging {
                 ? `${basePath}?topic_name=${encodedTopic}`
                 : `${basePath}/${encodedTopic}?allow_missing=true`;
               const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
-              return this.messagingRequestHandler.invokeHttp2RequestHandlerForTopicSubscriptionResponse(
-                FCM_SEND_HOST, path, methodName, requestData, http2SessionHandler,
-              );
-            });
-            return runWithConcurrencyLimit(tasks, 100);
-          } else {
-            const tasks = registrationTokensArray.map((token) => async () => {
-              const encodedToken = encodeURIComponent(token);
-              const encodedTopic = encodeURIComponent(topicName);
-              const basePath = `/v1/projects/${projectId}/registrations/${encodedToken}/topicSubscriptions`;
-              const path = methodName === 'subscribeToTopic'
-                ? `${basePath}?topic_name=${encodedTopic}`
-                : `${basePath}/${encodedTopic}?allow_missing=true`;
-              const requestData = methodName === 'subscribeToTopic' ? {} : undefined;
+
+              if (http2SessionHandler) {
+                return this.messagingRequestHandler.invokeHttp2RequestHandlerForTopicSubscriptionResponse(
+                  FCM_SEND_HOST, path, methodName, requestData, http2SessionHandler,
+                );
+              }
               return this.messagingRequestHandler.invokeHttpRequestHandlerForTopicSubscriptionResponse(
                 FCM_SEND_HOST, path, methodName, requestData,
               );
             });
             return runWithConcurrencyLimit(tasks, 100);
-          }
-        })
+          })
           .then((results) => {
             return this.parseTopicManagementResponses(results);
           })
