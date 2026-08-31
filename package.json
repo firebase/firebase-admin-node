@@ -215,7 +215,7 @@
     "jwks-rsa": "^4.0.1"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^8.7.1",
+    "@google-cloud/firestore": "^9.0.0",
     "@google-cloud/storage": "^7.22.0"
   },
   "devDependencies": {
