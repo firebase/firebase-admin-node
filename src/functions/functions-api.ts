@@ -24,7 +24,9 @@ export interface DelayDelivery {
    * This delay is added to the current time.
    */
   scheduleDelaySeconds?: number;
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   scheduleTime?: never;
 }
 
@@ -36,7 +38,9 @@ export interface AbsoluteDelivery {
    * The time when the task is scheduled to be attempted or retried.
    */
   scheduleTime?: Date;
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   scheduleDelaySeconds?: never;
 }
 
