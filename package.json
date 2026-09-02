@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "14.2.0",
+  "version": "14.3.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -215,8 +215,8 @@
     "jwks-rsa": "^4.0.1"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^8.6.0",
-    "@google-cloud/storage": "^7.19.0"
+    "@google-cloud/firestore": "^8.7.1",
+    "@google-cloud/storage": "^7.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -237,8 +237,8 @@
     "@types/node": "^26.0.0",
     "@types/sinon": "^21.0.1",
     "@types/sinon-chai": "^3.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.62.0",
-    "@typescript-eslint/parser": "^8.62.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
     "bcrypt": "^6.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
@@ -266,7 +266,7 @@
     "sinon-chai": "^3.0.0",
     "ts-node": "^10.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.62.0",
+    "typescript-eslint": "^8.67.0",
     "yargs": "^17.0.1"
   }
 }

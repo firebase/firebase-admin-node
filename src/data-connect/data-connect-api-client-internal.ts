@@ -70,11 +70,19 @@ const IMPERSONATE_MUTATION_ENDPOINT = 'impersonateMutation';
 /** @internal The maximum number of items allowed in the @allow directive's maxCount argument. */
 export const ALLOW_DIRECTIVE_MAX_COUNT = 10_000;
 
-function getHeaders(isUsingGen: boolean): { [key: string]: string } {
+interface GetHeadersParameters {
+  projectId: string;
+  serviceId: string;
+  isUsingGen: boolean;
+}
+
+function getHeaders(parameters: GetHeadersParameters): { [key: string]: string } {
+  const { projectId, serviceId, isUsingGen } = parameters;
   const headerValue = {
     'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
     'X-Goog-Api-Client': utils.getMetricsHeader(),
-    'X-Client-Version': `node/${utils.getSdkVersion()}`,
+    'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
+    'X-Firebase-Sqlconnect-Affinity': `${projectId}${serviceId}`,
   };
   if (isUsingGen) {
     headerValue['X-Goog-Api-Client'] += ' admin-js/gen';
@@ -386,10 +394,15 @@ export class DataConnectApiClient {
    */
   private async makeGqlRequest<GraphqlResponse>(url: string, data: object): 
   Promise<ExecuteGraphqlResponse<GraphqlResponse>> {
+    const projectId = await this.getProjectId();
     const request: HttpRequestConfig = {
       method: 'POST',
       url,
-      headers: getHeaders(this.isUsingGen),
+      headers: getHeaders({
+        projectId,
+        serviceId: this.connectorConfig.serviceId,
+        isUsingGen: this.isUsingGen,
+      }),
       data,
     };
     const resp = await this.httpClient.send(request);

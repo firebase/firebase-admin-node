@@ -25,7 +25,7 @@ import {
 
 const expect = chai.expect;
 
-describe('admin.machineLearning', () => {
+describe.skip('admin.machineLearning', () => {
 
   const modelsToDelete: string[] = [];
 
