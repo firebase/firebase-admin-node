@@ -504,6 +504,271 @@ describe('FirebaseApp', () => {
         expect(err.cause).to.equal(mockError);
       }
     });
+
+    describe('with a stuck or failing credential', () => {
+      const TEN_MINUTES_IN_SECONDS = 10 * 60;
+
+      function stubCredential(): sinon.SinonStub {
+        return sinon.stub<[], Promise<GoogleOAuthAccessToken>>();
+      }
+
+      it('serves a valid cached token while a stalled refresh is still in flight', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Cached before the stall',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>(() => {}));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+
+        // This refresh never settles, so joining it would block the caller indefinitely.
+        app.INTERNAL.getToken(true).catch(() => undefined);
+
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('keeps serving a valid cached token after a forced refresh is rejected', async () => {
+        // The path RTDB takes after a token revocation, with the rejection swallowed.
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Cached before the failure',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).rejects(new Error('token endpoint unavailable'));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+
+        // The forced caller still sees the failure; only later callers fall back to the cache.
+        try {
+          await app.INTERNAL.getToken(true);
+          expect.fail('Should have failed');
+        } catch (err: any) {
+          expect(err).to.have.property('code', 'app/invalid-credential');
+        }
+
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+        expect(app.INTERNAL.getCachedToken()?.accessToken).to.equal(oracle.access_token);
+      });
+
+      it('serves a cached token that is only just outside the refresh threshold', async () => {
+        // The threshold is the only bound on the cache read. A token with barely more than
+        // TOKEN_EXPIRY_THRESHOLD_MILLIS left must still be served after a refresh fails.
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Just outside the threshold',
+          expires_in: TEN_MINUTES_IN_SECONDS,
+        };
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).rejects(new Error('token endpoint unavailable'));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+        await app.INTERNAL.getToken(true).catch(() => undefined);
+
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('leaves the in-flight refresh reachable after serving the cache', async () => {
+        // Serving the cache must not overwrite `promiseToCachedToken_`; once the cached token
+        // reaches the threshold, callers still have to join the refresh already under way.
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Cached before the refresh',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        let respond: (token: GoogleOAuthAccessToken) => void = () => undefined;
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>((resolve) => {
+          respond = resolve;
+        }));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+
+        const forced = app.INTERNAL.getToken(true);
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+
+        // Age the cached token into the refresh threshold while that refresh is still in flight.
+        clock.tick((60 - 4) * ONE_MINUTE_IN_MILLISECONDS);
+
+        let settled = false;
+        const waiter = app.INTERNAL.getToken().then((token) => {
+          settled = true;
+          return token;
+        });
+        await Promise.resolve();
+        expect(settled).to.be.false;
+
+        respond(replacement);
+        expect((await waiter).accessToken).to.equal(replacement.access_token);
+        await forced;
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('replaces the cached token once a later forced refresh succeeds', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Cached before the failure',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).rejects(new Error('token endpoint unavailable'));
+        getAccessToken.onCall(2).resolves(replacement);
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+        await app.INTERNAL.getToken(true).catch(() => undefined);
+
+        // A failed refresh must not stop a later one from replacing the cache.
+        expect((await app.INTERNAL.getToken(true)).accessToken).to.equal(replacement.access_token);
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(replacement.access_token);
+        expect(getAccessToken).to.have.been.calledThrice;
+      });
+
+      it('serves the outgoing token while the refresh that replaces it is in flight', async () => {
+        const outgoing: GoogleOAuthAccessToken = {
+          access_token: 'Rejected by the server',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        let respond: (token: GoogleOAuthAccessToken) => void = () => undefined;
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(outgoing);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>((resolve) => {
+          respond = resolve;
+        }));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+
+        // A forced refresh means the current token was rejected, so serving it to a concurrent
+        // caller hands out a token the server may already refuse.
+        const forced = app.INTERNAL.getToken(true);
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(outgoing.access_token);
+
+        respond(replacement);
+        await forced;
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(replacement.access_token);
+      });
+
+      it('waits for the in-flight refresh when the cached token is nearly dead', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Nearly dead',
+          expires_in: TEN_MINUTES_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        let respond: (token: GoogleOAuthAccessToken) => void = () => undefined;
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>((resolve) => {
+          respond = resolve;
+        }));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+
+        // Leave the token less life than the refresh threshold, with a refresh in flight.
+        clock.tick((10 * ONE_MINUTE_IN_MILLISECONDS) - (20 * 1000));
+        const forced = app.INTERNAL.getToken(true);
+
+        let settled = false;
+        const waiter = app.INTERNAL.getToken().then((token) => {
+          settled = true;
+          return token;
+        });
+        await Promise.resolve();
+        expect(settled).to.be.false;
+
+        // The waiter must receive the refreshed token, not the nearly dead cached one.
+        respond(replacement);
+        expect((await waiter).accessToken).to.equal(replacement.access_token);
+        await forced;
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('surfaces the credential error once the cached token is inside the refresh threshold', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Nearly dead',
+          expires_in: TEN_MINUTES_IN_SECONDS,
+        };
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).rejects(new Error('token endpoint unavailable'));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+
+        clock.tick((10 * ONE_MINUTE_IN_MILLISECONDS) - (20 * 1000));
+
+        try {
+          await app.INTERNAL.getToken();
+          expect.fail('Should have failed');
+        } catch (err: any) {
+          expect(err).to.have.property('code', 'app/invalid-credential');
+          expect(err.message).to.include('token endpoint unavailable');
+        }
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('does not serve a cached token that is already inside the refresh threshold', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Valid but nearly due',
+          expires_in: TEN_MINUTES_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        let respond: (token: GoogleOAuthAccessToken) => void = () => undefined;
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>((resolve) => {
+          respond = resolve;
+        }));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
+
+        // Advance to exactly where a proactive refresh becomes due, then start one.
+        clock.tick(5 * ONE_MINUTE_IN_MILLISECONDS);
+        const forced = app.INTERNAL.getToken(true);
+
+        let settled = false;
+        const waiter = app.INTERNAL.getToken().then((token) => {
+          settled = true;
+          return token;
+        });
+        await Promise.resolve();
+        expect(settled).to.be.false;
+
+        // At exactly the threshold the cached token is due, so the waiter gets the new one.
+        respond(replacement);
+        expect((await waiter).accessToken).to.equal(replacement.access_token);
+        await forced;
+        expect(getAccessToken).to.have.been.calledTwice;
+      });
+    });
   });
 
   describe('INTERNAL.addAuthTokenListener()', () => {
