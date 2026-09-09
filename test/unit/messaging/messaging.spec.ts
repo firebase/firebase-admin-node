@@ -3393,6 +3393,75 @@ describe('Messaging', () => {
       });
     });
 
+    it('should be fulfilled with a response containing session errors when session fails using HTTP/2', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('1'));
+      const sessionError = 'MOCK_SESSION_ERROR';
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
+        new Error(sessionError),
+      ));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        ['token_1', 'token_2'],
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors.length).to.equal(1);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/unknown-error');
+        expect(response.errors[0].error.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
+        expect(response.errors[0].error.message).to.contain('Session failures:');
+        expect(response.errors[0].error.message).to.contain(sessionError);
+        expect(response.errors[0].error.cause).to.not.be.undefined;
+        expect(response.errors[0].error.cause!.constructor.name).to.equal('AggregateError');
+        const cause = response.errors[0].error.cause as any;
+        expect(cause.errors).to.be.an.instanceOf(Array);
+        expect(cause.errors.length).to.equal(2);
+        expect(cause.errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect(cause.errors[1].message).to.contain(sessionError);
+      });
+    });
+
+    it('should be fulfilled with a response containing AggregateError when multiple session errors occur' +
+      ' using HTTP/2', () => {
+      const sessionError1 = 'MOCK_SESSION_ERROR_1';
+      const sessionError2 = 'MOCK_SESSION_ERROR_2';
+
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_1'),
+        new Error(sessionError1),
+      ));
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_2'),
+        new Error(sessionError2),
+      ));
+
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        ['token_1', 'token_2'],
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.failureCount).to.equal(2);
+
+        const failure = response.errors[0];
+        expect(failure.error.code).to.equal('messaging/unknown-error');
+
+        const cause = failure.error.cause;
+        expect(cause).to.not.be.undefined;
+        expect(cause!.constructor.name).to.equal('AggregateError');
+        expect((cause as any).errors).to.be.an.instanceOf(Array);
+        expect((cause as any).errors.length).to.equal(3);
+        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR_1');
+        expect((cause as any).errors[1].message).to.contain(sessionError1);
+        expect((cause as any).errors[2].message).to.contain(sessionError2);
+      });
+    });
+
     it('should be fulfilled when legacy HTTP transport is enabled', () => {
       messagingService.enableLegacyHttpTransport();
       const token = encodeURIComponent(mocks.messaging.registrationToken);

@@ -285,21 +285,9 @@ export class Messaging {
       if (result.status === 'fulfilled') {
         responses.push(result.value);
       } else { // rejected
-        let error = result.reason;
-        if (sessionErrors.length > 0) {
-          // Combine the original stream error and all session errors
-          const allErrors = [result.reason, ...sessionErrors];
-          const cause = new AggregateError(allErrors, 'Stream failure and session failures occurred');
-
-          const streamMessage = result.reason?.message || 'Unknown stream error';
-          const sessionMessage = `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`;
-
-          error = new FirebaseMessagingError({
-            code: messagingClientErrorCode.UNKNOWN_ERROR.code,
-            message: `${streamMessage}${sessionMessage}`,
-            cause: cause
-          });
-        }
+        const error = sessionErrors.length > 0
+          ? this.createSessionError(result.reason, sessionErrors)
+          : result.reason;
         responses.push({ success: false, error });
       }
     });
@@ -309,6 +297,21 @@ export class Messaging {
       successCount,
       failureCount: responses.length - successCount,
     };
+  }
+
+  private createSessionError(streamReason: any, sessionErrors: Error[]): FirebaseMessagingError {
+    // Combine the original stream error and all session errors
+    const allErrors = [streamReason, ...sessionErrors];
+    const cause = new AggregateError(allErrors, 'Stream failure and session failures occurred');
+
+    const streamMessage = streamReason?.message || 'Unknown stream error';
+    const sessionMessage = `. Session failures: ${sessionErrors.map(e => e.message).join(', ')}`;
+
+    return new FirebaseMessagingError({
+      code: messagingClientErrorCode.UNKNOWN_ERROR.code,
+      message: `${streamMessage}${sessionMessage}`,
+      cause: cause,
+    });
   }
 
   /**
@@ -600,7 +603,8 @@ export class Messaging {
             return runWithConcurrencyLimit(tasks, 100);
           })
           .then((results) => {
-            return this.parseTopicManagementResponses(results);
+            const sessionErrors = http2SessionHandler ? http2SessionHandler.getErrors() : [];
+            return this.parseTopicManagementResponses(results, sessionErrors);
           })
           .finally(() => {
             http2SessionHandler?.close();
@@ -610,6 +614,7 @@ export class Messaging {
 
   private parseTopicManagementResponses(
     results: PromiseSettledResult<TopicSubscriptionResponse>[],
+    sessionErrors: Error[] = [],
   ): MessagingTopicManagementResponse {
     const response: MessagingTopicManagementResponse = {
       successCount: 0,
@@ -635,7 +640,9 @@ export class Messaging {
       } else {
         response.failureCount += 1;
         let error: FirebaseMessagingError;
-        if (result.reason instanceof FirebaseMessagingError) {
+        if (sessionErrors.length > 0) {
+          error = this.createSessionError(result.reason, sessionErrors);
+        } else if (result.reason instanceof FirebaseMessagingError) {
           error = result.reason;
         } else {
           error = FirebaseMessagingError.fromTopicManagementServerError(
