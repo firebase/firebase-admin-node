@@ -215,8 +215,8 @@
     "jwks-rsa": "^4.0.1"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^8.7.1",
-    "@google-cloud/storage": "^7.22.0"
+    "@google-cloud/firestore": "^9.1.0",
+    "@google-cloud/storage": "^8.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
