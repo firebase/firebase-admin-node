@@ -50,6 +50,12 @@ export class FirebaseAppInternals {
   }
 
   public getToken(forceRefresh = false): Promise<FirebaseAccessToken> {
+    // Prefer the cached token over `promiseToCachedToken_`, which may hold a failed refresh. This
+    // runs before shouldRefresh() on purpose: each reads its own Date.now(), so in the opposite
+    // order a token crossing the threshold between the two reads would satisfy neither.
+    if (!forceRefresh && this.hasUsableCachedToken()) {
+      return Promise.resolve(this.cachedToken_);
+    }
     if (forceRefresh || this.shouldRefresh()) {
       this.promiseToCachedToken_ = this.refreshToken();
     }
@@ -124,6 +130,11 @@ export class FirebaseAppInternals {
   private shouldRefresh(): boolean {
     return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS)
       && !this.isRefreshing;
+  }
+
+  private hasUsableCachedToken(): boolean {
+    return !!this.cachedToken_
+      && (this.cachedToken_.expirationTime - Date.now()) > TOKEN_EXPIRY_THRESHOLD_MILLIS;
   }
 
   /**
