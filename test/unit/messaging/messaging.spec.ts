@@ -167,7 +167,9 @@ function mockTopicSubscriptionRequest(
     mockedResults.push({ error: 'TOO_MANY_TOPICS' });
   }
 
-  const path = (methodName === 'subscribeToTopic') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy')
+    ? FCM_TOPIC_MANAGEMENT_ADD_PATH
+    : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
 
   return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
     .post(path)
@@ -192,7 +194,9 @@ function mockTopicSubscriptionRequestWithError(
     contentType = 'text/html; charset=UTF-8';
   }
 
-  const path = (methodName === 'subscribeToTopic') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+  const path = (methodName === 'subscribeToTopic' || methodName === 'subscribeToTopicLegacy')
+    ? FCM_TOPIC_MANAGEMENT_ADD_PATH
+    : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
 
   return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
     .post(path)
@@ -3225,11 +3229,276 @@ describe('Messaging', () => {
     });
   }
 
+  function tokenSubscriptionTestsV1(methodName: string): void {
+    const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
+      `${methodName}() must be a non-empty string or a non-empty array`;
+
+    const invalidRegistrationTokens = [null, NaN, 0, 1, true, false, {}, { a: 1 }, _.noop];
+    invalidRegistrationTokens.forEach((invalidRegistrationToken) => {
+      it('should throw given invalid type for registration token(s) argument: ' +
+        JSON.stringify(invalidRegistrationToken), () => {
+        expect(() => {
+          messagingService[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
+        }).to.throw(invalidRegistrationTokensArgumentError);
+      });
+    });
+
+    it('should throw given no registration token(s) argument', () => {
+      expect(() => {
+        messagingService[methodName](undefined as any, mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should throw given empty string for registration token(s) argument', () => {
+      expect(() => {
+        messagingService[methodName]('', mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should throw given empty array for registration token(s) argument', () => {
+      expect(() => {
+        messagingService[methodName]([], mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should be rejected given empty string within array for registration token(s) argument', () => {
+      return messagingService[methodName](['foo', 'bar', ''], mocks.messaging.topic)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should be rejected given non-string value within array for registration token(s) argument', () => {
+      return messagingService[methodName](['foo', true as any, 'bar'], mocks.messaging.topic)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should be rejected given an array containing more than 1,000 registration tokens', () => {
+      const registrationTokens: string[] = [];
+      for (let i = 0; i < 1001; i++) {
+        registrationTokens.push(mocks.messaging.registrationToken + i);
+      }
+      return messagingService[methodName](registrationTokens, mocks.messaging.topic)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    const invalidTopicArgumentError = `Topic provided to ${methodName}() must be a string which matches ` +
+      'the format "/topics/[a-zA-Z0-9-_.~%]+"';
+
+    const invalidTopics = [null, NaN, 0, 1, true, false, [], ['a', 1], {}, { a: 1 }, _.noop];
+    invalidTopics.forEach((invalidTopic) => {
+      it(`should throw given invalid type for topic argument: ${JSON.stringify(invalidTopic)}`, () => {
+        expect(() => {
+          messagingService[methodName](mocks.messaging.registrationToken, invalidTopic as string);
+        }).to.throw(invalidTopicArgumentError);
+      });
+    });
+
+    it('should throw given no topic argument', () => {
+      expect(() => {
+        messagingService[methodName](mocks.messaging.registrationToken, undefined as any);
+      }).to.throw(invalidTopicArgumentError);
+    });
+
+    it('should throw given empty string for topic argument', () => {
+      expect(() => {
+        messagingService[methodName](mocks.messaging.registrationToken, '');
+      }).to.throw(invalidTopicArgumentError);
+    });
+
+    const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
+    topicsWithInvalidCharacters.forEach((invalidTopic) => {
+      it(`should be rejected given topic argument which has invalid characters: ${invalidTopic}`, () => {
+        return messagingService[methodName](mocks.messaging.registrationToken, invalidTopic)
+          .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+      });
+    });
+
+    it('should be fulfilled with server response given a single registration token and topic using HTTP/2', () => {
+      const responsePath = 'projects/projec_id/registrations/reg_token/topicSubscriptions/topic_name';
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse(responsePath));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(0);
+        expect(response.errors).to.be.empty;
+      });
+    });
+
+    it('should handle ALREADY_EXISTS (409) as success for subscribeToTopic', () => {
+      if (methodName === 'subscribeToTopic') {
+        mockedHttp2Responses.push(mockHttp2SendRequestError(409, 'json', {
+          error: { status: 'ALREADY_EXISTS', message: 'Already exists' },
+        }));
+        http2Mocker.http2Stub(mockedHttp2Responses);
+
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topic,
+        ).then((response: MessagingTopicManagementResponse) => {
+          expect(response.successCount).to.equal(1);
+          expect(response.failureCount).to.equal(0);
+        });
+      } else {
+        mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', {
+          error: { status: 'NOT_FOUND', message: 'Not found' },
+        }));
+        http2Mocker.http2Stub(mockedHttp2Responses);
+
+        return messagingService[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topic,
+        ).then((response: MessagingTopicManagementResponse) => {
+          expect(response.successCount).to.equal(0);
+          expect(response.failureCount).to.equal(1);
+          expect(response.errors[0].error.code).to.equal('messaging/registration-token-not-registered');
+        });
+      }
+    });
+
+    it('should be fulfilled with server response given multiple registration tokens and topic using HTTP/2', () => {
+      const tokens = ['token_1', 'token_2', 'token_3'];
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('1'));
+      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', {
+        error: { status: 'NOT_FOUND', message: 'Not found' },
+      }));
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('3'));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        tokens,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(2);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors.length).to.equal(1);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/registration-token-not-registered');
+      });
+    });
+
+    it('should handle JSON error response with null error property', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestError(500, 'json', { error: null }));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/unknown-error');
+      });
+    });
+
+    it('should be fulfilled with a response containing session errors when session fails using HTTP/2', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestResponse('1'));
+      const sessionError = 'MOCK_SESSION_ERROR';
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error(`MOCK_STREAM_ERROR caused by ${sessionError}`),
+        new Error(sessionError),
+      ));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        ['token_1', 'token_2'],
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors.length).to.equal(1);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/unknown-error');
+        expect(response.errors[0].error.message).to.contain(`MOCK_STREAM_ERROR caused by ${sessionError}`);
+        expect(response.errors[0].error.message).to.contain('Session failures:');
+        expect(response.errors[0].error.message).to.contain(sessionError);
+        expect(response.errors[0].error.cause).to.not.be.undefined;
+        expect(response.errors[0].error.cause!.constructor.name).to.equal('AggregateError');
+        const cause = response.errors[0].error.cause as any;
+        expect(cause.errors).to.be.an.instanceOf(Array);
+        expect(cause.errors.length).to.equal(2);
+        expect(cause.errors[0].message).to.contain('MOCK_STREAM_ERROR');
+        expect(cause.errors[1].message).to.contain(sessionError);
+      });
+    });
+
+    it('should be fulfilled with a response containing AggregateError when multiple session errors occur' +
+      ' using HTTP/2', () => {
+      const sessionError1 = 'MOCK_SESSION_ERROR_1';
+      const sessionError2 = 'MOCK_SESSION_ERROR_2';
+
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_1'),
+        new Error(sessionError1),
+      ));
+      mockedHttp2Responses.push(mockHttp2Error(
+        new Error('MOCK_STREAM_ERROR_2'),
+        new Error(sessionError2),
+      ));
+
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        ['token_1', 'token_2'],
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(http2Mocker.requests.length).to.equal(2);
+        expect(response.failureCount).to.equal(2);
+
+        const failure = response.errors[0];
+        expect(failure.error.code).to.equal('messaging/unknown-error');
+
+        const cause = failure.error.cause;
+        expect(cause).to.not.be.undefined;
+        expect(cause!.constructor.name).to.equal('AggregateError');
+        expect((cause as any).errors).to.be.an.instanceOf(Array);
+        expect((cause as any).errors.length).to.equal(3);
+        expect((cause as any).errors[0].message).to.contain('MOCK_STREAM_ERROR_1');
+        expect((cause as any).errors[1].message).to.contain(sessionError1);
+        expect((cause as any).errors[2].message).to.contain(sessionError2);
+      });
+    });
+
+    it('should be fulfilled when legacy HTTP transport is enabled', () => {
+      messagingService.enableLegacyHttpTransport();
+      const token = encodeURIComponent(mocks.messaging.registrationToken);
+      const topic = encodeURIComponent(mocks.messaging.topic);
+      const basePath = `/v1/projects/project_id/registrations/${token}/topicSubscriptions`;
+      const path = methodName === 'subscribeToTopic'
+        ? `${basePath}?topic_name=${topic}`
+        : `${basePath}/${topic}?allow_missing=true`;
+
+      const nockInstance = nock(`https://${FCM_SEND_HOST}:443`);
+      const scope = (methodName === 'subscribeToTopic' ? nockInstance.post(path) : nockInstance.delete(path))
+        .reply(200, {});
+
+      return messagingService[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(1);
+        expect(response.failureCount).to.equal(0);
+        expect(scope.isDone()).to.be.true;
+      });
+    });
+  }
+
   describe('subscribeToTopic()', () => {
-    tokenSubscriptionTests('subscribeToTopic');
+    tokenSubscriptionTestsV1('subscribeToTopic');
   });
 
   describe('unsubscribeFromTopic()', () => {
-    tokenSubscriptionTests('unsubscribeFromTopic');
+    tokenSubscriptionTestsV1('unsubscribeFromTopic');
+  });
+
+  describe('subscribeToTopicLegacy()', () => {
+    tokenSubscriptionTests('subscribeToTopicLegacy');
+  });
+
+  describe('unsubscribeFromTopicLegacy()', () => {
+    tokenSubscriptionTests('unsubscribeFromTopicLegacy');
   });
 });
