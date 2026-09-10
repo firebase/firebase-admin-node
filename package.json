@@ -250,7 +250,7 @@
     "firebase-token-generator": "^2.0.0",
     "globals": "^17.6.0",
     "gulp": "^5.0.0",
-    "gulp-filter": "^7.0.0",
+    "gulp-filter": "^10.0.0",
     "gulp-header": "^2.0.9",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
