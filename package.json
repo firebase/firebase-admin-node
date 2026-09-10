@@ -210,7 +210,7 @@
     "@firebase/database-compat": "^2.1.4",
     "@firebase/database-types": "^1.0.20",
     "fast-deep-equal": "^3.1.1",
-    "google-auth-library": "^10.6.2",
+    "google-auth-library": "^11.0.2",
     "jsonwebtoken": "^9.0.0",
     "jwks-rsa": "^4.0.1"
   },
