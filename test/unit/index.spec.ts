@@ -48,6 +48,7 @@ import './database/index.spec';
 // Messaging
 import './messaging/index.spec';
 import './messaging/messaging.spec';
+import './messaging/messaging-errors-internal.spec';
 
 // Machine Learning
 import './machine-learning/index.spec';
