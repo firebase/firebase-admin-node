@@ -199,15 +199,23 @@ export class RemoteConfig {
     // (undocumented)
     readonly app: App;
     createTemplateFromJSON(json: string): RemoteConfigTemplate;
+    getServerConfigTemplate(): Promise<RemoteConfigTemplate>;
+    getServerConfigTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
     getServerTemplate(options?: GetServerTemplateOptions): Promise<ServerTemplate>;
     getTemplate(): Promise<RemoteConfigTemplate>;
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
     initServerTemplate(options?: InitServerTemplateOptions): ServerTemplate;
+    listServerConfigVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
+    publishServerConfigTemplate(template: RemoteConfigTemplate, options?: {
+        force: boolean;
+    }): Promise<RemoteConfigTemplate>;
     publishTemplate(template: RemoteConfigTemplate, options?: {
         force: boolean;
     }): Promise<RemoteConfigTemplate>;
     rollback(versionNumber: number | string): Promise<RemoteConfigTemplate>;
+    rollbackServerConfigTemplate(versionNumber: number | string): Promise<RemoteConfigTemplate>;
+    validateServerConfigTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
     validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
 }
 
