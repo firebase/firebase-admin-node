@@ -26,22 +26,44 @@ import { FirebaseMachineLearningError, MachineLearningErrorCode } from './error'
 
 /**
  * Firebase ML Model input objects
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export interface ModelOptionsBase {
   displayName?: string;
   tags?: string[];
 }
 
+/**
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
+ */
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
   tfliteModel: {
     gcsTfliteUri: string;
   };
 }
 
+/**
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
+ */
 export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions;
 
 /**
  * Interface representing options for listing Models.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export interface ListModelsOptions {
   /**

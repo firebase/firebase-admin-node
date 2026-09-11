@@ -1096,7 +1096,9 @@ export abstract class BaseAuth {
     return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID));
   }
 
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
     token: string,

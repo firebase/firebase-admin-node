@@ -177,7 +177,9 @@ export interface DecodedIdToken {
   [key: string]: any;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingSharedUserInfo {
   uid: string;
   display_name?: string;
@@ -186,18 +188,24 @@ export interface DecodedAuthBlockingSharedUserInfo {
   phone_number?: string;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingMetadata {
   creation_time?: number;
   last_sign_in_time?: number;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingUserInfo extends DecodedAuthBlockingSharedUserInfo {
   provider_id: string;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingMfaInfo {
   uid: string;
   display_name?: string;
@@ -206,12 +214,16 @@ export interface DecodedAuthBlockingMfaInfo {
   factor_id?: string;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingEnrolledFactors {
   enrolled_factors?: DecodedAuthBlockingMfaInfo[];
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingUserRecord extends DecodedAuthBlockingSharedUserInfo {
   email_verified?: boolean;
   disabled?: boolean;
@@ -226,7 +238,9 @@ export interface DecodedAuthBlockingUserRecord extends DecodedAuthBlockingShared
   [key: string]: any;
 }
 
-/** @alpha */
+/**
+ * @excludeFromDocs
+ */
 export interface DecodedAuthBlockingToken {
   aud: string;
   exp: number;
@@ -333,7 +347,7 @@ export class FirebaseTokenVerifier {
   private readonly signatureVerifier: SignatureVerifier;
 
   constructor(clientCertUrl: string, private issuer: string, private tokenInfo: FirebaseTokenInfo,
-              private readonly app: App) {
+    private readonly app: App) {
 
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
@@ -410,7 +424,9 @@ export class FirebaseTokenVerifier {
       });
   }
 
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   public _verifyAuthBlockingToken(
     jwtToken: string,
@@ -448,7 +464,7 @@ export class FirebaseTokenVerifier {
           );
         }
         return Promise.resolve(projectId);
-      })
+      });
   }
 
   private decodeAndVerify(
@@ -521,10 +537,10 @@ export class FirebaseTokenVerifier {
         '"' + header.alg + '".' + verifyJwtTokenDocsMessage;
     } else if (typeof audience !== 'undefined' && !(payload.aud as string).includes(audience)) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected "` +
-      audience + '" but got "' + payload.aud + '".' + verifyJwtTokenDocsMessage;
+        audience + '" but got "' + payload.aud + '".' + verifyJwtTokenDocsMessage;
     } else if (typeof audience === 'undefined' && payload.aud !== projectId) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "aud" (audience) claim. Expected "` +
-      projectId + '" but got "' + payload.aud + '".' + projectIdMatchMessage +
+        projectId + '" but got "' + payload.aud + '".' + projectIdMatchMessage +
         verifyJwtTokenDocsMessage;
     } else if (payload.iss !== this.issuer + projectId) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +

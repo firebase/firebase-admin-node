@@ -73,8 +73,37 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
     }
 
     console.error(`API Extractor completed successfully`);
+
+    // Strip @excludeFromDocs APIs from the generated docModel so they aren't documented in reference docs.
+    const apiJsonPath = path.resolve('temp', `${safeName}.api.json`);
+    await stripHiddenDocsFromApiJson(apiJsonPath);
   } finally {
     await fs.unlink(tempConfigFile);
+  }
+}
+
+async function stripHiddenDocsFromApiJson(apiJsonPath) {
+  if (!await fs.exists(apiJsonPath)) {
+    return;
+  }
+  const content = await fs.readFile(apiJsonPath, 'utf8');
+  const data = JSON.parse(content);
+
+  let removedCount = 0;
+  function removeHidden(node) {
+    if (node.members) {
+      const originalLength = node.members.length;
+      // Filter out any member whose docComment includes @excludeFromDocs
+      node.members = node.members.filter(m => !(m.docComment && /@excludeFromDocs\b/.test(m.docComment)));
+      removedCount += (originalLength - node.members.length);
+      node.members.forEach(removeHidden);
+    }
+  }
+
+  removeHidden(data);
+  if (removedCount > 0) {
+    console.log(`Removed ${removedCount} @excludeFromDocs items from ${path.basename(apiJsonPath)}`);
+    await fs.writeFile(apiJsonPath, JSON.stringify(data, null, 2));
   }
 }
 

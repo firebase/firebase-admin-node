@@ -31,6 +31,7 @@ export {
   DeliverySchedule,
   TaskOptions,
   TaskOptionsExperimental,
+  FunctionScope,
 } from './functions-api';
 export {
   Functions,

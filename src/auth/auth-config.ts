@@ -1631,7 +1631,9 @@ export interface AllowByDefaultWrap {
    * Allow every region by default.
    */
   allowByDefault: AllowByDefault;
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   allowlistOnly?: never;
 }
 
@@ -1644,7 +1646,9 @@ export interface AllowlistOnlyWrap {
    * allowlist.
    */
   allowlistOnly: AllowlistOnly;
-  /** @alpha */
+  /**
+   * @excludeFromDocs
+   */
   allowByDefault?: never;
 }
 
