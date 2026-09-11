@@ -97,7 +97,7 @@ export interface AndroidNotificationV2 {
     defaultVibrateTimings?: boolean;
     eventTimestamp?: Date;
     icon?: string;
-    id?: string;
+    id?: number;
     imageUrl?: string;
     lightSettings?: LightSettings;
     localOnly?: boolean;

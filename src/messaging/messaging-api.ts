@@ -960,7 +960,7 @@ export interface AndroidNotificationV2 {
   /**
    * Identifier of the notification.
    */
-  id?: string;
+  id?: number;
 
   /**
    * Action associated with a user click on the notification. If specified, an
