@@ -490,7 +490,7 @@ describe('AppCheckApiClient', () => {
           expect(alreadyConsumed).to.equal(true);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: 'https://firebaseappcheck.googleapis.com/v1beta/projects/test-project:verifyAppCheckToken',
+            url: 'https://firebaseappcheck.googleapis.com/v1/projects/test-project:verifyAppCheckToken',
             headers: EXPECTED_HEADERS,
             data: { app_check_token: TEST_TOKEN_TO_EXCHANGE }
           });
