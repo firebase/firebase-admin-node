@@ -28,7 +28,7 @@ import { AppCheckToken, AppCheckTokenOptions } from './app-check-api';
 
 // App Check backend constants
 const FIREBASE_APP_CHECK_V1_API_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}/apps/{appId}:exchangeCustomToken';
-const ONE_TIME_USE_TOKEN_VERIFICATION_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1beta/projects/{projectId}:verifyAppCheckToken';
+const ONE_TIME_USE_TOKEN_VERIFICATION_URL_FORMAT = 'https://firebaseappcheck.googleapis.com/v1/projects/{projectId}:verifyAppCheckToken';
 
 const FIREBASE_APP_CHECK_CONFIG_HEADERS = {
   'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`
