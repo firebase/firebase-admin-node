@@ -260,7 +260,10 @@ export class FirebaseMessagingRequestHandler {
   ): TopicSubscriptionResponse {
     if (err.response.isJson()) {
       const json = err.response.data;
-      const errorCode = getErrorCode(json);
+      let errorCode = getErrorCode(json);
+      if (errorCode === 'UNREGISTERED') {
+        errorCode = 'NOT_FOUND';
+      }
       if (methodName === 'subscribeToTopic' && (errorCode === 'ALREADY_EXISTS' || err.response.status === 409)) {
         return { success: true };
       }

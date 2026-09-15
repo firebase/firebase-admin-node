@@ -3358,6 +3358,31 @@ describe('Messaging', () => {
       }
     });
 
+    it('should handle UNREGISTERED error code as registration-token-not-registered', () => {
+      mockedHttp2Responses.push(mockHttp2SendRequestError(404, 'json', {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'Not found',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      }));
+      http2Mocker.http2Stub(mockedHttp2Responses);
+
+      return messagingService[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(1);
+        expect(response.errors[0].error.code).to.equal('messaging/registration-token-not-registered');
+      });
+    });
+
     it('should be fulfilled with server response given multiple registration tokens and topic using HTTP/2', () => {
       const tokens = ['token_1', 'token_2', 'token_3'];
       mockedHttp2Responses.push(mockHttp2SendRequestResponse('1'));
