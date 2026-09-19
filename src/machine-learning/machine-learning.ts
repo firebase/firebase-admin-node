@@ -25,7 +25,14 @@ import {
 } from './machine-learning-api-client';
 import { FirebaseMachineLearningError } from './error';
 
-/** Response object for a listModels operation. */
+/**
+ * Response object for a listModels operation.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
+ */
 export interface ListModelsResult {
   /** A list of models in your project. */
   readonly models: Model[];
@@ -39,6 +46,11 @@ export interface ListModelsResult {
 
 /**
  * A TensorFlow Lite Model output object
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export interface TFLiteModel {
   /** The size of the model. */
@@ -50,6 +62,11 @@ export interface TFLiteModel {
 
 /**
  * The Firebase `MachineLearning` service interface.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export class MachineLearning {
 
@@ -88,6 +105,11 @@ export class MachineLearning {
    * @param model - The model to create.
    *
    * @returns A Promise fulfilled with the created model.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
@@ -103,6 +125,11 @@ export class MachineLearning {
    * @param model - The model fields to update.
    *
    * @returns A Promise fulfilled with the updated model.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
     const updateMask = utils.generateUpdateMask(model);
@@ -120,6 +147,11 @@ export class MachineLearning {
    * @param modelId - The ID of the model to publish.
    *
    * @returns A Promise fulfilled with the published model.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public publishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, true);
@@ -131,6 +163,11 @@ export class MachineLearning {
    * @param modelId - The ID of the model to unpublish.
    *
    * @returns A Promise fulfilled with the unpublished model.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public unpublishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, false);
@@ -142,6 +179,11 @@ export class MachineLearning {
    * @param modelId - The ID of the model to get.
    *
    * @returns A Promise fulfilled with the model object.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
@@ -157,6 +199,11 @@ export class MachineLearning {
    *     resolves with the current (filtered) list of models and the next page
    *     token. For the last page, an empty list of models and no page token
    *     are returned.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResult> {
     return this.client.listModels(options)
@@ -183,6 +230,11 @@ export class MachineLearning {
    * Deletes a model from the current project.
    *
    * @param modelId - The ID of the model to delete.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
@@ -240,6 +292,11 @@ export class MachineLearning {
 
 /**
  * A Firebase ML Model output object.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export class Model {
   private model: ModelResponse;
@@ -366,6 +423,11 @@ export class Model {
    *
    * @returns A promise that resolves when the model is unlocked
    *   or the maximum wait time has passed.
+   *
+   * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+   * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+   * Firebase as an alternative for hosting custom models. For more info, see
+   * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
    */
   public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
     if ((this.model.activeOperations?.length ?? 0) > 0) {

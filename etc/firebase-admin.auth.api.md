@@ -31,7 +31,7 @@ export interface AllowByDefault {
 // @public
 export interface AllowByDefaultWrap {
     allowByDefault: AllowByDefault;
-    // @alpha (undocumented)
+    // (undocumented)
     allowlistOnly?: never;
 }
 
@@ -42,7 +42,7 @@ export interface AllowlistOnly {
 
 // @public
 export interface AllowlistOnlyWrap {
-    // @alpha (undocumented)
+    // (undocumented)
     allowByDefault?: never;
     allowlistOnly: AllowlistOnly;
 }
@@ -196,7 +196,7 @@ export abstract class BaseAuth {
     setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
     updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
     updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
-    // @alpha (undocumented)
+    // (undocumented)
     _verifyAuthBlockingToken(token: string, audience?: string): Promise<DecodedAuthBlockingToken>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
@@ -257,7 +257,7 @@ export interface CustomStrengthOptionsConfig {
     requireUppercase?: boolean;
 }
 
-// @alpha (undocumented)
+// @public (undocumented)
 export interface DecodedAuthBlockingToken {
     // (undocumented)
     [key: string]: any;
