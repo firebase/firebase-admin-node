@@ -705,6 +705,45 @@ describe('UserImportBuilder', () => {
           new UserImportBuilder(invalidMultiFactorUsers, validOptions as any, userRequestValidator);
       expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
+
+    it('should import users with TOTP second factors', () => {
+      const totpUsers: any[] = [
+        {
+          uid: '1234',
+          email: 'user@example.com',
+          multiFactor: {
+            enrolledFactors: [
+              {
+                uid: 'enrolledSecondFactor1',
+                displayName: 'Google Authenticator',
+                factorId: 'totp',
+                enrollmentTime: 'Fri, 24 Oct 2025 09:34:05 GMT',
+                totpInfo: {},
+              },
+            ],
+          },
+        },
+      ];
+      const expectedRequest = {
+        users: [
+          {
+            localId: '1234',
+            email: 'user@example.com',
+            mfaInfo: [
+              {
+                mfaEnrollmentId: 'enrolledSecondFactor1',
+                displayName: 'Google Authenticator',
+                totpInfo: {},
+                enrolledAt: '2025-10-24T09:34:05.000Z',
+              },
+            ],
+          },
+        ],
+      };
+      const userImportBuilder =
+          new UserImportBuilder(totpUsers, validOptions as any, userRequestValidator);
+      expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
+    });
   });
 
   describe('buildResponse()', () => {
