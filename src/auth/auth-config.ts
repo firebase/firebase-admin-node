@@ -17,6 +17,7 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { authClientErrorCode, FirebaseAuthError } from './error';
+import { TotpInfoResponse } from './user-record';
 
 /**
  * Interface representing base properties of a user-enrolled second factor for a
@@ -94,10 +95,26 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 }
 
 /**
+ * Interface representing a TOTP specific user-enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdateTotpMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
+
+  /**
+   * The TOTP specific metadata of the second factor, as returned by the Auth server when
+   * the factor was enrolled. The Admin SDK cannot enroll a new TOTP factor on behalf of a
+   * user, so this is only ever populated from a previously enrolled factor.
+   */
+  totpInfo: TotpInfoResponse;
+}
+
+/**
  * Type representing the properties of a user-enrolled second factor
  * for an `UpdateRequest`.
  */
-export type UpdateMultiFactorInfoRequest = | UpdatePhoneMultiFactorInfoRequest;
+export type UpdateMultiFactorInfoRequest =
+  | UpdatePhoneMultiFactorInfoRequest
+  | UpdateTotpMultiFactorInfoRequest;
 
 /**
  * The multi-factor related user settings for create operations.
