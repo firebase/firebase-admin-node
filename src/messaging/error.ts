@@ -279,7 +279,7 @@ export class FirebaseMessagingError extends FirebaseError {
    */
   public static fromTopicManagementServerError(
     serverErrorCode: string,
-    message?: string,
+    message?: string | null,
     serverError?: RequestResponseError,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.

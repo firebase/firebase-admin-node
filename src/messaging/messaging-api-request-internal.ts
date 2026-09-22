@@ -21,11 +21,11 @@ import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, RequestResponseError, RequestResponse,
   AuthorizedHttp2Client, Http2SessionHandler, Http2RequestConfig,
 } from '../utils/api-request';
-import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
+import { createFirebaseError, getErrorCode, getErrorMessage } from './messaging-errors-internal';
 import { getSdkVersion } from '../utils/index';
 import { SendResponse } from './messaging-api';
-import * as validator from '../utils/validator';
-import { FirebaseMessagingError } from './error';
+import { FirebaseMessagingError, MessagingErrorCode } from './error';
+import { toHttpResponse } from '../utils/error';
 
 export interface TopicSubscriptionResponse {
   success: boolean;
@@ -260,18 +260,11 @@ export class FirebaseMessagingRequestHandler {
   ): TopicSubscriptionResponse {
     if (err.response.isJson()) {
       const json = err.response.data;
-      let errorCode = getErrorCode(json);
-      if (errorCode === 'UNREGISTERED') {
-        errorCode = 'NOT_FOUND';
-      }
+      const errorCode = getErrorCode(json);
       if (methodName === 'subscribeToTopic' && (errorCode === 'ALREADY_EXISTS' || err.response.status === 409)) {
         return { success: true };
       }
-      const errorMessage = (
-        validator.isNonNullObject(json)
-        && validator.isNonNullObject((json as any).error)
-        && validator.isNonEmptyString((json as any).error.message)
-      ) ? (json as any).error.message : undefined;
+      const errorMessage = getErrorMessage(json);
       return {
         success: false,
         error: FirebaseMessagingError.fromTopicManagementServerError(
@@ -287,38 +280,39 @@ export class FirebaseMessagingRequestHandler {
       return { success: true };
     }
 
-    let serverErrorCode: string;
+    let errorCode: MessagingErrorCode;
     switch (err.response.status) {
     case 400:
-      serverErrorCode = 'INVALID_ARGUMENT';
+      errorCode = MessagingErrorCode.INVALID_REGISTRATION_TOKEN;
       break;
     case 401:
     case 403:
-      serverErrorCode = 'PERMISSION_DENIED';
+      errorCode = MessagingErrorCode.AUTHENTICATION_ERROR;
       break;
     case 404:
-      serverErrorCode = 'NOT_FOUND';
+      errorCode = MessagingErrorCode.REGISTRATION_TOKEN_NOT_REGISTERED;
       break;
     case 429:
-      serverErrorCode = 'RESOURCE_EXHAUSTED';
+      errorCode = MessagingErrorCode.TOPICS_SUBSCRIPTION_RATE_EXCEEDED;
       break;
     case 500:
-      serverErrorCode = 'INTERNAL';
+      errorCode = MessagingErrorCode.INTERNAL_ERROR;
       break;
     case 503:
-      serverErrorCode = 'DEADLINE_EXCEEDED';
+      errorCode = MessagingErrorCode.SERVER_UNAVAILABLE;
       break;
     default:
-      serverErrorCode = 'UNKNOWN_ERROR';
+      errorCode = MessagingErrorCode.UNKNOWN_ERROR;
     }
 
     return {
       success: false,
-      error: FirebaseMessagingError.fromTopicManagementServerError(
-        serverErrorCode,
-        `Server responded with status ${err.response.status}.`,
-        err,
-      ),
+      error: new FirebaseMessagingError({
+        code: errorCode,
+        message: `Server responded with status ${err.response.status}.`,
+        httpResponse: toHttpResponse(err.response),
+        cause: err,
+      }),
     };
   }
 }

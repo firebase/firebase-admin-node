@@ -25,43 +25,6 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { validateMessage } from './messaging-internal';
 import { FirebaseMessagingRequestHandler, TopicSubscriptionResponse } from './messaging-api-request-internal';
-
-/**
- * Runs a list of async tasks with a maximum concurrency limit.
- *
- * @param tasks - Array of functions that return a Promise.
- * @param limit - Maximum number of tasks to run concurrently.
- * @returns A Promise that resolves with an array of PromiseSettledResult in the same order as the tasks.
- */
-async function runWithConcurrencyLimit<T>(
-  tasks: (() => Promise<T>)[],
-  limit = 100,
-): Promise<PromiseSettledResult<T>[]> {
-  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
-  let currentIndex = 0;
-
-  const worker = async (): Promise<void> => {
-    while (currentIndex < tasks.length) {
-      const index = currentIndex++;
-      try {
-        const value = await tasks[index]();
-        results[index] = { status: 'fulfilled', value };
-      } catch (reason) {
-        results[index] = { status: 'rejected', reason };
-      }
-    }
-  };
-
-  const workers: Promise<void>[] = [];
-  const workerCount = Math.min(limit, tasks.length);
-  for (let i = 0; i < workerCount; i++) {
-    workers.push(worker());
-  }
-
-  await Promise.all(workers);
-  return results;
-}
-
 import {
   BatchResponse,
   FidMulticastMessage,
@@ -117,6 +80,42 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
     });
   }
   return result;
+}
+
+/**
+ * Runs a list of async tasks with a maximum concurrency limit.
+ *
+ * @param tasks - Array of functions that return a Promise.
+ * @param limit - Maximum number of tasks to run concurrently.
+ * @returns A Promise that resolves with an array of PromiseSettledResult in the same order as the tasks.
+ */
+async function runWithConcurrencyLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit = 100,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length);
+  let currentIndex = 0;
+
+  const worker = async (): Promise<void> => {
+    while (currentIndex < tasks.length) {
+      const index = currentIndex++;
+      try {
+        const value = await tasks[index]();
+        results[index] = { status: 'fulfilled', value };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    }
+  };
+
+  const workers: Promise<void>[] = [];
+  const workerCount = Math.min(limit, tasks.length);
+  for (let i = 0; i < workerCount; i++) {
+    workers.push(worker());
+  }
+
+  await Promise.all(workers);
+  return results;
 }
 
 
@@ -396,21 +395,6 @@ export class Messaging {
     return this.sendEach(messages, dryRun);
   }
 
-  /**
-   * Subscribes a device to an FCM topic.
-   *
-   * See {@link https://firebase.google.com/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the |
-   * Subscribe to a topic}
-   * for code samples and detailed documentation. Optionally, you can provide an
-   * array of tokens to subscribe multiple devices.
-   *
-   * @param registrationTokens - A token or array of registration tokens
-   *   for the devices to subscribe to the topic.
-   * @param topic - The topic to which to subscribe.
-   *
-   * @returns A promise fulfilled with the server's response after the device has been
-   *   subscribed to the topic.
-   */
   /**
    * Subscribes a device to an FCM topic.
    *
