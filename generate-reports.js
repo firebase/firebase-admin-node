@@ -35,10 +35,10 @@ const tempConfigFile = 'api-extractor.tmp';
 
 async function generateReports() {
   const entryPoints = require('./entrypoints.json');
-  for (const entryPoint in entryPoints) {
+  await Promise.all(entryPoints.map((entryPoint) => {
     const filePath = entryPoints[entryPoint].typings;
-    await generateReportForEntryPoint(entryPoint, filePath);
-  }
+    return generateReportForEntryPoint(entryPoint, filePath);
+  }));
 }
 
 async function generateReportForEntryPoint(entryPoint, filePath) {
