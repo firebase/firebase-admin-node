@@ -89,12 +89,174 @@ const fidMessage: Message = {
   fid: mockFid,
 };
 
+const messageWithAndroidV2RemoteNotification: Message = {
+  data: {
+    foo: 'bar',
+  },
+  notification: {
+    title: 'Message title',
+    body: 'Message body',
+    imageUrl: 'https://example.com/image.png',
+  },
+  androidV2: {
+    collapseKey: 'test-key',
+    ttl: 5000,
+    restrictedPackageName: 'com.google.firebase.testing',
+    data: {
+      androidFoo: 'androidBar',
+    },
+    directBootOk: true,
+    bandwidthConstrainedOk: true,
+    restrictedSatelliteOk: true,
+    remoteNotification: {
+      mutableContent: true,
+      useAsV1DataMessage: true,
+      notification: {
+        title: 'test.title',
+        body: 'test.body',
+        icon: 'test.icon',
+        color: '#AABBCC',
+        sound: 'test.sound',
+        tag: 'test.tag',
+        id: 1,
+        clickAction: 'test.click.action',
+        bodyLocKey: 'test.body.loc.key',
+        bodyLocArgs: ['body.arg1', 'body.arg2'],
+        titleLocKey: 'test.title.loc.key',
+        titleLocArgs: ['title.arg1', 'title.arg2'],
+        channelId: 'test.channel.id',
+        ticker: 'test.ticker',
+        sticky: true,
+        eventTimestamp: new Date(),
+        localOnly: true,
+        priority: 'high',
+        defaultSound: true,
+        defaultVibrateTimings: false,
+        defaultLightSettings: false,
+        vibrateTimingsMillis: [100, 50, 250],
+        visibility: 'private',
+        notificationCount: 1,
+        lightSettings: {
+          color: '#AABBCC',
+          lightOnDurationMillis: 200,
+          lightOffDurationMillis: 300,
+        },
+        imageUrl: 'https://example.com/image.png',
+      },
+    },
+    fcmOptions: {
+      analyticsLabel: 'test-analytics',
+    },
+  },
+  apns: {
+    payload: {
+      aps: {
+        alert: {
+          title: 'Message title',
+          body: 'Message body',
+        },
+      },
+    },
+  },
+  topic: 'foo-bar',
+};
+
+const messageWithAndroidV2MinimalRemoteNotification: Message = {
+  androidV2: {
+    remoteNotification: {
+      notification: {
+        title: 'test.title',
+        body: 'test.body',
+      },
+    },
+  },
+  topic: 'foo-bar',
+};
+
+const messageWithAndroidV2BackgroundSync: Message = {
+  data: {
+    foo: 'bar',
+  },
+  androidV2: {
+    collapseKey: 'test-key',
+    ttl: 5000,
+    restrictedPackageName: 'com.google.firebase.testing',
+    data: {
+      androidFoo: 'androidBar',
+    },
+    directBootOk: true,
+    bandwidthConstrainedOk: true,
+    restrictedSatelliteOk: true,
+    backgroundSync: {},
+    fcmOptions: {
+      analyticsLabel: 'test-analytics',
+    },
+  },
+  topic: 'foo-bar',
+};
+
+const messageWithAndroidV2MinimalBackgroundSync: Message = {
+  androidV2: {
+    backgroundSync: {},
+  },
+  topic: 'foo-bar',
+};
+
 describe('admin.messaging', () => {
   it('send(message, dryRun) returns a message ID', () => {
     return getMessaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
       });
+  });
+
+  describe('androidV2', () => {
+    it('send(message with all androidV2 remote notification fields, dryRun) returns a message ID', () => {
+      return getMessaging().send(messageWithAndroidV2RemoteNotification, true)
+        .then((name) => {
+          expect(name).matches(/^projects\/.*\/messages\/.*$/);
+        });
+    });
+
+    it('send(message with minimal androidV2 remote notification, dryRun) returns a message ID', () => {
+      return getMessaging().send(messageWithAndroidV2MinimalRemoteNotification, true)
+        .then((name) => {
+          expect(name).matches(/^projects\/.*\/messages\/.*$/);
+        });
+    });
+
+    it('send(message with all androidV2 background sync fields, dryRun) returns a message ID', () => {
+      return getMessaging().send(messageWithAndroidV2BackgroundSync, true)
+        .then((name) => {
+          expect(name).matches(/^projects\/.*\/messages\/.*$/);
+        });
+    });
+
+    it('send(message with minimal androidV2 background sync, dryRun) returns a message ID', () => {
+      return getMessaging().send(messageWithAndroidV2MinimalBackgroundSync, true)
+        .then((name) => {
+          expect(name).matches(/^projects\/.*\/messages\/.*$/);
+        });
+    });
+
+    it('sendEach() with androidV2 messages', () => {
+      const messages: Message[] = [
+        messageWithAndroidV2RemoteNotification,
+        messageWithAndroidV2MinimalRemoteNotification,
+        messageWithAndroidV2BackgroundSync,
+        messageWithAndroidV2MinimalBackgroundSync,
+      ];
+      return getMessaging().sendEach(messages, true)
+        .then((response) => {
+          expect(response.responses.length).to.equal(messages.length);
+          expect(response.successCount).to.equal(messages.length);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+          });
+        });
+    });
   });
 
   it('send(message with fid, dryRun) fails with installation-id-not-registered', () => {
