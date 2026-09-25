@@ -2389,6 +2389,17 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         },
         {
+          name: 'invalid second factor totp info',
+          error: new FirebaseAuthError(
+            authClientErrorCode.INVALID_ENROLLED_FACTORS,
+            'The second factor "totpInfo" for "enrolledSecondFactor1" must be a non-null object.'),
+          secondFactor: {
+            uid: 'enrolledSecondFactor1',
+            factorId: 'totp',
+            totpInfo: 'invalid',
+          },
+        },
+        {
           name: 'invalid second factor type',
           error: new FirebaseAuthError(
             authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
@@ -2412,6 +2423,54 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               expect(error).to.deep.include(invalidSecondFactorTest.error);
             });
         });
+      });
+
+      it('should be fulfilled given a valid TOTP second factor', () => {
+        const expectedResult = utils.responseFrom({ localId: uid });
+        const data = {
+          multiFactor: {
+            enrolledFactors: [
+              {
+                uid: 'enrolledSecondFactor1',
+                displayName: 'Google Authenticator',
+                factorId: 'totp',
+                enrollmentTime: now.toUTCString(),
+                totpInfo: {},
+              },
+              {
+                // A phone factor in the same update must still be converted as before.
+                uid: 'enrolledSecondFactor2',
+                phoneNumber: '+16505551000',
+                factorId: 'phone',
+              },
+            ],
+          },
+        };
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.updateExistingAccount(uid, data as any)
+          .then((result) => {
+            expect(result).to.equal(uid);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {
+              localId: uid,
+              mfa: {
+                enrollments: [
+                  {
+                    mfaEnrollmentId: 'enrolledSecondFactor1',
+                    displayName: 'Google Authenticator',
+                    totpInfo: {},
+                    enrolledAt: now.toISOString(),
+                  },
+                  {
+                    mfaEnrollmentId: 'enrolledSecondFactor2',
+                    phoneInfo: '+16505551000',
+                  },
+                ],
+              },
+            }));
+          });
       });
 
       it('should be rejected given a tenant ID to modify', () => {

@@ -260,6 +260,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
     mfaEnrollmentId: true,
     displayName: true,
     phoneInfo: true,
+    totpInfo: true,
     enrolledAt: true,
   };
   // Remove unsupported keys from the original request.
@@ -303,9 +304,17 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
         `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
         'E.164 standard compliant identifier string.');
     }
+  } else if (typeof request.totpInfo !== 'undefined') {
+    // totpInfo is an opaque struct handed back by the server, so there is nothing to
+    // validate beyond it being an object.
+    if (!validator.isNonNullObject(request.totpInfo)) {
+      throw new FirebaseAuthError(
+        authClientErrorCode.INVALID_ENROLLED_FACTORS,
+        `The second factor "totpInfo" for "${authFactorInfoIdentifier}" must be a non-null object.`);
+    }
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
-    // a phone number. A TOTP based second factor may require a secret key, etc.
+    // a phone number.
     throw new FirebaseAuthError(
       authClientErrorCode.INVALID_ENROLLED_FACTORS,
       'MFAInfo object provided is invalid.');
