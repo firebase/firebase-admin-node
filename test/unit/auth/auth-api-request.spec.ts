@@ -2400,6 +2400,16 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         },
         {
+          name: 'totp second factor without uid',
+          error: new FirebaseAuthError(
+            authClientErrorCode.INVALID_UID,
+            'The second factor "uid" must be a valid non-empty string for TOTP.'),
+          secondFactor: {
+            factorId: 'totp',
+            totpInfo: {},
+          },
+        },
+        {
           name: 'invalid second factor type',
           error: new FirebaseAuthError(
             authClientErrorCode.UNSUPPORTED_SECOND_FACTOR,

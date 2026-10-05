@@ -101,6 +101,12 @@ export interface UpdatePhoneMultiFactorInfoRequest extends BaseUpdateMultiFactor
 export interface UpdateTotpMultiFactorInfoRequest extends BaseUpdateMultiFactorInfoRequest {
 
   /**
+   * The ID of the enrolled second factor. Always required for TOTP factors, since they can
+   * only be carried over from a previously enrolled factor and never newly created.
+   */
+  uid: string;
+
+  /**
    * The TOTP specific metadata of the second factor, as returned by the Auth server when
    * the factor was enrolled. The Admin SDK cannot enroll a new TOTP factor on behalf of a
    * user, so this is only ever populated from a previously enrolled factor.

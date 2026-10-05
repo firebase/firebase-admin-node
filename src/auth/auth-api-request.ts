@@ -312,6 +312,13 @@ function validateAuthFactorInfo(request: AuthFactorInfo): void {
         authClientErrorCode.INVALID_ENROLLED_FACTORS,
         `The second factor "totpInfo" for "${authFactorInfoIdentifier}" must be a non-null object.`);
     }
+    // A TOTP factor is always carried over from a previously enrolled one, so the
+    // enrollment ID is needed to identify which factor is being updated.
+    if (typeof request.mfaEnrollmentId === 'undefined') {
+      throw new FirebaseAuthError(
+        authClientErrorCode.INVALID_UID,
+        'The second factor "uid" must be a valid non-empty string for TOTP.');
+    }
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
     // a phone number.
