@@ -34,16 +34,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    ignore:
-      # Ignore ESM-only major bumps until build/test scripts migrate off CJS
-      - dependency-name: "chai"
-        versions: [">= 5.0.0"]
-      - dependency-name: "gulp-filter"
-        versions: [">= 8.0.0"]
-      - dependency-name: "del"
-        versions: [">= 7.0.0"]
-      - dependency-name: "chalk"
-        versions: [">= 5.0.0"]
 
   # Automatically update SHA-pinned GitHub Actions
   - package-ecosystem: "github-actions"
