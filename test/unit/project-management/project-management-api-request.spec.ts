@@ -17,10 +17,11 @@
 'use strict';
 
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import chaiAsPromised from 'chai-as-promised';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   ProjectManagementRequestHandler

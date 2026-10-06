@@ -15,6 +15,7 @@
  */
 
 import * as chai from 'chai';
+import 'chai/register-should';
 import { Ruleset, RulesetMetadata, getSecurityRules } from '../../lib/security-rules/index';
 
 const expect = chai.expect;
