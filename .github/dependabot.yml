@@ -4,3 +4,51 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 10
+    groups:
+      # Keep ESLint and typescript-eslint packages in lockstep
+      eslint:
+        patterns:
+          - "eslint"
+          - "@eslint/*"
+          - "typescript-eslint"
+          - "@typescript-eslint/*"
+      # Batch Firebase sibling packages together
+      firebase:
+        patterns:
+          - "@firebase/*"
+      # Batch all non-breaking devDependencies into a single weekly PR
+      dev-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      # Batch non-breaking prod/optional dependencies into a single PR
+      prod-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore ESM-only major bumps until build/test scripts migrate off CJS
+      - dependency-name: "chai"
+        versions: [">= 5.0.0"]
+      - dependency-name: "gulp-filter"
+        versions: [">= 8.0.0"]
+      - dependency-name: "del"
+        versions: [">= 7.0.0"]
+      - dependency-name: "chalk"
+        versions: [">= 5.0.0"]
+
+  # Automatically update SHA-pinned GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
