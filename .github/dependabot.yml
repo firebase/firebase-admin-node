@@ -7,6 +7,8 @@ updates:
       day: "monday"
       time: "06:00"
       timezone: "America/Los_Angeles"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     groups:
       # Keep ESLint and typescript-eslint packages in lockstep
@@ -48,6 +50,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
