@@ -26,9 +26,10 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import * as chai from 'chai';
+import 'chai/register-should';
 import chaiExclude from 'chai-exclude';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 chai.should();
 chai.use(sinonChai);

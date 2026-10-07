@@ -16,8 +16,9 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
 import { authClientErrorCode } from '../../../src/auth/error';
