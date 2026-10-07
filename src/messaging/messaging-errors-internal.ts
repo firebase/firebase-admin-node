@@ -113,7 +113,7 @@ export function getErrorCode(response: any): string | null {
  * @param response - The response to check for errors.
  * @returns The error message if present; null otherwise.
  */
-function getErrorMessage(response: any): string | null {
+export function getErrorMessage(response: any): string | null {
   if (validator.isNonNullObject(response) &&
       'error' in response &&
       validator.isNonEmptyString((response as any).error.message)) {

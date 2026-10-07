@@ -18,6 +18,11 @@ import { FirebaseError, ErrorInfo } from '../utils/error';
 
 /**
  * The constant mapping for valid Machine Learning client error codes.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export const MachineLearningErrorCode = {
   ALREADY_EXISTS: 'already-exists',
@@ -41,11 +46,21 @@ export const MachineLearningErrorCode = {
 
 /**
  * The type definition for valid Machine Learning client error codes.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
 /**
  * Firebase Machine Learning error code structure. This extends `FirebaseError`.
+ *
+ * @deprecated Firebase ML is deprecated and will be shut down on June 15, 2027.
+ * To host custom models, you must migrate to another solution. You can use Cloud Storage for
+ * Firebase as an alternative for hosting custom models. For more info, see
+ * https://firebase.google.com/docs/ml/migrate-to-cloud-storage
  */
 export class FirebaseMachineLearningError extends FirebaseError {
   /** @internal */

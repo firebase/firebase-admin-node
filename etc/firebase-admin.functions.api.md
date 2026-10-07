@@ -8,7 +8,7 @@ import { Agent } from 'http';
 
 // @public
 export interface AbsoluteDelivery {
-    // @alpha (undocumented)
+    // (undocumented)
     scheduleDelaySeconds?: never;
     scheduleTime?: Date;
 }
@@ -16,7 +16,7 @@ export interface AbsoluteDelivery {
 // @public
 export interface DelayDelivery {
     scheduleDelaySeconds?: number;
-    // @alpha (undocumented)
+    // (undocumented)
     scheduleTime?: never;
 }
 
@@ -37,8 +37,20 @@ export class Functions {
     //
     // (undocumented)
     readonly app: App;
-    taskQueue<Args = Record<string, any>>(functionName: string, extensionId?: string): TaskQueue<Args>;
+    taskQueue<Args = Record<string, any>>(functionName: string, scope?: FunctionScope): TaskQueue<Args>;
+    // @deprecated
+    taskQueue<Args = Record<string, any>>(functionName: string, deprecatedExtensionId: string): TaskQueue<Args>;
 }
+
+// @public
+export type FunctionScope = {
+    scope: 'current';
+} | {
+    scope: 'global';
+} | {
+    scope: 'extension';
+    instance: string;
+};
 
 // @public
 export const FunctionsErrorCode: {

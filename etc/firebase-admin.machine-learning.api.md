@@ -8,13 +8,13 @@ import { Agent } from 'http';
 
 // Warning: (ae-forgotten-export) The symbol "FirebaseError" needs to be exported by the entry point index.d.ts
 //
-// @public
+// @public @deprecated
 export class FirebaseMachineLearningError extends FirebaseError {
     // Warning: (ae-forgotten-export) The symbol "ErrorInfo" needs to be exported by the entry point index.d.ts
     constructor(info: ErrorInfo, message?: string);
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
     // (undocumented)
     tfliteModel: {
@@ -24,35 +24,42 @@ export interface GcsTfliteModelOptions extends ModelOptionsBase {
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public
+// @public @deprecated
 export function getMachineLearning(app?: App): MachineLearning;
 
-// @public
+// @public @deprecated
 export interface ListModelsOptions {
     filter?: string;
     pageSize?: number;
     pageToken?: string;
 }
 
-// @public
+// @public @deprecated
 export interface ListModelsResult {
     readonly models: Model[];
     readonly pageToken?: string;
 }
 
-// @public
+// @public @deprecated
 export class MachineLearning {
     get app(): App;
+    // @deprecated
     createModel(model: ModelOptions): Promise<Model>;
+    // @deprecated
     deleteModel(modelId: string): Promise<void>;
+    // @deprecated
     getModel(modelId: string): Promise<Model>;
+    // @deprecated
     listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
+    // @deprecated
     publishModel(modelId: string): Promise<Model>;
+    // @deprecated
     unpublishModel(modelId: string): Promise<Model>;
+    // @deprecated
     updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 }
 
-// @public
+// @public @deprecated
 export const MachineLearningErrorCode: {
     readonly ALREADY_EXISTS: "already-exists";
     readonly AUTHENTICATION_ERROR: "authentication-error";
@@ -73,10 +80,10 @@ export const MachineLearningErrorCode: {
     readonly UNAUTHENTICATED: "unauthenticated";
 };
 
-// @public
+// @public @deprecated
 export type MachineLearningErrorCode = typeof MachineLearningErrorCode[keyof typeof MachineLearningErrorCode];
 
-// @public
+// @public @deprecated
 export class Model {
     get createTime(): string;
     get displayName(): string;
@@ -92,13 +99,14 @@ export class Model {
     };
     get updateTime(): string;
     get validationError(): string | undefined;
+    // @deprecated
     waitForUnlocked(maxTimeMillis?: number): Promise<void>;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions;
 
-// @public
+// @public @deprecated
 export interface ModelOptionsBase {
     // (undocumented)
     displayName?: string;
@@ -106,7 +114,7 @@ export interface ModelOptionsBase {
     tags?: string[];
 }
 
-// @public
+// @public @deprecated
 export interface TFLiteModel {
     readonly gcsTfliteUri?: string;
     readonly sizeBytes: number;

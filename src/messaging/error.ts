@@ -220,6 +220,7 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErro
 const TOPIC_MGT_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof MessagingErrorCode> = {
   /* TOPIC SUBSCRIPTION MANAGEMENT ERRORS */
   NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
   TOO_MANY_TOPICS: 'TOO_MANY_TOPICS',
   RESOURCE_EXHAUSTED: 'TOPICS_SUBSCRIPTION_RATE_EXCEEDED',
@@ -278,7 +279,7 @@ export class FirebaseMessagingError extends FirebaseError {
    */
   public static fromTopicManagementServerError(
     serverErrorCode: string,
-    message?: string,
+    message?: string | null,
     serverError?: RequestResponseError,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
