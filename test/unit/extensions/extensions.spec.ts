@@ -16,7 +16,6 @@
  */
 
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import chaiAsPromised from 'chai-as-promised';

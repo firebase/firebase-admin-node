@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/error';
 import { HttpClient } from '../../../src/utils/api-request';

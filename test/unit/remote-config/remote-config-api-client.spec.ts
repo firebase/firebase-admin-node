@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/error';

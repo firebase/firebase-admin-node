@@ -15,7 +15,6 @@
  */
 
 import * as chai from 'chai';
-import 'chai/register-should';
 import chaiAsPromised from 'chai-as-promised';
 import { getDataConnect, ConnectorConfig } from '../../lib/data-connect/index';
 import firebase from '@firebase/app-compat';

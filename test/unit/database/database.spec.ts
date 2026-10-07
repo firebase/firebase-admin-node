@@ -19,7 +19,6 @@
 
 import * as _ from 'lodash';
 import { expect } from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';

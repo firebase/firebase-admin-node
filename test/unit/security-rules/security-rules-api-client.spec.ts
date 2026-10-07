@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/error';

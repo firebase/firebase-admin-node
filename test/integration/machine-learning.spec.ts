@@ -17,7 +17,6 @@
 
 import path = require('path');
 import * as chai from 'chai';
-import 'chai/register-should';
 import { Bucket } from '@google-cloud/storage';
 import { getStorage } from '../../lib/storage/index';
 import {

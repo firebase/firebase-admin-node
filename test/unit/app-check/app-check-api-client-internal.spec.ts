@@ -19,7 +19,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as sinon from 'sinon';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';

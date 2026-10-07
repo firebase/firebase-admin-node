@@ -18,7 +18,6 @@ import * as url from 'url';
 import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
-import 'chai/register-should';
 import chaiAsPromised from 'chai-as-promised';
 import firebase from '@firebase/app-compat';
 import '@firebase/auth-compat';

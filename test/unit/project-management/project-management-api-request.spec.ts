@@ -17,7 +17,6 @@
 'use strict';
 
 import * as chai from 'chai';
-import 'chai/register-should';
 import chaiAsPromised from 'chai-as-promised';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';

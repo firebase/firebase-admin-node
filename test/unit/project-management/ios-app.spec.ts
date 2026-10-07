@@ -17,7 +17,6 @@
 'use strict';
 
 import * as chai from 'chai';
-import 'chai/register-should';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/app/firebase-app';
