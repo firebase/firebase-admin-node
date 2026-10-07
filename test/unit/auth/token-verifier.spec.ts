@@ -18,6 +18,7 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import 'chai/register-should';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
 import sinonChai from 'sinon-chai';

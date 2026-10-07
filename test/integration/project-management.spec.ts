@@ -16,6 +16,7 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import 'chai/register-should';
 import chaiAsPromised from 'chai-as-promised';
 import { projectId } from './setup';
 import {

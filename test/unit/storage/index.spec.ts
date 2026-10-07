@@ -18,6 +18,7 @@
 'use strict';
 
 import * as chai from 'chai';
+import 'chai/register-should';
 import sinonChai from 'sinon-chai';
 import { createSandbox, SinonSandbox } from 'sinon';
 import chaiAsPromised from 'chai-as-promised';

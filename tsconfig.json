@@ -19,13 +19,9 @@
     "rootDir": "."
   },
   "files": [
-    "src/index.ts",
-    "node_modules/@types/chai/register-should.d.ts"
+    "src/index.ts"
   ],
   "ts-node": {
-    "require": [
-      "chai/register-should"
-    ],
     "moduleTypes": {
       "**/*.ts": "cjs"
     }

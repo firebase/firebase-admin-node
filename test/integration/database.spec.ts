@@ -15,6 +15,7 @@
  */
 
 import * as chai from 'chai';
+import 'chai/register-should';
 import chaiAsPromised from 'chai-as-promised';
 import {
   Database, DataSnapshot, EventType, Reference, ServerValue, getDatabase, getDatabaseWithUrl,
