@@ -708,6 +708,257 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
+  describe('getServerConfigTemplate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.getServerConfigTemplate()
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.getServerConfigTemplate());
+    runErrorResponseTests(() => apiClient.getServerConfigTemplate());
+
+    it('should resolve with the latest template on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-1' }));
+      stubs.push(stub);
+      return apiClient.getServerConfigTemplate()
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
+          expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
+          expect(resp.etag).to.equal('etag-123456789012-1');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig',
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+  });
+
+  describe('getServerConfigTemplateAtVersion', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.getServerConfigTemplateAtVersion(65)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // test for version number validations
+    runTemplateVersionNumberTests((v: string | number) => { apiClient.getServerConfigTemplateAtVersion(v); });
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.getServerConfigTemplateAtVersion(65));
+    runErrorResponseTests(() => apiClient.getServerConfigTemplateAtVersion(65));
+
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.getServerConfigTemplateAtVersion(60)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig',
+            headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
+          });
+        });
+    });
+
+    it('should resolve with the requested template version on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.getServerConfigTemplateAtVersion('60')
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
+          expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
+          expect(resp.etag).to.equal('etag-123456789012-60');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig',
+            headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
+          });
+        });
+    });
+  });
+
+  describe('validateServerConfigTemplate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.validateServerConfigTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for input template validations
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.validateServerConfigTemplate(t));
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.validateServerConfigTemplate(REMOTE_CONFIG_TEMPLATE));
+    runErrorResponseTests(() => apiClient.validateServerConfigTemplate(REMOTE_CONFIG_TEMPLATE));
+
+    it('should exclude output only parameters from version metadata', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-0' }));
+      stubs.push(stub);
+      const templateCopy = deepCopy(REMOTE_CONFIG_TEMPLATE);
+      templateCopy.version = VERSION_INFO;
+      return apiClient.validateServerConfigTemplate(templateCopy)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig?validate_only=true',
+            headers: { ...EXPECTED_HEADERS, 'If-Match': REMOTE_CONFIG_TEMPLATE.etag },
+            data: {
+              conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+              parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: { description: VERSION_INFO.description },
+            }
+          });
+        });
+    });
+  });
+
+  describe('publishServerConfigTemplate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.publishServerConfigTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for input template validations
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.publishServerConfigTemplate(t));
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.publishServerConfigTemplate(REMOTE_CONFIG_TEMPLATE));
+    runErrorResponseTests(() => apiClient.publishServerConfigTemplate(REMOTE_CONFIG_TEMPLATE));
+
+    it('should publish the requested template with ETag on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-10' }));
+      stubs.push(stub);
+      const templateCopy = deepCopy(REMOTE_CONFIG_TEMPLATE);
+      templateCopy.version = VERSION_INFO;
+      return apiClient.publishServerConfigTemplate(templateCopy)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig',
+            headers: { ...EXPECTED_HEADERS, 'If-Match': REMOTE_CONFIG_TEMPLATE.etag },
+            data: {
+              conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+              parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: { description: VERSION_INFO.description },
+            }
+          });
+        });
+    });
+
+    it('should force publish the requested template when force option is true', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-10' }));
+      stubs.push(stub);
+      const templateCopy = deepCopy(REMOTE_CONFIG_TEMPLATE);
+      templateCopy.version = VERSION_INFO;
+      return apiClient.publishServerConfigTemplate(templateCopy, { force: true })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig',
+            headers: { ...EXPECTED_HEADERS, 'If-Match': '*' },
+            data: {
+              conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+              parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: { description: VERSION_INFO.description },
+            }
+          });
+        });
+    });
+  });
+
+  describe('rollbackServerConfigTemplate', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.rollbackServerConfigTemplate(65)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // test for version number validations
+    runTemplateVersionNumberTests((v: string | number) => { apiClient.rollbackServerConfigTemplate(v); });
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.rollbackServerConfigTemplate(65));
+    runErrorResponseTests(() => apiClient.rollbackServerConfigTemplate(65));
+
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.rollbackServerConfigTemplate(60)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig:rollback',
+            headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
+          });
+        });
+    });
+  });
+
+  describe('listServerConfigVersions', () => {
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.listServerConfigVersions()
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for api response validations
+    runErrorResponseTests(() => apiClient.listServerConfigVersions());
+
+    it('should resolve with a list of template versions on success', () => {
+      const startTime = new Date(2020, 4, 2);
+      const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listServerConfigVersions({
+        pageSize: 2,
+        pageToken: '70',
+        endVersionNumber: '78',
+        startTime: startTime,
+        endTime: endTime,
+      })
+        .then((resp) => {
+          expect(resp.versions).to.deep.equal(TEST_VERSIONS_RESULT.versions);
+          expect(resp.nextPageToken).to.equal(TEST_VERSIONS_RESULT.nextPageToken);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/namespaces/firebase-server/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              pageSize: 2,
+              pageToken: '70',
+              endVersionNumber: '78',
+              startTime: startTime.toISOString(),
+              endTime: new Date(endTime).toISOString(),
+            }
+          });
+        });
+    });
+  });
+
   function runTemplateVersionNumberTests(rcOperation: (v: string | number) => any): void {
     ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {

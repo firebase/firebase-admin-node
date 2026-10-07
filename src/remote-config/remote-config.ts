@@ -213,6 +213,95 @@ export class RemoteConfig {
 
     return template;
   }
+
+  /**
+   * Gets the current active version of the server-side {@link RemoteConfigTemplate} of the project.
+   *
+   * @returns A promise that fulfills with a `RemoteConfigTemplate`.
+   */
+  public getServerConfigTemplate(): Promise<RemoteConfigTemplate> {
+    return this.client.getServerConfigTemplate()
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Gets the requested version of the server-side {@link RemoteConfigTemplate} of the project.
+   *
+   * @param versionNumber - Version number of the Remote Config template to look up.
+   *
+   * @returns A promise that fulfills with a `RemoteConfigTemplate`.
+   */
+  public getServerConfigTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    return this.client.getServerConfigTemplateAtVersion(versionNumber)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Validates a server-side {@link RemoteConfigTemplate}.
+   *
+   * @param template - The Remote Config template to be validated.
+   * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
+   */
+  public validateServerConfigTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    return this.client.validateServerConfigTemplate(template)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Publishes a server-side Remote Config template.
+   *
+   * @param template - The Remote Config template to be published.
+   * @param options - Optional options object when publishing a Remote Config template:
+   *    - `force`: Setting this to `true` forces the Remote Config template to
+   *      be updated and circumvent the ETag.
+   *
+   * @returns A Promise that fulfills with the published `RemoteConfigTemplate`.
+   */
+  public publishServerConfigTemplate(
+    template: RemoteConfigTemplate,
+    options?: { force: boolean }
+  ): Promise<RemoteConfigTemplate> {
+    return this.client.publishServerConfigTemplate(template, options)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Rolls back a project's published server-side Remote Config template to the specified version.
+   *
+   * @param versionNumber - The version number of the Remote Config template to roll back to.
+   * @returns A promise that fulfills with the published `RemoteConfigTemplate`.
+   */
+  public rollbackServerConfigTemplate(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    return this.client.rollbackServerConfigTemplate(versionNumber)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Gets a list of server-side Remote Config template versions that have been published, sorted in reverse
+   * chronological order.
+   *
+   * @param options - Optional options object for getting a list of versions.
+   * @returns A promise that fulfills with a `ListVersionsResult`.
+   */
+  public listServerConfigVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    return this.client.listServerConfigVersions(options)
+      .then((listVersionsResponse) => {
+        return {
+          versions: listVersionsResponse.versions?.map(version => new VersionImpl(version)) ?? [],
+          nextPageToken: listVersionsResponse.nextPageToken,
+        };
+      });
+  }
 }
 
 /**
