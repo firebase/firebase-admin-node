@@ -20,9 +20,10 @@
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import * as chai from 'chai';
+import 'chai/register-should';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 
 import {

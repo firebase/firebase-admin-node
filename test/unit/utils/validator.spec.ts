@@ -16,9 +16,10 @@
  */
 
 import * as chai from 'chai';
+import 'chai/register-should';
 import * as _ from 'lodash';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,

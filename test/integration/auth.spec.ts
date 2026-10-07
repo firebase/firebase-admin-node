@@ -18,7 +18,8 @@ import * as url from 'url';
 import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcrypt';
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import chaiAsPromised from 'chai-as-promised';
 import firebase from '@firebase/app-compat';
 import '@firebase/auth-compat';
 import { clone } from 'lodash';
@@ -35,7 +36,7 @@ import {
   PasswordPolicyConfig, SmsRegionConfig, RecaptchaConfig, ActionCodeSettings,
 } from '../../lib/auth/index';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
+import sinonChai from 'sinon-chai';
 
 const chalk = require('chalk');
 

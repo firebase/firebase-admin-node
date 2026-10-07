@@ -17,8 +17,9 @@
 'use strict';
 
 import * as chai from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { createFirebaseError } from '../../../src/messaging/messaging-errors-internal';
 import { RequestResponseError, RequestResponse } from '../../../src/utils/api-request';
