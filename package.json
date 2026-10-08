@@ -242,7 +242,7 @@
     "chai": "^6.2.2",
     "chai-as-promised": "^8.0.2",
     "chai-exclude": "^3.0.1",
-    "chalk": "^4.1.1",
+    "chalk": "^6.0.1",
     "child-process-promise": "^2.2.1",
     "eslint": "^10.3.0",
     "firebase-token-generator": "^2.0.0",
