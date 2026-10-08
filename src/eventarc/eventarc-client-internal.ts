@@ -42,6 +42,7 @@ const DEFAULT_CHANNEL_REGION = 'us-central1';
  */
 export class EventarcApiClient {
   private readonly httpClient: HttpClient;
+  private readonly eventarcHost: string;
   private projectId?: string;
   private readonly resolvedChannelName: Promise<string>;
 
@@ -53,6 +54,7 @@ export class EventarcApiClient {
       });
     }
     this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
+    this.eventarcHost = process.env.CLOUD_EVENTARC_EMULATOR_HOST ?? EVENTARC_API;
     this.resolvedChannelName = this.resolveChannelName(channel.name);
   }
 
@@ -105,7 +107,7 @@ export class EventarcApiClient {
     }
     const request: HttpRequestConfig = {
       method: 'POST',
-      url: `${this.getEventarcHost()}/${channel}:publishEvents`,
+      url: `${this.eventarcHost}/${channel}:publishEvents`,
       data: JSON.stringify({ events }),
     };
     return this.sendRequest(request);
@@ -161,9 +163,5 @@ export class EventarcApiClient {
   private async resolveChannelNameProjectId(location: string, channelId: string): Promise<string> {
     const projectId = await this.getProjectId();
     return `projects/${projectId}/locations/${location}/channels/${channelId}`;
-  }
-
-  private getEventarcHost(): string {
-    return process.env.CLOUD_EVENTARC_EMULATOR_HOST ?? EVENTARC_API;
   }
 }
