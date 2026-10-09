@@ -20,8 +20,10 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { authClientErrorCode, FirebaseAuthError } from './error';
 import {
-  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings
+  UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest,
+  UpdateTotpMultiFactorInfoRequest, MultiFactorUpdateSettings
 } from './auth-config';
+import { TotpInfoResponse } from './user-record';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
   'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
@@ -261,6 +263,7 @@ export interface AuthFactorInfo {
   mfaEnrollmentId?: string;
   displayName?: string;
   phoneInfo?: string;
+  totpInfo?: TotpInfoResponse;
   enrolledAt?: string;
   [key: string]: any;
 }
@@ -334,7 +337,6 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
         'UTC date string.');
     }
   }
-  // Currently only phone second factors are supported.
   if (isPhoneFactor(multiFactorInfo)) {
     // If any required field is missing or invalid, validation will still fail later.
     const authFactorInfo: AuthFactorInfo = {
@@ -344,11 +346,18 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       phoneInfo: multiFactorInfo.phoneNumber,
       enrolledAt,
     };
-    for (const objKey in authFactorInfo) {
-      if (typeof authFactorInfo[objKey] === 'undefined') {
-        delete authFactorInfo[objKey];
-      }
-    }
+    removeUndefinedFields(authFactorInfo);
+    return authFactorInfo;
+  } else if (isTotpFactor(multiFactorInfo)) {
+    // TOTP factors are always carried over from a previously enrolled factor, so the
+    // enrollment ID and the TOTP metadata are both preserved as is.
+    const authFactorInfo: AuthFactorInfo = {
+      mfaEnrollmentId: multiFactorInfo.uid,
+      displayName: multiFactorInfo.displayName,
+      totpInfo: multiFactorInfo.totpInfo,
+      enrolledAt,
+    };
+    removeUndefinedFields(authFactorInfo);
     return authFactorInfo;
   } else {
     // Unsupported second factor.
@@ -358,9 +367,25 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
   }
 }
 
+function removeUndefinedFields(obj: AuthFactorInfo): void {
+  for (const objKey in obj) {
+    if (typeof obj[objKey] === 'undefined') {
+      delete obj[objKey];
+    }
+  }
+}
+
 function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
   multiFactorInfo is UpdatePhoneMultiFactorInfoRequest {
   return multiFactorInfo.factorId === 'phone';
+}
+
+function isTotpFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
+  multiFactorInfo is UpdateTotpMultiFactorInfoRequest {
+  // Only factors that carry the TOTP metadata handed out by the server are accepted. A bare
+  // secret cannot be enrolled through the Admin SDK, and sending it would leave the user with
+  // a factor no authenticator app can generate codes for.
+  return multiFactorInfo.factorId === 'totp' && 'totpInfo' in multiFactorInfo;
 }
 
 /**
