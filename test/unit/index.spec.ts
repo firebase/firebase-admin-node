@@ -29,6 +29,7 @@ import './utils/validator.spec';
 import './utils/api-request.spec';
 import './utils/jwt.spec';
 import './utils/crypto-signer.spec';
+import './utils/deep-copy.spec';
 
 // Auth
 import './auth/auth.spec';
