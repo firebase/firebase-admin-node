@@ -76,7 +76,8 @@ export function deepExtend(target: any, source: any): any {
     if (prop === '__proto__' || prop === 'constructor' || prop === 'prototype') {
       continue;
     }
-    target[prop] = deepExtend(target[prop], source[prop]);
+    const hasProp = target instanceof Object && Object.prototype.hasOwnProperty.call(target, prop);
+    target[prop] = deepExtend(hasProp ? target[prop] : undefined, source[prop]);
   }
 
   return target;

@@ -53,9 +53,22 @@ describe('deepExtend()', () => {
     });
   });
 
+  it('should not mutate inherited prototype properties of the target', () => {
+    const proto = { shared: { x: 1 } };
+    const target = Object.create(proto);
+    const source = { shared: { y: 2 } };
+
+    deepExtend(target, source);
+
+    expect(proto.shared).to.deep.equal({ x: 1 });
+    expect(target.shared).to.deep.equal({ y: 2 });
+    expect(Object.prototype.hasOwnProperty.call(target, 'shared')).to.be.true;
+  });
+
   describe('prototype pollution', () => {
     afterEach(() => {
       delete (Object.prototype as any).polluted;
+      delete (Object.prototype.toString as any).polluted;
     });
 
     it('should not pollute prototype via __proto__', () => {
@@ -79,6 +92,14 @@ describe('deepExtend()', () => {
       const target: Record<string, any> = {};
       deepExtend(target, payload);
       expect(Object.prototype.hasOwnProperty.call(target, 'prototype')).to.be.false;
+    });
+
+    it('should not pollute inherited Object.prototype methods like toString', () => {
+      const payload = JSON.parse('{"toString": {"polluted": true}}');
+      const target: Record<string, any> = {};
+      deepExtend(target, payload);
+      expect((Object.prototype.toString as any).polluted).to.be.undefined;
+      expect(target.toString).to.deep.equal({ polluted: true });
     });
   });
 });
