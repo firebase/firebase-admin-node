@@ -65,6 +65,16 @@ describe('deepExtend()', () => {
     expect(Object.prototype.hasOwnProperty.call(target, 'shared')).to.be.true;
   });
 
+  it('should merge properties when target is Object.create(null)', () => {
+    const target = Object.create(null);
+    target.a = { b: 1 };
+    const source = { a: { c: 2 } };
+
+    deepExtend(target, source);
+
+    expect(target.a).to.deep.equal({ b: 1, c: 2 });
+  });
+
   describe('prototype pollution', () => {
     afterEach(() => {
       delete (Object.prototype as any).polluted;
