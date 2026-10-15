@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+import 'chai/register-should';
+
 // General
 import './app/credential-internal.spec';
 import './app/index.spec';

@@ -206,7 +206,11 @@ export class Messaging {
     sendEachForMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     sendEachForMulticast(message: FidMulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
     subscribeToTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
+    // @deprecated
+    subscribeToTopicLegacy(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
     unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
+    // @deprecated
+    unsubscribeFromTopicLegacy(registrationTokenOrTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
 }
 
 // @public
