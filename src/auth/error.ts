@@ -64,6 +64,7 @@ export const AuthErrorCode = {
   INVALID_PASSWORD: 'invalid-password',
   INVALID_PASSWORD_HASH: 'invalid-password-hash',
   INVALID_PASSWORD_SALT: 'invalid-password-salt',
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'password-does-not-meet-requirements',
   INVALID_PHONE_NUMBER: 'invalid-phone-number',
   INVALID_PHOTO_URL: 'invalid-photo-url',
   INVALID_PROJECT_ID: 'invalid-project-id',
@@ -296,6 +297,10 @@ export const authClientErrorCode: { readonly [K in keyof typeof AuthErrorCode]: 
   INVALID_PASSWORD_SALT: {
     code: AuthErrorCode.INVALID_PASSWORD_SALT,
     message: 'The password salt must be a valid byte buffer.',
+  },
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: {
+    code: AuthErrorCode.PASSWORD_DOES_NOT_MEET_REQUIREMENTS,
+    message: 'The password does not meet the requirements.',
   },
   INVALID_PHONE_NUMBER: {
     code: AuthErrorCode.INVALID_PHONE_NUMBER,
@@ -605,6 +610,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof AuthErrorCode> = {
   MISSING_USER_ACCOUNT: 'MISSING_UID',
   // Password auth disabled in console.
   OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
+  // Password does not meet the configured policy requirements.
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'PASSWORD_DOES_NOT_MEET_REQUIREMENTS',
   // Provided credential has insufficient permissions.
   PERMISSION_DENIED: 'INSUFFICIENT_PERMISSION',
   // Phone number already exists.
