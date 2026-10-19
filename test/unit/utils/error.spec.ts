@@ -141,6 +141,7 @@ describe('FirebaseAuthError', () => {
       it('should map password policy server errors to the public password policy code', () => {
         const error = FirebaseAuthError.fromServerError('PASSWORD_DOES_NOT_MEET_REQUIREMENTS');
         expect(error.code).to.be.equal('auth/password-does-not-meet-requirements');
+        expect(error.message).to.be.equal('The password does not meet the requirements.');
       });
 
       it('should initialize an error from an unexpected server code', () => {

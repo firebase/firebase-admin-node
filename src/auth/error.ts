@@ -64,7 +64,6 @@ export const AuthErrorCode = {
   INVALID_PASSWORD: 'invalid-password',
   INVALID_PASSWORD_HASH: 'invalid-password-hash',
   INVALID_PASSWORD_SALT: 'invalid-password-salt',
-  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'password-does-not-meet-requirements',
   INVALID_PHONE_NUMBER: 'invalid-phone-number',
   INVALID_PHOTO_URL: 'invalid-photo-url',
   INVALID_PROJECT_ID: 'invalid-project-id',
@@ -96,6 +95,7 @@ export const AuthErrorCode = {
   MAXIMUM_USER_COUNT_EXCEEDED: 'maximum-user-count-exceeded',
   MISSING_UID: 'missing-uid',
   OPERATION_NOT_ALLOWED: 'operation-not-allowed',
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'password-does-not-meet-requirements',
   PHONE_NUMBER_ALREADY_EXISTS: 'phone-number-already-exists',
   PROJECT_NOT_FOUND: 'project-not-found',
   INSUFFICIENT_PERMISSION: 'insufficient-permission',
@@ -298,10 +298,6 @@ export const authClientErrorCode: { readonly [K in keyof typeof AuthErrorCode]: 
     code: AuthErrorCode.INVALID_PASSWORD_SALT,
     message: 'The password salt must be a valid byte buffer.',
   },
-  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: {
-    code: AuthErrorCode.PASSWORD_DOES_NOT_MEET_REQUIREMENTS,
-    message: 'The password does not meet the requirements.',
-  },
   INVALID_PHONE_NUMBER: {
     code: AuthErrorCode.INVALID_PHONE_NUMBER,
     message: 'The phone number must be a non-empty E.164 standard compliant identifier string.',
@@ -427,6 +423,10 @@ export const authClientErrorCode: { readonly [K in keyof typeof AuthErrorCode]: 
     code: AuthErrorCode.OPERATION_NOT_ALLOWED,
     message: 'The given sign-in provider is disabled for this Firebase project. Enable it in the ' +
       'Firebase console, under the sign-in method tab of the Auth section.',
+  },
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: {
+    code: AuthErrorCode.PASSWORD_DOES_NOT_MEET_REQUIREMENTS,
+    message: 'The password does not meet the requirements.',
   },
   PHONE_NUMBER_ALREADY_EXISTS: {
     code: AuthErrorCode.PHONE_NUMBER_ALREADY_EXISTS,
