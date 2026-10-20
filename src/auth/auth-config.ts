@@ -1178,7 +1178,12 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @returns Whether the provider ID corresponds to a SAML provider.
    */
   public static isProviderId(providerId: any): providerId is string {
-    return validator.isNonEmptyString(providerId) && providerId.indexOf('saml.') === 0;
+    // Single dots are permitted within the provider ID suffix (e.g., "saml.my.provider"),
+    // so we check !providerId.endsWith('.') separately to reject "saml.", "saml..", and
+    // trailing-dot segments without introducing multi-quantifier regex backtracking.
+    return validator.isNonEmptyString(providerId) &&
+      !providerId.endsWith('.') &&
+      /^saml\.[a-zA-Z0-9-_.~]+$/.test(providerId);
   }
 
   /**
@@ -1216,7 +1221,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     }
     // Required fields.
     if (validator.isNonEmptyString(options.providerId)) {
-      if (options.providerId.indexOf('saml.') !== 0) {
+      if (!SAMLConfig.isProviderId(options.providerId)) {
         throw new FirebaseAuthError(
           authClientErrorCode.INVALID_PROVIDER_ID,
           '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
@@ -1429,7 +1434,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @returns Whether the provider ID corresponds to an OIDC provider.
    */
   public static isProviderId(providerId: any): providerId is string {
-    return validator.isNonEmptyString(providerId) && providerId.indexOf('oidc.') === 0;
+    // Single dots are permitted within the provider ID suffix (e.g., "oidc.my.provider"),
+    // so we check !providerId.endsWith('.') separately to reject "oidc.", "oidc..", and
+    // trailing-dot segments without introducing multi-quantifier regex backtracking.
+    return validator.isNonEmptyString(providerId) &&
+      !providerId.endsWith('.') &&
+      /^oidc\.[a-zA-Z0-9-_.~]+$/.test(providerId);
   }
 
   /**
@@ -1469,7 +1479,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     }
     // Required fields.
     if (validator.isNonEmptyString(options.providerId)) {
-      if (options.providerId.indexOf('oidc.') !== 0) {
+      if (!OIDCConfig.isProviderId(options.providerId)) {
         throw new FirebaseAuthError(
           !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
           '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',

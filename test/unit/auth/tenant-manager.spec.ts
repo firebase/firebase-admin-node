@@ -29,7 +29,7 @@ import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
 import { TenantServerResponse } from '../../../src/auth/tenant';
 import { authClientErrorCode, FirebaseAuthError } from '../../../src/auth/error';
 import {
-  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult, Tenant, TenantManager,
+  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult, Tenant, TenantAwareAuth, TenantManager,
 } from '../../../src/auth/index';
 
 chai.should();
@@ -69,12 +69,29 @@ describe('TenantManager', () => {
     return mockApp.delete();
   });
 
+  const MALFORMED_TENANT_IDS = [
+    '.', '..', '...', 'victim.', '..\n', '../other', 'tenant/1', 'tenant\\1',
+    'tenant?foo=bar', 'tenant#frag', 'tenant%2e%2e',
+  ];
+
   describe('authForTenant()', () => {
-    const invalidTenantIds = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    const invalidTenantIds = [
+      null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop,
+      ...MALFORMED_TENANT_IDS,
+    ];
     invalidTenantIds.forEach((invalidTenantId) => {
       it('should throw given invalid tenant ID: ' + JSON.stringify(invalidTenantId), () => {
         expect(() => {
           return tenantManager.authForTenant(invalidTenantId as any);
+        }).to.throw('The tenant ID must be a valid non-empty string.');
+      });
+    });
+
+    MALFORMED_TENANT_IDS.forEach((invalidTenantId) => {
+      it('TenantAwareAuth constructor should throw given malformed tenant ID: ' +
+          JSON.stringify(invalidTenantId), () => {
+        expect(() => {
+          return new TenantAwareAuth(mockApp, invalidTenantId);
         }).to.throw('The tenant ID must be a valid non-empty string.');
       });
     });
@@ -116,15 +133,17 @@ describe('TenantManager', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
     });
 
-    it('should be rejected given an invalid tenant ID', () => {
-      const invalidTenantId = '';
-      return tenantManager.getTenant(invalidTenantId)
-        .then(() => {
-          throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-          expect(error).to.have.property('code', 'auth/invalid-tenant-id');
-        });
+    const invalidTenantIds = ['', ...MALFORMED_TENANT_IDS];
+    invalidTenantIds.forEach((invalidTenantId) => {
+      it('should be rejected given an invalid tenant ID: ' + JSON.stringify(invalidTenantId), () => {
+        return tenantManager.getTenant(invalidTenantId)
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+          });
+      });
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
@@ -321,7 +340,10 @@ describe('TenantManager', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
     });
 
-    const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
+    const invalidTenantIds = [
+      null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop,
+      ...MALFORMED_TENANT_IDS,
+    ];
     invalidTenantIds.forEach((invalidTenantId) => {
       it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
         return tenantManager.deleteTenant(invalidTenantId as any)
@@ -500,15 +522,17 @@ describe('TenantManager', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
     });
 
-    it('should be rejected given an invalid tenant ID', () => {
-      const invalidTenantId = '';
-      return tenantManager.updateTenant(invalidTenantId, tenantOptions)
-        .then(() => {
-          throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-          expect(error).to.have.property('code', 'auth/invalid-tenant-id');
-        });
+    const invalidTenantIds = ['', ...MALFORMED_TENANT_IDS];
+    invalidTenantIds.forEach((invalidTenantId) => {
+      it('should be rejected given an invalid tenant ID: ' + JSON.stringify(invalidTenantId), () => {
+        return tenantManager.updateTenant(invalidTenantId, tenantOptions)
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+          });
+      });
     });
 
     it('should be rejected given no TenantOptions', () => {

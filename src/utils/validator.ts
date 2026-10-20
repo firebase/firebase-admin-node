@@ -297,3 +297,17 @@ export function isTaskId(taskId: any): boolean {
   const VALID_TASK_ID_REGEX = /^[A-Za-z0-9_-]+$/;
   return VALID_TASK_ID_REGEX.test(taskId);
 }
+
+/**
+ * Validates that a string is a valid tenant ID.
+ *
+ * @param tenantId - The string to validate.
+ * @returns Whether the string is a valid tenant ID.
+ */
+export function isTenantId(tenantId: any): tenantId is string {
+  // Reject trailing dots separately to forbid ".", "..", and trailing-dot segments
+  // without introducing multi-quantifier regex backtracking.
+  return isNonEmptyString(tenantId) &&
+    !tenantId.endsWith('.') &&
+    /^[a-zA-Z0-9-_.~]+$/.test(tenantId);
+}

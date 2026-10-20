@@ -24,7 +24,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
   isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
-  isUTCDateString, isISODateString,
+  isUTCDateString, isISODateString, isTenantId,
 } from '../../../src/utils/validator';
 
 
@@ -529,5 +529,30 @@ describe('isISODateString()', () => {
 
   it('should return true given a valid ISO date string', () => {
     expect(isISODateString(validISODateString)).to.be.true;
+  });
+});
+
+describe('isTenantId()', () => {
+  it('should return false given no argument', () => {
+    expect(isTenantId(undefined as any)).to.be.false;
+  });
+
+  const invalidTenantIds = [
+    null, NaN, 0, 1, true, false, '', [], ['a'], {}, { a: 1 }, _.noop,
+    '.', '..', '...', 'victim.', '..\n', '../other', 'tenant/other',
+    'tenant\\other', 'tenant?foo=bar', 'tenant#frag', 'tenant%2fother',
+    'tenant id',
+  ];
+  invalidTenantIds.forEach((invalidTenantId) => {
+    it('should return false given an invalid tenant ID: ' + JSON.stringify(invalidTenantId), () => {
+      expect(isTenantId(invalidTenantId)).to.be.false;
+    });
+  });
+
+  const validTenantIds = ['tenant1', 'tenant-1', 'TENANT_1', 'tenant.1~foo'];
+  validTenantIds.forEach((validTenantId) => {
+    it('should return true given a valid tenant ID: ' + JSON.stringify(validTenantId), () => {
+      expect(isTenantId(validTenantId)).to.be.true;
+    });
   });
 });
