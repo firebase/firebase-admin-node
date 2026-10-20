@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import 'chai/register-should';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');

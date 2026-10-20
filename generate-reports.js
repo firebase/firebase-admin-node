@@ -17,16 +17,9 @@
 
 const path = require('path');
 const fs = require('mz/fs');
-const yargs = require('yargs');
 const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
 
-const { local: localMode } = yargs
-  .option('local', {
-    boolean: true,
-    description: 'Run API Extractor with --local flag',
-  })
-  .version(false)
-  .help().argv;
+const localMode = process.argv.includes('--local');
 
 // API Extractor configuration file.
 const config = require('./api-extractor.json');

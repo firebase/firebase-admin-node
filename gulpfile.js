@@ -25,8 +25,8 @@ var gulp = require('gulp');
 var pkg = require('./package.json');
 
 // File I/O
+var fs = require('fs');
 var ts = require('gulp-typescript');
-var del = require('del');
 var header = require('gulp-header');
 var filter = require('gulp-filter');
 
@@ -65,9 +65,7 @@ var banner = `/*! firebase-admin v${pkg.version} */\n`;
 /***********/
 
 gulp.task('cleanup', function() {
-  return del([
-    paths.build,
-  ]);
+  return fs.promises.rm(paths.build, { recursive: true, force: true });
 });
 
 // Task used to compile the TypeScript project. If automatic typings

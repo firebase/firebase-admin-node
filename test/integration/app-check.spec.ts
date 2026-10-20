@@ -17,7 +17,8 @@
 import * as _ from 'lodash';
 import { getAppCheck, AppCheckToken } from '../../lib/app-check/index';
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import chaiAsPromised from 'chai-as-promised';
 import fs = require('fs');
 import path = require('path');
 

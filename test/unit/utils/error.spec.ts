@@ -18,8 +18,9 @@
 'use strict';
 
 import * as chai from 'chai';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 
 import { FirebaseError } from '../../../src/utils/error';
 import { FirebaseAuthError } from '../../../src/auth/error';

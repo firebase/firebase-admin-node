@@ -15,7 +15,8 @@
  */
 
 import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import 'chai/register-should';
+import chaiAsPromised from 'chai-as-promised';
 import { Bucket, File } from '@google-cloud/storage';
 
 import { projectId } from './setup';

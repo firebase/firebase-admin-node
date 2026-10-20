@@ -18,10 +18,11 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import 'chai/register-should';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
 import { Agent } from 'http';
 
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
