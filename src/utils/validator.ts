@@ -309,5 +309,5 @@ export function isTenantId(tenantId: any): tenantId is string {
   // without introducing multi-quantifier regex backtracking.
   return isNonEmptyString(tenantId) &&
     !tenantId.endsWith('.') &&
-    /^[a-zA-Z0-9-_.~]+$/.test(tenantId);
+    /^[a-zA-Z0-9_.~-]+$/.test(tenantId);
 }

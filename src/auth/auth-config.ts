@@ -1183,7 +1183,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     // trailing-dot segments without introducing multi-quantifier regex backtracking.
     return validator.isNonEmptyString(providerId) &&
       !providerId.endsWith('.') &&
-      /^saml\.[a-zA-Z0-9-_.~]+$/.test(providerId);
+      /^saml\.[a-zA-Z0-9_.~-]+$/.test(providerId);
   }
 
   /**
@@ -1439,7 +1439,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     // trailing-dot segments without introducing multi-quantifier regex backtracking.
     return validator.isNonEmptyString(providerId) &&
       !providerId.endsWith('.') &&
-      /^oidc\.[a-zA-Z0-9-_.~]+$/.test(providerId);
+      /^oidc\.[a-zA-Z0-9_.~-]+$/.test(providerId);
   }
 
   /**
