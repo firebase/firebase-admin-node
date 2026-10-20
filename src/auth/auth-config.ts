@@ -1221,7 +1221,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     }
     // Required fields.
     if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        (!validator.isNonEmptyString(options.providerId) || !SAMLConfig.isProviderId(options.providerId))) {
+        !SAMLConfig.isProviderId(options.providerId)) {
       throw new FirebaseAuthError(
         !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
@@ -1472,7 +1472,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     }
     // Required fields.
     if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        (!validator.isNonEmptyString(options.providerId) || !OIDCConfig.isProviderId(options.providerId))) {
+        !OIDCConfig.isProviderId(options.providerId)) {
       throw new FirebaseAuthError(
         !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',

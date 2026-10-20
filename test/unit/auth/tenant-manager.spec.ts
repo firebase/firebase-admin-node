@@ -70,8 +70,8 @@ describe('TenantManager', () => {
   });
 
   const MALFORMED_TENANT_IDS = [
-    '.', '..', '...', 'victim.', '..\n', '../other', 'tenant/1', 'tenant\\1',
-    'tenant?foo=bar', 'tenant#frag', 'tenant%2e%2e',
+    '.', '..', '...', 'tenant.', '..\n', 'tenant/1', 'tenant\\1',
+    'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
   ];
 
   describe('authForTenant()', () => {

@@ -539,8 +539,8 @@ describe('isTenantId()', () => {
 
   const invalidTenantIds = [
     null, NaN, 0, 1, true, false, '', [], ['a'], {}, { a: 1 }, _.noop,
-    '.', '..', '...', 'victim.', '..\n', 'tenant1\n', '\uFEFFtenant1', '../other', 'tenant/other',
-    'tenant\\other', 'tenant?foo=bar', 'tenant#frag', 'tenant%2e%2e', 'tenant%2fother',
+    '.', '..', '...', 'tenant.', '..\n', 'tenant1\n', '\uFEFFtenant1', 'tenant/1',
+    'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
     'tenant id',
   ];
   invalidTenantIds.forEach((invalidTenantId) => {

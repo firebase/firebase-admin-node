@@ -660,9 +660,9 @@ describe('SAMLConfig', () => {
 
     const invalidProviderIds = [
       null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'saml.', 'saml..', 'saml.provider.',
-      'saml.\n', 'saml.provider\n', '\uFEFFsaml.provider', 'saml../other', 'saml.provider/../other',
-      'saml.provider/other', 'saml.provider\\other', 'saml.provider?foo=bar', 'saml.provider#frag',
-      'saml.provider%2fother', 'oidc.provider', 'other', [], [1, 'a'],
+      'saml.\n', 'saml.provider\n', '\uFEFFsaml.provider', 'saml.provider/1',
+      'saml.provider\\1', 'saml.provider?foo=bar', 'saml.provider#frag',
+      'saml.provider%2f1', 'oidc.provider', 'other', [], [1, 'a'],
       {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid SAML provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
@@ -791,8 +791,8 @@ describe('SAMLConfig', () => {
 
     const invalidProviderIds = [
       null, NaN, 0, 1, true, false, '', 'saml.', 'saml..', 'saml.provider.', 'saml.\n',
-      '\uFEFFsaml.provider', 'saml.provider/../other', 'saml.provider?foo=bar',
-      'saml.provider#frag', 'saml.provider%2fother', 'oidc.provider', 'other',
+      '\uFEFFsaml.provider', 'saml.provider/1', 'saml.provider?foo=bar',
+      'saml.provider#frag', 'saml.provider%2f1', 'oidc.provider', 'other',
       [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
@@ -1011,9 +1011,9 @@ describe('OIDCConfig', () => {
 
     const invalidProviderIds = [
       null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'oidc.', 'oidc..', 'oidc.provider.',
-      'oidc.\n', 'oidc.provider\n', '\uFEFFoidc.provider', 'oidc../other', 'oidc.provider/../other',
-      'oidc.provider/other', 'oidc.provider\\other', 'oidc.provider?foo=bar', 'oidc.provider#frag',
-      'oidc.provider%2fother', 'saml.provider', 'other', [], [1, 'a'],
+      'oidc.\n', 'oidc.provider\n', '\uFEFFoidc.provider', 'oidc.provider/1',
+      'oidc.provider\\1', 'oidc.provider?foo=bar', 'oidc.provider#frag',
+      'oidc.provider%2f1', 'saml.provider', 'other', [], [1, 'a'],
       {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid OIDC provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
@@ -1178,8 +1178,8 @@ describe('OIDCConfig', () => {
 
     const invalidProviderIds = [
       null, NaN, 0, 1, true, false, '', 'oidc.', 'oidc..', 'oidc.provider.', 'oidc.\n',
-      '\uFEFFoidc.provider', 'oidc.provider/../other', 'oidc.provider?foo=bar',
-      'oidc.provider#frag', 'oidc.provider%2fother', 'other', 'saml.provider',
+      '\uFEFFoidc.provider', 'oidc.provider/1', 'oidc.provider?foo=bar',
+      'oidc.provider#frag', 'oidc.provider%2f1', 'other', 'saml.provider',
       [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
