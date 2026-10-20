@@ -1220,15 +1220,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       }
     }
     // Required fields.
-    if (validator.isNonEmptyString(options.providerId)) {
-      if (!SAMLConfig.isProviderId(options.providerId)) {
-        throw new FirebaseAuthError(
-          authClientErrorCode.INVALID_PROVIDER_ID,
-          '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
-        );
-      }
-    } else if (!ignoreMissingFields) {
-      // providerId is required and not provided correctly.
+    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
+        (!validator.isNonEmptyString(options.providerId) || !SAMLConfig.isProviderId(options.providerId))) {
       throw new FirebaseAuthError(
         !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
@@ -1478,14 +1471,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       }
     }
     // Required fields.
-    if (validator.isNonEmptyString(options.providerId)) {
-      if (!OIDCConfig.isProviderId(options.providerId)) {
-        throw new FirebaseAuthError(
-          !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
-          '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
-        );
-      }
-    } else if (!ignoreMissingFields) {
+    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
+        (!validator.isNonEmptyString(options.providerId) || !OIDCConfig.isProviderId(options.providerId))) {
       throw new FirebaseAuthError(
         !options.providerId ? authClientErrorCode.MISSING_PROVIDER_ID : authClientErrorCode.INVALID_PROVIDER_ID,
         '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',

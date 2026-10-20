@@ -200,6 +200,9 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: App, protected version: string, protected tenantId: string, emHost?: string) {
     super(app, version, emHost);
+    if (!validator.isTenantId(tenantId)) {
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
+    }
     if (emHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
         host: emHost
@@ -2334,10 +2337,10 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * @constructor
    */
   constructor(app: App, private readonly tenantId: string, emHost?: string | null) {
+    super(app, emHost);
     if (!validator.isTenantId(tenantId)) {
       throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
     }
-    super(app, emHost);
   }
 
   /**

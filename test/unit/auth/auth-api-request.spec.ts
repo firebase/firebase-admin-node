@@ -1573,6 +1573,36 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
       }
 
+      if (handler.supportsTenantManagement) {
+        it('should fail client-side validation when user records have malformed tenant IDs', () => {
+          const invalidTenantIds = [
+            '', '.', '..', '...', 'victim.', '..\n', '../other', 'tenant/1',
+            'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2e%2e',
+          ];
+          const testUsers: UserImportRecord[] = invalidTenantIds.map((invalidTenantId, i) => ({
+            uid: `user${i}`,
+            tenantId: invalidTenantId,
+          }));
+          const expectedResult = {
+            successCount: 0,
+            failureCount: invalidTenantIds.length,
+            errors: invalidTenantIds.map((_, index) => ({
+              index,
+              error: new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID),
+            })),
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send');
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp);
+          return requestHandler.uploadAccount(testUsers)
+            .then((result) => {
+              expectUserImportResult(result, expectedResult);
+              expect(stub).to.have.not.been.called;
+            });
+        });
+      }
+
       it('should resolve successfully when 1000 UserImportRecords are provided', () => {
         const expectedResult = utils.responseFrom({});
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
@@ -1762,6 +1792,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               ],
             },
           },
+          {
+            uid: 'user23',
+            tenantId: '',
+          },
         ] as any;
         const validOptions = {
           hash: {
@@ -1856,6 +1890,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 `Unsupported second factor "${JSON.stringify(testUsers[22].multiFactor.enrolledFactors[0])}" provided.`,
               ),
             },
+            { index: 23, error: new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID) },
           ],
         };
         const stub = sinon.stub(HttpClient.prototype, 'send');
