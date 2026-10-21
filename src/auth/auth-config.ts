@@ -1178,12 +1178,9 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @returns Whether the provider ID corresponds to a SAML provider.
    */
   public static isProviderId(providerId: any): providerId is string {
-    // Single dots are permitted within the provider ID suffix (e.g., "saml.my.provider"),
-    // so we check !providerId.endsWith('.') separately to reject "saml.", "saml..", and
-    // trailing-dot segments without introducing multi-quantifier regex backtracking.
     return validator.isNonEmptyString(providerId) &&
-      !providerId.endsWith('.') &&
-      /^saml\.[a-zA-Z0-9_.~-]+$/.test(providerId);
+      providerId.startsWith('saml.') &&
+      validator.isSafeUrlSegment(providerId);
   }
 
   /**
@@ -1427,12 +1424,9 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @returns Whether the provider ID corresponds to an OIDC provider.
    */
   public static isProviderId(providerId: any): providerId is string {
-    // Single dots are permitted within the provider ID suffix (e.g., "oidc.my.provider"),
-    // so we check !providerId.endsWith('.') separately to reject "oidc.", "oidc..", and
-    // trailing-dot segments without introducing multi-quantifier regex backtracking.
     return validator.isNonEmptyString(providerId) &&
-      !providerId.endsWith('.') &&
-      /^oidc\.[a-zA-Z0-9_.~-]+$/.test(providerId);
+      providerId.startsWith('oidc.') &&
+      validator.isSafeUrlSegment(providerId);
   }
 
   /**

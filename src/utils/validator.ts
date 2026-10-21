@@ -299,15 +299,26 @@ export function isTaskId(taskId: any): boolean {
 }
 
 /**
+ * Validates that a string is a safe single URL path segment containing only
+ * unreserved URI characters (RFC 3986) and not ending with a dot.
+ *
+ * @param segment - The string to validate.
+ * @returns Whether the string is a safe URL path segment.
+ */
+export function isSafeUrlSegment(segment: any): segment is string {
+  // Reject trailing dots separately to forbid ".", "..", and trailing-dot segments
+  // without introducing multi-quantifier regex backtracking.
+  return isNonEmptyString(segment) &&
+    !segment.endsWith('.') &&
+    /^[a-zA-Z0-9_.~-]+$/.test(segment);
+}
+
+/**
  * Validates that a string is a valid tenant ID.
  *
  * @param tenantId - The string to validate.
  * @returns Whether the string is a valid tenant ID.
  */
 export function isTenantId(tenantId: any): tenantId is string {
-  // Reject trailing dots separately to forbid ".", "..", and trailing-dot segments
-  // without introducing multi-quantifier regex backtracking.
-  return isNonEmptyString(tenantId) &&
-    !tenantId.endsWith('.') &&
-    /^[a-zA-Z0-9_.~-]+$/.test(tenantId);
+  return isSafeUrlSegment(tenantId);
 }

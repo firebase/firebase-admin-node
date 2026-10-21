@@ -24,7 +24,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
   isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
-  isUTCDateString, isISODateString, isTenantId,
+  isUTCDateString, isISODateString, isSafeUrlSegment, isTenantId,
 } from '../../../src/utils/validator';
 
 
@@ -529,6 +529,31 @@ describe('isISODateString()', () => {
 
   it('should return true given a valid ISO date string', () => {
     expect(isISODateString(validISODateString)).to.be.true;
+  });
+});
+
+describe('isSafeUrlSegment()', () => {
+  it('should return false given no argument', () => {
+    expect(isSafeUrlSegment(undefined as any)).to.be.false;
+  });
+
+  const invalidSegments = [
+    null, NaN, 0, 1, true, false, '', [], ['a'], {}, { a: 1 }, _.noop,
+    '.', '..', '...', 'segment.', '..\n', 'segment1\n', '\uFEFFsegment1', 'segment/1',
+    'segment\\1', 'segment?foo=bar', 'segment#frag', 'segment%2f1',
+    'segment id',
+  ];
+  invalidSegments.forEach((invalidSegment) => {
+    it('should return false given an invalid URL segment: ' + JSON.stringify(invalidSegment), () => {
+      expect(isSafeUrlSegment(invalidSegment)).to.be.false;
+    });
+  });
+
+  const validSegments = ['segment1', 'segment-1', 'SEGMENT_1', 'segment.1~foo'];
+  validSegments.forEach((validSegment) => {
+    it('should return true given a valid URL segment: ' + JSON.stringify(validSegment), () => {
+      expect(isSafeUrlSegment(validSegment)).to.be.true;
+    });
   });
 });
 
