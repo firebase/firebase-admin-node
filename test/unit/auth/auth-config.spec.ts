@@ -651,12 +651,18 @@ describe('SAMLConfig', () => {
   });
 
   describe('isProviderId()', () => {
-    it('should return true on valid SAML provider ID', () => {
-      expect(SAMLConfig.isProviderId('saml.provider')).to.be.true;
+    const validProviderIds = ['saml.provider', 'saml.my-provider_1.v2~test'];
+    validProviderIds.forEach((validProviderId) => {
+      it(`should return true on valid SAML provider ID "${validProviderId}"`, () => {
+        expect(SAMLConfig.isProviderId(validProviderId)).to.be.true;
+      });
     });
 
     const invalidProviderIds = [
-      null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'oidc.provider', 'other', [], [1, 'a'],
+      null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'saml.', 'saml..', 'saml.provider.',
+      'saml.\n', 'saml.provider\n', '\uFEFFsaml.provider', 'saml.provider/1',
+      'saml.provider\\1', 'saml.provider?foo=bar', 'saml.provider#frag',
+      'saml.provider%2f1', 'oidc.provider', 'other', [], [1, 'a'],
       {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid SAML provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
@@ -784,7 +790,10 @@ describe('SAMLConfig', () => {
     });
 
     const invalidProviderIds = [
-      null, NaN, 0, 1, true, false, '', 'oidc.provider', 'other', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'saml.', 'saml..', 'saml.provider.', 'saml.\n',
+      '\uFEFFsaml.provider', 'saml.provider/1', 'saml.provider?foo=bar',
+      'saml.provider#frag', 'saml.provider%2f1', 'oidc.provider', 'other',
+      [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;
@@ -993,12 +1002,18 @@ describe('OIDCConfig', () => {
   });
 
   describe('isProviderId()', () => {
-    it('should return true on valid OIDC provider ID', () => {
-      expect(OIDCConfig.isProviderId('oidc.provider')).to.be.true;
+    const validProviderIds = ['oidc.provider', 'oidc.my-provider_1.v2~test'];
+    validProviderIds.forEach((validProviderId) => {
+      it(`should return true on valid OIDC provider ID "${validProviderId}"`, () => {
+        expect(OIDCConfig.isProviderId(validProviderId)).to.be.true;
+      });
     });
 
     const invalidProviderIds = [
-      null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'saml.provider', 'other', [], [1, 'a'],
+      null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'oidc.', 'oidc..', 'oidc.provider.',
+      'oidc.\n', 'oidc.provider\n', '\uFEFFoidc.provider', 'oidc.provider/1',
+      'oidc.provider\\1', 'oidc.provider?foo=bar', 'oidc.provider#frag',
+      'oidc.provider%2f1', 'saml.provider', 'other', [], [1, 'a'],
       {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid OIDC provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
@@ -1162,7 +1177,10 @@ describe('OIDCConfig', () => {
     });
 
     const invalidProviderIds = [
-      null, NaN, 0, 1, true, false, '', 'other', 'saml.provider', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'oidc.', 'oidc..', 'oidc.provider.', 'oidc.\n',
+      '\uFEFFoidc.provider', 'oidc.provider/1', 'oidc.provider?foo=bar',
+      'oidc.provider#frag', 'oidc.provider%2f1', 'other', 'saml.provider',
+      [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;

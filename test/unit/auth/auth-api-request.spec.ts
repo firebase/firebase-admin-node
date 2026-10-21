@@ -907,6 +907,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return handler.init(mockApp);
         }).not.to.throw(Error);
       });
+
+      if (!handler.supportsTenantManagement) {
+        const invalidTenantIds = [
+          null, NaN, 0, 1, true, false, '', '.', '..', '...', 'tenant.', '..\n',
+          'tenant/1', 'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
+        ];
+        invalidTenantIds.forEach((invalidTenantId) => {
+          it('should throw given invalid tenantId: ' + JSON.stringify(invalidTenantId), () => {
+            expect(() => {
+              return new TenantAwareAuthRequestHandler(mockApp, invalidTenantId as any);
+            }).to.throw('The tenant ID must be a valid non-empty string.');
+          });
+        });
+      }
     });
 
     describe('Emulator Support', () => {
@@ -1559,6 +1573,36 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
       }
 
+      if (handler.supportsTenantManagement) {
+        it('should fail client-side validation when user records have malformed tenant IDs', () => {
+          const invalidTenantIds = [
+            '', '.', '..', '...', 'tenant.', '..\n', 'tenant/1',
+            'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
+          ];
+          const testUsers: UserImportRecord[] = invalidTenantIds.map((invalidTenantId, i) => ({
+            uid: `user${i}`,
+            tenantId: invalidTenantId,
+          }));
+          const expectedResult = {
+            successCount: 0,
+            failureCount: invalidTenantIds.length,
+            errors: invalidTenantIds.map((_, index) => ({
+              index,
+              error: new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID),
+            })),
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send');
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp);
+          return requestHandler.uploadAccount(testUsers)
+            .then((result) => {
+              expectUserImportResult(result, expectedResult);
+              expect(stub).to.have.not.been.called;
+            });
+        });
+      }
+
       it('should resolve successfully when 1000 UserImportRecords are provided', () => {
         const expectedResult = utils.responseFrom({});
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
@@ -1748,6 +1792,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               ],
             },
           },
+          {
+            uid: 'user23',
+            tenantId: '',
+          },
         ] as any;
         const validOptions = {
           hash: {
@@ -1842,6 +1890,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 `Unsupported second factor "${JSON.stringify(testUsers[22].multiFactor.enrolledFactors[0])}" provided.`,
               ),
             },
+            { index: 23, error: new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID) },
           ],
         };
         const stub = sinon.stub(HttpClient.prototype, 'send');
@@ -3375,7 +3424,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.', 'oidc..', 'oidc.provider.', 'oidc.\n',
+        '\uFEFFoidc.provider', 'oidc.provider/1', 'oidc.provider?foo=bar',
+        'oidc.provider#frag', 'oidc.provider%2f1', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -3552,7 +3603,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.', 'oidc..', 'oidc.provider.', 'oidc.\n',
+        '\uFEFFoidc.provider', 'oidc.provider/1', 'oidc.provider?foo=bar',
+        'oidc.provider#frag', 'oidc.provider%2f1', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -3842,7 +3895,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.', 'oidc..', 'oidc.provider.', 'oidc.\n',
+        '\uFEFFoidc.provider', 'oidc.provider/1', 'oidc.provider?foo=bar',
+        'oidc.provider#frag', 'oidc.provider%2f1', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -3939,7 +3994,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.', 'saml..', 'saml.provider.', 'saml.\n',
+        '\uFEFFsaml.provider', 'saml.provider/1', 'saml.provider?foo=bar',
+        'saml.provider#frag', 'saml.provider%2f1', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -4110,7 +4167,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.', 'saml..', 'saml.provider.', 'saml.\n',
+        '\uFEFFsaml.provider', 'saml.provider/1', 'saml.provider?foo=bar',
+        'saml.provider#frag', 'saml.provider%2f1', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -4386,7 +4445,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.', 'saml..', 'saml.provider.', 'saml.\n',
+        '\uFEFFsaml.provider', 'saml.provider/1', 'saml.provider?foo=bar',
+        'saml.provider#frag', 'saml.provider%2f1', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_PROVIDER_ID);
@@ -4607,7 +4668,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [
+          null, NaN, 0, 1, true, false, '', '.', '..', '...', 'tenant.', '..\n',
+          'tenant/1', 'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
+          ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
@@ -4777,7 +4841,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [
+          null, NaN, 0, 1, true, false, '', '.', '..', '...', 'tenant.', '..\n',
+          'tenant/1', 'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
+          ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
@@ -5031,7 +5098,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [
+          null, NaN, 0, 1, true, false, '', '.', '..', '...', 'tenant.', '..\n',
+          'tenant/1', 'tenant\\1', 'tenant?foo=bar', 'tenant#frag', 'tenant%2f1',
+          ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
