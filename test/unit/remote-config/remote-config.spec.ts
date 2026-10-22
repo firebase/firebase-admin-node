@@ -544,6 +544,109 @@ describe('RemoteConfig', () => {
     });
   });
 
+  describe('getServerConfigTemplate', () => {
+    runInvalidResponseTests(() => remoteConfig.getServerConfigTemplate(),
+      'getServerConfigTemplate');
+    runValidResponseTests(() => remoteConfig.getServerConfigTemplate(),
+      'getServerConfigTemplate');
+  });
+
+  describe('getServerConfigTemplateAtVersion', () => {
+    runInvalidResponseTests(() => remoteConfig.getServerConfigTemplateAtVersion(65),
+      'getServerConfigTemplateAtVersion');
+    runValidResponseTests(() => remoteConfig.getServerConfigTemplateAtVersion(65),
+      'getServerConfigTemplateAtVersion');
+  });
+
+  describe('validateServerConfigTemplate', () => {
+    runInvalidResponseTests(() => remoteConfig.validateServerConfigTemplate(REMOTE_CONFIG_TEMPLATE),
+      'validateServerConfigTemplate');
+    runValidResponseTests(() => remoteConfig.validateServerConfigTemplate(REMOTE_CONFIG_TEMPLATE),
+      'validateServerConfigTemplate');
+  });
+
+  describe('publishServerConfigTemplate', () => {
+    runInvalidResponseTests(() => remoteConfig.publishServerConfigTemplate(REMOTE_CONFIG_TEMPLATE),
+      'publishServerConfigTemplate');
+    runValidResponseTests(() => remoteConfig.publishServerConfigTemplate(REMOTE_CONFIG_TEMPLATE),
+      'publishServerConfigTemplate');
+  });
+
+  describe('rollbackServerConfigTemplate', () => {
+    runInvalidResponseTests(() => remoteConfig.rollbackServerConfigTemplate('5'), 'rollbackServerConfigTemplate');
+    runValidResponseTests(() => remoteConfig.rollbackServerConfigTemplate('5'), 'rollbackServerConfigTemplate');
+  });
+
+  describe('listServerConfigVersions', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listServerConfigVersions')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return remoteConfig.listServerConfigVersions()
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].versionNumber = invalidVersion as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listServerConfigVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listServerConfigVersions()
+          .should.eventually.be.rejected
+          .and.to.match(/^Error: Version number must be a non-empty string in int64 format or a number$/);
+      });
+    });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].versionNumber = invalidVersion as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listServerConfigVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listServerConfigVersions()
+          .should.eventually.be.rejected
+          .and.to.match(/^Error: Version number must be an integer or a string in int64 format$/);
+      });
+    });
+
+    it('should resolve with an empty versions list if no results are available for requested list options', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listServerConfigVersions')
+        .resolves({} as any);
+      stubs.push(stub);
+      return remoteConfig.listServerConfigVersions({
+        pageSize: 2,
+        endVersionNumber: 10,
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(0);
+          expect(response.nextPageToken).to.be.undefined;
+        });
+    });
+
+    it('should resolve with template versions list on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listServerConfigVersions')
+        .resolves(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+      stubs.push(stub);
+      return remoteConfig.listServerConfigVersions({
+        pageSize: 2
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(2);
+          expect(response.versions[0].updateTime).equals('Thu, 07 May 2020 18:46:09 GMT');
+          expect(response.versions[1].updateTime).equals('Thu, 07 May 2020 18:44:41 GMT');
+          expect(response.nextPageToken).to.equal('76');
+        });
+    });
+  });
+
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_PARAMETER_GROUPS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
