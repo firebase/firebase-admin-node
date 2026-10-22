@@ -224,3 +224,173 @@ describe('DataConnect', () => {
     });
   });
 });
+
+describe('getDataConnect()', () => {
+  const mockOptions = {
+    credential: new mocks.MockCredential(),
+    projectId: 'test-project',
+  };
+  let mockApp: FirebaseApp;
+  let getAppStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    mockApp = mocks.appWithOptions(mockOptions);
+    getAppStub = sinon.stub(appIndex, 'getApp').returns(mockApp);
+  });
+
+  afterEach(() => {
+    getAppStub.restore();
+    return mockApp.delete();
+  });
+
+  describe('should cache DataConnect instances correctly', () => {
+    it('should return the same instance for identical connector configs', () => {
+      const config: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'my-connector',
+      };
+
+      const dc1 = getDataConnect(config);
+      const dc2 = getDataConnect(config);
+
+      expect(dc1).to.deep.equal(dc2);
+    });
+
+    it('should return different instances for different connectors with same location and serviceId', () => {
+      const config1: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'connector-a',
+      };
+      const config2: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'connector-b',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+
+      expect(dc1).to.not.deep.equal(dc2);
+      expect(dc1.connectorConfig.connector).to.equal('connector-a');
+      expect(dc2.connectorConfig.connector).to.equal('connector-b');
+    });
+
+    it('should return different instances for different locations', () => {
+      const config1: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'my-connector',
+      };
+      const config2: ConnectorConfig = {
+        location: 'us-east1',
+        serviceId: 'my-service',
+        connector: 'my-connector',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+
+      expect(dc1).to.not.deep.equal(dc2);
+    });
+
+    it('should return different instances for different serviceIds', () => {
+      const config1: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'service-a',
+        connector: 'my-connector',
+      };
+      const config2: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'service-b',
+        connector: 'my-connector',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+
+      expect(dc1).to.not.deep.equal(dc2);
+    });
+
+    it('should consider configs with connector undefined and defined as different', () => {
+      const configWithConnector: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'my-connector',
+      };
+      const configWithoutConnector: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+      };
+
+      const dc1 = getDataConnect(configWithConnector);
+      const dc2 = getDataConnect(configWithoutConnector);
+
+      expect(dc1).to.not.deep.equal(dc2);
+      expect(dc1.connectorConfig.connector).to.equal('my-connector');
+      expect(dc2.connectorConfig.connector).to.be.undefined;
+    });
+
+    it('should consider configs with connector empty string and undefined as different', () => {
+      const configWithEmptyConnector: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: '',
+      };
+      const configWithoutConnector: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+      };
+
+      const dc1 = getDataConnect(configWithEmptyConnector);
+      const dc2 = getDataConnect(configWithoutConnector);
+
+      expect(dc1).to.not.deep.equal(dc2);
+      expect(dc1.connectorConfig.connector).to.equal('');
+      expect(dc2.connectorConfig.connector).to.be.undefined;
+    });
+
+    it('should not have cache collisions with ambiguous keys', () => {
+      const config1: ConnectorConfig = {
+        location: 'us-west2-a',
+        serviceId: 'b',
+      };
+      const config2: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'a-b',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+
+      expect(dc1).to.not.deep.equal(dc2);
+    });
+
+    it('should return the same instance regardless of ConnectorConfig key ordering', () => {
+      // Define configs with different key orderings
+      const config1: ConnectorConfig = {
+        location: 'us-west2',
+        serviceId: 'my-service',
+        connector: 'my-connector',
+      };
+      const config2: ConnectorConfig = {
+        serviceId: 'my-service',
+        connector: 'my-connector',
+        location: 'us-west2',
+      };
+      const config3: ConnectorConfig = {
+        connector: 'my-connector',
+        location: 'us-west2',
+        serviceId: 'my-service',
+      };
+
+      const dc1 = getDataConnect(config1);
+      const dc2 = getDataConnect(config2);
+      const dc3 = getDataConnect(config3);
+
+      expect(dc1).to.deep.equal(dc2);
+      expect(dc2).to.deep.equal(dc3);
+    });
+  });
+});
