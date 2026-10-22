@@ -16,8 +16,16 @@
  */
 
 import * as _ from 'lodash';
-import { expect } from 'chai';
+import * as chai from 'chai';
 import * as sinon from 'sinon';
+import * as sinonChai from 'sinon-chai';
+import * as chaiAsPromised from 'chai-as-promised';
+
+chai.should();
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 import {
   AuthorizedHttpClient,
   HttpClient,
@@ -251,6 +259,91 @@ describe('DataConnectApiClient', () => {
           .rejects(expected);
         return apiClient.executeGraphql('query', {})
           .should.eventually.be.rejected.and.deep.include(expected);
+      });
+
+      it('should reject when GraphQL errors with debugDetails are returned', async () => {
+        const gqlErrorResponse = {
+          errors: [
+            {
+              message: 'SQL execution failed',
+              path: ['content_update'],
+              extensions: {
+                code: 'INTERNAL',
+                debugDetails: 'Quota exceeded for quota metric Connect Queries'
+              }
+            }
+          ]
+        };
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(gqlErrorResponse, 200));
+
+        await expect(apiClient.executeGraphql('query', {}))
+          .to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'SQL execution failed: Quota exceeded for quota metric Connect Queries'
+          );
+      });
+
+      it('should reject and format multiple GraphQL errors', async () => {
+        const gqlErrorResponse = {
+          errors: [
+            { message: 'First error' },
+            {
+              message: 'Second error',
+              extensions: { debugDetails: 'detailed failure' }
+            }
+          ]
+        };
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(gqlErrorResponse, 200));
+
+        await expect(apiClient.executeGraphql('query', {}))
+          .to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'First error; Second error: detailed failure'
+          );
+      });
+
+      it('should reject with formatted GraphQL errors on non-200 HTTP response', async () => {
+        const gqlErrorResponse = {
+          errors: [
+            {
+              message: 'Bad request',
+              extensions: { debugDetails: 'Field not found' }
+            }
+          ]
+        };
+        const mockErr = utils.errorFrom(gqlErrorResponse, 400);
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .rejects(mockErr);
+
+        await expect(apiClient.executeGraphql('query', {}))
+          .to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'Bad request: Field not found'
+          );
+      });
+
+      it('should handle malformed error arrays containing null or primitive elements', async () => {
+        const gqlErrorResponse = {
+          errors: [
+            null,
+            'string error',
+            { message: 'valid error', extensions: { debugDetails: 'extra' } }
+          ]
+        };
+        sandbox
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(gqlErrorResponse, 200));
+
+        await expect(apiClient.executeGraphql('query', {}))
+          .to.be.rejectedWith(
+            FirebaseDataConnectError,
+            'null; string error; valid error: extra'
+          );
       });
     });
 
