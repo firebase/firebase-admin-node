@@ -35,8 +35,10 @@ async function generateEsmWrapper(entryPoint, source) {
   const target = getTarget(entryPoint);
   const output = getEsmOutput(source, target);
   await fs.mkdir(path.dirname(target), { recursive: true });
-  await fs.writeFile(target, output);
-  await fs.writeFile('./lib/esm/package.json', JSON.stringify({type: 'module'}));
+  await Promise.all([
+    fs.writeFile(target, output),
+    fs.writeFile('./lib/esm/package.json', JSON.stringify({type: 'module'}))
+  ]);
 }
 
 function getTarget(entryPoint) {
