@@ -84,6 +84,7 @@ export interface GetAccountInfoUserResponse {
   createdAt?: string;
   lastLoginAt?: string;
   lastRefreshAt?: string;
+  passwordUpdatedAt?: number | string;
   [key: string]: any;
 }
 
@@ -380,6 +381,12 @@ export class UserMetadata {
   public readonly lastRefreshTime?: string | null;
 
   /**
+   * The date the user's password was last updated, formatted as a UTC string.
+   * Returns null if the user has never updated their password.
+   */
+  public readonly passwordUpdatedAt?: string | null;
+
+  /**
    * @param response - The server side response returned from the `getAccountInfo`
    *     endpoint.
    * @constructor
@@ -394,6 +401,7 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
     const lastRefreshAt = response.lastRefreshAt ? new Date(response.lastRefreshAt).toUTCString() : null;
     utils.addReadonlyGetter(this, 'lastRefreshTime', lastRefreshAt);
+    utils.addReadonlyGetter(this, 'passwordUpdatedAt', parseDate(response.passwordUpdatedAt));
   }
 
   /**
@@ -406,6 +414,7 @@ export class UserMetadata {
       lastSignInTime: this.lastSignInTime,
       creationTime: this.creationTime,
       lastRefreshTime: this.lastRefreshTime,
+      passwordUpdatedAt: this.passwordUpdatedAt,
     };
   }
 }
