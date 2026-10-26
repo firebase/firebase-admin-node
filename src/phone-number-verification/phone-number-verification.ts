@@ -86,6 +86,12 @@ export class PhoneNumberVerification {
         message: 'VerifyPhoneNumberTokenOptions must be a non-null object.',
       });
     }
+    if (typeof options.acceptTestTokens !== 'undefined' && !validator.isBoolean(options.acceptTestTokens)) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'VerifyPhoneNumberTokenOptions.acceptTestTokens must be a boolean.',
+      });
+    }
   }
 }
 

@@ -99,7 +99,7 @@ export class PhoneNumberTokenVerifier {
     const projectId = await this.ensureProjectId();
     const decoded = await this.decodeAndVerify(jwtToken, projectId);
     const decodedIdToken = decoded.payload as PhoneNumberVerificationToken;
-    if (decodedIdToken.test_number === true && !options?.acceptTestTokens) {
+    if (decodedIdToken.test_number === true && options?.acceptTestTokens !== true) {
       throw new FirebasePhoneNumberVerificationError({
         code: FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN,
         message: `${this.tokenInfo.jwtName} is a test token. To accept test tokens during ` +

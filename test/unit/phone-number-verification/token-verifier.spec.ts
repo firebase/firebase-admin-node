@@ -340,6 +340,10 @@ describe('PhoneNumberTokenVerifier', () => {
         await expect(verifier.verifyJWT('test-token', { acceptTestTokens: false }))
           .to.be.rejectedWith(/is a test token/)
           .and.eventually.have.property('code', `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`);
+
+        await expect(verifier.verifyJWT('test-token', { acceptTestTokens: 'false' as any }))
+          .to.be.rejectedWith(/is a test token/)
+          .and.eventually.have.property('code', `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`);
       });
 
       it('should accept a test token when acceptTestTokens is true and populate testNumber', async () => {

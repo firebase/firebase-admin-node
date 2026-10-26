@@ -94,6 +94,17 @@ describe('PhoneNumberVerification Service', () => {
       });
     });
 
+    it('should throw given non-boolean acceptTestTokens option', () => {
+      ['false', 'true', 0, 1, null, {}, []].forEach((invalidAcceptTestTokens) => {
+        expect(() => {
+          return phoneNumberVerificationService.verifyToken(
+            mockTokenString,
+            { acceptTestTokens: invalidAcceptTestTokens as any }
+          );
+        }).to.throw('VerifyPhoneNumberTokenOptions.acceptTestTokens must be a boolean.');
+      });
+    });
+
     it('should return the decoded token object on success', async () => {
       verifyJwtStub.resolves(mockDecodedToken);
 
