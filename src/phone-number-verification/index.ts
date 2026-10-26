@@ -31,6 +31,7 @@ export {
 
 export {
   PhoneNumberVerificationToken,
+  VerifyPhoneNumberTokenOptions,
 } from './phone-number-verification-api'
 
 /**

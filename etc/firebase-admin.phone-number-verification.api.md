@@ -22,7 +22,7 @@ export function getPhoneNumberVerification(app?: App): PhoneNumberVerification;
 // @public
 export class PhoneNumberVerification {
     get app(): App;
-    verifyToken(jwt: string): Promise<PhoneNumberVerificationToken>;
+    verifyToken(jwt: string, options?: VerifyPhoneNumberTokenOptions): Promise<PhoneNumberVerificationToken>;
 }
 
 // @public
@@ -46,6 +46,13 @@ export interface PhoneNumberVerificationToken {
     nonce: string;
     phoneNumber: string;
     sub: string;
+    test_number?: boolean;
+    testNumber?: boolean;
+}
+
+// @public
+export interface VerifyPhoneNumberTokenOptions {
+    acceptTestTokens?: boolean;
 }
 
 ```

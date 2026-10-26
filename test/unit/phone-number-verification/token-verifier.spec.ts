@@ -306,7 +306,7 @@ describe('PhoneNumberTokenVerifier', () => {
     });
 
     describe('Success', () => {
-      it('should return the token with phoneNumber property appended', async () => {
+      it('should return the token with phoneNumber and testNumber properties appended', async () => {
         decodeJwtStub.resolves({ header: VALID_HEADER, payload: VALID_PAYLOAD });
         signatureVerifierStub.verify.resolves();
 
@@ -316,8 +316,41 @@ describe('PhoneNumberTokenVerifier', () => {
         expect(result.sub).to.equal(VALID_PAYLOAD.sub);
         expect(result.aud).to.deep.equal(VALID_PAYLOAD.aud);
 
-        // Check the property
+        // Check the properties
         expect(result).to.have.property('phoneNumber');
+        expect(result.phoneNumber).to.equal(VALID_PAYLOAD.sub);
+        expect(result.testNumber).to.be.false;
+      });
+    });
+
+    describe('Test Token Handling', () => {
+      beforeEach(() => {
+        decodeJwtStub.resolves({
+          header: VALID_HEADER,
+          payload: { ...VALID_PAYLOAD, test_number: true },
+        });
+        signatureVerifierStub.verify.resolves();
+      });
+
+      it('should reject a test token by default with INVALID_TOKEN', async () => {
+        await expect(verifier.verifyJWT('test-token'))
+          .to.be.rejectedWith(/is a test token/)
+          .and.eventually.have.property('code', `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`);
+
+        await expect(verifier.verifyJWT('test-token', { acceptTestTokens: false }))
+          .to.be.rejectedWith(/is a test token/)
+          .and.eventually.have.property('code', `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`);
+
+        await expect(verifier.verifyJWT('test-token', { acceptTestTokens: 'false' as any }))
+          .to.be.rejectedWith(/is a test token/)
+          .and.eventually.have.property('code', `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`);
+      });
+
+      it('should accept a test token when acceptTestTokens is true and populate testNumber', async () => {
+        const result = await verifier.verifyJWT('test-token', { acceptTestTokens: true });
+
+        expect(result.test_number).to.be.true;
+        expect(result.testNumber).to.be.true;
         expect(result.phoneNumber).to.equal(VALID_PAYLOAD.sub);
       });
     });
