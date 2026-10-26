@@ -74,7 +74,24 @@ describe('PhoneNumberVerification Service', () => {
       await phoneNumberVerificationService.verifyToken(mockTokenString);
 
       expect(verifyJwtStub.calledOnce).to.be.true;
-      expect(verifyJwtStub.calledWith(mockTokenString)).to.be.true;
+      expect(verifyJwtStub.calledWith(mockTokenString, undefined)).to.be.true;
+    });
+
+    it('should pass VerifyPhoneNumberTokenOptions to the internal verifier', async () => {
+      verifyJwtStub.resolves(mockDecodedToken);
+
+      await phoneNumberVerificationService.verifyToken(mockTokenString, { acceptTestTokens: true });
+
+      expect(verifyJwtStub.calledOnce).to.be.true;
+      expect(verifyJwtStub.calledWith(mockTokenString, { acceptTestTokens: true })).to.be.true;
+    });
+
+    it('should throw given invalid VerifyPhoneNumberTokenOptions', () => {
+      [null, 100, -100, 'abc', [], true].forEach((invalidOptions) => {
+        expect(() => {
+          return phoneNumberVerificationService.verifyToken(mockTokenString, invalidOptions as any);
+        }).to.throw('VerifyPhoneNumberTokenOptions must be a non-null object.');
+      });
     });
 
     it('should return the decoded token object on success', async () => {

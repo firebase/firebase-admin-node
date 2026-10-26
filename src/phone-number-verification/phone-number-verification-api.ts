@@ -74,9 +74,39 @@ export interface PhoneNumberVerificationToken {
     phoneNumber: string;
 
     /**
+     * Indicates whether the token was issued while the app was in test mode.
+     * Present and set to `true` for test-mode tokens.
+     * As a convenience, a boolean value is also copied over to the
+     * {@link PhoneNumberVerificationToken.testNumber | testNumber} property.
+     */
+    test_number?: boolean;
+
+    /**
+     * Indicates whether the token was issued while the app was in test mode.
+     * This value is not actually one of the JWT token claims. It is added as a
+     * convenience, and is set to `true` when the {@link PhoneNumberVerificationToken.test_number}
+     * claim is `true`, or `false` otherwise.
+     */
+    testNumber?: boolean;
+
+    /**
      * Other arbitrary claims included in the token.
      */
     [key: string]: any;
+}
+
+/**
+ * Interface representing options for the {@link PhoneNumberVerification.verifyToken} method.
+ */
+export interface VerifyPhoneNumberTokenOptions {
+    /**
+     * To accept test-mode tokens (tokens containing the claim `"test_number": true`),
+     * set this option to `true`. By default, {@link PhoneNumberVerification.verifyToken}
+     * rejects test-mode tokens.
+     *
+     * Enable this option only during development and testing.
+     */
+    acceptTestTokens?: boolean;
 }
 
 export {
