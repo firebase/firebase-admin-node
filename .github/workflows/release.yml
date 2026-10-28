@@ -111,6 +111,7 @@ jobs:
     environment: Release
     permissions:
       contents: write
+      id-token: write
 
     steps:
     - name: Checkout source for publish
@@ -147,8 +148,15 @@ jobs:
           --title "Firebase Admin Node.js SDK $RELEASE_VER" \
           --notes "$RELEASE_BODY"
 
-    - name: Publish to NPM
+    - name: Authenticate to Google Cloud (OSS Exit Gate)
+      uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed
+      with:
+        workload_identity_provider: 'projects/305452601764/locations/global/workloadIdentityPools/builders/providers/github'
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f
+
+    - name: Publish to NPM via OSS Exit Gate
       run: ./.github/scripts/publish_package.sh
       env:
-        NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         VERSION: ${{ steps.preflight.outputs.version }}

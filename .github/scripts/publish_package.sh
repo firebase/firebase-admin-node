@@ -17,7 +17,37 @@
 set -e
 set -u
 
-echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_AUTH_TOKEN}" >> .npmrc
+touch "$HOME/.npmrc"
+cat << 'NPMRC_EOF' > .npmrc
+registry=https://us-npm.pkg.dev/oss-exit-gate-prod/firebase-admin-node--npm/
+//us-npm.pkg.dev/oss-exit-gate-prod/firebase-admin-node--npm/:always-auth=true
+NPMRC_EOF
+npx --yes --registry=https://registry.npmjs.org/ google-artifactregistry-auth --repo-config=.npmrc --credential-config="$HOME/.npmrc"
 
-readonly UNPREFIXED_VERSION=`echo ${VERSION} | cut -c 2-`
-npm publish ./dist/firebase-admin-${UNPREFIXED_VERSION}.tgz --registry https://wombat-dressing-room.appspot.com
+if [ -z "${VERSION:-}" ]; then
+  echo "Error: VERSION environment variable is not set." >&2
+  exit 1
+fi
+readonly UNPREFIXED_VERSION=$(echo "${VERSION}" | cut -c 2-)
+npm publish "./dist/firebase-admin-${UNPREFIXED_VERSION}.tgz" \
+  --registry="https://us-npm.pkg.dev/oss-exit-gate-prod/firebase-admin-node--npm/" \
+  --provenance=false
+
+cat << MANIFEST_EOF > manifest.json
+{
+  "publish_all": false,
+  "publishing_groups": [
+    {
+      "packages": [
+        {
+          "name": "firebase-admin",
+          "version": "${UNPREFIXED_VERSION}"
+        }
+      ]
+    }
+  ]
+}
+MANIFEST_EOF
+
+gcloud storage cp manifest.json \
+  "gs://oss-exit-gate-prod-projects-bucket/firebase-admin-node/npm/manifests/manifest-${GITHUB_RUN_ID:-manual}-${GITHUB_RUN_ATTEMPT:-1}.json"
