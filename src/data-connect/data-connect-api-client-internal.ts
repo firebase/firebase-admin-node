@@ -407,7 +407,7 @@ export class DataConnectApiClient {
     };
     const resp = await this.httpClient.send(request);
     if (resp.data.errors && validator.isNonEmptyArray(resp.data.errors)) {
-      const allMessages = resp.data.errors.map((error: { message: any; }) => error.message).join(' ');
+      const allMessages = formatGraphqlErrors(resp.data.errors);
       throw new FirebaseDataConnectError({
         code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
         message: allMessages,
@@ -435,6 +435,15 @@ export class DataConnectApiClient {
     }
 
     const data = response.data as any;
+    if (validator.isNonNullObject(data) && validator.isNonEmptyArray(data.errors)) {
+      return new FirebaseDataConnectError({
+        code: DATA_CONNECT_ERROR_CODE_MAPPING.QUERY_ERROR,
+        message: formatGraphqlErrors(data.errors),
+        httpResponse: toHttpResponse(response),
+        cause: err,
+      });
+    }
+
     const error: ServerError = (validator.isNonNullObject(data) && validator.isNonNullObject(data.error))
       ? data.error
       : (validator.isNonNullObject(data) ? data : {});
@@ -644,6 +653,34 @@ interface ServerError {
   code?: number;
   message?: string;
   status?: string;
+}
+
+interface GraphqlErrorResponse {
+  message?: string;
+  extensions?: {
+    debugDetails?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
+/**
+ * Formats GraphQL errors into a human-readable string, including debugDetails if present.
+ *
+ * @internal
+ */
+export function formatGraphqlErrors(errors: GraphqlErrorResponse[]): string {
+  return errors
+    .map((error) => {
+      // Defensive fallback for non-conforming or malformed error payloads.
+      if (!validator.isNonNullObject(error)) {
+        return String(error);
+      }
+      const message = error.message || 'Unknown error';
+      const details = error.extensions?.debugDetails;
+      return details ? `${message}: ${details}` : message;
+    })
+    .join('; ');
 }
 
 /**
