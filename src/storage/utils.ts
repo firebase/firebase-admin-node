@@ -19,7 +19,8 @@ export interface FirebaseMetadata {
 
 export function getFirebaseMetadata(
   endpoint: string,
-  file: File
+  file: File,
+  headers?: { [key: string]: string }
 ): Promise<FirebaseMetadata> {
   const uri = `${endpoint}/b/${file.bucket.name}/o/${encodeURIComponent(
     file.name
@@ -30,6 +31,7 @@ export function getFirebaseMetadata(
       {
         method: 'GET',
         uri,
+        headers,
       },
       (err, body) => {
         if (err) {
