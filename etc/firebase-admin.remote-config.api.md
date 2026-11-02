@@ -81,7 +81,7 @@ export interface ExplicitParameterValue {
     value: string;
 }
 
-// @public
+// @public @deprecated
 export interface FetchResponseData {
     config?: {
         [key: string]: string;
@@ -236,10 +236,11 @@ export const RemoteConfigErrorCode: {
 // @public
 export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof RemoteConfigErrorCode];
 
-// @public
+// @public @deprecated
 export class RemoteConfigFetchResponse {
+    // @deprecated
     constructor(app: App, serverConfig: ServerConfig, requestEtag?: string);
-    // (undocumented)
+    // @deprecated (undocumented)
     toJSON(): FetchResponseData;
 }
 
