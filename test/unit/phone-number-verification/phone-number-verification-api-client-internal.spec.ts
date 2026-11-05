@@ -50,6 +50,7 @@ describe('FPNV Constants and Error Class', () => {
         INVALID_ARGUMENT: 'invalid-argument',
         INVALID_TOKEN: 'invalid-token',
         EXPIRED_TOKEN: 'expired-token',
+        TEST_TOKEN_REJECTED: 'test-token-rejected',
       });
     });
   });
@@ -72,6 +73,18 @@ describe('FPNV Constants and Error Class', () => {
 
       expect(error.code).to.equal(`${FPNV_PREFIX}/${testCode}`);
       expect(error.message).to.equal(testMessage);
+    });
+
+    it('should match error codes using hasCode()', () => {
+      const error = new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED,
+        message: 'Test token rejected.',
+      });
+
+      expect(error.code).to.equal(`${FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED}`);
+      expect(error.hasCode(FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED)).to.be.true;
+      expect(error.hasCode(`${FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED}`)).to.be.true;
+      expect(error.hasCode(FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN)).to.be.false;
     });
 
     it('should handle all defined error codes', () => {
