@@ -200,6 +200,9 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: App, protected version: string, protected tenantId: string, emHost?: string) {
     super(app, version, emHost);
+    if (!validator.isTenantId(tenantId)) {
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
+    }
     if (emHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
         host: emHost
@@ -419,7 +422,7 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
     }
   }
   if (typeof request.tenantId !== 'undefined' &&
-    !validator.isNonEmptyString(request.tenantId)) {
+    !validator.isTenantId(request.tenantId)) {
     throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
   }
   // For any invalid parameter, use the external key name in the error description.
@@ -2212,7 +2215,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @returns A promise that resolves with the tenant information.
    */
   public getTenant(tenantId: string): Promise<TenantServerResponse> {
-    if (!validator.isNonEmptyString(tenantId)) {
+    if (!validator.isTenantId(tenantId)) {
       return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID));
     }
     return this.invokeRequestHandler(this.authResourceUrlBuilder, GET_TENANT, {}, { tenantId })
@@ -2262,7 +2265,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @returns A promise that resolves when the tenant is deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
-    if (!validator.isNonEmptyString(tenantId)) {
+    if (!validator.isTenantId(tenantId)) {
       return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID));
     }
     return this.invokeRequestHandler(this.authResourceUrlBuilder, DELETE_TENANT, undefined, { tenantId })
@@ -2298,7 +2301,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @returns A promise that resolves with the modified tenant object.
    */
   public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<TenantServerResponse> {
-    if (!validator.isNonEmptyString(tenantId)) {
+    if (!validator.isTenantId(tenantId)) {
       return Promise.reject(new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID));
     }
     try {
@@ -2335,6 +2338,9 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: App, private readonly tenantId: string, emHost?: string | null) {
     super(app, emHost);
+    if (!validator.isTenantId(tenantId)) {
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
+    }
   }
 
   /**
