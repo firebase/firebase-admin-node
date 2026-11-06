@@ -16,13 +16,10 @@
  */
 
 import { App } from '../app';
-import * as validator from '../utils/validator';
 import {
-  FirebasePhoneNumberVerificationError,
   PhoneNumberVerificationToken,
   PhoneNumberVerificationTokenOptions,
 } from './phone-number-verification-api';
-import { FPNV_ERROR_CODE_MAPPING } from './error';
 import { PhoneNumberTokenVerifier } from './token-verifier';
 import { JWKS_URL, FPNV_TOKEN_INFO } from './phone-number-verification-api-client-internal';
 
@@ -72,28 +69,7 @@ export class PhoneNumberVerification {
     jwt: string,
     options?: PhoneNumberVerificationTokenOptions
   ): Promise<PhoneNumberVerificationToken> {
-    this.validatePhoneNumberVerificationTokenOptions(options);
     return this.phoneNumberVerificationVerifier.verifyJWT(jwt, options);
-  }
-
-  private validatePhoneNumberVerificationTokenOptions(
-    options?: PhoneNumberVerificationTokenOptions
-  ): void {
-    if (typeof options === 'undefined') {
-      return;
-    }
-    if (!validator.isNonNullObject(options)) {
-      throw new FirebasePhoneNumberVerificationError({
-        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: 'PhoneNumberVerificationTokenOptions must be a non-null object.',
-      });
-    }
-    if (typeof options.acceptTestTokens !== 'undefined' && !validator.isBoolean(options.acceptTestTokens)) {
-      throw new FirebasePhoneNumberVerificationError({
-        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
-        message: 'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.',
-      });
-    }
   }
 }
 

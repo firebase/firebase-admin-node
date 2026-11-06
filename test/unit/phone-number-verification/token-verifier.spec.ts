@@ -164,6 +164,44 @@ describe('PhoneNumberTokenVerifier', () => {
         .to.be.rejectedWith('First argument to verifyToken() must be a string.');
     });
 
+    it('should validate jwtToken before options', async () => {
+      await expect(verifier.verifyJWT(123 as any, null as any))
+        .to.be.rejectedWith(
+          FirebasePhoneNumberVerificationError,
+          'First argument to verifyToken() must be a string.'
+        )
+        .and.eventually.have.property(
+          'code',
+          `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN}`
+        );
+    });
+
+    it('should reject with INVALID_ARGUMENT given invalid PhoneNumberVerificationTokenOptions', async () => {
+      const expectedCode = `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT}`;
+      for (const invalidOptions of [null, 100, -100, 'abc', [], true]) {
+        await expect(verifier.verifyJWT('token', invalidOptions as any))
+          .to.be.rejectedWith(
+            FirebasePhoneNumberVerificationError,
+            'PhoneNumberVerificationTokenOptions must be a non-null object.'
+          )
+          .and.eventually.have.property('code', expectedCode);
+      }
+    });
+
+    it('should reject with INVALID_ARGUMENT given non-boolean acceptTestTokens option', async () => {
+      const expectedCode = `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT}`;
+      for (const invalidAcceptTestTokens of ['false', 'true', 0, 1, null, {}, []]) {
+        await expect(
+          verifier.verifyJWT('token', { acceptTestTokens: invalidAcceptTestTokens as any })
+        )
+          .to.be.rejectedWith(
+            FirebasePhoneNumberVerificationError,
+            'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.'
+          )
+          .and.eventually.have.property('code', expectedCode);
+      }
+    });
+
     it('should throw if project ID cannot be determined', async () => {
       findProjectIdStub.resolves(null);
       await expect(verifier.verifyJWT('token'))
@@ -360,8 +398,14 @@ describe('PhoneNumberTokenVerifier', () => {
           .and.eventually.have.property('code', expectedCode);
 
         await expect(verifier.verifyJWT('test-token', { acceptTestTokens: 'false' as any }))
-          .to.be.rejectedWith(FirebasePhoneNumberVerificationError, /is a test token/)
-          .and.eventually.have.property('code', expectedCode);
+          .to.be.rejectedWith(
+            FirebasePhoneNumberVerificationError,
+            'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.'
+          )
+          .and.eventually.have.property(
+            'code',
+            `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT}`
+          );
       });
 
       it('should accept a test token when acceptTestTokens is true and populate testNumber', async () => {

@@ -17,7 +17,8 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 
 import { App } from '../../../src/app/index';
@@ -25,9 +26,13 @@ import * as mocks from '../../resources/mocks';
 import { PhoneNumberVerification } from '../../../src/phone-number-verification/phone-number-verification';
 import { PhoneNumberTokenVerifier } from '../../../src/phone-number-verification/token-verifier';
 import {
+  FirebasePhoneNumberVerificationError,
   PhoneNumberVerificationToken,
   PhoneNumberVerificationTokenOptions,
 } from '../../../src/phone-number-verification/phone-number-verification-api';
+
+chai.use(chaiAsPromised);
+const expect = chai.expect;
 
 describe('PhoneNumberVerification Service', () => {
   let phoneNumberVerificationService: PhoneNumberVerification;
@@ -91,23 +96,47 @@ describe('PhoneNumberVerification Service', () => {
       expect(verifyJwtStub.calledWith(mockTokenString, options)).to.be.true;
     });
 
-    it('should throw given invalid PhoneNumberVerificationTokenOptions', () => {
-      [null, 100, -100, 'abc', [], true].forEach((invalidOptions) => {
-        expect(() => {
-          return phoneNumberVerificationService.verifyToken(mockTokenString, invalidOptions as any);
-        }).to.throw('PhoneNumberVerificationTokenOptions must be a non-null object.');
-      });
+    it('should reject given invalid PhoneNumberVerificationTokenOptions', async () => {
+      verifyJwtStub.restore();
+      for (const invalidOptions of [null, 100, -100, 'abc', [], true]) {
+        await expect(
+          phoneNumberVerificationService.verifyToken(mockTokenString, invalidOptions as any)
+        )
+          .to.be.rejectedWith(
+            FirebasePhoneNumberVerificationError,
+            'PhoneNumberVerificationTokenOptions must be a non-null object.'
+          )
+          .and.eventually.have.property('code', 'phone-number-verification/invalid-argument');
+      }
     });
 
-    it('should throw given non-boolean acceptTestTokens option', () => {
-      ['false', 'true', 0, 1, null, {}, []].forEach((invalidAcceptTestTokens) => {
-        expect(() => {
-          return phoneNumberVerificationService.verifyToken(
+    it('should reject given non-boolean acceptTestTokens option', async () => {
+      verifyJwtStub.restore();
+      for (const invalidAcceptTestTokens of ['false', 'true', 0, 1, null, {}, []]) {
+        await expect(
+          phoneNumberVerificationService.verifyToken(
             mockTokenString,
             { acceptTestTokens: invalidAcceptTestTokens as any }
-          );
-        }).to.throw('PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.');
-      });
+          )
+        )
+          .to.be.rejectedWith(
+            FirebasePhoneNumberVerificationError,
+            'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.'
+          )
+          .and.eventually.have.property('code', 'phone-number-verification/invalid-argument');
+      }
+    });
+
+    it('should validate jwt before options and reject on the promise path', async () => {
+      verifyJwtStub.restore();
+      await expect(
+        phoneNumberVerificationService.verifyToken(123 as any, null as any)
+      )
+        .to.be.rejectedWith(
+          FirebasePhoneNumberVerificationError,
+          'First argument to verifyToken() must be a string.'
+        )
+        .and.eventually.have.property('code', 'phone-number-verification/invalid-token');
     });
 
     it('should return the decoded token object on success', async () => {

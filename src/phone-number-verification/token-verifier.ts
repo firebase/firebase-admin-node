@@ -95,6 +95,7 @@ export class PhoneNumberTokenVerifier {
         message: `First argument to ${this.tokenInfo.verifyApiName} must be a string.`,
       });
     }
+    this.validatePhoneNumberVerificationTokenOptions(options);
 
     const projectId = await this.ensureProjectId();
     const decoded = await this.decodeAndVerify(jwtToken, projectId);
@@ -109,6 +110,26 @@ export class PhoneNumberTokenVerifier {
     decodedIdToken.phoneNumber = decodedIdToken.sub;
     decodedIdToken.testNumber = decodedIdToken.test_number === true;
     return decodedIdToken;
+  }
+
+  private validatePhoneNumberVerificationTokenOptions(
+    options?: PhoneNumberVerificationTokenOptions
+  ): void {
+    if (typeof options === 'undefined') {
+      return;
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'PhoneNumberVerificationTokenOptions must be a non-null object.',
+      });
+    }
+    if (typeof options.acceptTestTokens !== 'undefined' && !validator.isBoolean(options.acceptTestTokens)) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.',
+      });
+    }
   }
 
 

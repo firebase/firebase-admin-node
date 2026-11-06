@@ -91,14 +91,14 @@ export interface PhoneNumberVerificationToken {
  * Interface representing options for the {@link PhoneNumberVerification.verifyToken} method.
  */
 export interface PhoneNumberVerificationTokenOptions {
-  /**
-   * To accept test-mode tokens (tokens containing the claim `"test_number": true`),
-   * set this option to `true`. By default, {@link PhoneNumberVerification.verifyToken}
-   * rejects test-mode tokens.
-   *
-   * Enable this option only during development and testing.
-   */
-  acceptTestTokens?: boolean;
+    /**
+     * To accept test-mode tokens (tokens containing the claim `"test_number": true`),
+     * set this option to `true`. By default, {@link PhoneNumberVerification.verifyToken}
+     * rejects test-mode tokens.
+     *
+     * Enable this option only during development and testing.
+     */
+    acceptTestTokens?: boolean;
 }
 
 export {
