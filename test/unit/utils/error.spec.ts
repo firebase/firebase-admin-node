@@ -144,6 +144,16 @@ describe('FirebaseAuthError', () => {
         expect(error.message).to.be.equal('The password does not meet the requirements.');
       });
 
+      it('should keep the detailed message from a password policy server error', () => {
+        const error = FirebaseAuthError.fromServerError(
+          'PASSWORD_DOES_NOT_MEET_REQUIREMENTS : ' +
+          'Missing password requirements: [Password must contain at least 6 characters]',
+        );
+        expect(error.code).to.be.equal('auth/password-does-not-meet-requirements');
+        expect(error.message).to.be.equal(
+          'Missing password requirements: [Password must contain at least 6 characters]');
+      });
+
       it('should initialize an error from an unexpected server code', () => {
         const error = FirebaseAuthError.fromServerError('UNEXPECTED_ERROR');
         expect(error.code).to.be.equal('auth/internal-error');
