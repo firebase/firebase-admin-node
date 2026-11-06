@@ -23,6 +23,7 @@ export const PhoneNumberVerificationErrorCode = {
   INVALID_ARGUMENT: 'invalid-argument',
   INVALID_TOKEN: 'invalid-token',
   EXPIRED_TOKEN: 'expired-token',
+  TEST_TOKEN_REJECTED: 'test-token-rejected',
 } as const;
 
 /**

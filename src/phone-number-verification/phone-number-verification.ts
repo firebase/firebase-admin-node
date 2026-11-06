@@ -16,7 +16,10 @@
  */
 
 import { App } from '../app';
-import { PhoneNumberVerificationToken } from './phone-number-verification-api';
+import {
+  PhoneNumberVerificationToken,
+  PhoneNumberVerificationTokenOptions,
+} from './phone-number-verification-api';
 import { PhoneNumberTokenVerifier } from './token-verifier';
 import { JWKS_URL, FPNV_TOKEN_INFO } from './phone-number-verification-api-client-internal';
 
@@ -53,13 +56,20 @@ export class PhoneNumberVerification {
   }
 
   /**
-   * Verifies a Firebase Phone Number Verification token.
+   * Verifies a Firebase Phone Number Verification token. By default, tokens issued in
+   * test mode (containing `"test_number": true`) are rejected unless
+   * `options.acceptTestTokens` is set to `true`.
    *
    * @param jwt - A string containing the Firebase Phone Number Verification JWT.
+   * @param options - Optional {@link PhoneNumberVerificationTokenOptions} object when verifying a
+   *   Phone Number Verification token.
    * @returns A promise that resolves with the decoded token.
    */
-  public verifyToken(jwt: string): Promise<PhoneNumberVerificationToken> {
-    return this.phoneNumberVerificationVerifier.verifyJWT(jwt);
+  public verifyToken(
+    jwt: string,
+    options?: PhoneNumberVerificationTokenOptions
+  ): Promise<PhoneNumberVerificationToken> {
+    return this.phoneNumberVerificationVerifier.verifyJWT(jwt, options);
   }
 }
 
