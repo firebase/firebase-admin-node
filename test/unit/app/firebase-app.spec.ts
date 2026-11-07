@@ -570,6 +570,8 @@ describe('FirebaseApp', () => {
 
         const app = utils.createAppWithOptions({ credential: { getAccessToken } });
         await app.INTERNAL.getToken();
+        // Leave five minutes and one second on the token: just outside the threshold.
+        clock.tick((5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
         await app.INTERNAL.getToken(true).catch(() => undefined);
 
         expect((await app.INTERNAL.getToken()).accessToken).to.equal(oracle.access_token);
@@ -577,7 +579,7 @@ describe('FirebaseApp', () => {
       });
 
       it('leaves the in-flight refresh reachable after serving the cache', async () => {
-        // Serving the cache must not overwrite `promiseToCachedToken_`; once the cached token
+        // Serving the cache must not drop the in-flight refresh; once the cached token
         // reaches the threshold, callers still have to join the refresh already under way.
         const oracle: GoogleOAuthAccessToken = {
           access_token: 'Cached before the refresh',
@@ -768,6 +770,44 @@ describe('FirebaseApp', () => {
         expect((await waiter).accessToken).to.equal(replacement.access_token);
         await forced;
         expect(getAccessToken).to.have.been.calledTwice;
+      });
+
+      it('keeps a newer forced refresh in flight when an older one settles', async () => {
+        const oracle: GoogleOAuthAccessToken = {
+          access_token: 'Nearly dead',
+          expires_in: TEN_MINUTES_IN_SECONDS,
+        };
+        const replacement: GoogleOAuthAccessToken = {
+          access_token: 'Replacement',
+          expires_in: ONE_HOUR_IN_SECONDS,
+        };
+        let failOlder: (err: Error) => void = () => undefined;
+        let respondNewer: (token: GoogleOAuthAccessToken) => void = () => undefined;
+        const getAccessToken = stubCredential();
+        getAccessToken.onCall(0).resolves(oracle);
+        getAccessToken.onCall(1).returns(new Promise<GoogleOAuthAccessToken>((_, reject) => {
+          failOlder = reject;
+        }));
+        getAccessToken.onCall(2).returns(new Promise<GoogleOAuthAccessToken>((resolve) => {
+          respondNewer = resolve;
+        }));
+
+        const app = utils.createAppWithOptions({ credential: { getAccessToken } });
+        await app.INTERNAL.getToken();
+        clock.tick((10 * ONE_MINUTE_IN_MILLISECONDS) - (20 * 1000));
+
+        const older = app.INTERNAL.getToken(true).catch(() => undefined);
+        const newer = app.INTERNAL.getToken(true);
+        failOlder(new Error('token endpoint unavailable'));
+        await older;
+
+        // The older refresh settling must not hide the newer one: the waiter joins it rather
+        // than starting a refresh of its own.
+        const waiter = app.INTERNAL.getToken();
+        respondNewer(replacement);
+        expect((await waiter).accessToken).to.equal(replacement.access_token);
+        await newer;
+        expect(getAccessToken).to.have.been.calledThrice;
       });
     });
   });

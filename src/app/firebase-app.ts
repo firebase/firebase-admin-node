@@ -39,27 +39,30 @@ export interface FirebaseAccessToken {
  */
 export class FirebaseAppInternals {
   private cachedToken_: FirebaseAccessToken;
-  private promiseToCachedToken_: Promise<FirebaseAccessToken>;
+  private refreshTokenPromise_: Promise<FirebaseAccessToken> | undefined;
   private tokenListeners_: Array<(token: string) => void>;
-  private isRefreshing: boolean;
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   constructor(private credential_: Credential) {
     this.tokenListeners_ = [];
-    this.isRefreshing = false;
   }
 
   public getToken(forceRefresh = false): Promise<FirebaseAccessToken> {
-    // Prefer the cached token over `promiseToCachedToken_`, which may hold a failed refresh. This
-    // runs before shouldRefresh() on purpose: each reads its own Date.now(), so in the opposite
-    // order a token crossing the threshold between the two reads would satisfy neither.
-    if (!forceRefresh && this.hasUsableCachedToken()) {
+    if (!forceRefresh && this.cachedToken_ && !this.shouldRefresh()) {
       return Promise.resolve(this.cachedToken_);
     }
-    if (forceRefresh || this.shouldRefresh()) {
-      this.promiseToCachedToken_ = this.refreshToken();
+    // Only an in-flight refresh is shared. Clearing it once settled keeps a failed refresh from
+    // being replayed to later callers, and the identity check stops an older refresh from
+    // clearing a newer forced one.
+    if (forceRefresh || !this.refreshTokenPromise_) {
+      const refreshPromise = this.refreshToken().finally(() => {
+        if (this.refreshTokenPromise_ === refreshPromise) {
+          this.refreshTokenPromise_ = undefined;
+        }
+      });
+      this.refreshTokenPromise_ = refreshPromise;
     }
-    return this.promiseToCachedToken_
+    return this.refreshTokenPromise_;
   }
 
   public getCachedToken(): FirebaseAccessToken | null {
@@ -67,7 +70,6 @@ export class FirebaseAppInternals {
   }
 
   private refreshToken(): Promise<FirebaseAccessToken> {
-    this.isRefreshing = true;
     return Promise.resolve(this.credential_.getAccessToken())
       .then((result) => {
         // Since the developer can provide the credential implementation, we want to weakly verify
@@ -121,20 +123,11 @@ export class FirebaseAppInternals {
           message: errorMessage,
           cause: error as Error
         });
-      })
-      .finally(() => {
-        this.isRefreshing = false;
-      })
+      });
   }
 
   private shouldRefresh(): boolean {
-    return (!this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS)
-      && !this.isRefreshing;
-  }
-
-  private hasUsableCachedToken(): boolean {
-    return !!this.cachedToken_
-      && (this.cachedToken_.expirationTime - Date.now()) > TOKEN_EXPIRY_THRESHOLD_MILLIS;
+    return !this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS;
   }
 
   /**
