@@ -81,6 +81,9 @@ export class TenantAwareAuth extends BaseAuth {
    * @internal
    */
   constructor(app: App, tenantId: string, emHost?: string | null) {
+    if (!validator.isTenantId(tenantId)) {
+      throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
+    }
     const emIsSet = emHost !== undefined;
     super(app, new TenantAwareAuthRequestHandler(
       app, tenantId, emHost), createFirebaseTokenGenerator(
@@ -175,7 +178,7 @@ export class TenantManager {
    * @returns The `TenantAwareAuth` instance corresponding to this tenant identifier.
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
-    if (!validator.isNonEmptyString(tenantId)) {
+    if (!validator.isTenantId(tenantId)) {
       throw new FirebaseAuthError(authClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
