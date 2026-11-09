@@ -130,6 +130,7 @@ export const AuthErrorCode: {
     readonly MAXIMUM_USER_COUNT_EXCEEDED: "maximum-user-count-exceeded";
     readonly MISSING_UID: "missing-uid";
     readonly OPERATION_NOT_ALLOWED: "operation-not-allowed";
+    readonly PASSWORD_DOES_NOT_MEET_REQUIREMENTS: "password-does-not-meet-requirements";
     readonly PHONE_NUMBER_ALREADY_EXISTS: "phone-number-already-exists";
     readonly PROJECT_NOT_FOUND: "project-not-found";
     readonly INSUFFICIENT_PERMISSION: "insufficient-permission";
