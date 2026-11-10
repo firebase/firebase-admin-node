@@ -211,8 +211,7 @@
     "@firebase/database-types": "^1.0.20",
     "fast-deep-equal": "^3.1.1",
     "google-auth-library": "^11.1.0",
-    "jsonwebtoken": "^9.0.0",
-    "jwks-rsa": "^4.0.1"
+    "jsonwebtoken": "^9.0.0"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^9.1.0",
