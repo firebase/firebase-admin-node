@@ -109,12 +109,7 @@ function resolveJwkImportAlgorithm(jwk: JwkKey): SubtleImportAlgorithm | null {
 }
 
 function spkiToPem(spki: ArrayBuffer): string {
-  const bytes = new Uint8Array(spki);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  const base64 = btoa(binary);
+  const base64 = Buffer.from(spki).toString('base64');
   const lines = base64.match(/.{1,64}/g) ?? [];
   return `-----BEGIN PUBLIC KEY-----\n${lines.join('\n')}\n-----END PUBLIC KEY-----\n`;
 }
@@ -196,7 +191,7 @@ export class JwksFetcher implements KeyFetcher {
     };
     return client.send(request)
       .then(async (resp) => {
-        if (!resp.isJson() || !validator.isArray(resp.data.keys)) {
+        if (!resp.isJson() || !validator.isNonNullObject(resp.data) || !validator.isArray(resp.data.keys)) {
           throw new Error('The JWKS endpoint did not contain any keys.');
         }
         const signingKeys = await parseSigningKeys(resp.data.keys);

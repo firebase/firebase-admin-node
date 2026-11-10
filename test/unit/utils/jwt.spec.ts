@@ -850,5 +850,18 @@ describe('JwksFetcher', () => {
       return keyFetcher.fetchPublicKeys()
         .should.eventually.be.rejectedWith('Error fetching Json Web Keys');
     });
+
+    it('should be rejected if fetching the public keys returns a JSON null body', () => {
+      mockedRequests.push(
+        nock('https://firebaseappcheck.googleapis.com')
+          .get(jwksPath)
+          .reply(200, 'null', { 'content-type': 'application/json' }),
+      );
+
+      return keyFetcher.fetchPublicKeys()
+        .should.eventually.be.rejectedWith(
+          'Error fetching Json Web Keys: The JWKS endpoint did not contain any keys.',
+        );
+    });
   });
 });
