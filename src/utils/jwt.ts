@@ -16,7 +16,6 @@
 
 import * as validator from './validator';
 import * as jwt from 'jsonwebtoken';
-import * as jwks from 'jwks-rsa';
 import { HttpClient, HttpRequestConfig, RequestResponseError } from '../utils/api-request';
 import { Agent } from 'http';
 
@@ -49,21 +48,132 @@ interface KeyFetcher {
   fetchPublicKeys(): Promise<{ [key: string]: string }>;
 }
 
+interface JwkKey {
+  kty?: string;
+  use?: string;
+  alg?: string;
+  kid?: string;
+  crv?: string;
+  d?: string;
+  e?: string;
+  n?: string;
+  x?: string;
+  y?: string;
+  key_ops?: string[];
+  ext?: boolean;
+}
+
+type SubtleImportAlgorithm = Parameters<typeof globalThis.crypto.subtle.importKey>[2];
+
+const RSA_IMPORT_ALGORITHMS: { [alg: string]: { name: 'RSASSA-PKCS1-v1_5' | 'RSA-PSS'; hash: string } } = {
+  RS256: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+  RS384: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-384' },
+  RS512: { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-512' },
+  PS256: { name: 'RSA-PSS', hash: 'SHA-256' },
+  PS384: { name: 'RSA-PSS', hash: 'SHA-384' },
+  PS512: { name: 'RSA-PSS', hash: 'SHA-512' },
+};
+
+const EC_CURVE_ALGORITHMS: { [crv: string]: string } = {
+  'P-256': 'ES256',
+  'P-384': 'ES384',
+  'P-521': 'ES512',
+};
+
+const BASE64URL_REGEX = /^[A-Za-z0-9_-]+$/;
+const PRIVATE_JWK_FIELDS = ['d', 'p', 'q', 'dp', 'dq', 'qi', 'oth'];
+
+function isValidBase64UrlField(value: unknown): value is string {
+  return validator.isNonEmptyString(value) && BASE64URL_REGEX.test(value);
+}
+
+function resolveJwkImportAlgorithm(jwk: JwkKey): SubtleImportAlgorithm | null {
+  if (jwk.kty === 'RSA') {
+    if (!isValidBase64UrlField(jwk.n) || !isValidBase64UrlField(jwk.e)) {
+      return null;
+    }
+    const alg = jwk.alg ?? 'RS256';
+    return RSA_IMPORT_ALGORITHMS[alg] ?? null;
+  }
+  if (jwk.kty === 'EC' && typeof jwk.crv === 'string') {
+    if (!isValidBase64UrlField(jwk.x) || !isValidBase64UrlField(jwk.y)) {
+      return null;
+    }
+    const expectedAlg = EC_CURVE_ALGORITHMS[jwk.crv];
+    if (!expectedAlg || (jwk.alg && jwk.alg !== expectedAlg)) {
+      return null;
+    }
+    return { name: 'ECDSA', namedCurve: jwk.crv };
+  }
+  return null;
+}
+
+function spkiToPem(spki: ArrayBuffer): string {
+  const bytes = new Uint8Array(spki);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
+  const lines = base64.match(/.{1,64}/g) ?? [];
+  return `-----BEGIN PUBLIC KEY-----\n${lines.join('\n')}\n-----END PUBLIC KEY-----\n`;
+}
+
+async function importJwkAsPem(jwk: JwkKey): Promise<string | null> {
+  if (jwk.use !== undefined && jwk.use !== 'sig') {
+    return null;
+  }
+  if (PRIVATE_JWK_FIELDS.some((field) => field in jwk)) {
+    return null;
+  }
+  const algorithm = resolveJwkImportAlgorithm(jwk);
+  if (!algorithm) {
+    return null;
+  }
+  try {
+    const cryptoKey = await globalThis.crypto.subtle.importKey(
+      'jwk',
+      { ...jwk, ext: true },
+      algorithm,
+      true,
+      ['verify'],
+    );
+    if (cryptoKey.type !== 'public') {
+      return null;
+    }
+    const spki = await globalThis.crypto.subtle.exportKey('spki', cryptoKey);
+    return spkiToPem(spki);
+  } catch {
+    return null;
+  }
+}
+
+async function parseSigningKeys(keys: unknown[]): Promise<{ [key: string]: string }> {
+  const publicKeys: { [key: string]: string } = {};
+  for (const entry of keys) {
+    if (!validator.isNonNullObject(entry)) {
+      continue;
+    }
+    const jwk = entry as JwkKey;
+    if (!validator.isNonEmptyString(jwk.kid)) {
+      continue;
+    }
+    const pem = await importJwkAsPem(jwk);
+    if (pem) {
+      publicKeys[jwk.kid] = pem;
+    }
+  }
+  return publicKeys;
+}
+
 export class JwksFetcher implements KeyFetcher {
   private publicKeys: { [key: string]: string };
   private publicKeysExpireAt = 0;
-  private client: jwks.JwksClient;
 
-  constructor(jwksUrl: string, httpAgent?: Agent) {
+  constructor(private jwksUrl: string, private readonly httpAgent?: Agent) {
     if (!validator.isURL(jwksUrl)) {
       throw new Error('The provided JWKS URL is not a valid URL.');
     }
-
-    this.client = jwks({
-      jwksUri: jwksUrl,
-      cache: false, // disable jwks-rsa LRU cache as the keys are always cached for 6 hours.
-      requestAgent: httpAgent,
-    });
   }
 
   public fetchPublicKeys(): Promise<{ [key: string]: string }> {
@@ -78,18 +188,26 @@ export class JwksFetcher implements KeyFetcher {
   }
 
   private refresh(): Promise<{ [key: string]: string }> {
-    return this.client.getSigningKeys()
-      .then((signingKeys) => {
-        // reset expire at from previous set of keys.
-        this.publicKeysExpireAt = 0;
-        const newKeys = signingKeys.reduce((map: { [key: string]: string }, signingKey: jwks.SigningKey) => {
-          map[signingKey.kid] = signingKey.getPublicKey();
-          return map;
-        }, {});
+    const client = new HttpClient();
+    const request: HttpRequestConfig = {
+      method: 'GET',
+      url: this.jwksUrl,
+      httpAgent: this.httpAgent,
+    };
+    return client.send(request)
+      .then(async (resp) => {
+        if (!resp.isJson() || !validator.isArray(resp.data.keys)) {
+          throw new Error('The JWKS endpoint did not contain any keys.');
+        }
+        const signingKeys = await parseSigningKeys(resp.data.keys);
+        if (Object.keys(signingKeys).length === 0) {
+          throw new Error('The JWKS endpoint did not contain any signing keys.');
+        }
         this.publicKeysExpireAt = Date.now() + (HOUR_IN_SECONDS * 6 * 1000);
-        this.publicKeys = newKeys;
-        return newKeys;
-      }).catch((err) => {
+        this.publicKeys = signingKeys;
+        return signingKeys;
+      })
+      .catch((err) => {
         throw new Error(`Error fetching Json Web Keys: ${err.message}`);
       });
   }

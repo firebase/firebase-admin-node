@@ -388,8 +388,8 @@ describe('PublicKeySignatureVerifier', () => {
       const verifier = PublicKeySignatureVerifier.withJwksUrl('https://www.example.com/publicKeys', mockHttpAgent);
       expect(verifier).to.be.an.instanceOf(PublicKeySignatureVerifier);
       expect((verifier as any).keyFetcher).to.be.an.instanceOf(JwksFetcher);
-      expect((verifier as any).keyFetcher.client.options.requestAgent).to.be.an.instanceOf(http.Agent);
-      expect((verifier as any).keyFetcher.client.options.requestAgent).to.eq(mockHttpAgent);
+      expect((verifier as any).keyFetcher.httpAgent).to.be.an.instanceOf(http.Agent);
+      expect((verifier as any).keyFetcher.httpAgent).to.eq(mockHttpAgent);
     });
   });
 
@@ -693,6 +693,18 @@ describe('JwksFetcher', () => {
       mockedRequests = [];
     });
 
+    it('should use the given HTTP Agent', () => {
+      const agent = new https.Agent();
+      const jwksFetcher = new JwksFetcher('https://firebaseappcheck.googleapis.com/v1alpha/jwks', agent);
+      mockedRequests.push(mockFetchJsonWebKeys());
+
+      return jwksFetcher.fetchPublicKeys()
+        .then(() => {
+          expect(https.request).to.have.been.calledOnce;
+          expect(httpsSpy.args[0][0].agent).to.equal(agent);
+        });
+    });
+
     it('should not fetch the public keys until the first time fetchPublicKeys() is called', () => {
       mockedRequests.push(mockFetchJsonWebKeys());
 
@@ -702,8 +714,83 @@ describe('JwksFetcher', () => {
       return jwksFetcher.fetchPublicKeys()
         .then((result) => {
           expect(https.request).to.have.been.calledOnce;
-          expect(result).to.have.key(mocks.jwksResponse.keys[0].kid);
+          expect(result).to.deep.equal({
+            [mocks.jwksResponse.keys[0].kid]: mocks.jwksKeyPair.public,
+          });
         });
+    });
+
+    it('should parse EC P-256 signing keys and verify ES256 tokens', async () => {
+      const keyPair = await globalThis.crypto.subtle.generateKey(
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['sign', 'verify'],
+      );
+      const publicJwk = await globalThis.crypto.subtle.exportKey('jwk', keyPair.publicKey);
+      const pkcs8 = await globalThis.crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+      const privateBase64 = Buffer.from(pkcs8).toString('base64');
+      const privatePem = '-----BEGIN PRIVATE KEY-----\n' +
+        `${privateBase64.match(/.{1,64}/g)!.join('\n')}\n-----END PRIVATE KEY-----\n`;
+
+      mockedRequests.push(
+        nock('https://firebaseappcheck.googleapis.com')
+          .get(jwksPath)
+          .reply(200, {
+            keys: [{ ...publicJwk, kid: 'ec-key-1', use: 'sig', alg: 'ES256' }],
+          }),
+      );
+
+      const jwtLib = require('jsonwebtoken');
+      const es256Token = jwtLib.sign({ sub: 'user-1' }, privatePem, {
+        algorithm: 'ES256',
+        keyid: 'ec-key-1',
+        expiresIn: ONE_HOUR_IN_SECONDS,
+      });
+
+      const verifier = PublicKeySignatureVerifier.withJwksUrl(
+        'https://firebaseappcheck.googleapis.com/v1alpha/jwks',
+      );
+      await verifier.verify(es256Token);
+    });
+
+    it('should skip non-signing, private, and malformed JWKs while keeping valid signing keys', () => {
+      const validKey = mocks.jwksResponse.keys[0];
+      mockedRequests.push(
+        nock('https://firebaseappcheck.googleapis.com')
+          .get(jwksPath)
+          .reply(200, {
+            keys: [
+              { ...validKey, kid: 'enc-key', use: 'enc' },
+              { ...validKey, kid: 'private-key', d: 'secret-exponent' },
+              { kty: 'RSA', kid: 'malformed-key', n: '!!!', e: '!!!' },
+              { kty: 'oct', kid: 'symmetric-key', k: 'secret' },
+              validKey,
+            ],
+          }),
+      );
+
+      return keyFetcher.fetchPublicKeys()
+        .then((result) => {
+          expect(result).to.deep.equal({
+            [validKey.kid]: mocks.jwksKeyPair.public,
+          });
+        });
+    });
+
+    it('should be rejected if JWKS contains no valid signing keys', () => {
+      const validKey = mocks.jwksResponse.keys[0];
+      mockedRequests.push(
+        nock('https://firebaseappcheck.googleapis.com')
+          .get(jwksPath)
+          .reply(200, {
+            keys: [{ ...validKey, kid: 'enc-key', use: 'enc' }],
+          }),
+      );
+
+      return keyFetcher.fetchPublicKeys()
+        .should.eventually.be.rejectedWith(
+          'Error fetching Json Web Keys: The JWKS endpoint did not contain any signing keys.',
+        );
     });
 
     it('should not re-fetch the public keys every time fetchPublicKeys() is called', () => {
