@@ -24,7 +24,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
   isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
-  isUTCDateString, isISODateString, isSafeUrlSegment, isTenantId,
+  isUTCDateString, isISODateString, isSafeUrlSegment, isTenantId, isTaskId,
 } from '../../../src/utils/validator';
 
 
@@ -578,6 +578,24 @@ describe('isTenantId()', () => {
   validTenantIds.forEach((validTenantId) => {
     it('should return true given a valid tenant ID: ' + JSON.stringify(validTenantId), () => {
       expect(isTenantId(validTenantId)).to.be.true;
+    });
+  });
+});
+
+describe('isTaskId()', () => {
+  it('should return true given a valid task ID of up to 500 characters', () => {
+    expect(isTaskId('task-1_A')).to.be.true;
+    expect(isTaskId(createRandomString(500))).to.be.true;
+  });
+
+  it('should return false given a task ID longer than 500 characters', () => {
+    expect(isTaskId(createRandomString(501))).to.be.false;
+  });
+
+  const invalidTaskIds = [null, undefined, 1234, '', 'task!', 'id:0', 'task/1'];
+  invalidTaskIds.forEach((invalidTaskId) => {
+    it('should return false given an invalid task ID: ' + JSON.stringify(invalidTaskId), () => {
+      expect(isTaskId(invalidTaskId)).to.be.false;
     });
   });
 });
