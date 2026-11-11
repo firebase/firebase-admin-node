@@ -704,8 +704,6 @@ class VersionImpl implements Version {
 const HTTP_NOT_MODIFIED = 304;
 const HTTP_OK = 200;
 
-let fetchResponseDeprecationWarned = false;
-
 /**
  * Represents a fetch response that can be used to interact with RC's client SDK.
  *
@@ -714,6 +712,8 @@ let fetchResponseDeprecationWarned = false;
  * next major release.
  */
 export class RemoteConfigFetchResponse {
+  private static deprecationWarned = false;
+
   private response: FetchResponseData;
 
   /**
@@ -726,8 +726,8 @@ export class RemoteConfigFetchResponse {
    * next major release.
    */
   constructor(app: App, serverConfig: ServerConfig, requestEtag?: string) {
-    if (!fetchResponseDeprecationWarned) {
-      fetchResponseDeprecationWarned = true;
+    if (!RemoteConfigFetchResponse.deprecationWarned) {
+      RemoteConfigFetchResponse.deprecationWarned = true;
       console.warn(
         'RemoteConfigFetchResponse is deprecated and will be removed in the next major ' +
         'release. Remote Config server-side rendering (SSR) hydration of the client SDK ' +

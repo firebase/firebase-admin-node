@@ -1589,14 +1589,13 @@ describe('RemoteConfig', () => {
 
     beforeEach(() => {
       warnStub = sinon.stub(console, 'warn');
+      (RemoteConfigFetchResponse as any).deprecationWarned = false;
     });
 
     afterEach(() => {
       warnStub.restore();
     });
 
-    // This test must run before any other construction of RemoteConfigFetchResponse
-    // in this process, since the deprecation warning is emitted only once per process.
     it('should log a deprecation warning only once', () => {
       const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
       const template = remoteConfig.initServerTemplate({ template: templateData });
