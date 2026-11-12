@@ -71,7 +71,8 @@ environments.
 ## Documentation
 
 * [Setup Guide](https://firebase.google.com/docs/admin/setup/)
-* [Database Guide](https://firebase.google.com/docs/database/admin/start/)
+* [Realtime Database Guide](https://firebase.google.com/docs/database/admin/start/)
+* [Firestore Guide](https://googleapis.dev/nodejs/firestore/latest/index.html)
 * [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
 * [Cloud Messaging Guide](https://firebase.google.com/docs/cloud-messaging/admin/)
 * [API Reference](https://firebase.google.com/docs/reference/admin/node/)
