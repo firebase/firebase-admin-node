@@ -240,7 +240,7 @@ export type RemoteConfigErrorCode = typeof RemoteConfigErrorCode[keyof typeof Re
 export class RemoteConfigFetchResponse {
     // @deprecated
     constructor(app: App, serverConfig: ServerConfig, requestEtag?: string);
-    // @deprecated (undocumented)
+    // @deprecated
     toJSON(): FetchResponseData;
 }
 

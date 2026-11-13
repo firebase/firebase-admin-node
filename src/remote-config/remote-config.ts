@@ -745,9 +745,9 @@ export class RemoteConfigFetchResponse {
     }
   }
 
-  /** 
-   * @returns JSON representation of the fetch response that can be consumed
-   * by the RC client SDK.
+  /**
+   * Returns the JSON representation of this fetch response, which can be
+   * consumed by the RC client SDK.
    *
    * @deprecated Remote Config server-side rendering (SSR) hydration of the
    * client SDK is no longer supported. This method will be removed in the
