@@ -712,8 +712,6 @@ const HTTP_OK = 200;
  * next major release.
  */
 export class RemoteConfigFetchResponse {
-  private static deprecationWarned = false;
-
   private response: FetchResponseData;
 
   /**
@@ -726,15 +724,6 @@ export class RemoteConfigFetchResponse {
    * next major release.
    */
   constructor(app: App, serverConfig: ServerConfig, requestEtag?: string) {
-    if (!RemoteConfigFetchResponse.deprecationWarned) {
-      RemoteConfigFetchResponse.deprecationWarned = true;
-      console.warn(
-        'RemoteConfigFetchResponse is deprecated and will be removed in the next major ' +
-        'release. Remote Config server-side rendering (SSR) hydration of the client SDK ' +
-        'is no longer supported.'
-      );
-    }
-
     const config: { [key: string]: string } = {};
     for (const [param, value] of Object.entries(serverConfig.getAll())) {
       config[param] = value.asString();

@@ -1585,26 +1585,6 @@ describe('RemoteConfig', () => {
   });
 
   describe('RemoteConfigFetchResponse', () => {
-    let warnStub: sinon.SinonStub;
-
-    beforeEach(() => {
-      warnStub = sinon.stub(console, 'warn');
-      (RemoteConfigFetchResponse as any).deprecationWarned = false;
-    });
-
-    afterEach(() => {
-      warnStub.restore();
-    });
-
-    it('should log a deprecation warning only once', () => {
-      const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
-      const template = remoteConfig.initServerTemplate({ template: templateData });
-      new RemoteConfigFetchResponse(mockApp, template.evaluate());
-      new RemoteConfigFetchResponse(mockApp, template.evaluate());
-      expect(warnStub).to.have.been.calledOnce;
-      expect(warnStub.firstCall.args[0]).to.include('RemoteConfigFetchResponse is deprecated');
-    });
-
     it('should return a 200 response when supplied with no etag', () => {
       const templateData = deepCopy(SERVER_REMOTE_CONFIG_RESPONSE) as ServerTemplateData;
       // Defines remote parameter values.
