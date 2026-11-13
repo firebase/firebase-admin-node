@@ -16,7 +16,11 @@
  */
 
 import { App } from '../app';
-import { FirebasePhoneNumberVerificationError, PhoneNumberVerificationToken } from './phone-number-verification-api';
+import {
+  FirebasePhoneNumberVerificationError,
+  PhoneNumberVerificationToken,
+  PhoneNumberVerificationTokenOptions,
+} from './phone-number-verification-api';
 import * as util from '../utils/index';
 import * as validator from '../utils/validator';
 import {
@@ -81,19 +85,51 @@ export class PhoneNumberTokenVerifier {
     // Project ID is validated in the verification call.
   }
 
-  public async verifyJWT(jwtToken: string): Promise<PhoneNumberVerificationToken> {
+  public async verifyJWT(
+    jwtToken: string,
+    options?: PhoneNumberVerificationTokenOptions
+  ): Promise<PhoneNumberVerificationToken> {
     if (!validator.isString(jwtToken)) {
       throw new FirebasePhoneNumberVerificationError({
         code: FPNV_ERROR_CODE_MAPPING.INVALID_TOKEN,
         message: `First argument to ${this.tokenInfo.verifyApiName} must be a string.`,
       });
     }
+    this.validatePhoneNumberVerificationTokenOptions(options);
 
     const projectId = await this.ensureProjectId();
     const decoded = await this.decodeAndVerify(jwtToken, projectId);
     const decodedIdToken = decoded.payload as PhoneNumberVerificationToken;
+    if (decodedIdToken.test_number === true && options?.acceptTestTokens !== true) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED,
+        message: `${this.tokenInfo.jwtName} is a test token. To accept test tokens during ` +
+          `development, pass { acceptTestTokens: true } to ${this.tokenInfo.verifyApiName}.`,
+      });
+    }
     decodedIdToken.phoneNumber = decodedIdToken.sub;
+    decodedIdToken.testNumber = decodedIdToken.test_number === true;
     return decodedIdToken;
+  }
+
+  private validatePhoneNumberVerificationTokenOptions(
+    options?: PhoneNumberVerificationTokenOptions
+  ): void {
+    if (typeof options === 'undefined') {
+      return;
+    }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'PhoneNumberVerificationTokenOptions must be a non-null object.',
+      });
+    }
+    if (typeof options.acceptTestTokens !== 'undefined' && !validator.isBoolean(options.acceptTestTokens)) {
+      throw new FirebasePhoneNumberVerificationError({
+        code: FPNV_ERROR_CODE_MAPPING.INVALID_ARGUMENT,
+        message: 'PhoneNumberVerificationTokenOptions.acceptTestTokens must be a boolean.',
+      });
+    }
   }
 
 
