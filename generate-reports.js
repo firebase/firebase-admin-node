@@ -17,7 +17,6 @@
 
 const path = require('path');
 const fs = require('mz/fs');
-const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
 
 const localMode = process.argv.includes('--local');
 
@@ -35,6 +34,7 @@ async function generateReports() {
 }
 
 async function generateReportForEntryPoint(entryPoint, filePath) {
+  const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
   console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
@@ -67,15 +67,16 @@ async function generateReportForEntryPoint(entryPoint, filePath) {
 
     console.error(`API Extractor completed successfully`);
 
-    // Strip @excludeFromDocs APIs from the generated docModel so they aren't documented in reference docs.
+    // Strip @excludeFromDocs APIs and normalize global name collisions (e.g. Storage_2 -> Storage)
+    // in the generated docModel so reference docs stay clean.
     const apiJsonPath = path.resolve('temp', `${safeName}.api.json`);
-    await stripHiddenDocsFromApiJson(apiJsonPath);
+    await postProcessApiJson(apiJsonPath);
   } finally {
     await fs.unlink(tempConfigFile);
   }
 }
 
-async function stripHiddenDocsFromApiJson(apiJsonPath) {
+async function postProcessApiJson(apiJsonPath) {
   if (!await fs.exists(apiJsonPath)) {
     return;
   }
@@ -83,19 +84,34 @@ async function stripHiddenDocsFromApiJson(apiJsonPath) {
   const data = JSON.parse(content);
 
   let removedCount = 0;
-  function removeHidden(node) {
+  let modified = false;
+  function visitNode(node) {
+    // Normalize Storage_2 back to Storage (API Extractor renames it due to @types/node's global Storage interface).
+    if (node.name === 'Storage_2') {
+      node.name = 'Storage';
+      modified = true;
+    }
+    if (typeof node.canonicalReference === 'string' && node.canonicalReference.includes('!Storage_2')) {
+      node.canonicalReference = node.canonicalReference.replace('!Storage_2', '!Storage');
+      modified = true;
+    }
+    if (node.excerptTokens) {
+      node.excerptTokens.forEach(visitNode);
+    }
     if (node.members) {
       const originalLength = node.members.length;
       // Filter out any member whose docComment includes @excludeFromDocs
       node.members = node.members.filter(m => !(m.docComment && /@excludeFromDocs\b/.test(m.docComment)));
       removedCount += (originalLength - node.members.length);
-      node.members.forEach(removeHidden);
+      node.members.forEach(visitNode);
     }
   }
 
-  removeHidden(data);
+  visitNode(data);
   if (removedCount > 0) {
     console.log(`Removed ${removedCount} @excludeFromDocs items from ${path.basename(apiJsonPath)}`);
+  }
+  if (removedCount > 0 || modified) {
     await fs.writeFile(apiJsonPath, JSON.stringify(data, null, 2));
   }
 }
