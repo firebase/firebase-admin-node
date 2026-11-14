@@ -30,8 +30,15 @@ export {
 
 export {
   AndroidConfig,
-  AndroidFcmOptions,
+  AndroidConfigV2,
+  AndroidConfigV2Base,
+  AndroidRemoteNotificationConfig,
+  AndroidBackgroundSyncConfig,
+  AndroidRemoteNotification,
+  AndroidBackgroundSyncMessage,
   AndroidNotification,
+  AndroidNotificationV2,
+  AndroidFcmOptions,
   ApnsConfig,
   ApnsFcmOptions,
   ApnsPayload,
