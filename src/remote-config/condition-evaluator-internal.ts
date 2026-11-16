@@ -226,7 +226,7 @@ export class ConditionEvaluator {
       return compareStrings(
         targetCustomSignalValues,
         actualCustomSignalValue,
-        (target, actual) => new RegExp(target).test(actual),
+        (target, actual) => matchesRegex(target, actual),
       );
 
     // For numeric operators only one target value is allowed.
@@ -272,6 +272,20 @@ function compareStrings(
 ): boolean {
   const actual = String(actualValue);
   return targetValues.some((target) => predicateFn(target, actual));
+}
+
+// Tests the actual value against a target regular expression. Remote Config
+// regular expressions use RE2 syntax, which is not fully supported by the
+// JavaScript RegExp engine (e.g. inline flags such as "(?i)"). A pattern that
+// cannot be compiled is treated as a non-match instead of throwing, so that
+// it does not fail the evaluation of the whole template.
+function matchesRegex(target: string, actual: string): boolean {
+  try {
+    return new RegExp(target).test(actual);
+  } catch (e) {
+    // TODO: add logging once we have a wrapped logger.
+    return false;
+  }
 }
 
 // Compares two numbers against each other.
