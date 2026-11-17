@@ -17,6 +17,7 @@
 
 const path = require('path');
 const fs = require('mz/fs');
+const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
 
 const localMode = process.argv.includes('--local');
 
@@ -34,7 +35,6 @@ async function generateReports() {
 }
 
 async function generateReportForEntryPoint(entryPoint, filePath) {
-  const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
   console.log(`\nGenerating API report for ${entryPoint}`)
   console.log('========================================================\n');
 
