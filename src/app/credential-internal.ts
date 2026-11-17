@@ -481,8 +481,12 @@ function populateGoogleAuth(keyFile: string | object, httpAgent?: Agent)
     copyAttr(keyFile, keyFile, 'project_id', 'projectId');
     copyAttr(keyFile, keyFile, 'private_key', 'privateKey');
     copyAttr(keyFile, keyFile, 'client_email', 'clientEmail');
-
-    client = auth.fromJSON(keyFile);
+    
+    client = auth.fromJSON(keyFile, {
+      transporterOptions: {
+        agent: httpAgent,
+      },
+    });
   }
   return { auth, client };
 }
