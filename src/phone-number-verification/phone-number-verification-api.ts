@@ -74,9 +74,29 @@ export interface PhoneNumberVerificationToken {
     phoneNumber: string;
 
     /**
+     * Indicates whether the token was issued while the app was in test mode.
+     * Set to `true` when the `"test_number"` claim is present and truthy, or `false`
+     * otherwise (production tokens omit the `"test_number"` claim).
+     */
+    testNumber: boolean;
+
+    /**
      * Other arbitrary claims included in the token.
      */
     [key: string]: any;
+}
+
+/**
+ * Interface representing options for the {@link PhoneNumberVerification.verifyToken} method.
+ */
+export interface PhoneNumberVerificationTokenOptions {
+    /**
+     * Whether to accept test-mode tokens (tokens containing the claim `"test_number": true`). By
+     * default, {@link PhoneNumberVerification.verifyToken} rejects test-mode tokens.
+     *
+     * Enable this option only during development and testing.
+     */
+    acceptTestTokens?: boolean;
 }
 
 export {
