@@ -95,6 +95,7 @@ export const AuthErrorCode = {
   MAXIMUM_USER_COUNT_EXCEEDED: 'maximum-user-count-exceeded',
   MISSING_UID: 'missing-uid',
   OPERATION_NOT_ALLOWED: 'operation-not-allowed',
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'password-does-not-meet-requirements',
   PHONE_NUMBER_ALREADY_EXISTS: 'phone-number-already-exists',
   PROJECT_NOT_FOUND: 'project-not-found',
   INSUFFICIENT_PERMISSION: 'insufficient-permission',
@@ -423,6 +424,10 @@ export const authClientErrorCode: { readonly [K in keyof typeof AuthErrorCode]: 
     message: 'The given sign-in provider is disabled for this Firebase project. Enable it in the ' +
       'Firebase console, under the sign-in method tab of the Auth section.',
   },
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: {
+    code: AuthErrorCode.PASSWORD_DOES_NOT_MEET_REQUIREMENTS,
+    message: 'The password does not meet the requirements.',
+  },
   PHONE_NUMBER_ALREADY_EXISTS: {
     code: AuthErrorCode.PHONE_NUMBER_ALREADY_EXISTS,
     message: 'The user with the provided phone number already exists.',
@@ -605,6 +610,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: Record<string, keyof typeof AuthErrorCode> = {
   MISSING_USER_ACCOUNT: 'MISSING_UID',
   // Password auth disabled in console.
   OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
+  // Password does not meet the configured policy requirements.
+  PASSWORD_DOES_NOT_MEET_REQUIREMENTS: 'PASSWORD_DOES_NOT_MEET_REQUIREMENTS',
   // Provided credential has insufficient permissions.
   PERMISSION_DENIED: 'INSUFFICIENT_PERMISSION',
   // Phone number already exists.
