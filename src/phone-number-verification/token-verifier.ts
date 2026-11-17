@@ -100,7 +100,7 @@ export class PhoneNumberTokenVerifier {
     const projectId = await this.ensureProjectId();
     const decoded = await this.decodeAndVerify(jwtToken, projectId);
     const decodedIdToken = decoded.payload as PhoneNumberVerificationToken;
-    if (decodedIdToken.test_number === true && options?.acceptTestTokens !== true) {
+    if (decodedIdToken.test_number && !options?.acceptTestTokens) {
       throw new FirebasePhoneNumberVerificationError({
         code: FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED,
         message: `${this.tokenInfo.jwtName} is a test token. To accept test tokens during ` +
@@ -108,7 +108,7 @@ export class PhoneNumberTokenVerifier {
       });
     }
     decodedIdToken.phoneNumber = decodedIdToken.sub;
-    decodedIdToken.testNumber = decodedIdToken.test_number === true;
+    decodedIdToken.testNumber = Boolean(decodedIdToken.test_number);
     return decodedIdToken;
   }
 

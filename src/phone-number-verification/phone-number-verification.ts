@@ -61,8 +61,7 @@ export class PhoneNumberVerification {
    * `options.acceptTestTokens` is set to `true`.
    *
    * @param jwt - A string containing the Firebase Phone Number Verification JWT.
-   * @param options - Optional {@link PhoneNumberVerificationTokenOptions} object when verifying a
-   *   Phone Number Verification token.
+   * @param options - Optional {@link PhoneNumberVerificationTokenOptions} object.
    * @returns A promise that resolves with the decoded token.
    */
   public verifyToken(

@@ -364,16 +364,18 @@ describe('PhoneNumberTokenVerifier', () => {
         expect(result.testNumber).to.be.false;
       });
 
-      it('should set testNumber to false when test_number claim is false or non-boolean', async () => {
-        decodeJwtStub.resolves({
-          header: VALID_HEADER,
-          payload: { ...VALID_PAYLOAD, test_number: 'false' },
-        });
-        signatureVerifierStub.verify.resolves();
+      it('should set testNumber to false when test_number claim is falsy', async () => {
+        for (const falsyValue of [false, 0, null, '']) {
+          decodeJwtStub.resolves({
+            header: VALID_HEADER,
+            payload: { ...VALID_PAYLOAD, test_number: falsyValue },
+          });
+          signatureVerifierStub.verify.resolves();
 
-        const result = await verifier.verifyJWT('valid-token');
+          const result = await verifier.verifyJWT('valid-token');
 
-        expect(result.testNumber).to.be.false;
+          expect(result.testNumber).to.be.false;
+        }
       });
     });
 
@@ -414,6 +416,21 @@ describe('PhoneNumberTokenVerifier', () => {
         expect(result.test_number).to.be.true;
         expect(result.testNumber).to.be.true;
         expect(result.phoneNumber).to.equal(VALID_PAYLOAD.sub);
+      });
+
+      it('should treat a non-boolean truthy test_number claim as a test token', async () => {
+        const expectedCode = `${MOCK_FPNV_PREFIX}/${FPNV_ERROR_CODE_MAPPING.TEST_TOKEN_REJECTED}`;
+        decodeJwtStub.resolves({
+          header: VALID_HEADER,
+          payload: { ...VALID_PAYLOAD, test_number: 1 },
+        });
+
+        await expect(verifier.verifyJWT('test-token'))
+          .to.be.rejectedWith(FirebasePhoneNumberVerificationError, /is a test token/)
+          .and.eventually.have.property('code', expectedCode);
+
+        const result = await verifier.verifyJWT('test-token', { acceptTestTokens: true });
+        expect(result.testNumber).to.be.true;
       });
     });
 
