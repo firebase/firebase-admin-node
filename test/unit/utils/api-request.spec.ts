@@ -38,6 +38,8 @@ import {
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
 import * as zlib from 'zlib';
+import * as http from 'http';
+import { AddressInfo } from 'net';
 import { getMetricsHeader } from '../../../src/utils';
 
 chai.should();
@@ -348,6 +350,42 @@ describe('HttpClient', () => {
       expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
       expect(resp.isJson()).to.be.false;
     });
+  });
+
+  it('should be rejected when the connection drops during a multipart response', async () => {
+    // The server sends the headers and part of the body, then resets the
+    // connection (#2105).
+    const server = http.createServer((req, res) => {
+      res.writeHead(200, { 'content-type': 'multipart/mixed; boundary=boundary' });
+      res.write('--boundary\r\nContent-type: application/json\r\n\r\n{"foo": 1}\r\n');
+      setTimeout(() => res.socket?.destroy(), 10);
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const { port } = server.address() as AddressInfo;
+    try {
+      // Retries are off so the test sees the first failure.
+      const client = new HttpClient(null);
+      await client.send({
+        method: 'GET',
+        url: `http://127.0.0.1:${port}${mockPath}`,
+      }).should.eventually.be.rejectedWith(/ECONNRESET/);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+
+  it('should be rejected when a multipart response ends early', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, '--boundary\r\nContent-type: application/json\r\n\r\n{"foo": 1}', {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).should.eventually.be.rejected;
   });
 
   it('should be fulfilled for a 2xx response with any multipart payload', () => {
