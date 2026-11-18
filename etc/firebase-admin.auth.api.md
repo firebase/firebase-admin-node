@@ -328,6 +328,7 @@ export interface DecodedIdToken {
     };
     iat: number;
     iss: string;
+    name?: string;
     phone_number?: string;
     picture?: string;
     sub: string;
