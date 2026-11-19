@@ -706,6 +706,10 @@ const HTTP_OK = 200;
 
 /**
  * Represents a fetch response that can be used to interact with RC's client SDK.
+ *
+ * @deprecated Remote Config server-side rendering (SSR) hydration of the
+ * client SDK is no longer supported. This class will be removed in the
+ * next major release.
  */
 export class RemoteConfigFetchResponse {
   private response: FetchResponseData;
@@ -714,6 +718,10 @@ export class RemoteConfigFetchResponse {
    * @param app - The app for this RemoteConfig service.
    * @param serverConfig - The server config for which to generate a fetch response.
    * @param requestEtag - A request eTag with which to compare the current response.
+   *
+   * @deprecated Remote Config server-side rendering (SSR) hydration of the
+   * client SDK is no longer supported. This class will be removed in the
+   * next major release.
    */
   constructor(app: App, serverConfig: ServerConfig, requestEtag?: string) {
     const config: { [key: string]: string } = {};
@@ -737,9 +745,13 @@ export class RemoteConfigFetchResponse {
     }
   }
 
-  /** 
-   * @returns JSON representation of the fetch response that can be consumed
-   * by the RC client SDK.
+  /**
+   * Returns the JSON representation of this fetch response, which can be
+   * consumed by the RC client SDK.
+   *
+   * @deprecated Remote Config server-side rendering (SSR) hydration of the
+   * client SDK is no longer supported. This method will be removed in the
+   * next major release.
    */
   public toJSON(): FetchResponseData {
     return this.response;
