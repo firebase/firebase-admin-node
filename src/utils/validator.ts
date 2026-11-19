@@ -295,7 +295,7 @@ export function isTaskId(taskId: any): boolean {
   }
 
   const VALID_TASK_ID_REGEX = /^[A-Za-z0-9_-]+$/;
-  return VALID_TASK_ID_REGEX.test(taskId);
+  return taskId.length <= 500 && VALID_TASK_ID_REGEX.test(taskId);
 }
 
 /**
