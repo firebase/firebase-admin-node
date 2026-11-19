@@ -37,6 +37,8 @@ import {
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { Agent } from 'http';
+import * as http2 from 'http2';
+import { AddressInfo } from 'net';
 import * as zlib from 'zlib';
 import { getMetricsHeader } from '../../../src/utils';
 
@@ -1304,6 +1306,130 @@ describe('Http2Client', () => {
     }
     http2Mocker.done()
     mockedHttp2Responses = [];
+  });
+
+  describe('with a local HTTP/2 server', () => {
+    let server: http2.Http2Server;
+    let requestStub: sinon.SinonStub;
+    const sessions = new Set<http2.ServerHttp2Session>();
+    let url: string;
+
+    beforeEach(async () => {
+      server = http2.createServer();
+      server.on('session', (session) => {
+        sessions.add(session);
+        session.on('error', () => {});
+      });
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+      url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+      http2SessionHandler = new Http2SessionHandler(url);
+      const session = http2SessionHandler.session;
+      const request = session.request.bind(session);
+      requestStub = sinon.stub(session, 'request').callsFake((headers, options) => {
+        // Adapt the SDK's HTTPS pseudo-header for the local cleartext server.
+        return request({ ...headers, ':scheme': 'http' }, options);
+      });
+    });
+
+    afterEach(async () => {
+      requestStub.restore();
+      http2SessionHandler.session.destroy();
+      sessions.forEach((session) => session.destroy());
+      sessions.clear();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    });
+
+    it('should reject when the session closes before response headers', () => {
+      server.on('stream', (stream: http2.ServerHttp2Stream) => {
+        stream.resume();
+        stream.on('end', () => stream.session!.destroy());
+      });
+
+      return new Http2Client(null).send({
+        method: 'POST',
+        url,
+        http2SessionHandler,
+      }).should.eventually.be.rejectedWith('HTTP/2 stream closed before response completed')
+        .and.have.property('code', 'app/network-error');
+    });
+
+    it('should reject when the stream is canceled before response headers', () => {
+      server.on('stream', (stream: http2.ServerHttp2Stream) => {
+        stream.resume();
+        stream.on('end', () => stream.close(http2.constants.NGHTTP2_CANCEL));
+      });
+
+      return new Http2Client(null).send({
+        method: 'POST',
+        url,
+        http2SessionHandler,
+      }).should.eventually.be.rejectedWith('HTTP/2 stream closed before response completed')
+        .and.have.property('code', 'app/network-error');
+    });
+
+    it('should preserve the original stream error on close', () => {
+      server.on('stream', (stream: http2.ServerHttp2Stream) => {
+        stream.on('error', () => {});
+        stream.resume();
+        stream.on('end', () => stream.close(http2.constants.NGHTTP2_INTERNAL_ERROR));
+      });
+
+      return new Http2Client(null).send({
+        method: 'POST',
+        url,
+        http2SessionHandler,
+      }).should.eventually.be.rejectedWith('NGHTTP2_INTERNAL_ERROR')
+        .and.have.property('code', 'app/network-error');
+    });
+
+    [false, true].forEach((compressed) => {
+      it(`should resolve a complete ${compressed ? 'compressed' : 'uncompressed'} response on close`, async () => {
+        const data = { foo: 'bar' };
+        server.on('stream', (stream: http2.ServerHttp2Stream) => {
+          stream.resume();
+          stream.on('end', () => {
+            stream.respond({
+              ':status': 200,
+              'content-type': 'application/json',
+              ...(compressed ? { 'content-encoding': 'gzip' } : {}),
+            });
+            const body = JSON.stringify(data);
+            stream.end(compressed ? zlib.gzipSync(body) : body);
+          });
+        });
+
+        const response = await new Http2Client(null).send({
+          method: 'POST',
+          url,
+          http2SessionHandler,
+        });
+        expect(response.status).to.equal(200);
+        expect(response.data).to.deep.equal(data);
+      });
+    });
+
+    it('should retry a prematurely closed stream when connection resets are retryable', async () => {
+      let attempts = 0;
+      server.on('stream', (stream: http2.ServerHttp2Stream) => {
+        stream.resume();
+        stream.on('end', () => {
+          if (++attempts === 1) {
+            stream.close(http2.constants.NGHTTP2_CANCEL);
+          } else {
+            stream.respond({ ':status': 200, 'content-type': 'application/json' });
+            stream.end('{"retried":true}');
+          }
+        });
+      });
+
+      const response = await new Http2Client({ ...testRetryConfig(), maxRetries: 1 }).send({
+        method: 'POST',
+        url,
+        http2SessionHandler,
+      });
+      expect(attempts).to.equal(2);
+      expect(response.data).to.deep.equal({ retried: true });
+    });
   });
 
   const invalidNumbers: any[] = ['string', null, undefined, {}, [], true, false, NaN, -1];
