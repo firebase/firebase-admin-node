@@ -216,7 +216,7 @@
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^9.1.0",
-    "@google-cloud/storage": "^8.1.0"
+    "@google-cloud/storage": "^9.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
