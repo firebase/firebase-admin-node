@@ -1024,9 +1024,36 @@ describe('ConditionEvaluator', () => {
         const testCases: CustomSignalTestCase[] = [
           { targets: ['foo', '^ba.*$'], actual: 'bar', outcome: true },
           { targets: ['  bar   '], actual: 'biz', outcome: false },
+          // RE2 syntax that JavaScript's RegExp cannot compile is treated as a non-match.
+          { targets: ['(?i)premium'], actual: 'free', outcome: false },
+          { targets: ['(?i)premium', 'beta'], actual: 'beta-tester', outcome: true },
         ];
 
         testCases.forEach(runCustomSignalTestCase(CustomSignalOperator.STRING_CONTAINS_REGEX));
+
+        it('should not fail the other conditions when a regex cannot be compiled', () => {
+          const unsupportedRegex = createNamedCondition('unsupported_regex', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['(?i)premium']
+            }
+          });
+          const supportedRegex = createNamedCondition('supported_regex', {
+            customSignal: {
+              customSignalOperator: CustomSignalOperator.STRING_CONTAINS_REGEX,
+              customSignalKey: 'user_prop',
+              targetCustomSignalValues: ['^beta']
+            }
+          });
+          const evaluator = new ConditionEvaluator();
+          const context = { 'user_prop': 'beta-tester' };
+          expect(evaluator.evaluateConditions([unsupportedRegex, supportedRegex], context)).deep.equals(
+            new Map([
+              ['unsupported_regex', false],
+              ['supported_regex', true],
+            ]));
+        });
       });
 
       describe('NUMERIC_LESS_THAN', () => {
