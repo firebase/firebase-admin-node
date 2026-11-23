@@ -628,8 +628,22 @@ class AsyncRequestCall {
     const busboy = require('@fastify/busboy');
     const multipartParser = new busboy.Dicer({ boundary });
     const responseBuffer: Buffer[] = [];
+
+    // A dropped connection or a truncated body surfaces as an 'error' event on
+    // the response, the parser or a part. Without handlers the request would
+    // never settle, and the unhandled 'error' event would be thrown. Destroy
+    // the request too, so a parse error doesn't keep downloading the body.
+    const onError = (err: Error): void => {
+      this.enhanceAndReject(err, null, response.request);
+      response.request?.destroy();
+    };
+    respStream.on('error', onError);
+    multipartParser.on('error', onError);
+
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];
+
+      part.on('error', onError);
 
       part.on('data', (partData: Buffer) => {
         tempBuffers.push(partData);
