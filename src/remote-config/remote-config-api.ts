@@ -879,6 +879,10 @@ export interface ServerConfig {
 /**
  * JSON-serializable representation of evaluated config values. This can be consumed by 
  * Remote Config web client SDKs.
+ *
+ * @deprecated Remote Config server-side rendering (SSR) hydration of the
+ * client SDK is no longer supported. This type will be removed in the
+ * next major release.
  */
 export interface FetchResponseData {
   /**
