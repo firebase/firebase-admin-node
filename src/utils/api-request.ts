@@ -878,6 +878,13 @@ class AsyncHttp2Call extends AsyncRequestCall {
       this.handleHttp2Response(headers, req);
     });
 
+    req.on('close', () => {
+      // A closed stream cannot time out or produce the response the caller is waiting for.
+      if (req.readableEnded === false) {
+        this.rejectWithError('HTTP/2 stream closed before response completed', 'ECONNRESET', req);
+      }
+    });
+
     // Handle errors
     req.on('error', (err: any) => {
       if (req.aborted) {
