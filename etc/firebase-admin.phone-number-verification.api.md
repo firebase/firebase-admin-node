@@ -22,7 +22,7 @@ export function getPhoneNumberVerification(app?: App): PhoneNumberVerification;
 // @public
 export class PhoneNumberVerification {
     get app(): App;
-    verifyToken(jwt: string): Promise<PhoneNumberVerificationToken>;
+    verifyToken(jwt: string, options?: PhoneNumberVerificationTokenOptions): Promise<PhoneNumberVerificationToken>;
 }
 
 // @public
@@ -30,6 +30,7 @@ export const PhoneNumberVerificationErrorCode: {
     readonly INVALID_ARGUMENT: "invalid-argument";
     readonly INVALID_TOKEN: "invalid-token";
     readonly EXPIRED_TOKEN: "expired-token";
+    readonly TEST_TOKEN_REJECTED: "test-token-rejected";
 };
 
 // @public
@@ -46,6 +47,12 @@ export interface PhoneNumberVerificationToken {
     nonce: string;
     phoneNumber: string;
     sub: string;
+    testNumber: boolean;
+}
+
+// @public
+export interface PhoneNumberVerificationTokenOptions {
+    acceptTestTokens?: boolean;
 }
 
 ```

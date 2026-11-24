@@ -31,7 +31,8 @@ export {
 
 export {
   PhoneNumberVerificationToken,
-} from './phone-number-verification-api'
+  PhoneNumberVerificationTokenOptions,
+} from './phone-number-verification-api';
 
 /**
  * Gets the {@link PhoneNumberVerification} service for the default app or a

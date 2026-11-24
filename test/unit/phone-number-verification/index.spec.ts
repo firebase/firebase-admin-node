@@ -34,9 +34,16 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('Module export', () => {
-  it('should export PhoneNumberVerification class', () => {
+  it('should export PhoneNumberVerification class and error types', () => {
     expect(pnvIndex.PhoneNumberVerification).to.exist;
     expect(pnvIndex.getPhoneNumberVerification).to.be.a('function');
+    expect(pnvIndex.FirebasePhoneNumberVerificationError).to.be.a('function');
+    expect(pnvIndex.PhoneNumberVerificationErrorCode).to.deep.equal({
+      INVALID_ARGUMENT: 'invalid-argument',
+      INVALID_TOKEN: 'invalid-token',
+      EXPIRED_TOKEN: 'expired-token',
+      TEST_TOKEN_REJECTED: 'test-token-rejected',
+    });
   });
 });
 
