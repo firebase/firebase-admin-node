@@ -148,7 +148,7 @@ export abstract class BaseAuth {
    * @param app - The FirebaseApp to associate with this Auth instance.
    * @param authRequestHandler - The RPC request handler for this instance.
    * @param tokenGenerator - Optional token generator. If not specified, a
-   *     (non-tenant-aware) instance will be created. Use this paramter to
+   *     (non-tenant-aware) instance will be created. Use this parameter to
    *     specify a tenant-aware tokenGenerator.
    * @constructor
    * @internal
