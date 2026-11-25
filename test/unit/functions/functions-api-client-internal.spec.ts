@@ -265,6 +265,13 @@ describe('FunctionsApiClient', () => {
       });
     }
 
+    it('should reject a task ID longer than 500 characters', () => {
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { id: 'a'.repeat(501) })
+        .should.eventually.be.rejectedWith(
+          'id can contain only letters ([A-Za-z]), numbers ([0-9]), '
+          + 'hyphens (-), or underscores (_). The maximum length is 500 characters.');
+    });
+
     it('should throw when both scheduleTime and scheduleDelaySeconds are provided', () => {
       expect(apiClient.enqueue({}, FUNCTION_NAME, undefined, {
         scheduleTime: new Date(),
@@ -490,6 +497,54 @@ describe('FunctionsApiClient', () => {
         .resolves(utils.responseFrom({}, 200));
       stubs.push(stub);
       return apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleTime })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: CLOUD_TASKS_URL,
+            headers: EXPECTED_HEADERS,
+            data: {
+              task: expectedPayload,
+            }
+          });
+        });
+    });
+
+    it('should ignore an undefined scheduleTime when scheduleDelaySeconds is set', () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const scheduleDelaySeconds = 1800;
+      const scheduleTime = new Date();
+      scheduleTime.setSeconds(scheduleTime.getSeconds() + scheduleDelaySeconds);
+      const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
+      (expectedPayload as any).scheduleTime = scheduleTime.toISOString();
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleTime: undefined, scheduleDelaySeconds })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: CLOUD_TASKS_URL,
+            headers: EXPECTED_HEADERS,
+            data: {
+              task: expectedPayload,
+            }
+          });
+        });
+    });
+
+    it('should ignore an undefined scheduleDelaySeconds when scheduleTime is set', () => {
+      const scheduleTime = new Date();
+      const expectedPayload = deepCopy(TEST_TASK_PAYLOAD);
+      (expectedPayload as any).scheduleTime = scheduleTime.toISOString();
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}, 200));
+      stubs.push(stub);
+      return apiClient.enqueue({}, FUNCTION_NAME, undefined, { scheduleTime, scheduleDelaySeconds: undefined })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',

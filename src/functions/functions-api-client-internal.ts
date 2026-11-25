@@ -342,7 +342,7 @@ export class FunctionsApiClient {
           message: 'TaskOptions must be a non-null object'
         });
       }
-      if ('scheduleTime' in opts && 'scheduleDelaySeconds' in opts) {
+      if (typeof opts.scheduleTime !== 'undefined' && typeof opts.scheduleDelaySeconds !== 'undefined') {
         throw new FirebaseFunctionsError({
           code: 'invalid-argument',
           message: 'Both scheduleTime and scheduleDelaySeconds are provided. Only one value should be set.'
